@@ -1,0 +1,30 @@
+486181ea-7121-11da-a5ed-d76291339024 org.hypergraphdb.type.HGHandleType org.hypergraphdb.HGHandle org.hypergraphdb.HGPersistentHandle org.hypergraphdb.handle.HGLiveHandle org.hypergraphdb.handle.UUIDPersistentHandle
+ab8854fb-0d34-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.ByteType java.lang.Byte
+66f68f3c-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.CharType java.lang.Character
+91de4b2d-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.BooleanType java.lang.Boolean
+a6531c2e-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.FloatType java.lang.Float
+be8d80af-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.DoubleType java.lang.Double
+d04af9e0-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.IntType java.lang.Integer
+e2394711-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.LongType java.lang.Long
+fdd944c2-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.ShortType java.lang.Short
+eeee128b-c5c1-11d9-bfe0-4b9280693a83 org.hypergraphdb.type.javaprimitive.StringType java.lang.String
+6c46f2f2-04a7-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.IntPrimitiveArrayType [I
+b9a25de3-04bc-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.BooleanPrimitiveArrayType [Z
+4ccf8574-04bd-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.BytePrimitiveArrayType [B
+3a3b2255-04bf-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.CharPrimitiveArrayType [C
+4e25f0e6-04c1-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.DoublePrimitiveArrayType [D
+9eb2c047-04c3-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.FloatPrimitiveArrayType [F
+2ebcfcf8-04c4-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.LongPrimitiveArrayType [J
+ea102869-04c4-11db-aae2-8dc354b70291 org.hypergraphdb.type.javaprimitive.ShortPrimitiveArrayType [S
+4e3c44ec-da21-11db-84d5-cf67a5f089dc org.hypergraphdb.type.javaprimitive.EnumTypeConstructor org.hypergraphdb.type.javaprimitive.EnumType
+ae9e93e7-07c9-11da-831d-8d375c1471fe org.hypergraphdb.type.RecordTypeConstructor org.hypergraphdb.type.RecordType
+f0f59c28-07c9-11da-831d-8d375c1471fe org.hypergraphdb.type.SlotType org.hypergraphdb.type.Slot
+787bdd6b-8d29-11da-9641-f34293e5a85b org.hypergraphdb.type.AbstractTypeConstructor org.hypergraphdb.type.HGAbstractType org.hypergraphdb.type.HGAbstractCompositeType
+623b1568-9fe4-11da-b2eb-93b1a0fe35e8 org.hypergraphdb.atom.AtomSetType org.hypergraphdb.atom.HGAtomSet
+79960d98-e51d-11da-8136-c58f96521980 org.hypergraphdb.type.ArrayTypeConstructor org.hypergraphdb.type.ArrayType
+4d3b3e26-0d59-11db-b807-8dc2e665907b org.hypergraphdb.type.CollectionTypeConstructor org.hypergraphdb.type.CollectionType
+2e8be758-1ff9-11db-b132-1d51dd755b13 org.hypergraphdb.type.MapTypeConstructor org.hypergraphdb.type.MapType
+34e91416-37da-11db-b1e1-8ab779d916a7 org.hypergraphdb.type.SerializableType java.io.Serializable
+db733325-19d5-11db-8b55-23bc8177d6ec org.hypergraphdb.type.NullType 
+2ec10476-d964-11db-a08c-eb6f4c8f155a org.hypergraphdb.type.AtomRefType org.hypergraphdb.atom.HGAtomRef
+b211d3bb-e0a5-11db-b848-d63153bea5bf org.hypergraphdb.atom.HGRelTypeConstructor org.hypergraphdb.atom.HGRelType

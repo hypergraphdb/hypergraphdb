@@ -1,0 +1,64 @@
+/*
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted
+ * software. For permitted uses, licensing options and redistribution, please see 
+ * the LicensingInformation file at the root level of the distribution. 
+ *
+ * Copyright (c) 2005-2006
+ *  Kobrix Software, Inc.  All rights reserved.
+ */
+package org.hypergraphdb.type;
+
+import java.util.Comparator;
+
+import org.hypergraphdb.handle.HGLiveHandle;
+import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.type.javaprimitive.PrimitiveTypeBase;
+import org.hypergraphdb.HGPersistentHandle;
+
+
+public class HGHandleType extends PrimitiveTypeBase 
+{
+	private static final HandleComparator comp = new HandleComparator();
+	
+    public static class HandleComparator implements Comparator<byte[]>
+    {
+        public int compare(byte [] left, byte [] right)
+        {
+            int i = dataOffset;
+            for (; i < left.length && i < right.length; i++)
+                if (left[i] - right[i] == 0)
+                    continue;
+                else 
+                    return left[i] - right[i];
+            return 0;
+        }
+    }
+
+    public static final String INDEX_NAME = "hg_handle_value_index";
+    
+	@Override
+	protected String getIndexName() 
+	{
+		return INDEX_NAME;
+	}
+
+	@Override
+	protected Object readBytes(byte[] data, int offset) 
+	{
+		return UUIDPersistentHandle.makeHandle(data, offset);
+	}
+
+	@Override
+	protected byte[] writeBytes(Object value) 
+	{
+		if (value instanceof HGPersistentHandle)
+			return ((HGPersistentHandle)value).toByteArray();
+		else
+			return ((HGLiveHandle)value).getPersistentHandle().toByteArray();
+	}
+
+	public Comparator<byte[]> getComparator() 
+	{
+		return comp;
+	}	
+}
