@@ -62,7 +62,7 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
 	        {
 	        	Slot slot = (Slot)graph.get(slotHandle);
 	        	Object value = record.get(slot);
-	        	if (recordType.getReferenceMode(slotHandle) != null)
+	        	if (value != null && recordType.getReferenceMode(slotHandle) != null)
 	        		value = graph.get(((HGAtomRef)value).getReferent());
                 javaTypes.assign(bean, slot.getLabel(), value);	        	
 	        }
@@ -92,15 +92,17 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
 	        	Slot slot = (Slot)graph.get(slotHandle);
 	        	Object value = BonesOfBeans.getProperty(instance, slot.getLabel());
 	        	HGAtomRef.Mode refMode = recordType.getReferenceMode(slotHandle);
-	        	if (refMode != null)
+	        	if (refMode != null && value != null)
 	        	{
 	        		HGHandle valueAtomHandle = graph.getHandle(value);
 	        		if (valueAtomHandle == null)
-	        			valueAtomHandle = graph.getPersistentHandle(graph.add(value));
+	        			valueAtomHandle = graph.getPersistentHandle(
+	        								graph.add(value, 
+	        										  slot.getValueType()));
 	        		value = new HGAtomRef(valueAtomHandle, refMode);
 	        	}
         		record.set(slot, value);            	
-	        }	        
+	        }
 	        result = hgType.store(record);        
 		}
 		return result;        

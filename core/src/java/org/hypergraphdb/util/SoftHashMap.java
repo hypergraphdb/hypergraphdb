@@ -103,7 +103,8 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
     public V remove(Object key) 
     {
         processQueue();
-        return hash.remove(key).get();
+        SoftValue<K,V> soft = hash.remove(key);
+        return soft == null ? null : soft.get();
     }
 
     public void clear() 

@@ -71,6 +71,9 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 			int i = 2, j = 0;
 			while (i < A.length && j < targetSet.length)
 			{
+				if (targetSet[j] == null) 
+					System.out.println("target set is null");
+				else if (A == null) System.out.println("A is null");
 				if (targetSet[j].equals(A[i]) || targetSet[j].equals(HGHandleFactory.anyHandle))
 					j++;
 				i++;

@@ -200,16 +200,18 @@ class IndexManager
 		HGProjection proj = TypeUtils.getProjection(hg, hg.getTypeSystem().getType(typeHandle), dimensionPath);
 		HGAtomType projType = hg.getTypeSystem().getType(proj.getType());
 		if (! (projType instanceof ByteArrayConverter && projType instanceof Comparator))
-			throw new HGException("Cannot get index for type " + 
+			return null;
+/*			throw new HGException("Cannot get index for type " + 
 								   typeHandle + 
 								   " and dimension path " +
 								   TypeUtils.formatDimensionPath(dimensionPath) +
 								   " since the type of the projection along that dimension does not implement " +
-								   "both the org.hypergraphdb.storage.ByteArrayConverter and java.util.Comparator interfaces.");				
-		return hg.getStore().getIndex(makeIndexName(typeHandle, dimensionPath),  
-                                     (ByteArrayConverter)projType, 
-                                     BAtoHandle.getInstance(), 
-                                     (Comparator)projType);
+								   "both the org.hypergraphdb.storage.ByteArrayConverter and java.util.Comparator interfaces."); */				
+		else
+			return hg.getStore().getIndex(makeIndexName(typeHandle, dimensionPath),  
+										 (ByteArrayConverter)projType, 
+										  BAtoHandle.getInstance(), 
+										  (Comparator)projType);
 	}
 	
     public void removeAllIndices(HGPersistentHandle typeHandle)

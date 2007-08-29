@@ -195,29 +195,37 @@ public class RecordType implements HGCompositeType
                 continue;
             }
             
-        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);        	
-        	if (refMode == null)
-        	{
-                HGHandle actualTypeHandle = graph.getTypeSystem().getTypeHandle(value.getClass());
-                if (actualTypeHandle == null)
-                	actualTypeHandle = slot.getValueType();
-                HGAtomType type = graph.getTypeSystem().getType(actualTypeHandle);                
-                layout[2*i] = graph.getPersistentHandle(actualTypeHandle);
-                layout[2*i + 1] = TypeUtils.storeValue(graph, value, type);
-        	}
-        	else
-        	{
-                layout[2*i] = graph.getPersistentHandle(slot.getValueType());
-                if (value instanceof HGAtomRef)
-                {
-	        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
-	                layout[2*i + 1] = refType.store((HGAtomRef)value);
-                }
-                else
-                	throw new HGException("Slot " + slot.getLabel() + 
-                						  " should have an atom reference for record " + 
-                						  graph.getHandle(this));
-        	}
+            if (value == null)
+            {
+            	layout[2*i] = graph.getPersistentHandle(slot.getValueType());
+            	layout[2*i + 1] = HGHandleFactory.nullHandle();
+            }
+            else
+            {
+	        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);        	
+	        	if (refMode == null)
+	        	{
+	                HGHandle actualTypeHandle = graph.getTypeSystem().getTypeHandle(value.getClass());
+	                if (actualTypeHandle == null)
+	                	actualTypeHandle = slot.getValueType();
+	                HGAtomType type = graph.getTypeSystem().getType(actualTypeHandle);                
+	                layout[2*i] = graph.getPersistentHandle(actualTypeHandle);
+	                layout[2*i + 1] = TypeUtils.storeValue(graph, value, type);
+	        	}
+	        	else
+	        	{
+	                layout[2*i] = graph.getPersistentHandle(slot.getValueType());
+	                if (value instanceof HGAtomRef)
+	                {
+		        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
+		                layout[2*i + 1] = refType.store((HGAtomRef)value);
+	                }
+	                else
+	                	throw new HGException("Slot " + slot.getLabel() + 
+	                						  " should have an atom reference for record " + 
+	                						  graph.getHandle(this));
+	        	}
+            }
         }
         graph.getStore().store(handle, layout);
         return handle;
