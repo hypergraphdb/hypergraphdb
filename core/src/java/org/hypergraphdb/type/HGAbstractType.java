@@ -26,7 +26,7 @@ import org.hypergraphdb.LazyRef;
  * <p>
  * A possible future application of abstract types in HyperGraph would be to actually
  * create "abstract values" out of them. Those would be semi-specified/undefined atoms, with
- * values yet to be refined. Such atoms could be provisionally used for linkage with other atoms 
+ * values yet to be refined. Such atoms could be provisonally used for linkage with other atoms 
  * until futher (if ever) concretized. 
  * </p>
  * 

@@ -96,9 +96,14 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
 	        	{
 	        		HGHandle valueAtomHandle = graph.getHandle(value);
 	        		if (valueAtomHandle == null)
+	        		{
+	        			HGAtomType valueType = (HGAtomType)graph.get(slot.getValueType());
 	        			valueAtomHandle = graph.getPersistentHandle(
-	        								graph.add(value, 
-	        										  slot.getValueType()));
+	        					graph.add(value, 
+	        						valueType instanceof HGAbstractType ?
+	        							 graph.getTypeSystem().getTypeHandle(value.getClass()) :	
+	        							 slot.getValueType()));
+	        		}
 	        		value = new HGAtomRef(valueAtomHandle, refMode);
 	        	}
         		record.set(slot, value);            	
