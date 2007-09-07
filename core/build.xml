@@ -38,6 +38,7 @@
 	<target description="clean up" name="clean">
 		<!-- Delete the ${build} and ${dist} directory trees -->
 		<delete dir="${build}" />
+        <delete file="hypergraphdb.jar"/>
 	</target>
 
 </project>

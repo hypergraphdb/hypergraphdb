@@ -28,5 +28,12 @@
 	</target>
     
     <target name="all" depends="core, viewer, apps"/>
-    
+    <target name="clean">
+      <ant dir="core" target="clean"/>
+      <ant dir="viewer" target="clean"/>
+      <ant dir="apps" target="clean"/>
+      <delete>
+        <fileset dir="." includes="*.jar"/>
+      </delete>
+    </target>
 </project>
