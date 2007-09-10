@@ -50,8 +50,8 @@ public class WeakRefAtomCache implements HGAtomCache
     private final HashMap<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
 		
-	private WeakHashMap<Object, PhantomHandle> atoms = 
-		new WeakHashMap<Object, PhantomHandle>();
+	private WeakHashMap<Object, HGLiveHandle> atoms = 
+		new WeakHashMap<Object, HGLiveHandle>();
 	
 	private IdentityHashMap<HGLiveHandle, Object> frozenAtoms = 
 		new IdentityHashMap<HGLiveHandle, Object>();
@@ -148,7 +148,11 @@ public class WeakRefAtomCache implements HGAtomCache
 								 byte flags) 
 	{
 		if (closing)
-			return new TempLiveHandle(atom, pHandle, flags);
+		{
+			HGLiveHandle result = new TempLiveHandle(atom, pHandle, flags);
+			atoms.put(atom, result);
+			return result;
+		}
 		PhantomHandle h = new PhantomHandle(atom, pHandle, flags, refQueue);
 		lock.writeLock().lock();
 		try
@@ -170,7 +174,11 @@ public class WeakRefAtomCache implements HGAtomCache
 									    long lastAccessTime) 
 	{
 		if (closing)
-			return new TempLiveHandle(atom, pHandle, flags); 
+		{
+			HGManagedLiveHandle result = new TempLiveHandle(atom, pHandle, flags);
+			atoms.put(atom, result);
+			return result;
+		}
 		PhantomManagedHandle h = new PhantomManagedHandle(atom, 
 														  pHandle, 
 														  flags, 
@@ -263,13 +271,6 @@ public class WeakRefAtomCache implements HGAtomCache
 			// nothing to do here really, perhaps report somewhere that we shouldn't be
 			// interrupted during this important procedure?
 		}		
-		//
-		// Some defensive programming: check that all maps are empty at this point.
-		//
-/*		if (!atoms.isEmpty())
-			throw new HGException("BUG: could not cleanup the HyperGraph cache properly, 'atoms' map not empty.");
-		if (!liveHandles.isEmpty())
-			throw new HGException("BUG: could not cleanup the HyperGraph cache properly, 'liveHandles' map not empty."); */
 		frozenAtoms.clear();		
 		incidenceCache.clear();
 		atoms.clear();
