@@ -175,7 +175,7 @@ public class HGTypeSystem
         //
         // If we are actually creating a new database, populate with primitive types.
         //
-        if (hg.getStore().getData(TOP_PERSISTENT_HANDLE) == null)
+        if (hg.getStore().getLink(TOP_PERSISTENT_HANDLE) == null)
         {
         	addPrimitiveTypeToStore(TOP_PERSISTENT_HANDLE);
         	addPrimitiveTypeToStore(LINK_PERSISTENT_HANDLE);
@@ -325,7 +325,7 @@ public class HGTypeSystem
         // TODO: we are assuming here that if the defineHGType call above did not return
         // a newly created type, but an already existing one, its type constructor can
         // only be Top. There is no reason this should be true in general. Probably
-        // defineHGType should return multiple values: the resulting type, whether its new
+        // defineHGType should return multiple values: the resulting type, whether it's new
         // or not and possibly other things, encapsulated in some sort of type descriptor.
         //
         else  
@@ -530,7 +530,7 @@ public class HGTypeSystem
     	//
     	// Make sure the type is in storage...
     	//
-    	if (hg.getStore().getData(handle) == null)
+    	if (hg.getStore().getLink(handle) == null)
     	{
 	       	addPrimitiveTypeToStore(handle);
 	       	hg.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, handle), SUBSUMES_PERSISTENT_HANDLE);

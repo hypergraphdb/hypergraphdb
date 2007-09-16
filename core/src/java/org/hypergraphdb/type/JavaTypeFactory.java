@@ -190,7 +190,8 @@ public class JavaTypeFactory {
 				return new HGAbstractType();
 			else
 				return defineComposite(typeSystem, descriptors);
-		} else if (Map.class.isAssignableFrom(javaClass)
+		} 
+		else if (Map.class.isAssignableFrom(javaClass)
 				&& is_default_constructible) 
 		{
 			return new MapType(new GenericObjectFactory<Map<Object, Object>>(

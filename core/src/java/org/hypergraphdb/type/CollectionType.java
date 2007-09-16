@@ -109,7 +109,7 @@ public class CollectionType implements HGAtomType
 				hg.getTypeSystem().getType(typeHandle).release(valueHandle);
 			}
 		}
-		hg.getStore().remove(handle);
+		hg.getStore().removeLink(handle);
 	}
 
 	public boolean subsumes(Object general, Object specific) 

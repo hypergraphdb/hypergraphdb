@@ -240,11 +240,11 @@ public class AtomRefType implements HGAtomType, HGSearchable
 		}
 		if (removeRef)
 		{
-			hg.getStore().remove(handle);
+			hg.getStore().removeData(handle);
 			if (otherRef != null)
-				hg.getStore().remove(otherRef);
+				hg.getStore().removeData(otherRef);
 			if (otherRef2 != null)
-				hg.getStore().remove(otherRef2);
+				hg.getStore().removeData(otherRef2);
 			if (makeManaged)
 			{
 				int flags = hg.getSystemFlags(refHandle);

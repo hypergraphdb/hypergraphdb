@@ -20,7 +20,7 @@ package org.hypergraphdb.query;
  * </p>
  * 
  * <p>
- * The <code>HGQueryCondition<code>s does not mandate at what level, 
+ * The <code>HGQueryCondition</code>s does not mandate at what level, 
  * HyperGraph atoms or HGStore, will conditions apply. 
  * </p>
  * 

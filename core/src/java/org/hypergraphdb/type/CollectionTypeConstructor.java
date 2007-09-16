@@ -61,7 +61,7 @@ public class CollectionTypeConstructor implements HGAtomType
 
 	public void release(HGPersistentHandle handle) 
 	{
-		hg.getStore().remove(handle);
+		hg.getStore().removeData(handle);
 	}
 
 	public boolean subsumes(Object general, Object specific) 

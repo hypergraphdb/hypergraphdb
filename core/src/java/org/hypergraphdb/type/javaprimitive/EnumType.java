@@ -60,6 +60,6 @@ public class EnumType extends HGAtomTypeBase
 			throw new HGException("EnumType.release: wrong or inexisting layout for handle " + handle);		
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		stringType.release(layout[0]);
-		graph.getStore().remove(handle);
+		graph.getStore().removeLink(handle);
 	}
 }

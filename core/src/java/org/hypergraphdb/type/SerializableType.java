@@ -63,7 +63,7 @@ public class SerializableType implements HGAtomType
 	
 	public void release(HGPersistentHandle handle)
 	{
-		hg.getStore().remove(handle);
+		hg.getStore().removeData(handle);
 	}
 	
 	public HGPersistentHandle store(Object instance)

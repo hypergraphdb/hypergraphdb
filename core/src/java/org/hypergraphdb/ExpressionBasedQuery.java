@@ -18,6 +18,7 @@ import java.util.Map;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.*;
 import org.hypergraphdb.algorithms.*;
@@ -952,7 +953,8 @@ class ExpressionBasedQuery extends HGQuery
 						return Nothing.Instance;
 					else
 					{
-						HGIndex idx = graph.getIndex(typeHandle, pc.getDimensionPath());
+						ByPartIndexer indexer = new ByPartIndexer(typeHandle, pc.getDimensionPath());
+						HGIndex idx = graph.getIndexManager().getIndex(indexer);
 						if (idx != null)
 						{
 							if (byType != null)

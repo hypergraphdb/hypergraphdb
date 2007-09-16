@@ -254,7 +254,7 @@ public class RecordType implements HGCompositeType
             		type.release(layout[j]);
             	}
         }        
-        graph.getStore().remove(handle);
+        graph.getStore().removeLink(handle);
     }
 
     public boolean subsumes(Object general, Object specific)

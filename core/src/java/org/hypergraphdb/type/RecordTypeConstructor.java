@@ -49,7 +49,7 @@ public class RecordTypeConstructor extends HGAtomTypeBase
 
     public void release(HGPersistentHandle handle)
     {
-        graph.getStore().remove(handle);
+        graph.getStore().removeLink(handle);
     }
 
 }

@@ -42,12 +42,14 @@ import org.hypergraphdb.transaction.TransactionBDBImpl;
 public class HGStore
 {
     private static final String DATA_DB_NAME = "datadb";
+    private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
     
     private String databaseLocation;
     
     private Environment env = null;
     private Database data_db = null;
+    private Database primitive_db = null;
     private Database incidence_db = null;
     private LinkBinding linkBinding = new LinkBinding();
     private HGTransactionManager transactionManager = null;    
@@ -80,6 +82,7 @@ public class HGStore
         envConfig.setLockDetectMode(LockDetectMode.RANDOM);
         envConfig.setRunRecovery(true);
         envConfig.setRegister(true);
+        envConfig.setLogAutoRemove(true);
 //        envConfig.setRunFatalRecovery(true);
         
         File envDir = new File(databaseLocation);
@@ -92,7 +95,8 @@ public class HGStore
             dbConfig.setAllowCreate(true);
             dbConfig.setTransactional(true);
             dbConfig.setType(DatabaseType.BTREE);
-            data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);
+            data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);    
+            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, dbConfig);
             
             dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
@@ -205,7 +209,7 @@ public class HGStore
         UUIDPersistentHandle handle = UUIDPersistentHandle.makeHandle();   
         try
         {
-            OperationStatus result = data_db.put(txn(), 
+            OperationStatus result = primitive_db.put(txn(), 
             									 new DatabaseEntry(handle.toByteArray()), 
             									 new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
@@ -230,7 +234,7 @@ public class HGStore
     {
         try
         {
-            OperationStatus result = data_db.put(txn(), 
+            OperationStatus result = primitive_db.put(txn(), 
             									 new DatabaseEntry(handle.toByteArray()), 
             									 new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
@@ -244,10 +248,11 @@ public class HGStore
     }
     
     /**
-     * <p>Remove the value associated with a <code>HGPersistentHandle</code> key.</p>
-     * 
+     * <p>Remove the value associated with a <code>HGPersistentHandle</code> key. The value can
+     * be either a link or raw data. Note that this is a more expensive operation than either
+     * of <code>removeLink</code> or <code>removeData</code>.</p> 
      */
-    public void remove(HGPersistentHandle handle)
+/*    public void remove(HGPersistentHandle handle)
     {
         if (handle == null)
             throw new NullPointerException("HGStore.remove called with a null handle.");
@@ -255,6 +260,45 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             data_db.delete(txn(), key);
+            primitive_db.delete(txn(), key);
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to remove value with handle " + handle + 
+                    ": " + ex.toString(), ex);            
+        }
+    } */
+    
+    /**
+     * <p>Remove a link value associated with a <code>HGPersistentHandle</code> key.</p> 
+     */    
+    public void removeLink(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.remove called with a null handle.");
+        try
+        {
+            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+            data_db.delete(txn(), key);
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to remove value with handle " + handle + 
+                    ": " + ex.toString(), ex);            
+        }
+    }
+
+    /**
+     * <p>Remove a raw data value associated with a <code>HGPersistentHandle</code> key.</p> 
+     */
+    public void removeData(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.remove called with a null handle.");
+        try
+        {
+            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+            primitive_db.delete(txn(), key);
         }
         catch (Exception ex)
         {
@@ -359,7 +403,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (data_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (primitive_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
                 return value.getData();
             else
                 return null;            
@@ -821,30 +865,17 @@ public class HGStore
                     // on a logging mechanism. 
                 	t.printStackTrace();
                 }
-            try
-            {
-            	data_db.close();
-            }
-            catch (Throwable t)
-            {
-            	t.printStackTrace();
-            }
-            try
-            {
-            	incidence_db.close();
-            }
-            catch (Throwable t)
-            {
-            	t.printStackTrace();
-            }
-            try
-            {
-            	env.close();
-            }
-            catch (Throwable t)
-            {
-            	t.printStackTrace();
-            }
+            try { data_db.close(); }
+            catch (Throwable t) { t.printStackTrace(); }
+            
+            try { primitive_db.close(); }
+            catch (Throwable t) { t.printStackTrace(); }
+            
+            try { incidence_db.close(); }
+            catch (Throwable t) { t.printStackTrace(); }
+            
+            try { env.close(); }
+            catch (Throwable t) { t.printStackTrace(); }
         } 
    	}
 }

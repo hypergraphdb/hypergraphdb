@@ -70,6 +70,6 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		for (HGPersistentHandle h : layout)
 			stringType.release(h);
-		graph.getStore().remove(handle);
+		graph.getStore().removeLink(handle);
 	}
 }

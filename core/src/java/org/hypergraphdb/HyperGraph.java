@@ -74,7 +74,8 @@ import org.hypergraphdb.util.HGUtils;
  * <p>
  * For aggregate structures such as Java beans, it is often useful to create indices
  * to speed up searching by certain properties. You can manipulate indices with the
- * <code>createIndex</code>, <code>getIndex</code> and <code>removeIndex</code> methods.
+ * {@link HGIndexerManager} associated with a HyperGraph instance. Call <code>getIndexManager</code>
+ * to get the index manager.
  * </p>
  * 
  * @author Borislav Iordanov
@@ -105,7 +106,7 @@ public /*final*/ class HyperGraph
     /**
      * An index manager for user created indices. 
      */
-    private IndexManager idx_manager = null;
+    private HGIndexManager idx_manager = null;
     
     /**
      * The hypergraph typing manager. Integrates tightly with a HyperGraph
@@ -200,15 +201,17 @@ public /*final*/ class HyperGraph
 	        {
 	        	
 	        	systemAttributesDB = store.createIndex(SA_DB_NAME, BAtoHandle.getInstance(), AtomAttrib.baConverter, null);
-	        }	     
+	        }     
+	                    
+	        idx_manager = new HGIndexManager(this);
 	        
-            idx_manager = new IndexManager(this);
-            
 	        //
 	        // Now, bootstrap the type system.
 	        //
-	        typeSystem.bootstrap(TYPES_CONFIG_FILE);	        
+	        typeSystem.bootstrap(TYPES_CONFIG_FILE);                 
             
+    		idx_manager.loadIndexers();
+    		
 	        // Initialize atom access statistics, purging and the like. 
 	        initAtomManagement();    
             
@@ -776,7 +779,7 @@ public /*final*/ class HyperGraph
 	        //
 	        if (atom instanceof HGAtomType)
 	        {	        		
-	            idx_manager.removeAllIndices(pHandle);
+	            idx_manager.unregisterAll(pHandle);
 	        	typeSystem.remove(pHandle, (HGAtomType)atom);
 	        	HGSearchResult instances = null;
 	        	try
@@ -808,7 +811,7 @@ public /*final*/ class HyperGraph
 	        //
 	        TypeUtils.releaseValue(HyperGraph.this, valueHandle);
 	        type.release(valueHandle);         
-	        store.remove(pHandle);
+	        store.removeLink(pHandle);
 	        store.removeIncidenceSet(pHandle);
 	        if (lHandle != null)
 	            cache.remove(lHandle);
@@ -1266,11 +1269,14 @@ public /*final*/ class HyperGraph
      * @param dimensionPath A sequence of dimension names pointing to the nested type
      * dimension which must be indexed. If such a dimension cannot be navigated to
      * by following a composite type nesting, a <code>HGException</code> will be thrown.
+     * @return <code>true</code> if  a new index was created and <code>false</code> otherwise.
      */
-    public HGIndex createIndex(HGHandle typeHandle, String [] dimensionPath)
+/*    public boolean createIndex(HGHandle typeHandle, String [] dimensionPath)
     {
-    	return idx_manager.createIndex(getPersistentHandle(typeHandle), dimensionPath);
-    }
+    	ByPartIndexer indexer = new ByPartIndexer(typeHandle, dimensionPath);
+    	return idx_manager.register(indexer);
+//    	return idx_manager.createIndex(getPersistentHandle(typeHandle), dimensionPath);
+    } */
     
     /**
      * <p>Return the index of a given type dimension (a.k.a. property). The index
@@ -1280,10 +1286,10 @@ public /*final*/ class HyperGraph
      * @param The handle to the type.
      * @param A <code>String [] </code> representing the path to the type dimension.
      */
-    public HGIndex getIndex(HGHandle typeHandle, String [] dimensionPath)
+/*    public HGIndex getIndex(HGHandle typeHandle, String [] dimensionPath)
     {
     	return idx_manager.getIndex(getPersistentHandle(typeHandle), dimensionPath);
-    }
+    } */
     
     /**
      * <p>Remove a previously created index of a given type dimension.</p>
@@ -1291,9 +1297,22 @@ public /*final*/ class HyperGraph
      * @param The handle to the type.
      * @param A <code>String [] </code> representing the path to the type dimension.
      */
-    public void removeIndex(HGHandle typeHandle, String [] dimensionPath)
+/*    public void removeIndex(HGHandle typeHandle, String [] dimensionPath)
     {
     	idx_manager.removeIndex(getPersistentHandle(typeHandle), dimensionPath);
+    } */
+    
+    /**
+     * <p>
+     * Return the <code>HGIndexManager</code> that is associated with this
+     * HyperGraph instance. The index manager may be used to create indices
+     * for specific atoms types. Such indices may result in quicker queries
+     * at the expense of slower atom insertions. 
+     * </p>
+     */
+    public HGIndexManager getIndexManager()
+    {
+    	return idx_manager;
     }
     
     // ------------------------------------------------------------------------

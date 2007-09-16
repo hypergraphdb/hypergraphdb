@@ -161,7 +161,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
         }
         else
         {
-            store.remove(handle);
+            store.removeData(handle);
             getIndex().removeEntry(ref_counted_data, handle);
         }
     }
