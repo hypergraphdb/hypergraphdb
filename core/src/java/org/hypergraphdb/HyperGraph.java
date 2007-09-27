@@ -1629,7 +1629,7 @@ public /*final*/ class HyperGraph
         // Remove from cached incidence set, if present.
         //
         HGHandle [] targetIncidenceSet = cache.getIncidenceSet(targetAtom);
-        if (targetIncidenceSet != null)
+        if (targetIncidenceSet != null && targetIncidenceSet.length > 0)
         {
             HGHandle [] newTargetIncidenceSet = new HGHandle[targetIncidenceSet.length - 1];
             int k = 0;

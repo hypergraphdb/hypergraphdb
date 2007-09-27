@@ -92,10 +92,6 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 	{
 		while (isEnqueued())
 			try { synchronized (this) { wait(); } } catch (InterruptedException ex) { }
-		if (ref == null)
-		{
-			System.err.println("OOPS storing null ref in " + this.getPersistentHandle());
-		}
 		try { refField.set(this, ref); } catch (Exception t) { throw new HGException(t); }		
 	}
 	
@@ -133,7 +129,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 			x = null;
 			do 
 			{ 
-				try { synchronized (this) { wait(); } } catch (InterruptedException ex) { }
+				try { synchronized (this) { wait(100); } } catch (InterruptedException ex) { }
 			} while (isEnqueued());
 		}
 		return x;

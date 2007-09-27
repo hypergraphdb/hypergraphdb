@@ -862,7 +862,7 @@ public class HGTypeSystem
                 try
                 {
                     // Remove from class->atom cache if there.
-                    Class clazz = Class.forName(classname);
+                    Class clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
                     classToAtomType.remove(clazz);
                 }
                 catch (ClassNotFoundException ex) { }
@@ -914,6 +914,6 @@ public class HGTypeSystem
     		}
     		else
     			return false;
-    	}
+    	} 
     }    
 }

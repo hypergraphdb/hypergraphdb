@@ -27,16 +27,8 @@ public class HGRel extends HGPlainLink
 		return name;
 	}
 	
-	public int hashCode()
+	public String toString()
 	{
-		return HGUtils.hashIt(name);
-	}
-	
-	public boolean equals(Object other)
-	{
-		if (! (other instanceof HGRel))
-			return false;
-		else
-			return HGUtils.eq(name, ((HGRel)other).name);
+		return name + "[" + getArity() + "]";
 	}
 }
