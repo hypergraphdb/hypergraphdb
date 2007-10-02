@@ -98,10 +98,15 @@ public class SingleValueResultSet extends IndexResultSet
     	{
     		if (exactMatch)
     			return ((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
-    		else if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
-    			return HGUtils.eq(B, pkey.getData());
     		else
-    			return false;
+    		{
+    			byte [] save = new byte[pkey.getData().length];
+    			System.arraycopy(pkey.getData(), 0, save, 0, save.length);    		
+    			if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    				return HGUtils.eq(save, pkey.getData());
+    			else
+    				return false;     			
+    		}
     	}
     	catch (Throwable t)
     	{

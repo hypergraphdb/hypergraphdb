@@ -90,10 +90,15 @@ public class KeyScanResultSet extends IndexResultSet
     	{
     		if (exactMatch)
     			return cursor.getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
-    		else if (cursor.getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
-    			return HGUtils.eq(B, key.getData());
-    		else
-    			return false;
+    		else 
+    		{
+    			byte [] save = new byte[key.getData().length];
+    			System.arraycopy(key.getData(), 0, save, 0, save.length);    		
+    			if (cursor.getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    				return HGUtils.eq(save, key.getData());
+    			else
+    				return false;    			
+    		}
     	}
     	catch (Throwable t)
     	{
