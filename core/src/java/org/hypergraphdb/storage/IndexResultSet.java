@@ -115,10 +115,15 @@ abstract class IndexResultSet implements HGRandomAccessResult
     	{
     		if (exactMatch)
     			return cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
-    		else if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
-    			return HGUtils.eq(B, data.getData());
-    		else
-    			return false;
+    		else 
+    		{
+    			byte [] save = new byte[data.getData().length];
+    			System.arraycopy(data.getData(), 0, save, 0, save.length);    		
+    			if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    				return HGUtils.eq(save, data.getData());
+    			else
+    				return false;
+    		}
     	}
     	catch (Throwable t)
     	{
