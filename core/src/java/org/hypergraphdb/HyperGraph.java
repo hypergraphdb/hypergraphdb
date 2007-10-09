@@ -238,9 +238,9 @@ public /*final*/ class HyperGraph
         if (!is_open)
             return;
         ArrayList<Throwable> problems = new ArrayList<Throwable>();
-        try { eventManager.dispatch(this, new HGClosingEvent()); } catch (Throwable t) { problems.add(t); }        
-        try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }
+        try { eventManager.dispatch(this, new HGClosingEvent()); } catch (Throwable t) { problems.add(t); }
     	try { replace(statsHandle, stats);  					 } catch (Throwable t) { problems.add(t); }        
+        try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
     	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
     	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
         try { store.close();								 	 } catch (Throwable t) { problems.add(t); }

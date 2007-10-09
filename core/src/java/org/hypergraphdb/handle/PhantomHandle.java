@@ -91,7 +91,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 	public void storeRef(Object ref)
 	{
 		while (isEnqueued())
-			try { synchronized (this) { wait(); } } catch (InterruptedException ex) { }
+			try { synchronized (this) { wait(100); } } catch (InterruptedException ex) { }
 		try { refField.set(this, ref); } catch (Exception t) { throw new HGException(t); }		
 	}
 	
