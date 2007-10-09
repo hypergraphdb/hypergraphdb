@@ -2,7 +2,6 @@ package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
-import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -15,6 +14,12 @@ import org.hypergraphdb.util.HGUtils;
 public class HGRel extends HGPlainLink 
 {
 	private String name;
+	
+	public HGRel(HGHandle [] targetSet)
+	{
+		super(targetSet);
+		this.name = "<name unavailable>";
+	}
 	
 	public HGRel(String name, HGHandle [] targetSet)
 	{
