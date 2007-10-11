@@ -107,22 +107,23 @@ abstract class IndexResultSet implements HGRandomAccessResult
 	    }
     }
 
-    public boolean goTo(Object value, boolean exactMatch)
+    public GotoResult goTo(Object value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
     	data.setData(B);
     	try
     	{
     		if (exactMatch)
-    			return cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+    			return cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
+    				   GotoResult.found : GotoResult.nothing;
     		else 
     		{
     			byte [] save = new byte[data.getData().length];
     			System.arraycopy(data.getData(), 0, save, 0, save.length);    		
     			if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
-    				return HGUtils.eq(save, data.getData());
+    				return HGUtils.eq(save, data.getData()) ? GotoResult.found : GotoResult.close;
     			else
-    				return false;
+    				return GotoResult.nothing;
     		}
     	}
     	catch (Throwable t)

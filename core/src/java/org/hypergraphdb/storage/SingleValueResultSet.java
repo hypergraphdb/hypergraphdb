@@ -90,22 +90,23 @@ public class SingleValueResultSet extends IndexResultSet
         }                        
     }
     
-    public boolean goTo(Object value, boolean exactMatch)
+    public GotoResult goTo(Object value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
     	pkey.setData(B);
     	try
     	{
     		if (exactMatch)
-    			return ((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+    			return ((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
+    					GotoResult.found : GotoResult.nothing;
     		else
     		{
     			byte [] save = new byte[pkey.getData().length];
     			System.arraycopy(pkey.getData(), 0, save, 0, save.length);    		
     			if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
-    				return HGUtils.eq(save, pkey.getData());
+    				return HGUtils.eq(save, pkey.getData()) ? GotoResult.found : GotoResult.close;
     			else
-    				return false;     			
+    				return GotoResult.nothing;     			
     		}
     	}
     	catch (Throwable t)

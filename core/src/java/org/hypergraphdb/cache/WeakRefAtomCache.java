@@ -340,7 +340,8 @@ public class WeakRefAtomCache implements HGAtomCache
 		{
 			atoms.remove(handle.getRef());
 			// Shouldn't use clear here, since we might be gc-ing the ref!
-			((PhantomHandle)handle).storeRef(null);
+			if (handle instanceof PhantomHandle)
+				((PhantomHandle)handle).storeRef(null);
 			liveHandles.remove(handle.getPersistentHandle());			
 		}
 		finally

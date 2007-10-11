@@ -10,7 +10,6 @@ package org.hypergraphdb.query.impl;
 
 import java.util.NoSuchElementException;
 
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 
 /**

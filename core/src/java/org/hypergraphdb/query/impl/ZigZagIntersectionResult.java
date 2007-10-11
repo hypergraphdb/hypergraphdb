@@ -2,6 +2,7 @@ package org.hypergraphdb.query.impl;
 
 import java.util.NoSuchElementException;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -30,13 +31,25 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 			if (!left.hasNext() || !right.hasNext())
 				return null;
 			Object x = left.next();
-			if (right.goTo(x, false))
-				return x;
-			else
+			switch (right.goTo(x, false))
 			{
-				if (right.hasPrev())
-					right.prev();
-				swap();
+				case found: 
+				{
+					return x;
+				}
+				case close:
+				{
+//					if (right.hasPrev())
+//						right.prev();
+					swap();		
+					break;
+				}
+				default:
+				{
+					// this means that all we have reached EOF since 'x', the
+					// element on the left is greater than all elements on the right
+					return null;
+				}
 			}
 		}
 	}
@@ -48,7 +61,7 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 			if (!left.hasPrev() || !right.hasPrev())
 				return null;
 			Object x = left.prev();
-			if (right.goTo(x, false))
+			if (right.goTo(x, false) == GotoResult.found)
 				return x;
 			else
 				swap();
@@ -71,9 +84,26 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		next = advance();
 	}
 	
-	public boolean goTo(Object value, boolean exactMatch) 
+	public GotoResult goTo(Object value, boolean exactMatch) 
 	{
-		return left.goTo(value, exactMatch) && right.goTo(value, exactMatch);
+		GotoResult r_l = left.goTo(value, exactMatch);
+		GotoResult r_r = right.goTo(value, exactMatch); 
+		if (r_l == GotoResult.found)
+		{
+			if (r_r == GotoResult.found)
+				return GotoResult.found;
+			else
+				return GotoResult.close;
+		}
+		else if (r_l == GotoResult.close)
+			return GotoResult.close;
+		else
+		{
+			if (r_r == GotoResult.nothing)
+				return GotoResult.nothing;
+			else
+				return GotoResult.close;
+		}
 	}
 
 	public void close() 

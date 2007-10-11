@@ -50,7 +50,7 @@ public class RABasedPredicate implements HGAtomPredicate, CloseMe
 	{
 		if (ras == null)
 			ras = (HGRandomAccessResult)query.execute();
-		return ras.goTo(handle, true);
+		return ras.goTo(handle, true) == HGRandomAccessResult.GotoResult.found;
 	}
 	
 	public void close()

@@ -82,22 +82,23 @@ public class KeyScanResultSet extends IndexResultSet
 	    }         
     } 	
     
-    public boolean goTo(Object value, boolean exactMatch)
+    public GotoResult goTo(Object value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
     	key.setData(B);
     	try
     	{
     		if (exactMatch)
-    			return cursor.getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS;
+    			return cursor.getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
+    				   GotoResult.found : GotoResult.nothing;
     		else 
     		{
     			byte [] save = new byte[key.getData().length];
     			System.arraycopy(key.getData(), 0, save, 0, save.length);    		
     			if (cursor.getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
-    				return HGUtils.eq(save, key.getData());
+    				return HGUtils.eq(save, key.getData()) ? GotoResult.found : GotoResult.close;
     			else
-    				return false;    			
+    				return GotoResult.nothing;    			
     		}
     	}
     	catch (Throwable t)

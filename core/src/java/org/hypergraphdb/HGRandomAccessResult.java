@@ -23,6 +23,35 @@ package org.hypergraphdb;
 public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueType> 
 {
 	/**
+	 * <p>
+	 * Enumerates the possible results of a call to the <code>goTo</code> in a 
+	 * <code>HGRandomAccessResult</code>.
+	 * </p>
+	 * 
+	 * @author Borislav Iordanov
+	 */
+	enum GotoResult 
+	{ 
+		/**
+		 * Indicates that the element was found and the cursor is positionned on that
+		 * element.
+		 */
+		found,
+		
+		/**
+		 * Indicates that the element was not found and the cursor has <strong>NOT</strong>
+		 * changed position.
+		 */
+		nothing,
+		
+		/**
+		 * Indicates that the element was not found, but the cursor was positionned to 
+		 * the next element greater than the element sought for.
+		 */
+		close
+	}
+	
+	/**
 	 * <p>Position the result set at a particular value if that value
 	 * is indeed part of the result set.
 	 * </p>
@@ -32,8 +61,7 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	 * match exactly a value in the result set, or whether the cursor should
 	 * be positionned to the closest value. Here "closest" means "smallest 
 	 * greater than the <code>value</code> parameter.
-	 * @return <code>true</code> if the value is in the result set and 
-	 * <code>false</code> otherwise.
+	 * @return A <code>GotoResult</code>.
 	 */
-	boolean goTo(Object value, boolean exactMatch);
+	GotoResult goTo(Object value, boolean exactMatch);
 }
