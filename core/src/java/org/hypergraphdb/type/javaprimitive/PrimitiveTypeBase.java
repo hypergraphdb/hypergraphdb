@@ -231,4 +231,14 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     	else
     		return l.equals(r);        
     }
+    
+    public int getRefCountFor(Object o)
+    {
+    	byte [] B = objectAsBytes((JavaType)o);
+    	HGPersistentHandle handle = (HGPersistentHandle)this.getIndex().findFirst(B);
+    	if (handle == null) return 0;
+        byte [] ref_counted_data = hg.getStore().getData(handle);
+        int refCnt = getRefCount(ref_counted_data);
+    	return refCnt;
+    }    
 }

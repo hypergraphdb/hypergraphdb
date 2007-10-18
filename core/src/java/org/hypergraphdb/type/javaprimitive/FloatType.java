@@ -10,7 +10,6 @@ package org.hypergraphdb.type.javaprimitive;
 
 import java.util.Comparator;
 
-
 /**
  *
  * @author  User
