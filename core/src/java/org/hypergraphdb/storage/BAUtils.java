@@ -20,20 +20,21 @@ public class BAUtils
 {
 	public static int readInt(byte [] buffer, int offset)
 	{
-        return buffer[offset + 0] + 
-        	   256*buffer[offset + 1] + 
-        	   256*256*buffer[offset + 2] + 
-        	   256*256*256*buffer[offset + 3];		
+        int ch1 = buffer[offset];
+        int ch2 = buffer[offset + 1];
+        int ch3 = buffer[offset + 2];
+        int ch4 = buffer[offset + 3];
+        return ((ch1 & 0xFF) << 24)
+	      | ((ch2 & 0xFF) << 16)
+	      | ((ch3 & 0xFF) << 8)
+	      | (ch4 & 0xFF);
 	}
 	
 	public static void writeInt(int c, byte [] buffer, int offset)
 	{
-		buffer[offset + 0] = (byte)(c % 256);
-        c = c >> 8;
-        buffer[offset + 1] = (byte)(c % 256);
-        c = c >> 8;
-        buffer[offset + 2] = (byte)(c % 256);
-        c = c >> 8;
-        buffer[offset + 3] = (byte)(c % 256);		
+		buffer[offset + 0] = (byte) ((c >>> 24) & 0xFF);
+        buffer[offset + 1] = (byte) ((c >>> 16) & 0xFF);
+        buffer[offset + 2] = (byte) ((c >>> 8) & 0xFF);
+        buffer[offset + 3] = (byte) ((c >>> 0) & 0xFF);		
 	}
 }
