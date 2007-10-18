@@ -248,29 +248,19 @@ public class WeakRefAtomCache implements HGAtomCache
 		phantomCleanupThread.end();	
 		while (phantomCleanupThread.isAlive() )
 			try { phantomCleanupThread.join(); } catch (InterruptedException ex) { }
-		for (Iterator<Map.Entry<HGPersistentHandle, PhantomHandle>> i = liveHandles.entrySet().iterator(); i.hasNext(); ) 
+		PhantomHandle.returnEnqueued.set(Boolean.TRUE);
+		for (Iterator<Map.Entry<HGPersistentHandle, PhantomHandle>> i = liveHandles.entrySet().iterator(); 
+			 i.hasNext(); ) 
 		{
 			PhantomHandle h = i.next().getValue();
-			Object x = h.getRef();
-			if (!h.isEnqueued())
+			Object x = h.fetchRef();
+			graph.getEventManager().dispatch(graph, new HGAtomEvictEvent(h, x));			
+			if (h.isEnqueued())
 			{
-				graph.getEventManager().dispatch(graph, new HGAtomEvictEvent(h, x));
-//				atoms.remove(x);
-//				i.remove();				
+				h.clear();
 			}
 		}
-		try
-		{
-			// Finish up with all reference that are currently enqueued.
-			PhantomHandle.returnEnqueued.set(Boolean.TRUE);
-			processRefQueue(); 
-			PhantomHandle.returnEnqueued.set(Boolean.FALSE);
-		}
-		catch (InterruptedException ex)
-		{
-			// nothing to do here really, perhaps report somewhere that we shouldn't be
-			// interrupted during this important procedure?
-		}		
+		PhantomHandle.returnEnqueued.set(Boolean.FALSE);
 		frozenAtoms.clear();		
 		incidenceCache.clear();
 		atoms.clear();
