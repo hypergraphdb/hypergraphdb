@@ -37,4 +37,20 @@ public class BAUtils
         buffer[offset + 2] = (byte) ((c >>> 8) & 0xFF);
         buffer[offset + 3] = (byte) ((c >>> 0) & 0xFF);		
 	}
+	
+	public static boolean eq(byte [] left, int leftPos, byte [] right, int rightPos, int size)
+	{
+		int i = leftPos, j = rightPos;
+		if (leftPos + size > left.length)
+			return false;
+		if (rightPos + size > right.length)
+			return false;
+		while (size > 0)
+		{
+			if (left[i++] != right[j++])
+				return false;
+			size--;
+		}
+		return true;
+	}
 }
