@@ -339,6 +339,35 @@ public class HGStore
 
     /**
      * <p>
+     * Retrieves an existing link in raw byte form. The returned byte array contains 
+     * the 16 byte UUID of the handles constituting the link.
+     * </p>
+     * 
+     * @param handle
+     * @return
+     */
+    public byte [] getLinkData(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.getLink called with a null handle.");
+        try
+        {
+            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+            DatabaseEntry value = new DatabaseEntry();
+            if (data_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+                return value.getData();
+            else
+                return null;
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to retrieve link with handle " + handle + 
+                                  ": " + ex.toString(), ex);
+        }
+    }
+    
+    /**
+     * <p>
      * Read a persistent handle array of size <code>n</code> out of a raw data buffer.
      * The buffer must contain at least <code>n</code> persistent handles starting 
      * at <code>offset</code>.
