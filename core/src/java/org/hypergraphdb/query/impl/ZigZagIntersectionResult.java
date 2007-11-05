@@ -2,6 +2,7 @@ package org.hypergraphdb.query.impl;
 
 import java.util.NoSuchElementException;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -26,11 +27,21 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 	
 	private Object advance()
 	{
+		boolean use_next = true;
 		while (true)
 		{
-			if (!left.hasNext() || !right.hasNext())
+			if (!left.hasNext() && use_next || !right.hasNext())
 				return null;
-			Object x = left.next();
+			Object x;
+			if (use_next)
+			{
+				x = left.next();
+			}
+			else
+			{
+				x = left.current();
+				use_next = true;
+			}
 			switch (right.goTo(x, false))
 			{
 				case found: 
@@ -39,8 +50,10 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 				}
 				case close:
 				{
-//					if (right.hasPrev())
-//						right.prev();
+					if (right.hasPrev())
+						right.prev();
+					else
+						use_next = false; // this happens when we've moved to the 1st element of the set.
 					swap();		
 					break;
 				}
@@ -164,5 +177,5 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 	public void remove() 
 	{
 		throw new UnsupportedOperationException();		
-	}
+	}	
 }

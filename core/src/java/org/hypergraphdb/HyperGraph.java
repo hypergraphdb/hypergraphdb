@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
 
-//import org.hypergraphdb.cache.DefaultAtomCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.DefaultLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -1998,7 +1997,7 @@ public /*final*/ class HyperGraph
     {
     	systemAttributesDB.removeAllEntries(handle);
     	systemAttributesDB.addEntry(handle, attribs);
-    }    
+    }
     
     private void removeAtomAttributes(HGPersistentHandle handle)
     {

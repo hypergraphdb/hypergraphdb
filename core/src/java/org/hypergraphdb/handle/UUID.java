@@ -300,6 +300,8 @@ class UUID
     */
    public byte[] asByteArray()
    {
+	   // we need to copy mostly for cases when the byte array is passed as a search key/data
+	   // to BerkleyDB since it uses the buffer to write the value of the closest match.
        byte[] result = new byte[16];
        toByteArray(result);
        return result;

@@ -1,4 +1,4 @@
-486181ea-7121-11da-a5ed-d76291339024 org.hypergraphdb.type.HGHandleType org.hypergraphdb.HGHandle org.hypergraphdb.HGPersistentHandle org.hypergraphdb.handle.HGLiveHandle org.hypergraphdb.handle.UUIDPersistentHandle
+486181ea-7121-11da-a5ed-d76291339024 org.hypergraphdb.type.HGHandleType org.hypergraphdb.HGHandle org.hypergraphdb.HGPersistentHandle org.hypergraphdb.handle.HGLiveHandle org.hypergraphdb.handle.UUIDPersistentHandle org.hypergraphdb.handle.PhantomHandle
 ab8854fb-0d34-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.ByteType java.lang.Byte
 66f68f3c-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.CharType java.lang.Character
 91de4b2d-0d45-11da-ac60-932fd7ea200d org.hypergraphdb.type.javaprimitive.BooleanType java.lang.Boolean

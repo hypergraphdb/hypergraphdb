@@ -97,14 +97,24 @@ public class SingleValueResultSet extends IndexResultSet
     	try
     	{
     		if (exactMatch)
-    			return ((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
-    					GotoResult.found : GotoResult.nothing;
+    		{
+    			if (((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(pkey.getData());
+    				return GotoResult.found; 
+    			}
+    			else
+    				return GotoResult.nothing;
+    		}
     		else
     		{
     			byte [] save = new byte[pkey.getData().length];
     			System.arraycopy(pkey.getData(), 0, save, 0, save.length);    		
-    			if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    			if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(pkey.getData());
     				return HGUtils.eq(save, pkey.getData()) ? GotoResult.found : GotoResult.close;
+    			}
     			else
     				return GotoResult.nothing;     			
     		}

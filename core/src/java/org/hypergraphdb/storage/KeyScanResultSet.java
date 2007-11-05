@@ -89,14 +89,24 @@ public class KeyScanResultSet extends IndexResultSet
     	try
     	{
     		if (exactMatch)
-    			return cursor.getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
-    				   GotoResult.found : GotoResult.nothing;
+    		{
+    			if (cursor.getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(key.getData());
+    				return GotoResult.found;
+    			}
+    			else
+    				return GotoResult.nothing;
+    		}
     		else 
     		{
     			byte [] save = new byte[key.getData().length];
     			System.arraycopy(key.getData(), 0, save, 0, save.length);    		
-    			if (cursor.getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    			if (cursor.getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(key.getData());    				
     				return HGUtils.eq(save, key.getData()) ? GotoResult.found : GotoResult.close;
+    			}
     			else
     				return GotoResult.nothing;    			
     		}

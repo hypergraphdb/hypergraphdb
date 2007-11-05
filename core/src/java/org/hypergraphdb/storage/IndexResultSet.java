@@ -107,6 +107,17 @@ abstract class IndexResultSet implements HGRandomAccessResult
 	    }
     }
 
+    protected void positionToCurrent(byte [] data)
+    {
+		current = converter.fromByteArray(data);
+        next = advance();
+        if (next != null)
+        	back();
+        prev = back();
+        if (prev != null)
+        	advance();    	
+    }
+    
     public GotoResult goTo(Object value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
@@ -114,14 +125,24 @@ abstract class IndexResultSet implements HGRandomAccessResult
     	try
     	{
     		if (exactMatch)
-    			return cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS ?
-    				   GotoResult.found : GotoResult.nothing;
+    		{
+    			if (cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(data.getData());
+    				return GotoResult.found; 
+    			}
+    			else
+    				return GotoResult.nothing;
+    		}
     		else 
     		{
     			byte [] save = new byte[data.getData().length];
     			System.arraycopy(data.getData(), 0, save, 0, save.length);    		
-    			if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)    		
+    			if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			{
+    				positionToCurrent(data.getData());
     				return HGUtils.eq(save, data.getData()) ? GotoResult.found : GotoResult.close;
+    			}    				
     			else
     				return GotoResult.nothing;
     		}
