@@ -275,15 +275,49 @@ public class HGTypeSystem
     	}
     }
 
+    /**
+     * <p>
+     * 
+     * </p>
+     * 
+     * @param handle
+     * @param clazz
+     */
+    public void defineTypeAtom(final HGPersistentHandle handle, final Class clazz)
+    {
+    	if (hg.getTransactionManager().getContext().getCurrent() != null)
+    	{
+    		hg.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+            classToAtomType.put(clazz, handle);        
+            getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));    		
+    		HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
+        	if (!h.equals(handle))
+        		throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
+
+    	}
+    	else
+    		hg.getTransactionManager().transact(new Callable<HGHandle>() { 
+    		public HGHandle call() 
+    		{ 
+        		hg.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+                classToAtomType.put(clazz, handle);        
+                getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));    		        		
+    			HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
+            	if (!h.equals(handle))
+            		throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
+            	return h;
+    		} });    	
+    }
+    
     HGHandle defineNewJavaType(final Class clazz)
     {
     	try
     	{
 	    	if (hg.getTransactionManager().getContext().getCurrent() != null)
-	    		return defineNewJavaTypeTransaction(clazz);
+	    		return makeNewJavaType(clazz);
 	    	else
 	    		return hg.getTransactionManager().transact(new Callable<HGHandle>() 
-	    		    	{ public HGHandle call() { return defineNewJavaTypeTransaction(clazz); } });
+	    		    	{ public HGHandle call() { return makeNewJavaType(clazz); } });
     	}
     	catch (RuntimeException t)
     	{
@@ -292,12 +326,7 @@ public class HGTypeSystem
     	}
     }
     
-    /**
-     * We need to infer to HG type by introspection. We maintain the 
-     * full inheritence tree of Java class and interfaces. Therefore, for each
-     * newly added Java type mapping, we navigate to parent classes etc.
-     */    
-    HGHandle defineNewJavaTypeTransaction(Class clazz)
+    HGHandle makeNewJavaType(Class clazz)
     {
     	//
     	// First, create a dummy type for the class, so that recursive type
@@ -306,7 +335,16 @@ public class HGTypeSystem
         HGHandle newHandle = hg.add(clazz, NULLTYPE_PERSISTENT_HANDLE);
         classToAtomType.put(clazz, newHandle);        
         getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(newHandle));
-        
+        return defineNewJavaTypeTransaction(newHandle, clazz);
+    }
+    
+    /**
+     * We need to infer to HG type by introspection. We maintain the 
+     * full inheritence tree of Java class and interfaces. Therefore, for each
+     * newly added Java type mapping, we navigate to parent classes etc.
+     */    
+    HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class clazz)
+    {        
         //
         // Next, create a HyperGraph type matching the Java class.
         //              

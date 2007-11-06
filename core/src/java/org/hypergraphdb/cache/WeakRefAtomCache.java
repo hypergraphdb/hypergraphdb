@@ -152,11 +152,15 @@ public class WeakRefAtomCache implements HGAtomCache
 			HGLiveHandle result = new TempLiveHandle(atom, pHandle, flags);
 			atoms.put(atom, result);
 			return result;
-		}
-		PhantomHandle h = new PhantomHandle(atom, pHandle, flags, refQueue);
+		}		
 		lock.writeLock().lock();
+		PhantomHandle h = null;
 		try
-		{
+		{			
+			h = liveHandles.get(pHandle);
+			if (h != null)
+				return h;
+			h = new PhantomHandle(atom, pHandle, flags, refQueue);			
 			atoms.put(atom, h);
 			liveHandles.put(pHandle, h);
 		}
@@ -179,15 +183,19 @@ public class WeakRefAtomCache implements HGAtomCache
 			atoms.put(atom, result);
 			return result;
 		}
-		PhantomManagedHandle h = new PhantomManagedHandle(atom, 
-														  pHandle, 
-														  flags, 
-														  refQueue,
-														  retrievalCount,
-														  lastAccessTime);
+		PhantomManagedHandle h = null;
 		lock.writeLock().lock();
 		try
 		{
+			h = (PhantomManagedHandle)liveHandles.get(pHandle);
+			if (h != null)
+				return h;
+			h = new PhantomManagedHandle(atom, 
+										 pHandle, 
+										 flags, 
+										 refQueue,
+										 retrievalCount,
+										 lastAccessTime);
 			atoms.put(atom, h);
 			liveHandles.put(pHandle, h);
 		}

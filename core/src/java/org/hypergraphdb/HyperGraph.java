@@ -1215,10 +1215,13 @@ public /*final*/ class HyperGraph
 	    			attribs.retrievalCount = ((HGManagedLiveHandle)lHandle).getRetrievalCount();
 	    		}    		
 	    		cache.remove(lHandle);
-	    		if (managed)
-	    			cache.atomRead(pHandle, instance, (byte)flags, 0 /* attribs.retrievalCount */, attribs.lastAccessTime);
-	    		else
-	    			cache.atomRead(pHandle, instance, (byte)flags);
+	    		if (instance != null)
+	    		{
+		    		if (managed)
+		    			cache.atomRead(pHandle, instance, (byte)flags, 0 /* attribs.retrievalCount */, attribs.lastAccessTime);
+		    		else
+		    			cache.atomRead(pHandle, instance, (byte)flags);
+	    		}
 	    	}
 	    	return null;
     	}});
