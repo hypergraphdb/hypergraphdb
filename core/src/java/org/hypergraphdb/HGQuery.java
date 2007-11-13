@@ -157,10 +157,10 @@ public abstract class HGQuery
     	 * @param condition The query condition.
     	 * @return
     	 */
-    	public static Object getOne(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> T getOne(HyperGraph graph, HGQueryCondition condition)
     	{
     		HGHandle h = findOne(graph, condition);
-    		return h == null ? null : graph.get(h);
+    		return h == null ? null : (T)graph.get(h);
     	}
     	
     	/**
