@@ -18,6 +18,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGTypeSystem;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
@@ -76,7 +77,7 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
         this.hg = hg;
     }
     
-    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         HGPersistentHandle [] layout = hg.getStore().getLink(handle);
         HGAtomType labelType = hg.getTypeSystem().getAtomType(String.class);

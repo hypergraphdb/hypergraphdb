@@ -4,6 +4,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
@@ -29,7 +30,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
     public static final HGPersistentHandle HGHANDLE =
         HGHandleFactory.makeHandle("4e3c44ec-da21-11db-84d5-cf67a5f089dc");
  
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		EnumType result = new EnumType();
 		result.setHyperGraph(graph);

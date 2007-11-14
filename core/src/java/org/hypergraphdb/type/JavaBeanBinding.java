@@ -13,6 +13,7 @@ import java.lang.reflect.Constructor;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
 
@@ -41,7 +42,7 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
     	hgType.setThisHandle(typeHandle);
     }
 
-    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         Object bean = null;
         try

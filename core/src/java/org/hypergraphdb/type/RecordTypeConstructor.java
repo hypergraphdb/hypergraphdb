@@ -10,6 +10,7 @@ package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -24,7 +25,7 @@ import org.hypergraphdb.LazyRef;
 public class RecordTypeConstructor extends HGAtomTypeBase
 {
 
-    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         RecordType result = new RecordType();
         result.setHyperGraph(graph);

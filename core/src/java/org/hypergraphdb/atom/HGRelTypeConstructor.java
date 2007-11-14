@@ -7,6 +7,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
@@ -60,7 +61,7 @@ public class HGRelTypeConstructor extends HGAtomTypeBase
         return valueIndex;
     }
     
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		HGAtomType sType = graph.getTypeSystem().getAtomType(String.class);
 		String name = (String)sType.make(handle, null, null);

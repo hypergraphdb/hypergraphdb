@@ -12,6 +12,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -34,7 +35,7 @@ public class CollectionTypeConstructor implements HGAtomType
 		this.hg = hg;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		CollectionType result = null;
 		String className = new String(hg.getStore().getData(handle));

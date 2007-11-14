@@ -11,6 +11,7 @@ package org.hypergraphdb.type;
 import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -61,7 +62,7 @@ public interface HGAtomType extends HGGraphHolder
      * In case the <code>handle</code> points to an invalid instance (inexisting or with
      * a erronous layout), the method should throw a <code>HGException</code>.
      */
-    Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet);
+    Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet);
     
     /**
      * <p>Store a run-time instance of a hypergraph atom into the hypergraph <code>HGStore</code>

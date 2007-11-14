@@ -16,6 +16,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 
@@ -62,7 +63,7 @@ public class ArrayType implements HGAtomType {
 		this.hg = hg;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) {
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) {
 		HGPersistentHandle[] layout = hg.getStore().getLink(handle);
 		Object[] result;
 		if (targetSet == null || targetSet.deref().length == 0)

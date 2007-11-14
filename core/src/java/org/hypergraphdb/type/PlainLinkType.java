@@ -13,6 +13,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 public class PlainLinkType implements HGAtomType 
@@ -24,7 +25,7 @@ public class PlainLinkType implements HGAtomType
 		this.hg = hg;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		return new HGPlainLink(targetSet.deref());
 	}

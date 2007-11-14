@@ -16,6 +16,7 @@ import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.event.HGListener;
@@ -123,7 +124,7 @@ public class AtomRefType implements HGAtomType, HGSearchable
 		hg.getEventManager().addListener(HGAtomRemoveRequestEvent.class, removalListener);
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		byte [] data = hg.getStore().getData(handle);
 		HGAtomRef.Mode mode = HGAtomRef.Mode.get(data[MODE_OFFSET]);

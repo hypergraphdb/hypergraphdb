@@ -19,6 +19,7 @@ import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGOrderedSearchable;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
@@ -166,7 +167,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
         }
     }
 
-    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {                 
         byte [] asBytes = hg.getStore().getData(handle);
         if (asBytes == null)

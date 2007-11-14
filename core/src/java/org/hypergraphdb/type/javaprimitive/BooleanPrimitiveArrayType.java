@@ -11,6 +11,7 @@ package org.hypergraphdb.type.javaprimitive;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -25,7 +26,7 @@ import org.hypergraphdb.LazyRef;
  */
 public class BooleanPrimitiveArrayType extends PrimitiveArrayType 
 {
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		byte [] data = hg.getStore().getData(handle);
 		if (data == null)

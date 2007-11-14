@@ -14,6 +14,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -66,7 +67,7 @@ public class JavaAbstractBeanBinding implements HGCompositeType
 		return new BeanPropertyBasedProjection(hgType.getProjection(dimensionName));
 	}
     
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		throw new HGException("Cannot create a run-time instance of a HGAbstractType.");
 	}

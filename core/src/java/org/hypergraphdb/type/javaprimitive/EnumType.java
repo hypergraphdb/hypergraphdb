@@ -3,6 +3,7 @@ package org.hypergraphdb.type.javaprimitive;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
@@ -30,7 +31,7 @@ public class EnumType extends HGAtomTypeBase
 		this.enumType = enumType;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		// ignore target set...
 		HGPersistentHandle [] layout = graph.getStore().getLink(handle);

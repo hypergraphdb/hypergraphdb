@@ -3,6 +3,7 @@ package org.hypergraphdb.type;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 /**
@@ -30,7 +31,7 @@ public class TextType extends HGAtomTypeBase
 	public static final HGPersistentHandle HGHANDLE = 
 		HGHandleFactory.makeHandle("9e821fcb-de41-11db-8f74-836f1a2faea9");
 	
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		if (HGHandleFactory.nullHandle().equals(handle))
 			return null;

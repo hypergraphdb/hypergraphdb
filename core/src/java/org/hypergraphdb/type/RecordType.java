@@ -14,6 +14,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
@@ -141,7 +142,7 @@ public class RecordType implements HGCompositeType
         this.graph = hg;
     }
    
-    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet)
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         Record result = null;
         if (targetSet != null && targetSet.deref().length > 0)

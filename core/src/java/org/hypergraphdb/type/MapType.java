@@ -15,6 +15,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 public class MapType implements HGAtomType 
@@ -37,7 +38,7 @@ public class MapType implements HGAtomType
 		this.hg = hg;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		Map<Object, Object> result;
 		if (targetSet == null || targetSet.deref().length == 0)
