@@ -14,6 +14,7 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAUtils;
 
 /**
@@ -59,6 +60,18 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 	public HGHandle [] targets()
 	{
 		return targetSet;
+	}
+	
+	public void setTarget(int pos, HGHandle newTarget)
+	{
+		targetSet[pos] = newTarget;
+		byte [] B;
+		if (newTarget instanceof HGPersistentHandle)
+			B = ((HGPersistentHandle)newTarget).toByteArray();
+		else
+			B = ((HGLiveHandle)newTarget).getPersistentHandle().toByteArray();
+		if (targetsBuffer != null)
+			System.arraycopy(B, 0, targetsBuffer, B.length*pos, B.length);
 	}
 	
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
