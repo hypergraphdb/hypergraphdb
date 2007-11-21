@@ -14,6 +14,7 @@ import java.util.List;
 import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
+import org.hypergraphdb.util.CompositeMapping;
 import org.hypergraphdb.util.Mapping;
 
 /**
@@ -42,7 +43,7 @@ public abstract class HGQuery
 		return new ExpressionBasedQuery(hg, condition);
 	}
 
-	public abstract HGSearchResult execute();
+	public abstract <T> HGSearchResult<T> execute();
     
     /**
      * <p>
@@ -119,10 +120,10 @@ public abstract class HGQuery
         }
         public static HGQueryCondition not(HGAtomPredicate c) { return new Not(c); }
         
-        public static HGQueryCondition incident(HGHandle h) { return new IncidentCondition(h); }
-        public static HGQueryCondition link(HGHandle...h) { return new LinkCondition(h); }
-        public static HGQueryCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
-        public static HGQueryCondition arity(int i) { return new ArityCondition(i); }
+        public static IncidentCondition incident(HGHandle h) { return new IncidentCondition(h); }
+        public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
+        public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
+        public static ArityCondition arity(int i) { return new ArityCondition(i); }
        
         public static HGQueryCondition value(Object value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
         public static HGQueryCondition eq(Object x) { return value(x, ComparisonOperator.EQ); }
@@ -141,6 +142,7 @@ public abstract class HGQuery
         public static HGQueryCondition apply(Mapping m, HGQueryCondition c) { return new MapCondition(c, m); }
         public static Mapping linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
         public static Mapping deref(HyperGraph graph) { return new DerefMapping(graph); }
+        public static Mapping targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
         
         //
@@ -243,6 +245,23 @@ public abstract class HGQuery
     		{
     			if (rs != null) rs.close();
     		}      		
-    	}     	
+    	}
+    	
+    	public static <T> List<T> findAll(HGQuery query)
+    	{
+    		ArrayList<T> result = new ArrayList<T>();
+    		HGSearchResult<T> rs = null;
+    		try
+    		{
+    			rs = query.execute();
+    			while (rs.hasNext())
+    				result.add(rs.next());
+    			return result;
+    		}
+    		finally
+    		{
+    			if (rs != null) rs.close();
+    		}      		
+    	}    	
     }
 }

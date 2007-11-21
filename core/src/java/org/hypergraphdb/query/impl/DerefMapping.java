@@ -4,7 +4,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.Mapping;
 
-public class DerefMapping implements Mapping
+public final class DerefMapping implements Mapping
 {
 	private HyperGraph graph;
 	

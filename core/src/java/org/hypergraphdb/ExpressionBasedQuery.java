@@ -349,6 +349,7 @@ class ExpressionBasedQuery extends HGQuery
 				MapCondition mc = (MapCondition)c;
 				QueryMetaData qmd = toQueryMap.get(mc.getCondition().getClass()).getMetaData(hg, mc.getCondition());
 				qmd.randomAccess = false;
+				qmd.ordered = false; // should we have an order preserving mapping?
 				return qmd;
 			}
 		});

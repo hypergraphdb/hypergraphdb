@@ -3,7 +3,7 @@ package org.hypergraphdb.query.impl;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.util.Mapping;
 
-public class LinkProjectionMapping implements Mapping
+public final class LinkProjectionMapping implements Mapping
 {
 	private int targetPosition;
 	

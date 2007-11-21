@@ -50,10 +50,7 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 				}
 				case close:
 				{
-					if (right.hasPrev())
-						right.prev();
-					else
-						use_next = false; // this happens when we've moved to the 1st element of the set.
+					use_next = false; 
 					swap();		
 					break;
 				}
