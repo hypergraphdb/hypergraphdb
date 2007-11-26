@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" output="core/build" path="core/src/config"/>
 	<classpathentry kind="src" output="apps/build/tm" path="apps/tm/src/java"/>
-	<classpathentry kind="src" output="apps/build/xsd" path="apps/xsd/src/java"/>
 	<classpathentry kind="src" output="apps/build/management" path="apps/management/src/java"/>
 	<classpathentry kind="src" output="viewer/build" path="viewer/src/java"/>
 	<classpathentry kind="src" output="apps/build/wordnet" path="apps/wordnet/src/java"/>
