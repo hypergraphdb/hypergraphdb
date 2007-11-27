@@ -14,6 +14,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.ReadyRef;
+import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -102,9 +103,11 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
             for (int i = 2; i < layout.length; i++)
             	targets[i-2] = layout[i];
 			type = layout[0];
+			TypeUtils.initiateAtomConstruction(hg, layout[1]);
 			atom = hg.getTypeSystem().getType(type).make(layout[1], 
 														 new ReadyRef<HGHandle[]>(targets), 
 														 null);
+			TypeUtils.atomConstructionComplete(hg, layout[1]);
 		}
 		
 		if (atom == null)

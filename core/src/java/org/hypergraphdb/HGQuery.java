@@ -101,6 +101,8 @@ public abstract class HGQuery
     {
         public static HGQueryCondition type(HGHandle h) { return new AtomTypeCondition(h); }
         public static HGQueryCondition type(Class c) { return new AtomTypeCondition(c); }
+        public static HGQueryCondition typePlus(HGHandle h) { return new TypePlusCondition(h); }
+        public static HGQueryCondition typePlus(Class c) { return new TypePlusCondition(c); }        
         public static HGQueryCondition subsumes(HGHandle h) { return new SubsumesCondition(h); }
         public static HGQueryCondition subsumed(HGHandle h) { return new SubsumedCondition(h); }
         

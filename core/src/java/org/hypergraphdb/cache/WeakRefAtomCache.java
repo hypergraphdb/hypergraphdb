@@ -1,6 +1,7 @@
 package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,16 +45,16 @@ public class WeakRefAtomCache implements HGAtomCache
 {	
 	private HyperGraph graph = null;
 	
-	private SoftHashMap<HGPersistentHandle, HGHandle[]> incidenceCache = 
+	private Map<HGPersistentHandle, HGHandle[]> incidenceCache = 
 		new SoftHashMap<HGPersistentHandle, HGHandle[]>();
 	
-    private final HashMap<HGPersistentHandle, PhantomHandle> 
+    private final Map<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
 		
-	private WeakHashMap<Object, HGLiveHandle> atoms = 
-		new WeakHashMap<Object, HGLiveHandle>();
+	private Map<Object, HGLiveHandle> atoms = 
+		Collections.synchronizedMap(new WeakHashMap<Object, HGLiveHandle>());
 	
-	private IdentityHashMap<HGLiveHandle, Object> frozenAtoms = 
+	private Map<HGLiveHandle, Object> frozenAtoms = 
 		new IdentityHashMap<HGLiveHandle, Object>();
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
@@ -101,7 +102,7 @@ public class WeakRefAtomCache implements HGAtomCache
 				lock.writeLock().unlock();
 			}
 			ref.clear();
-			synchronized (ref) { ref.notifyAll(); }
+			synchronized (ref) { ref.notifyAll(); }			
 			ref = (PhantomHandle)refQueue.poll();
 		}
 	}
@@ -123,6 +124,11 @@ public class WeakRefAtomCache implements HGAtomCache
 	        	{
 	                Thread.currentThread().interrupt();
 	            }
+	        	catch (Throwable t)
+	        	{
+	        		System.err.println("PhantomCleanup thread caught an unexpected exception, stack trace follows:");
+	        		t.printStackTrace(System.err);
+	        	}
 	        }
 			PhantomHandle.returnEnqueued.set(Boolean.FALSE);
 	    }
@@ -136,6 +142,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public WeakRefAtomCache()
 	{
 		phantomCleanupThread.start();
+		phantomCleanupThread.setPriority(Thread.MAX_PRIORITY);
 	}
 	
 	public void setHyperGraph(HyperGraph hg) 

@@ -103,11 +103,11 @@ public final class TypeUtils
 	}
 	
 	// ------------------------------------------------------------------------
-	// The following part deal solely with the management of circular references
+	// The following part deals solely with the management of circular references
 	// during storage and retrieval of aggregate values. Type implementations
-	// would normally use those utility methods to track ciruclar references.
+	// would normally use those utility methods to track circular references.
 	//
-	// The implementatio is straightforward: two maps and a set are maintained:
+	// The implementation is straightforward: two maps and a set are maintained:
 	//
 	// - JAVA_REF_MAP maps pure Java references (Objects) to HGPersistentHandles.
 	//   It is used during storage of aggregate values. It is attached to the 
@@ -120,7 +120,7 @@ public final class TypeUtils
 	// - HANDLE_REF_SET contains the set of value handles that are being released.
 	//   It is attached to the current transaction as an attribute.
 	//
-	// In all cases, type implementations are expected to consult the relevent
+	// In all cases, type implementations are expected to consult the relevant
 	// map in order to see whether the operation (read, write, remove) has already been
 	// performed in the current context (transaction write or thread-local read).
 	//
@@ -135,7 +135,7 @@ public final class TypeUtils
 	// (a JavaBeanBinding) to the underlying type (RecordType) to finally the 
 	// TypeUtils.getNewHandleFor method. The interface WrappedRuntimeInstance was
 	// created to solve this issue. Couldn't find a more elegant way that doesn't
-	// involve chaning the HGAtomType interface. The problem is that it is the
+	// involve changing the HGAtomType interface. The problem is that it is the
 	// responsibility of the HGAtomType.store method to create the handle of the 
 	// value. But RecordType.store is called with a Record instance, not a bean
 	// instance and therefore cannot do the mapping Object->HGPersistentHandle 
@@ -218,6 +218,10 @@ public final class TypeUtils
 		return result;
 	}
 	
+	public static void initiateAtomConstruction(HyperGraph graph, HGPersistentHandle h)
+	{
+	}
+	
 	public static void setValueFor(HyperGraph hg, HGPersistentHandle h, Object value)
 	{
 		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap();
@@ -236,4 +240,10 @@ public final class TypeUtils
 		}
 		return result;
 	}
+	
+	public static void atomConstructionComplete(HyperGraph graph, HGPersistentHandle h)
+	{
+		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap();
+		refMap.clear();
+	}	
 }

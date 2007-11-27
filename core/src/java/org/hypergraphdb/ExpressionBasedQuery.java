@@ -77,6 +77,25 @@ class ExpressionBasedQuery extends HGQuery
 				return x;
 			}			
 		});
+		toQueryMap.put(TypePlusCondition.class, new ConditionToQuery()
+		{
+			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			{
+				TypePlusCondition ac = (TypePlusCondition)c;
+				Or orCondition = new Or();
+                for (HGHandle h : ac.getSubTypes(hg))
+                	orCondition.add(new AtomTypeCondition(h));
+                return toQueryMap.get(Or.class).getQuery(hg, orCondition);
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				TypePlusCondition ac = (TypePlusCondition)c;
+				Or orCondition = new Or();
+                for (HGHandle h : ac.getSubTypes(hg))
+                	orCondition.add(new AtomTypeCondition(h));
+                return toQueryMap.get(Or.class).getMetaData(hg, orCondition);
+			}			
+		});		
 		toQueryMap.put(TypedValueCondition.class, new ConditionToQuery()
 		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)

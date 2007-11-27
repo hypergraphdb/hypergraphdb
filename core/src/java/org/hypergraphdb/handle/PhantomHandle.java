@@ -139,7 +139,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 	{
 	}
 	
-	public final int hashCode()
+/*	public final int hashCode()
 	{
 		return persistentHandle.hashCode(); 
 	}
@@ -152,7 +152,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
             return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
         else
         	return persistentHandle.equals((HGPersistentHandle)other);		
-	}
+	} */
 	
 	public String toString()
 	{

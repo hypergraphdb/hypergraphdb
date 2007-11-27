@@ -1438,7 +1438,8 @@ public /*final*/ class HyperGraph
 	        IncidenceSetRef isref = new IncidenceSetRef(persistentHandle, HyperGraph.this);
 	        
 	        HGAtomType type = typeSystem.getType(typeHandle);
-	        if (link.length == 2)
+	        TypeUtils.initiateAtomConstruction(HyperGraph.this, valueHandle);
+	        if (link.length == 2)	        	
 	            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
 	        else
 	        {
@@ -1467,7 +1468,7 @@ public /*final*/ class HyperGraph
 	            if (! (instance instanceof HGLink))
 	                instance = new HGValueLink(instance, targets);
 	        }
-	        
+	        TypeUtils.atomConstructionComplete(HyperGraph.this, valueHandle);
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {
@@ -1705,9 +1706,11 @@ public /*final*/ class HyperGraph
     		for (int i = 2; i < layout.length; i++)
     			targetSet[i - 2] = layout[i];
     	}
+    	TypeUtils.initiateAtomConstruction(HyperGraph.this, layout[1]);
     	Object result = type.make(layout[1], 
     							  new ReadyRef<HGHandle[]>(targetSet), 
     							  new IncidenceSetRef(atomHandle, this));
+    	TypeUtils.atomConstructionComplete(HyperGraph.this, layout[1]);
         if (targetSet.length > 0 && ! (result instanceof HGLink))
             result = new HGValueLink(result, targetSet);
         if (result instanceof HGAtomType)
