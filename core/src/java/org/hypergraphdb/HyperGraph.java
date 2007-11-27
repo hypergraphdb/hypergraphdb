@@ -25,6 +25,7 @@ import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
 import org.hypergraphdb.util.HGLogger;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Pair;
 
 /**
  * <p>
@@ -605,10 +606,12 @@ public /*final*/ class HyperGraph
         else
             persistentHandle = (HGPersistentHandle)handle;
         
-        liveHandle = loadAtom(persistentHandle, liveHandle);
+        Pair<HGLiveHandle, Object> loaded = loadAtom(persistentHandle, liveHandle);                
         
-        if (liveHandle == null)
+        if (loaded == null)
         	return null; // TODO: perhaps we should throw an exception here, but a new type, e.g. HGInvalidHandleException?
+        
+        liveHandle = loaded.getFirst();
         
         //
         // If the incidence set of the newly fetched atom is already loaded,
@@ -642,9 +645,9 @@ public /*final*/ class HyperGraph
             }
         }
         
-        eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, liveHandle.getRef()));
+        eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));
         
-        return liveHandle.getRef();
+        return loaded.getSecond();
     }
 
     /**
@@ -1410,10 +1413,18 @@ public /*final*/ class HyperGraph
         }
     }
     
-    private HGLiveHandle loadAtom(final HGPersistentHandle persistentHandle,  final HGLiveHandle liveHandle)    
+    /**
+     * Loads an atom from storage. Returns a pair of (live handle, run-time instance) because the instance may very
+     * well get GC-ed before we even have the change to return it in the 'get' method above!
+     *  
+     * @param persistentHandle
+     * @param liveHandle
+     * @return
+     */
+    private Pair<HGLiveHandle, Object> loadAtom(final HGPersistentHandle persistentHandle,  final HGLiveHandle liveHandle)    
     {
-    	return getTransactionManager().transact(new Callable<HGLiveHandle>() 
- 	    { public HGLiveHandle call() {
+    	return getTransactionManager().transact(new Callable<Pair<HGLiveHandle, Object>>() 
+ 	    { public Pair<HGLiveHandle, Object> call() {
 	        Object instance;        
 	        HGPersistentHandle [] link = store.getLink(persistentHandle);
 	        
@@ -1432,7 +1443,7 @@ public /*final*/ class HyperGraph
 	        if (typeHandle.equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
 	        {
 	        	HGLiveHandle result = typeSystem.loadPredefinedType(persistentHandle); 
-	        	return result;
+	        	return new Pair<HGLiveHandle, Object>(result, result.getRef());
 	        }
 	        
 	        IncidenceSetRef isref = new IncidenceSetRef(persistentHandle, HyperGraph.this);
@@ -1495,7 +1506,7 @@ public /*final*/ class HyperGraph
 	    	if (instance instanceof HGGraphHolder)
 	    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
 	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));  
-	        return result;
+	        return new Pair<HGLiveHandle, Object>(result, instance);
     	}});
     }
     

@@ -52,7 +52,7 @@ public class WeakRefAtomCache implements HGAtomCache
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
 		
 	private Map<Object, HGLiveHandle> atoms = 
-		Collections.synchronizedMap(new WeakHashMap<Object, HGLiveHandle>());
+		new WeakHashMap<Object, HGLiveHandle>();
 	
 	private Map<HGLiveHandle, Object> frozenAtoms = 
 		new IdentityHashMap<HGLiveHandle, Object>();
