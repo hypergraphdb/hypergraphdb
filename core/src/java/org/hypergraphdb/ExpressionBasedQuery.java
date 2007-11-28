@@ -985,6 +985,7 @@ class ExpressionBasedQuery extends HGQuery
 								out.add(new AtomValueCondition(byTypedValue.getValue(), 
 															   byTypedValue.getOperator()));
 							}
+							out.remove(pc);
 							out.add(new IndexedPartCondition(typeHandle, idx, pc.getValue(), pc.getOperator()));
 						}
 					}			

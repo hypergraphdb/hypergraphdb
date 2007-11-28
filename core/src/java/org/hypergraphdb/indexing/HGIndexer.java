@@ -20,7 +20,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * <p>
  * Because indexers are stored as HyperGraphDB atoms, they must obey
  * the Java Beans conventions of having a default constructor and getter/setter
- * pair for each property that must recorded into storage.
+ * pair for each property that must be recorded into storage.
  * </p>
  * 
  * <p>

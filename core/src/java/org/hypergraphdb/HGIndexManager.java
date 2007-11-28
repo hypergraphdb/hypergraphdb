@@ -24,7 +24,7 @@ import org.hypergraphdb.storage.BAtoHandle;
  * </p>
  * <p>
  * Atom indexing in HyperGraph relies on the concept of a <code>HGIndexer</code>. Indexers
- * are always bound to an atom type. They are mainly responsible for producing an index <em>key</code> 
+ * are always bound to an atom type. They are mainly responsible for producing an index <em>key</em> 
  * given an atom instance. The index manager interacts with the <code>HGStore</code> to create
  * and update indices at the storage level based on an implementation of the <code>HGIndexer</code>
  * interface.    
@@ -252,6 +252,21 @@ public class HGIndexManager
 				result = getOrCreateIndex(indexer);
 		}
 		return result;
+	}
+
+	/**
+	 * <p>
+	 * Return all registered <code>HGIndexer</code>s for a given HyperGraph type.
+	 * </p>
+	 * 
+	 * @param type The <code>HGHandle</code> of the HyperGraph type whose indexers
+	 * are desired.
+	 * @return The list of indexers. May be <code>null</code> if no indexer is
+	 * currently registered for that type.
+	 */
+	public List<HGIndexer> getIndexersForType(HGHandle type)
+	{
+		return this.indexers.get(type);
 	}
 	
 	/**

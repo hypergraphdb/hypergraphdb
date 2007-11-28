@@ -331,34 +331,34 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                                   name + "' with a null key.");
         byte [] keyAsBytes = keyConverter.toByteArray(key);
         DatabaseEntry keyEntry = new DatabaseEntry(keyAsBytes);
-        DatabaseEntry value = new DatabaseEntry();        
-        HGRandomAccessResult result = null;
+        DatabaseEntry value = new DatabaseEntry();
         Cursor cursor = null;
         try
         {
             cursor = db.openCursor(txn(), null);
-            OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+            OperationStatus status = cursor.getSearchKeyRange(keyEntry, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-            {                
+            {       
+            	Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
                 if (!compare_equals)
                 {
-                    Comparator<byte[]> comparator = db.getConfig().getBtreeComparator(); 
-                    if (comparator.compare(keyAsBytes, keyEntry.getData()) == 0)
-                        if (lower_range)
-                            cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
-                        else
-                            cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
+                    if (lower_range)
+                        status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
+                    else if (comparator.compare(keyAsBytes, keyEntry.getData()) == 0)
+                    	status = cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
                 }
-                if (lower_range)
-                    result = new KeyRangeBackwardResultSet(cursor, keyEntry, valueConverter);
-                else
-                    result = new KeyRangeForwardResultSet(cursor, keyEntry, valueConverter);                    
+                else if (lower_range && comparator.compare(keyAsBytes, keyEntry.getData()) != 0)
+                	status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
             }
-            else 
-            {
+
+            if (status == OperationStatus.SUCCESS)
+	            if (lower_range)
+	                return new KeyRangeBackwardResultSet(cursor, keyEntry, valueConverter);
+	            else
+	                return new KeyRangeForwardResultSet(cursor, keyEntry, valueConverter);
+            else
                 try { cursor.close(); } catch (Throwable t) { }
                 return new SingleKeyResultSet();
-            }
         }
         catch (Exception ex)
         {
@@ -368,7 +368,6 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                                   name + "': " + ex.toString(), 
                                   ex);
         }
-        return result;          
     }
     
     public HGRandomAccessResult findGT(KeyType key)
