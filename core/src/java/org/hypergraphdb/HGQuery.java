@@ -178,9 +178,9 @@ public abstract class HGQuery
     	 * @param condition
     	 * @return
     	 */
-    	public static HGHandle findOne(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> T findOne(HyperGraph graph, HGQueryCondition condition)
     	{
-    		HGSearchResult<HGHandle> rs = null;
+    		HGSearchResult<T> rs = null;
     		try
     		{
     			rs = graph.find(condition);
