@@ -137,12 +137,17 @@ public class GraphClassics
 		
 	}
 	
-	public void prim()
+	public void prim(HGHandle start, 
+					 final HGALGenerator adjencyGenerator, 
+					 Mapping<HGHandle, Double> weight,
+					 Map<HGHandle, HGHandle> parentMatrix)
 	{
 		
 	}
 	
-	public void kruskall()
+	public void kruskall(Iterator<HGHandle> links,
+						 Mapping<HGHandle, Double> weight,
+						 Map<HGHandle, HGHandle> parentMatrix)
 	{
 		
 	}
