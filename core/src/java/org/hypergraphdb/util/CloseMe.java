@@ -1,4 +1,4 @@
-package org.hypergraphdb.query.impl;
+package org.hypergraphdb.util;
 
 public interface CloseMe
 {

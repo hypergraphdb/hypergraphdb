@@ -5,6 +5,7 @@ import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGAtomPredicate;
+import org.hypergraphdb.util.CloseMe;
 
 /**
  * 

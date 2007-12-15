@@ -17,6 +17,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.ArrayBasedIterator;
+import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.TempLink;
 
 /**
@@ -70,7 +71,7 @@ import org.hypergraphdb.util.TempLink;
  * 
  * @author Borislav Iordanov
  */
-public class DefaultALGenerator implements HGALGenerator 
+public class DefaultALGenerator implements HGALGenerator, CloseMe
 {
 	private HyperGraph hg;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);

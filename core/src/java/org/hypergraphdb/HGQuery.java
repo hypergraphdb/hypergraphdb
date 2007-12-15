@@ -129,17 +129,17 @@ public abstract class HGQuery
        
         public static HGQueryCondition value(Object value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
         public static HGQueryCondition eq(Object x) { return value(x, ComparisonOperator.EQ); }
-        public static HGQueryCondition lt(Object x) { return value(x, ComparisonOperator.LT); }        
-        public static HGQueryCondition gt(Object x) { return value(x, ComparisonOperator.GT); }
-        public static HGQueryCondition lte(Object x) { return value(x, ComparisonOperator.LTE); }
-        public static HGQueryCondition gte(Object x) { return value(x, ComparisonOperator.GTE); }
+        public static HGQueryCondition lt(Object x) { return value(x, ComparisonOperator.GT); }        
+        public static HGQueryCondition gt(Object x) { return value(x, ComparisonOperator.LT); }
+        public static HGQueryCondition lte(Object x) { return value(x, ComparisonOperator.GTE); }
+        public static HGQueryCondition gte(Object x) { return value(x, ComparisonOperator.LTE); }
         
         public static HGQueryCondition part(String path, Object value, ComparisonOperator op) {  return new AtomPartCondition(path.split("\\."), value, op); }
         public static HGQueryCondition eq(String path, Object x) { return part(path, x, ComparisonOperator.EQ); }
-        public static HGQueryCondition lt(String path, Object x) { return part(path, x, ComparisonOperator.LT); }        
-        public static HGQueryCondition gt(String path, Object x) { return part(path, x, ComparisonOperator.GT); }
-        public static HGQueryCondition lte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
-        public static HGQueryCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.GTE); }
+        public static HGQueryCondition lt(String path, Object x) { return part(path, x, ComparisonOperator.GT); }        
+        public static HGQueryCondition gt(String path, Object x) { return part(path, x, ComparisonOperator.LT); }
+        public static HGQueryCondition lte(String path, Object x) { return part(path, x, ComparisonOperator.GTE); }
+        public static HGQueryCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
         
         public static HGQueryCondition apply(Mapping m, HGQueryCondition c) { return new MapCondition(c, m); }
         public static Mapping linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
