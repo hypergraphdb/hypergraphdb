@@ -58,12 +58,12 @@ public class GraphClassics
 	 * @return The distance between <code>start</code> and <code>goal</code> or
 	 * <code>null</code> if <code>start</code> is unreachable from <code>goal</code>.
 	 */
-	public 	Double dijkstra(final HGHandle start, 
-		 			    	final HGHandle goal, 
-		 			    	final HGALGenerator adjencyGenerator,
-		 			    	Mapping<HGHandle, Double> weight,
-		 			    	Map<HGHandle, Double> distanceMatrix,
-		 			    	Map<HGHandle, HGHandle> predecessorMatrix)
+	public 	static Double dijkstra(final HGHandle start, 
+				 			       final HGHandle goal, 
+				 			       final HGALGenerator adjencyGenerator,
+				 			       Mapping<HGHandle, Double> weight,
+				 			       Map<HGHandle, Double> distanceMatrix,
+				 			       Map<HGHandle, HGHandle> predecessorMatrix)
 	{
 		final Map<HGHandle, Double> dm = 
 			distanceMatrix == null ? new HashMap<HGHandle, Double>() : distanceMatrix;		
@@ -96,13 +96,14 @@ public class GraphClassics
 				return dm.get(goal);
 			settled.add(a);
 			HGSearchResult<HGHandle> neighbors = adjencyGenerator.generate(a);
-			double weightCurrent = dm.get(a).doubleValue();
+			Double wcTemp = dm.get(a);
+			double weightCurrent = wcTemp == null ? 0.0 : wcTemp;
 			while (neighbors.hasNext())
 			{
 				HGHandle n = neighbors.next();
 				if (settled.contains(n))
 					continue;
-				Double weightN = distanceMatrix.get(n);
+				Double weightN = dm.get(n);
 				Double weightAN = weight.eval(adjencyGenerator.getCurrentLink());
 				if (weightN == null || 
 					weightN > weightCurrent + weightAN)

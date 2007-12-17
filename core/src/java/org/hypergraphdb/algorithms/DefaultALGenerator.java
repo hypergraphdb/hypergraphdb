@@ -31,8 +31,8 @@ import org.hypergraphdb.util.TempLink;
  * The adjency list generation process is conceptually split into two main steps:
  * 
  * <ol>
- * <li>Get the relevent links for the atom.</li>
- * <li>For each link, get the relevent members of its outgoing set.</li>
+ * <li>Get the relevant links for the atom.</li>
+ * <li>For each link, get the relevant members of its outgoing set.</li>
  * </ol>
  * 
  * In the simplest case, step 1 amounts to retrieving the incidence set of the focus atom
@@ -64,8 +64,8 @@ import org.hypergraphdb.util.TempLink;
  * </p>
  * 
  * <p>
- * All of the above mentionned options are configured at construction time. In the simplest case
- * of no link or sibling filtering and where links are undordered, use the <code>SimpleALGenerator</code>
+ * All of the above mentioned options are configured at construction time. In the simplest case
+ * of no link or sibling filtering and where links are unordered, use the <code>SimpleALGenerator</code>
  * instead which will be somewhat faster.
  * </p>
  * 
@@ -80,7 +80,8 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	private HGAtomPredicate siblingPredicate;
 	private boolean returnPreceeding = true, 
 				    returnSucceeding = true, 
-				    reverseOrder = false;
+				    reverseOrder = false,
+				    returnSource = false;
 	private AdjIterator currIterator = null;
 	
 	private class AdjIterator implements HGSearchResult<HGHandle>
@@ -91,6 +92,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		HGHandle current;
 		TargetSetIterator tsIter;
 		boolean closeResultSet;
+		int minArity = 2;
 		
 		//
 		// TargetSetIterator is used to iterate within the target set of a given link.
@@ -127,11 +129,13 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 					if (!focus_seen && h.equals(src))
 					{
 						focus_seen = true;
-						if (!returnSucceeding)
+						if (returnSource && siblingPredicate.satisfies(hg, h))
+							return;						
+						else if (!returnSucceeding)
 						{
 							pos = -1;
 							return;
-						}
+						}						
 					}
 					else if (siblingPredicate.satisfies(hg, h))
 						return;
@@ -155,7 +159,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				else if (!focus_seen && currLink.getTargetAt(pos).equals(src))
 				{
 					focus_seen = true;
-					if (!returnSucceeding || ++pos == currLink.getArity())
+					if (returnSource)
+						return;
+					else if (!returnSucceeding || ++pos == currLink.getArity())
 						pos = -1;
 				}
 			}
@@ -167,20 +173,27 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				if (!returnPreceeding)
 				{
 					while (!currLink.getTargetAt(pos++).equals(src));
-					if (pos == currLink.getArity())
+					focus_seen = true;
+					if (returnSource && 
+						(siblingPredicate == null || siblingPredicate.satisfies(hg, src)))
+					{
+						pos--;
+						return;
+					}
+					else if (pos == currLink.getArity())
 					{
 						pos = -1;
 						return;
 					}
-					else
-						focus_seen = true;					
 				}
 				if (siblingPredicate != null)
 					filter();		
 				else if (!focus_seen && currLink.getTargetAt(pos).equals(src))
 				{
 					focus_seen = true;
-					if (!returnSucceeding)
+					if (returnSource && (siblingPredicate == null || siblingPredicate.satisfies(hg, src)))
+						return;
+					else if (!returnSucceeding)
 					{
 						pos = -1;
 						return;
@@ -203,7 +216,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 					if (!focus_seen && h.equals(src))
 					{
 						focus_seen = true;
-						if (!returnSucceeding)
+						if (returnSource && siblingPredicate.satisfies(hg, src))
+							return;
+						else if (!returnSucceeding)
 						{
 							pos = -1;
 							return;
@@ -225,17 +240,23 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				if (!returnPreceeding)
 				{
 					while (!currLink.getTargetAt(pos--).equals(src));
-					if (pos == -1)
+					focus_seen = true;
+					if (returnSource && (siblingPredicate == null || siblingPredicate.satisfies(hg, src)))
+					{
+						pos++;
 						return;
-					else
-						focus_seen = true;					
+					}
+					else if (pos == -1)
+						return;										
 				}
 				if (siblingPredicate != null)
 					filter();		
 				else if (!focus_seen && currLink.getTargetAt(pos).equals(src))
 				{
 					focus_seen = true;
-					if (!returnSucceeding)
+					if (returnSource && (siblingPredicate == null || siblingPredicate.satisfies(hg, src)))
+						return;
+					else if (!returnSucceeding)
 					{
 						pos = -1;
 						return;
@@ -254,6 +275,8 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				else if (!focus_seen && currLink.getTargetAt(pos).equals(src))
 				{
 					focus_seen = true;
+					if (returnSource)
+						return;
 					if (!returnSucceeding)
 						pos = -1;
 					else
@@ -284,7 +307,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 					tempLink.setHandleArray(hg.getStore().getLink(hg.getPersistentHandle(hCurrLink)), 2);
 					currLink = tempLink;
 				}
-				if (currLink.getArity() <= 1)
+				if (currLink.getArity() < minArity)
 					continue;
 				tsIter.reset();
 				if (tsIter.hasNext())
@@ -302,6 +325,8 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				tsIter = new BTargetSetIterator();
 			else
 				tsIter = new FTargetSetIterator();
+			if (returnSource)
+				minArity = 1;
 			getNextLink();
 		}
 		
@@ -340,6 +365,27 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 
 		public boolean hasPrev() { throw new UnsupportedOperationException(); }
 		public HGHandle prev() { throw new UnsupportedOperationException(); }		
+	}
+	
+	/**
+	 * <p>
+	 * Default constructor available, but the class is not really default constructible - 
+	 * you must at least specify a <code>HyperGraph</code> instance on which to operate.
+	 * </p>
+	 */
+	public DefaultALGenerator()
+	{		
+	}
+
+	/**
+	 * <p>
+	 * Construct with default values: no link or sibling predicate, returning all
+	 * siblings in their normal storage order.
+	 * </p>
+	 */
+	public DefaultALGenerator(HyperGraph graph)
+	{
+		this.hg = graph;
 	}
 	
 	/**
@@ -409,6 +455,56 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		if (!returnPreceeding && !returnSucceeding)
 			throw new HGException("DefaultALGenerator: attempt to construct with both returnSucceeding and returnPreceeding set to false.");
 	}
+
+	/**
+	 * <p>
+	 * Construct a default adjency list generator where links are considered <strong>ordered</strong>.
+	 * </p>
+	 *
+	 * <p>
+	 * The constructor does NOT allow both <code>returnSucceeding</code> and <code>returnPreceeding</code>
+	 * to be set to <code>false</code>. This will always return empty adjency lists and does not make
+	 * any sense. Even, in a more complex situation where those parameters are determined at run-time 
+	 * following some unforeseen logic, the caller must make sure that not both of those parameters are
+	 * false.
+	 * </p>
+	 * 
+	 * @param hg The HyperGraph instance from where incidence sets are fetched.
+	 * @param linkPredicate The predicate by which links are filtered. Only links satisfying
+	 * this predicate will be considered. If this parameter is <code>null</code>, all links
+	 * from the incidence set will be considered.
+	 * @param siblingPredicate The predicate by which sibling atoms are filtered from the
+	 * adjency list. Only atoms satisfying this predicate will be returned. If this parameter
+	 * is <code>null</code>, all sibling atoms will be considered.
+	 * @param returnPreceeding Whether or not to return siblings that appear before the focus 
+	 * atom in an ordered link.
+	 * @param returnSucceding Whether or not to return siblings that appear after the focus atom
+	 * in an ordered link.
+	 * @param reverseOrder Whether or not to reverse the default order implied by a link's target
+	 * array. Note that this parameter affects the meaning of <em>preceeding</em> and <em>succeeding</em>
+	 * in the above two parameters.
+	 * @param returnSource Whether to return the source/originating atom along with its siblings. The default
+	 * is false.
+	 */
+	public DefaultALGenerator(HyperGraph graph, 
+							  HGAtomPredicate linkPredicate,
+							  HGAtomPredicate siblingPredicate,
+							  boolean returnPreceeding,
+							  boolean returnSucceeding,
+							  boolean reverseOrder,
+							  boolean returnSource)
+	{
+		this.hg = graph;
+		this.linkPredicate = linkPredicate;
+		this.siblingPredicate = siblingPredicate;
+		this.returnPreceeding = returnPreceeding;
+		this.returnSucceeding = returnSucceeding;
+		this.reverseOrder = reverseOrder;
+		this.returnSource = returnSource;
+//		if (!returnPreceeding && !returnSucceeding && !returnSource)
+//			throw new HGException("DefaultALGenerator: attempt to construct with both returnSucceeding and returnPreceeding set to false.");
+	}
+	
 	
 	public HGHandle getCurrentLink()
 	{
@@ -431,5 +527,75 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	{
 		if (currIterator != null && currIterator.closeResultSet)
 			((HGSearchResult<HGHandle>)currIterator.linksIterator).close();
-	}	
+	}
+
+	public HyperGraph getGraph()
+	{
+		return hg;
+	}
+
+	public void setGraph(HyperGraph graph)
+	{
+		this.hg = graph;
+	}
+
+	public HGAtomPredicate getLinkPredicate()
+	{
+		return linkPredicate;
+	}
+
+	public void setLinkPredicate(HGAtomPredicate linkPredicate)
+	{
+		this.linkPredicate = linkPredicate;
+	}
+
+	public HGAtomPredicate getSiblingPredicate()
+	{
+		return siblingPredicate;
+	}
+
+	public void setSiblingPredicate(HGAtomPredicate siblingPredicate)
+	{
+		this.siblingPredicate = siblingPredicate;
+	}
+
+	public boolean isReturnPreceeding()
+	{
+		return returnPreceeding;
+	}
+
+	public void setReturnPreceeding(boolean returnPreceeding)
+	{
+		this.returnPreceeding = returnPreceeding;
+	}
+
+	public boolean isReturnSucceeding()
+	{
+		return returnSucceeding;
+	}
+
+	public void setReturnSucceeding(boolean returnSucceeding)
+	{
+		this.returnSucceeding = returnSucceeding;
+	}
+
+	public boolean isReverseOrder()
+	{
+		return reverseOrder;
+	}
+
+	public void setReverseOrder(boolean reverseOrder)
+	{
+		this.reverseOrder = reverseOrder;
+	}
+
+	public boolean isReturnSource()
+	{
+		return returnSource;
+	}
+
+	public void setReturnSource(boolean returnSource)
+	{
+		this.returnSource = returnSource;
+	}		
 }

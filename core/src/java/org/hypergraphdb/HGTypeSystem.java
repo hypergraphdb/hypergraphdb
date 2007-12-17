@@ -188,7 +188,30 @@ public class HGTypeSystem
         }
     }
     
-    void storePrimitiveTypes(String resource)
+    /**
+     * <p>
+     * Use this method to load a set of primitive types in bulk, from a text descriptor
+     * resource (loaded using this class's class loader).
+     * </p>
+     * <p>
+     * The resource is expected to be in the following format: 1 type per line where
+     * each line consists of two or more columns separated by the space character.
+     * The first columns should be a canonical string representation of a UUID. The second
+     * column should be the classname of the class implementing the type. The (optional)
+     * subsequent columns should list the names of the classes that this type "covers".
+     * The following is an example where the first line simply adds a predefined type
+     * without any corresponding covered Java classes, and the second shows a type
+     * that covers only one class:
+     * </p>
+     * <p>
+     * <pre><code>
+     * db733325-19d5-11db-8b55-23bc8177d6ec org.hypergraphdb.type.NullType
+     * 2ec10476-d964-11db-a08c-eb6f4c8f155a org.hypergraphdb.type.AtomRefType org.hypergraphdb.atom.HGAtomRef 
+     * </code></pre>
+     * </p>
+     * @param resource
+     */
+    public void storePrimitiveTypes(String resource)
     {
        InputStream resourceIn = getClass().getResourceAsStream(resource);
        if (resourceIn == null)
