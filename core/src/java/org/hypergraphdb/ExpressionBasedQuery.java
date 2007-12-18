@@ -369,6 +369,7 @@ class ExpressionBasedQuery extends HGQuery
 				QueryMetaData qmd = toQueryMap.get(mc.getCondition().getClass()).getMetaData(hg, mc.getCondition());
 				qmd.randomAccess = false;
 				qmd.ordered = false; // should we have an order preserving mapping?
+				qmd.predicateCost = -1;
 				return qmd;
 			}
 		});
@@ -386,7 +387,7 @@ class ExpressionBasedQuery extends HGQuery
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				return QueryMetaData.ORACCESS;
+				return QueryMetaData.ORACCESS.clone();
 			}
 		});		
 		toQueryMap.put(And.class, new ConditionToQuery()
@@ -576,7 +577,7 @@ class ExpressionBasedQuery extends HGQuery
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.ORACCESS; // assume we have ORACCESS, but check below
+				QueryMetaData x = QueryMetaData.ORACCESS.clone(); // assume we have ORACCESS, but check below
 				boolean ispredicate = true;
 				x.predicateCost = 0;
 				for (HGQueryCondition sub : ((And)c))
@@ -634,7 +635,7 @@ class ExpressionBasedQuery extends HGQuery
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.ORACCESS; // TODO - this is only true in the worst case!
+				QueryMetaData x = QueryMetaData.ORACCESS.clone(); // TODO - this is only true in the worst case!
 				boolean ispredicate = true;
 				x.predicateCost = 0;
 				for (HGQueryCondition sub : ((Or)c))

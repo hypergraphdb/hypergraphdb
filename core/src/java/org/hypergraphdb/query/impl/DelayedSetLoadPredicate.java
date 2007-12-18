@@ -18,6 +18,7 @@ public class DelayedSetLoadPredicate implements HGAtomPredicate
 		HGSearchResult rs = null;
 		try
 		{
+			set = new HGAtomSet();
 			rs = query.execute();
 			while (rs.hasNext())
 				set.add((HGHandle)rs.next());

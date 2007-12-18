@@ -24,6 +24,11 @@ import org.hypergraphdb.HGSearchResult;
  */
 public class HGUtils
 {
+	public static boolean isEmpty(String s)
+	{
+		return s == null || s.length() == 0;
+	}
+	
     public static Throwable getRootCause(Throwable t)
     {
     	if (t != null)

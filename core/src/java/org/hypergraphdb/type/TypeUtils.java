@@ -19,7 +19,10 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.query.TypePlusCondition;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -245,5 +248,42 @@ public final class TypeUtils
 	{
 		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap();
 		refMap.clear();
-	}	
+	}
+	
+	public static void deleteInstances(HyperGraph graph, HGHandle type)
+	{		
+		int batchSize = 100; // perhaps this should become a parameter
+		HGHandle [] batch = new HGHandle[batchSize];
+		for (boolean done = false; !done; )
+		{
+			HGSearchResult<HGHandle> rs = null;
+			try
+			{
+				rs = graph.find(new TypePlusCondition(type));
+				int fetched = 0;
+				while (fetched < batch.length && rs.hasNext())
+					batch[fetched++] = rs.next();
+				rs.close();
+				done = fetched == 0;
+				graph.getTransactionManager().beginTransaction();
+				try
+				{
+					while (--fetched >= 0)
+						graph.remove(batch[fetched]);
+					graph.getTransactionManager().endTransaction(true);
+				}
+				catch (Throwable t)
+				{
+					try { graph.getTransactionManager().endTransaction(false); }
+					catch (Throwable t1) { t1.printStackTrace(System.err); }
+					done = false;
+					HGUtils.wrapAndRethrow(t);
+				}
+			}
+			finally
+			{
+				HGUtils.closeNoException(rs);
+			}
+		}
+	}
 }

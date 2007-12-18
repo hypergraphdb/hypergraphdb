@@ -252,6 +252,15 @@ public /*final*/ class HyperGraph
         }
     }
     
+    /** 
+     * <p>Return <code>true</code> is the database is currently open and <code>false</code>
+     * otherwise.</p>
+     */
+    public boolean isOpen()
+    {
+    	return is_open;
+    }
+    
     /**
      * <p>Return the <code>HGStore</code> used by this hypergraph.</p>
      */
@@ -781,8 +790,6 @@ public /*final*/ class HyperGraph
 	        //
 	        if (atom instanceof HGAtomType)
 	        {	        		
-	            idx_manager.unregisterAll(pHandle);
-	        	typeSystem.remove(pHandle, (HGAtomType)atom);
 	        	HGSearchResult instances = null;
 	        	try
 	        	{
@@ -794,6 +801,8 @@ public /*final*/ class HyperGraph
 	        	{
 	        		if (instances != null) instances.close();
 	        	}
+	            idx_manager.unregisterAll(pHandle);
+	        	typeSystem.remove(pHandle, (HGAtomType)atom);	        	
 	        }
 	        
 	        HGPersistentHandle typeHandle = layout[0];

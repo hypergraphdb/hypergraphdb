@@ -165,8 +165,8 @@ public class HGIndexManager
 			for (Iterator<HGIndexer> i = forType.iterator(); i.hasNext(); )
 			{
 				HGIndexer indexer = i.next();
-				graph.remove(graph.getHandle(indexer));
 				deleteIndex(indexer);
+				graph.remove(graph.getHandle(indexer));				
 				i.remove();
 			}
 	}

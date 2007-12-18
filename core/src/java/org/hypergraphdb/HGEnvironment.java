@@ -48,6 +48,8 @@ public class HGEnvironment
 			hg = new HyperGraph(location);
 			dbs.put(location, hg);
 		}
+		else if (!hg.isOpen())
+			hg.open(location);
 		return hg;
 	}
 	
