@@ -575,7 +575,7 @@ public /*final*/ class HyperGraph
      * the right cast. The actual type of the atom may be obtained via a call
      * to <code>HyperGraph.getTypeSystem().getAtomType(Object)</code>.
      */
-    public Object get(HGHandle handle)
+    public <T> T get(HGHandle handle)
     {
     	stats.atomAccessed();
     	
@@ -588,7 +588,7 @@ public /*final*/ class HyperGraph
         
         if (liveHandle != null)
         {
-        	Object theAtom = liveHandle.getRef();
+        	T theAtom = (T)liveHandle.getRef();
         	if (theAtom == null)
         	{
         		//
@@ -597,7 +597,7 @@ public /*final*/ class HyperGraph
         		HGLiveHandle existing = cache.get(liveHandle.getPersistentHandle());
         		if (existing != null)
         		{
-        			theAtom = existing.getRef();
+        			theAtom = (T)existing.getRef();
         			if (theAtom != null)
         			{
         				eventManager.dispatch(this, new HGAtomAccessedEvent(existing, theAtom));
@@ -656,7 +656,7 @@ public /*final*/ class HyperGraph
         
         eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));
         
-        return loaded.getSecond();
+        return (T)loaded.getSecond();
     }
 
     /**
