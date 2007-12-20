@@ -83,7 +83,7 @@ public class ByPartIndexer extends HGIndexer
 	{
 		if (projectionType == null)
 			getProjections(graph);
-		return (ByteArrayConverter)projectionType;
+		return (ByteArrayConverter<Object>)projectionType;
 	}
 
 	@Override

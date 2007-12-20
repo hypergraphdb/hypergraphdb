@@ -42,6 +42,9 @@ public class HGEnvironment
 	 */
 	public synchronized static HyperGraph get(String location) 
 	{ 
+		char last = location.charAt(location.length() - 1); 
+		if (last == '/' || last == '\\')
+			location = location.substring(0, location.length() - 1);
 		HyperGraph hg = dbs.get(location);
 		if (hg == null)
 		{
@@ -61,6 +64,9 @@ public class HGEnvironment
 	 */
 	public synchronized static HyperGraph getExistingOnly(String location)
 	{
+		char last = location.charAt(location.length() - 1); 
+		if (last == '/' || last == '\\')
+			location = location.substring(0, location.length() - 1);		
 		HyperGraph hg = dbs.get(location);
 		if (hg == null)
 		{

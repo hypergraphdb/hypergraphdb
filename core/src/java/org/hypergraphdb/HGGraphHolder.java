@@ -20,5 +20,5 @@ public interface HGGraphHolder
 	 * @param hg The <code>HyperGraph</code> that just loaded
 	 * the atom.
 	 */
-	void setHyperGraph(HyperGraph hg);
+	void setHyperGraph(HyperGraph graph);
 }

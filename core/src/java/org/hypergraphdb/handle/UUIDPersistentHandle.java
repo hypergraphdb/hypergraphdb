@@ -22,10 +22,11 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     {
     	System.loadLibrary("EthernetAddress");
     	com.ccg.net.ethernet.EthernetAddress nativeEAddress = com.ccg.net.ethernet.EthernetAddress.getPrimaryAdapter();
-    	if (nativeEAddress == null)
+/*    	if (nativeEAddress == null)
     		throw new Error(
-    				"Unable to determine primary Ethernet Adapter. HyperGraphDB can only be used on machine where such information is available.");    	
-    	eAddress = new EthernetAddress(nativeEAddress.getBytes());
+    				"Unable to determine primary Ethernet Adapter. HyperGraphDB can only be used on machine where such information is available."); */
+    	if (nativeEAddress != null)
+    		eAddress = new EthernetAddress(nativeEAddress.getBytes());
     }
     
     private UUID uuid;
@@ -46,7 +47,10 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     {
         // TODO - this is not the perfect way to do the generation, so it should be replaced
         // in a real production system.
-        uuid = new UUID(UUIDGenerator.getInstance().generateTimeBasedUUID(eAddress).asByteArray());
+    	if (eAddress != null)
+    		uuid = new UUID(UUIDGenerator.getInstance().generateTimeBasedUUID(eAddress).asByteArray());
+    	else
+    		uuid = new UUID(UUIDGenerator.getInstance().generateTimeBasedUUID().asByteArray());
     }
     
     private UUIDPersistentHandle(UUID uuid)

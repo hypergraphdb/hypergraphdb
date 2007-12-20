@@ -601,7 +601,7 @@ public /*final*/ class HyperGraph
         			if (theAtom != null)
         			{
         				eventManager.dispatch(this, new HGAtomAccessedEvent(existing, theAtom));
-        				return theAtom;
+        				return (T)theAtom;
         			}
         		}
        			persistentHandle = liveHandle.getPersistentHandle();
@@ -609,7 +609,7 @@ public /*final*/ class HyperGraph
         	else
         	{
         		eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, theAtom));
-        		return theAtom;
+        		return (T)theAtom;
         	}
         }
         else
