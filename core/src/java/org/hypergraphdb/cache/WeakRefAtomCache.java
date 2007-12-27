@@ -61,7 +61,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private ReentrantReadWriteLock incidenceLock = new ReentrantReadWriteLock();
-	private ReferenceQueue refQueue = new ReferenceQueue();
+	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup phantomCleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
@@ -394,3 +394,4 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 }
+
