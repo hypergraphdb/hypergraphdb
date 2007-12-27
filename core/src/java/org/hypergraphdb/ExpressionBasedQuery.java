@@ -1022,9 +1022,10 @@ class ExpressionBasedQuery extends HGQuery
 		this.condition = simplify(toDNF(condition));
 	}
 	
-    public HGSearchResult execute()
+    public <T> HGSearchResult<T> execute()
     {
     	HGQuery query = toQuery(graph, condition);
         return query.execute();
     }
 }
+
