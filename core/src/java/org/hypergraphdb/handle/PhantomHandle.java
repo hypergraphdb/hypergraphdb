@@ -8,48 +8,48 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 
-/** 
+/**
  * <p>
  * An implementation of a live handle that tracks garbage collection activity by
- * extending <code>PhantomReference</code>. 
+ * extending <code>PhantomReference</code>.
  * </p>
- * 
+ *
  * @author Borislav Iordanov
  *
  */
-public class PhantomHandle extends PhantomReference<Object> implements HGLiveHandle, Comparable<HGHandle> 
+public class PhantomHandle extends PhantomReference<Object> implements HGLiveHandle, Comparable<HGHandle>
 {
 	private HGPersistentHandle persistentHandle;
 	private byte flags;
-    private static Field refField = null;
-    
-    static
-    {
-    	for (Class<?> clazz = PhantomReference.class; 
-    		 clazz != null && refField == null; 
-    		 clazz = clazz.getSuperclass())
-    	{
-    		Field [] all = clazz.getDeclaredFields();
-    		for (int i = 0; i < all.length; i++)
-    			if (all[i].getName().equals("referent"))
-    			{
-    				refField = all[i];
-    				refField.setAccessible(true);
-    				break;
-    			}
-    	}
-    }
+	private static Field refField = null;
 
-    /**
-     * <strong>This is for internal use ONLY.</strong> 
-     * 
-     * <p>See comments in 'getRef' for information about this variable.</p>
-     */
-    public static ThreadLocal<Boolean> returnEnqueued = new ThreadLocal<Boolean>();
-    
-	public PhantomHandle(Object ref, 
-						 HGPersistentHandle persistentHandle, 
-						 byte flags, 
+	static
+	{
+		for (Class<?> clazz = PhantomReference.class;
+			 clazz != null && refField == null;
+			 clazz = clazz.getSuperclass())
+		{
+			Field [] all = clazz.getDeclaredFields();
+			for (int i = 0; i < all.length; i++)
+				if (all[i].getName().equals("referent"))
+				{
+					refField = all[i];
+					refField.setAccessible(true);
+					break;
+				}
+		}
+	}
+
+	/**
+	 * <strong>This is for internal use ONLY.</strong>
+	 *
+	 * <p>See comments in 'getRef' for information about this variable.</p>
+	 */
+	public static ThreadLocal<Boolean> returnEnqueued = new ThreadLocal<Boolean>();
+
+	public PhantomHandle(Object ref,
+						 HGPersistentHandle persistentHandle,
+						 byte flags,
 						 ReferenceQueue<Object> refQueue)
 	{
 		super(ref, refQueue);
@@ -58,12 +58,12 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		this.flags = flags;
 	}
 
-	public byte getFlags() 
+	public byte getFlags()
 	{
 		return flags;
 	}
 
-	public HGPersistentHandle getPersistentHandle() 
+	public HGPersistentHandle getPersistentHandle()
 	{
 		return persistentHandle;
 	}
@@ -75,7 +75,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 	 * only be called if it doesn't result in the referent becoming strongly reachable again.
 	 * </p>
 	 */
-	public Object fetchRef() 
+	public Object fetchRef()
 	{
 		try { return refField.get(this); } catch (Exception t) { throw new HGException(t); }
 	}
@@ -85,16 +85,16 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 	 * A setter of the referent. This setter will block the current Thread while the reference
 	 * is being enqueued by the grabage collector.
 	 * </p>
-	 * 
+	 *
 	 * @param ref
 	 */
 	public void storeRef(Object ref)
 	{
 		while (isEnqueued())
 			try { synchronized (this) { wait(100); } } catch (InterruptedException ex) { }
-		try { refField.set(this, ref); } catch (Exception t) { throw new HGException(t); }		
+		try { refField.set(this, ref); } catch (Exception t) { throw new HGException(t); }
 	}
-	
+
 	public Object getRef()
 	{
 		//
@@ -102,9 +102,9 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		// collected. This will be indicated by the fact that the object will
 		// be enqueued in the ReferenceQueue for this PhantomReference.
 		//
-		
+
 		// Obviously, we are doing something unorthodox here. The main danger
-		// and the first thing to examine in case of weird behavior with this 
+		// and the first thing to examine in case of weird behavior with this
 		// is a situation where an atom gets removed from the 'atoms' WeakHashMap
 		// in the cache (hence it's being garbage collected) and 'getRef' is called
 		// after that but before the reference gets enqueued. Is that possible at all?
@@ -112,8 +112,8 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		// thread. Also, when an object is going to be garbage collect its references are
 		// added to a "pending" list from where they are further enqueued. The 'isEnqueued'
 		// method actually checks for "pending or already enqueued" so we should be fine.
-		
-		//  
+
+		//
 		// However, there is a special case in which we don't want to return null: when
 		// we are in the phantom reference queue cleanup thread. Because cleanup may involve
 		// saving the atom which in turn might trigger a 'getRef' for another handle down
@@ -127,33 +127,33 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 			if (f != null && f.booleanValue())
 				return x;
 			x = null;
-			do 
-			{ 
+			do
+			{
 				try { synchronized (this) { wait(100); } } catch (InterruptedException ex) { }
 			} while (isEnqueued());
 		}
 		return x;
 	}
-		
-	public void accessed() 
+
+	public void accessed()
 	{
 	}
-	
+
 	public final int hashCode()
 	{
-		return persistentHandle.hashCode(); 
+		return persistentHandle.hashCode();
 	}
-	
+
 	public final boolean equals(Object other)
 	{
-        if (other == null)
-            return false;
-        else if (other instanceof HGLiveHandle)
-            return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
-        else
-        	return persistentHandle.equals((HGPersistentHandle)other);		
+		if (other == null)
+			return false;
+		else if (other instanceof HGLiveHandle)
+			return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
+		else
+			return persistentHandle.equals((HGPersistentHandle)other);
 	}
-	
+
 	public String toString()
 	{
 		return "phantomHandle(" + persistentHandle.toString() + ")";
