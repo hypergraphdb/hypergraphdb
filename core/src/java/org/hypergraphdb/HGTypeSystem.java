@@ -625,7 +625,7 @@ public class HGTypeSystem
     /**
      * <p>Return the <code>HGAtomType</code> by its <code>HGHandle</code>.</p>
      * 
-     * @param handle The handle of the atom type itself. Not that to retrieve the type
+     * @param handle The handle of the atom type itself. Note that to retrieve the type
      * of an atom, you must use the <code>getAtomType(Object)</code> method.
      */
     public HGAtomType getType(HGHandle handle)
