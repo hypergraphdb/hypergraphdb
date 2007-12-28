@@ -13,7 +13,7 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
 {
     private final Map<K, SoftValue<K, V>> hash;
 
-    private final ReferenceQueue queue = new ReferenceQueue();
+    private final ReferenceQueue<V> queue = new ReferenceQueue<V>();
 
     private static class SoftValue<Ka, Va> extends SoftReference<Va> 
     {
