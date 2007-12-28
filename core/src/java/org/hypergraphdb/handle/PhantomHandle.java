@@ -25,7 +25,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 
 	static
 	{
-		for (Class<?> clazz = PhantomReference.class;
+		for (Class<? super PhantomReference<Object>> clazz = PhantomReference.class;
 			 clazz != null && refField == null;
 			 clazz = clazz.getSuperclass())
 		{
