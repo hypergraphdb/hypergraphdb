@@ -10,25 +10,11 @@ package org.hypergraphdb.handle;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-import org.safehaus.uuid.UUIDGenerator;
-import org.safehaus.uuid.EthernetAddress;
+import java.util.UUID;
 
 public final class UUIDPersistentHandle implements HGPersistentHandle
 {
-    static final long serialVersionUID = -1;
-    static EthernetAddress eAddress = null;
-    
-    static
-    {
-    	System.loadLibrary("EthernetAddress");
-    	com.ccg.net.ethernet.EthernetAddress nativeEAddress = com.ccg.net.ethernet.EthernetAddress.getPrimaryAdapter();
-/*    	if (nativeEAddress == null)
-    		throw new Error(
-    				"Unable to determine primary Ethernet Adapter. HyperGraphDB can only be used on machine where such information is available."); */
-    	if (nativeEAddress != null)
-    		eAddress = new EthernetAddress(nativeEAddress.getBytes());
-    }
-    
+    static final long serialVersionUID = -1;    
     private UUID uuid;
     
     /**
@@ -37,20 +23,15 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public static final int SIZE = 16;
     
-    public static final UUIDPersistentHandle UUID_NULL_HANDLE = new UUIDPersistentHandle(UUID.valueOf(
-    		new byte[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} ));
-    
+    public static final UUIDPersistentHandle UUID_NULL_HANDLE = 
+    	new UUIDPersistentHandle(new byte[] {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 0);
+        
     /**
      * <p>Default constructor create a new UUID.</p>
      */
     private UUIDPersistentHandle()
     {
-        // TODO - this is not the perfect way to do the generation, so it should be replaced
-        // in a real production system.
-    	if (eAddress != null)
-    		uuid = new UUID(UUIDGenerator.getInstance().generateTimeBasedUUID(eAddress).asByteArray());
-    	else
-    		uuid = new UUID(UUIDGenerator.getInstance().generateTimeBasedUUID().asByteArray());
+    	uuid = UUID.randomUUID();
     }
     
     private UUIDPersistentHandle(UUID uuid)
@@ -75,8 +56,13 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with a null value.");
         else if (value.length - offset < 16)
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with wrong size byte array.");
-        else 
-            uuid = UUID.valueOf(value, offset);
+        long msb = 0;
+        long lsb = 0;
+        for (int i=offset; i < 8 + offset; i++)
+            msb = (msb << 8) | (value[i] & 0xff);
+        for (int i=8+offset; i < 16 + offset; i++)
+            lsb = (lsb << 8) | (value[i] & 0xff);
+        uuid = new UUID(msb, lsb);
     }
     
     /**
@@ -130,7 +116,7 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public static UUIDPersistentHandle makeHandle(String value)
     {
-        return new UUIDPersistentHandle(UUID.valueOf(value));
+        return new UUIDPersistentHandle(UUID.fromString(value));
     }
     
 
@@ -139,7 +125,26 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public byte [] toByteArray()
     {
-        return uuid.toByteArray();
+    	long msb = uuid.getMostSignificantBits();
+    	long lsb = uuid.getLeastSignificantBits();
+    	byte [] data = new byte[16]; // should we precompute and cache this?
+        data[0] = (byte) ((msb >>> 56)); 
+        data[1] = (byte) ((msb >>> 48));
+        data[2] = (byte) ((msb >>> 40)); 
+        data[3] = (byte) ((msb >>> 32));
+        data[4] = (byte) ((msb >>> 24)); 
+        data[5] = (byte) ((msb >>> 16));
+        data[6] = (byte) ((msb >>> 8)); 
+        data[7] = (byte) ((msb >>> 0));
+        data[8] = (byte) ((lsb >>> 56)); 
+        data[9] = (byte) ((lsb >>> 48));
+        data[10] = (byte) ((lsb >>> 40)); 
+        data[11] = (byte) ((lsb >>> 32));
+        data[12] = (byte) ((lsb >>> 24)); 
+        data[13] = (byte) ((lsb >>> 16));
+        data[14] = (byte) ((lsb >>> 8)); 
+        data[15] = (byte) ((lsb >>> 0));
+        return data;
     }
     
     public boolean equals(Object other)

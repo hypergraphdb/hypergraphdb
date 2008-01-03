@@ -30,7 +30,7 @@ public abstract class HGQuery
 {    
 	public final static HGQuery NOP = new HGQuery()
 	{
-		public HGSearchResult execute() { return HGSearchResult.EMPTY; }
+		public <T> HGSearchResult<T> execute() { return HGSearchResult.EMPTY; }
 	};
 	
 /*	public static HGQuery make(HyperGraph hg, String expression)
