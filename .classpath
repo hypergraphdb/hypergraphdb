@@ -8,11 +8,9 @@
 	<classpathentry kind="src" output="core/build" path="core/src/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="core/jars/db.jar"/>
-	<classpathentry kind="lib" path="core/jars/jug.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/commons-logging.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/jwnl.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/utilities.jar"/>
-	<classpathentry kind="lib" path="core/native/linux"/>
 	<classpathentry kind="lib" path="apps/tm/jars/tmapi-1_0SP1.jar"/>
 	<classpathentry kind="lib" path="apps/xsd/jars/asm-3.0.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/antlr.jar"/>
