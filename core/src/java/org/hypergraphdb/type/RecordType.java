@@ -159,6 +159,8 @@ public class RecordType implements HGCompositeType
         {
         	HGHandle slotHandle = getAt(i);             
             Object value = null;
+            try
+            {
             if (!layout[2*i + 1].equals(HGHandleFactory.nullHandle()))
             {            	
 	        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);
@@ -171,7 +173,14 @@ public class RecordType implements HGCompositeType
 	        		value = TypeUtils.makeValue(graph, 
 	        									layout[2*i + 1], 
 	        									graph.getTypeSystem().getType(layout[2*i]));
-            }            
+            }
+            }
+            catch (HGException ex)
+            {
+            	Slot s = graph.get(slotHandle);
+            	System.err.println("Unable to get value for slot: " + s.getLabel());
+//            	throw ex;
+            }
             result.set((Slot)graph.get(slotHandle), value);
         }
         return result;

@@ -761,116 +761,118 @@ public /*final*/ class HyperGraph
     		return;
     	
     	getTransactionManager().transact(new Callable<Object>() 
-    	{ public Object call() {
-	        HGPersistentHandle pHandle = null;
-	        HGLiveHandle lHandle = null;
-	        if (handle instanceof HGLiveHandle)
-	        {
-	            lHandle = (HGLiveHandle)handle;            
-	            pHandle = lHandle.getPersistentHandle(); 
-	        }
-	        else
-	        {
-	            pHandle = (HGPersistentHandle)handle;
-	            lHandle = cache.get(pHandle);
-	        }
-	
-	        HGPersistentHandle [] layout = store.getLink(pHandle);        
-	        
-	        if (layout == null)
-	            return null;
-	        else if (layout[0].equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
-	        	throw new HGException("Cannot remove the HyperGraph primitive type: " + pHandle);
-	        
-	        Object atom = get(handle); // need the atom in order to clear all indexes...
-	        
-	        //
-	        // If the atom is a type, remove it from the type system 
-	        // (which also removes all its instances).
-	        //
-	        if (atom instanceof HGAtomType)
-	        {	        		
-	        	HGSearchResult instances = null;
-	        	try
-	        	{
-	        		instances = indexByType.find(pHandle);
-		        	while (instances.hasNext())
-		        		remove((HGPersistentHandle)instances.next(), keepIncidentLinks);
-	        	}
-	        	finally
-	        	{
-	        		if (instances != null) instances.close();
-	        	}
-	            idx_manager.unregisterAll(pHandle);
-	        	typeSystem.remove(pHandle, (HGAtomType)atom);	        	
-	        }
-	        
-	        HGPersistentHandle typeHandle = layout[0];
-	        HGPersistentHandle valueHandle = layout[1];
-	        HGAtomType type = typeSystem.getType(typeHandle);	        
-	        HGHandle [] incidenceSet = cache.getIncidenceSet(pHandle);
-	        
-	        //
-	        // Clean all indexing entries related to this atom.
-	        //
-	        idx_manager.maybeUnindex(typeHandle, type, atom, pHandle);        
-	        indexByType.removeEntry(typeHandle, pHandle);
-	        indexByValue.removeEntry(valueHandle, pHandle);
-	
-	        //
-	        // Remove the atom record from the store and cache.
-	        //
-	        TypeUtils.releaseValue(HyperGraph.this, valueHandle);
-	        type.release(valueHandle);         
-	        store.removeLink(pHandle);
-	        store.removeIncidenceSet(pHandle);
-	        if (lHandle != null)
-	            cache.remove(lHandle);
-	        cache.removeIncidenceSet(pHandle);
-	        
-	        //
-	        // If it's a link, remove it from the incidence sets of all its 
-	        // targets.
-	        //
-	        if (layout.length > 2)
-	            for (int i = 2; i < layout.length; i++)
-	            	removeFromIncidenceSet(layout[i], lHandle, pHandle);
-	
-	        //
-	        // Handle links pointing to this atom:
-	        //
-	        if (incidenceSet != null)
-	        {
-		        for (int i = 0; i < incidenceSet.length; i++)
+    	{ public Object call() { removeTransaction(handle, keepIncidentLinks); return null; }});
+    }
+    
+    private void removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
+    {
+        HGPersistentHandle pHandle = null;
+        HGLiveHandle lHandle = null;
+        if (handle instanceof HGLiveHandle)
+        {
+            lHandle = (HGLiveHandle)handle;            
+            pHandle = lHandle.getPersistentHandle(); 
+        }
+        else
+        {
+            pHandle = (HGPersistentHandle)handle;
+            lHandle = cache.get(pHandle);
+        }
+
+        HGPersistentHandle [] layout = store.getLink(pHandle);        
+        
+        if (layout == null)
+            return;
+        else if (layout[0].equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
+        	throw new HGException("Cannot remove the HyperGraph primitive type: " + pHandle);
+        
+        Object atom = get(handle); // need the atom in order to clear all indexes...
+        
+        //
+        // If the atom is a type, remove it from the type system 
+        // (which also removes all its instances).
+        //
+        if (atom instanceof HGAtomType)
+        {	        		
+        	HGSearchResult instances = null;
+        	try
+        	{
+        		instances = indexByType.find(pHandle);
+	        	while (instances.hasNext())
+	        		removeTransaction((HGPersistentHandle)instances.next(), keepIncidentLinks);
+        	}
+        	finally
+        	{
+        		if (instances != null) instances.close();
+        	}
+            idx_manager.unregisterAll(pHandle);
+        	typeSystem.remove(pHandle, (HGAtomType)atom);	        	
+        }
+        
+        HGPersistentHandle typeHandle = layout[0];
+        HGPersistentHandle valueHandle = layout[1];
+        HGAtomType type = typeSystem.getType(typeHandle);	        
+        HGHandle [] incidenceSet = cache.getIncidenceSet(pHandle);
+        
+        //
+        // Clean all indexing entries related to this atom.
+        //
+        idx_manager.maybeUnindex(typeHandle, type, atom, pHandle);        
+        indexByType.removeEntry(typeHandle, pHandle);
+        indexByValue.removeEntry(valueHandle, pHandle);
+
+        //
+        // Remove the atom record from the store and cache.
+        //
+        TypeUtils.releaseValue(HyperGraph.this, valueHandle);
+        type.release(valueHandle);         
+        store.removeLink(pHandle);
+        store.removeIncidenceSet(pHandle);
+        if (lHandle != null)
+            cache.remove(lHandle);
+        cache.removeIncidenceSet(pHandle);
+        
+        //
+        // If it's a link, remove it from the incidence sets of all its 
+        // targets.
+        //
+        if (layout.length > 2)
+            for (int i = 2; i < layout.length; i++)
+            	removeFromIncidenceSet(layout[i], lHandle, pHandle);
+
+        //
+        // Handle links pointing to this atom:
+        //
+        if (incidenceSet != null)
+        {
+	        for (int i = 0; i < incidenceSet.length; i++)
+		        if (!keepIncidentLinks)
+		        	removeTransaction(incidenceSet[i], keepIncidentLinks);
+		        else
+		        	targetRemoved(incidenceSet[i], pHandle);
+        }
+        else
+        {
+        	HGSearchResult<HGHandle> irs = null;
+        	try
+        	{
+        		irs = store.getIncidenceResultSet(pHandle);
+        		while (irs.hasNext())
+        		{
+        			HGHandle link = irs.next();
 			        if (!keepIncidentLinks)
-			        	remove(incidenceSet[i], keepIncidentLinks);
+			        	removeTransaction(link, keepIncidentLinks);
 			        else
-			        	targetRemoved(incidenceSet[i], pHandle);
-	        }
-	        else
-	        {
-	        	HGSearchResult<HGHandle> irs = null;
-	        	try
-	        	{
-	        		irs = store.getIncidenceResultSet(pHandle);
-	        		while (irs.hasNext())
-	        		{
-	        			HGHandle link = irs.next();
-				        if (!keepIncidentLinks)
-				        	remove(link, keepIncidentLinks);
-				        else
-				        	targetRemoved(link, pHandle);	        			
-	        		}
-	        	}
-	        	finally
-	        	{
-	        		HGUtils.closeNoException(irs);
-	        	}
-	        }
-	        store.removeIncidenceSet(pHandle);
-	        eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));
-	        return null;
-    	}});
+			        	targetRemoved(link, pHandle);	        			
+        		}
+        	}
+        	finally
+        	{
+        		HGUtils.closeNoException(irs);
+        	}
+        }
+        store.removeIncidenceSet(pHandle);
+        eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));    	
     }
     
     /**

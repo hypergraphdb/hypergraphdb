@@ -17,7 +17,7 @@ import org.hypergraphdb.HGPersistentHandle;
  * @author Borislav Iordanov
  *
  */
-public class PhantomHandle extends PhantomReference<Object> implements HGLiveHandle, Comparable<HGHandle>
+public class PhantomHandle extends PhantomReference implements HGLiveHandle, Comparable<HGHandle>
 {
 	private HGPersistentHandle persistentHandle;
 	private byte flags;
