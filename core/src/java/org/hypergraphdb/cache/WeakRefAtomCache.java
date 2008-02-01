@@ -19,6 +19,7 @@ import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
 import org.hypergraphdb.util.SoftHashMap;
+import org.hypergraphdb.util.WeakIdentityHashMap;
 
 /**
  * 
@@ -51,7 +52,7 @@ public class WeakRefAtomCache implements HGAtomCache
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
 		
 	private Map<Object, HGLiveHandle> atoms = 
-		new WeakHashMap<Object, HGLiveHandle>();
+		new WeakIdentityHashMap<Object, HGLiveHandle>();
 	
 	private Map<HGLiveHandle, Object> frozenAtoms = 
 		new IdentityHashMap<HGLiveHandle, Object>();
