@@ -105,8 +105,7 @@ public class AtomRefType implements HGAtomType, HGSearchable
 		{
 			HGPersistentHandle pHandle = hg.getPersistentHandle(ev.getAtomHandle());
 			if (getHardIdx().findFirst(pHandle) != null ||
-				getSymbolicIdx().findFirst(pHandle) != null ||
-				getFloatingIdx().findFirst(pHandle) != null)
+				getFloatingIdx().findFirst(pHandle) != null) // symbolic links don't prevent removal of atoms
 				return Result.cancel;
 			else
 				return Result.ok;
@@ -177,84 +176,63 @@ public class AtomRefType implements HGAtomType, HGSearchable
 	{
 		byte [] data = hg.getStore().getData(handle);
 		HGAtomRef.Mode mode = HGAtomRef.Mode.get(data[MODE_OFFSET]);
-		HGPersistentHandle refHandle = HGHandleFactory.makeHandle(data, ATOM_HANDLE_OFFSET);
 		int count = BAUtils.readInt(data, REFCOUNT_OFFSET) - 1;
-		boolean makeManaged = false;
-		boolean removeRef = false;
-		HGPersistentHandle otherRef = null, otherRef2 = null;
 		if (count == 0)
 		{
+			boolean makeManaged = false;
+			boolean removeRef = false;
+			HGPersistentHandle otherRef = null;	
+			HGPersistentHandle refHandle = HGHandleFactory.makeHandle(data, ATOM_HANDLE_OFFSET);
 			switch (mode)
 			{
 				case hard:
 				{
-					otherRef = getFloatingIdx().findFirst(refHandle);
-					otherRef2 = getSymbolicIdx().findFirst(refHandle);					
+					otherRef = getFloatingIdx().findFirst(refHandle);					
 					if (otherRef != null)
 					{
 						makeManaged = true;
-						if (BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0)
-							removeRef = otherRef2 == null ||
-									    BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0;
+						removeRef = BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
 					}
-					else if (otherRef2 != null)
-						removeRef = BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0; 
 					else
 						removeRef = true;
 					getHardIdx().removeAllEntries(refHandle);
+					break;
 				}
 				case symbolic:
 				{
-					otherRef = getFloatingIdx().findFirst(refHandle);
-					otherRef2 = getHardIdx().findFirst(refHandle);					
-					if (otherRef != null)
-					{
-						makeManaged = true;
-						if (BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0)
-							removeRef = otherRef2 == null ||
-										BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0;
-					}
-					else if (otherRef2 != null)
-						removeRef = BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0; 
-					else
-						removeRef = true;
+					hg.getStore().removeData(handle);
 					getSymbolicIdx().removeAllEntries(refHandle);
+					break;
 				}	
 				case floating:
 				{
 					makeManaged = true;
 					otherRef = getHardIdx().findFirst(refHandle);
-					otherRef2 = getSymbolicIdx().findFirst(refHandle);					
-					if (otherRef != null)
-					{
-						if (BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0)
-							removeRef = otherRef2 == null ||
-									    BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0;
-					}
-					else if (otherRef2 != null)
-						removeRef = BAUtils.readInt(hg.getStore().getData(otherRef2), REFCOUNT_OFFSET) == 0; 
-					else
-						removeRef = true;				
+					removeRef = otherRef == null || BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
 					getFloatingIdx().removeAllEntries(refHandle);
+					break;
 				}
 			}
-		}
-		if (removeRef)
-		{
-			hg.getStore().removeData(handle);
-			if (otherRef != null)
-				hg.getStore().removeData(otherRef);
-			if (otherRef2 != null)
-				hg.getStore().removeData(otherRef2);
-			if (makeManaged)
+			if (removeRef)
 			{
-				int flags = hg.getSystemFlags(refHandle);
-				if ((flags & HGSystemFlags.MANAGED) == 0)
-					hg.setSystemFlags(refHandle, flags | HGSystemFlags.MANAGED);
-			}
+				hg.getStore().removeData(handle);
+				if (otherRef != null)
+					hg.getStore().removeData(otherRef);
+				if (makeManaged)
+				{
+					int flags = hg.getSystemFlags(refHandle);
+					if ((flags & HGSystemFlags.MANAGED) == 0)
+						hg.setSystemFlags(refHandle, flags | HGSystemFlags.MANAGED);
+				}
+				else
+					hg.remove(refHandle);
+			}			
 		}
 		else
+		{
 			BAUtils.writeInt(count, data, REFCOUNT_OFFSET);
+			hg.getStore().store(handle, data);
+		}
 	}
 
 	public boolean subsumes(Object general, Object specific) 

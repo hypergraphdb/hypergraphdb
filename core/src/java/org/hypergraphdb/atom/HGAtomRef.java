@@ -42,10 +42,26 @@ import org.hypergraphdb.HGHandle;
  * The above three cases are represented by the three possible modes of an atom reference:
  * <code>HARD</code>, <code>SYMBOLIC</code> and <code>FLOATING</code> respectively. The 
  * terms <code>HARD</code> and <code>SYMBOLIC</code> were chosen because of their familiarity
- * from Unix and derivative filesystems since atom references with those modes behave like
+ * from Unix and derivative file systems since atom references with those modes behave like
  * the corresponding file links in those systems.  The term <code>FLOATING</code> is specific to 
- * HyperGraph and it has the effect of transforming a refered to atom to a temporary, managed 
+ * HyperGraph and it has the effect of transforming a referred to atom to a temporary, managed 
  * atom that gets removed if not used.
+ * </p>
+ * 
+ * <p>
+ * Both a <code>HARD</code> and a <code>FLOATING</code> reference will prevent an atom from
+ * being removed from a HyperGraph database. That is, a call to <code>HyperGraph.remove(atomHandle)</code> will
+ * have no effect and return <code>false</code> whenever there's a <code>HARD</code> or a <code>FLOATING</code>
+ * reference to that <code>atomHandle</code>. On the other hand, <code>SYMBOLIC</code> references impose
+ * no such constraint. As a result, a symbolic reference may point to a non-existing atom which
+ * generally translates to <code>null<code>.
+ * </p>
+ * 
+ * <code>When a mixture of both floating and hard references point to an atom, floating references take
+ * precedence in the management of the atom's lifetime. That is, when all hard references are deleted, but
+ * a floating reference remains, the atom is not going to be deleted. Also, when both all hard reference and all
+ * floating references are deleted, the atom is transformed into a <code>MANAGED</code> atom instead of 
+ * being removed.
  * </p>
  * 
  * @author Borislav Iordanov
@@ -56,14 +72,14 @@ public class HGAtomRef
 	{
 		/**
 		 * This constant define a <code>HARD</code> reference mode. This behavior of  
-		 * hard references is like the Unix filesystem hard links: when all hard references
+		 * hard references is like the Unix file system hard links: when all hard references
 		 * are removed from HyperGraph, the referent is removed as well.
 		 */		
 		hard((byte)0),
 		
 		/**
 		 * This constant define a <code>SYMBOLIC</code> reference mode. This behavior of  
-		 * symbolic references is like the Unix filesystem symbolic links: they are just pointers
+		 * symbolic references is like the Unix file system symbolic links: they are just pointers
 		 * to the referent without an effect on its lifetime.
 		 */
 		symbolic((byte)1),
