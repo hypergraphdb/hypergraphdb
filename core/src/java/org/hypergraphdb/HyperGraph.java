@@ -93,6 +93,11 @@ public /*final*/ class HyperGraph
     private static final String SA_DB_NAME = "HGSYSATTRIBS";
     
     /**
+     * The location (full directory path on disk) for this HyperGraph database. 
+     */
+    private String location = null;
+    
+    /**
      * Is a database currently open?
      */
     private boolean is_open = false;
@@ -219,6 +224,7 @@ public /*final*/ class HyperGraph
 	        loadListeners();
 
 	        eventManager.dispatch(this, new HGOpenedEvent());
+	    	this.location = location;
     	}
     	catch (Throwable t)
     	{
@@ -710,10 +716,12 @@ public /*final*/ class HyperGraph
      * detailed explanation.</p>
      * 
      * @param handle
+     * @return <code>true</code> if the atom was successfully removed and <code>false</code>
+     * otherwise.
      */
-    public void remove(final HGHandle handle)
+    public boolean remove(final HGHandle handle)
     {
-    	remove(handle, true);
+    	return remove(handle, true);
     }
     
     /**
@@ -754,14 +762,17 @@ public /*final*/ class HyperGraph
      * pointing to it (if <code>true</code>) or whether to remove the links altogether (if
      * <code>false</code>). The flag applies recursively to all removals triggered from
      * this call.
+     * @return <code>true</code> if the atom was successfully removed and <code>false</code>
+     * otherwise.
      */
-    public void remove(final HGHandle handle, final boolean keepIncidentLinks)
+    public boolean remove(final HGHandle handle, final boolean keepIncidentLinks)
     {
     	if (eventManager.dispatch(this, new HGAtomRemoveRequestEvent(handle)) == HGListener.Result.cancel)
-    		return;
+    		return false;
     	
     	getTransactionManager().transact(new Callable<Object>() 
     	{ public Object call() { removeTransaction(handle, keepIncidentLinks); return null; }});
+    	return true;
     }
     
     private void removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
@@ -827,10 +838,8 @@ public /*final*/ class HyperGraph
         TypeUtils.releaseValue(HyperGraph.this, valueHandle);
         type.release(valueHandle);         
         store.removeLink(pHandle);
-        store.removeIncidenceSet(pHandle);
         if (lHandle != null)
             cache.remove(lHandle);
-        cache.removeIncidenceSet(pHandle);
         
         //
         // If it's a link, remove it from the incidence sets of all its 
@@ -871,6 +880,7 @@ public /*final*/ class HyperGraph
         		HGUtils.closeNoException(irs);
         	}
         }
+        cache.removeIncidenceSet(pHandle);        
         store.removeIncidenceSet(pHandle);
         eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));    	
     }

@@ -61,6 +61,13 @@ public class HGIndexManager
 			   graph.getPersistentHandle(graph.getHandle(indexer));
 	}
 	
+	private HGIndexer toAtomIndexer(HGIndexer indexer)
+	{
+		List<HGIndexer> L = indexers.get(indexer.getType());
+		int i = L.indexOf(indexer);
+		return i >= 0 ? L.get(i) : null;
+	}
+	
 	// TODO: this needs to be made thread safe.
 	private <KeyType extends Object> HGIndex<KeyType, HGPersistentHandle> getOrCreateIndex(HGIndexer indexer)
 	{
@@ -84,6 +91,9 @@ public class HGIndexManager
 		
 	public void deleteIndex(HGIndexer indexer)
 	{
+		indexer = toAtomIndexer(indexer);
+		if (indexer == null)
+			return;
 		indices.remove(indexer);
 		String name = getIndexName(indexer);
 		graph.getStore().removeIndex(name);
@@ -247,9 +257,13 @@ public class HGIndexManager
 		HGIndex<KeyType, HGPersistentHandle> result = (HGIndex<KeyType, HGPersistentHandle>)indices.get(indexer);
 		if (result == null)
 		{
-			List<HGIndexer> L = indexers.get(indexer.getType());
-			if (L != null && L.contains(indexer))
-				result = getOrCreateIndex(indexer);
+			List<HGIndexer> L = indexers.get(indexer.getType());			
+			if (L != null)
+			{
+				int i = L.indexOf(indexer);
+				if (i >= 0)				
+					result = getOrCreateIndex(L.get(i));
+			}				
 		}
 		return result;
 	}

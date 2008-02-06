@@ -250,7 +250,7 @@ public final class TypeUtils
 		refMap.clear();
 	}
 	
-	public static void deleteInstances(HyperGraph graph, HGHandle type)
+	public static boolean deleteInstances(HyperGraph graph, HGHandle type)
 	{		
 		int batchSize = 100; // perhaps this should become a parameter
 		HGHandle [] batch = new HGHandle[batchSize];
@@ -269,7 +269,8 @@ public final class TypeUtils
 				try
 				{
 					while (--fetched >= 0)
-						graph.remove(batch[fetched]);
+						if (!graph.remove(batch[fetched]))
+							return false;
 					graph.getTransactionManager().endTransaction(true);
 				}
 				catch (Throwable t)
@@ -285,5 +286,6 @@ public final class TypeUtils
 				HGUtils.closeNoException(rs);
 			}
 		}
+		return true;
 	}
 }
