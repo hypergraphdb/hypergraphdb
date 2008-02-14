@@ -4,7 +4,6 @@ import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.IdentityHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -56,6 +55,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private Map<HGLiveHandle, Object> frozenAtoms = 
 		new IdentityHashMap<HGLiveHandle, Object>();
+	private ColdAtoms coldAtoms = new ColdAtoms();
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
@@ -170,6 +170,7 @@ public class WeakRefAtomCache implements HGAtomCache
 			h = new PhantomHandle(atom, pHandle, flags, refQueue);			
 			atoms.put(atom, h);
 			liveHandles.put(pHandle, h);
+			coldAtoms.add(atom);
 		}
 		finally
 		{
@@ -205,6 +206,7 @@ public class WeakRefAtomCache implements HGAtomCache
 										 lastAccessTime);
 			atoms.put(atom, h);
 			liveHandles.put(pHandle, h);
+			coldAtoms.add(atom);
 		}
 		finally
 		{
@@ -243,6 +245,7 @@ public class WeakRefAtomCache implements HGAtomCache
 				ph.storeRef(atom);
 				liveHandles.put(ph.getPersistentHandle(), ph);
 				atoms.put(atom, ph);
+				coldAtoms.add(atom);
 			}		
 			else if (ph.getRef() != atom)
 			{
