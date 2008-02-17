@@ -226,9 +226,11 @@ public class HGTransactionManager
 				if (!is_deadlock)
 					throw ex;
 			}
-			catch (Exception ex)
+			catch (Throwable t)
 			{
-				throw new HGException(ex);
+				try { endTransaction(false); }
+		    	catch (HGTransactionException tex) { throw new HGException(t); }				
+				throw new HGException(t);
 			}
 		}
 	}

@@ -30,6 +30,16 @@ public class HGEnvironment
 {
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
 	
+	synchronized static void set(String location, HyperGraph graph)
+	{
+		dbs.put(location, graph);
+	}
+	
+	synchronized static void remove(String location)
+	{
+		dbs.remove(location);
+	}
+	
 	/**
 	 * <p>
 	 * Retrieve an already opened or open a HyperGraph instance. Note that a new

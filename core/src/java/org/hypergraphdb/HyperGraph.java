@@ -171,13 +171,36 @@ public /*final*/ class HyperGraph
     {
     	open(location);
     }
-    
+
     /**
      * <p>Open the database at the specified location.</p>
      * 
      * @param location The full path of the directory where the database resides.
      */
     public synchronized void open(String location)
+    {
+    	if (this.location != null && this.location.length() > 0)
+    		HGEnvironment.remove(this.location);
+    	this.location = location;
+    	open();
+    	HGEnvironment.set(this.location, this);
+    }
+    
+    /** 
+     * <p>Return the physical location of this HyperGraph database. The location is
+     * set either at construction or by a call to the <code>open(String location)</code>
+     * method.
+     * </p>
+     */
+    public String getLocation()
+    {
+    	return location;
+    }
+     
+    /**
+     * <p>Open the database if it's not already open.</p>
+     */
+    private synchronized void open()
     {
     	if (is_open)
     		close();
