@@ -54,6 +54,20 @@ public class ByPartIndexer extends HGIndexer
 	{		
 	}
 	
+	/**
+	 * <p>
+	 * Convenience constructor that allows passing a dot separated dimension path
+	 * that is converted to a <code>String[]</code>. 
+	 * </p>
+	 * 
+	 * @param type The type of the atoms to be indexed.
+	 * @param dimensionPath The dimension path in dot format (e.g. "person.address.street")
+	 */
+	public ByPartIndexer(HGHandle type, String dimensionPath)
+	{
+		this(type, dimensionPath.split("\\."));
+	}
+	
 	public ByPartIndexer(HGHandle type, String [] dimensionPath)
 	{
 		super(type);
@@ -71,19 +85,19 @@ public class ByPartIndexer extends HGIndexer
 	}
 
 	@Override
-	public Comparator getComparator(HyperGraph graph)
+	public Comparator<?> getComparator(HyperGraph graph)
 	{
 		if (projectionType == null)
 			getProjections(graph);
-		return (Comparator)projectionType;
+		return (Comparator<?>)projectionType;
 	}
 
 	@Override
-	public ByteArrayConverter getConverter(HyperGraph graph)
+	public ByteArrayConverter<?> getConverter(HyperGraph graph)
 	{
 		if (projectionType == null)
 			getProjections(graph);
-		return (ByteArrayConverter<Object>)projectionType;
+		return (ByteArrayConverter<?>)projectionType;
 	}
 
 	@Override

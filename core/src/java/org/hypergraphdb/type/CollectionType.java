@@ -40,7 +40,7 @@ public class CollectionType implements HGAtomType
 		this.hg = hg;
 	}
 
-	public ObjectFactory getFactory()
+	public ObjectFactory<Collection<Object>> getFactory()
 	{
 		return factory;
 	}
@@ -69,10 +69,11 @@ public class CollectionType implements HGAtomType
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	public HGPersistentHandle store(Object instance) 
 	{
 		HGPersistentHandle result = TypeUtils.getNewHandleFor(hg, instance);
-		Collection collection = (Collection)instance;
+		Collection<Object> collection = (Collection<Object>)instance;
 		HGPersistentHandle [] layout = new HGPersistentHandle[collection.size()*2];
 		int pos = 0;
 		for (Object curr : collection)

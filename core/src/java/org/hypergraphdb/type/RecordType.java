@@ -194,17 +194,10 @@ public class RecordType implements HGCompositeType
         Record record = (Record)instance;
         HGPersistentHandle [] layout = new HGPersistentHandle[slots.size() * 2];
         for (int i = 0; i < slots.size(); i++)
-        {        	
+        {     	
         	HGHandle slotHandle = getAt(i);
             Slot slot = (Slot)graph.get(slotHandle);
             Object value = record.get(slot);            
-            if (value == null)
-            {
-            	layout[2*i] = graph.getPersistentHandle(slot.getValueType());
-                layout[2*i + 1] = HGHandleFactory.nullHandle();            	
-                continue;
-            }
-            
             if (value == null)
             {
             	layout[2*i] = graph.getPersistentHandle(slot.getValueType());

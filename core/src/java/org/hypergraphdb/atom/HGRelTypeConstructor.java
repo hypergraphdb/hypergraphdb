@@ -124,10 +124,11 @@ public class HGRelTypeConstructor extends HGAtomTypeBase
 		return true;
 	}
 
+	@SuppressWarnings("unchecked")
 	public HGSearchResult<HGPersistentHandle> find(HGRelType key)
 	{
 		if (key == null || key.getName() == null)
-			return HGSearchResult.EMPTY;
+			return (HGSearchResult<HGPersistentHandle>)HGSearchResult.EMPTY;
 		
 		return getIndex().find(key.getName().getBytes());
 	}

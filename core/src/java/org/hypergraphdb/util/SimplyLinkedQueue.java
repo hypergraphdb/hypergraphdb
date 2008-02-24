@@ -36,6 +36,8 @@ public class SimplyLinkedQueue<T>
 			throw new NoSuchElementException();
 		T result = head.data;
 		head = head.next;
+		if (head == null)
+			tail = null;
 		size--;
 		return result;
 	}

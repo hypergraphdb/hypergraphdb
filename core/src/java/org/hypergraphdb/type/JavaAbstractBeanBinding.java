@@ -30,14 +30,14 @@ import org.hypergraphdb.LazyRef;
 public class JavaAbstractBeanBinding implements HGCompositeType 
 {
     protected HyperGraph graph;	
-	protected Class<?> beanClass;
+	protected Class<?> javaClass;
     protected HGHandle typeHandle;
     protected HGCompositeType hgType;    
     
     public JavaAbstractBeanBinding(HGHandle typeHandle, HGCompositeType hgType, Class<?> clazz)
     {
     	this.typeHandle = typeHandle;
-    	this.beanClass = clazz;
+    	this.javaClass = clazz;
     	this.hgType = hgType;
     }
     
@@ -95,12 +95,12 @@ public class JavaAbstractBeanBinding implements HGCompositeType
         {
             JavaAbstractBeanBinding otherJB = (JavaAbstractBeanBinding)other;
             //TODO:??? could be subclasses; if || with both forms of isAssignable is more correct
-            return typeHandle.equals(otherJB.typeHandle) && beanClass.isAssignableFrom(otherJB.beanClass);            
+            return typeHandle.equals(otherJB.typeHandle) && javaClass.isAssignableFrom(otherJB.javaClass);            
         }
     }
     
     public String toString()
     {
-    	return beanClass.toString();
+    	return javaClass.toString();
     }
 }

@@ -78,11 +78,12 @@ public class HGTypeSystem
 	public static final HGAtomType top = Top.getInstance();
 
 	private HyperGraph hg = null;
-	private Map<Class, HGHandle> classToAtomType = Collections.synchronizedMap(new ClassToTypeCache());
+	private Map<Class<?>, HGHandle> classToAtomType = Collections.synchronizedMap(new ClassToTypeCache());
 	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
 	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;
-
+	private JavaTypeFactory javaTypes = null;
+	
 	private HGBidirectionalIndex<String, HGPersistentHandle> getClassToTypeDB()
 	{
 		if (classToTypeDB == null)
@@ -187,7 +188,7 @@ public class HGTypeSystem
 			storePrimitiveTypes(typeDefResource);
 		}
 	}
-
+	
 	/**
 	 * <p>
 	 * Use this method to load a set of primitive types in bulk, from a text descriptor
@@ -220,7 +221,6 @@ public class HGTypeSystem
 	   BufferedReader reader = new BufferedReader(new InputStreamReader(resourceIn));
 	   try
 	   {
-
 		   for (String line = reader.readLine(); line != null; line = reader.readLine())
 		   {
 			   line = line.trim();
@@ -236,7 +236,7 @@ public class HGTypeSystem
 					                      resource + ", the line " + line + " is ill formed.");
 			   String pHandleStr = tok.nextToken();
 			   String typeClassName = tok.nextToken();
-			   Class typeClass = Class.forName(typeClassName);
+			   Class<?> typeClass = Class.forName(typeClassName);
 			   HGAtomType type = (HGAtomType)typeClass.newInstance();
 			   type.setHyperGraph(hg);
 			   HGPersistentHandle pHandle = HGHandleFactory.makeHandle(pHandleStr);
@@ -244,7 +244,7 @@ public class HGTypeSystem
 				   while (tok.hasMoreTokens())
 				   {
 					   String valueClassName = tok.nextToken();
-					   Class valueClass = Class.forName(valueClassName);
+					   Class<?> valueClass = Class.forName(valueClassName);
 					   addPredefinedType(pHandle, type, valueClass);
 				   }
 				}
@@ -285,7 +285,7 @@ public class HGTypeSystem
 			}
 			try
 			{
-				Class clazz = Class.forName(classname);
+				Class<?> clazz = Class.forName(classname);
 				HGAtomType type = (HGAtomType)clazz.newInstance();
 				type.setHyperGraph(hg);
 				return (HGLiveHandle)addPredefinedType(pHandle, type, null);
@@ -306,7 +306,7 @@ public class HGTypeSystem
 	 * @param handle
 	 * @param clazz
 	 */
-	public void defineTypeAtom(final HGPersistentHandle handle, final Class clazz)
+	public void defineTypeAtom(final HGPersistentHandle handle, final Class<?> clazz)
 	{
 		if (hg.getTransactionManager().getContext().getCurrent() != null)
 		{
@@ -332,7 +332,7 @@ public class HGTypeSystem
 			} });
 	}
 
-	HGHandle defineNewJavaType(final Class clazz)
+	HGHandle defineNewJavaType(final Class<?> clazz)
 	{
 		try
 		{
@@ -349,7 +349,7 @@ public class HGTypeSystem
 		}
 	}
 
-	HGHandle makeNewJavaType(Class clazz)
+	HGHandle makeNewJavaType(Class<?> clazz)
 	{
 		//
 		// First, create a dummy type for the class, so that recursive type
@@ -366,12 +366,12 @@ public class HGTypeSystem
 	 * full inheritence tree of Java class and interfaces. Therefore, for each
 	 * newly added Java type mapping, we navigate to parent classes etc.
 	 */
-	HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class clazz)
+	HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class<?> clazz)
 	{
 		//
 		// Next, create a HyperGraph type matching the Java class.
 		//
-		HGAtomType inferredHGType = JavaTypeFactory.getInstance().defineHGType(this, clazz, newHandle);
+		HGAtomType inferredHGType = javaTypes.defineHGType(clazz, newHandle);
 
 		if (inferredHGType == null)
 			throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");
@@ -412,7 +412,7 @@ public class HGTypeSystem
 		// a RecordType. To make it transparently handle run-time instances of 'clazz',
 		// we need a corresponding Java binding for this type, e.g. a JavaBeanBinding.
 		//
-		HGAtomType type = JavaTypeFactory.getInstance().getJavaBinding(newHandle, inferredHGType, clazz);
+		HGAtomType type = javaTypes.getJavaBinding(newHandle, inferredHGType, clazz);
 		type.setHyperGraph(hg);
 
 		//
@@ -426,7 +426,7 @@ public class HGTypeSystem
 
 		// Now, examine the super type and implemented interfaces
 		// First, make sure we've mapped all interfaces
-		Class [] interfaces = clazz.getInterfaces();
+		Class<?> [] interfaces = clazz.getInterfaces();
 		for (int i = 0; i < interfaces.length; i++)
 		{
 			HGHandle interfaceHandle = getTypeHandle(interfaces[i]);
@@ -476,6 +476,8 @@ public class HGTypeSystem
 		this.getAliases();
 		this.getClassToTypeDB();
 		this.getPredefinedTypesDB();
+		this.javaTypes = new JavaTypeFactory();
+		javaTypes.setHyperGraph(hg);
 	}
 
 	/**
@@ -488,6 +490,15 @@ public class HGTypeSystem
 		return hg;
 	}
 
+	/** 
+	 * <p>Return the <code>JavaTypeFactory</code> which is responsible for mapping
+	 * Java class to HyperGraph types.</p>
+	 */
+	public JavaTypeFactory getJavaTypeFactory()
+	{
+		return this.javaTypes;
+	}
+	
 	public HGAtomType getTop()
 	{
 		return top;
@@ -508,7 +519,7 @@ public class HGTypeSystem
 		String classname = getClassToTypeDB().findFirstByValue(handle.getPersistentHandle());
 		if (classname != null)
 		{		  
-			Class clazz;
+			Class<?> clazz;
 			try
 			{
 				if(classname.startsWith("[L"))
@@ -524,7 +535,7 @@ public class HGTypeSystem
 				throw new HGException("Could not load class " + classname +
 				                      " for inferred HG type: " + handle.getPersistentHandle(), t);
 			}
-			type = JavaTypeFactory.getInstance().getJavaBinding(handle, type, clazz);
+			type = javaTypes.getJavaBinding(handle, type, clazz);
 			if (refreshInCache)
 			{
 				hg.cache.atomRefresh(handle, type);
@@ -578,7 +589,7 @@ public class HGTypeSystem
 	 * type should not be mapped to a Java class.
 	 * @return A run-time handle for the newly added type.
 	 */
-	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class clazz)
+	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class<?> clazz)
 	{
 		if (hg.getTransactionManager().getContext().getCurrent() != null)
 			return addPredefinedTypeTransaction(handle, type, clazz);
@@ -586,7 +597,7 @@ public class HGTypeSystem
 			return hg.getTransactionManager().transact(new Callable<HGHandle>()
 				{ public HGHandle call() { return addPredefinedTypeTransaction(handle, type, clazz); } });
 	}
-	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, Class clazz)
+	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, Class<?> clazz)
 	{
 		//
 		// Make sure the type is in storage...
@@ -656,7 +667,7 @@ public class HGTypeSystem
 	 * </p>
 	 *
 	 */
-	public HGAtomType getAtomType(Class clazz)
+	public HGAtomType getAtomType(Class<?> clazz)
 	{
 		return (HGAtomType)hg.get(getTypeHandle(clazz));
 	}
@@ -691,7 +702,7 @@ public class HGTypeSystem
 	 * <p>Return <code>true</code> if there is a HyperGraph type corresponding to the given
 	 * class and <code>false</code> otherwise.</p>
 	 */
-	public boolean hasType(Class clazz)
+	public boolean hasType(Class<?> clazz)
 	{
 		if (classToAtomType.containsKey(clazz))
 			return true;
@@ -711,7 +722,7 @@ public class HGTypeSystem
 	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
 	 * will be returned.
 	 */
-	public HGHandle getTypeHandle(Class clazz)
+	public HGHandle getTypeHandle(Class<?> clazz)
 	{
 		if (clazz.isPrimitive())
 			clazz = BonesOfBeans.wrapperEquivalentOf(clazz);
@@ -736,7 +747,7 @@ public class HGTypeSystem
 		//
 		if (clazz.isArray())
 		{
-			Class clazz1 = (new Object[0]).getClass();
+			Class<?> clazz1 = (new Object[0]).getClass();
 			typeHandle = classToAtomType.get(clazz1);
 			if (typeHandle != null)
 				return typeHandle;
@@ -902,7 +913,7 @@ public class HGTypeSystem
 		// Remove all aliases
 		//
 		HGBidirectionalIndex<String, HGPersistentHandle> aliases = getAliases();
-		for (Iterator i = aliases.findByValue(typeHandle); i.hasNext(); )
+		for (Iterator<String> i = aliases.findByValue(typeHandle); i.hasNext(); )
 		{
 			// TODO: maybe a problem here if we are removing while iterating...
 			aliases.removeEntry((String)i.next(), typeHandle);
@@ -923,7 +934,7 @@ public class HGTypeSystem
 				try
 				{
 					// Remove from class->atom cache if there.
-					Class clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
+					Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
 					classToAtomType.remove(clazz);
 				}
 				catch (ClassNotFoundException ex) { }
@@ -939,7 +950,7 @@ public class HGTypeSystem
 		}
 	}
 
-	private class ClassToTypeCache extends LinkedHashMap<Class, HGHandle>
+	private class ClassToTypeCache extends LinkedHashMap<Class<?>, HGHandle>
 	{
 		static final long serialVersionUID = -1;
 
@@ -947,7 +958,7 @@ public class HGTypeSystem
 		{
 			super(1000, 0.75f, true);
 		}
-		protected boolean removeEldestEntry(Map.Entry<Class, HGHandle> eldest)
+		protected boolean removeEldestEntry(Map.Entry<Class<?>, HGHandle> eldest)
 		{
 			if (size() > MAX_CLASS_TO_TYPE)
 			{

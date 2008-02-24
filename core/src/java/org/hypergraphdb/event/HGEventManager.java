@@ -23,9 +23,9 @@ import org.hypergraphdb.HyperGraph;
  */
 public class HGEventManager 
 {
-	private HashMap<Class, ArrayList<HGListener>> listenerMap = new HashMap<Class, ArrayList<HGListener>>();
+	private HashMap<Class<?>, ArrayList<HGListener>> listenerMap = new HashMap<Class<?>, ArrayList<HGListener>>();
 	
-	public <T extends HGEvent> void addListener(Class<T> eventType, HGListener<T> listener)
+	public <T extends HGEvent> void addListener(Class<T> eventType, HGListener listener)
 	{
 		ArrayList<HGListener> listeners = listenerMap.get(eventType);
 		if (listeners == null)
@@ -36,7 +36,7 @@ public class HGEventManager
 		listeners.add(listener);
 	}
 	
-	public <T extends HGEvent> void removeListener(Class<T> eventType, HGListener<T> listener)
+	public <T extends HGEvent> void removeListener(Class<T> eventType, HGListener listener)
 	{
 		ArrayList<HGListener> listeners = listenerMap.get(eventType);
 		if (listeners == null)
@@ -45,9 +45,9 @@ public class HGEventManager
 			listeners.remove(listener);
 	}
 	
-	public <T extends HGEvent> HGListener.Result dispatch(HyperGraph hg, T event)
+	public  HGListener.Result dispatch(HyperGraph hg, HGEvent event)
 	{
-		for (Class clazz = event.getClass(); HGEvent.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass())
+		for (Class<?> clazz = event.getClass(); HGEvent.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass())
 		{
 			ArrayList<HGListener> listeners = listenerMap.get(clazz);
 			if (listeners == null)

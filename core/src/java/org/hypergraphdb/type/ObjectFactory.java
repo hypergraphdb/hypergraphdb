@@ -25,7 +25,7 @@ public interface ObjectFactory<T>
 	 * Return the <code>Class</code> of the objects being constructed by this factory.
 	 * </p> 
 	 */
-	Class getType();
+	Class<T> getType();
 	
 	/**
 	 * <p>Create a new run-time instance of the type this factory 

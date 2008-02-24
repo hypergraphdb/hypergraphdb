@@ -505,7 +505,7 @@ public class HGStore
             if (status == OperationStatus.NOTFOUND)
             {
             	cursor.close();
-                return HGSearchResult.EMPTY;
+                return (HGSearchResult<HGHandle>)HGSearchResult.EMPTY;
             }
             else
             	return new SingleKeyResultSet(cursor, key, BAtoHandle.getInstance());

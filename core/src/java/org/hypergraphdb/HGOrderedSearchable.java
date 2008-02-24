@@ -27,7 +27,7 @@ public interface HGOrderedSearchable<KeyType, ValueType> extends HGSearchable<Ke
      * @param key The search key.
      * @return An <code>HGSearchResult</code> over the resulting range of values.
      */
-    HGSearchResult findLT(KeyType key);
+    HGSearchResult<ValueType> findLT(KeyType key);
 
     /**
      * <p>Return a range of all values <em>strictly greater than</em>
@@ -36,7 +36,7 @@ public interface HGOrderedSearchable<KeyType, ValueType> extends HGSearchable<Ke
      * @param key The search key.
      * @return An <code>HGSearchResult</code> over the resulting range of values.
      */    
-    HGSearchResult findGT(KeyType key);
+    HGSearchResult<ValueType> findGT(KeyType key);
     
     /**
      * <p>Return a range of all values <em>less than or equal to</em>
@@ -45,7 +45,7 @@ public interface HGOrderedSearchable<KeyType, ValueType> extends HGSearchable<Ke
      * @param key The search key.
      * @return An <code>HGSearchResult</code> over the resulting range of values.
      */    
-    HGSearchResult findLTE(KeyType key);
+    HGSearchResult<ValueType> findLTE(KeyType key);
     
     /**
      * <p>Return a range of all values <em>greater than or equal to</em>
@@ -54,5 +54,5 @@ public interface HGOrderedSearchable<KeyType, ValueType> extends HGSearchable<Ke
      * @param key The search key.
      * @return An <code>HGSearchResult</code> over the resulting range of values.
      */    
-    HGSearchResult findGTE(KeyType key);
+    HGSearchResult<ValueType> findGTE(KeyType key);
 }

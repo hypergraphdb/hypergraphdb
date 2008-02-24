@@ -41,7 +41,7 @@ public class CollectionTypeConstructor implements HGAtomType
 		String className = new String(hg.getStore().getData(handle));
 		try
 		{
-			Class clazz = Class.forName(className);
+			Class<?> clazz = Class.forName(className);
 			GenericObjectFactory factory = new GenericObjectFactory(clazz);
 			result = new CollectionType(factory);
 		}

@@ -246,8 +246,15 @@ public /*final*/ class HyperGraph
 	        // Load all listeners stored in this HyperGraph as HGListenerAtoms
 	        loadListeners();
 
-	        eventManager.dispatch(this, new HGOpenedEvent());
-	    	this.location = location;
+	        // This is kind of completing the type system bootstrap process, otherwise
+	        // there's a circular dependency between the initialization of the index manager
+	        // and the JavaObjectMapper (which has an index on the HGSerializable atoms). Another
+	        // option to avoid this typical bootstrapping circularity is the implement the JavaObjectMapper
+	        // to directly work with the HGStore instead of relying on the index manager. In any case,
+	        // it all remains an implementation detail.
+	        typeSystem.getJavaTypeFactory().initNonDefaultMappers();
+	        
+	        eventManager.dispatch(this, new HGOpenedEvent());	    	
     	}
     	catch (Throwable t)
     	{
@@ -604,6 +611,7 @@ public /*final*/ class HyperGraph
      * the right cast. The actual type of the atom may be obtained via a call
      * to <code>HyperGraph.getTypeSystem().getAtomType(Object)</code>.
      */
+    @SuppressWarnings("unchecked")
     public <T> T get(HGHandle handle)
     {
     	stats.atomAccessed();
@@ -828,7 +836,7 @@ public /*final*/ class HyperGraph
         //
         if (atom instanceof HGAtomType)
         {	        		
-        	HGSearchResult instances = null;
+        	HGSearchResult<HGPersistentHandle> instances = null;
         	try
         	{
         		instances = indexByType.find(pHandle);
@@ -1708,7 +1716,7 @@ public /*final*/ class HyperGraph
      * @param handle The persistent handle of the atom.
      * @param instance The run-time value of the atom.
      */
-    private void rawSave(HGPersistentHandle handle, Object instance)
+/*    private void rawSave(HGPersistentHandle handle, Object instance)
     {
 		HGPersistentHandle [] layout = store.getLink(handle);
 		if (layout == null)
@@ -1742,7 +1750,7 @@ public /*final*/ class HyperGraph
 				rs.close();
 			}
 		}
-    }
+    } */
     
     /**
      * Make a run-time instance given a layout and a type. Ignore caching,
@@ -1783,7 +1791,7 @@ public /*final*/ class HyperGraph
      * @param h
      * @return
      */
-    private Object rawGet(HGHandle h)
+/*    private Object rawGet(HGHandle h)
     {
     	HGPersistentHandle ph = null;
     	if (h instanceof HGLiveHandle)
@@ -1806,7 +1814,7 @@ public /*final*/ class HyperGraph
     		HGAtomType type = (HGAtomType)rawGet(layout[0]);
     		return rawMake(layout, type, ph);
     	}
-    }
+    } */
     
     /**
      * Replace an atom with a new value. Recursively replace the values of type atoms.
@@ -2006,10 +2014,11 @@ public /*final*/ class HyperGraph
     	
     	eventManager.addListener(
     			HGAtomEvictEvent.class,
-    			new HGListener<HGAtomEvictEvent>()
+    			new HGListener()
     			{
-    				public HGListener.Result handle(HyperGraph hg, HGAtomEvictEvent ev)
+    				public HGListener.Result handle(HyperGraph hg, HGEvent event)
     				{
+    					HGAtomEvictEvent ev = (HGAtomEvictEvent)event;
     					unloadAtom((HGLiveHandle)ev.getAtomHandle(), ev.getInstance());
     					return Result.ok;
     				}
@@ -2017,21 +2026,23 @@ public /*final*/ class HyperGraph
     			);    	
     }
     
+    @SuppressWarnings("unchecked")
     private void loadListeners()
     {
-    	HGSearchResult rs = null;
+    	HGSearchResult<HGHandle> rs = null;
     	try
     	{
     		rs = find(new AtomTypeCondition(typeSystem.getTypeHandle(HGListenerAtom.class)));
     		while (rs.hasNext())
     		{
     			HGListenerAtom listenerAtom = (HGListenerAtom)get((HGHandle)rs.next());
-    			Class eventClass, listenerClass;
+    			Class<?> eventClass;
+    			Class<?> listenerClass;
     			try
     			{
     				eventClass = Class.forName(listenerAtom.getEventClassName());
     				listenerClass = Class.forName(listenerAtom.getListenerClassName());
-    				eventManager.addListener(eventClass, (HGListener)listenerClass.newInstance());
+    				eventManager.addListener((Class<HGEvent>)eventClass, (HGListener)listenerClass.newInstance());
     			}
     			catch (Throwable t)
     			{

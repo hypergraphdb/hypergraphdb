@@ -16,7 +16,7 @@ import org.hypergraphdb.HyperGraph;
  * about HyperGraph events. Event listeners implement the 
  * </p> 
  */
-public interface HGListener<EventType extends HGEvent> 
+public interface HGListener 
 {
 	public static enum Result
 	{
@@ -42,5 +42,5 @@ public interface HGListener<EventType extends HGEvent>
 		}
 	};
 	
-	Result handle(HyperGraph hg, EventType event);
+	Result handle(HyperGraph hg, HGEvent event);
 }

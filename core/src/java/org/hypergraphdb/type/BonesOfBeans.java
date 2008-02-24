@@ -24,7 +24,7 @@ import org.hypergraphdb.HGException;
 /**
  * This is a utility class to handle bean introspection. All functions may
  * throw a <code>HGException</code> which will wrap the underlying bean
- * instrospection and reflection (for set and get) exceptions.
+ * introspection and reflection (for set and get) exceptions.
  *
  */
 public class BonesOfBeans
@@ -37,12 +37,12 @@ public class BonesOfBeans
 //    static private HashMap<Class, HashMap<String, PropertyDescriptor>> cache = 
 //    	new HashMap<Class, HashMap<String, PropertyDescriptor>>();
     
-     private static Map<String, PropertyDescriptor> getpropmap(Class clazz)
+     private static Map<String, PropertyDescriptor> getpropmap(Class<?> clazz)
      {
          return getpropmap(clazz,false);
      }
      
-    private static Map<String, PropertyDescriptor> getpropmap(Class clazz, boolean incl_cls)
+    private static Map<String, PropertyDescriptor> getpropmap(Class<?> clazz, boolean incl_cls)
     {
         HashMap<String, PropertyDescriptor> propmap = null; // cache.get(clazz);
         if (propmap == null)
@@ -95,13 +95,13 @@ public class BonesOfBeans
      * @return a <code>Map</code> of all property descriptors in the bean. The
      * map elements are keyed by property name.
      */
-    public static Map<String, PropertyDescriptor> getAllPropertyDescriptors(Class beanClass)
+    public static Map<String, PropertyDescriptor> getAllPropertyDescriptors(Class<?> beanClass)
     {
         return getpropmap(beanClass);    
     }
     
     
-    public static Map<String, PropertyDescriptor> getAllPropertyDescriptorsEx(Class beanClass)
+    public static Map<String, PropertyDescriptor> getAllPropertyDescriptorsEx(Class<?> beanClass)
     {
         return getpropmap(beanClass, true);
     }
@@ -334,7 +334,7 @@ public class BonesOfBeans
     {
         try
         {
-            Class clazz = Class.forName(classname);
+            Class<?> clazz = Class.forName(classname);
             return clazz.newInstance();
         }
         catch (Exception ex)
@@ -351,21 +351,21 @@ public class BonesOfBeans
      * primitive wrapper.  If aClass is primitive, returns aClass.
      * Otherwise, returns null.
      */
-    static Class primitiveEquivalentOf(Class aClass)
+    static Class<?> primitiveEquivalentOf(Class<?> aClass)
     {
         return aClass.isPrimitive()
         ? aClass
-        : (Class) objectToPrimitiveMap.get(aClass);
+        : (Class<?>) objectToPrimitiveMap.get(aClass);
     }
     
-    public static Class wrapperEquivalentOf(Class aClass)
+    public static Class<?> wrapperEquivalentOf(Class<?> aClass)
     {
-        Iterator it = objectToPrimitiveMap.entrySet().iterator();
+        Iterator<Map.Entry<Class<?>, Class<?>>> it = objectToPrimitiveMap.entrySet().iterator();
         while(it.hasNext())
         {
-            Map.Entry entry = (Map.Entry) it.next();
+            Map.Entry<Class<?>, Class<?>> entry = it.next();
             if(aClass.equals(entry.getValue()))
-                return (Class)entry.getKey();
+                return (Class<?>)entry.getKey();
         }
         return  aClass;
     }
@@ -375,7 +375,7 @@ public class BonesOfBeans
      * Mapping from primitive wrapper Classes to their
      * corresponding primitive Classes.
      */
-    private static final Map<Class, Class> objectToPrimitiveMap = new HashMap<Class, Class>(13);
+    private static final Map<Class<?>, Class<?>> objectToPrimitiveMap = new HashMap<Class<?>, Class<?>>(13);
     
     static
     { 

@@ -30,7 +30,7 @@ public class ColdAtoms
 		if (queue.poll() != null)
 		{
 			// free some space
-			if (!buckets.isEmpty())
+			if (buckets.size() > 1)
 				buckets.fetch();
 			// reset the low memory indicator
 			lowMemIndicator = new SoftReference<Object>(new Object(), queue);

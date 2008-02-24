@@ -36,7 +36,7 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
     	super(typeHandle, hgType, clazz);
         try
         {
-        	linkConstructor = beanClass.getDeclaredConstructor(new Class[] {HGHandle[].class} );
+        	linkConstructor = javaClass.getDeclaredConstructor(new Class[] {HGHandle[].class} );
         }
         catch (NoSuchMethodException ex) { }
     	hgType.setThisHandle(typeHandle);
@@ -47,15 +47,15 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
         Object bean = null;
         try
         {
-            JavaTypeFactory javaTypes = JavaTypeFactory.getInstance();
+            JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
             if (targetSet != null && targetSet.deref().length > 0)
             	if (linkConstructor != null)
             		bean = linkConstructor.newInstance(new Object[] { targetSet.deref() });
             	else
             		throw new RuntimeException("Can't construct link with Java type " +
-            				beanClass.getName() + " please include a (HGHandle [] ) constructor.");
+            				javaClass.getName() + " please include a (HGHandle [] ) constructor.");
             else
-           	   bean = beanClass.newInstance();
+           	   bean = javaClass.newInstance();
             TypeUtils.setValueFor(graph, handle, bean);            
             Record record = (Record)hgType.make(handle, targetSet, null);
 	        RecordType recordType = (RecordType)hgType;
@@ -70,7 +70,7 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
         }
         catch (InstantiationException ex)
 		{
-        	throw new HGException("Unable to instantiate bean of type '" + beanClass.getName() +
+        	throw new HGException("Unable to instantiate bean of type '" + javaClass.getName() +
         			"', make sure that bean has a default constructor declared.");
 		}
         catch (Throwable t)
@@ -109,9 +109,9 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
 	        	}
         		record.set(slot, value);            	
 	        }
-	        result = hgType.store(record);        
+        	result = hgType.store(record);
 		}
-		return result;        
+		return result;
     }
 
     public void release(HGPersistentHandle handle)

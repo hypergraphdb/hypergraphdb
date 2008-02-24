@@ -9,12 +9,23 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 
+ * <p>
+ * This is similar to the standard <code>WeakHashMap</code>, but it 
+ * uses <code>SoftReference</code>s for the map's values instead 
+ * of <code>WeakReference</code>s for the maps keys. Thus, an entry is removed
+ * from the map when the JVM is low in memory and when the entry's value is
+ * softly reachable. 
+ * </p>
+ *
+ * @author Borislav Iordanov
+ *
+ * @param <K> The type of the map key.
+ * @param <V> The type of the map value.
+ */
 public class SoftHashMap <K, V> extends AbstractMap<K, V>
 {
-    private final Map<K, SoftValue<K, V>> hash;
-
-    private final ReferenceQueue<V> queue = new ReferenceQueue<V>();
-
     private static class SoftValue<Ka, Va> extends SoftReference<Va> 
     {
         @SuppressWarnings("unused")
@@ -45,11 +56,14 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
     	public V setValue(V v) { V old = v; this.v = v; return old;}
     	public K getKey() { return k; } 
     }
+ 
+    private final Map<K, SoftValue<K, V>> hash;
+    private final ReferenceQueue<V> queue = new ReferenceQueue<V>();
     
     private void processQueue() 
     {
-        SoftValue sv;
-        while ((sv = (SoftValue) queue.poll()) != null) 
+        SoftValue<K, V> sv;
+        while ((sv = (SoftValue<K,V>) queue.poll()) != null) 
         {
             hash.remove(sv.key);
         }
@@ -148,12 +162,12 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
     				return false;
     			else
     			{
-    				Map.Entry<K,V> e = (Map.Entry)o;
+    				Map.Entry<K,V> e = (Map.Entry<K,V>)o;
     				return s.contains(new E(e.getKey(), e.getValue()));
     			}
     		}
-
-    		public boolean containsAll(Collection c) 
+    			
+    		public boolean containsAll(Collection<?> c) 
     		{
     			for (Object x:c)
     				if (!this.contains(x)) 
@@ -187,7 +201,7 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
     				return false;
     			else
     			{
-    				Map.Entry<K,V> e = (Map.Entry)o;
+    				Map.Entry<K,V> e = (Map.Entry<K,V>)o;
     				return s.remove(new E(e.getKey(), e.getValue()));
     			}    		
     		}

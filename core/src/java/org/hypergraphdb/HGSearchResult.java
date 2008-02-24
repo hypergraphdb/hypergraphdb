@@ -51,5 +51,5 @@ public interface HGSearchResult<T> extends TwoWayIterator<T>
      * throw a <code>NoSuchElementException</code>.  
      * </p>
      */
-    public static final HGSearchResult EMPTY = new EmptySearchResult();
+    public static final HGSearchResult<? extends Object> EMPTY = new EmptySearchResult();
 }

@@ -397,4 +397,3 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 }
-

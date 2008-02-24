@@ -28,9 +28,10 @@ import org.hypergraphdb.util.Mapping;
  */
 public abstract class HGQuery 
 {    
+	@SuppressWarnings("unchecked")
 	public final static HGQuery NOP = new HGQuery()
 	{
-		public <T> HGSearchResult<T> execute() { return HGSearchResult.EMPTY; }
+		public <T> HGSearchResult<T> execute() { return (HGSearchResult<T>)HGSearchResult.EMPTY; }
 	};
 	
 /*	public static HGQuery make(HyperGraph hg, String expression)
@@ -100,9 +101,9 @@ public abstract class HGQuery
     public static final class hg
     {
         public static HGQueryCondition type(HGHandle h) { return new AtomTypeCondition(h); }
-        public static HGQueryCondition type(Class c) { return new AtomTypeCondition(c); }
+        public static HGQueryCondition type(Class<?> c) { return new AtomTypeCondition(c); }
         public static HGQueryCondition typePlus(HGHandle h) { return new TypePlusCondition(h); }
-        public static HGQueryCondition typePlus(Class c) { return new TypePlusCondition(c); }        
+        public static HGQueryCondition typePlus(Class<?> c) { return new TypePlusCondition(c); }        
         public static HGQueryCondition subsumes(HGHandle h) { return new SubsumesCondition(h); }
         public static HGQueryCondition subsumed(HGHandle h) { return new SubsumedCondition(h); }
         
@@ -141,10 +142,10 @@ public abstract class HGQuery
         public static HGQueryCondition lte(String path, Object x) { return part(path, x, ComparisonOperator.GTE); }
         public static HGQueryCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
         
-        public static HGQueryCondition apply(Mapping m, HGQueryCondition c) { return new MapCondition(c, m); }
-        public static Mapping linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
-        public static Mapping deref(HyperGraph graph) { return new DerefMapping(graph); }
-        public static Mapping targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
+        public static HGQueryCondition apply(Mapping<?,?> m, HGQueryCondition c) { return new MapCondition(c, m); }
+        public static Mapping<?,?> linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
+        public static Mapping<?,?> deref(HyperGraph graph) { return new DerefMapping(graph); }
+        public static Mapping<?,?> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
         
         //
@@ -161,6 +162,7 @@ public abstract class HGQuery
     	 * @param condition The query condition.
     	 * @return
     	 */
+        @SuppressWarnings("unchecked")
     	public static <T> T getOne(HyperGraph graph, HGQueryCondition condition)
     	{
     		HGHandle h = findOne(graph, condition);

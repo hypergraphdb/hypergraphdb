@@ -27,10 +27,10 @@ import org.hypergraphdb.HGException;
  */
 public class GenericObjectFactory<T> implements ObjectFactory<T> 
 {
-	private Class type;
-    private Constructor linkConstructor = null;
+	private Class<T> type;
+    private Constructor<T> linkConstructor = null;
     
-    public GenericObjectFactory(Class type)
+    public GenericObjectFactory(Class<T> type)
     {
     	this.type = type;
         try
@@ -41,7 +41,7 @@ public class GenericObjectFactory<T> implements ObjectFactory<T>
     	
     }
     
-	public Class getType() 
+	public Class<T> getType() 
 	{
 		return type;
 	}

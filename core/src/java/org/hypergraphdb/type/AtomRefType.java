@@ -19,6 +19,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
+import org.hypergraphdb.event.HGEvent;
 import org.hypergraphdb.event.HGListener;
 import org.hypergraphdb.event.HGAtomRemoveRequestEvent;
 import org.hypergraphdb.query.impl.UnionResult;
@@ -40,7 +41,7 @@ import org.hypergraphdb.storage.BAUtils;
  * 
  * @author Borislav Iordanov
  */
-public class AtomRefType implements HGAtomType, HGSearchable
+public class AtomRefType implements HGAtomType, HGSearchable<HGPersistentHandle, HGPersistentHandle>
 {
     public static final HGPersistentHandle HGHANDLE =
         HGHandleFactory.makeHandle("2ec10476-d964-11db-a08c-eb6f4c8f155a");
@@ -99,10 +100,11 @@ public class AtomRefType implements HGAtomType, HGSearchable
 		return floatingIdx;
 	}
 	
-	private class RemovalListener implements HGListener<HGAtomRemoveRequestEvent>
+	private class RemovalListener implements HGListener
 	{
-		public HGListener.Result handle(HyperGraph hg, HGAtomRemoveRequestEvent ev)
+		public HGListener.Result handle(HyperGraph hg, HGEvent event)
 		{
+			HGAtomRemoveRequestEvent ev = (HGAtomRemoveRequestEvent)event;
 			HGPersistentHandle pHandle = hg.getPersistentHandle(ev.getAtomHandle());
 			if (getHardIdx().findFirst(pHandle) != null ||
 				getFloatingIdx().findFirst(pHandle) != null) // symbolic links don't prevent removal of atoms
@@ -245,8 +247,10 @@ public class AtomRefType implements HGAtomType, HGSearchable
 	 * type <code>HGHandle</code>. In the former case, references with the specific
 	 * mode and referent are search. In the latter or if the mode of the HGAtomRef is null, 
 	 * all reference regardless of mode are searched.
+	 * 
 	 */
-	public HGSearchResult find(Object key) 
+	@SuppressWarnings("unchecked")	
+	public HGSearchResult<HGPersistentHandle> find(HGPersistentHandle key) 
 	{
 		if (key instanceof HGAtomRef)
 		{
