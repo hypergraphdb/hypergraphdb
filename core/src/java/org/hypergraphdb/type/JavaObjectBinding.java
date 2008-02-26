@@ -152,7 +152,7 @@ public class JavaObjectBinding extends JavaAbstractBinding
 	        	Pair<RecordType, Record> curr = superList.pop();
 	        	if (result != null)
 	        		curr.getSecond().set(superSlot, result);
-	        	result = curr.getFirst().store(curr.getSecond());	        	
+	        	result = curr.getFirst().store(curr.getSecond());
 	        }
 		}
 		return result;

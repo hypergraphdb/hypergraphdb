@@ -77,17 +77,17 @@ public class JavaAbstractBinding implements HGCompositeType
     
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
-		throw new HGException("Cannot create a run-time instance of a HGAbstractType.");
+		throw new HGException("Cannot create a run-time instance of a HGAbstractType:" + javaClass.getName());
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
-		throw new HGException("Cannot store and instance of a HGAbstractType in the database.");		
+		throw new HGException("Cannot store and instance of a HGAbstractType in the database:" + javaClass.getName());		
 	}
 
 	public void release(HGPersistentHandle handle) 
 	{
-		throw new HGException("Cannot release an instance of a HGAbstractType.");		
+		throw new HGException("Cannot release an instance of a HGAbstractType:" + javaClass.getName());		
 	}
 	
     public boolean subsumes(Object general, Object specific)
