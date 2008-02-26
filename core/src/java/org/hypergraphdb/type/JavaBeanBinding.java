@@ -26,12 +26,12 @@ import org.hypergraphdb.atom.HGAtomRef;
  * 
  * @author Borislav Iordanov
  */
-public class JavaBeanBinding extends JavaAbstractBeanBinding
+public class JavaBeanBinding extends JavaAbstractBinding
 {
-    private Constructor linkConstructor = null;
+    private Constructor<?> linkConstructor = null;
 
         
-    public JavaBeanBinding(HGHandle typeHandle, RecordType hgType, Class clazz)
+    public JavaBeanBinding(HGHandle typeHandle, RecordType hgType, Class<?> clazz)
     {
     	super(typeHandle, hgType, clazz);
         try
@@ -39,7 +39,6 @@ public class JavaBeanBinding extends JavaAbstractBeanBinding
         	linkConstructor = javaClass.getDeclaredConstructor(new Class[] {HGHandle[].class} );
         }
         catch (NoSuchMethodException ex) { }
-    	hgType.setThisHandle(typeHandle);
     }
 
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)

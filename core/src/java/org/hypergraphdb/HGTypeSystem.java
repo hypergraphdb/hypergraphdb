@@ -300,7 +300,8 @@ public class HGTypeSystem
 
 	/**
 	 * <p>
-	 *
+	 * Create a HyperGraph type for the specified Java class and store the type
+	 * under the passed in <code>handle</code>. 
 	 * </p>
 	 *
 	 * @param handle
@@ -314,7 +315,9 @@ public class HGTypeSystem
 			classToAtomType.put(clazz, handle);
 			getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));
 			HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
-			if (!h.equals(handle))
+			if (h == null)
+				throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");				
+			else if (!h.equals(handle))
 				throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
 
 		}
@@ -326,9 +329,12 @@ public class HGTypeSystem
 				classToAtomType.put(clazz, handle);
 				getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));
 				HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
-				if (!h.equals(handle))
+				if (h == null)
+					throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");					
+				else if (!h.equals(handle))
 					throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
-				return h;
+				else
+					return h;
 			} });
 	}
 
@@ -358,7 +364,17 @@ public class HGTypeSystem
 		HGHandle newHandle = hg.add(clazz, NULLTYPE_PERSISTENT_HANDLE);
 		classToAtomType.put(clazz, newHandle);
 		getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(newHandle));
-		return defineNewJavaTypeTransaction(newHandle, clazz);
+		HGHandle inferred = defineNewJavaTypeTransaction(newHandle, clazz);
+		if (inferred == null)
+		{
+			// rollback changes
+			getClassToTypeDB().removeAllEntries(clazz.getName());
+			classToAtomType.remove(clazz);
+			hg.remove(newHandle);
+			return null;
+		}
+		else
+			return inferred;
 	}
 
 	/**
@@ -374,7 +390,8 @@ public class HGTypeSystem
 		HGAtomType inferredHGType = javaTypes.defineHGType(clazz, newHandle);
 
 		if (inferredHGType == null)
-			throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");
+			return null;
+			// throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");
 
 		//
 		// Now, replace the dummy atom that we added at the beginning with the new type.

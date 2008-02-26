@@ -494,10 +494,17 @@ public /*final*/ class HyperGraph
             if (link instanceof HGValueLink)
                 value = ((HGValueLink)link).getValue();            
             HGHandle type = typeSystem.getTypeHandle(value.getClass());
+            if (type == null)
+            	throw new HGException("Unable to create HyperGraph type for class " + value.getClass().getName());
             result = addLink(value, type, link, (byte)flags);
         }
         else
-            result = addNode(atom, typeSystem.getTypeHandle(atom.getClass()), (byte)flags);
+        {
+        	HGHandle type = typeSystem.getTypeHandle(atom.getClass());
+            if (type == null)
+            	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
+            result = addNode(atom, type, (byte)flags);
+        }
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
     }
@@ -971,10 +978,20 @@ public /*final*/ class HyperGraph
     public void replace(HGHandle handle, Object atom)
     {
     	HGHandle atomType;
-    	if (atom instanceof HGValueLink)
-    		atomType = typeSystem.getTypeHandle(((HGValueLink)atom).getValue().getClass());
+    	if (atom instanceof HGValueLink)    		
+    	{
+    		Class<?> c = ((HGValueLink)atom).getValue().getClass();
+    		atomType = typeSystem.getTypeHandle(c);
+            if (atomType == null)
+            	throw new HGException("Unable to create HyperGraph type for class " + c.getName());
+            
+    	}
     	else
+    	{
     		atomType = typeSystem.getTypeHandle(atom.getClass());
+            if (atomType == null)
+            	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());    		
+    	}
         replace(handle, atom, atomType);
         eventManager.dispatch(this, new HGAtomReplacedEvent(handle));        
     }
@@ -1293,71 +1310,6 @@ public /*final*/ class HyperGraph
     	HGQuery query = HGQuery.make(this, condition);
         return query.execute();
     }
-    
-    /**
-     * <p>Run a HyperGraphDB query based on the specified expression. For the 
-     * syntax of the HyperGraphDB query language, please consult the reference
-     * manual.
-     * 
-     * @param expression The query expression. Cannot be <code>null</code>
-     * @return The <code>HGSearchResult</code> of the query.
-     */
-/*    public HGSearchResult find(String expression)
-    {
-    	HGQuery query = HGQuery.make(this, expression);
-    	return query.execute();
-    } */
-    
-    /**
-     * <p>Create an index (if not already existing) along a specified dimension of 
-     * composite HyperGraph type.</p>
-     * 
-     * <p>
-     * All subsequent additions and removals of atoms of this type will trigger
-     * updates of the newly created index. Note that if HyperGraph already contains
-     * atoms of that type, they will be scanned to populate the index based on
-     * the current data. Hence this operation may take some time to complete.
-     * (<strong>NOTE:</strong> we don't have feedback mechanism yet for long
-     * hypergraph operations, but once we do, such operations will be calling back
-     * progress update listeners and the like.
-     * </p>
-     * 
-     * @param typeHandle The handle of the type for which the index must be created.
-     * @param dimensionPath A sequence of dimension names pointing to the nested type
-     * dimension which must be indexed. If such a dimension cannot be navigated to
-     * by following a composite type nesting, a <code>HGException</code> will be thrown.
-     * @return <code>true</code> if  a new index was created and <code>false</code> otherwise.
-     */
-/*    public boolean createIndex(HGHandle typeHandle, String [] dimensionPath)
-    {
-    	ByPartIndexer indexer = new ByPartIndexer(typeHandle, dimensionPath);
-    	return idx_manager.register(indexer);
-//    	return idx_manager.createIndex(getPersistentHandle(typeHandle), dimensionPath);
-    } */
-    
-    /**
-     * <p>Return the index of a given type dimension (a.k.a. property). The index
-     * must have been previsouly created with the <code>createIndex</code> method,
-     * otherwise this method returns <code>null</code>.</p>
-     *
-     * @param The handle to the type.
-     * @param A <code>String [] </code> representing the path to the type dimension.
-     */
-/*    public HGIndex getIndex(HGHandle typeHandle, String [] dimensionPath)
-    {
-    	return idx_manager.getIndex(getPersistentHandle(typeHandle), dimensionPath);
-    } */
-    
-    /**
-     * <p>Remove a previously created index of a given type dimension.</p>
-     *
-     * @param The handle to the type.
-     * @param A <code>String [] </code> representing the path to the type dimension.
-     */
-/*    public void removeIndex(HGHandle typeHandle, String [] dimensionPath)
-    {
-    	idx_manager.removeIndex(getPersistentHandle(typeHandle), dimensionPath);
-    } */
     
     /**
      * <p>

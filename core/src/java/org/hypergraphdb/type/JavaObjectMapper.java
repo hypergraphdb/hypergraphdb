@@ -1,6 +1,7 @@
 package org.hypergraphdb.type;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 
 import org.hypergraphdb.HGException;
@@ -42,7 +43,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 		return idx;
 	}
 	
-	private HGHandle getSuperSlot()
+	public HGHandle getSuperSlot()
 	{
 		if (superSlot == null)
 			superSlot = graph.getTypeSystem().getJavaTypeFactory().getSlotHandle(
@@ -94,28 +95,14 @@ public class JavaObjectMapper implements JavaTypeMapper
 	{
 		initClasses();
 		return checkClass(javaClass);
-/*		for (String existing : classes)
-		{				
-			Class<?> e = null;
-			try { e = Class.forName(existing); }
-			catch (Exception ex) { }
-			if (e != null && e.isAssignableFrom(javaClass))
-				return true;
-		}		
-		return false; */ 
 	}
 
-	private HGAtomType defineComposite(HGTypeSystem typeSystem, Field [] fields) 
+	private boolean ignoreField(Field f)
 	{
-		HGAbstractCompositeType compositeType = new HGAbstractCompositeType();
-		for (Field f : fields)
-		{
-			compositeType.addProjection(
-				new HGAbstractCompositeType.Projection(
-						f.getName(), 
-						typeSystem.getTypeHandle(f.getType())));
-		}
-		return compositeType;
+		int m = f.getModifiers();
+		return (m & Modifier.TRANSIENT) != 0 ||
+			   (m & Modifier.STATIC) != 0 ||
+			   f.getAnnotation(HGIgnore.class) != null;
 	}
 	
 	private HGAtomRef.Mode getReferenceMode(Class<?> javaClass, Field field)
@@ -152,39 +139,57 @@ public class JavaObjectMapper implements JavaTypeMapper
 		
 		HGTypeSystem typeSystem = graph.getTypeSystem();
 		JavaTypeFactory javaTypes = typeSystem.getJavaTypeFactory();
-		
-		boolean is_abstract = javaTypes.isAbstract(javaClass);
-		boolean is_default_constructible = javaTypes.isDefaultConstructible(javaClass);
-		boolean is_link = javaTypes.isLink(javaClass);		
-		
 		Field fields [] = javaClass.getDeclaredFields();
-		
-		if (is_abstract || !(is_default_constructible || is_link))
-			return defineComposite(typeSystem, fields);
-		
+				
 		RecordType recType = new RecordType();
+
+		// First, find out about the super slot which we put if the parent is a 
+		// non-empty record.
+		if (javaClass.getSuperclass() != null)
+		{
+			// Make sure we handle properly recursive calls - if the type handle yields
+			// a 'Class' instance, it means we're in the process of constructing the type.
+			// So we can simply check whether it has any fields that are not to be ignored.
+			boolean has_parent = false;
+			HGHandle parentTypeHandle = typeSystem.getTypeHandle(javaClass.getSuperclass());
+			Object x = graph.get(parentTypeHandle);			
+			if (x instanceof Class)
+			{
+				Class<?> clazz = (Class<?>)x;				
+				for (Field pf : clazz.getDeclaredFields())
+					if (!ignoreField(pf)) { has_parent = true; break; }
+			}
+			else
+			{
+				HGAtomType parentType = typeSystem.getAtomType(javaClass.getSuperclass());
+				has_parent = parentType instanceof HGCompositeType && 
+							((HGCompositeType)parentType).getDimensionNames().hasNext();
+			}
+			if (has_parent)
+				recType.addSlot(getSuperSlot());
+		}
+		
 		for (Field field : fields)
 		{ 
-			if (field.getAnnotation(HGIgnore.class) != null)
+			if (ignoreField(field))
 				continue;
-			HGHandle slotHandle = javaTypes.getSlotHandle(field.getName(), 
-														  typeSystem.getTypeHandle(field.getType()));
+			HGHandle fieldTypeHandle = typeSystem.getTypeHandle(field.getType());
+			if (fieldTypeHandle == null)
+			{
+				throw new HGException("Unable to create HG type for field " + 
+									  field.getName() + " of class " + javaClass.getName());
+			}
+			HGHandle slotHandle = javaTypes.getSlotHandle(field.getName(), fieldTypeHandle);
 			recType.addSlot(slotHandle);
 			HGAtomRef.Mode refMode = getReferenceMode(javaClass, field);						
 			if (refMode != null)
 				typeSystem.getHyperGraph().add(new AtomProjection(typeHandle, slotHandle, refMode));			
 		}
 		
-		if (javaClass.getSuperclass() != null)
-		{
-			HGAtomType parentType = typeSystem.getAtomType(javaClass.getSuperclass());
-			// Store super class only if its type is a non-empty composite type.
-			if (parentType instanceof HGCompositeType && 
-				((HGCompositeType)parentType).getDimensionNames().hasNext())
-				recType.addSlot(getSuperSlot());
-		}
 		if (recType.getSlots().isEmpty())
 			return new HGAbstractType();
+//		else if (!isInstantiable(javaTypes, javaClass))
+//			return defineComposite(typeSystem, fields);
 		else
 			return recType;
 	}
@@ -196,11 +201,20 @@ public class JavaObjectMapper implements JavaTypeMapper
 		if (mapAsSerializableObject(javaClass))
 		{
 			if (hgType instanceof RecordType)
-				return new JavaBeanBinding(typeHandle, (RecordType)hgType, javaClass);
+			{
+				RecordType recType = (RecordType)hgType;
+				recType.setThisHandle(typeHandle);
+				if (JavaTypeFactory.isHGInstantiable(javaClass))
+					return new JavaObjectBinding(typeHandle, recType, javaClass);
+				else
+					return new JavaAbstractBinding(typeHandle, recType, javaClass);
+			}
 			else if (hgType instanceof HGCompositeType)
-				return new JavaAbstractBeanBinding(typeHandle, (HGCompositeType)hgType, javaClass);
+				return new JavaAbstractBinding(typeHandle, (HGCompositeType)hgType, javaClass);
+			
 			else if (hgType instanceof HGAbstractType)
 				return new JavaInterfaceBinding(typeHandle, hgType, javaClass);
+			
 			else
 				return hgType;
 		}

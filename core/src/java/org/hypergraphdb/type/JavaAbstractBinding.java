@@ -20,21 +20,24 @@ import org.hypergraphdb.LazyRef;
 /**
  * <p>
  * Acts as an atom type for Java interfaces and abstract classes that have
- * declared/visible bean properties, but cannot be instantiateed. Concrete
- * bean classes are represented by the <code>JavaBeanBinding</code> implementation. 
+ * declared/visible bean properties or private fields translated into 
+ * record slots, but cannot be instantiateed. Concrete
+ * bean classes are represented by the <code>JavaBeanBinding</code> or the
+ * <code>JavaObjectBinding</code> implementations depending on how exactly
+ * that particular Java class is handled. 
  * </p>
  * 
  * @author Borislav Iordanov
  *
  */
-public class JavaAbstractBeanBinding implements HGCompositeType 
+public class JavaAbstractBinding implements HGCompositeType 
 {
     protected HyperGraph graph;	
 	protected Class<?> javaClass;
     protected HGHandle typeHandle;
     protected HGCompositeType hgType;    
     
-    public JavaAbstractBeanBinding(HGHandle typeHandle, HGCompositeType hgType, Class<?> clazz)
+    public JavaAbstractBinding(HGHandle typeHandle, HGCompositeType hgType, Class<?> clazz)
     {
     	this.typeHandle = typeHandle;
     	this.javaClass = clazz;
@@ -45,6 +48,11 @@ public class JavaAbstractBeanBinding implements HGCompositeType
     {
         this.graph = hg;    	
         hgType.setHyperGraph(hg);
+    }
+    
+    public Class<?> getJavaClass()
+    {
+    	return javaClass;
     }
     
     public HGCompositeType getHGType()
@@ -93,7 +101,7 @@ public class JavaAbstractBeanBinding implements HGCompositeType
             return false;
         else
         {
-            JavaAbstractBeanBinding otherJB = (JavaAbstractBeanBinding)other;
+            JavaAbstractBinding otherJB = (JavaAbstractBinding)other;
             //TODO:??? could be subclasses; if || with both forms of isAssignable is more correct
             return typeHandle.equals(otherJB.typeHandle) && javaClass.isAssignableFrom(otherJB.javaClass);            
         }

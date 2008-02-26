@@ -84,13 +84,13 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 	}
 
-	public boolean isAbstract(Class<?> c)
+	public static boolean isAbstract(Class<?> c)
 	{
 		return Modifier.isAbstract(c.getModifiers()) || 
 		  	   Modifier.isInterface(c.getModifiers());
 	}
 	
-	public boolean isDefaultConstructible(Class<?> c)
+	public static boolean isDefaultConstructible(Class<?> c)
 	{
 		try 
 		{
@@ -103,7 +103,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}		
 	}
 	
-	public boolean isLink(Class<?> c)
+	public static boolean isLink(Class<?> c)
 	{
 		try 
 		{
@@ -114,6 +114,11 @@ public class JavaTypeFactory implements JavaTypeMapper
 		{
 			return false;
 		}		
+	}
+	
+	public static boolean isHGInstantiable(Class<?> c)
+	{
+		return !isAbstract(c) && (isDefaultConstructible(c) || isLink(c));
 	}
 	
 	public HGHandle getSlotHandle(String label, HGHandle type)

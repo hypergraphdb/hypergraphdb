@@ -2,6 +2,7 @@ package org.hypergraphdb.type;
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
+import java.util.Stack;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
@@ -9,8 +10,9 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
+import org.hypergraphdb.util.Pair;
 
-public class JavaObjectBinding extends JavaAbstractBeanBinding
+public class JavaObjectBinding extends JavaAbstractBinding
 {
     private Constructor<?> linkConstructor = null;
     
@@ -22,27 +24,41 @@ public class JavaObjectBinding extends JavaAbstractBeanBinding
         	linkConstructor = javaClass.getDeclaredConstructor(new Class[] {HGHandle[].class} );
         }
         catch (NoSuchMethodException ex) { }
-    	hgType.setThisHandle(typeHandle);
     }
 
     private void assignFields(HGPersistentHandle valueHandle, Object instance)
-    {    	
+    {    	 
     	JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-        Record record = (Record)hgType.make(valueHandle, null, null);
-        RecordType recordType = (RecordType)hgType;    	
-        for (HGHandle slotHandle : recordType.getSlots())
-        {
-        	Slot slot = (Slot)graph.get(slotHandle);
-        	if ("!super".equals(slot.getLabel()))
-        	{
-        		JavaObjectBinding superType = (JavaObjectBinding)graph.getTypeSystem().getAtomType(javaClass.getSuperclass());
-        		superType.assignFields((HGPersistentHandle)record.get(slot), instance);
+    	HGHandle superSlot = javaTypes.getJavaObjectMapper().getSuperSlot();
+    	RecordType hgType = (RecordType)this.hgType;
+    	Class<?> clazz = javaClass;    	
+    	while (true)
+    	{
+    		Record record = (Record)hgType.make(valueHandle, null, null);
+    		HGPersistentHandle ss = null;
+	        for (HGHandle slotHandle : hgType.getSlots())
+	        {	 
+	        	Slot slot = (Slot)graph.get(slotHandle);
+	        	if (slotHandle.equals(superSlot))
+	        	{
+	        		ss = (HGPersistentHandle)record.get(slot);
+	        		continue;
+	        	}	        	
+	        	Object value = record.get(slot);
+	        	if (value != null && hgType.getReferenceMode(slotHandle) != null)
+	        		value = graph.get(((HGAtomRef)value).getReferent());
+	            javaTypes.assignPrivate(clazz, instance, slot.getLabel(), value);	        	
+	        }
+	        if (ss != null)
+        	{	
+	        	clazz = clazz.getSuperclass();
+        		JavaAbstractBinding superType = (JavaAbstractBinding)graph.getTypeSystem().getAtomType(clazz);	        	
+        		hgType = (RecordType)superType.getHGType();
+        		valueHandle = ss;
         	}
-        	Object value = record.get(slot);
-        	if (value != null && recordType.getReferenceMode(slotHandle) != null)
-        		value = graph.get(((HGAtomRef)value).getReferent());
-            javaTypes.assignPrivate(javaClass, instance, slot.getLabel(), value);	        	
-        }    	
+	        else
+	        	break;
+    	}
     }
     
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
@@ -80,39 +96,64 @@ public class JavaObjectBinding extends JavaAbstractBeanBinding
 		if (result == null)
 		{
             JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-	        final Record record = new BeanRecord(typeHandle, instance);
+            HGHandle superSlotHandle = javaTypes.getJavaObjectMapper().getSuperSlot();
+            Slot superSlot = graph.get(superSlotHandle);
+            Class<?> clazz = javaClass;
 	        RecordType recordType = (RecordType)hgType;
-	        for (HGHandle slotHandle : recordType.getSlots())
-	        {
-	        	Slot slot = (Slot)graph.get(slotHandle);
-	        	if ("!super".equals(slot.getLabel()))
-	        	{
-	        		HGAtomType superType = graph.getTypeSystem().getAtomType(javaClass.getSuperclass());
-	        		record.set(slot, superType.store(instance));	        		
-	        	}
-	        	else
-	        	{
-		        	// Normal field declared at the level of instances' class.
-		        	Object value = javaTypes.retrievePrivate(javaClass, instance, slot.getLabel());
-		        	HGAtomRef.Mode refMode = recordType.getReferenceMode(slotHandle);
-		        	if (refMode != null && value != null)
+	        Record record = new BeanRecord(typeHandle, instance);
+	        Stack<Pair<RecordType, Record>> superList = new Stack<Pair<RecordType, Record>>();
+	        while (true)
+	        {		        
+		        superList.push(new Pair<RecordType, Record>(recordType, record));
+		        boolean has_super = false;
+		        for (HGHandle slotHandle : recordType.getSlots())
+		        {        	
+		        	if (slotHandle.equals(superSlotHandle))
 		        	{
-		        		HGHandle valueAtomHandle = graph.getHandle(value);
-		        		if (valueAtomHandle == null)
-		        		{
-		        			HGAtomType valueType = (HGAtomType)graph.get(slot.getValueType());
-		        			valueAtomHandle = graph.getPersistentHandle(
-		        					graph.add(value, 
-		        						valueType instanceof HGAbstractType ?
-		        							 graph.getTypeSystem().getTypeHandle(value.getClass()) :	
-		        							 slot.getValueType()));
-		        		}
-		        		value = new HGAtomRef(valueAtomHandle, refMode);
+		        		has_super = true;
+		        		continue;
 		        	}
-	        		record.set(slot, value);
-	        	}
+		        	else
+		        	{
+		        		Slot slot = (Slot)graph.get(slotHandle);
+			        	// Normal field declared at the level of instances' class.
+			        	Object value = javaTypes.retrievePrivate(clazz, instance, slot.getLabel());
+			        	HGAtomRef.Mode refMode = recordType.getReferenceMode(slotHandle);
+			        	if (refMode != null && value != null)
+			        	{
+			        		HGHandle valueAtomHandle = graph.getHandle(value);
+			        		if (valueAtomHandle == null)
+			        		{
+			        			HGAtomType valueType = (HGAtomType)graph.get(slot.getValueType());
+			        			valueAtomHandle = graph.getPersistentHandle(
+			        					graph.add(value, 
+			        						valueType instanceof HGAbstractType ?
+			        							 graph.getTypeSystem().getTypeHandle(value.getClass()) :	
+			        							 slot.getValueType()));
+			        		}
+			        		value = new HGAtomRef(valueAtomHandle, refMode);
+			        	}
+		        		record.set(slot, value);
+		        	}
+		        }
+		        if (has_super)
+		        {
+		        	clazz = clazz.getSuperclass();
+		        	HGHandle superTypeHandle = graph.getTypeSystem().getTypeHandle(clazz);
+		        	JavaAbstractBinding superType = graph.get(superTypeHandle); 
+		        	recordType = (RecordType)superType.getHGType();		
+		        	record = new Record(superTypeHandle);
+		        }
+		        else 
+		        	break;
+	        }	        
+	        while (!superList.isEmpty())
+	        {
+	        	Pair<RecordType, Record> curr = superList.pop();
+	        	if (result != null)
+	        		curr.getSecond().set(superSlot, result);
+	        	result = curr.getFirst().store(curr.getSecond());	        	
 	        }
-        	result = hgType.store(record);
 		}
 		return result;
     }

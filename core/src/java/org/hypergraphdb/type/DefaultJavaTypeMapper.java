@@ -215,9 +215,13 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 									 Class<?> javaClass)
 	{
 		if (hgType instanceof RecordType)
-			return new JavaBeanBinding(typeHandle, (RecordType)hgType, javaClass);
+		{
+			RecordType recType = (RecordType)hgType;
+			recType.setThisHandle(typeHandle);
+			return new JavaBeanBinding(typeHandle, recType, javaClass);
+		}
 		else if (hgType instanceof HGCompositeType)
-			return new JavaAbstractBeanBinding(typeHandle, (HGCompositeType)hgType, javaClass);
+			return new JavaAbstractBinding(typeHandle, (HGCompositeType)hgType, javaClass);
 		else if (hgType instanceof HGAbstractType)
 			return new JavaInterfaceBinding(typeHandle, hgType, javaClass);
 		else

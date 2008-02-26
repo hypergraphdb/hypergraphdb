@@ -79,6 +79,11 @@ public class RecordType implements HGCompositeType
 	    			refModes.put(l.getProjection(), l.getMode());
 	    		}
 	    	}
+	    	catch (RuntimeException ex)
+	    	{
+	    		refModes = null;
+	    		throw ex;
+	    	}
 	    	finally
 	    	{
 	    		HGUtils.closeNoException(rs);
