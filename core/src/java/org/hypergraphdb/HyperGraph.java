@@ -10,6 +10,7 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.cache.WeakRefAtomCache;
@@ -1851,16 +1852,16 @@ public /*final*/ class HyperGraph
 				// If we are replacing a link by a link. We need to compute the
 				// delta of the target sets and remove the link from incidence
 				// sets where it no longer belongs.    		
-	    		HashMap<HGPersistentHandle, Boolean> newTargets = new HashMap<HGPersistentHandle, Boolean>();
+	    		HashSet<HGPersistentHandle> newTargets = new HashSet<HGPersistentHandle>();
 				for (int i = 0; i < newLink.getArity(); i++)
 				{
 					HGPersistentHandle target = getPersistentHandle(newLink.getTargetAt(i)); 
 					newLayout[2 + i] = target;
 					if (layout.length > 2) 
-						newTargets.put(target, Boolean.TRUE);
+						newTargets.add(target);
 				}    		
 				for (int i = 2; i < layout.length; i++)
-					if (newTargets.get(layout[i]) != null)
+					if (!newTargets.contains(layout[i]))
 						removeFromIncidenceSet(layout[i], lHandle, pHandle);
 	    	}
 	    	else 
