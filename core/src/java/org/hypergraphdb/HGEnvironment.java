@@ -27,7 +27,7 @@ import java.util.*;
  * @author Borislav Iordanov
  */
 public class HGEnvironment 
-{
+{	
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
 	
 	synchronized static void set(String location, HyperGraph graph)
