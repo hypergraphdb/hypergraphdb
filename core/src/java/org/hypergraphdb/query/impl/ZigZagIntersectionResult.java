@@ -3,7 +3,6 @@ package org.hypergraphdb.query.impl;
 import java.util.NoSuchElementException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -13,26 +12,27 @@ import org.hypergraphdb.util.HGUtils;
  * 
  * @author Borislav Iordanov
  */
-public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombiner<HGRandomAccessResult, HGRandomAccessResult>
+public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSCombiner<T>
 {
-	private HGRandomAccessResult left, right;
-	private Object current = null, next = null, prev = null;
-
+	private HGRandomAccessResult<T> left, right;
+	private T current = null, next = null, prev = null;
+	private int lookahead = 0;
+	
 	private void swap()
 	{
-		HGRandomAccessResult tmp = left;
+		HGRandomAccessResult<T> tmp = left;
 		left = right;
 		right = tmp;
 	}
 	
-	private Object advance()
+	private T advance()
 	{
 		boolean use_next = true;
 		while (true)
 		{
 			if (!left.hasNext() && use_next || !right.hasNext())
 				return null;
-			Object x;
+			T x;
 			if (use_next)
 			{
 				x = left.next();
@@ -64,64 +64,111 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		}
 	}
 	
-	private Object back()
+	private T back()
 	{
+/*		HGRandomAccessResult<T> starting_left = left, starting_right = right; 
+		T save_left = left.current();		
+	 	T save_right = right.current(); */
+		T result = null;
 		while (true)
 		{
 			if (!left.hasPrev() || !right.hasPrev())
-				return null;
-			Object x = left.prev();
+				break;
+			T x = left.prev();
 			if (right.goTo(x, false) == GotoResult.found)
-				return x;
+			{ 
+				result = x; 
+				break; 
+			}
 			else
 				swap();
 		}
+/*		if (result == null)
+		{
+			starting_left.goTo(save_left, true);
+			starting_right.goTo(save_right, true);
+		} */
+		return result;
 	}
 
 	// Here, we try to make the current position of this zig-zag result
-	// set be the current position of the left_or_right parameter (which is
-	// one of the 'left' or 'right' result sets). If we succeed, we return
+	// set be the current position of the left_or_right parameter or the closest
+	// position with greater than that current. If we succeed, we return
 	// true, otherwise we return false. 
-	private boolean positionTo(HGRandomAccessResult left_or_right)
+	private boolean positionTo(HGRandomAccessResult<T> left_or_right)
 	{
-		if (left != left_or_right)
+		// Make sure the argument 'left_or_right' is the left rs in the loop below
+		if (left != left_or_right) 
 			swap();
-		prev = back();
+		while (true)
+		{
+			switch (right.goTo(left.current(), false))
+			{
+				case found: 
+				{
+					prev = back();
+					if (prev != null)
+						current = advance();
+					else
+						current = left.current();
+					if ( (next = advance()) != null)
+						lookahead = 1;
+					else
+						lookahead = 0;
+					return true;
+				}
+				case close:
+				{					 
+					swap();		
+					break;
+				}
+				default:
+				{
+					return false;
+				}				
+			}
+		}
+/*		prev = back();
 		current = advance();
 		if (current == null)
 			return false;
 		next = advance();
-		return true;
+		return true; */
 	}
 		
 	public ZigZagIntersectionResult()
 	{		
 	}
 	
-	public ZigZagIntersectionResult(HGRandomAccessResult left, HGRandomAccessResult right)
+	public ZigZagIntersectionResult(HGRandomAccessResult<T> left, HGRandomAccessResult<T> right)
 	{
 		init(left, right);
 	}
 
-	public void init(HGRandomAccessResult left, HGRandomAccessResult right)
+	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
 	{
-		this.left = left;
-		this.right = right;
+		this.left = (HGRandomAccessResult<T>)left;
+		this.right = (HGRandomAccessResult<T>)right;
 		next = advance();
+		lookahead = 1;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public GotoResult goTo(Object value, boolean exactMatch) 
 	{
-		Object save_left = left.current();		
+		// We need to save state of both left and right cursor. Because of swapping, save the current
+		// left and the current right in local variables.
+		HGRandomAccessResult<T> starting_left = left, starting_right = right; 
+		T save_left = left.current();		
 		GotoResult r_l = left.goTo(value, exactMatch);
 		if (r_l == GotoResult.nothing)
 			return GotoResult.nothing;
 		
-		Object save_right = right.current();
+		T save_right = right.current();
 		GotoResult r_r = right.goTo(value, exactMatch);
 		if (r_r == GotoResult.nothing)
 		{
-			left.goTo(save_left, true); // restore current position of left...
+			starting_left.goTo(save_left, true); // restore current position of left...
 			return GotoResult.nothing;
 		}
 		
@@ -132,7 +179,10 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 				current = left.current();
 				prev = back();
 				if (prev != null) advance();
-				next = advance();
+				if ( (next = advance()) != null)
+					lookahead = 1;
+				else
+					lookahead = 0;
 				return GotoResult.found;
 			}
 			else // r_r == close
@@ -141,8 +191,8 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 					return GotoResult.close;
 				else
 				{
-					left.goTo(save_left, true);
-					right.goTo(save_right, true);
+					starting_left.goTo(save_left, true);
+					starting_right.goTo(save_right, true);
 					return GotoResult.nothing;
 				}			
 			}
@@ -155,15 +205,15 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 					return GotoResult.close;
 				else
 				{
-					left.goTo(save_left, true);
-					right.goTo(save_right, true);
+					starting_left.goTo(save_left, true);
+					starting_right.goTo(save_right, true);
 					return GotoResult.nothing;
 				}
 			}
 			else
 			{
 				boolean moved;
-				if (((Comparable)left.current()).compareTo(right.current()) > 0)
+				if (((Comparable<T>)left.current()).compareTo(right.current()) > 0)
 					moved = positionTo(left);
 				else
 					moved = positionTo(right);
@@ -171,8 +221,8 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 					return GotoResult.close;
 				else
 				{
-					left.goTo(save_left, true);
-					right.goTo(save_right, true);
+					starting_left.goTo(save_left, true);
+					starting_right.goTo(save_right, true);
 					return GotoResult.nothing;					
 				}				
 			}		
@@ -185,7 +235,7 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		right.close();		
 	}
 
-	public Object current() 
+	public T current() 
 	{
 		if (current == null)
 			throw new NoSuchElementException();
@@ -203,7 +253,7 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		return prev != null;
 	}
 
-	public Object prev() 
+	public T prev() 
 	{
 		if (prev == null)
 			throw new NoSuchElementException();
@@ -211,7 +261,15 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		{
 			next = current;
 			current = prev;
-			prev = back();
+	        lookahead++;
+	        while (true)
+	        {
+	        	prev = back();
+	        	if (prev == null)
+	        		break;
+	        	if (--lookahead == -1)
+	        		break;
+	        }
 			return current;
 		}
 	}
@@ -221,7 +279,7 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		return next != null;
 	}
 
-	public Object next() 
+	public T next() 
 	{
 		if (next == null)
 			throw new NoSuchElementException();
@@ -229,7 +287,15 @@ public class ZigZagIntersectionResult implements HGRandomAccessResult, RSCombine
 		{
 			prev = current;
 			current = next;
-			next = advance();
+	        lookahead--;
+	        while (true)
+	        {
+	        	next = advance();
+	        	if (next == null)
+	        		break;
+	        	if (++lookahead == 1)
+	        		break;
+	        }
 			return current;
 		}
 	}

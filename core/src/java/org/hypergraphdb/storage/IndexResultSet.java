@@ -32,6 +32,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
 {        
     protected Cursor cursor;
     protected Object current, prev, next;
+    protected int lookahead = 0;
     protected DatabaseEntry key;        
     protected DatabaseEntry data = new DatabaseEntry();
     protected ByteArrayConverter converter;
@@ -52,10 +53,16 @@ abstract class IndexResultSet implements HGRandomAccessResult
     {
         checkCursor();
         prev = current;
-        current = next;        
-        next = advance();
-        if (next == null)
-        	back();
+        current = next;
+        lookahead--;
+        while (true)
+        {
+        	next = advance();
+        	if (next == null)
+        		break;
+        	if (++lookahead == 1)
+        		break;
+        }
     }
     
     protected final void movePrev()
@@ -63,7 +70,15 @@ abstract class IndexResultSet implements HGRandomAccessResult
         checkCursor();
         next = current;
         current = prev;
-        prev = back();
+        lookahead++;
+        while (true)
+        {
+        	prev = back();
+        	if (prev == null)
+        		break;
+        	if (--lookahead == -1)
+        		break;
+        }
     }
     
     protected abstract Object advance();
@@ -100,6 +115,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
 	    {
 	        cursor.getCurrent(key, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(data.getData());
+	        lookahead = 1;
 	    }
 	    catch (Throwable t)
 	    {
@@ -113,7 +129,11 @@ abstract class IndexResultSet implements HGRandomAccessResult
         prev = back();
         if (prev != null)
         	advance();  	
-		next = advance();
+		next = advance();		
+        if (next != null) 
+        	lookahead = 1;
+        else 
+        	lookahead = 0;
     }
     
     public GotoResult goTo(Object value, boolean exactMatch)

@@ -2,7 +2,7 @@ package org.hypergraphdb.query.impl;
 
 import org.hypergraphdb.HGSearchResult;
 
-public interface RSCombiner<Left, Right>  extends HGSearchResult
+public interface RSCombiner<T>  extends HGSearchResult<T>
 {
-	void init(Left l, Right r);
+	void init(HGSearchResult<T> l, HGSearchResult<T> r);
 }

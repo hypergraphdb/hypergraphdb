@@ -21,30 +21,32 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
-public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSearchResult, HGSearchResult>
+public class SortedIntersectionResult<T> implements HGSearchResult<T>, RSCombiner<T>
 {
-	private HGSearchResult left, right;
-	private Object current = null, next = null, prev = null;
+	private HGSearchResult<T> left, right;
+	private T current = null, next = null, prev = null;
+	private int lookahead = 0;
 	
-	private Object advance()
+	@SuppressWarnings("unchecked")
+	private T advance()
 	{
 		boolean advance_left = true, advance_right = true;
-		Comparable lnext = null, rnext = null;
+		Comparable<T> lnext = null, rnext = null;
 		while (true)				
 		{
 			if (advance_left)
 				if (!left.hasNext())
 					return null;
 				else
-					lnext = (Comparable)left.next();
+					lnext = (Comparable<T>)left.next();
 			if (advance_right)
 				if (!right.hasNext())
 					return null;
 				else
 					rnext = (Comparable)right.next();
-			int comp = lnext.compareTo(rnext);
+			int comp = lnext.compareTo((T)rnext);
 			if (comp == 0)
-				return lnext;
+				return (T)lnext;
 			else if (comp < 0) // lnext < rnext
 			{
 				advance_left = true;
@@ -58,25 +60,26 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 		}
 	}
 	
-	private Object back()
+	@SuppressWarnings("unchecked")
+	private T back()
 	{
 		boolean back_left = true, back_right = true;
-		Comparable lprev = null, rprev = null;
+		Comparable<T> lprev = null, rprev = null;
 		while (true)				
 		{
 			if (back_left)
 				if (!left.hasPrev())
 					return null;
 				else
-					lprev = (Comparable)left.prev();
+					lprev = (Comparable<T>)left.prev();
 			if (back_right)
 				if (!right.hasPrev())
 					return null;
 				else
-					rprev = (Comparable)right.prev();
-			int comp = lprev.compareTo(rprev);
+					rprev = (Comparable<T>)right.prev();
+			int comp = lprev.compareTo((T)rprev);
 			if (comp == 0)
-				return lprev;
+				return (T)lprev;
 			else if (comp < 0) // lprev < rprev
 			{
 				back_left = false;
@@ -94,19 +97,20 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 	{		
 	}
 	
-	public SortedIntersectionResult(HGSearchResult left, HGSearchResult right)
+	public SortedIntersectionResult(HGSearchResult<T> left, HGSearchResult<T> right)
 	{
 		init(left, right);
 	}
 	
-	public void init(HGSearchResult left, HGSearchResult right)
+	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
 	{
 		this.left = left;
 		this.right = right;
 		next = advance();
+		lookahead = 1;
 	}
 	
-	public Object current() 
+	public T current() 
 	{
 		if (current == null)
 			throw new NoSuchElementException();
@@ -125,7 +129,7 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 		return prev != null;
 	}
 
-	public Object prev() 
+	public T prev() 
 	{
 		if (prev == null)
 			throw new NoSuchElementException();
@@ -133,7 +137,15 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 		{
 			next = current;
 			current = prev;
-			prev = back();
+	        lookahead++;
+	        while (true)
+	        {
+	        	prev = back();
+	        	if (prev == null)
+	        		break;
+	        	if (--lookahead == -1)
+	        		break;
+	        }
 			return current;
 		}
 	}
@@ -143,7 +155,7 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 		return next != null;
 	}
 
-	public Object next() 
+	public T next() 
 	{
 		if (next == null)
 			throw new NoSuchElementException();
@@ -151,7 +163,15 @@ public class SortedIntersectionResult implements HGSearchResult, RSCombiner<HGSe
 		{
 			prev = current;
 			current = next;
-			next = advance();
+	        lookahead--;
+	        while (true)
+	        {
+	        	next = advance();
+	        	if (next == null)
+	        		break;
+	        	if (++lookahead == 1)
+	        		break;
+	        }
 			return current;
 		}
 	}
