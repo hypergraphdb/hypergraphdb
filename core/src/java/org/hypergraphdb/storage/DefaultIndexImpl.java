@@ -219,9 +219,9 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     public void removeEntry(KeyType key, ValueType value)
     {
         checkOpen();
-        if (key == null)
+/*        if (key == null)
             throw new HGException("Attempting to lookup index '" + 
-                                  name + "' with a null key.");
+                                  name + "' with a null key."); */
         DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
         DatabaseEntry valueEntry = new DatabaseEntry(valueConverter.toByteArray(value));
         Cursor cursor = null;
@@ -262,9 +262,9 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     public ValueType findFirst(KeyType key)
     {
         checkOpen();
-        if (key == null)
+/*        if (key == null)
             throw new HGException("Attempting to lookup index '" + 
-                                  name + "' with a null key.");
+                                  name + "' with a null key."); */
         DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
         DatabaseEntry value = new DatabaseEntry();        
         ValueType result = null;
@@ -293,9 +293,9 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     public HGRandomAccessResult find(KeyType key)
     {
         checkOpen();
-        if (key == null)
+/*        if (key == null)
             throw new HGException("Attempting to lookup index '" + 
-                                  name + "' with a null key.");
+                                  name + "' with a null key."); */
         DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
         DatabaseEntry value = new DatabaseEntry();        
         HGRandomAccessResult result = null;
@@ -326,9 +326,9 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     private HGRandomAccessResult findOrdered(KeyType key, boolean lower_range, boolean compare_equals)
     {
         checkOpen();
-        if (key == null)
+/*        if (key == null)
             throw new HGException("Attempting to lookup index '" + 
-                                  name + "' with a null key.");
+                                  name + "' with a null key."); */
         byte [] keyAsBytes = keyConverter.toByteArray(key);
         DatabaseEntry keyEntry = new DatabaseEntry(keyAsBytes);
         DatabaseEntry value = new DatabaseEntry();

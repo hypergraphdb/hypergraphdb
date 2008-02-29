@@ -100,18 +100,18 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         return super.isOpen() && secondaryDb != null;
     }
     
-    public HGRandomAccessResult findByValue(ValueType value)
+    public HGRandomAccessResult<KeyType> findByValue(ValueType value)
     {
         if (!isOpen())
             throw new HGException("Attempting to lookup index '" + 
                                   name + 
                                   "' while it is closed.");      
-        if (value == null)
+/*        if (value == null)
             throw new HGException("Attempting to lookup index '" + 
-                                  name + "' with a null key.");
+                                  name + "' with a null key."); */
         DatabaseEntry keyEntry = new DatabaseEntry(valueConverter.toByteArray(value));
         DatabaseEntry valueEntry = new DatabaseEntry();        
-        HGRandomAccessResult result = null;
+        HGRandomAccessResult<KeyType> result = null;
         SecondaryCursor cursor = null;
         try
         {
@@ -142,9 +142,9 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
             throw new HGException("Attempting to lookup by value index '" + 
                                   name + 
                                   "' while it is closed.");
-        if (value == null)
+/*        if (value == null)
             throw new HGException("Attempting to lookup by value index '" + 
-                                  name + "' with a null value.");
+                                  name + "' with a null value."); */
         DatabaseEntry keyEntry = new DatabaseEntry(valueConverter.toByteArray(value));
         DatabaseEntry valueEntry = new DatabaseEntry();        
         KeyType result = null;
