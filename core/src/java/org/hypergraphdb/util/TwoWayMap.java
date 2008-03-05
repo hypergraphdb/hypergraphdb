@@ -1,0 +1,48 @@
+package org.hypergraphdb.util;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+public class TwoWayMap<X,Y>
+{
+	private Map<X,Y> xtoy = new HashMap<X,Y>();
+	private Map<Y,X> ytox = new HashMap<Y,X>();
+	
+	public void add(X x, Y y)
+	{
+		xtoy.put(x, y);
+		ytox.put(y, x);
+	}
+	
+	public Iterator<X> xiterator() { return xtoy.keySet().iterator(); }
+	public Iterator<Y> yiterator() { return ytox.keySet().iterator(); }
+	public Iterator<Pair<X,Y>> xyiterator() 
+	{ 
+		final Iterator<Map.Entry<X, Y>> i = xtoy.entrySet().iterator();
+		return new Iterator<Pair<X,Y>>()
+		{
+			public void remove() 
+			{
+				i.remove();
+			}
+			public boolean hasNext() 
+			{ 
+				return i.hasNext(); 
+			}
+			public Pair<X,Y> next() 
+			{ 
+				Map.Entry<X, Y> e = i.next(); 
+				return new Pair<X,Y>(e.getKey(), e.getValue()); 
+			}
+		};
+	}
+	public Y removeX(X x) { Y y = xtoy.remove(x); if (y != null) ytox.remove(y); return y;}
+	public X removeY(Y y) { X x = ytox.remove(y); if (x != null) xtoy.remove(x); return x;}
+	public Y getY(X x) { return xtoy.get(x); }
+	public X getX(Y y) { return  ytox.get(y); }
+	public boolean containsX(X x) { return xtoy.containsKey(x); }
+	public boolean containsY(Y y) { return ytox.containsKey(y); }
+	public boolean isEmtpy() { return xtoy.isEmpty(); }
+	public void clear() { xtoy.clear(); ytox.clear(); }
+}
