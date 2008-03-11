@@ -157,11 +157,11 @@ public class MasterTest
 
 	private static Component makePanel()
 	{
-		JPanel panel = new AddRemoveListPanel();//new JPanel();
+		JPanel panel = new JPanel();//new AddRemoveListPanel();//new JPanel();
 		//panel.add(makeButton());
 		List l = new LinkedList();
 		l.add("First"); l.add("Second");
-		((AddRemoveListPanel)panel).setData(l);
+		//((AddRemoveListPanel)panel).setData(l);
 		//JPanel outer = new JPanel();
 		//outer.add(panel);
 		//JTabbedPane pane = new JTabbedPane();
@@ -305,7 +305,7 @@ public class MasterTest
 					frame.setJMenuBar((JMenuBar) m);
 				 //else
 				//	 frame.setJMenuBar(makeBar());
-				 m = find(hg, AddRemoveListPanel.class);
+				 m = find(hg, JPanel.class); //AddRemoveListPanel.class);
 				System.out.println("Panel: " + ((JPanel)m).getComponentCount());
 				 if(m!= null)
 				   frame.getContentPane().add((Component) m);
