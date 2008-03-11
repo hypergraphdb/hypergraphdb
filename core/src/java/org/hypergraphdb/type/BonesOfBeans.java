@@ -351,7 +351,7 @@ public class BonesOfBeans
      * primitive wrapper.  If aClass is primitive, returns aClass.
      * Otherwise, returns null.
      */
-    static Class<?> primitiveEquivalentOf(Class<?> aClass)
+    public static Class<?> primitiveEquivalentOf(Class<?> aClass)
     {
         return aClass.isPrimitive()
         ? aClass

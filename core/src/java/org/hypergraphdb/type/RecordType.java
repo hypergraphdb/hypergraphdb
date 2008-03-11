@@ -41,8 +41,8 @@ import java.util.Iterator;
  */
 public class RecordType implements HGCompositeType
 {
-    private ArrayList<HGHandle> slots = new ArrayList<HGHandle>();
-    private HyperGraph graph;
+    protected ArrayList<HGHandle> slots = new ArrayList<HGHandle>();
+    protected HyperGraph graph;
     private HGHandle thisHandle;
     private HashMap<String, HGProjection> projections = null;
     private HashMap<HGHandle, HGAtomRef.Mode> refModes = null;
@@ -82,6 +82,7 @@ public class RecordType implements HGCompositeType
 	    	catch (RuntimeException ex)
 	    	{
 	    		refModes = null;
+	    		//return null;
 	    		throw ex;
 	    	}
 	    	finally

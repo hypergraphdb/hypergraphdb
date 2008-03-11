@@ -18,6 +18,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.conv.SwingTypeMapper;
 import org.hypergraphdb.util.AccessibleObjectCache;
 
 
@@ -51,6 +52,9 @@ public class JavaTypeFactory implements JavaTypeMapper
 		objectMapper = new JavaObjectMapper();
 		objectMapper.setHyperGraph(graph);
 		mappers.add(0, objectMapper);
+		SwingTypeMapper stm = new SwingTypeMapper();
+		stm.setHyperGraph(graph);
+		mappers.add(0, stm);
 	}
 	
 	public void assign(Object bean, String property, Object value) 

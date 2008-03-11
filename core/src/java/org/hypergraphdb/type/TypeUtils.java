@@ -153,7 +153,7 @@ public final class TypeUtils
 	private static ThreadLocal<Map<HGPersistentHandle, Object>> HANDLE_REF_MAP = 
 		new ThreadLocal<Map<HGPersistentHandle, Object>>();
 	
-	interface WrappedRuntimeInstance { Object getRealInstance(); }
+	public interface WrappedRuntimeInstance { Object getRealInstance(); }
 	
 	public static Map<Object, HGPersistentHandle> getTransactionObjectRefMap(HyperGraph hg)
 	{
