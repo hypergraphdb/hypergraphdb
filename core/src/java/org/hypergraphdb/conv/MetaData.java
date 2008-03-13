@@ -19,6 +19,7 @@ import java.awt.Rectangle;
 import java.beans.BeanInfo;
 import java.beans.Encoder;
 import java.beans.Introspector;
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -229,6 +230,9 @@ public class MetaData {
 		//
 		registerConstructor("java.beans.EventHandler", new String[] { "target",
 				"action", "eventPropertyName", "listenerMethodName" });
+		//registerConstructor("java.beans.PropertyChangeListenerProxy",
+		//		new String[] { "propertyName", "listener"},
+		//		 new Class[] { String.class, PropertyChangeListener.class });
 		// awt
 		registerConstructor("java.awt.Point", new String[] { "x", "y" });
 		registerConstructor("java.awt.Dimension", new String[] { "width",
@@ -912,43 +916,39 @@ class java_awt_GridBagLayout_PersistenceDelegate extends DefaultConverter {
 	public Set<AddOnType> getAddOnFields() {
 		return addOnFields;
 	}
-	
-	protected static String ITEMS = "items";
+}
 
-	protected void ex_store(Object instance, Map<String, Object> props) {
-		Hashtable comptable = (Hashtable) RefUtils.getPrivateFieldValue(
-				instance.getClass(),
-				java.awt.GridBagLayout.class, "comptable");
-		props.put(ITEMS, comptable);
+// Swing
+class javax_swing_AbstractAction_PersistenceDelegate extends DefaultConverter 
+{
+	public javax_swing_AbstractAction_PersistenceDelegate() {
+		super(AbstractAction.class);
 	}
-
-	protected static final Map<String, Class> map = new HashMap<String, Class>(
-			1);
+		
+	protected static final Map<String, Class> map = 
+		new HashMap<String, Class>(1);
 	static {
-		map.put(ITEMS, Hashtable.class);
+		map.put("arrayTable", Object.class);
 	}
 
 	protected Map<String, Class> getAuxSlots() {
 		return map;
 	}
-
+	
 	protected void ex_make(Object instance, Map<String, Object> props) {
-		GridBagLayout c = ((GridBagLayout) instance);
-		Hashtable comptable = (Hashtable) props.get(ITEMS);
-		System.out.println("GBG:" + comptable);
-		
-		if (comptable != null) {
-			for (Enumeration e = comptable.keys(); e.hasMoreElements();) {
-				Component child = (Component) e.nextElement();
-				System.out.println("GBG - add:" + comptable.get(child) +
-						":" + child);
-				c.addLayoutComponent(child, comptable.get(child));
+		AbstractAction c = ((AbstractAction) instance);
+		Object val = props.get("arrayTable");
+		System.out.println("AbstractAction:" + val);
+		if (val != null) {
+			Field f = RefUtils.getPrivateField(AbstractAction.class, "arrayTable");
+			try{
+				f.set(instance, val);
+			}catch(Exception ex){
+				ex.printStackTrace();
 			}
 		}
 	}
 }
-
-// Swing
 
 // JFrame (If we do this for Window instead of JFrame, the setVisible call
 // will be issued before we have added all the children to the JFrame and

@@ -43,7 +43,7 @@ public class RecordType implements HGCompositeType
 {
     protected ArrayList<HGHandle> slots = new ArrayList<HGHandle>();
     protected HyperGraph graph;
-    private HGHandle thisHandle;
+    protected HGHandle thisHandle;
     private HashMap<String, HGProjection> projections = null;
     private HashMap<HGHandle, HGAtomRef.Mode> refModes = null;
             

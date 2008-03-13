@@ -58,9 +58,9 @@ public class ClassGenerator
 	protected HyperGraph hg;
 	// generated class Name
 	private String genClassName;
-	// convenience var to avoid sucessive replace('.', '/')
+	// convenience var to avoid successive replace('.', '/') calls
 	private String className;
-	// TODO: temp, testing only
+	// TODO: temporary, testing only
 	private SwingTypeIntrospector inspector;
 	private static Map<Class<?>, Class<?>> cache = new HashMap<Class<?>, Class<?>>();
 
@@ -147,6 +147,8 @@ public class ClassGenerator
 			genMakeSetter(mv, s, inspector.getSettersMap().get(s));
 		for (Field f : inspector.getPubFieldsMap().values())
 			genMakePubField(mv, f);
+		for (Field f : inspector.getPrivFieldsMap().values())
+			genMakePrivField(mv, f);
 		for (EventSetDescriptor e : inspector.getEventSetDescriptorsMap().values())
 			if (e != null) genMakeListeners(mv, e);
 		
@@ -218,14 +220,7 @@ public class ClassGenerator
 				"([Ljava/util/EventListener;)[Ljava/util/EventListener;");
 		mv.visitMethodInsn(INVOKEVIRTUAL, baseClassName, "setValue",
 				SET_VALUE_DESC);
-		// mv.visitMethodInsn(INVOKEVIRTUAL, "javax/swing/JButton",
-		// "getActionListeners", "()[Ljava/awt/event/ActionListener;");
-		// mv.visitMethodInsn(INVOKEVIRTUAL, "test/GeneratedCLass",
-		// "filterListeners",
-		// "([Ljava/util/EventListener;)[Ljava/util/EventListener;");
-		// mv.visitMethodInsn(INVOKEVIRTUAL, "test/GeneratedCLass", "setValue",
-		// "(Lorg/hypergraphdb/type/Record;Ljava/lang/String;Ljava/lang/Object;)V");
-	}
+    }
 
 	protected void genStorePrivField(MethodVisitor mv, Field f)
 	{
@@ -319,6 +314,23 @@ public class ClassGenerator
 			mv.visitTypeInsn(CHECKCAST, tt);
 			mv.visitFieldInsn(PUTFIELD, className, f.getName(), Type.getType(t).getDescriptor());
 	}
+		mv.visitLabel(l0);
+	}
+	protected void genMakePrivField(MethodVisitor mv, Field f){
+		Label l0 = generateBaseGetValueCall(mv, f.getName());
+		Label l9 = new Label();
+		mv.visitLabel(l9);
+		mv.visitVarInsn(ALOAD, 3);
+		mv.visitVarInsn(ALOAD, 3);
+		mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;");
+		Label l10 = new Label();
+		mv.visitLabel(l10);
+		mv.visitVarInsn(ALOAD, 4);
+		mv.visitVarInsn(ALOAD, 5);
+		Label l11 = new Label();
+		mv.visitLabel(l11);
+        mv.visitMethodInsn(INVOKESTATIC, "org/hypergraphdb/conv/RefUtils", "setPrivateFieldValue", 
+        		 "(Ljava/lang/Object;Ljava/lang/Class;Ljava/lang/String;Ljava/lang/Object;)V");
 		mv.visitLabel(l0);
 	}
 

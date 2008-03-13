@@ -1,5 +1,6 @@
 package org.hypergraphdb.conv;
 
+import java.awt.event.ActionListener;
 import java.beans.BeanInfo;
 import java.beans.EventSetDescriptor;
 import java.beans.PropertyDescriptor;
@@ -15,6 +16,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.swing.AbstractButton;
 import javax.swing.JMenuItem;
 import javax.swing.JTabbedPane;
 import org.hypergraphdb.HGException;
@@ -102,7 +105,7 @@ public class DefaultConverter implements Converter
 		catch (Exception ex)
 		{
 			throw new RuntimeException(
-					"Unable to construct converter for cls: " + type.getName());
+					"Unable to construct converter for cls: " + type.getName(), ex);
 		}
 	}
 
@@ -528,6 +531,11 @@ public class DefaultConverter implements Converter
 			if (e.getClass().getEnclosingClass() == JMenuItem.class
 					&& e.getClass().getName().startsWith(
 							"javax.swing.JMenuItem$"))
+			{
+				System.err.println("Filtering " + e);
+				continue;
+			}
+			if(e instanceof ActionListener && instance instanceof AbstractButton)
 			{
 				System.err.println("Filtering " + e);
 				continue;

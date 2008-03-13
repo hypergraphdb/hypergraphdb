@@ -121,8 +121,33 @@ public class RefUtils
 		}
 		catch (Exception e)
 		{
+			System.err.println("Unable to get field: " +
+					name + " in class: " + cls.getName());
 		}
 		return null;
+	}
+	
+	public static void setPrivateFieldValue(Object instance, Class cls,
+			String name, Object value)
+	{
+		int dot = name.indexOf(".");
+		if (dot > 0) {
+			return; //getValue(instance, cls, name);
+		}
+		try
+		{
+			Field f = getPrivateField(cls, name);
+			if (f != null)
+			{
+				f.setAccessible(true);
+				f.set(instance, value);
+			}
+		}
+		catch (Exception e)
+		{
+			System.err.println("Unable to set: " + value + "for " +
+					name + " in class: " + cls.getName());
+		}
 	}
 
 	public static Class getType(Class cls, String name)

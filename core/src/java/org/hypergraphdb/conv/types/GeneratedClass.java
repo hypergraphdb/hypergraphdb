@@ -22,8 +22,6 @@ public abstract class GeneratedClass extends SwingBinding
 	
 	public GeneratedClass(HGHandle typeHandle, SwingType hgType) {
 		super(typeHandle, hgType);
-		this.typeHandle = typeHandle;
-		this.hgType = hgType;
 	}
 	
 	public Object make(HGPersistentHandle handle,
@@ -37,13 +35,6 @@ public abstract class GeneratedClass extends SwingBinding
 			bean = instantiate(record); 
 			TypeUtils.setValueFor(graph, handle, bean);
 			if(bean == null) return null;
-//			if(bean instanceof AddRemoveListPanel.RemoveAction)
-//			{
-//				System.err.println("Make - res: " + bean + ":" + record);
-//				Object obj1 = getValue(record, "panel");
-//				System.err.println("Make - obj: " + obj1);
-//				
-//			}
 			makeBean(bean, record);
 			//System.out.println("Make - res: " + bean);
 			
@@ -102,31 +93,18 @@ public abstract class GeneratedClass extends SwingBinding
 		return AddOnFactory.instantiateConstructorLink(graph, hgType, link, record);
 	}
 	
-	public SwingType getHgType()
-	{
-		return hgType;
-	}
-
-	public void setHgType(SwingType hgType)
-	{
-		this.hgType = hgType;
-	}
-
-	public HGHandle getTypeHandle()
-	{
-		return typeHandle;
-	}
-
-	public void setTypeHandle(HGHandle typeHandle)
+	public void init(HGHandle typeHandle, SwingType hgType)
 	{
 		this.typeHandle = typeHandle;
+		this.hgType = hgType;
+		this.hgType.setThisHandle(typeHandle);
 	}
 	
 	public void dealWithListeners(Object instance, Record rec, Map<String, EventSetDescriptor> esd){
 		
 		for (String key: esd.keySet()) {
 			EventSetDescriptor d = esd.get(key);
-			Class listenerType = d.getListenerType();
+			Class<?> listenerType = d.getListenerType();
 			EventListener[] oldL = new EventListener[0];
 			try {
 				Method m = d.getGetListenerMethod();

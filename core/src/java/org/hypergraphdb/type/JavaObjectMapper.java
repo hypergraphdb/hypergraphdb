@@ -22,12 +22,12 @@ import org.hypergraphdb.util.HGUtils;
 
 public class JavaObjectMapper implements JavaTypeMapper
 {
-	private HyperGraph graph = null;
-	private HashSet<String> classes = null;
-	private HGHandle superSlot = null;
-	private HGIndex<String, HGPersistentHandle> idx = null;
+	protected HyperGraph graph = null;
+	protected HashSet<String> classes = null;
+	protected HGHandle superSlot = null;
+	protected HGIndex<String, HGPersistentHandle> idx = null;
 	
-	private HGIndex<String, HGPersistentHandle> getIndex()
+	protected HGIndex<String, HGPersistentHandle> getIndex()
 	{
 		if (idx == null)
 		{
@@ -51,7 +51,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 		return superSlot;
 	}	
 	
-	private void initClasses()
+	protected void initClasses()
 	{
 		if (classes != null)
 			return;
@@ -73,7 +73,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 		}
 	}	
 	
-	private boolean checkClass(Class<?> javaClass)
+	protected boolean checkClass(Class<?> javaClass)
 	{
 		if (!classes.contains(javaClass.getName()))
 		{
@@ -91,7 +91,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 			return true;
 	}
 	
-	private boolean mapAsSerializableObject(Class<?> javaClass)
+	protected boolean mapAsSerializableObject(Class<?> javaClass)
 	{
 		initClasses();
 		return checkClass(javaClass);

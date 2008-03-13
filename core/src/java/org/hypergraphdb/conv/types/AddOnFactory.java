@@ -265,13 +265,13 @@ public class AddOnFactory {
 				if(s != null)
 				  res.put(s.getLabel(), types[j]);
 				else
-					System.err.println("NULL AddOnSLOt at: " + i + ":" + type.getJavaClass());
+					System.err.println("NULL AddOnSlot at: " + i + ":" + type.getJavaClass());
 			}
 		}
 		return res;
 	}
 	
-	interface AddOnLinkDecriptor{
+	interface AddOnLinkDescriptor{
 		String getName();
 		Class[] getTypes();
 		void processLink(HyperGraph hg, HGRelType link, 

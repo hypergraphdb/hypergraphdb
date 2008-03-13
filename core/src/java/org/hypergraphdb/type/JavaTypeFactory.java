@@ -41,6 +41,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 	private ArrayList<JavaTypeMapper> mappers = new ArrayList<JavaTypeMapper>();
 	private JavaObjectMapper objectMapper = null;
 	private DefaultJavaTypeMapper defaultMapper = null;
+	private SwingTypeMapper swingTypeMapper = null;
 	
 	public JavaTypeFactory()
 	{
@@ -52,9 +53,9 @@ public class JavaTypeFactory implements JavaTypeMapper
 		objectMapper = new JavaObjectMapper();
 		objectMapper.setHyperGraph(graph);
 		mappers.add(0, objectMapper);
-		SwingTypeMapper stm = new SwingTypeMapper();
-		stm.setHyperGraph(graph);
-		mappers.add(0, stm);
+		swingTypeMapper = new SwingTypeMapper();
+		swingTypeMapper.setHyperGraph(graph);
+		mappers.add(0, swingTypeMapper);
 	}
 	
 	public void assign(Object bean, String property, Object value) 
@@ -177,5 +178,9 @@ public class JavaTypeFactory implements JavaTypeMapper
 	public List<JavaTypeMapper> getMappers()
 	{
 		return mappers;
+	}
+
+	public SwingTypeMapper getSwingTypeMapper() {
+		return swingTypeMapper;
 	}
 }

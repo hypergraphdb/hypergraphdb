@@ -1,5 +1,6 @@
 package org.hypergraphdb.conv.types;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HGValueLink;
+import org.hypergraphdb.annotation.AtomReference;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.atom.HGRelType;
@@ -34,7 +36,6 @@ public class SwingType extends RecordType
 	private Class<?> javaClass;
 	private HGHandle ctrHandle;
 	private HGHandle addOnsHandle;
-	private HGHandle typeHandle;
 	protected HashMap<String, HGHandle> slotHandles = new HashMap<String, HGHandle>();
 
 
@@ -45,7 +46,7 @@ public class SwingType extends RecordType
 
 	public void init(HGHandle typeHandle)
 	{
-		this.typeHandle = typeHandle;
+		this.thisHandle = typeHandle;
 		//System.out.println("SwingType: " + javaClass.getName());
 		Converter c = MetaData.getConverter(javaClass);
 		createSlots(c);
@@ -148,10 +149,10 @@ public class SwingType extends RecordType
 			}
 			
 			addSlot(slotHandle);
-			HGAtomRef.Mode refMode = getReferenceMode(slotHandle);//javaClass, slot.getLabel());
+			HGAtomRef.Mode refMode = getReferenceMode(javaClass, slot.getLabel());
 			if (refMode != null)
 				typeSystem.getHyperGraph().add(
-						new AtomProjection(typeHandle, slotHandle, refMode));
+						new AtomProjection(thisHandle, slotHandle, refMode));
 		}
 	}
 
@@ -227,46 +228,46 @@ public class SwingType extends RecordType
 	}
 
 
-//	private HGAtomRef.Mode getReferenceMode(Class<?> javaClass, String name)
-//	{
-//		//
-//		// Retrieve or recursively create a new type for the nested
-//		// bean.
-//		//
-//		try
-//		{
-//			Field field = javaClass.getDeclaredField(name);
-//			AtomReference ann = (AtomReference) field
-//					.getAnnotation(AtomReference.class);
-//			if (ann == null) return null;
-//			String s = ann.value();
-//			if ("hard".equals(s))
-//				return HGAtomRef.Mode.hard;
-//			else if ("symbolic".equals(s))
-//				return HGAtomRef.Mode.symbolic;
-//			else if ("floating".equals(s))
-//				return HGAtomRef.Mode.floating;
-//			else
-//				throw new HGException(
-//						"Wrong annotation value '"
-//								+ s
-//								+ "' for field '"
-//								+ field.getName()
-//								+ "' of class '"
-//								+ javaClass.getName()
-//								+ "', must be one of \"hard\", \"symbolic\" or \"floating\".");
-//		}
-//		catch (NoSuchFieldException ex)
-//		{
-//			// Perhaps issue a warning here if people are misspelling
-//			// unintentionally? Proper spelling is only useful for
-//			// annotation, so a warning/error should be really issued if
-//			// we find an annotation for a field that we can't make
-//			// use of?
-//			return null;
-//		}
-//	}
-//	
+	private HGAtomRef.Mode getReferenceMode(Class<?> javaClass, String name)
+	{
+		//
+		// Retrieve or recursively create a new type for the nested
+		// bean.
+		//
+		try
+		{
+			Field field = javaClass.getDeclaredField(name);
+			AtomReference ann = (AtomReference) field
+					.getAnnotation(AtomReference.class);
+			if (ann == null) return null;
+			String s = ann.value();
+			if ("hard".equals(s))
+				return HGAtomRef.Mode.hard;
+			else if ("symbolic".equals(s))
+				return HGAtomRef.Mode.symbolic;
+			else if ("floating".equals(s))
+				return HGAtomRef.Mode.floating;
+			else
+				throw new HGException(
+						"Wrong annotation value '"
+								+ s
+								+ "' for field '"
+								+ field.getName()
+								+ "' of class '"
+								+ javaClass.getName()
+								+ "', must be one of \"hard\", \"symbolic\" or \"floating\".");
+		}
+		catch (NoSuchFieldException ex)
+		{
+			// Perhaps issue a warning here if people are misspelling
+			// unintentionally? Proper spelling is only useful for
+			// annotation, so a warning/error should be really issued if
+			// we find an annotation for a field that we can't make
+			// use of?
+			return null;
+		}
+	}
+	
 	 public HGPersistentHandle store(Object instance)
 	    {
 	        HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);
@@ -286,7 +287,7 @@ public class SwingType extends RecordType
 	            }
 	            else
 	            {
-		        	HGAtomRef.Mode refMode = null;//getReferenceMode(slotHandle);        	
+		        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);        	
 		        	if (refMode == null)
 		        	{
 		                HGHandle actualTypeHandle = graph.getTypeSystem().getTypeHandle(value.getClass());
@@ -317,7 +318,10 @@ public class SwingType extends RecordType
 	 
 	 public synchronized HGAtomRef.Mode getReferenceMode(HGHandle slot)
 	 {
-		// System.out.println("SwingTypeStore-getReferenceMode: " + slot);
+		 if(thisHandle == null)	{
+			 System.out.println("SwingTypeStore-getReferenceMode: " + slot + ":" + thisHandle);
+			 Thread.currentThread().dumpStack();
+		 }
          return super.getReferenceMode(slot);
 	 }
 }
