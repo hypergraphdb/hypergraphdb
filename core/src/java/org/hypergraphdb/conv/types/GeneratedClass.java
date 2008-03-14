@@ -120,7 +120,7 @@ public abstract class GeneratedClass extends SwingBinding
 				}
 			}
 			// System.out.println("addListeners: " + d.getName() + ":" + oldL);
-			setValue(rec, key, filterListeners(oldL));
+			setValue(rec, key, filterListeners(instance, oldL));
 		}
 	}
 	

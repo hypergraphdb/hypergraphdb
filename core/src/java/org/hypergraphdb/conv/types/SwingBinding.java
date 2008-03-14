@@ -123,6 +123,15 @@ public class SwingBinding extends HGAtomTypeBase {
 					System.err.println("Unable to set field: " + label + " on "
 							+ hgType.getJavaClass().getName());
 				}
+				else if (insp.getPrivFieldsMap().containsKey(label))
+					try {
+						Field f = insp.getPrivFieldsMap().get(label);
+						f.setAccessible(true);
+						f.set(bean, value);
+					} catch (IllegalAccessException ex) {
+						System.err.println("Unable to set field: " + label + " on "
+								+ hgType.getJavaClass().getName());
+					}
 			else if (insp.getEventSetDescriptorsMap().containsKey(label)) {
 				try {
 					Method m = insp.getEventSetDescriptorsMap().get(label)
@@ -164,7 +173,7 @@ public class SwingBinding extends HGAtomTypeBase {
 					EventListener[] ls = (EventListener[]) m.invoke(bean);
 					setValue(record, e.getName()
 							+ DefaultConverter.LISTENERS_KEY,
-							filterListeners(ls));
+							filterListeners(bean, ls));
 				}
 			}
 			for (Field f : inspector.getPrivFieldsMap().values()) {
@@ -218,7 +227,7 @@ public class SwingBinding extends HGAtomTypeBase {
 		return false;
 	}
 
-	protected EventListener[] filterListeners(EventListener[] in) {
+	protected EventListener[] filterListeners(Object instance, EventListener[] in) {
 		if (in == null)
 			return null;
 		Set<EventListener> res = new HashSet<EventListener>(in.length);
@@ -243,9 +252,10 @@ public class SwingBinding extends HGAtomTypeBase {
 				System.err.println("Filtering " + e);
 				continue;
 			}
+			//the action is added as event listener too, so filter it
 			if (e instanceof ActionListener
 					&& AbstractButton.class.isAssignableFrom(hgType
-							.getJavaClass())) {
+							.getJavaClass()) && ((AbstractButton)instance).getAction() != null) {
 				System.err.println("Filtering " + e);
 				continue;
 			}

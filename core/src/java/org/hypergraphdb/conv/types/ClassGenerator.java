@@ -213,11 +213,12 @@ public class ClassGenerator
 		mv.visitVarInsn(ALOAD, 2);
 		mv.visitLdcInsn(name);
 		mv.visitVarInsn(ALOAD, 0);
+		mv.visitVarInsn(ALOAD, 1);
 		mv.visitVarInsn(ALOAD, 3);
 		mv.visitMethodInsn(INVOKEVIRTUAL, className, m.getName(), Type
 				.getMethodDescriptor(m));
 		mv.visitMethodInsn(INVOKEVIRTUAL, baseClassName, "filterListeners",
-				"([Ljava/util/EventListener;)[Ljava/util/EventListener;");
+		"(Ljava/lang/Object;[Ljava/util/EventListener;)[Ljava/util/EventListener;");
 		mv.visitMethodInsn(INVOKEVIRTUAL, baseClassName, "setValue",
 				SET_VALUE_DESC);
     }

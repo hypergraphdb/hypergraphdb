@@ -30,9 +30,12 @@ public class DefaultConverter implements Converter
 	protected Class[] ctrParamTypes;
 	protected Map<String, Class> map = new HashMap<String, Class>();
 	protected Constructor ctr;
-	protected final Class type;
+	protected Class type;
 	protected Method factoryMethod;
 
+	DefaultConverter(){
+		
+	}
 	public DefaultConverter(Class type)
 	{
 		this(type, null);

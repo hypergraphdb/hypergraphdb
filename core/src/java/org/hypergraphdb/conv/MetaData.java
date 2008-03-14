@@ -146,6 +146,9 @@ public class MetaData {
 		removeProperty("javax.swing.JMenuBar", "layout");
 		removeProperty("javax.swing.JMenuItem", "UI");
 		removeProperty("javax.swing.JButton", "UI");
+		removeProperty("javax.swing.JToolBar", "UI");
+		removeProperty("javax.swing.JToolBar", "layout");
+		removeProperty("javax.swing.AbstractAction", "enabled");
 
 		// The scrollBars in a JScrollPane are dynamic and should not
 		// be archived. The row and columns headers are changed by
@@ -934,19 +937,26 @@ class javax_swing_AbstractAction_PersistenceDelegate extends DefaultConverter
 	protected Map<String, Class> getAuxSlots() {
 		return map;
 	}
-	
-	protected void ex_make(Object instance, Map<String, Object> props) {
-		AbstractAction c = ((AbstractAction) instance);
-		Object val = props.get("arrayTable");
-		System.out.println("AbstractAction:" + val);
-		if (val != null) {
-			Field f = RefUtils.getPrivateField(AbstractAction.class, "arrayTable");
-			try{
-				f.set(instance, val);
-			}catch(Exception ex){
-				ex.printStackTrace();
-			}
+}
+
+class javax_swing_ArrayTable_PersistenceDelegate extends DefaultConverter 
+{
+	public javax_swing_ArrayTable_PersistenceDelegate() {
+		try{
+		this.type = Class.forName("javax.swing.ArrayTable");
+		}catch(Exception ex){
+			ex.printStackTrace();
 		}
+	}
+		
+	protected static final Map<String, Class> map = 
+		new HashMap<String, Class>(1);
+	static {
+		map.put("table", Object.class);
+	}
+
+	protected Map<String, Class> getAuxSlots() {
+		return map;
 	}
 }
 

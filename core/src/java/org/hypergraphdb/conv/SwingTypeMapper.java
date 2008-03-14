@@ -1,6 +1,9 @@
 package org.hypergraphdb.conv;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
+
+import javax.swing.ImageIcon;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
@@ -32,6 +35,9 @@ public class SwingTypeMapper extends JavaObjectMapper {
 	}
 
 	public HGAtomType defineHGType(Class<?> javaClass, HGHandle typeHandle) {
+		if(ImageIcon.class.isAssignableFrom(javaClass))
+			return graph.getTypeSystem().getAtomType(Serializable.class);
+		
 		if (javaClass.getName().startsWith("javax")
 				|| javaClass.getName().startsWith("java.awt")
 				|| javaClass.getName().startsWith("java.beans")
@@ -89,6 +95,28 @@ public class SwingTypeMapper extends JavaObjectMapper {
 		{
 			throw new HGException(ex);
 		}
+	}
+	
+	//com.kobrix.notebook.NotebookEditorKit
+	protected boolean checkClass(Class<?> javaClass)
+	{
+		if (!(classes.contains(javaClass.getName())
+				||javaClass.getName().startsWith("javax")
+				|| javaClass.getName().startsWith("java.awt")
+				|| javaClass.getName().startsWith("java.beans")))
+		{
+			Class<?> parent = javaClass.getSuperclass();
+			if (parent == null)
+				return false;
+			if (checkClass(parent))
+				return true;
+			for (Class<?> in : javaClass.getInterfaces())
+				if (checkClass(in))
+					return true;
+			return false;
+		}
+		else
+			return true;
 	}
 	
 	public static class HGSerializable
