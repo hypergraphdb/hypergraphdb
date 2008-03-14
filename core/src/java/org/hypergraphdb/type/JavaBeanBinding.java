@@ -80,7 +80,7 @@ public class JavaBeanBinding extends JavaAbstractBinding
         catch (InstantiationException ex)
 		{
         	throw new HGException("Unable to instantiate bean of type '" + javaClass.getName() +
-        			"', make sure that bean has a default constructor declared.");
+        			"', make sure that bean has a default constructor declared.", ex);
 		}
         catch (HGException t) { throw t; }
         catch (Throwable t)

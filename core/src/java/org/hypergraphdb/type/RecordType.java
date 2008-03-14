@@ -71,8 +71,11 @@ public class RecordType implements HGCompositeType
 	    	HGSearchResult<HGHandle> rs = null;
 	    	try
 	    	{
+	    		if (thisHandle == null)
+	    			thisHandle = graph.getHandle(this);
 	    		rs = graph.find(hg.and(hg.type(AtomProjection.class), 
-	    							   hg.link(thisHandle == null ? graph.getHandle(this) : thisHandle)));
+	    							   hg.incident(thisHandle),
+	    							   hg.orderedLink(thisHandle, HGHandleFactory.anyHandle)));
 	    		while (rs.hasNext())
 	    		{
 	    			AtomProjection l = (AtomProjection)graph.get(rs.next());
