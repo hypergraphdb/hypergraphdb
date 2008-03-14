@@ -76,7 +76,8 @@ public class RecordType implements HGCompositeType
 	    		while (rs.hasNext())
 	    		{
 	    			AtomProjection l = (AtomProjection)graph.get(rs.next());
-	    			refModes.put(l.getProjection(), l.getMode());
+	    			HGHandle slotHandle = hg.findOne(graph, hg.eq(new Slot(l.getName(),l.getProjectionValueType())));	    			
+	    			refModes.put(slotHandle, l.getMode());
 	    		}
 	    	}
 	    	catch (RuntimeException ex)
@@ -167,25 +168,25 @@ public class RecordType implements HGCompositeType
             Object value = null;
             try
             {
-            if (!layout[2*i + 1].equals(HGHandleFactory.nullHandle()))
-            {            	
-	        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);
-	        	if (refMode != null)
-	        	{
-	        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
-	        		value = refType.make(layout[2*i + 1], null, null);
-	        	}
-	        	else
-	        		value = TypeUtils.makeValue(graph, 
-	        									layout[2*i + 1], 
-	        									graph.getTypeSystem().getType(layout[2*i]));
-            }
+	            if (!layout[2*i + 1].equals(HGHandleFactory.nullHandle()))
+	            {            	
+		        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);
+		        	if (refMode != null)
+		        	{
+		        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
+		        		value = refType.make(layout[2*i + 1], null, null);
+		        	}
+		        	else
+		        		value = TypeUtils.makeValue(graph, 
+		        									layout[2*i + 1], 
+		        									graph.getTypeSystem().getType(layout[2*i]));
+	            }
             }
             catch (HGException ex)
             {
             	Slot s = graph.get(slotHandle);
             	System.err.println("Unable to get value for slot: " + s.getLabel());
-//            	throw ex;
+            	throw ex;
             }
             result.set((Slot)graph.get(slotHandle), value);
         }

@@ -176,11 +176,13 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 				HGHandle valueTypeHandle = typeSystem.getTypeHandle(propType);
 				HGHandle slotHandle = javaTypes.getSlotHandle(desc.getName(), 
 															  valueTypeHandle);
+				Slot slot = graph.get(slotHandle);
 				recordType.addSlot(slotHandle);
 				HGAtomRef.Mode refMode = getReferenceMode(javaClass, desc);						
 				if (refMode != null)
 					typeSystem.getHyperGraph().add(new AtomProjection(typeHandle, 
-																	  slotHandle, 
+																	  slot.getLabel(),
+																	  slot.getValueType(), 
 																	  refMode));
 			}
 			return recordType;

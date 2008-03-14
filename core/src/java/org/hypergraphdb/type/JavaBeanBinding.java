@@ -64,7 +64,17 @@ public class JavaBeanBinding extends JavaAbstractBinding
 	        	Object value = record.get(slot);
 	        	if (value != null && recordType.getReferenceMode(slotHandle) != null)
 	        		value = graph.get(((HGAtomRef)value).getReferent());
-                javaTypes.assign(bean, slot.getLabel(), value);	        	
+	        	try
+	        	{
+	        		javaTypes.assign(bean, slot.getLabel(), value);
+	        	}
+	        	catch (Throwable t)
+	        	{	        		
+	        		throw new HGException("Failed to assign property: " + 
+	        							  slot.getLabel() + 
+	        							  " to bean " + 
+	        							  bean.getClass(), t);
+	        	}
 	        }
         }
         catch (InstantiationException ex)
@@ -72,6 +82,7 @@ public class JavaBeanBinding extends JavaAbstractBinding
         	throw new HGException("Unable to instantiate bean of type '" + javaClass.getName() +
         			"', make sure that bean has a default constructor declared.");
 		}
+        catch (HGException t) { throw t; }
         catch (Throwable t)
         {
             throw new HGException("JavaTypeBinding.make: " + t.toString(), t);

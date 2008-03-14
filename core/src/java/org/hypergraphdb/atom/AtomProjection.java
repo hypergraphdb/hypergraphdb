@@ -14,9 +14,14 @@ import org.hypergraphdb.HGPlainLink;
  * </p>
  *
  * <p>
- * The link assumes that projections are somehow represented as hypergraph
- * atoms. This is the case, for instance, with <code>Slot</code>s of the
- * <code>Record</code> type. 
+ * The link is between the type whose projection is an atom reference and
+ * the type of the projection's value. 
+ * </p>
+ * 
+ * <p>
+ * An <code>AtomProjection</code> also holds the name of the projection as an attribute.
+ * the name together with the value type are enough (and generally necessary) to identify
+ * the projection.
  * </p>
  * 
  * @author Borislav Iordanov
@@ -25,7 +30,7 @@ import org.hypergraphdb.HGPlainLink;
 public class AtomProjection extends HGPlainLink
 {
 	private HGAtomRef.Mode mode;
-	
+	private String name;
 	
 	public AtomProjection(HGHandle [] targetSet)
 	{
@@ -42,10 +47,11 @@ public class AtomProjection extends HGPlainLink
 	 * @param mode The mode of the atom reference to be used when managing atoms
 	 * of the composite type.
 	 */
-	public AtomProjection(HGHandle type, HGHandle projection, HGAtomRef.Mode mode)
+	public AtomProjection(HGHandle type, String name, HGHandle valueType, HGAtomRef.Mode mode)
 	{
-		super(new HGHandle[] {type, projection});
+		super(new HGHandle[] {type, valueType});
 		this.mode = mode;
+		this.name = name;
 	}
 	
 	public HGHandle getType()
@@ -53,7 +59,7 @@ public class AtomProjection extends HGPlainLink
 		return getTargetAt(0);
 	}
 	
-	public HGHandle getProjection()
+	public HGHandle getProjectionValueType()
 	{
 		return getTargetAt(1);
 	}
@@ -67,4 +73,14 @@ public class AtomProjection extends HGPlainLink
 	{
 		this.mode =  mode;
 	}
+
+	public String getName()
+	{
+		return name;
+	}
+
+	public void setName(String name)
+	{
+		this.name = name;
+	}	
 }

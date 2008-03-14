@@ -1,11 +1,15 @@
 package org.hypergraphdb.indexing;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.type.AtomRefType;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGCompositeType;
 import org.hypergraphdb.type.HGProjection;
@@ -44,8 +48,20 @@ public class ByPartIndexer extends HGIndexer
 										  dimensionPath[j] + 
 										  "' in type '" + type + "'");
 				type = (HGAtomType)graph.get(projections[j].getType());
-			}			
-			projectionType = (HGAtomType)graph.get(projections[projections.length - 1].getType());
+			}	
+			HGProjection ours = projections[dimensionPath.length - 1];						
+			HGHandle enclosingType = dimensionPath.length > 1 ?
+					projections[dimensionPath.length - 2].getType() : getType();
+			// For HGAtomRef's, we want to index by the atom directly:
+    		HGHandle atomProj = hg.findOne(graph,
+    				hg.and(hg.type(AtomProjection.class), 
+    					   hg.incident(enclosingType),
+    					   hg.incident(ours.getType()),
+    					   hg.eq("name", ours.getName())));
+    		if (atomProj != null)
+    			projectionType = graph.get(AtomRefType.HGHANDLE);
+    		else 
+    			projectionType = graph.get(ours.getType());
 		}
 		return projections;
 	}
@@ -89,7 +105,10 @@ public class ByPartIndexer extends HGIndexer
 	{
 		if (projectionType == null)
 			getProjections(graph);
-		return (Comparator<?>)projectionType;
+		if (projectionType.getClass().equals(AtomRefType.class))
+			return null;
+		else
+			return (Comparator<?>)projectionType;
 	}
 
 	@Override

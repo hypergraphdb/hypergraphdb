@@ -180,10 +180,14 @@ public class JavaObjectMapper implements JavaTypeMapper
 									  field.getName() + " of class " + javaClass.getName());
 			}
 			HGHandle slotHandle = javaTypes.getSlotHandle(field.getName(), fieldTypeHandle);
-			recType.addSlot(slotHandle);
+			Slot slot = graph.get(slotHandle);			
+			recType.addSlot(slotHandle);			
 			HGAtomRef.Mode refMode = getReferenceMode(javaClass, field);						
 			if (refMode != null)
-				typeSystem.getHyperGraph().add(new AtomProjection(typeHandle, slotHandle, refMode));			
+				typeSystem.getHyperGraph().add(new AtomProjection(typeHandle, 
+																  slot.getLabel(),
+																  slot.getValueType(), 
+																  refMode));			
 		}
 		
 		if (recType.getSlots().isEmpty())

@@ -25,6 +25,7 @@ import org.hypergraphdb.event.HGAtomRemoveRequestEvent;
 import org.hypergraphdb.query.impl.UnionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAUtils;
+import org.hypergraphdb.storage.ByteArrayConverter;
 
 /**
  * <p>
@@ -41,7 +42,9 @@ import org.hypergraphdb.storage.BAUtils;
  * 
  * @author Borislav Iordanov
  */
-public class AtomRefType implements HGAtomType, HGSearchable<HGPersistentHandle, HGPersistentHandle>
+public class AtomRefType implements HGAtomType, 
+								    HGSearchable<HGPersistentHandle, HGPersistentHandle>,
+								    ByteArrayConverter<Object>
 {
     public static final HGPersistentHandle HGHANDLE =
         HGHandleFactory.makeHandle("2ec10476-d964-11db-a08c-eb6f4c8f155a");
@@ -270,5 +273,15 @@ public class AtomRefType implements HGAtomType, HGSearchable<HGPersistentHandle,
 		return new UnionResult(getHardIdx().find(referent), 
 							   new UnionResult(getSymbolicIdx().find(referent),
 									   		   getFloatingIdx().find(referent)));
+	}
+
+	public Object fromByteArray(byte[] byteArray)
+	{
+		return hg.get(BAtoHandle.getInstance().fromByteArray(byteArray));
+	}
+
+	public byte[] toByteArray(Object object)
+	{
+		return hg.getPersistentHandle(hg.getHandle(object)).toByteArray();
 	}
 }
