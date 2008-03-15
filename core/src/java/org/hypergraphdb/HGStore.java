@@ -518,6 +518,38 @@ public class HGStore
     }
     
     /**
+     * <p>Return the number of atoms in the incidence set of a given atoms. That is,
+     * return the number of links pointing to the atom.</p>
+     */
+    public long getIncidenceSetCardinality(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.getIncidenceSetCardinality called with a null handle.");
+        
+        Cursor cursor = null;
+        try
+        {
+            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+            DatabaseEntry value = new DatabaseEntry();            
+            cursor = incidence_db.openCursor(txn(), null);
+            OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
+            if (status == OperationStatus.NOTFOUND)
+            	return 0;
+            else
+            	return cursor.count();
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to retrieve incidence set for handle " + handle + 
+                                  ": " + ex.toString(), ex);
+        }    	
+        finally
+        {
+        	try { cursor.close(); } catch (Throwable t) { }
+        }
+    }
+    
+    /**
      * <p>Update the incidence set of an atom with a newly created link pointing to it.
      * This method is only to be used internally by hypergraph.
      * </p>

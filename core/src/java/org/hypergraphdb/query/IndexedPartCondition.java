@@ -6,12 +6,15 @@ import org.hypergraphdb.util.HGUtils;
 
 public class IndexedPartCondition implements HGQueryCondition
 {
-	private HGIndex idx;
+	private HGIndex<?, ?> idx;
 	private Object partValue;
 	private HGHandle type;
 	private ComparisonOperator operator;
 	
-	public IndexedPartCondition(HGHandle type, HGIndex idx, Object partValue, ComparisonOperator operator)
+	public IndexedPartCondition(HGHandle type, 
+								HGIndex<?, ?> idx, 
+								Object partValue, 
+								ComparisonOperator operator)
 	{
 		this.type = type;
 		this.idx = idx;

@@ -1027,5 +1027,13 @@ class ExpressionBasedQuery extends HGQuery
     	HGQuery query = toQuery(graph, condition);
         return query.execute();
     }
+    
+    /** 
+     * <p>Return a possibly simplified and normalized version of the condition with
+     * which this query was constructed.</p>
+     */
+    public HGQueryCondition getCondition()
+    {
+    	return condition;
+    }
 }
-

@@ -16,7 +16,9 @@ import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
 
+import com.sleepycat.db.BtreeStats;
 import com.sleepycat.db.Database;
+import com.sleepycat.db.DatabaseException;
 import com.sleepycat.db.DatabaseType;
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.LockMode;
@@ -394,5 +396,42 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     {
         if (isOpen())
             try { close(); } catch (Throwable t) { }
-    }        
+    }
+
+	public long count()
+	{
+		try
+		{
+			return ((BtreeStats)db.getStats(txn(), null)).getNumKeys();
+		}
+		catch (DatabaseException ex)
+		{
+			throw new HGException(ex);
+		}
+	}
+
+	public long count(KeyType key)
+	{
+        Cursor cursor = null;
+        try
+        {
+            cursor = db.openCursor(txn(), null);
+            DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
+            DatabaseEntry value = new DatabaseEntry();                    
+            OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+            if (status == OperationStatus.SUCCESS)
+            	return cursor.count();
+            else
+            	return 0;
+        }
+        catch (DatabaseException ex)
+        {
+        	throw new HGException(ex);
+        }
+        finally
+        {
+        	if (cursor != null)        
+        		try { cursor.close(); } catch (Throwable t) { }
+        }
+	}    
 }

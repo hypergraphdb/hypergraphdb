@@ -52,7 +52,7 @@ public abstract class HGQuery
      * for constructing HyperGraph query conditions and performing HyperGraph queries. 
      * With a Java 5+ compiler, you can import the class into your file's namespace 
      * and build HG condition with a much
-     * simpler syntax than constructing the expression tree explicitely. For example:
+     * simpler syntax than constructing the expression tree explicitly. For example:
      * </p>
      * 
      * <p>
@@ -147,6 +147,30 @@ public abstract class HGQuery
         public static Mapping<?,?> deref(HyperGraph graph) { return new DerefMapping(graph); }
         public static Mapping<?,?> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
+        
+        
+        /**
+         * <p>
+         * Count the number of atoms that match the query condition parameter. Retrieving
+         * the count might require performing the actual query traversing the result set.
+         * In cases where the condition is simple and the count is available directly from
+         * an index, it is returned right away. Otherwise, the operation may be expensive
+         * when the result set matching <code>cond</code> is large or it takes time
+         * to obtain it. 
+         * </p>
+         * 
+         * @param graph The HyperGraph against which the counting is performed.
+         * @param cond The condition specifying the result set.
+         * @return The number of atoms satisfying the query condition.
+         */
+        public static long count(HyperGraph graph, HGQueryCondition cond) 
+        { 
+        	ResultSizeEstimation.Counter counter = ResultSizeEstimation.countersMap.get(cond.getClass());
+        	if (counter == null)
+        		return ResultSizeEstimation.countResultSet(graph, cond);
+        	else
+        		return counter.count(graph, cond);
+        }
         
         //
         // Querying section.

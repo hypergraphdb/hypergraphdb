@@ -112,5 +112,18 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
     /**
      * <p>Return a result set containing all values in this index.</p>
      */
-    HGRandomAccessResult<ValueType> scanValues();    
+    HGRandomAccessResult<ValueType> scanValues();
+    
+    /**
+     * <p>Return the number of keys in this index. This operation must run
+     * in constant time, regardless of the number of keys.</p>
+     */
+    long count();
+
+    /**
+     * <p>Return the number of values for the key. This operation must run 
+     * constant time regardless of the key or the number returned.</p>
+     * @param key The key whose values must be counted.
+     */
+    long count(KeyType key);
 }

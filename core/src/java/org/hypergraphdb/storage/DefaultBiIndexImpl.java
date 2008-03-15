@@ -9,6 +9,8 @@
 package org.hypergraphdb.storage;
 
 import java.util.Comparator;
+
+import com.sleepycat.db.DatabaseException;
 import com.sleepycat.db.DatabaseType;
 import com.sleepycat.db.SecondaryCursor;
 import com.sleepycat.db.DatabaseEntry;
@@ -36,7 +38,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
     						  HGTransactionManager transactionManager,
     						  ByteArrayConverter<KeyType> keyConverter,
     						  ByteArrayConverter<ValueType> valueConverter,
-    						  Comparator comparator)
+    						  Comparator<?> comparator)
     {
         super(indexName, env, transactionManager, keyConverter, valueConverter, comparator);
     }
@@ -169,4 +171,29 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         }
         return result;
     }
+
+	public long countKeys(ValueType value)
+	{
+        DatabaseEntry keyEntry = new DatabaseEntry(valueConverter.toByteArray(value));
+        DatabaseEntry valueEntry = new DatabaseEntry();        
+        SecondaryCursor cursor = null;
+        try
+        {
+            cursor = secondaryDb.openSecondaryCursor(txn(), null);
+            OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
+            if (status == OperationStatus.SUCCESS)
+            	return cursor.count();
+            else 
+            	return 0;
+        }
+        catch (DatabaseException ex)
+        {
+        	throw new HGException(ex);
+        }
+        finally
+        {
+        	if (cursor != null)        
+        		try { cursor.close(); } catch (Throwable t) { }
+        }
+	}    
 }

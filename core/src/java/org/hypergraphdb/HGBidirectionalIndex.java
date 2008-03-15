@@ -32,4 +32,11 @@ public interface HGBidirectionalIndex<KeyType, ValueType> extends HGIndex<KeyTyp
      * </p>
      */
     KeyType findFirstByValue(ValueType value);
+    
+    /**
+     * <p>Return the number of keys pointing to the given values. This operation
+     * must execute in constant time, regardless of the data in the index.</p>
+     * @param value The value.
+     */
+    long countKeys(ValueType value);
 }
