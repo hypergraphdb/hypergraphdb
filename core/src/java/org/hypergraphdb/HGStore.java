@@ -919,7 +919,8 @@ public class HGStore
         {
         	try
         	{
-        		env.checkpoint(null);
+        		if (env.getConfig().getTransactional())
+        			env.checkpoint(null);
         	}
         	catch (Throwable t)
         	{
