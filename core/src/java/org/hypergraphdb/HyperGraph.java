@@ -157,6 +157,7 @@ public /*final*/ class HyperGraph
     
     HGHandle statsHandle = null;
     HGStats stats = new HGStats();
+    HGConfiguration config = new HGConfiguration();
     
     public HyperGraph()
     {    	
@@ -199,6 +200,29 @@ public /*final*/ class HyperGraph
     }
      
     /**
+     * <p>Return the set of configuration parameters for this HyperGraphDB instance.</p>
+     */
+    public HGConfiguration getConfig()
+	{
+		return config;
+	}
+
+    /**
+     * <p>Specify configuration parameters for this HyperGraphDB instance. If the
+     * instance is already opened, most parameters will not take effect.
+     * </p>
+     * 
+     * @param config A <code>HGConfiguration</code> holding the parameters. Must not be
+     * <code>null</code> - it is ignored if it is.
+     */
+	public void setConfig(HGConfiguration config)
+	{
+		if (config == null)
+			return;
+		this.config = config;		
+	}
+
+	/**
      * <p>Open the database if it's not already open.</p>
      */
     private synchronized void open()
@@ -209,7 +233,7 @@ public /*final*/ class HyperGraph
     	try
     	{
     		eventManager = new HGEventManager();
-	        store = new HGStore(location);
+	        store = new HGStore(location, config);
 	        cache = new WeakRefAtomCache();
 	        cache.setHyperGraph(this);
 	        typeSystem = new HGTypeSystem(this);    

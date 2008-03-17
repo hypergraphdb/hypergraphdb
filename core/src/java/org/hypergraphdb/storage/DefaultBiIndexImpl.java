@@ -47,14 +47,15 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
     {
     	sort_duplicates = false;
         super.open();
-        SecondaryConfig dbConfig = new SecondaryConfig();
-        dbConfig.setAllowCreate(true);
-        dbConfig.setTransactional(true);
-        dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
-        dbConfig.setSortedDuplicates(true);
-        dbConfig.setType(DatabaseType.BTREE);
         try
         {
+            SecondaryConfig dbConfig = new SecondaryConfig();
+            dbConfig.setAllowCreate(true);
+            if (env.getConfig().getTransactional())        
+            	dbConfig.setTransactional(true);
+            dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
+            dbConfig.setSortedDuplicates(true);
+            dbConfig.setType(DatabaseType.BTREE);        	
             secondaryDb = env.openSecondaryDatabase(null, SECONDARY_DB_NAME_PREFIX + name, null, db, dbConfig);
         }
         catch (Throwable t)

@@ -13,6 +13,7 @@ import java.util.Comparator;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
 
@@ -65,8 +66,11 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
     protected Transaction txn()
     {
-    	TransactionBDBImpl tx = (TransactionBDBImpl)transactionManager.getContext().getCurrent();
-    	return tx == null ? null : tx.getBDBTransaction();
+    	HGTransaction tx = transactionManager.getContext().getCurrent();;
+    	if (tx == null || ! (tx instanceof TransactionBDBImpl))
+    		return null;
+    	else
+    		return ((TransactionBDBImpl)tx).getBDBTransaction();
     }
     
     public DefaultIndexImpl(String indexName, 
@@ -101,15 +105,16 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     
     public void open()
     {    	
-        DatabaseConfig dbConfig = new DatabaseConfig();
-        dbConfig.setAllowCreate(true);
-        dbConfig.setTransactional(true);
-        dbConfig.setType(DatabaseType.BTREE);
-        dbConfig.setSortedDuplicates(sort_duplicates);
-        if (comparator != null)
-       		dbConfig.setBtreeComparator(comparator);        
         try
         {
+            DatabaseConfig dbConfig = new DatabaseConfig();
+            dbConfig.setAllowCreate(true);
+            if (env.getConfig().getTransactional())
+            	dbConfig.setTransactional(true);
+            dbConfig.setType(DatabaseType.BTREE);
+            dbConfig.setSortedDuplicates(sort_duplicates);
+            if (comparator != null)
+           		dbConfig.setBtreeComparator(comparator);                	
             db = env.openDatabase(null, DB_NAME_PREFIX + name, null, dbConfig);
         }
         catch (Throwable t)

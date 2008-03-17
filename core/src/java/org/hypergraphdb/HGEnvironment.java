@@ -26,9 +26,10 @@ import java.util.*;
  * 
  * @author Borislav Iordanov
  */
-public class HGEnvironment 
-{	
+public  class HGEnvironment 
+{		
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
+	private static Map<String, HGConfiguration> configs = new HashMap<String, HGConfiguration>();
 	
 	synchronized static void set(String location, HyperGraph graph)
 	{
@@ -38,6 +39,14 @@ public class HGEnvironment
 	synchronized static void remove(String location)
 	{
 		dbs.remove(location);
+	}
+	
+	static String normalize(String location)
+	{
+		char last = location.charAt(location.length() - 1); 
+		if (last == '/' || last == '\\')
+			location = location.substring(0, location.length() - 1);
+		return location;
 	}
 	
 	/**
@@ -52,18 +61,38 @@ public class HGEnvironment
 	 */
 	public synchronized static HyperGraph get(String location) 
 	{ 
-		char last = location.charAt(location.length() - 1); 
-		if (last == '/' || last == '\\')
-			location = location.substring(0, location.length() - 1);
+		location = normalize(location);
 		HyperGraph hg = dbs.get(location);
 		if (hg == null)
 		{
-			hg = new HyperGraph(location);
+			hg = new HyperGraph();
+			hg.setConfig(getConfiguration(location));
+			hg.open(location);
 			dbs.put(location, hg);
 		}
 		else if (!hg.isOpen())
+		{
+			if (configs.containsKey(location))
+				hg.setConfig(configs.get(location));
 			hg.open(location);
+		}
 		return hg;
+	}
+	
+	/**
+	 * <p>Retrieve the HyperGraphDB instance at the specified location and open it
+	 * (if not already opened) with the given configuration. If the instance has
+	 * already been opened, the configuration parameter is ignored.
+	 * 
+	 * @param location The filesystem path of the database instance.
+	 * @param config The set of configuration parameters.
+	 * @return
+	 */
+	public synchronized static HyperGraph get(String location, HGConfiguration config) 
+	{ 
+		location = normalize(location);
+		configs.put(location, config);
+		return get(location);
 	}
 	
 	/**
@@ -74,9 +103,7 @@ public class HGEnvironment
 	 */
 	public synchronized static HyperGraph getExistingOnly(String location)
 	{
-		char last = location.charAt(location.length() - 1); 
-		if (last == '/' || last == '\\')
-			location = location.substring(0, location.length() - 1);		
+		location = normalize(location);
 		HyperGraph hg = dbs.get(location);
 		if (hg == null)
 		{
@@ -106,5 +133,68 @@ public class HGEnvironment
 	public synchronized static boolean isOpen(String location)
 	{
 		return dbs.containsKey(location);
+	}
+	
+	/**
+	 * <p>
+	 * Configure a HyperGraphDB instance before it is actually opened. If the instance
+	 * at that location is already opened, the new configuration will only take effect
+	 * if you close and re-open the instance. 
+	 * </p>
+	 * 
+	 * @param location The filesystem path to the database instance.
+	 * @param config A <code>HGConfiguration</code> with the desired parameters set.
+	 */
+	public synchronized static void configure(String location, HGConfiguration config)
+	{
+		configs.put(location, config);
+	}
+	
+	/**
+	 * <p>
+	 * Retrieve the configuration of a HyperGraphDB instance. If no configuration was
+	 * previously defined, a new one will be created.
+	 * </p>
+	 * 
+	 * @param location The filesystem path to the HyperGraphDB instance.
+	 */
+	public synchronized static HGConfiguration getConfiguration(String location)
+	{
+		location = normalize(location);
+		HGConfiguration conf = configs.get(location);
+		if (conf == null)
+		{
+			HyperGraph hg = dbs.get(location);
+			if (hg != null)
+				conf = hg.getConfig();
+			else
+				conf = new HGConfiguration();
+			configs.put(location, conf);
+		}
+		return conf;
+	}
+	
+	// Try to make sure all HyperGraphs are properly closed during shutdown.
+	private static class OnShutdown implements Runnable
+	{
+		public void run()
+		{
+			for (HyperGraph graph : dbs.values())
+			{
+				if (graph.isOpen())
+					try { graph.close(); } 
+					catch (Throwable t) 
+					{ 
+						System.err.println("Problem closing HyperGraphDB instance at " + 
+										   graph.getLocation() + ", stack trace follows...");
+						t.printStackTrace(System.err);						
+					}
+			}
+		}
+	}	
+	
+	static
+	{
+		Runtime.getRuntime().addShutdownHook(new Thread(new OnShutdown()));
 	}
 }

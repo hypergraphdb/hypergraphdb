@@ -58,8 +58,11 @@ public class HGStore
     
     private Transaction txn()
     {
-    	TransactionBDBImpl tx = (TransactionBDBImpl)transactionManager.getContext().getCurrent();
-    	return tx == null ? null : tx.getBDBTransaction();
+    	HGTransaction tx = transactionManager.getContext().getCurrent();;
+    	if (tx == null || ! (tx instanceof TransactionBDBImpl))
+    		return null;
+    	else
+    		return ((TransactionBDBImpl)tx).getBDBTransaction();
     }
     
     /**
@@ -68,25 +71,29 @@ public class HGStore
      * 
      * @param database
      */
-    public HGStore(String database)
+    public HGStore(String database, HGConfiguration config)
     {
         databaseLocation = database;
         
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);
-        envConfig.setInitializeCache(true);        
-        envConfig.setInitializeLocking(true);
-        envConfig.setInitializeLogging(true);
-        envConfig.setTransactional(true);
-        envConfig.setTxnWriteNoSync(true);
-        envConfig.setLockDetectMode(LockDetectMode.RANDOM);
-        envConfig.setRunRecovery(true);
-        envConfig.setRegister(true);
-        envConfig.setLogAutoRemove(true);
-        envConfig.setMaxLockers(2000);
-        envConfig.setMaxLockObjects(2000);
-        envConfig.setMaxLocks(10000);
-//        envConfig.setRunFatalRecovery(true);
+        envConfig.setInitializeCache(true);  
+        
+        if (config.isTransactional())
+        {
+	        envConfig.setInitializeLocking(true);
+	        envConfig.setInitializeLogging(true);
+	        envConfig.setTransactional(true);
+	        envConfig.setTxnWriteNoSync(true);
+	        envConfig.setLockDetectMode(LockDetectMode.RANDOM);
+	        envConfig.setRunRecovery(true);
+	        envConfig.setRegister(true);
+	        envConfig.setLogAutoRemove(true);
+	        envConfig.setMaxLockers(2000);
+	        envConfig.setMaxLockObjects(2000);
+	        envConfig.setMaxLocks(10000);
+	//        envConfig.setRunFatalRecovery(true);
+        }
         
         File envDir = new File(databaseLocation);
         envDir.mkdirs();
@@ -96,19 +103,23 @@ public class HGStore
 
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            dbConfig.setTransactional(true);
+            if (env.getConfig().getTransactional())
+            	dbConfig.setTransactional(true);
             dbConfig.setType(DatabaseType.BTREE);
             data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);    
             primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, dbConfig);
             
             dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            dbConfig.setTransactional(true);
+            if (env.getConfig().getTransactional())
+            	dbConfig.setTransactional(true);
             dbConfig.setSortedDuplicates(true);
             dbConfig.setType(DatabaseType.BTREE);
             incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, dbConfig);
             
-	        transactionManager = new HGTransactionManager(getTransactionFactory());            
+	        transactionManager = new HGTransactionManager(getTransactionFactory());
+	        if (!env.getConfig().getTransactional())
+	        	transactionManager.disable();
         }
         catch (Exception ex)
         {
