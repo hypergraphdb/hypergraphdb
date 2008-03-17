@@ -19,10 +19,42 @@ import com.sleepycat.db.DeadlockException;
  */
 public class HGTransactionManager
 {
-	private HGTransactionFactory factory;
-	
+	private HGTransactionFactory factory;	
 	private ThreadLocal<HGTransactionContext> tcontext =  new ThreadLocal<HGTransactionContext>();
-
+	private boolean enabled = true;
+	
+	/** 
+	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>
+	 * otherwise.</p>
+	 */
+	public boolean isEnabled()
+	{
+		return enabled;
+	}
+	
+	/**
+	 * <p>Enable or disable transaction. Note that all current transactions will
+	 * be silently aborted so make sure any pending transactions are completed before
+	 * calling this method.</p>
+	 * 
+	 * @param enabled <code>true</code> if transaction must be henceforth enabled and
+	 * <code>false</code> otherwise.
+	 */
+	public void setEnabled(boolean enabled)
+	{
+		this.enabled = enabled;
+	}
+	
+	/**
+	 * <p>Enable transactions - equivalent to <code>setEnabled(true)</code>.</p>  
+	 */
+	public void enable() { setEnabled(true); }
+	
+	/**
+	 * <p>Disable transactions - equivalent to <code>setEnabled(false)</code></p>
+	 */
+	public void disable() { setEnabled(false); }
+	
 	/**
 	 * <p>Return the <code>HGTransactionContext</code> instance associated with the current
 	 * thread.</p>
@@ -32,7 +64,7 @@ public class HGTransactionManager
     	HGTransactionContext ctx = tcontext.get();
     	if (ctx == null)
     	{
-    		ctx = new HGTransactionContext(this);
+    		ctx = new DefaultTransactionContext(this);
     		tcontext.set(ctx);
     	}
     	return ctx;
@@ -106,7 +138,10 @@ public class HGTransactionManager
 	 */
 	public HGTransaction createTransaction(HGTransaction parent)
 	{
-		return factory.createTransaction(parent);
+		if (enabled)
+			return factory.createTransaction(parent);
+		else
+			return new VanillaTransaction();
 	}
 	
 	/**
