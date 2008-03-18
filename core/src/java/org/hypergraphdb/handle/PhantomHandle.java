@@ -146,7 +146,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 
 	public final boolean equals(Object other)
 	{
-		if (other == null)
+		if (other == null || ! (other instanceof HGHandle))
 			return false;
 		else if (other instanceof HGLiveHandle)
 			return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
