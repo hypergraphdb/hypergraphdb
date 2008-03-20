@@ -126,6 +126,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
     public void close()
     {
+    	if (db == null)
+    		return;
         try
         {
             db.close();

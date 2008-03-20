@@ -77,6 +77,9 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         {
             exception = ex;
         }
+     
+        if (secondaryDb == null)
+        	return;
         
         // Attempt to close secondary database even if there was an exception
         // during the close of the primary.
