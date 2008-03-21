@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.hypergraphdb.*;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.util.HGUtils;
 
 public class LinkConsistency
 {
@@ -101,10 +102,17 @@ public class LinkConsistency
 	{
 		failed.clear();
 		HGSearchResult<HGPersistentHandle> rs = graph.find(cond);
-		while (rs.hasNext() && failed.size() < stopAfter)
+		try
 		{
-			if (!isLinkConsistent(rs.next()))
-				failed.add(rs.current());
+			while (rs.hasNext() && failed.size() < stopAfter)
+			{
+				if (!isLinkConsistent(rs.next()))
+					failed.add(rs.current());
+			}
+		}
+		finally
+		{
+			HGUtils.closeNoException(rs);
 		}
 	}
 }
