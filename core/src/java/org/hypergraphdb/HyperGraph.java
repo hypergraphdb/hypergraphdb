@@ -9,7 +9,6 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 
@@ -1665,25 +1664,32 @@ public /*final*/ class HyperGraph
     private void removeFromIncidenceSet(HGPersistentHandle targetAtom,
     									HGLiveHandle incidentLiveLink,
     									HGPersistentHandle incidentLink)
-    {
-        store.removeIncidenceLink(targetAtom, incidentLink);
-        
+    {        
         //
         // Remove from cached incidence set, if present.
         //
         HGHandle [] targetIncidenceSet = cache.getIncidenceSet(targetAtom);
         if (targetIncidenceSet != null && targetIncidenceSet.length > 0)
         {
-            HGHandle [] newTargetIncidenceSet = new HGHandle[targetIncidenceSet.length - 1];
-            int k = 0;
+            int pos = -1; // position of the incident link to remove
             for (int j = 0; j < targetIncidenceSet.length; j++)
                 if (incidentLiveLink != null && incidentLiveLink == targetIncidenceSet[j] ||
                 	incidentLink.equals(targetIncidenceSet[j]))
-                    continue;
-                else
-                    newTargetIncidenceSet[k++] = targetIncidenceSet[j];
-            cache.incidenceSetRead(targetAtom, newTargetIncidenceSet);
+                {
+                	pos = j;
+                    break;
+                }
+            if (pos > -1)
+            {
+            	store.removeIncidenceLink(targetAtom, incidentLink);
+                HGHandle [] newset = new HGHandle[targetIncidenceSet.length - 1];
+                System.arraycopy(targetIncidenceSet, 0, newset, 0, pos);
+                System.arraycopy(targetIncidenceSet, pos + 1, newset, pos, targetIncidenceSet.length - pos - 1);
+            	cache.incidenceSetRead(targetAtom, newset);                
+            }
         }   	
+        else
+        	store.removeIncidenceLink(targetAtom, incidentLink);
     }
 
     /**
