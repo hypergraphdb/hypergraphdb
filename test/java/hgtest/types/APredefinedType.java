@@ -4,13 +4,14 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 
 public class APredefinedType implements HGAtomType 
 {
 	public Object make(HGPersistentHandle handle,
-			LazyRef<HGHandle[]> targetSet, LazyRef<HGHandle[]> incidenceSet) 
+			LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		return "APredefined instance";
 	}
