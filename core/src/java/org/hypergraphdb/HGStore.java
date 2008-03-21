@@ -41,6 +41,21 @@ import org.hypergraphdb.transaction.TransactionBDBImpl;
  */
 public class HGStore
 {
+	// Initialize the native libraries manually for Windows because of the weird
+	// way the OS looks for dependent libraries. We need to load them one by one
+	// separately.
+	static
+	{
+		String osname = System.getProperty("os.name");
+		if (osname.indexOf("win") > -1 || osname.indexOf("Win") > -1)
+		{
+			System.loadLibrary("msvcr71");
+			System.loadLibrary("msvcp71");			
+			System.loadLibrary("libdb44");
+			System.loadLibrary("libdb_java44");			
+		}
+	}
+	
     private static final String DATA_DB_NAME = "datadb";
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
