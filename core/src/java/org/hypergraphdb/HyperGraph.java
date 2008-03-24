@@ -2058,4 +2058,9 @@ public /*final*/ class HyperGraph
     {
     	systemAttributesDB.removeAllEntries(handle);
     }
+    
+    protected void finalize() throws Throwable
+    {
+   		try { close(); } catch (Throwable t) { }
+    }
 }
