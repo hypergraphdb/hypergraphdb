@@ -35,7 +35,7 @@ import java.util.Iterator;
  * 
  * @author Borislav Iordanov
  */
-public final class HGAtomSet 
+public final class HGAtomSet implements Iterable<HGHandle>
 {	
 	UUIDTrie trie = new UUIDTrie();
 	

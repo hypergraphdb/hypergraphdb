@@ -4,7 +4,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.Mapping;
 
-public final class DerefMapping implements Mapping
+public final class DerefMapping implements Mapping<HGHandle, Object>
 {
 	private HyperGraph graph;
 	
@@ -13,9 +13,9 @@ public final class DerefMapping implements Mapping
 		this.graph = graph;		 
 	}
 	
-	public Object eval(Object x)
+	public Object eval(HGHandle x)
 	{		
-		return graph.get((HGHandle)x);
+		return graph.get(x);
 	}
 	
 	public HyperGraph getGraph()

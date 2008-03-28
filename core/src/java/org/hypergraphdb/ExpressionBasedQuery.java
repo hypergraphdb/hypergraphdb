@@ -28,7 +28,7 @@ import org.hypergraphdb.atom.HGSubsumes;
  * 
  * @author Borislav Iordanov
  */
-class ExpressionBasedQuery extends HGQuery
+class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 {
 	private HGQueryCondition condition;
 	private HyperGraph graph;
@@ -39,8 +39,8 @@ class ExpressionBasedQuery extends HGQuery
 		QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition condition);
 	}
 	
-	private static HashMap<Class, ConditionToQuery> toQueryMap = 
-		new HashMap<Class, ConditionToQuery>();
+	private static HashMap<Class<?>, ConditionToQuery> toQueryMap = 
+		new HashMap<Class<?>, ConditionToQuery>();
 	
 	static
 	{
@@ -122,7 +122,7 @@ class ExpressionBasedQuery extends HGQuery
                 	// so far obtained. 
                 	//
                 	return new PredicateBasedFilter(hg,
-                			new PipeQuery(new SearchableBasedQuery((HGSearchable)type, value, vc.getOperator()),
+                			new PipeQuery(new SearchableBasedQuery((HGSearchable<?,?>)type, value, vc.getOperator()),
                 						  new SearchableBasedQuery(hg.indexByValue, 
                          										  null,
                          										  ComparisonOperator.EQ)),
@@ -195,12 +195,12 @@ class ExpressionBasedQuery extends HGQuery
 		});
 		toQueryMap.put(IncidentCondition.class, new ConditionToQuery()
         {
-			public HGQuery getQuery(final HyperGraph hg, final HGQueryCondition c)
+			public HGQuery<HGHandle> getQuery(final HyperGraph hg, final HGQueryCondition c)
 			{
 				final HGPersistentHandle handle = hg.getPersistentHandle(((IncidentCondition)c).getTarget());
-				return new HGQuery()
+				return new HGQuery<HGHandle>()
 				{
-					public HGSearchResult execute()
+					public HGSearchResult<HGHandle> execute()
 					{
 						return hg.getStore().getIncidenceResultSet(handle);
 					}
@@ -775,13 +775,8 @@ class ExpressionBasedQuery extends HGQuery
 		else
 			return C;
 	}
-	
-	private static HGQueryCondition parse(String condition)
-	{
-		return null;
-	}
-	
-	private static HGQuery toQuery(HyperGraph hg, HGQueryCondition condition)
+		
+	private static <ResultType> HGQuery<ResultType> toQuery(HyperGraph hg, HGQueryCondition condition)
 	{
 		ConditionToQuery transformer = (ConditionToQuery)toQueryMap.get(condition.getClass());
 		if (transformer == null)
@@ -1022,9 +1017,9 @@ class ExpressionBasedQuery extends HGQuery
 		this.condition = simplify(toDNF(condition));
 	}
 	
-    public <T> HGSearchResult<T> execute()
+    public HGSearchResult<ResultType> execute()
     {
-    	HGQuery query = toQuery(graph, condition);
+    	HGQuery<ResultType> query = toQuery(graph, condition);
         return query.execute();
     }
     

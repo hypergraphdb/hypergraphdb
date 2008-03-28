@@ -11,8 +11,6 @@ package org.hypergraphdb.algorithms;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 
-import java.util.Iterator;
-
 /**
  * <p>
  * This interface defines an adjency list (AL) generator. An AL generator is capable

@@ -41,7 +41,7 @@ import org.hypergraphdb.util.Pair;
  * 
  * @author Borislav Iordanov
  */
-public interface HGTraversal extends java.util.Iterator 
+public interface HGTraversal extends java.util.Iterator<Pair<HGHandle, HGHandle>> 
 {
 	/**
 	 * <p>Return <code>true</code> if there are remaining atoms to be visited and

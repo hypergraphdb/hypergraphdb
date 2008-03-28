@@ -7,7 +7,6 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.util.HGUtils;
 
 /**
  * 

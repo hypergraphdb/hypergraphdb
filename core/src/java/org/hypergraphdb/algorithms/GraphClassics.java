@@ -17,6 +17,24 @@ import org.hypergraphdb.util.Mapping;
  */
 public class GraphClassics
 {
+	
+	/**
+	 * <p>
+	 * Simplified interface to Dijkstra's algorithm - calls the full version with
+	 * the remaining arguments set to <code>null</code>.
+	 * </p>
+	 * 
+	 * @param start 
+	 * @param goal
+	 * @param adjencyGenerator
+	 * @return The number of edges b/w <code>start</code> and <code>goal</code> or
+	 * <code>null</code> if they are not connected.
+	 */
+	public static Double dijkstra(final HGHandle start, final HGHandle goal, final HGALGenerator adjencyGenerator)
+	{
+		return dijkstra(start, goal, adjencyGenerator, null, null, null);
+	}
+	
 	/**
 	 * <p>
 	 * Implements Dijkstra's algorithm for finding the shortest path between two

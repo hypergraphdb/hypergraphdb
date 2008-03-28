@@ -1,7 +1,6 @@
 package org.hypergraphdb.indexing;
 
 import java.util.Comparator;
-import java.util.List;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;

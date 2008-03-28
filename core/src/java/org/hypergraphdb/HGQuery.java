@@ -15,6 +15,7 @@ import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
 import org.hypergraphdb.util.CompositeMapping;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 
 /**
@@ -26,12 +27,12 @@ import org.hypergraphdb.util.Mapping;
  * 
  * @author Borislav Iordanov
  */
-public abstract class HGQuery 
+public abstract class HGQuery<SearchResult> 
 {    
 	@SuppressWarnings("unchecked")
-	public final static HGQuery NOP = new HGQuery()
+	public final static HGQuery<Object> NOP = new HGQuery<Object>()
 	{
-		public <T> HGSearchResult<T> execute() { return (HGSearchResult<T>)HGSearchResult.EMPTY; }
+		public HGSearchResult<Object> execute() { return (HGSearchResult<Object>)HGSearchResult.EMPTY; }
 	};
 	
 /*	public static HGQuery make(HyperGraph hg, String expression)
@@ -39,12 +40,13 @@ public abstract class HGQuery
 		return new ExpressionBasedQuery(hg, expression);
 	} */
 
-	public static HGQuery make(HyperGraph hg, HGQueryCondition condition)
+	@SuppressWarnings("unchecked")
+	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph hg, HGQueryCondition condition)
 	{
-		return new ExpressionBasedQuery(hg, condition);
+		return (HGQuery<SearchResult>)new ExpressionBasedQuery(hg, condition);
 	}
 
-	public abstract <T> HGSearchResult<T> execute();
+	public abstract HGSearchResult<SearchResult> execute();
     
     /**
      * <p>
@@ -100,12 +102,12 @@ public abstract class HGQuery
      */
     public static final class hg
     {
-        public static HGQueryCondition type(HGHandle h) { return new AtomTypeCondition(h); }
-        public static HGQueryCondition type(Class<?> c) { return new AtomTypeCondition(c); }
-        public static HGQueryCondition typePlus(HGHandle h) { return new TypePlusCondition(h); }
-        public static HGQueryCondition typePlus(Class<?> c) { return new TypePlusCondition(c); }        
-        public static HGQueryCondition subsumes(HGHandle h) { return new SubsumesCondition(h); }
-        public static HGQueryCondition subsumed(HGHandle h) { return new SubsumedCondition(h); }
+        public static AtomTypeCondition type(HGHandle h) { return new AtomTypeCondition(h); }
+        public static AtomTypeCondition type(Class<?> c) { return new AtomTypeCondition(c); }
+        public static TypePlusCondition typePlus(HGHandle h) { return new TypePlusCondition(h); }
+        public static TypePlusCondition typePlus(Class<?> c) { return new TypePlusCondition(c); }        
+        public static SubsumesCondition subsumes(HGHandle h) { return new SubsumesCondition(h); }
+        public static SubsumedCondition subsumed(HGHandle h) { return new SubsumedCondition(h); }
         
         public static HGQueryCondition and(HGQueryCondition...clauses)
         {
@@ -143,9 +145,9 @@ public abstract class HGQuery
         public static HGQueryCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
         
         public static HGQueryCondition apply(Mapping<?,?> m, HGQueryCondition c) { return new MapCondition(c, m); }
-        public static Mapping<?,?> linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
-        public static Mapping<?,?> deref(HyperGraph graph) { return new DerefMapping(graph); }
-        public static Mapping<?,?> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
+        public static Mapping<HGLink, HGHandle> linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
+        public static Mapping<HGHandle, Object> deref(HyperGraph graph) { return new DerefMapping(graph); }
+        public static Mapping<HGHandle,HGHandle> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
         
         
@@ -170,6 +172,24 @@ public abstract class HGQuery
         		return ResultSizeEstimation.countResultSet(graph, cond);
         	else
         		return counter.count(graph, cond);
+        }
+        
+        /**
+         * <p>Return the size of result set of the query. The query is actually executed.</p>
+         */
+        public static long count(HGQuery<?> query)
+        {
+        	int c = 0;
+        	HGSearchResult<?> rs = query.execute();
+        	try
+        	{
+        		for (; rs.hasNext(); rs.next()) c++;
+        		return c;
+        	}
+        	finally
+        	{
+        		HGUtils.closeNoException(rs);
+        	}
         }
         
         //
@@ -275,7 +295,7 @@ public abstract class HGQuery
     		}      		
     	}
     	
-    	public static <T> List<T> findAll(HGQuery query)
+    	public static <T> List<T> findAll(HGQuery<T> query)
     	{
     		ArrayList<T> result = new ArrayList<T>();
     		HGSearchResult<T> rs = null;
