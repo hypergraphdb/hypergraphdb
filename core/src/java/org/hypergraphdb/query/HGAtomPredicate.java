@@ -21,11 +21,11 @@ public interface HGAtomPredicate
 	 * <p>Check whether a given <code>Object</code> satisfies this
 	 * query condition.</p>
      * 
-	 * @param hg The <code>HyperGraph</code> instance.
+	 * @param graph The <code>HyperGraph</code> instance.
 	 * @param handle The atom on which to test the query condition.
 	 * 
 	 * @return <code>true</code> if the passed in parameter satisfies
 	 * the condition and <code>false</code> otherwise.
 	 */
-	boolean satisfies(HyperGraph hg, HGHandle handle);
+	boolean satisfies(HyperGraph graph, HGHandle handle);
 }

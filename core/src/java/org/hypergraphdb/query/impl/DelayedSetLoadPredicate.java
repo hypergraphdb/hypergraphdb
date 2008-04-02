@@ -10,12 +10,12 @@ import org.hypergraphdb.util.HGUtils;
 
 public class DelayedSetLoadPredicate implements HGAtomPredicate
 {
-	private HGQuery query;
+	private HGQuery<HGHandle> query;
 	private HGAtomSet set = null;
 	
 	private void loadSet()
 	{
-		HGSearchResult rs = null;
+		HGSearchResult<HGHandle> rs = null;
 		try
 		{
 			set = new HGAtomSet();
@@ -29,7 +29,7 @@ public class DelayedSetLoadPredicate implements HGAtomPredicate
 		}
 	}
 	
-	public DelayedSetLoadPredicate(HGQuery query)
+	public DelayedSetLoadPredicate(HGQuery<HGHandle> query)
 	{
 		this.query = query;
 	}

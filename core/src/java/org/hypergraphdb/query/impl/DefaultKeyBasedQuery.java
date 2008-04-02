@@ -31,7 +31,7 @@ public class DefaultKeyBasedQuery extends KeyBasedQuery
 	}
 
 	@Override
-	public HGSearchResult execute() 
+	public HGSearchResult<?> execute() 
 	{		
 		return graph.find(cond);
 	}

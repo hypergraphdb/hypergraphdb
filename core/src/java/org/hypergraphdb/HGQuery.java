@@ -125,6 +125,7 @@ public abstract class HGQuery<SearchResult>
         }
         public static HGQueryCondition not(HGAtomPredicate c) { return new Not(c); }
         
+        public static TargetCondition target(HGHandle h) { return new TargetCondition(h); }
         public static IncidentCondition incident(HGHandle h) { return new IncidentCondition(h); }
         public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }

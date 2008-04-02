@@ -35,8 +35,8 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	private static interface ConditionToQuery
 	{
-		HGQuery getQuery(HyperGraph hg, HGQueryCondition condition);
-		QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition condition);
+		HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition condition);
+		QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition condition);
 	}
 	
 	private static HashMap<Class<?>, ConditionToQuery> toQueryMap = 
@@ -46,7 +46,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	{
 		toQueryMap.put(AnyAtomCondition.class, new ConditionToQuery()
 		{ 
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				return new IndexScanQuery(hg.indexByType, false);						
 			}
@@ -60,7 +60,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		});
 		toQueryMap.put(AtomTypeCondition.class, new ConditionToQuery()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				AtomTypeCondition ac = (AtomTypeCondition)c;
                 HGHandle h = ac.getTypeHandle();
@@ -79,7 +79,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		});
 		toQueryMap.put(TypePlusCondition.class, new ConditionToQuery()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				TypePlusCondition ac = (TypePlusCondition)c;
 				Or orCondition = new Or();
@@ -98,7 +98,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		});		
 		toQueryMap.put(TypedValueCondition.class, new ConditionToQuery()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
                 //
                 // TODO: how to we deal with null values? For the String
@@ -159,7 +159,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		}); 
 		toQueryMap.put(AtomValueCondition.class, new ConditionToQuery()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
                 //
                 // TODO: how to we deal with null values? For the String
@@ -193,6 +193,34 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				
 			}
 		});
+		toQueryMap.put(TargetCondition.class, new ConditionToQuery()
+        {
+			public HGQuery<HGHandle> getQuery(final HyperGraph graph, final HGQueryCondition c)
+			{
+				final HGPersistentHandle handle = graph.getPersistentHandle(((TargetCondition)c).getLink());
+				return new HGQuery<HGHandle>()
+				{
+					public HGSearchResult<HGHandle> execute()
+					{
+						if (graph.isLoaded(handle))
+							return new LinkTargetsResultSet((HGLink)graph.get(handle));
+						else
+						{
+							HGPersistentHandle [] A = graph.getStore().getLink(handle);
+							if (A == null)
+								throw new NullPointerException("No link data for handle " + handle);
+							return new HandleArrayResultSet(A, 2);
+						}
+					}
+				};
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				x.predicateCost = 1;
+				return x;
+			}
+		});		
 		toQueryMap.put(IncidentCondition.class, new ConditionToQuery()
         {
 			public HGQuery<HGHandle> getQuery(final HyperGraph hg, final HGQueryCondition c)
@@ -785,7 +813,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					"Please try to contrain the query futher, for example by specifying the atom's types or " +
 					"incidence sets or some indexed property value.");
 		else
-			return transformer.getQuery(hg, condition);
+			return (HGQuery<ResultType>)transformer.getQuery(hg, condition);
 	}
 	
 	private boolean checkConsistent(AtomTypeCondition c1, AtomTypeCondition c2)

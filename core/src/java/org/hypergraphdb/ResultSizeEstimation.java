@@ -17,6 +17,7 @@ import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
 import org.hypergraphdb.query.SubsumedCondition;
 import org.hypergraphdb.query.SubsumesCondition;
+import org.hypergraphdb.query.TargetCondition;
 import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.TypedValueCondition;
 import org.hypergraphdb.type.HGAtomType;
@@ -214,6 +215,29 @@ class ResultSizeEstimation
 		}			
 	});
 
+	countersMap.put(TargetCondition.class, new Counter()
+	{ 
+		public long count(HyperGraph graph, HGQueryCondition x)
+		{
+			HGHandle h = ((TargetCondition)x).getLink();
+			if (graph.isLoaded(h))
+				return ((HGLink)graph.get(h)).getArity();
+			else
+			{
+				HGPersistentHandle [] A = graph.getStore().getLink(graph.getPersistentHandle(h));
+				if (A == null)
+					throw new NullPointerException("No link data for handle " + h);
+				else
+					return A.length - 2;
+			}
+		}
+		
+		public long cost(HyperGraph graph, HGQueryCondition x)
+		{
+			return 1;
+		}			
+	});
+	
 	countersMap.put(IncidentCondition.class, new Counter()
 	{ 
 		public long count(HyperGraph graph, HGQueryCondition x)
