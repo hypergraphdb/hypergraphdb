@@ -40,6 +40,7 @@ public class HandleArrayResultSet implements HGSearchResult<HGHandle>
 		this.A = array;
 		this.start = start;
 		this.end = end;
+		this.pos = start - 1;
 	}
 	
 	public void close()
@@ -72,12 +73,12 @@ public class HandleArrayResultSet implements HGSearchResult<HGHandle>
 
 	public boolean hasNext()
 	{
-		return pos < end;
+		return pos < end - 1;
 	}
 
 	public HGHandle next()
 	{
-		if (pos >= end)
+		if (pos >= end - 1)
 			throw new NoSuchElementException();
 		return A[++pos];
 	}

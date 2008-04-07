@@ -57,7 +57,7 @@ public class LinkTargetsResultSet implements HGSearchResult<HGHandle>
 
 	public boolean hasNext()
 	{
-		return pos < l.getArity();
+		return pos < l.getArity() - 1;
 	}
 
 	public HGHandle next()
