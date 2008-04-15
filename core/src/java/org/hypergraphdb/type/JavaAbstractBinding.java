@@ -72,7 +72,12 @@ public class JavaAbstractBinding implements HGCompositeType
 
 	public HGProjection getProjection(String dimensionName) 
 	{
-		return new BeanPropertyBasedProjection(hgType.getProjection(dimensionName));
+		HGProjection p = hgType.getProjection(dimensionName);
+		if (p == null)
+			throw new HGException("Could not find projection for '" + dimensionName + 
+					"' in HG type " + typeHandle + " for " + javaClass.getName());
+		else
+			return new BeanPropertyBasedProjection(p);
 	}
     
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 

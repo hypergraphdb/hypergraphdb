@@ -7,7 +7,7 @@ import java.util.Iterator;
  * 
  * <p>
  * This is a <code>HGTransaction</code> implementation that only maintains
- * the attribute map. It is for use when transaction are disabled.
+ * the attribute map. It is for use when transactions are disabled.
  * </p>
  *
  * @author Borislav Iordanov

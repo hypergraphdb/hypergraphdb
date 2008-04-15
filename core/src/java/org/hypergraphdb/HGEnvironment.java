@@ -26,7 +26,7 @@ import java.util.*;
  * 
  * @author Borislav Iordanov
  */
-public  class HGEnvironment 
+public class HGEnvironment 
 {		
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
 	private static Map<String, HGConfiguration> configs = new HashMap<String, HGConfiguration>();
