@@ -15,6 +15,9 @@ package org.hypergraphdb.query;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HyperGraph;
+
 /**
  * <p>
  * Represents the disjunction operator of a query condition. Several sub-clauses
@@ -23,7 +26,7 @@ import java.util.Iterator;
  * 
  * @author Borislav Iordanov
  */
-public class Or extends ArrayList<HGQueryCondition> implements HGQueryCondition 
+public class Or extends ArrayList<HGQueryCondition> implements HGQueryCondition, HGAtomPredicate 
 {
 	private static final long serialVersionUID = -1;	
 	
@@ -66,13 +69,18 @@ public class Or extends ArrayList<HGQueryCondition> implements HGQueryCondition
 		add(clause5);		
 	}
 		
-/*	public boolean satisfies(HyperGraph hg, HGHandle value)
+	public boolean satisfies(HyperGraph hg, HGHandle value)
 	{
         for (int i = 0; i < size(); i++)
-            if (get(i).satisfies(hg, value))
+        {
+        	HGQueryCondition c = get(i);
+        	if (! (c instanceof HGAtomPredicate))
+        		throw new Error("Attempt to use Or as a predicate where the sub-condition " + c + " is not a predicate.");
+            if (((HGAtomPredicate)c).satisfies(hg, value))
                 return true;
+        }
         return false;
-	} */
+	} 
 	
 	public Object clone()
 	{

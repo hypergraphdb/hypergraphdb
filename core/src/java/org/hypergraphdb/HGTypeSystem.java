@@ -561,7 +561,7 @@ public class HGTypeSystem
 		}
 		return type;
 	}
-
+	
 	/**
 	 * <p>Specify an application specific predefined type, possibly overriding a default
 	 * HyperGraph basic type. This method allows you to add base level types when the primitive types

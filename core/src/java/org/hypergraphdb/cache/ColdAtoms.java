@@ -29,6 +29,10 @@ public class ColdAtoms
 	{
 		if (queue.poll() != null)
 		{
+			Runtime rt = Runtime.getRuntime();
+			double used = (double)rt.totalMemory() / (double)rt.maxMemory();
+			if (used < 0.9) // percentage if used memory before we release it should be made configurable....
+				return;
 			if (buckets.size() > 1)
 				buckets.fetch();
 			// reset the low memory indicator

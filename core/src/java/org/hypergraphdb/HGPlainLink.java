@@ -40,7 +40,7 @@ public class HGPlainLink implements HGLink
      * 
      * @param outgoingSet A non-null array of valid <code>HGHandle</code>s of length > 0.
      */
-    public HGPlainLink(HGHandle [] outgoingSet)
+    public HGPlainLink(HGHandle...outgoingSet)
     {
         if (outgoingSet == null)
             throw new HGException("Attempt to construct a link with a null outgoing set. If the link has arity 0, please constructor with a 0 length array of atoms.");
