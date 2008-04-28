@@ -56,7 +56,7 @@ import org.hypergraphdb.type.HGPrimitiveType;
  */
 public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<JavaType>, 
 	                                                         HGOrderedSearchable<JavaType, HGPersistentHandle>, 
-	                                                         Comparator
+	                                                         Comparator<byte[]>
 {
     protected HyperGraph hg = null;
     protected HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;
@@ -140,9 +140,9 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     protected abstract byte [] writeBytes(JavaType value);
     protected abstract JavaType readBytes(byte [] data, int offset);
     
-    public int compare(Object left, Object right)
+    public int compare(byte [] left, byte []right)
     {
-        return getComparator().compare((byte[])left, (byte[])right);
+        return getComparator().compare(left, right);
     }
      
     public final void setHyperGraph(HyperGraph hg)
@@ -205,22 +205,22 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
         return getIndex().find(objectAsBytes(key));
     }
 
-    public HGSearchResult findGT(JavaType key)
+    public HGSearchResult<HGPersistentHandle> findGT(JavaType key)
     {
         return getIndex().findGT(objectAsBytes(key));
     }
 
-    public HGSearchResult findGTE(JavaType key)
+    public HGSearchResult<HGPersistentHandle> findGTE(JavaType key)
     {
         return getIndex().findGTE(objectAsBytes(key));
     }
 
-    public HGSearchResult findLT(JavaType key)
+    public HGSearchResult<HGPersistentHandle> findLT(JavaType key)
     {
         return getIndex().findLT(objectAsBytes(key));
     }
 
-    public HGSearchResult findLTE(JavaType key)
+    public HGSearchResult<HGPersistentHandle> findLTE(JavaType key)
     {
         return getIndex().findLTE(objectAsBytes(key));
     }    
@@ -233,9 +233,9 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     		return l.equals(r);        
     }
     
-    public int getRefCountFor(Object o)
+    public int getRefCountFor(JavaType o)
     {
-    	byte [] B = objectAsBytes((JavaType)o);
+    	byte [] B = objectAsBytes(o);
     	HGPersistentHandle handle = (HGPersistentHandle)this.getIndex().findFirst(B);
     	if (handle == null) return 0;
         byte [] ref_counted_data = hg.getStore().getData(handle);

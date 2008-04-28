@@ -15,7 +15,7 @@ import java.util.Comparator;
  *
  * @author  User
  */
-public class BooleanType extends PrimitiveTypeBase
+public class BooleanType extends PrimitiveTypeBase<Boolean>
 {
     public static final String INDEX_NAME = "hg_bool_value_index";
     
@@ -38,12 +38,12 @@ public class BooleanType extends PrimitiveTypeBase
         return INDEX_NAME;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Boolean readBytes(byte [] bytes, int offset)
     {
         return new Boolean(bytes[offset] == 1);
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Boolean value)
     {
        int b = ((Boolean)value).booleanValue() ? 1 : 0;
        return new byte[]{(byte) b}; 

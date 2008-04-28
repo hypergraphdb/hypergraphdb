@@ -13,7 +13,7 @@ package org.hypergraphdb.type.javaprimitive;
  *
  * @author  User
  */
-public class LongType extends NumericTypeBase
+public class LongType extends NumericTypeBase<Long>
 {
     
     public static final String INDEX_NAME = "hg_long_value_index";
@@ -23,10 +23,10 @@ public class LongType extends NumericTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Long value)
     {
         byte [] data = new byte[8];
-        long v = ((Long)value).longValue();
+        long v = value.longValue();
         data[0] = (byte) ((v >>> 56)); 
         data[1] = (byte) ((v >>> 48));
         data[2] = (byte) ((v >>> 40)); 
@@ -38,7 +38,7 @@ public class LongType extends NumericTypeBase
         return data;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Long readBytes(byte [] bytes, int offset)
     {
         return new Long((((long)bytes[offset] << 56) +
                 ((long)(bytes[offset + 1] & 255) << 48) +

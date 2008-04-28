@@ -14,7 +14,7 @@ import java.util.Comparator;
  *
  * @author  User
  */
-public class FloatType extends PrimitiveTypeBase
+public class FloatType extends PrimitiveTypeBase<Float>
 {
     public static final String INDEX_NAME = "hg_float_value_index";
  
@@ -42,10 +42,10 @@ public class FloatType extends PrimitiveTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Float value)
     {
         byte [] data = new byte[4];
-        int i = Float.floatToIntBits(((Float)value).floatValue());
+        int i = Float.floatToIntBits(value.floatValue());
         data[3] = (byte) (i >>> 0);
         data[2] = (byte) (i >>> 8);
         data[1] = (byte) (i >>> 16);
@@ -53,7 +53,7 @@ public class FloatType extends PrimitiveTypeBase
         return data;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Float readBytes(byte [] bytes, int offset)
     {
         return new Float(bytesToFloat(bytes));
     }

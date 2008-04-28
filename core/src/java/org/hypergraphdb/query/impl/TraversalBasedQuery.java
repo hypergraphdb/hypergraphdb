@@ -45,7 +45,7 @@ public class TraversalBasedQuery extends HGQuery
 	}
 	
 	@Override
-	public HGSearchResult execute() 
+	public HGSearchResult<?> execute() 
 	{
 		switch (returnType)
 		{

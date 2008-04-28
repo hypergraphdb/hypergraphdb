@@ -10,27 +10,28 @@ import org.hypergraphdb.type.HGAtomTypeBase;
 
 public class EnumType extends HGAtomTypeBase
 {
-	private Class enumType;
+	private Class<? extends Enum<?>> enumType;
 	
 	public EnumType()
 	{		
 	}
 	
-	public EnumType(Class enumType)
+	public EnumType(Class<? extends Enum<?>> enumType)
 	{
 		this.enumType = enumType;
 	}
 	
-	public final Class getEnumType()
+	public final Class<?> getEnumType()
 	{
 		return enumType;
 	}
 
-	public final void setEnumType(Class enumType)
+	public final void setEnumType(Class<? extends Enum<?>> enumType)
 	{
 		this.enumType = enumType;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		// ignore target set...
@@ -39,12 +40,12 @@ public class EnumType extends HGAtomTypeBase
 			throw new HGException("EnumType.make: wrong or inexisting layout for handle " + handle);
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		String symbol = (String)stringType.make(layout[0], null, null);
-		return Enum.valueOf(enumType, symbol);
+		return Enum.valueOf((Class<Enum>)enumType, symbol);
 	}
 
 	public HGPersistentHandle store(Object instance)
 	{
-		Enum e = (Enum)instance;
+		Enum<?> e = (Enum<?>)instance;
 		if (!e.getClass().equals(enumType))
 			throw new HGException("Attempting to store an enum instance of the wrong type " + 
 					e.getClass().getName() + ", expected " + enumType.getName());

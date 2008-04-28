@@ -30,6 +30,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
     public static final HGPersistentHandle HGHANDLE =
         HGHandleFactory.makeHandle("4e3c44ec-da21-11db-84d5-cf67a5f089dc");
  
+    @SuppressWarnings("unchecked")
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		EnumType result = new EnumType();
@@ -39,7 +40,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		String classname = (String)stringType.make(layout[0], null, null);
 		try
 		{
-			result.setEnumType(Class.forName(classname));
+			result.setEnumType((Class<Enum<?>>)Class.forName(classname));
 		}
 		catch (ClassNotFoundException ex)
 		{
@@ -57,7 +58,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		HGPersistentHandle [] layout = new HGPersistentHandle[1 + et.getEnumType().getEnumConstants().length];
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		layout[0] = stringType.store(et.getEnumType().getName());
-		Enum [] constants =(Enum[])et.getEnumType().getEnumConstants(); 
+		Enum<?> [] constants =(Enum[])et.getEnumType().getEnumConstants(); 
 		for (int i = 0; i < constants.length; i++ )
 		{
 			layout[i + 1] = stringType.store(constants[i].name());

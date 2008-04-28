@@ -15,7 +15,7 @@ import java.util.Comparator;
  *
  * @author  User
  */
-public class DoubleType extends PrimitiveTypeBase
+public class DoubleType extends PrimitiveTypeBase<Double>
 {
     public static final String INDEX_NAME = "hg_double_value_index";
  
@@ -45,10 +45,10 @@ public class DoubleType extends PrimitiveTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Double value)
     {
         byte [] data = new byte[8];
-        long v = Double.doubleToLongBits(((Double)value).doubleValue());
+        long v = Double.doubleToLongBits(value.doubleValue());
         data[0] = (byte) ((v >>> 56)); 
         data[1] = (byte) ((v >>> 48));
         data[2] = (byte) ((v >>> 40)); 
@@ -60,7 +60,7 @@ public class DoubleType extends PrimitiveTypeBase
         return data;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Double readBytes(byte [] bytes, int offset)
     {
         return new Double(bytesToDouble(bytes));
     }

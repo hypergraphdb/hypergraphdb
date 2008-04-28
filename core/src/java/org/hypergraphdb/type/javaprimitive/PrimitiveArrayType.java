@@ -8,7 +8,6 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
-import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.type.HGAtomType;

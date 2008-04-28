@@ -13,7 +13,7 @@ package org.hypergraphdb.type.javaprimitive;
  *
  * @author  User
  */
-public class ShortType extends NumericTypeBase
+public class ShortType extends NumericTypeBase<Short>
 {
     
     public static final String INDEX_NAME = "hg_short_value_index";
@@ -23,16 +23,16 @@ public class ShortType extends NumericTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Short value)
     {
-        short val = ((Short)value).shortValue();
+        short val = value.shortValue();
         byte data [] = new byte[2];
         data[1] = (byte) (val >>> 0);
         data[0] = (byte) (val >>> 8);      
         return data;
     }
     
-    protected Object readBytes(byte [] b, int offset)
+    protected Short readBytes(byte [] b, int offset)
     {
     	return new Short((short) (((b[offset+ 1] & 0xFF) << 0) + 
     			((b[offset]) << 8)));

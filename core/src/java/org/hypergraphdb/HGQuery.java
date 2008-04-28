@@ -150,7 +150,56 @@ public abstract class HGQuery<SearchResult>
         public static Mapping<HGHandle, Object> deref(HyperGraph graph) { return new DerefMapping(graph); }
         public static Mapping<HGHandle,HGHandle> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
+     
+        // traversals
+        public static BFSCondition bfs(HGHandle start) { return new BFSCondition(start); }
+        public static BFSCondition bfs(HGHandle start, 
+        							   HGAtomPredicate lp, 
+        							   HGAtomPredicate sp) 
+        { 
+        	BFSCondition c = new BFSCondition(start);
+        	c.setLinkPredicate(lp);
+        	c.setSiblingPredicate(sp);
+        	return c;
+        }
+        public static BFSCondition bfs(HGHandle start, 
+									   HGAtomPredicate lp, 
+									   HGAtomPredicate sp,
+									   boolean returnPreceeding,
+									   boolean returnSucceeding) 
+		{ 
+			BFSCondition c = new BFSCondition(start);
+			c.setLinkPredicate(lp);
+			c.setSiblingPredicate(sp);
+			c.setReturnPreceeding(returnPreceeding);
+			c.setReturnSucceeding(returnSucceeding);
+			return c;
+		}        
+        public static DFSCondition dfs(HGHandle start) { return new DFSCondition(start); }
+        public static DFSCondition dfs(HGHandle start, 
+        							   HGAtomPredicate lp, 
+        							   HGAtomPredicate sp) 
+        { 
+        	DFSCondition c = new DFSCondition(start);
+        	c.setLinkPredicate(lp);
+        	c.setSiblingPredicate(sp);
+        	return c;
+        }
+        public static DFSCondition dfs(HGHandle start, 
+									   HGAtomPredicate lp, 
+									   HGAtomPredicate sp,
+									   boolean returnPreceeding,
+									   boolean returnSucceeding) 
+		{ 
+			DFSCondition c = new DFSCondition(start);
+			c.setLinkPredicate(lp);
+			c.setSiblingPredicate(sp);
+			c.setReturnPreceeding(returnPreceeding);
+			c.setReturnSucceeding(returnSucceeding);
+			return c;
+		}
         
+        public static HGHandle anyHandle() { return HGHandleFactory.anyHandle; }
         
         /**
          * <p>

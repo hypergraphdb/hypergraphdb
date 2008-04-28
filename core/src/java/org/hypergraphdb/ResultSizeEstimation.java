@@ -6,7 +6,9 @@ import org.hypergraphdb.query.AnyAtomCondition;
 import org.hypergraphdb.query.AtomPartCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.query.AtomValueCondition;
+import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.ComparisonOperator;
+import org.hypergraphdb.query.DFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 import org.hypergraphdb.query.IndexedPartCondition;
@@ -371,10 +373,11 @@ class ResultSizeEstimation
 		}			
 	});
 	
-	countersMap.put(SubsumesCondition.class, fullScanCounter);
+	countersMap.put(SubsumesCondition.class, fullScanCounter);	
 	countersMap.put(SubsumedCondition.class, fullScanCounter);
 	countersMap.put(LinkCondition.class, fullScanCounter);
 	countersMap.put(OrderedLinkCondition.class, fullScanCounter);
-	
+	countersMap.put(BFSCondition.class, fullScanCounter);
+	countersMap.put(DFSCondition.class, fullScanCounter);
 	}
 }

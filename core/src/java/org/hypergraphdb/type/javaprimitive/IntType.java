@@ -29,7 +29,7 @@ package org.hypergraphdb.type.javaprimitive;
  *
  * @author Borislav Iordanov
  */
-public final class IntType extends NumericTypeBase
+public final class IntType extends NumericTypeBase<Integer>
 {
     public static final String INDEX_NAME = "hg_int_value_index";
     
@@ -38,10 +38,10 @@ public final class IntType extends NumericTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Integer value)
     {
         byte [] data = new byte[4];
-        int v = ((Integer)value).intValue();
+        int v = value.intValue();
         data[0] = (byte) ((v >>> 24) & 0xFF); 
         data[1] = (byte) ((v >>> 16) & 0xFF);
         data[2] = (byte) ((v >>> 8) & 0xFF); 
@@ -49,7 +49,7 @@ public final class IntType extends NumericTypeBase
         return data;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Integer readBytes(byte [] bytes, int offset)
     {
         int ch1 = bytes[offset];
         int ch2 = bytes[offset + 1];

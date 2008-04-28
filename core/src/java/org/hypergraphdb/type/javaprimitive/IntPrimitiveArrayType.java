@@ -29,7 +29,7 @@ public class IntPrimitiveArrayType extends PrimitiveArrayType
 	        int ch2 = data[offset + 1];
 	        int ch3 = data[offset + 2];
 	        int ch4 = data[offset + 3];
-	        A[i] = ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));						
+	        A[i] = ((ch1 & 0xFF) << 24) | ((ch2 & 0xFF) << 16) | ((ch3 & 0xFF) << 8) | (ch4 & 0xFF);						
 		}
 		return A;
 	}

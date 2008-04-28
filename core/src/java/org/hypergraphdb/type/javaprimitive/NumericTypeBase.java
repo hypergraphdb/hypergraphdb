@@ -14,7 +14,7 @@ import java.util.Comparator;
  *
  * @author  User
  */
-public abstract class NumericTypeBase extends PrimitiveTypeBase
+public abstract class NumericTypeBase<T> extends PrimitiveTypeBase<T>
 {
 	private static final NumericComparator comp = new NumericComparator();
 	

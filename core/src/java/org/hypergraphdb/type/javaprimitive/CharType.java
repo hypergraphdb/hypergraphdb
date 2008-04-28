@@ -13,7 +13,7 @@ package org.hypergraphdb.type.javaprimitive;
  *
  * @author  User
  */
-public class CharType extends NumericTypeBase
+public class CharType extends NumericTypeBase<Character>
 {
     
     public static final String INDEX_NAME = "hg_char_value_index";
@@ -23,16 +23,16 @@ public class CharType extends NumericTypeBase
         return INDEX_NAME;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(Character value)
     {
         byte [] data = new byte[2];
-        int v = ((Character)value).charValue();
+        int v = value.charValue();
         data[0] = (byte) ((v >>> 8) & 0xFF); 
         data[1] = (byte) ((v >>> 0) & 0xFF);
         return data;
     }
     
-    protected Object readBytes(byte [] bytes, int offset)
+    protected Character readBytes(byte [] bytes, int offset)
     {
         int ch1 = bytes[offset];
         int ch2 = bytes[offset + 1];

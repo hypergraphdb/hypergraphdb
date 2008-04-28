@@ -42,7 +42,7 @@ import java.util.Comparator;
  * 
  * @author Borislav Iordanov
  */
-public final class StringType extends PrimitiveTypeBase
+public final class StringType extends PrimitiveTypeBase<String>
 {
     public static final String INDEX_NAME = "hg_string_value_index";
     
@@ -120,12 +120,12 @@ public final class StringType extends PrimitiveTypeBase
         return data;
     }
     
-    protected byte [] writeBytes(Object value)
+    protected byte [] writeBytes(String value)
     {
-        return stringToBytes((String)value); 
+        return stringToBytes(value); 
     }
     
-    protected Object readBytes(byte [] data, int offset)
+    protected String readBytes(byte [] data, int offset)
     {
         switch (data[offset])
         {

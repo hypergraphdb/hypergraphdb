@@ -313,6 +313,38 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				return x;
 			}
 		});
+		toQueryMap.put(BFSCondition.class, new ConditionToQuery()
+        {
+			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
+			{
+				BFSCondition cc = (BFSCondition)c;
+				return new TraversalBasedQuery(cc.getTraversal(graph));
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				// this is kind of approx. as the predicate may return very quickly 
+				// or end up doing an all separate query on its own
+				x.predicateCost = 5;
+				return x;
+			}
+		});
+		toQueryMap.put(DFSCondition.class, new ConditionToQuery()
+        {
+			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
+			{
+				DFSCondition cc = (DFSCondition)c;
+				return new TraversalBasedQuery(cc.getTraversal(graph));
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				// this is kind of approx. as the predicate may return very quickly 
+				// or end up doing an all separate query on its own
+				x.predicateCost = 5;
+				return x;
+			}
+		});			
 		toQueryMap.put(SubsumedCondition.class, new ConditionToQuery()
         {
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
