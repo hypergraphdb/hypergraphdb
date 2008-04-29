@@ -8,11 +8,13 @@
  */
 package org.hypergraphdb;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.hypergraphdb.type.HGAtomType;
@@ -318,14 +320,13 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				BFSCondition cc = (BFSCondition)c;
-				return new TraversalBasedQuery(cc.getTraversal(graph));
+				return new TraversalBasedQuery(cc.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
 				QueryMetaData x = QueryMetaData.MISTERY.clone();
-				// this is kind of approx. as the predicate may return very quickly 
-				// or end up doing an all separate query on its own
-				x.predicateCost = 5;
+				x.predicateCost = -1;
+				x.predicateOnly = false;
 				return x;
 			}
 		});
@@ -334,15 +335,11 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				DFSCondition cc = (DFSCondition)c;
-				return new TraversalBasedQuery(cc.getTraversal(graph));
+				return new TraversalBasedQuery(cc.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
-				// this is kind of approx. as the predicate may return very quickly 
-				// or end up doing an all separate query on its own
-				x.predicateCost = 5;
-				return x;
+				return QueryMetaData.MISTERY;
 			}
 		});			
 		toQueryMap.put(SubsumedCondition.class, new ConditionToQuery()
@@ -1064,17 +1061,31 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		else
 			return cond;
 	}	
-	
-/*	public ExpressionBasedQuery(HyperGraph hg, String condition)
+
+	@SuppressWarnings("unchecked")
+	private HGQueryCondition expand(HyperGraph graph, HGQueryCondition cond)
 	{
-		this.graph = hg;
-		this.condition = simplify(toDNF(parse(condition)));		
-	} */
+		if (cond instanceof TypePlusCondition)
+		{
+			TypePlusCondition ac = (TypePlusCondition)cond;
+			Or orCondition = new Or();
+            for (HGHandle h : ac.getSubTypes(graph))
+            	orCondition.add(new AtomTypeCondition(h));
+            cond = orCondition;
+		}
+		else if (cond instanceof List)
+		{
+			List<HGQueryCondition> L = (List<HGQueryCondition>)cond;
+			for (int i = 0; i < L.size(); i++)
+				L.set(i, expand(graph, L.get(i)));
+		}
+		return cond;
+	}
 	
-	public ExpressionBasedQuery(HyperGraph hg, HGQueryCondition condition)
+	public ExpressionBasedQuery(HyperGraph graph, HGQueryCondition condition)
 	{
-		this.graph = hg;		
-		this.condition = simplify(toDNF(condition));
+		this.graph = graph;		
+		this.condition = simplify(toDNF(expand(graph, condition)));
 	}
 	
     public HGSearchResult<ResultType> execute()

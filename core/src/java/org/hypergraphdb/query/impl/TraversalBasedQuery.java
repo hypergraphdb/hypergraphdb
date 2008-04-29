@@ -69,4 +69,14 @@ public class TraversalBasedQuery extends HGQuery
 				throw new HGException("This should never happen ;)");
 		}
 	}
+
+	public ReturnType getReturnType()
+	{
+		return returnType;
+	}
+
+	public void setReturnType(ReturnType returnType)
+	{
+		this.returnType = returnType;
+	}	
 }
