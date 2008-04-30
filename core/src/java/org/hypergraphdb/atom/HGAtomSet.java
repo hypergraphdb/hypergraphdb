@@ -11,7 +11,10 @@ package org.hypergraphdb.atom;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.atom.impl.UUIDTrie;
+
+import java.util.AbstractSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <p>
@@ -35,18 +38,33 @@ import java.util.Iterator;
  * 
  * @author Borislav Iordanov
  */
-public final class HGAtomSet implements Iterable<HGHandle>
+public final class HGAtomSet extends AbstractSet<HGHandle> implements Set<HGHandle>, Cloneable, java.io.Serializable
 {	
+    static final long serialVersionUID = -1L;
+    
 	UUIDTrie trie = new UUIDTrie();
+	private int size = 0;
 	
 	public boolean add(HGHandle h)
 	{
-		return trie.add(U.getBytes(h));
+		if (trie.add(U.getBytes(h)))
+		{
+			size++;
+			return true;
+		}
+		else 
+			return false;
 	}
 	
 	public boolean remove(HGHandle h)
 	{
-		return trie.remove(U.getBytes(h));		
+		if (trie.remove(U.getBytes(h)))
+		{
+			size--;
+			return true;
+		}
+		else
+			return false;
 	}
 	
 	public boolean contains(HGHandle h)
@@ -54,6 +72,28 @@ public final class HGAtomSet implements Iterable<HGHandle>
 		return trie.find(U.getBytes(h));		
 	}
 	
+	public int size()
+	{
+		return size;
+	}
+	
+	public boolean isEmpty()
+	{
+		return size == 0;
+	}
+	
+	public void clear()
+	{
+		trie.clear();
+	}
+	
+    public Object clone() 
+    {
+    	HGAtomSet newSet = new HGAtomSet();
+    	newSet.trie = trie.clone();
+    	return newSet;
+    }
+    
 	/**
 	 * <p>Return an <code>Iterator</code> over all atoms in this set. Contrary to many
 	 * iterator implementations, the <code>remove</code> of the returned iterator is
@@ -81,4 +121,7 @@ public final class HGAtomSet implements Iterable<HGHandle>
 			}
 		};
 	}
+	
+    public int hashCode() { return System.identityHashCode(this); }
+    public boolean equals(Object x) { return x == this; }
 }

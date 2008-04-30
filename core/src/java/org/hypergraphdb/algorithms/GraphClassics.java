@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.hypergraphdb.*;
 import org.hypergraphdb.atom.HGAtomSet;
+import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.util.Mapping;
 
 /**
@@ -84,38 +85,54 @@ public class GraphClassics
 				 			       Map<HGHandle, HGHandle> predecessorMatrix)
 	{
 		final Map<HGHandle, Double> dm = 
-			distanceMatrix == null ? new HashMap<HGHandle, Double>() : distanceMatrix;		
+			distanceMatrix == null ? new HashMap<HGHandle, Double>() : distanceMatrix;
+		dm.put(start, 0.0);
 		Comparator<HGHandle> comp = new Comparator<HGHandle>()
 		{
+			private int compareHandles(HGHandle left, HGHandle right)
+			{				
+				HGPersistentHandle x = left instanceof HGPersistentHandle ?
+						(HGPersistentHandle)left : ((HGLiveHandle)left).getPersistentHandle();
+				HGPersistentHandle y = right instanceof HGPersistentHandle ?
+						(HGPersistentHandle)right : ((HGLiveHandle)right).getPersistentHandle();
+				return x.compareTo(y);				
+			}
+			
 			public int compare(HGHandle left, HGHandle right)
 			{
 				Double l = dm.get(left);
 				Double r = dm.get(right);
 				if (l == null)
 					if (r == null)
-						return 0;
+						return compareHandles(left, right);
 					else
 						return 1;
 				else if (r == null)
 					return -1;
 				else
-					return l.compareTo(r); 
+				{
+					int c = l.compareTo(r);
+					if (c == 0)
+						c = compareHandles(left, right);
+					return c;
+				}
 			}
 		};
 		if (weight == null)
 			weight = new Mapping<HGHandle, Double>() { public Double eval(HGHandle link) { return 1.0; } };
 			
 		HGAtomSet settled = new HGAtomSet(); 
-		PriorityQueue<HGHandle> unsettled = new PriorityQueue<HGHandle>(11, comp);
+		TreeSet<HGHandle> unsettled = new TreeSet<HGHandle>(comp);
 		unsettled.add(start);
-		for (HGHandle a = unsettled.poll(); a != null; a = unsettled.poll())
+		while (!unsettled.isEmpty())		
 		{
+			HGHandle a = unsettled.first();
+			unsettled.remove(a);
 			if (a.equals(goal))
 				return dm.get(goal);
 			settled.add(a);
 			HGSearchResult<HGHandle> neighbors = adjencyGenerator.generate(a);
-			Double wcTemp = dm.get(a);
-			double weightCurrent = wcTemp == null ? 0.0 : wcTemp;
+			double weightCurrent = dm.get(a).doubleValue();
 			while (neighbors.hasNext())
 			{
 				HGHandle n = neighbors.next();
@@ -123,13 +140,21 @@ public class GraphClassics
 					continue;
 				Double weightN = dm.get(n);
 				Double weightAN = weight.eval(adjencyGenerator.getCurrentLink());
-				if (weightN == null || 
-					weightN > weightCurrent + weightAN)
+				if (weightN == null)
 				{
 					dm.put(n, weightCurrent + weightAN);
+					unsettled.add(n);
+					if (predecessorMatrix != null)
+						predecessorMatrix.put(n, a);					
+				}
+				else if (weightN > weightCurrent + weightAN)
+				{
+					// new distance found for n, re-insert at appropriate position
+					unsettled.remove(n);
+					dm.put(n, weightCurrent + weightAN);
+					unsettled.add(n);
 					if (predecessorMatrix != null)
 						predecessorMatrix.put(n, a);
-					unsettled.add(n);
 				}
 			}
 			neighbors.close();

@@ -53,8 +53,9 @@ public final class UUIDTrie
 	// our elements are of fixed length...
 	//
 	
-	private static class trie	{ }	
-	private static final class leaf_trie extends trie { }
+	private static class trie implements Cloneable { public Object clone() { return this; } }	
+	private static final class leaf_trie extends trie 
+		{ public Object clone() { return THE_LEAF; } }
 	
 	// a single instance representing leafs is enough since they don't store anything.
 	private static final leaf_trie THE_LEAF = new leaf_trie();
@@ -65,6 +66,16 @@ public final class UUIDTrie
 		trie [] children = new trie[16];
 		byte count = 0; // number of non-null children
 
+		public Object clone() 
+		{ 
+			node_trie cl = new node_trie();
+			cl.count = count;
+			cl.children = new trie[children.length];
+			for (int i = 0; i < children.length; i++)
+				cl.children[i] = (trie)(((trie)children[i]).clone());
+			return cl;
+		}
+		
 		//
 		// The following recursive version of find was forgotten in favor of
 		// a non-recursive version (below). However, this recursive version has
@@ -144,6 +155,18 @@ public final class UUIDTrie
 	}
 
 	private node_trie root = new node_trie();
+	
+	public void clear()
+	{
+		root = new node_trie();
+	}
+	
+	public UUIDTrie clone()
+	{
+		UUIDTrie trie = new UUIDTrie();
+		trie.root = (node_trie)root.clone();
+		return trie;
+	}
 	
 	/**
 	 * <p>Add a new element returning <code>true</code> if it was already in the set
