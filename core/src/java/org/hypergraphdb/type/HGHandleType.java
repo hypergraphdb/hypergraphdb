@@ -13,10 +13,11 @@ import java.util.Comparator;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.type.javaprimitive.PrimitiveTypeBase;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 
 
-public class HGHandleType extends PrimitiveTypeBase<HGPersistentHandle> 
+public class HGHandleType extends PrimitiveTypeBase<HGHandle> 
 {
 	private static final HandleComparator comp = new HandleComparator();
 	
@@ -43,13 +44,13 @@ public class HGHandleType extends PrimitiveTypeBase<HGPersistentHandle>
 	}
 
 	@Override
-	protected HGPersistentHandle readBytes(byte[] data, int offset) 
+	protected HGHandle readBytes(byte[] data, int offset) 
 	{
 		return UUIDPersistentHandle.makeHandle(data, offset);
 	}
 
 	@Override
-	protected byte[] writeBytes(HGPersistentHandle value) 
+	protected byte[] writeBytes(HGHandle value) 
 	{
 		if (value instanceof HGPersistentHandle)
 			return ((HGPersistentHandle)value).toByteArray();

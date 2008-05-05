@@ -110,7 +110,7 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 					"JavaTypeFactory.getHGType: null beanClass parameter.");
 		
 		if (javaClass.isEnum())
-			return new EnumType((Class<Enum<?>>)javaClass);
+			return new EnumType((Class<Enum>)javaClass);
 		
 		if (javaClass.isArray()) 
 			return new ArrayType(javaClass.getComponentType());

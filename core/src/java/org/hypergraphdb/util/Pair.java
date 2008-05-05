@@ -62,10 +62,15 @@ public class Pair<F, S>
 			return false;
 		
 		if (second == null) 
-			{ if (p.second != null) return false; else return true; }
-		else if(p.second == null)
+			return p.second == null;
+		else if (p.second == null)
 			return false;
 		else
 			return second.equals(p.second);
+	}
+	
+	public String toString()
+	{
+		return "pair(" + first + "," + second + ")";
 	}
 }

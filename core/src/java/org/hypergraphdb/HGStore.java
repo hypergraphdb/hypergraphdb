@@ -104,8 +104,8 @@ public class HGStore
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
 	        envConfig.setLogAutoRemove(true);
-	        envConfig.setMaxLockers(2000);
-	        envConfig.setMaxLockObjects(2000);
+	        envConfig.setMaxLockers(10000);
+	        envConfig.setMaxLockObjects(10000);
 	        envConfig.setMaxLocks(10000);
 	//        envConfig.setRunFatalRecovery(true);
         }

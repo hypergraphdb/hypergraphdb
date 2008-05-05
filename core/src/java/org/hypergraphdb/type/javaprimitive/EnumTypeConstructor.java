@@ -40,7 +40,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		String classname = (String)stringType.make(layout[0], null, null);
 		try
 		{
-			result.setEnumType((Class<Enum<?>>)Class.forName(classname));
+			result.setEnumType((Class<Enum>)Class.forName(classname));
 		}
 		catch (ClassNotFoundException ex)
 		{

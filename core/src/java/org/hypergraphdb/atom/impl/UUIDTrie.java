@@ -169,7 +169,7 @@ public final class UUIDTrie
 	}
 	
 	/**
-	 * <p>Add a new element returning <code>true</code> if it was already in the set
+	 * <p>Add a new element returning <code>true</code> if it wasn't already in the set
 	 * and <code>false</code> otherwise.</p>
 	 * 
 	 * @param uuid
@@ -196,7 +196,7 @@ public final class UUIDTrie
 				if (offset == 31)
 				{
 					node.children[position] = THE_LEAF;
-					return false;
+					return true;
 				}
 				else
 				{
@@ -207,7 +207,7 @@ public final class UUIDTrie
 			else
 			{
 				if (offset == 31)
-					return true;
+					return false;
 				else
 				{
 					node = (node_trie)node.children[position];

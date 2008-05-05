@@ -10,13 +10,13 @@ import org.hypergraphdb.type.HGAtomTypeBase;
 
 public class EnumType extends HGAtomTypeBase
 {
-	private Class<? extends Enum<?>> enumType;
+	private Class<Enum> enumType;
 	
 	public EnumType()
 	{		
 	}
 	
-	public EnumType(Class<? extends Enum<?>> enumType)
+	public EnumType(Class<Enum> enumType)
 	{
 		this.enumType = enumType;
 	}
@@ -26,7 +26,7 @@ public class EnumType extends HGAtomTypeBase
 		return enumType;
 	}
 
-	public final void setEnumType(Class<? extends Enum<?>> enumType)
+	public final void setEnumType(Class<Enum> enumType)
 	{
 		this.enumType = enumType;
 	}
