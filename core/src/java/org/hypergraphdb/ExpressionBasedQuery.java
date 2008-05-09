@@ -8,7 +8,6 @@
  */
 package org.hypergraphdb;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -32,6 +31,7 @@ import org.hypergraphdb.atom.HGSubsumes;
  */
 class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 {
+	private HGQuery<ResultType> query = null; 
 	private HGQueryCondition condition;
 	private HyperGraph graph;
 	
@@ -1086,11 +1086,11 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	{
 		this.graph = graph;		
 		this.condition = simplify(toDNF(expand(graph, condition)));
+		query = toQuery(graph, condition);
 	}
 	
     public HGSearchResult<ResultType> execute()
-    {
-    	HGQuery<ResultType> query = toQuery(graph, condition);
+    {    	
         return query.execute();
     }
     
