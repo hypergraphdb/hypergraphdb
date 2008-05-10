@@ -27,9 +27,9 @@ import org.hypergraphdb.util.Mapping;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public abstract class HGQuery<SearchResult> 
-{    
-	@SuppressWarnings("unchecked")
+{  	
 	public final static HGQuery<Object> NOP = new HGQuery<Object>()
 	{
 		public HGSearchResult<Object> execute() { return (HGSearchResult<Object>)HGSearchResult.EMPTY; }
@@ -328,7 +328,7 @@ public abstract class HGQuery<SearchResult>
     	 * @param condition
     	 * @return
     	 */
-    	public static List<Object> getAll(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> List<T> getAll(HyperGraph graph, HGQueryCondition condition)
     	{
     		ArrayList<Object> result = new ArrayList<Object>();
     		HGSearchResult<HGHandle> rs = null;
@@ -337,7 +337,7 @@ public abstract class HGQuery<SearchResult>
     			rs = graph.find(condition);
     			while (rs.hasNext())
     				result.add(graph.get(rs.next()));
-    			return result;
+    			return (List<T>)result;
     		}
     		finally
     		{

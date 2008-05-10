@@ -12,7 +12,7 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 
 /**
  * <p>
- * The <code>HGHandleFactory</code> class is used to construct unique (UUID) handle
+ * The <code>HGHandleFactory</code> class is used to construct unique (UUID) handles
  * for hypergraph atoms.
  * </p>
  * 
@@ -23,7 +23,7 @@ public class HGHandleFactory
     /**
      * <p>Construct and return a new, unique persistent handle. The handle 
      * is permanently unique. It can be persistent (serialized) and restored without
-     * ever conflicting with another handle.
+     * ever conflicting with another handle. 
      * </p>
      */
     public static HGPersistentHandle makeHandle()

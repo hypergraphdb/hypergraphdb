@@ -1331,7 +1331,7 @@ public /*final*/ class HyperGraph
      */
     public <T> HGSearchResult<T> find(HGQueryCondition condition)
     {
-    	HGQuery query = HGQuery.make(this, condition);
+    	HGQuery<T> query = HGQuery.make(this, condition);
         return query.execute();
     }
     
@@ -1767,37 +1767,6 @@ public /*final*/ class HyperGraph
         								   false);
         return result;    	
     }
-
-    /**
-     * Retrieve an atom without modifying the cache.
-     * 
-     * @param h
-     * @return
-     */
-/*    private Object rawGet(HGHandle h)
-    {
-    	HGPersistentHandle ph = null;
-    	if (h instanceof HGLiveHandle)
-    	{
-    		Object x = ((HGLiveHandle)h).getRef();
-    		if (x != null)
-    			return x;
-    		else
-    			ph = ((HGLiveHandle)h).getPersistentHandle();
-    	}
-    	else
-    		ph = (HGPersistentHandle)h;
-    	HGPersistentHandle [] layout = store.getLink(ph);
-    	if (layout == null)
-    		return null;
-    	else if (HGTypeSystem.TOP_PERSISTENT_HANDLE.equals(layout[0]))
-    		return cache.get(ph).getRef();
-    	else 
-    	{
-    		HGAtomType type = (HGAtomType)rawGet(layout[0]);
-    		return rawMake(layout, type, ph);
-    	}
-    } */
     
     /**
      * Replace an atom with a new value. Recursively replace the values of type atoms.
@@ -1830,13 +1799,15 @@ public /*final*/ class HyperGraph
 	        else
 	        	oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
 	        
+	        // idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, oldValue, pHandle);
+	        
 	    	if (oldValue instanceof HGValueLink)
 	    		oldValue = ((HGValueLink)oldValue).getValue();
 	        
 	    	//
 	    	// If the atom is a type, we need to morph all its values to the new
 	    	// type. This is done simply by recursively replacing instances
-	    	// based on the old type atom with instanaces of the new type. 
+	    	// based on the old type atom with instances of the new type. 
 	    	//    	
 	    	if (oldValue instanceof HGAtomType)
 	    	{
@@ -1902,7 +1873,9 @@ public /*final*/ class HyperGraph
 	        }
 			newLayout[0] = layout[0];
 			newLayout[1] = layout[1];    	
-	    	store.store(pHandle, newLayout);    		
+	    	store.store(pHandle, newLayout);
+	    	
+	    	// idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
 	    	
 	    	if (lHandle != null)
 	    		cache.atomRefresh(lHandle, atom);

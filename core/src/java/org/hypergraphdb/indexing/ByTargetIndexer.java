@@ -4,6 +4,7 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -44,14 +45,14 @@ public class ByTargetIndexer extends HGIndexer
 
 
 	@Override
-	public Comparator getComparator(HyperGraph graph)
+	public Comparator<?> getComparator(HyperGraph graph)
 	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public ByteArrayConverter getConverter(HyperGraph graph)
+	public ByteArrayConverter<HGPersistentHandle> getConverter(HyperGraph graph)
 	{
 		return BAtoHandle.getInstance();
 	}
