@@ -75,6 +75,7 @@ public class KeyScanResultSet extends IndexResultSet
 	    {
 	        cursor.getCurrent(key, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(key.getData());
+	        lookahead = 1;
 	    }
 	    catch (Throwable t)
 	    {

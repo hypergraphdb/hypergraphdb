@@ -52,7 +52,7 @@ public class Pair<F, S>
 		if (! (other instanceof Pair))
 			return false;
 		
-		Pair p = (Pair)other;
+		Pair<?,?> p = (Pair<?,?>)other;
 		
 		if (first == null)
 			{ if (p.first != null) return false; }

@@ -1799,7 +1799,7 @@ public /*final*/ class HyperGraph
 	        else
 	        	oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
 	        
-	        // idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, oldValue, pHandle);
+	        idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, oldValue, pHandle);
 	        
 	    	if (oldValue instanceof HGValueLink)
 	    		oldValue = ((HGValueLink)oldValue).getValue();
@@ -1875,7 +1875,7 @@ public /*final*/ class HyperGraph
 			newLayout[1] = layout[1];    	
 	    	store.store(pHandle, newLayout);
 	    	
-	    	// idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
+	    	idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
 	    	
 	    	if (lHandle != null)
 	    		cache.atomRefresh(lHandle, atom);
