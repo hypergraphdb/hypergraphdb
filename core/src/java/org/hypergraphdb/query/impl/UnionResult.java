@@ -180,10 +180,11 @@ public class UnionResult implements HGSearchResult
 			return true;
 		else if (last_choice == null)
 			return false;
-		else if (last_choice == left)
+		else if (last_choice == left && !rightBOF)
 			return ((Comparable)left.current()).compareTo(right.current()) > 0;
-		else // last choice == right
-			return ((Comparable)right.current()).compareTo(left.current()) > 0;	
+		else if (last_choice == right && !leftBOF)
+			return ((Comparable)right.current()).compareTo(left.current()) > 0;
+		else return false;
 	}
 	
 	public boolean hasNext() 
@@ -194,10 +195,11 @@ public class UnionResult implements HGSearchResult
 			return true;
 		else if (last_choice == null)
 			return false;
-		else if (last_choice == left)
+		else if (last_choice == left && !rightEOF)
 			return ((Comparable)left.current()).compareTo(right.current()) < 0;
-		else // last choice == right
+		else if (last_choice == right && !leftEOF)
 			return ((Comparable)right.current()).compareTo(left.current()) < 0;			
+		else return false;
 	}
 
 	public Object next() 
