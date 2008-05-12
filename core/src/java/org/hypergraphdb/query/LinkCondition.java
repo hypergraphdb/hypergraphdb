@@ -13,6 +13,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGLink;
+
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -76,6 +77,19 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 					count++;
 		}
 		return count == targetSet.size();		
+	}
+	
+	public int hashCode() 
+	{ 
+		return targetSet.hashCode();  
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof LinkCondition))
+			return false;
+		else
+			return ((LinkCondition)x).targetSet.equals(targetSet);
 	}
 	
 	public String toString()

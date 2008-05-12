@@ -102,4 +102,11 @@ public class Or extends ArrayList<HGQueryCondition> implements HGQueryCondition,
 		return result.toString();
 	}
 	
+	public boolean equals(Object x)
+	{
+		if ( ! (x instanceof Or))
+			return false;
+		else
+			return super.equals((Or)x);
+	}	
 }

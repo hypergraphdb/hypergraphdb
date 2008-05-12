@@ -56,6 +56,19 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 		}
 	}
 	
+	public int hashCode() 
+	{ 
+		return arity; 
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof ArityCondition))
+			return false;
+		else
+			return arity == ((ArityCondition)x).arity;
+	}
+	
 	public String toString()
 	{
 		StringBuffer result = new StringBuffer();

@@ -22,7 +22,7 @@ public class IndexedPartCondition implements HGQueryCondition
 		this.operator = operator;
 	}
 
-	public HGIndex getIndex()
+	public HGIndex<?, ?> getIndex()
 	{
 		return idx;
 	}
@@ -52,6 +52,9 @@ public class IndexedPartCondition implements HGQueryCondition
 		if (! (other instanceof IndexedPartCondition))
 			return false;
 		IndexedPartCondition ip = (IndexedPartCondition)other;
-		return HGUtils.eq(idx, ip.idx) && HGUtils.eq(operator, ip.operator);
+		return HGUtils.eq(idx, ip.idx) && 
+			   HGUtils.eq(operator, ip.operator) &&
+			   HGUtils.eq(type, ip.type) &&
+			   HGUtils.eq(partValue, ip.partValue);
 	}
 }

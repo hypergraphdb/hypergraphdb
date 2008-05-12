@@ -14,6 +14,7 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -53,4 +54,21 @@ public class AtomValueCondition extends SimpleValueCondition
 		result.append(")");
 		return result.toString();
 	}
+	
+	public int hashCode() 
+	{ 
+		return HGUtils.hashThem(value, operator);
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof AtomValueCondition))
+			return false;
+		else
+		{
+			AtomValueCondition c = (AtomValueCondition)x;
+			return HGUtils.eq(operator, c.operator) &&
+				   HGUtils.eq(value, c.value);
+		}
+	}		
 }

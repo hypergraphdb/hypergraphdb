@@ -24,6 +24,7 @@ import org.hypergraphdb.util.HGUtils;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPredicate 
 {
 	protected Object value;

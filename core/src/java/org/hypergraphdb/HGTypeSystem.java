@@ -521,6 +521,26 @@ public class HGTypeSystem
 		return top;
 	}
 
+	Class<?> loadClass(String classname)
+	{
+		Class<?> clazz;
+		try
+		{
+			if(classname.startsWith("[L"))
+			{
+				classname = classname.substring(2, classname.length() - 1); //remove ending ";"
+				clazz = Array.newInstance(Thread.currentThread().getContextClassLoader().loadClass(classname), 0).getClass();
+			}
+			else
+			   clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
+			return clazz;
+		}
+		catch (Throwable t)
+		{
+			throw new HGException("Could not load class " + classname, t);
+		}
+	}
+	
 	/**
 	 * <p>HyperGraph internal method to handle the loading of a type. A type can be
 	 * loaded in one of two ways: either through the <code>getType(HGHandle)</code>
@@ -536,22 +556,7 @@ public class HGTypeSystem
 		String classname = getClassToTypeDB().findFirstByValue(handle.getPersistentHandle());
 		if (classname != null)
 		{		  
-			Class<?> clazz;
-			try
-			{
-				if(classname.startsWith("[L"))
-				{
-					classname = classname.substring(2, classname.length() - 1); //remove ending ";"
-					clazz = Array.newInstance(Thread.currentThread().getContextClassLoader().loadClass(classname), 0).getClass();
-				}
-				else
-				   clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
-			}
-			catch (Throwable t)
-			{
-				throw new HGException("Could not load class " + classname +
-				                      " for inferred HG type: " + handle.getPersistentHandle(), t);
-			}
+			Class<?> clazz = loadClass(classname);
 			type = javaTypes.getJavaBinding(handle, type, clazz);
 			if (refreshInCache)
 			{
@@ -650,6 +655,24 @@ public class HGTypeSystem
 		return typeHandle;
 	}
 
+	/**
+	 * <p>
+	 * Return the Java class that corresponds to the given HyperGraphDB type handle. The
+	 * result is the class of the run-time instances constructed with the type identified
+	 * by <code>typeHandle</code>. 
+	 * </p>
+	 * 
+	 * @param typeHandle The <code>HGHandle</code> identifying the type whose runtime Java
+	 * class is required.
+	 * @return The Java class corresponding to <code>typeHandle</code> or <code>null</code>
+	 * if there's no such correspondence.
+	 */
+	public Class<?> getClassForType(HGHandle typeHandle)
+	{
+		String classname = getClassToTypeDB().findFirstByValue(hg.getPersistentHandle(typeHandle));
+		return classname != null ? loadClass(classname) : null;
+	}
+	
 	/**
 	 * <p>Return the <code>HGAtomType</code> by its <code>HGHandle</code>.</p>
 	 *

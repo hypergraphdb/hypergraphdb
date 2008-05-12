@@ -19,9 +19,18 @@ import org.hypergraphdb.HyperGraph;
  */
 public class AnyAtomCondition implements HGQueryCondition, HGAtomPredicate 
 {
-
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
 		return hg.get(handle) != null;
+	}
+	
+	public int hashCode() 
+	{ 
+		return 0; 
+	}
+	
+	public boolean equals(Object x)
+	{
+		return x instanceof AnyAtomCondition;
 	}
 }

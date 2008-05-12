@@ -12,7 +12,7 @@ import org.hypergraphdb.HGPersistentHandle;
 
 /**
  * <p>
- * The <code>HGTypeStructuralInfo</code> class represents a HyperGraph atom that provides
+ * The <code>HGTypeStructuralInfo</code> class repr+esents a HyperGraph atom that provides
  * fixed structural information about atoms of a definite type.</p>
  * <p>
  *  More often than not,

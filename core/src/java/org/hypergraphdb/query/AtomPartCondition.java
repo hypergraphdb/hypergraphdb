@@ -10,6 +10,7 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.type.HGTypedValue;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandle;
 
@@ -73,5 +74,23 @@ public class AtomPartCondition extends SimpleValueCondition
 		result.append(String.valueOf(getValue()));
 		result.append(")");
 		return result.toString();
+	}	
+	
+	public int hashCode() 
+	{ 
+		return HGUtils.hashThem(dimensionPath, HGUtils.hashThem(value, operator));
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof AtomPartCondition))
+			return false;
+		else
+		{
+			AtomPartCondition c = (AtomPartCondition)x;
+			return HGUtils.eq(operator, c.operator) &&
+				   HGUtils.eq(value, c.value) &&
+				   HGUtils.eq(dimensionPath, c.dimensionPath);
+		}
 	}	
 }

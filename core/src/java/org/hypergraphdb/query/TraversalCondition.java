@@ -5,6 +5,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -116,5 +117,29 @@ public abstract class TraversalCondition implements HGQueryCondition
 	public void setReturnSource(boolean returnSource)
 	{
 		this.returnSource = returnSource;
+	}
+	
+	public int hashCode() 
+	{ 
+		return HGUtils.hashThem(startAtom, 
+								HGUtils.hashThem(linkPredicate, 
+												 HGUtils.hashThem(siblingPredicate, reverseOrder)));
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof TypePlusCondition))
+			return false;
+		else
+		{
+			TraversalCondition c = (TraversalCondition)x;
+			return startAtom.equals(c.startAtom) &&
+				   HGUtils.eq(linkPredicate, c.linkPredicate) &&
+				   HGUtils.eq(siblingPredicate, c.siblingPredicate) &&
+				   returnSucceeding == c.returnSucceeding &&
+				   returnPreceeding == c.returnPreceeding &&
+				   returnSource == c.returnSource &&
+				   reverseOrder == c.reverseOrder;
+		}
 	}	
 }

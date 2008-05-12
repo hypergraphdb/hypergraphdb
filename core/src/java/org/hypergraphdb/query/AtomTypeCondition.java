@@ -14,6 +14,7 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -34,10 +35,10 @@ import org.hypergraphdb.HyperGraph;
  */
 public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate 
 {
-    private Class c;
+    private Class<?> c;
 	private HGHandle handle;
 	
-    public AtomTypeCondition(Class javaClass)
+    public AtomTypeCondition(Class<?> javaClass)
     {
         if (javaClass == null)
             throw new NullPointerException();
@@ -51,9 +52,19 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
 		this.handle = typeHandle;
 	}
 	
-    public Class getJavaClass()
+	public void setJavaClass(Class<?> c)
+	{
+		this.c = c;
+	}
+	
+    public Class<?> getJavaClass()
     {
         return c;
+    }
+    
+    public void setTypeHandle(HGHandle handle)
+    {
+    	this.handle = handle;
     }
     
 	public HGHandle getTypeHandle()
@@ -67,6 +78,22 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
         if (h == null)
             h = hg.getTypeSystem().getTypeHandle(c);
 		return hg.getType(value).equals(h);
+	}
+	
+	public int hashCode() 
+	{ 
+		return  c == null ? handle.hashCode() : c.hashCode();  
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof AtomTypeCondition))
+			return false;
+		else
+		{
+			AtomTypeCondition cond = (AtomTypeCondition)x;
+			return c == null ? HGUtils.eq(handle, cond.handle) : HGUtils.eq(c, cond.c);
+		}
 	}
 	
 	public String toString()

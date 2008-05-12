@@ -99,4 +99,20 @@ public class SubsumedCondition extends SubsumesImpl implements HGQueryCondition,
 	{
 		return impl.satisfies(hg, specific);
 	}
+	
+	public int hashCode() 
+	{ 
+		return general.hashCode();
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof SubsumedCondition))
+			return false;
+		else
+		{
+			SubsumedCondition c = (SubsumedCondition)x;
+			return general.equals(c.general);
+		}
+	}
 }

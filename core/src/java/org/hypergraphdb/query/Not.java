@@ -43,4 +43,17 @@ public class Not implements HGQueryCondition, HGAtomPredicate
 		result.append(")");
 		return result.toString();
 	}
+
+	public int hashCode() 
+	{ 
+		return ~negated.hashCode();  
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof Not))
+			return false;
+		else
+			return ((Not)x).negated.equals(negated);
+	}	
 }

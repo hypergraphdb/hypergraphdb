@@ -8,10 +8,11 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
 import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.util.HGUtils;
 
 public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 {
-	private Class clazz;
+	private Class<?> clazz;
 	private HGHandle baseType;
 	private List<HGHandle> subTypes = null;
 	
@@ -41,7 +42,7 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 			throw new NullPointerException("Base type is null in TypePlusCondition!");
 	}
 	
-	public TypePlusCondition(Class clazz)
+	public TypePlusCondition(Class<?> clazz)
 	{
 		this.clazz = clazz;
 		if (clazz == null)
@@ -56,12 +57,22 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 		return false;
 	}
 	
+	public void setBaseType(HGHandle baseType)
+	{
+		this.baseType = baseType;
+	}
+	
 	public HGHandle getBaseType()
 	{
 		return baseType;
 	}
 
-	public Class getJavaClass()
+	public void setJavaClass(Class<?> javaClass)
+	{
+		this.clazz = javaClass;
+	}
+	
+	public Class<?> getJavaClass()
 	{
 		return clazz;
 	}
@@ -72,4 +83,20 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 			fetchSubTypes(graph);
 		return subTypes;
 	}
+	
+	public int hashCode() 
+	{ 
+		return clazz == null ? baseType.hashCode() : clazz.hashCode();
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof TypePlusCondition))
+			return false;
+		else
+		{
+			TypePlusCondition c = (TypePlusCondition)x;
+			return clazz == null ? HGUtils.eq(baseType, c.baseType) : HGUtils.eq(clazz, c.clazz);
+		}
+	}	
 }

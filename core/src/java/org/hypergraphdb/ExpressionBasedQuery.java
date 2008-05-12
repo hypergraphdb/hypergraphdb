@@ -20,6 +20,7 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.indexing.ByPartIndexer;
+import org.hypergraphdb.indexing.ByTargetIndexer;
 import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.*;
 import org.hypergraphdb.algorithms.*;
@@ -430,9 +431,30 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				return qmd;
 			}
 		});
+		toQueryMap.put(IndexCondition.class, new ConditionToQuery()
+        {
+			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+			{				
+				IndexCondition ic = (IndexCondition)c;
+				if (ic.getOperator() != ComparisonOperator.EQ)
+				{
+					if (! (ic.getIndex() instanceof HGSortIndex))
+						throw new IllegalArgumentException("Invalid operator : " + ic.getOperator() + 
+								" for index " + ic.getIndex() + " and key " + ic.getKey());
+					else
+						return new IndexBasedQuery(ic.getIndex(), ic.getKey(), ic.getOperator());					
+				}
+				else
+					return new IndexBasedQuery(ic.getIndex(), ic.getKey());
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				return QueryMetaData.ORACCESS.clone();
+			}
+		});				
 		toQueryMap.put(IndexedPartCondition.class, new ConditionToQuery()
         {
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				IndexedPartCondition ip = (IndexedPartCondition)c;
 				if (ip.getIndex() instanceof HGSortIndex)						
@@ -782,7 +804,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		if (C instanceof And)
 		{			
 			And and = (And)C;
-			and = (And)and.clone();
+			HashSet<HGQueryCondition> andSet = new HashSet<HGQueryCondition>();			
 			for (int i = 0; i < and.size(); i++)
 			{
 				HGQueryCondition sub = and.get(i);
@@ -791,41 +813,46 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				// list of Or-ed Ands or primitives.
 				if (sub instanceof And)
 				{
-					and.remove(i--);
 					for (HGQueryCondition subsub:(And)sub)
-						and.add(subsub);					
+						if (!andSet.contains(subsub))
+							andSet.add(subsub);					
 				}
 				else if (sub instanceof Or)
 				{
-					and.remove(i--);
 					Or result = new Or();
 					for (HGQueryCondition subsub:(Or)sub)
 					{
-						And newsub = (And)and.clone();
+						And newsub = new And();
 						newsub.add(subsub);
+						newsub.addAll(andSet);
+						newsub.addAll(and.subList(i + 1, and.size()));
 						result.add(newsub);
 					}
 					return toDNF(result);
 				}				
+				else if (!andSet.contains(sub))
+					andSet.add(sub);
 			}
+			and = new And();
+			and.addAll(andSet);
 			return and;
 		}
 		else if (C instanceof Or)
 		{
 			Or or = (Or)C;
-			or = (Or)or.clone();
+			HashSet<HGQueryCondition> orSet = new HashSet<HGQueryCondition>();
 			for (int i = 0; i < or.size(); i++)
 			{
 				HGQueryCondition sub = or.get(i);
 				sub = toDNF(sub);
 				if (sub instanceof Or)
-				{
-					or.remove(i--);					
+				{					
 					for (HGQueryCondition subsub:(Or)sub)
-						or.add(subsub);
+						if (!orSet.contains(subsub))
+							orSet.add(subsub);
 				}
-				else
-					or.set(i, sub);
+				else if (!orSet.contains(sub))
+					orSet.add(sub);
 			}
 			return or;
 		}
@@ -907,12 +934,13 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			AtomTypeCondition byType = null;
 			AtomValueCondition byValue = null;
 			TypedValueCondition byTypedValue = null;
+			HashSet<OrderedLinkCondition> oLinks = new HashSet<OrderedLinkCondition>();
 			HashSet<AtomPartCondition> byPart = new HashSet<AtomPartCondition>();
 			boolean has_ordered = false;
 			boolean has_ra = false;
-			for (Iterator<HGQueryCondition> i = out.iterator(); i.hasNext(); )
+			for (int i = 0; i < out.size(); i++)
 			{
-				HGQueryCondition c = i.next();
+				HGQueryCondition c = out.get(i);				
 				if (c instanceof AtomTypeCondition)
 				{
 					if (byType == null)
@@ -921,12 +949,12 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if(!checkConsistent(byTypedValue, (AtomTypeCondition)c))
 								return Nothing.Instance;
 							else
-								i.remove();
+								out.remove(i--);
 						else
 							byType = (AtomTypeCondition)c;
 					}
 					else if (checkConsistent(byType, (AtomTypeCondition)c))
-						i.remove();
+						out.remove(i--);
 					else
 						return Nothing.Instance;							
 				}
@@ -938,12 +966,12 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if(!checkConsistent(byTypedValue, (AtomValueCondition)c))
 								return Nothing.Instance;
 							else
-								i.remove();
+								out.remove(i--);
 						else
 							byValue = (AtomValueCondition)c;						
 					}
 					else if (byValue.equals((AtomValueCondition)c))
-						i.remove();
+						out.remove(i--);
 					else
 						return Nothing.Instance;
 				}
@@ -952,13 +980,17 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					if (byTypedValue ==  null)
 						byTypedValue = (TypedValueCondition)byTypedValue;
 					else if (byTypedValue.equals((TypedValueCondition)c))
-						i.remove();
+						out.remove(i--);
 					else
 						return Nothing.Instance;					
 				}
 				else if (c instanceof AtomPartCondition)
 				{
 					byPart.add((AtomPartCondition)c);
+				}
+				else if (c instanceof OrderedLinkCondition)
+				{
+					oLinks.add((OrderedLinkCondition)c);
 				}
 				else
 				{
@@ -1031,17 +1063,55 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						if (idx != null)
 						{
 							if (byType != null)
+							{
 								out.remove(byType);
+								byType = null;
+							}
 							else if (byTypedValue != null)
 							{
 								out.remove(byTypedValue);
 								out.add(new AtomValueCondition(byTypedValue.getValue(), 
 															   byTypedValue.getOperator()));
+								byTypedValue = null;
 							}
 							out.remove(pc);
 							out.add(new IndexedPartCondition(typeHandle, idx, pc.getValue(), pc.getOperator()));
 						}
-					}			
+					}
+			
+			// Check for "by-target" indices within an OrderedLinkConditions and replace
+			// the corresponding 'incident' condition with one based on the index.
+			// Here would be an opportunity to use HGTypeStructuralInfo on a link type and
+			// possibly eliminate the OrderedLinkCondition (and resulting predicate call during
+			// query execution) altogether
+			if (typeHandle != null)
+				for (OrderedLinkCondition c : oLinks)
+				{					
+					for (int ti = 0; ti < c.targets().length; ti++)
+					{					
+						HGHandle targetHandle = c.targets()[ti];
+						ByTargetIndexer indexer = new ByTargetIndexer(typeHandle, ti);
+						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
+						if (idx != null)
+						{
+							if (byType != null)
+							{
+								out.remove(byType);
+								byType = null;
+							}
+							else if (byTypedValue != null)
+							{
+								out.remove(byTypedValue);
+								out.add(new AtomValueCondition(byTypedValue.getValue(), 
+															   byTypedValue.getOperator()));
+								byTypedValue = null;
+							}							
+							out.add(new IndexCondition<HGPersistentHandle, HGPersistentHandle>(
+										idx, graph.getPersistentHandle(targetHandle)));
+							out.remove(new IncidentCondition(targetHandle));
+						}
+					}
+				}
 			return out;
 		}
 		else if (cond instanceof Or)
@@ -1068,10 +1138,30 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		if (cond instanceof TypePlusCondition)
 		{
 			TypePlusCondition ac = (TypePlusCondition)cond;
+			if (ac.getJavaClass() == null)
+				ac.setJavaClass(graph.getTypeSystem().getClassForType(ac.getBaseType()));
+			else if (ac.getBaseType() == null)
+				ac.setBaseType(graph.getTypeSystem().getTypeHandle(ac.getJavaClass()));
 			Or orCondition = new Or();
             for (HGHandle h : ac.getSubTypes(graph))
             	orCondition.add(new AtomTypeCondition(h));
             cond = orCondition;
+		}
+		else if (cond instanceof AtomTypeCondition)
+		{
+			AtomTypeCondition tc = (AtomTypeCondition)cond;
+			if (tc.getJavaClass() == null)
+				tc.setJavaClass(graph.getTypeSystem().getClassForType(tc.getTypeHandle()));
+			else if (tc.getTypeHandle() == null)
+				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));			
+		}
+		else if (cond instanceof TypedValueCondition)
+		{
+			TypedValueCondition tc = (TypedValueCondition)cond;
+			if (tc.getJavaClass() == null)
+				tc.setJavaClass(graph.getTypeSystem().getClassForType(tc.getTypeHandle()));
+			else if (tc.getTypeHandle() == null)
+				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));			
 		}
 		else if (cond instanceof List)
 		{
@@ -1079,6 +1169,24 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			for (int i = 0; i < L.size(); i++)
 				L.set(i, expand(graph, L.get(i)));
 		}
+		else if (cond instanceof OrderedLinkCondition)
+		{
+			And result = new And();
+			result.add(cond);
+			for (HGHandle h : ((OrderedLinkCondition)cond).targets())
+				if (!h.equals(HGHandleFactory.anyHandle()))
+					result.add(new IncidentCondition(h));
+			cond = result;
+		}
+		else if (cond instanceof LinkCondition)
+		{
+			And result = new And();
+			result.add(cond);
+			for (HGHandle h : ((LinkCondition)cond).targets())
+				if (!h.equals(HGHandleFactory.anyHandle()))
+					result.add(new IncidentCondition(h));
+			cond = result;
+		}		
 		return cond;
 	}
 	
@@ -1086,7 +1194,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	{
 		this.graph = graph;		
 		this.condition = simplify(toDNF(expand(graph, condition)));
-		query = toQuery(graph, condition);
+		query = toQuery(graph, this.condition);
 	}
 	
     public HGSearchResult<ResultType> execute()

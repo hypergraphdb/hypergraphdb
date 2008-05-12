@@ -47,4 +47,20 @@ public class TargetCondition implements HGQueryCondition, HGAtomPredicate
 		}
 		return false;
 	}
+	
+	public int hashCode() 
+	{ 
+		return link.hashCode();
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof TargetCondition))
+			return false;
+		else
+		{
+			TargetCondition c = (TargetCondition)x;
+			return link.equals(c.link);
+		}
+	}	
 }

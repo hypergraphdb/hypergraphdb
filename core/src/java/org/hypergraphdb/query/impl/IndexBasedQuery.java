@@ -22,11 +22,13 @@ import org.hypergraphdb.query.ComparisonOperator;
  * 
  * @author Borislav Iordanov
  */
-public class IndexBasedQuery extends HGQuery
+@SuppressWarnings("unchecked")
+public class IndexBasedQuery extends HGQuery<Object>
 {
-    private HGIndex index;
+    private HGIndex<? extends Object, ? extends Object> index;
     private Object key;
     private ComparisonOperator operator = ComparisonOperator.EQ;
+    private boolean scanKeys = true;
     
 /*    public static final int EQ= 0;
     public static final int LT = 1;
@@ -34,33 +36,53 @@ public class IndexBasedQuery extends HGQuery
     public static final int LTE = 3;
     public static final int GTE = 4; */
     
-    public IndexBasedQuery(HGIndex index, Object key)
+    /**
+     * <p>
+     * Construct a query that will scan the whole index - either its keys or its
+     * values depending on the <code>scanKeys</code> parameter.
+     * </p>
+     * 
+     * @param index The <code>HGIndex</code> on which the query is performed.
+     * @param scanKeys <code>true</code> if all keys must be scanned and 
+     * <code>false</code> if all values must be scanned instead.
+     */
+    public IndexBasedQuery(HGIndex<Object, Object> index, boolean scanKeys)
+    {
+    	this.index = index;
+    	this.scanKeys = scanKeys;
+    }
+    
+    public IndexBasedQuery(HGIndex<? extends Object, ? extends Object> index, Object key)
     {
         this.index = index;
         this.key = key;
     }
     
-    public IndexBasedQuery(HGSortIndex index, Object key, ComparisonOperator operator)
+    public IndexBasedQuery(HGIndex<Object, Object> index, Object key, ComparisonOperator operator)
     {
     	this.index = index;
     	this.key = key;
     	this.operator = operator;
     }
     
-    public HGRandomAccessResult execute()
+    public HGRandomAccessResult<Object> execute()
     {
+    	if (key == null)
+    		return scanKeys ? 
+    				((HGIndex<Object, Object>)index).scanKeys() : 
+    				((HGIndex<Object, Object>)index).scanValues();
     	switch (operator)
     	{
     		case EQ:
-    			return index.find(key);
+    			return ((HGIndex<Object, Object>)index).find(key);
     		case LT:
-    			return ((HGSortIndex)index).findLT(key);
+    			return ((HGSortIndex<Object, Object>)index).findLT(key);
     		case GT:
-    			return ((HGSortIndex)index).findGT(key);
+    			return ((HGSortIndex<Object, Object>)index).findGT(key);
     		case LTE:
-    			return ((HGSortIndex)index).findLTE(key);
+    			return ((HGSortIndex<Object, Object>)index).findLTE(key);
     		case GTE:
-    			return ((HGSortIndex)index).findGTE(key);   
+    			return ((HGSortIndex<Object, Object>)index).findGTE(key);   
     		default:
     			throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
     	}

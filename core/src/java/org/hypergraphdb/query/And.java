@@ -101,4 +101,12 @@ public class And extends ArrayList<HGQueryCondition> implements HGQueryCondition
 		result.append(")");
 		return result.toString();
 	}
+	
+	public boolean equals(Object x)
+	{
+		if ( ! (x instanceof And))
+			return false;
+		else
+			return super.equals((And)x);
+	}
 }

@@ -50,6 +50,19 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 				return true;
 		return false;
 	}
+
+	public int hashCode() 
+	{ 
+		return target.hashCode();  
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof IncidentCondition))
+			return false;
+		else
+			return ((IncidentCondition)x).target.equals(target);
+	}
 	
 	public String toString()
 	{

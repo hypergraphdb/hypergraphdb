@@ -11,6 +11,7 @@ import org.hypergraphdb.query.ComparisonOperator;
 import org.hypergraphdb.query.DFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
+import org.hypergraphdb.query.IndexCondition;
 import org.hypergraphdb.query.IndexedPartCondition;
 import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.MapCondition;
@@ -26,6 +27,7 @@ import org.hypergraphdb.type.HGAtomType;
 
 // This is a temporary implementation, to research a bit what's involved in
 // estimating result set sizes...
+@SuppressWarnings("unchecked")
 class ResultSizeEstimation
 {
 	// count() should return the size of of the result set if the condition
@@ -46,10 +48,10 @@ class ResultSizeEstimation
 		return countResultSet(HGQuery.make(graph, cond));
 	}
 	
-	static long countResultSet(HGQuery q)
+	static long countResultSet(HGQuery<?> q)
 	{
     	// need to do full query.
-    	HGSearchResult<HGPersistentHandle> rs = q.execute();
+    	HGSearchResult<HGPersistentHandle> rs = (HGSearchResult<HGPersistentHandle>)q.execute();
     	try
     	{
 			long result = 0;        			
@@ -272,6 +274,25 @@ class ResultSizeEstimation
 			return c == null ? Integer.MAX_VALUE : c.cost(graph, x);					
 		}			
 	});
+
+	countersMap.put(IndexCondition.class, new Counter()
+	{ 
+		@SuppressWarnings("unchecked")
+		public long count(HyperGraph graph, HGQueryCondition x)
+		{
+			IndexCondition ic = (IndexCondition)x;
+			if (ic.getOperator() == ComparisonOperator.EQ)
+				return ic.getIndex().count(ic.getKey());			
+			else
+				return countResultSet(graph, ic);
+		}
+		
+		public long cost(HyperGraph graph, HGQueryCondition x)
+		{
+			IndexCondition ic = (IndexCondition)x;
+			return ic.getOperator() == ComparisonOperator.EQ ? 1 : Integer.MAX_VALUE;
+		}			
+	});
 	
 	countersMap.put(IndexedPartCondition.class, new Counter()
 	{ 
@@ -280,7 +301,7 @@ class ResultSizeEstimation
 		{
 			IndexedPartCondition ip = (IndexedPartCondition)x;
 			if (ip.getOperator() == ComparisonOperator.EQ)
-				return ip.getIndex().count(ip.getPartValue());
+				return ((HGIndex<Object, Object>)ip.getIndex()).count(ip.getPartValue());			
 			else
 				return countResultSet(graph, ip);
 		}

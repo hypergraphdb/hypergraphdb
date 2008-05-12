@@ -27,5 +27,5 @@ package org.hypergraphdb.query;
  * @author Borislav Iordanov
  */
 public interface HGQueryCondition
-{ 	
+{
 }

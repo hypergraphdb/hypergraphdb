@@ -16,6 +16,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAUtils;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -131,5 +132,20 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		}
 		result.append(")");
 		return result.toString();
+	}
+	
+	public int hashCode() 
+	{ 
+		int x = 0;
+		for (HGHandle h : targetSet) x += h.hashCode();
+		return x;
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof OrderedLinkCondition))
+			return false;
+		else
+			return HGUtils.eq(targetSet, ((OrderedLinkCondition)x).targetSet);
 	}	
 }

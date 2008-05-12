@@ -12,5 +12,5 @@ public final class Nothing implements HGQueryCondition
 {
 	public static final Nothing Instance = new Nothing();
 	
-	private Nothing() { }
+	private Nothing() { }	
 }

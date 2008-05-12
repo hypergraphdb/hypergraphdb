@@ -16,12 +16,6 @@ import org.hypergraphdb.util.HGUtils;
  * projections along a certain dimension of a given base atom set. The
  * base atom set is specified as a <code>HGQueryCondition</code>. 
  * </p>
- *  
- * <p>
- * The <code>satisfies</code> will work, but it is not intended to be
- * used frequently (e.g. in a loop) since it will execute the condition
- * defined for the base atom set each
- * </p>
  * 
  * @author Borislav Iordanov
  */
@@ -83,5 +77,22 @@ public class AtomProjectionCondition implements HGQueryCondition, HGAtomPredicat
 			}
 		}		
 		return baseSet.containsKey(handle);
+	}
+		
+	public int hashCode() 
+	{ 
+		return HGUtils.hashThem(dimensionPath, baseSetCondition); 
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof AtomProjectionCondition))
+			return false;
+		else
+		{
+			AtomProjectionCondition c = (AtomProjectionCondition)x;
+			return HGUtils.eq(dimensionPath, c.dimensionPath) &&
+				   HGUtils.eq(baseSetCondition, c.baseSetCondition);
+		}
 	}
 }

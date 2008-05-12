@@ -2,6 +2,7 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -21,7 +22,7 @@ import org.hypergraphdb.HyperGraph;
  */
 public class TypedValueCondition extends AtomValueCondition
 {
-	private Class javaClass;
+	private Class<?> javaClass;
 	private HGHandle typeHandle;
 
 	protected boolean satisfies(HyperGraph hg, HGHandle atomHandle, Object atom, HGHandle type)
@@ -34,7 +35,7 @@ public class TypedValueCondition extends AtomValueCondition
 		this(typeHandle, value, ComparisonOperator.EQ);
 	}
 	
-	public TypedValueCondition(Class javaClass, Object value)
+	public TypedValueCondition(Class<?> javaClass, Object value)
 	{
 		this(javaClass, value, ComparisonOperator.EQ);
 	}
@@ -45,10 +46,15 @@ public class TypedValueCondition extends AtomValueCondition
 		this.typeHandle = typeHandle;
 	}
 
-	public TypedValueCondition(Class javaClass, Object value, ComparisonOperator op)
+	public TypedValueCondition(Class<?> javaClass, Object value, ComparisonOperator op)
 	{
 		super(value, op);
 		this.javaClass = javaClass;
+	}
+	
+	public void setTypeHandle(HGHandle typeHandle)
+	{
+		this.typeHandle = typeHandle;
 	}
 	
 	public HGHandle getTypeHandle()
@@ -56,7 +62,12 @@ public class TypedValueCondition extends AtomValueCondition
 		return typeHandle;
 	}
 	
-	public Class getJavaClass()
+	public void setJavaClass(Class<?> javaClass)
+	{
+		this.javaClass = javaClass;
+	}
+	
+	public Class<?> getJavaClass()
 	{
 		return javaClass;
 	}
@@ -71,5 +82,25 @@ public class TypedValueCondition extends AtomValueCondition
 		result.append(typeHandle);
 		result.append(")");
 		return result.toString();
+	}
+	
+	public int hashCode() 
+	{ 
+		return  super.hashCode() + 
+				(javaClass == null ? typeHandle.hashCode() : javaClass.hashCode());  
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof TypedValueCondition))
+			return false;
+		else
+		{
+			TypedValueCondition c = (TypedValueCondition)x;
+			return (javaClass == null ? 
+					HGUtils.eq(typeHandle, c.typeHandle) : 
+					HGUtils.eq(javaClass, c.javaClass)) &&
+					super.equals(x);
+		}
 	}	
 }
