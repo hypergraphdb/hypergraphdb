@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
@@ -1069,8 +1070,12 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			// are always for a particular atom type) and a "by value" condition is kept
 			// only as a predicate
 			if (typeHandle != null && byPart.size() > 0)
-				for (AtomPartCondition pc : byPart)
-					if (!checkConsistent((HGAtomType)graph.get(typeHandle), pc))
+			{
+				HGAtomType type = (HGAtomType)graph.get(typeHandle);
+				if (type == null)
+					throw new HGException("No type for type handle " + typeHandle + " in this HyperGraph instance.");
+				for (AtomPartCondition pc : byPart)									
+					if (!checkConsistent(type, pc))
 						return Nothing.Instance;
 					else
 					{
@@ -1094,7 +1099,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							out.add(new IndexedPartCondition(typeHandle, idx, pc.getValue(), pc.getOperator()));
 						}
 					}
-			
+			}
 			// Check for "by-target" indices within an OrderedLinkConditions and replace
 			// the corresponding 'incident' condition with one based on the index.
 			// Here would be an opportunity to use HGTypeStructuralInfo on a link type and
@@ -1206,10 +1211,15 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		return cond;
 	}
 	
-	public ExpressionBasedQuery(HyperGraph graph, HGQueryCondition condition)
+	public ExpressionBasedQuery(final HyperGraph graph, final HGQueryCondition condition)
 	{
-		this.graph = graph;		
-		this.condition = simplify(toDNF(expand(graph, condition)));
+		this.graph = graph;	
+		this.condition = graph.getTransactionManager().ensureTransaction(new Callable<HGQueryCondition>() {
+			public HGQueryCondition call()
+			{
+				return simplify(toDNF(expand(graph, condition))); 
+			}
+		});
 		query = toQuery(graph, this.condition);
 	}
 	

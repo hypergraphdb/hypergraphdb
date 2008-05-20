@@ -285,7 +285,7 @@ public class HGTypeSystem
 			}
 			try
 			{
-				Class<?> clazz = Class.forName(classname);
+				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
 				HGAtomType type = (HGAtomType)clazz.newInstance();
 				type.setHyperGraph(hg);
 				return (HGLiveHandle)addPredefinedType(pHandle, type, null);
