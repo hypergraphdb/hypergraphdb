@@ -30,7 +30,6 @@ import org.hypergraphdb.util.HGUtils;
  */
 public final class PredicateBasedFilter extends HGQuery 
 {
-    private HyperGraph hg;
 	private HGQuery query;
 	private HGAtomPredicate predicate;
 	
@@ -44,7 +43,7 @@ public final class PredicateBasedFilter extends HGQuery
 	 */
 	public PredicateBasedFilter(HyperGraph hg, HGQuery query, HGAtomPredicate predicate)
 	{
-        this.hg = hg;
+        this.graph = hg;
 		this.query = query;
 		this.predicate = predicate;
 	}
@@ -57,8 +56,8 @@ public final class PredicateBasedFilter extends HGQuery
 			while (baseResult.hasNext())
 			{
 				Object next = baseResult.next();
-				if (predicate.satisfies(hg, (HGHandle)next))
-					return new FilteredResultSet(hg, baseResult, predicate, 1);
+				if (predicate.satisfies(graph, (HGHandle)next))
+					return new FilteredResultSet(graph, baseResult, predicate, 1);
 			}
 		}
 		catch (Throwable t)

@@ -30,11 +30,11 @@ import org.hypergraphdb.atom.HGSubsumes;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 {
 	private HGQuery<ResultType> query = null; 
 	private HGQueryCondition condition;
-	private HyperGraph graph;
 	
 	private static interface ConditionToQuery
 	{
@@ -88,7 +88,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				Or orCondition = new Or();
                 for (HGHandle h : ac.getSubTypes(hg))
                 	orCondition.add(new AtomTypeCondition(h));
-                return toQueryMap.get(Or.class).getQuery(hg, orCondition);
+                return toQuery(hg, orCondition); //toQueryMap.get(Or.class).getQuery(hg, orCondition);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
@@ -96,7 +96,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				Or orCondition = new Or();
                 for (HGHandle h : ac.getSubTypes(hg))
                 	orCondition.add(new AtomTypeCondition(h));
-                return toQueryMap.get(Or.class).getMetaData(hg, orCondition);
+                return toMetaData(hg, orCondition); //toQueryMap.get(Or.class).getMetaData(hg, orCondition);
 			}			
 		});		
 		toQueryMap.put(TypedValueCondition.class, new ConditionToQuery()
@@ -536,14 +536,14 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					Iterator<Map.Entry<HGQueryCondition, Double>> i = ORA.entrySet().iterator();
 					c1 = i.next().getKey();
 					c2 = i.next().getKey();
-					result = new IntersectionQuery(toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-												   toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
+					result = new IntersectionQuery(toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+												   toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
 												   new ZigZagIntersectionResult());
 					while (i.hasNext())
 					{
 						c1 = i.next().getKey();
 						result = new IntersectionQuery(result, 
-													   toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+													   toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 													   new ZigZagIntersectionResult());
 					}
 				}
@@ -561,15 +561,15 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					{
 						c1 = i.next().getKey();
 						c2 = i.next().getKey();
-						result = new IntersectionQuery(toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-													   toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
+						result = new IntersectionQuery(toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+													   toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
 													   new SortedIntersectionResult()); 
 					}
 					while (i.hasNext())
 					{
 						c1 = i.next().getKey();
 						result = new IntersectionQuery(result, 
-													   toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+													   toQuery(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 													   new SortedIntersectionResult());					
 					}						
 				}
@@ -577,10 +577,10 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					c1 = O.keySet().iterator().next();
 					if (result == null)
-						result = toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+						result = toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 					else
 						result = new IntersectionQuery(result, 
-													   toQueryMap.get(c1.getClass()).getQuery(graph, c1),
+													   toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
 													   new SortedIntersectionResult());
 				}
 				
@@ -595,7 +595,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if (n < curr.getValue().getSizeExpected())
 								c1 = curr.getKey();
 						}
-						result = toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+						result = toQuery(graph, c1); //toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 						W.remove(c1);
 					}
 					else if (RA.size() > 0)
@@ -608,7 +608,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if (cost < curr.getValue())
 								c1 = curr.getKey();
 						}
-						result = toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+						result = toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 						RA.remove(c1);						
 					}
 					else
@@ -622,7 +622,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					Map.Entry<HGQueryCondition, Double> curr = i.next();
 					c1 = curr.getKey();
-					P.put(new RABasedPredicate(toQueryMap.get(c1.getClass()).getQuery(graph, c1)), curr.getValue());
+					P.put(new RABasedPredicate(toQuery(graph, c1)) /* toQueryMap.get(c1.getClass()).getQuery(graph, c1)) */, curr.getValue());
 				}
 				
 				// Add predicates in order from the less costly to execute to the most costly...
@@ -648,7 +648,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				for (Iterator<Map.Entry<HGQueryCondition, QueryMetaData>> i = W.entrySet().iterator(); i.hasNext(); )
 				{
 					Map.Entry<HGQueryCondition, QueryMetaData> curr = i.next();
-					HGQuery q = toQueryMap.get(curr.getKey().getClass()).getQuery(graph, curr.getKey());
+					HGQuery q = toQuery(graph, curr.getKey()); // toQueryMap.get(curr.getKey().getClass()).getQuery(graph, curr.getKey());
 					result = new PredicateBasedFilter(graph, result, new DelayedSetLoadPredicate(q));
 				}
 				
@@ -869,7 +869,23 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					"Please try to contrain the query futher, for example by specifying the atom's types or " +
 					"incidence sets or some indexed property value.");
 		else
-			return (HGQuery<ResultType>)transformer.getQuery(hg, condition);
+		{
+			HGQuery<ResultType> q = (HGQuery<ResultType>)transformer.getQuery(hg, condition);
+			q.setHyperGraph(hg);
+			return q;
+		}
+	}
+
+	private static QueryMetaData toMetaData(HyperGraph hg, HGQueryCondition condition)
+	{
+		ConditionToQuery transformer = (ConditionToQuery)toQueryMap.get(condition.getClass());
+		if (transformer == null)
+			throw new HGException("The query condition '" + condition + 
+					"' could not be translated to an executable query because it is not specific enough. " +
+					"Please try to contrain the query futher, for example by specifying the atom's types or " +
+					"incidence sets or some indexed property value.");
+		else
+			return transformer.getMetaData(hg, condition);
 	}
 	
 	private boolean checkConsistent(AtomTypeCondition c1, AtomTypeCondition c2)

@@ -213,6 +213,33 @@ public class HGTransactionManager
 			throw new HGException(ex);
 		}
 	}
+
+	/**
+	 * <p>
+	 * Perform a unit of work encapsulated as a transaction and return the result. This method
+	 * will reuse the currently active transaction if there is one or create a new transaction
+	 * otherwise.
+	 * </p>
+	 * 
+	 * @param <V> The type of the return value.
+	 * @param transaction The transaction process encapsulated as a <code>Callable</code> instance.
+	 * @return The result of <code>transaction.call()</code>.
+	 * @throws The method will (re)throw any exception that does not result from a deadlock.
+	 */
+	public <V> V ensureTransaction(Callable<V> transaction)
+	{
+		if (getContext().getCurrent() != null)
+			try 
+			{
+				return transaction.call();
+			}
+			catch (Exception ex)
+			{
+				throw new RuntimeException(ex);
+			}
+		else
+			return transact(transaction);
+	}
 	
 	/**
 	 * <p>

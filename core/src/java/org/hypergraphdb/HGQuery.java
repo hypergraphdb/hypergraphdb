@@ -10,12 +10,12 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
 import org.hypergraphdb.util.CompositeMapping;
-import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 
 /**
@@ -28,8 +28,10 @@ import org.hypergraphdb.util.Mapping;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public abstract class HGQuery<SearchResult> 
+public abstract class HGQuery<SearchResult> implements HGGraphHolder
 {  	
+	protected HyperGraph graph;	
+	
 	public final static HGQuery<Object> NOP = new HGQuery<Object>()
 	{
 		public HGSearchResult<Object> execute() { return (HGSearchResult<Object>)HGSearchResult.EMPTY; }
@@ -44,6 +46,16 @@ public abstract class HGQuery<SearchResult>
 	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph hg, HGQueryCondition condition)
 	{
 		return (HGQuery<SearchResult>)new ExpressionBasedQuery(hg, condition);
+	}
+	
+	public HyperGraph getHyperGraph()
+	{
+		return graph;
+	}
+
+	public void setHyperGraph(HyperGraph graph)
+	{
+		this.graph = graph;
 	}
 
 	public abstract HGSearchResult<SearchResult> execute();
@@ -215,31 +227,37 @@ public abstract class HGQuery<SearchResult>
          * @param cond The condition specifying the result set.
          * @return The number of atoms satisfying the query condition.
          */
-        public static long count(HyperGraph graph, HGQueryCondition cond) 
+        public static long count(final HyperGraph graph, final HGQueryCondition cond) 
         { 
-        	ResultSizeEstimation.Counter counter = ResultSizeEstimation.countersMap.get(cond.getClass());
-        	if (counter == null)
-        		return ResultSizeEstimation.countResultSet(graph, cond);
-        	else
-        		return counter.count(graph, cond);
+        	return graph.getTransactionManager().ensureTransaction(new Callable<Long>() {
+        	public Long call()
+        	{
+            	ResultSizeEstimation.Counter counter = ResultSizeEstimation.countersMap.get(cond.getClass());
+            	if (counter == null)
+            		return ResultSizeEstimation.countResultSet(graph, cond);
+            	else
+            		return counter.count(graph, cond);        		
+        	}
+        	});
         }
         
         /**
-         * <p>Return the size of result set of the query. The query is actually executed.</p>
+         * <p>
+         * Count the result set from executing the given query. The query is executed and
+         * the result set scanned completely.
+         * </p>
+         * 
+         * @param query
+         * @return
          */
-        public static long count(HGQuery<?> query)
+        public static long count(final HGQuery<?> query)
         {
-        	int c = 0;
-        	HGSearchResult<?> rs = query.execute();
-        	try
-        	{
-        		for (; rs.hasNext(); rs.next()) c++;
-        		return c;
-        	}
-        	finally
-        	{
-        		HGUtils.closeNoException(rs);
-        	}
+        	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<Long>() {
+            	public Long call()
+            	{
+                	return ResultSizeEstimation.countResultSet(query);
+            	}
+            	});        	
         }
         
         //
@@ -274,21 +292,26 @@ public abstract class HGQuery<SearchResult>
     	 * @param condition
     	 * @return
     	 */
-    	public static <T> T findOne(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> T findOne(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		HGSearchResult<T> rs = null;
-    		try
-    		{
-    			rs = graph.find(condition);
-    			if (rs.hasNext())
-    				return rs.next();
-    			else
-    				return null;
-    		}
-    		finally
-    		{
-    			if (rs != null) rs.close();
-    		}    		
+        	return graph.getTransactionManager().ensureTransaction(new Callable<T>() {
+            	public T call()
+            	{
+            		HGSearchResult<T> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			if (rs.hasNext())
+            				return rs.next();
+            			else
+            				return null;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}    		
+            	}
+            	});
     	}
     	
     	/**
@@ -301,21 +324,26 @@ public abstract class HGQuery<SearchResult>
     	 * @param condition
     	 * @return
     	 */
-    	public static <T> List<T> findAll(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> List<T> findAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		ArrayList<T> result = new ArrayList<T>();
-    		HGSearchResult<T> rs = null;
-    		try
-    		{
-    			rs = graph.find(condition);
-    			while (rs.hasNext())
-    				result.add(rs.next());
-    			return result;
-    		}
-    		finally
-    		{
-    			if (rs != null) rs.close();
-    		}      		
+        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+            		ArrayList<T> result = new ArrayList<T>();
+            		HGSearchResult<T> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			while (rs.hasNext())
+            				result.add(rs.next());
+            			return result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}	
+            	}
+            	});    		      		
     	}
 
     	/**
@@ -328,38 +356,49 @@ public abstract class HGQuery<SearchResult>
     	 * @param condition
     	 * @return
     	 */
-    	public static <T> List<T> getAll(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> List<T> getAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		ArrayList<Object> result = new ArrayList<Object>();
-    		HGSearchResult<HGHandle> rs = null;
-    		try
-    		{
-    			rs = graph.find(condition);
-    			while (rs.hasNext())
-    				result.add(graph.get(rs.next()));
-    			return (List<T>)result;
-    		}
-    		finally
-    		{
-    			if (rs != null) rs.close();
-    		}      		
+        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+            		ArrayList<Object> result = new ArrayList<Object>();
+            		HGSearchResult<HGHandle> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			while (rs.hasNext())
+            				result.add(graph.get(rs.next()));
+            			return (List<T>)result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}	
+            	}
+            	});    		     		
     	}
     	
-    	public static <T> List<T> findAll(HGQuery<T> query)
+    	public static <T> List<T> findAll(final HGQuery<T> query)
     	{
-    		ArrayList<T> result = new ArrayList<T>();
-    		HGSearchResult<T> rs = null;
-    		try
-    		{
-    			rs = query.execute();
-    			while (rs.hasNext())
-    				result.add(rs.next());
-    			return result;
-    		}
-    		finally
-    		{
-    			if (rs != null) rs.close();
-    		}      		
+        	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+                	
+            		ArrayList<T> result = new ArrayList<T>();
+            		HGSearchResult<T> rs = null;
+            		try
+            		{
+            			rs = query.execute();
+            			while (rs.hasNext())
+            				result.add(rs.next());
+            			return result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}      	
+            	}
+            	});		
     	}    	
     }
 }

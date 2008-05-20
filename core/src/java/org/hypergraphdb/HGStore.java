@@ -68,7 +68,7 @@ public class HGStore
     private Database incidence_db = null;
     private LinkBinding linkBinding = new LinkBinding();
     private HGTransactionManager transactionManager = null;    
-    private HashMap<String, HGIndex> openIndices = new HashMap<String, HGIndex>();
+    private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
     private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();
     
     private Transaction txn()
@@ -735,7 +735,7 @@ public class HGStore
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> createIndex(String name,
     																	ByteArrayConverter<KeyType> keyConverter,
     																	ByteArrayConverter<ValueType> valueConverter,
-    																	Comparator comparator)
+    																	Comparator<?> comparator)
     {
     	indicesLock.writeLock().lock();
     	try
@@ -947,7 +947,7 @@ public class HGStore
             //
             // Close all indices
             //
-            for (Iterator<HGIndex> i = openIndices.values().iterator(); i.hasNext(); )
+            for (Iterator<HGIndex<?,?>> i = openIndices.values().iterator(); i.hasNext(); )
                 try
                 {
                 	i.next().close();
