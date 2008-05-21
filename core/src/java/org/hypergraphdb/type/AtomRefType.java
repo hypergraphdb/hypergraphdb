@@ -277,11 +277,18 @@ public class AtomRefType implements HGAtomType,
 
 	public Object fromByteArray(byte[] byteArray)
 	{
-		return hg.get(BAtoHandle.getInstance().fromByteArray(byteArray));
+		HGPersistentHandle h = BAtoHandle.getInstance().fromByteArray(byteArray);
+		if (h.equals(HGHandleFactory.nullHandle()))
+			return null;
+		else
+			return hg.get(h);
 	}
 
 	public byte[] toByteArray(Object object)
 	{
-		return hg.getPersistentHandle(hg.getHandle(object)).toByteArray();
+		if (object == null)
+			return HGHandleFactory.nullHandle().toByteArray();
+		else
+			return hg.getPersistentHandle(hg.getHandle(object)).toByteArray();
 	}
 }

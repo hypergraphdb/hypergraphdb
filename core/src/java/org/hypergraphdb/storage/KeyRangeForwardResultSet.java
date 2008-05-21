@@ -12,19 +12,19 @@
 package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.transaction.BDBTxCursor;
 
-import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
 
-class KeyRangeForwardResultSet extends IndexResultSet
+class KeyRangeForwardResultSet<T> extends IndexResultSet<T>
 {    
-    protected Object advance()
+    protected T advance()
     {
         try
         {
-            OperationStatus status = cursor.getNext(key, data, LockMode.DEFAULT);
+            OperationStatus status = cursor.cursor().getNext(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             	return converter.fromByteArray(data.getData());
             else
@@ -37,11 +37,11 @@ class KeyRangeForwardResultSet extends IndexResultSet
         }            
     }
     
-    protected Object back()
+    protected T back()
     {
         try
         {
-            OperationStatus status = cursor.getPrev(key, data, LockMode.DEFAULT);
+            OperationStatus status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(data.getData());
             else
@@ -58,7 +58,7 @@ class KeyRangeForwardResultSet extends IndexResultSet
     {            
     }
     
-    public KeyRangeForwardResultSet(Cursor cursor, DatabaseEntry key, ByteArrayConverter converter)
+    public KeyRangeForwardResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {
         super(cursor, key, converter);         
     }        

@@ -63,5 +63,5 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	 * greater than the <code>value</code> parameter.
 	 * @return A <code>GotoResult</code>.
 	 */
-	GotoResult goTo(Object value, boolean exactMatch);
+	GotoResult goTo(ValueType value, boolean exactMatch);
 }

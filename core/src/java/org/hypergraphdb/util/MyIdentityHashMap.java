@@ -22,6 +22,7 @@ import java.util.Set;
  * @param <K>
  * @param <V>
  */
+@SuppressWarnings("unchecked")
 class MyIdentityHashMap<K, V> extends AbstractMap<K,V>
 implements Map<K,V>, Cloneable, Serializable
 {
@@ -46,7 +47,7 @@ static final float DEFAULT_LOAD_FACTOR = 0.75f;
 /**
  * The table, resized as necessary. Length MUST Always be a power of two.
  */
-transient Entry[] table;
+transient Entry<K,V>[] table;
 
 /**
  * The number of key-value mappings contained in this identity hash map.

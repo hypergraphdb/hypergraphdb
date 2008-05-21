@@ -31,7 +31,7 @@ public class ActionQueueThread extends Thread
 	/**
 	 * The current list of actions to execute.
 	 */
-	private LinkedList actionList = new LinkedList();
+	private LinkedList<Runnable> actionList = new LinkedList<Runnable>();
 	
 	/**
 	 * The max size of the action queue before it block a calling thread.

@@ -154,7 +154,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	}
 	
 	@SuppressWarnings("unchecked")
-	public GotoResult goTo(Object value, boolean exactMatch) 
+	public GotoResult goTo(T value, boolean exactMatch) 
 	{
 		// We need to save state of both left and right cursor. Because of swapping, save the current
 		// left and the current right in local variables.

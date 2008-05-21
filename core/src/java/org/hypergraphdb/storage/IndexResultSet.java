@@ -12,9 +12,9 @@ import java.util.NoSuchElementException;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.transaction.BDBTxCursor;
 import org.hypergraphdb.util.HGUtils;
 
-import com.sleepycat.db.Cursor;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.OperationStatus;
@@ -28,14 +28,14 @@ import com.sleepycat.db.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
-abstract class IndexResultSet implements HGRandomAccessResult
+abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 {        
-    protected Cursor cursor;
-    protected Object current, prev, next;
+    protected BDBTxCursor cursor;
+    protected T current, prev, next;
     protected int lookahead = 0;
     protected DatabaseEntry key;        
     protected DatabaseEntry data = new DatabaseEntry();
-    protected ByteArrayConverter converter;
+    protected ByteArrayConverter<T> converter;
     
     protected final void closeNoException()
     {
@@ -44,7 +44,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
     
     protected final void checkCursor()
     {
-        if (cursor == null)
+        if (!cursor.isOpen())
             throw new HGException(
                     "DefaultIndexImpl.IndexResultSet: attempt to perform an operation on a closed or invalid cursor.");            
     }
@@ -81,8 +81,8 @@ abstract class IndexResultSet implements HGRandomAccessResult
         }
     }
     
-    protected abstract Object advance();
-    protected abstract Object back();
+    protected abstract T advance();
+    protected abstract T back();
     
     /**
      * <p>Construct an empty result set.</p>
@@ -100,7 +100,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
      * @param cursor
      * @param key
      */
-    public IndexResultSet(Cursor cursor, DatabaseEntry key, ByteArrayConverter converter)
+    public IndexResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {
 /*        id = idcounter++;
         System.out.println("Constructing index set with id " + id);
@@ -113,7 +113,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
         this.key = key == null ? new DatabaseEntry() : key;
 	    try
 	    {
-	        cursor.getCurrent(key, data, LockMode.DEFAULT);
+	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(data.getData());
 	        lookahead = 1;
 	    }
@@ -136,7 +136,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
         	lookahead = 0;
     }
     
-    public GotoResult goTo(Object value, boolean exactMatch)
+    public GotoResult goTo(T value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
     	data.setData(B);
@@ -144,7 +144,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
     	{
     		if (exactMatch)
     		{
-    			if (cursor.getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			if (cursor.cursor().getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(data.getData());
     				return GotoResult.found; 
@@ -156,7 +156,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
     		{
     			byte [] save = new byte[data.getData().length];
     			System.arraycopy(data.getData(), 0, save, 0, save.length);   
-    			if (cursor.getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			if (cursor.cursor().getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				GotoResult result = HGUtils.eq(save, data.getData()) ? GotoResult.found : GotoResult.close; 
     				positionToCurrent(data.getData());
@@ -195,7 +195,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
         }
     }
     
-    public final Object current()     
+    public final T current()     
     {
     	if (current == null)
     		throw new NoSuchElementException();
@@ -212,7 +212,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
     	return next != null; 
     }
     
-    public final Object prev()        
+    public final T prev()        
     { 
     	if (!hasPrev())
     		throw new NoSuchElementException();
@@ -220,7 +220,7 @@ abstract class IndexResultSet implements HGRandomAccessResult
     	return current(); 
     }
             
-    public final Object next()        
+    public final T next()        
     { 
     	if (!hasNext())
     		throw new NoSuchElementException();

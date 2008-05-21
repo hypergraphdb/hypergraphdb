@@ -8,6 +8,8 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.util.CloseMe;
+
 /**
  * <p>
  * Represents the result set of a HyperGraph query. 
@@ -15,7 +17,7 @@ package org.hypergraphdb;
  * 
  * @author Borislav Iordanov
  */
-public interface HGSearchResult<T> extends TwoWayIterator<T>
+public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe
 {
     /**
      * <p>Returns the current element in the result set. If there is no current element,

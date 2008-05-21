@@ -71,14 +71,14 @@ public class HGStore
     private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
     private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();
     
-    private Transaction txn()
+    private TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();;
-    	if (tx == null || ! (tx instanceof TransactionBDBImpl))
-    		return null;
+    	if (tx == null)
+    		return TransactionBDBImpl.nullTransaction();
     	else
-    		return ((TransactionBDBImpl)tx).getBDBTransaction();
-    }
+    		return (TransactionBDBImpl)tx;
+    }    
     
     /**
      * <p>Construct a <code>HGStore</code> bound to a specific database 
@@ -216,7 +216,7 @@ public class HGStore
         linkBinding.objectToEntry(link, value);
         try
         {
-            OperationStatus result = data_db.put(txn(), key, value);
+            OperationStatus result = data_db.put(txn().getBDBTransaction(), key, value);
             if (result != OperationStatus.SUCCESS)
                 throw new Exception("OperationStatus: " + result);            
         }
@@ -240,7 +240,7 @@ public class HGStore
         UUIDPersistentHandle handle = UUIDPersistentHandle.makeHandle();   
         try
         {
-            OperationStatus result = primitive_db.put(txn(), 
+            OperationStatus result = primitive_db.put(txn().getBDBTransaction(), 
             									 new DatabaseEntry(handle.toByteArray()), 
             									 new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
@@ -265,7 +265,7 @@ public class HGStore
     {
         try
         {
-            OperationStatus result = primitive_db.put(txn(), 
+            OperationStatus result = primitive_db.put(txn().getBDBTransaction(), 
             									 new DatabaseEntry(handle.toByteArray()), 
             									 new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
@@ -310,7 +310,7 @@ public class HGStore
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            data_db.delete(txn(), key);
+            data_db.delete(txn().getBDBTransaction(), key);
         }
         catch (Exception ex)
         {
@@ -329,7 +329,7 @@ public class HGStore
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            primitive_db.delete(txn(), key);
+            primitive_db.delete(txn().getBDBTransaction(), key);
         }
         catch (Exception ex)
         {
@@ -356,7 +356,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (data_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
                 return (HGPersistentHandle [])linkBinding.entryToObject(value);
             else
                 return null;
@@ -385,7 +385,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (data_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
                 return value.getData();
             else
                 return null;
@@ -463,7 +463,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (primitive_db.get(txn(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
                 return value.getData();
             else
                 return null;            
@@ -485,7 +485,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();            
-            cursor = incidence_db.openCursor(txn(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
                 return new HGHandle[0];
@@ -505,7 +505,7 @@ public class HGStore
         finally
         {
             if (cursor != null)
-                try { cursor.close(); } catch (Exception ex) { }
+                try { cursor.close(); } catch (Exception ex) { ex.printStackTrace(System.err); }
         }
     }
 
@@ -527,8 +527,9 @@ public class HGStore
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            DatabaseEntry value = new DatabaseEntry();            
-            cursor = incidence_db.openCursor(txn(), null);
+            DatabaseEntry value = new DatabaseEntry();
+            TransactionBDBImpl tx = txn();
+            cursor = incidence_db.openCursor(tx.getBDBTransaction(), null);            
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             {
@@ -536,7 +537,7 @@ public class HGStore
                 return (HGSearchResult<HGHandle>)HGSearchResult.EMPTY;
             }
             else
-            	return new SingleKeyResultSet(cursor, key, BAtoHandle.getInstance());
+            	return new SingleKeyResultSet(tx.attachCursor(cursor), key, BAtoHandle.getInstance());            
         }
         catch (Exception ex)
         {
@@ -559,7 +560,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();            
-            cursor = incidence_db.openCursor(txn(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             	return 0;
@@ -599,11 +600,11 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry(newLink.toByteArray());
-            cursor = incidence_db.openCursor(txn(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             {
-                OperationStatus result = incidence_db.put(txn(), key, value);
+                OperationStatus result = incidence_db.put(txn().getBDBTransaction(), key, value);
                 if (result != OperationStatus.SUCCESS)
                     throw new Exception("OperationStatus: " + result);
             }
@@ -641,7 +642,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry(oldLink.toByteArray());
-            cursor = incidence_db.openCursor(txn(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             {
@@ -673,7 +674,7 @@ public class HGStore
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            incidence_db.delete(txn(), key);
+            incidence_db.delete(txn().getBDBTransaction(), key);
         }
         catch (Exception ex)
         {

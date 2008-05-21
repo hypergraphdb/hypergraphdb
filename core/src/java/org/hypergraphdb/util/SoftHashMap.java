@@ -24,6 +24,7 @@ import java.util.Set;
  * @param <K> The type of the map key.
  * @param <V> The type of the map value.
  */
+@SuppressWarnings("unchecked")
 public class SoftHashMap <K, V> extends AbstractMap<K, V>
 {
     private static class SoftValue<Ka, Va> extends SoftReference<Va> 

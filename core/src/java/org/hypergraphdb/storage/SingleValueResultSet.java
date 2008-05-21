@@ -9,6 +9,7 @@
 package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.transaction.BDBTxCursor;
 import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.db.SecondaryCursor;
@@ -25,7 +26,7 @@ import com.sleepycat.db.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
-public class SingleValueResultSet extends IndexResultSet
+public class SingleValueResultSet<T> extends IndexResultSet<T>
 {
     private DatabaseEntry pkey = new DatabaseEntry();
     
@@ -33,7 +34,7 @@ public class SingleValueResultSet extends IndexResultSet
     {        
     }
     
-    public SingleValueResultSet(SecondaryCursor cursor, DatabaseEntry key, ByteArrayConverter converter)
+    public SingleValueResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {
         //
     	// The following is bit hacky because we want to avoid some of the default behavior
@@ -45,7 +46,7 @@ public class SingleValueResultSet extends IndexResultSet
         this.key = key == null ? new DatabaseEntry() : key;        
 	    try
 	    {
-	        ((SecondaryCursor)cursor).getCurrent(key, pkey, data, LockMode.DEFAULT);
+	        ((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(pkey.getData());
 	        lookahead = 1;
 	    }
@@ -57,11 +58,11 @@ public class SingleValueResultSet extends IndexResultSet
     }
     
     
-    protected Object advance()
+    protected T advance()
     {
         try
         {
-            OperationStatus status = ((SecondaryCursor)cursor).getNextDup(key, pkey, data, LockMode.DEFAULT);
+            OperationStatus status = ((SecondaryCursor)cursor.cursor()).getNextDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(pkey.getData());
             else
@@ -74,11 +75,11 @@ public class SingleValueResultSet extends IndexResultSet
         }     
     }
 
-    protected Object back()
+    protected T back()
     {
         try
         {
-            OperationStatus status = ((SecondaryCursor)cursor).getPrevDup(key, pkey, data, LockMode.DEFAULT);
+            OperationStatus status = ((SecondaryCursor)cursor.cursor()).getPrevDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(pkey.getData());
             else
@@ -91,7 +92,7 @@ public class SingleValueResultSet extends IndexResultSet
         }                        
     }
     
-    public GotoResult goTo(Object value, boolean exactMatch)
+    public GotoResult goTo(T value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
     	pkey.setData(B);
@@ -99,7 +100,7 @@ public class SingleValueResultSet extends IndexResultSet
     	{
     		if (exactMatch)
     		{
-    			if (((SecondaryCursor)cursor).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			if (((SecondaryCursor)cursor.cursor()).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(pkey.getData());
     				return GotoResult.found; 
@@ -111,7 +112,7 @@ public class SingleValueResultSet extends IndexResultSet
     		{
     			byte [] save = new byte[pkey.getData().length];
     			System.arraycopy(pkey.getData(), 0, save, 0, save.length);    		
-    			if (((SecondaryCursor)cursor).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    			if (((SecondaryCursor)cursor.cursor()).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(pkey.getData());
     				return HGUtils.eq(save, pkey.getData()) ? GotoResult.found : GotoResult.close;

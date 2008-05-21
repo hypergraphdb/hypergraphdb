@@ -149,8 +149,8 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     
     public boolean equals(Object other)
     {
-        if (other == null)
-        	return false;
+        if (other == this)
+        	return true;
         else if (other instanceof UUIDPersistentHandle)
         	return uuid.equals(((UUIDPersistentHandle)other).uuid);
         else if (other instanceof HGLiveHandle)

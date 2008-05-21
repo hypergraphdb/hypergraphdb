@@ -12,8 +12,8 @@
 package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.transaction.BDBTxCursor;
 
-import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
@@ -26,7 +26,7 @@ import com.sleepycat.db.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
-public class SingleKeyResultSet extends IndexResultSet
+public class SingleKeyResultSet<T> extends IndexResultSet<T>
 {
 	private boolean ordered = false;
 	
@@ -34,12 +34,12 @@ public class SingleKeyResultSet extends IndexResultSet
     {            
     }
     
-    public SingleKeyResultSet(Cursor cursor, DatabaseEntry key, ByteArrayConverter converter)
+    public SingleKeyResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {
         super(cursor, key, converter);
         try
         {
-        	ordered = cursor.getDatabase().getConfig().getSortedDuplicates();
+        	ordered = cursor.cursor().getDatabase().getConfig().getSortedDuplicates();
         }
         catch (Throwable t)
         {
@@ -47,11 +47,11 @@ public class SingleKeyResultSet extends IndexResultSet
         }
     }   
     
-    protected Object advance()
+    protected T advance()
     {
         try
         {
-            OperationStatus status = cursor.getNextDup(key, data, LockMode.DEFAULT);
+            OperationStatus status = cursor.cursor().getNextDup(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(data.getData());
             else
@@ -64,11 +64,11 @@ public class SingleKeyResultSet extends IndexResultSet
         }            
     }
     
-    protected Object back()
+    protected T back()
     {
         try
         {
-            OperationStatus status = cursor.getPrevDup(key, data, LockMode.DEFAULT);
+            OperationStatus status = cursor.cursor().getPrevDup(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(data.getData());
             else

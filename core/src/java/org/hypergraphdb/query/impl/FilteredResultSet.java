@@ -16,12 +16,12 @@ import org.hypergraphdb.util.CloseMe;
  * 
  * @author Borislav Iordanov
  */
-public class FilteredResultSet implements HGSearchResult
+public class FilteredResultSet<T> implements HGSearchResult<T>
 {
     private HyperGraph hg;
-	private HGSearchResult searchResult;
+	private HGSearchResult<T> searchResult;
 	private HGAtomPredicate predicate;		
-	private Object current = null;
+	private T current = null;
 
 	//
 	// The number of elements preceeding the current in the underlying
@@ -46,7 +46,7 @@ public class FilteredResultSet implements HGSearchResult
 	 * @param predicate
 	 */
 	public FilteredResultSet(HyperGraph hg, 
-							 HGSearchResult searchResult, 
+							 HGSearchResult<T> searchResult, 
 							 HGAtomPredicate predicate,
 							 int lookahead)
 	{
@@ -63,7 +63,7 @@ public class FilteredResultSet implements HGSearchResult
 			((CloseMe)predicate).close();
 	}
 
-	public Object current() 
+	public T current() 
 	{
 		return current;
 	}
@@ -73,7 +73,7 @@ public class FilteredResultSet implements HGSearchResult
 		return prevCount > 0;
 	}
 
-	public Object prev() 
+	public T prev() 
 	{
 		if (prevCount == 0)
 			throw new NoSuchElementException();
@@ -104,7 +104,7 @@ public class FilteredResultSet implements HGSearchResult
 		} 			
 	}
 
-	public Object next() 
+	public T next() 
 	{
 		if (!hasNext())
 			throw new NoSuchElementException();

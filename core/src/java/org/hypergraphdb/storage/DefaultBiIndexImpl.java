@@ -24,6 +24,7 @@ import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.transaction.TransactionBDBImpl;
 
 public class DefaultBiIndexImpl<KeyType, ValueType> 
 	extends DefaultIndexImpl<KeyType, ValueType> implements HGBidirectionalIndex<KeyType, ValueType>
@@ -55,7 +56,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
             	dbConfig.setTransactional(true);
             dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
             dbConfig.setSortedDuplicates(true);
-            dbConfig.setType(DatabaseType.BTREE);        	
+            dbConfig.setType(DatabaseType.BTREE);    
             secondaryDb = env.openSecondaryDatabase(null, SECONDARY_DB_NAME_PREFIX + name, null, db, dbConfig);
         }
         catch (Throwable t)
@@ -121,14 +122,15 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         SecondaryCursor cursor = null;
         try
         {
-            cursor = secondaryDb.openSecondaryCursor(txn(), null);
+        	TransactionBDBImpl tx = txn();
+            cursor = secondaryDb.openSecondaryCursor(tx.getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS && cursor.count() > 0)
-                result = new SingleValueResultSet(cursor, keyEntry, keyConverter);
+                result = new SingleValueResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
             else 
             {
                 try { cursor.close(); } catch (Throwable t) { }
-                result = new SingleValueResultSet();
+                result = new SingleValueResultSet<KeyType>();
             }
         }
         catch (Exception ex)
@@ -156,8 +158,8 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         KeyType result = null;
         SecondaryCursor cursor = null;
         try
-        {
-            cursor = secondaryDb.openSecondaryCursor(txn(), null);
+        {        	
+            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 result = keyConverter.fromByteArray(valueEntry.getData());
@@ -183,7 +185,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         SecondaryCursor cursor = null;
         try
         {
-            cursor = secondaryDb.openSecondaryCursor(txn(), null);
+            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             	return cursor.count();

@@ -14,9 +14,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 
@@ -32,6 +34,7 @@ import org.hypergraphdb.type.LinkType;
 import org.hypergraphdb.type.PlainLinkType;
 import org.hypergraphdb.type.SubsumesType;
 import org.hypergraphdb.type.Top;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -899,9 +902,20 @@ public class HGTypeSystem
 	 * @return A regular <code>HGSearchResult</code> containing the aliases. Make
 	 * sure to close the result set as all other result sets in HyperGraphDB.
 	 */
-	public HGSearchResult<String> findAliases(HGHandle typeHandle)
+	public Set<String> findAliases(HGHandle typeHandle)
 	{
-		return getAliases().findByValue(hg.getPersistentHandle(typeHandle));
+		Set<String> result =  new HashSet<String>();
+		HGSearchResult<String> rs = getAliases().findByValue(hg.getPersistentHandle(typeHandle));
+		try
+		{
+			while (rs.hasNext())
+				result.add(rs.next());
+			return result;
+		}
+		finally
+		{
+			HGUtils.closeNoException(rs);
+		}
 	}
 
 	/**
@@ -953,16 +967,23 @@ public class HGTypeSystem
 		// Remove all aliases
 		//
 		HGBidirectionalIndex<String, HGPersistentHandle> aliases = getAliases();
-		for (Iterator<String> i = aliases.findByValue(typeHandle); i.hasNext(); )
+		HGSearchResult<String> rs = aliases.findByValue(typeHandle);
+		try
 		{
-			// TODO: maybe a problem here if we are removing while iterating...
-			aliases.removeEntry((String)i.next(), typeHandle);
+			while (rs.hasNext())
+			{
+				// TODO: maybe a problem here if we are removing while iterating...
+				aliases.removeEntry((String)rs.next(), typeHandle);
+			}
 		}
-
+		finally
+		{
+			rs.close();
+		}
+		
 		//
 		// Remove from HG type <-> Java class mappings
-		//
-		HGSearchResult<String> rs = null;
+		//		
 		try
 		{
 			HGBidirectionalIndex<String, HGPersistentHandle> idx = getClassToTypeDB();
