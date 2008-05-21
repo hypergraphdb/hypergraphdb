@@ -42,11 +42,11 @@ import org.hypergraphdb.LazyRef;
 public class ArrayType implements HGAtomType {
 	private HyperGraph hg = null;
 
-	private Constructor linkConstructor = null;
+	private Constructor<?> linkConstructor = null;
 
-	private Class clazz;
+	private Class<?> clazz;
 
-	public ArrayType(Class clazz) {
+	public ArrayType(Class<?> clazz) {
 		this.clazz = clazz;
 		try {
 			linkConstructor = clazz
@@ -55,7 +55,7 @@ public class ArrayType implements HGAtomType {
 		}
 	}
 
-	public Class getType() {
+	public Class<?> getType() {
 		return clazz;
 	}
 

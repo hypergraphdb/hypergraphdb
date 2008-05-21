@@ -24,7 +24,7 @@ public class ArrayTypeConstructor implements HGAtomType
 		String className = new String(hg.getStore().getData(handle));
 		try
 		{
-			Class clazz = Class.forName(className);
+			Class<?> clazz = Class.forName(className);
 			result = new ArrayType(clazz);
 		}
 		catch (Throwable t)

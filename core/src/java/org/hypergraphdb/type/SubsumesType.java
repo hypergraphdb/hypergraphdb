@@ -18,11 +18,8 @@ import org.hypergraphdb.HGHandleFactory;
 
 public class SubsumesType implements HGAtomType 
 {
-	private HyperGraph hg;
-	
 	public void setHyperGraph(HyperGraph hg) 
 	{
-		this.hg = hg;
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 

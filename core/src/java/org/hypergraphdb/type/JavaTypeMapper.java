@@ -2,7 +2,6 @@ package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGTypeSystem;
 
 /**
  * 

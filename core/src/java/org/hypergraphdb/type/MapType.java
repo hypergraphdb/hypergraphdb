@@ -28,7 +28,7 @@ public class MapType implements HGAtomType
 		this.factory = factory;
 	}
 	
-	public ObjectFactory getFactory()
+	public ObjectFactory<?> getFactory()
 	{
 		return factory;
 	}

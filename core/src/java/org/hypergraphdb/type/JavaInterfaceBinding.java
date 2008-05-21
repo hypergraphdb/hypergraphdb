@@ -23,18 +23,18 @@ import org.hypergraphdb.HGHandle;
  */
 public class JavaInterfaceBinding extends HGAbstractType 
 {
-	private Class javaClass;
+	private Class<?> javaClass;
 	private HGHandle typeHandle;
 	private HGAtomType hgType;
 	
-	public JavaInterfaceBinding(HGHandle typeHandle, HGAtomType hgType, Class javaClass)
+	public JavaInterfaceBinding(HGHandle typeHandle, HGAtomType hgType, Class<?> javaClass)
 	{
 		this.javaClass = javaClass;
 		this.typeHandle = typeHandle;
 		this.hgType = hgType;
 	}
 	
-	public Class getJavaClass()
+	public Class<?> getJavaClass()
 	{
 		return javaClass;
 	}
