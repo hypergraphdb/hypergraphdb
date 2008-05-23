@@ -16,6 +16,7 @@ public class TransactionBDBImpl implements HGTransaction
 	private Transaction t;
 	private HashMap<String, Object> attributes = new HashMap<String, Object>();
 	private Set<BDBTxCursor> bdbCursors = new HashSet<BDBTxCursor>();
+	private boolean aborting = false;
 	
 	public static TransactionBDBImpl nullTransaction() { return new TransactionBDBImpl(null); }
 	
@@ -48,8 +49,10 @@ public class TransactionBDBImpl implements HGTransaction
 	{
 		try
 		{
+			aborting = true;
 			for (BDBTxCursor c : bdbCursors)
-				c.close();			
+				try { c.close(); }
+				catch (Throwable t) { System.err.println(t); }
 			if (t != null)
 				t.abort();
 		}
@@ -70,7 +73,8 @@ public class TransactionBDBImpl implements HGTransaction
 	
 	void removeCursor(BDBTxCursor c)
 	{
-		bdbCursors.remove(c);
+		if (!aborting)
+			bdbCursors.remove(c);
 	}
 	
 	public Object getAttribute(String name) 

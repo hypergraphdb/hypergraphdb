@@ -50,7 +50,13 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				}
 				case close:
 				{
-					use_next = false; 
+					use_next = false;
+/*					if (right instanceof ZigZagIntersectionResult)
+						if (((ZigZagIntersectionResult)right).current == null)
+						{
+							System.out.println("oops trouble coming");
+							right.goTo(x, false);
+						} */
 					swap();		
 					break;
 				}
@@ -106,11 +112,10 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			{
 				case found: 
 				{
+					current = left.current();
 					prev = back();
 					if (prev != null)
-						current = advance();
-					else
-						current = left.current();
+						advance();
 					if ( (next = advance()) != null)
 						lookahead = 1;
 					else
