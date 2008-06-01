@@ -99,7 +99,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 
 	// Here, we try to make the current position of this zig-zag result
 	// set be the current position of the left_or_right parameter or the closest
-	// position with greater than that current. If we succeed, we return
+	// position following that current. If we succeed, we return
 	// true, otherwise we return false. 
 	private boolean positionTo(HGRandomAccessResult<T> left_or_right)
 	{
@@ -164,12 +164,24 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		// We need to save state of both left and right cursor. Because of swapping, save the current
 		// left and the current right in local variables.
 		HGRandomAccessResult<T> starting_left = left, starting_right = right; 
-		T save_left = left.current();		
+		T save_left = null;
+		T save_right = null;
+		try
+		{
+			save_left = left.current();		
+			save_right = right.current();
+		}
+		catch (NoSuchElementException ex)
+		{
+			// it means that one of them is empty since we always advance them both in 'init'
+			return GotoResult.nothing;
+		}
+		
 		GotoResult r_l = left.goTo(value, exactMatch);
 		if (r_l == GotoResult.nothing)
 			return GotoResult.nothing;
 		
-		T save_right = right.current();
+		
 		GotoResult r_r = right.goTo(value, exactMatch);
 		if (r_r == GotoResult.nothing)
 		{
@@ -217,12 +229,8 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			}
 			else
 			{
-				boolean moved;
-				if (((Comparable<T>)left.current()).compareTo(right.current()) > 0)
-					moved = positionTo(left);
-				else
-					moved = positionTo(right);
-				if (moved)
+				int cmp = ((Comparable<T>)left.current()).compareTo(right.current());
+				if (cmp == 0 || cmp > 0 && positionTo(left) || positionTo(right))
 					return GotoResult.close;
 				else
 				{

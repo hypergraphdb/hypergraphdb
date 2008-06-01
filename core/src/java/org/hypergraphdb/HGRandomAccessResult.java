@@ -12,7 +12,7 @@ package org.hypergraphdb;
 /**
  * <p>
  * A <code>HGRandomAccessResult</code> is a search result that is based on some
- * kind of cursor that allows immediate positionning on some result value, if it
+ * kind of cursor that allows immediate positioning on some result value, if it
  * exists. This is particularly useful for index-based search results where the whole
  * result set is ordered and provides quick lookup to being with. A query execution
  * plan may take advantage of this capability.
@@ -33,7 +33,7 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	enum GotoResult 
 	{ 
 		/**
-		 * Indicates that the element was found and the cursor is positionned on that
+		 * Indicates that the element was found and the cursor is positioned on that
 		 * element.
 		 */
 		found,
@@ -45,7 +45,7 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 		nothing,
 		
 		/**
-		 * Indicates that the element was not found, but the cursor was positionned to 
+		 * Indicates that the element was not found, but the cursor was positioned to 
 		 * the next element greater than the element sought for.
 		 */
 		close
@@ -56,10 +56,10 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	 * is indeed part of the result set.
 	 * </p>
 	 * 
-	 * @param value The value where this result set should be positionned.
+	 * @param value The value where this result set should be positioned.
 	 * @param exactMatch A flag indicating whether the passed in value should
 	 * match exactly a value in the result set, or whether the cursor should
-	 * be positionned to the closest value. Here "closest" means "smallest 
+	 * be positioned to the closest value. Here "closest" means "smallest 
 	 * greater than the <code>value</code> parameter.
 	 * @return A <code>GotoResult</code>.
 	 */
