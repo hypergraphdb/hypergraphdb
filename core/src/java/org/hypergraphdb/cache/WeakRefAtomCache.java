@@ -140,7 +140,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	}
 	
 	public WeakRefAtomCache()
-	{
+	{		
 		phantomCleanupThread.start();
 		phantomCleanupThread.setPriority(Thread.MAX_PRIORITY);
 	}
@@ -148,6 +148,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public void setHyperGraph(HyperGraph hg) 
 	{
 		this.graph = hg;
+		phantomCleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
 	}
 	
 	public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
