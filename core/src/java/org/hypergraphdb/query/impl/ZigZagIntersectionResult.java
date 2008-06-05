@@ -42,6 +42,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				x = left.current();
 				use_next = true;
 			}
+//			System.out.println("at " + x);
 			switch (right.goTo(x, false))
 			{
 				case found: 
@@ -230,7 +231,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			else
 			{
 				int cmp = ((Comparable<T>)left.current()).compareTo(right.current());
-				if (cmp == 0 || cmp > 0 && positionTo(left) || positionTo(right))
+				if (cmp == 0 && positionTo(left) || cmp > 0 && positionTo(left) || positionTo(right))
 					return GotoResult.close;
 				else
 				{

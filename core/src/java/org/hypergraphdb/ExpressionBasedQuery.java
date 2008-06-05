@@ -532,7 +532,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				HGQueryCondition c1 = null, c2 = null;
 				
 				// First ORA sets - we just build up nested zig-zag intersections
-				if (ORA.size() > 1)
+/*				if (ORA.size() > 1)
 				{
 					Iterator<Map.Entry<HGQueryCondition, Double>> i = ORA.entrySet().iterator();
 					c1 = i.next().getKey();
@@ -548,7 +548,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 													   new ZigZagIntersectionResult());
 					}
 				}
-				else if (ORA.size() == 1)
+				else if (ORA.size() == 1) */
 				{
 					O.putAll(ORA);
 					ORA.clear();
