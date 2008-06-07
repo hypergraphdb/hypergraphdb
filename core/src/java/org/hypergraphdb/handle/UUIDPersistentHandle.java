@@ -8,13 +8,17 @@
  */
 package org.hypergraphdb.handle;
 
+import java.security.SecureRandom;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-import java.util.UUID;
+//import java.util.UUID;
 
 public final class UUIDPersistentHandle implements HGPersistentHandle
 {
     static final long serialVersionUID = -1;    
+    static final SecureRandom rndGenerator = new SecureRandom();
+    
     private UUID uuid;
     
     /**
@@ -31,7 +35,10 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     private UUIDPersistentHandle()
     {
-    	uuid = UUID.randomUUID();
+        byte[] rnd = new byte[16];        
+        rndGenerator.nextBytes(rnd);        
+        uuid = new UUID(UUID.TYPE_RANDOM_BASED, rnd);    	
+    	// uuid = UUID.randomUUID();
     }
     
     private UUIDPersistentHandle(UUID uuid)
@@ -56,13 +63,14 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with a null value.");
         else if (value.length - offset < 16)
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with wrong size byte array.");
-        long msb = 0;
+/*        long msb = 0;
         long lsb = 0;
         for (int i=offset; i < 8 + offset; i++)
             msb = (msb << 8) | (value[i] & 0xff);
         for (int i=8+offset; i < 16 + offset; i++)
             lsb = (lsb << 8) | (value[i] & 0xff);
-        uuid = new UUID(msb, lsb);
+        uuid = new UUID(msb, lsb); */
+        uuid = new UUID(value, offset);
     }
     
     /**
@@ -116,7 +124,8 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public static UUIDPersistentHandle makeHandle(String value)
     {
-        return new UUIDPersistentHandle(UUID.fromString(value));
+    	return new UUIDPersistentHandle(new UUID(value));
+        //return new UUIDPersistentHandle(UUID.fromString(value));
     }
     
 
@@ -125,7 +134,7 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public byte [] toByteArray()
     {
-    	long msb = uuid.getMostSignificantBits();
+/*    	long msb = uuid.getMostSignificantBits();
     	long lsb = uuid.getLeastSignificantBits();
     	byte [] data = new byte[16]; // should we precompute and cache this?
         data[0] = (byte) ((msb >>> 56)); 
@@ -144,7 +153,8 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
         data[13] = (byte) ((lsb >>> 16));
         data[14] = (byte) ((lsb >>> 8)); 
         data[15] = (byte) ((lsb >>> 0));
-        return data;
+        return data; */
+    	return uuid.mId;
     }
     
     public boolean equals(Object other)

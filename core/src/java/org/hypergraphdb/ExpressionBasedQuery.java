@@ -538,13 +538,13 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					c1 = i.next().getKey();
 					c2 = i.next().getKey();
 					result = new IntersectionQuery(toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-												   toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
+												   toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
 												   new ZigZagIntersectionResult());
 					while (i.hasNext())
 					{
 						c1 = i.next().getKey();
 						result = new IntersectionQuery(result, 
-													   toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+													   toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
 													   new ZigZagIntersectionResult());
 					}
 				}

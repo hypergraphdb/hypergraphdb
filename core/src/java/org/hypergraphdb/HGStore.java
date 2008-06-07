@@ -93,7 +93,7 @@ public class HGStore
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);
         envConfig.setInitializeCache(true);  
-        envConfig.setCacheSize(20*1024*1024); // 20MB
+        envConfig.setCacheSize(config.getStoreCacheSize());
         envConfig.setErrorPrefix("BERKELEYDB");
         envConfig.setErrorStream(System.out);
         if (config.isTransactional())
@@ -109,7 +109,7 @@ public class HGStore
 	        envConfig.setMaxLockers(10000);
 	        envConfig.setMaxLockObjects(10000);
 	        envConfig.setMaxLocks(10000);
-	//        envConfig.setRunFatalRecovery(true);
+	//        envConfig.setRunFatalRecovery(true);	        
         }
         
         File envDir = new File(databaseLocation);
@@ -137,6 +137,31 @@ public class HGStore
 	        transactionManager = new HGTransactionManager(getTransactionFactory());
 	        if (!env.getConfig().getTransactional())
 	        	transactionManager.disable();
+	        else
+	        {
+	        	final Environment fenv = env;
+		        Thread checkPointThread = new Thread(new Runnable()
+		        {
+		        	public void run()
+		        	{
+		        		try
+		        		{
+		        			while (true)
+		        			{
+		        				Thread.sleep(30000);
+		        				env.checkpoint(null);
+		        			}
+		        		}
+		        		catch (Throwable t)
+		        		{
+		        			System.err.println("HGDB CHECKPOINT THREAD exiting with: " + t.toString());
+		        		}
+		        	}
+		        });
+	        	checkPointThread.setName("HGCHECKPOINT");
+	        	checkPointThread.setDaemon(true);
+	        	checkPointThread.start();
+	        }
         }
         catch (Exception ex)
         {

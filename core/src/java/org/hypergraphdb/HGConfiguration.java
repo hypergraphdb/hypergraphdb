@@ -13,8 +13,14 @@ package org.hypergraphdb;
  */
 public class HGConfiguration
 {
+	/**
+	 * The default size in bytes of the storage (i.e. BerkeleyDB) cache = 20MB.
+	 */
+	public static final long DEFAULT_STORE_CACHE = 20*1024*1024; // 20MB
+	
 	private boolean transactional;
-
+	private long storeCacheSize = DEFAULT_STORE_CACHE;
+	
 	public HGConfiguration()
 	{
 		resetDefaults();
@@ -55,5 +61,33 @@ public class HGConfiguration
 	public void setTransactional(boolean transactional)
 	{
 		this.transactional = transactional;
-	}	
+	}
+	
+	/**
+	 * 
+	 * <p>
+	 * Return the size (in bytes) of the cache used by the storage layer. The default value is 
+	 * <code>DEFAULT_STORE_CACHE</code>. 
+	 * </p>
+	 *
+	 * @return
+	 */
+	public long getStoreCacheSize()
+	{
+		return this.storeCacheSize;
+	}
+	
+	/**
+	 * 
+	 * <p>
+	 * Set the size (in bytes) of the cache used by the storage layer. The default value is
+	 * <code>DEFAULT_STORE_CACHE</code>.
+	 * </p>
+	 *
+	 * @param storeCacheSize
+	 */
+	public void setStoreCacheSize(long storeCacheSize)
+	{
+		this.storeCacheSize = storeCacheSize;
+	}
 }
