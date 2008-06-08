@@ -1111,6 +1111,8 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					for (int ti = 0; ti < c.targets().length; ti++)
 					{					
 						HGHandle targetHandle = c.targets()[ti];
+						if (targetHandle.equals(HGHandleFactory.anyHandle))
+							continue;
 						ByTargetIndexer indexer = new ByTargetIndexer(typeHandle, ti);
 						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
 						if (idx != null)
