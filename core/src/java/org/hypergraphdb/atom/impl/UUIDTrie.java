@@ -82,7 +82,7 @@ public final class UUIDTrie
 		// the advantage of performing a more aggressive pruning of death nodes.
 		// If it turns out that atom sets are very volatile, and that aggressive 
 		// freeing up of unused nodes is needed, this recursive version might
-		// be prefered. Or implement a separate pruning method (called 'compact' 
+		// be preferred. Or implement a separate pruning method (called 'compact' 
 		// or something...).
 		//
 /*		boolean find(byte [] uuid, int offset)
