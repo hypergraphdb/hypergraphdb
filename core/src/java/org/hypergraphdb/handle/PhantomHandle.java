@@ -120,7 +120,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		// in the reference queue, this may result in a deadlock within the phantom ref
 		// cleanup thread itself. For this we use the thread local variable 'returnEnqueued'
 		//
-		Object x = fetchRef();
+		Object x = fetchRef();		
 		if (isEnqueued())
 		{
 			Boolean f = returnEnqueued.get();

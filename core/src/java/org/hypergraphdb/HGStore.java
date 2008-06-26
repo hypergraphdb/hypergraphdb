@@ -93,7 +93,9 @@ public class HGStore
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);
         envConfig.setInitializeCache(true);  
-        envConfig.setCacheSize(config.getStoreCacheSize());
+        //envConfig.setCacheSize(config.getStoreCacheSize());
+        envConfig.setCacheSize(20*1014*1024);
+        envConfig.setCacheCount(50);
         envConfig.setErrorPrefix("BERKELEYDB");
         envConfig.setErrorStream(System.out);
         if (config.isTransactional())

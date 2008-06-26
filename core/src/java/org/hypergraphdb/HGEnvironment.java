@@ -174,27 +174,60 @@ public class HGEnvironment
 		return conf;
 	}
 	
+	/**
+	 * 
+	 * <p>
+	 * Close all currently open <code>HyperGraph</code> instances. This is generally
+	 * done by a HyperGraphDB internal shutdown hook registered with the JVM. But if
+	 * you need more control over the shutdown sequence, this method will gracefully
+	 * do so. 
+	 * </p>
+	 *
+	 */
+	public synchronized static void closeAll()
+	{
+		for (HyperGraph graph : dbs.values())
+		{
+			if (graph.isOpen())
+				try { graph.close(); } 
+				catch (Throwable t) 
+				{ 
+					System.err.println("Problem closing HyperGraphDB instance at " + 
+									   graph.getLocation() + ", stack trace follows...");
+					t.printStackTrace(System.err);						
+				}
+		}		
+		dbs.clear();
+	}
+	
+	/**
+	 * 
+	 * <p>
+	 * Disable the HyperGraph JVM shutdown hook. The role of the shutdown hook is the close
+	 * all open databases gracefully. If you disable, no such process is triggered upon
+	 * JVM shutdown. If you have your own shutdown hook that must take upon that task, you can
+	 * call the <code>closeAll</code> method.
+	 * </p>
+	 *
+	 */
+	public static void disableShutdownHook()
+	{
+		Runtime.getRuntime().removeShutdownHook(shutdownHook);
+	}
+	
 	// Try to make sure all HyperGraphs are properly closed during shutdown.
 	private static class OnShutdown implements Runnable
 	{
 		public void run()
 		{
-			for (HyperGraph graph : dbs.values())
-			{
-				if (graph.isOpen())
-					try { graph.close(); } 
-					catch (Throwable t) 
-					{ 
-						System.err.println("Problem closing HyperGraphDB instance at " + 
-										   graph.getLocation() + ", stack trace follows...");
-						t.printStackTrace(System.err);						
-					}
-			}
+			closeAll();
 		}
 	}	
 	
+	private static Thread shutdownHook = new Thread(new OnShutdown());
+	
 	static
 	{
-		Runtime.getRuntime().addShutdownHook(new Thread(new OnShutdown()));
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
 	}
 }

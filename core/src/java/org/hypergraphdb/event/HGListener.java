@@ -42,5 +42,5 @@ public interface HGListener
 		}
 	};
 	
-	Result handle(HyperGraph hg, HGEvent event);
+	Result handle(HyperGraph graph, HGEvent event);
 }

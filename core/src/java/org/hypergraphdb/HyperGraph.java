@@ -657,7 +657,7 @@ public /*final*/ class HyperGraph
         if (liveHandle != null)
         {
         	T theAtom = (T)liveHandle.getRef();
-        	if (theAtom == null)
+        	if (theAtom == null || cache.get(theAtom) == null)
         	{
         		//
         		// The atom has been evicted from the cache, so the live reference is no
