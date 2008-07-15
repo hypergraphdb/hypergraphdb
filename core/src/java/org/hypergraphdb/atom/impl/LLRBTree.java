@@ -5,7 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -415,8 +415,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	
 	private Node<E> root = null;
 	private int size = 0;
-	private ReentrantLock readLock = new ReentrantLock();
-	private ReentrantLock writeLock = new ReentrantLock();
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	private static boolean isRed(Node<?> x)
 	{
@@ -536,7 +535,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	
 	public void removeMax()
 	{
-		writeLock.lock();
+		lock.writeLock().lock();
 		try
 		{
 			if (root == null)
@@ -548,13 +547,13 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		}
 		finally		
 		{
-			writeLock.unlock();
+			lock.writeLock().unlock();
 		}
 	}
 	
 	public void removeMin()
 	{
-		writeLock.lock();
+		lock.writeLock().lock();
 		try
 		{
 			if (root == null)
@@ -566,7 +565,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		}
 		finally		
 		{
-			writeLock.unlock();
+			lock.writeLock().unlock();
 		}
 	}	
 	
@@ -578,31 +577,39 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	
 	public void clear()
 	{
-		writeLock.lock();
+		lock.writeLock().lock();
 		root = null;
 		size = 0;
-		writeLock.unlock();
+		lock.writeLock().unlock();
 	}
 	
 	public boolean contains(E key)
 	{
-		Node<E> current = root; 
-		while (current != null)
+		lock.readLock().lock();
+		try
 		{
-			int cmp = key.compareTo(current.key);
-			if (cmp == 0)
-				return true;
-			else if (cmp < 0)
-				current = current.left;
-			else
-				current = current.right;
+			Node<E> current = root; 
+			while (current != null)
+			{
+				int cmp = key.compareTo(current.key);
+				if (cmp == 0)
+					return true;
+				else if (cmp < 0)
+					current = current.left;
+				else
+					current = current.right;
+			}
+			return false;
 		}
-		return false;
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 	
 	public boolean add(E key)
 	{
-		writeLock.lock();
+		lock.writeLock().lock();
 		try
 		{
 			int s = size;
@@ -612,14 +619,14 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		}
 		finally
 		{
-			writeLock.unlock();
+			lock.writeLock().unlock();
 		}
 	}
 	
 	@SuppressWarnings("unchecked")	
 	public boolean remove(Object key)
 	{
-		writeLock.lock();
+		lock.writeLock().lock();
 		try
 		{
 			if (root == null)
@@ -632,22 +639,38 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		}
 		finally
 		{
-			writeLock.unlock();
+			lock.writeLock().unlock();
 		}
 	}
 
 	public E first()
 	{
-		if (root == null)
-			return null;
-		return min(root).key;
+		lock.readLock().lock();
+		try
+		{
+			if (root == null)
+				return null;
+			return min(root).key;
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 
 	public E last()
 	{
-		if (root == null)
-			return null;
-		return max(root).key;
+		lock.readLock().lock();
+		try
+		{
+			if (root == null)
+				return null;
+			return max(root).key;
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 
 	public SortedSet<E> headSet(E toElement)
@@ -687,16 +710,32 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	@SuppressWarnings("unchecked")
 	public Object clone() throws CloneNotSupportedException
 	{
-		LLRBTree<E> cl = (LLRBTree<E>)super.clone();		
-		cl.root = root == null ? root : root.clone();
-		cl.size = size;
-		return cl;
+		lock.readLock().lock();
+		try
+		{
+			LLRBTree<E> cl = (LLRBTree<E>)super.clone();		
+			cl.root = root == null ? root : root.clone();
+			cl.size = size;
+			return cl;
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}	
 	
 	
 	public int depth()
 	{
-		return depth(root);		
+		lock.readLock().lock();
+		try
+		{
+			return depth(root);
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}		
 	}
 	private int depth(Node<E> x)
 	{
