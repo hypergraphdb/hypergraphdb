@@ -186,4 +186,10 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     	UUIDPersistentHandle handle = (UUIDPersistentHandle)other;
     	return uuid.compareTo(handle.uuid);
     }
+    
+    public int compareTo(HGPersistentHandle other)
+    {
+    	UUIDPersistentHandle handle = (UUIDPersistentHandle)other;
+    	return uuid.compareTo(handle.uuid);
+    }    
 }
