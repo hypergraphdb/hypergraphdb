@@ -14,11 +14,13 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * <p>
  * Implements a set of elements as a left-leaning red-black tree. The node
- * doesn't doesn't contain a pointer to a value, nor does it contains a pointer
+ * doesn't contain a pointer to a value, nor does it contains a pointer
  * to the parent which should make it more memory efficient than most
  * implementations (e.g. the standard java.util.TreeMap). However, tree
  * mutations are implemented recursively, which is not optimal and could
- * be removed in the future. 
+ * be removed in the future. Unfortunately, Java uses 4 bytes to store a boolean
+ * so we don't gain as much in space compactness as we could theoretically, but
+ * it's still an improvement. 
  * </p>
  *
  * @author Borislav Iordanov
@@ -41,7 +43,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	// the stack because it is known that it'll never go beyond
 	// the depth of the tree which, since this a balanced tree,
 	// is going to always be a relatively small number approx. 
-	// equal to log(treeSize).
+	// equal to 2*log(treeSize).
 	private final class NodeStack
 	{
 		Node<E> [] A;
@@ -266,13 +268,14 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		
 		ResultSet()
 		{
+			lock.readLock().lock();
 		}
 		
 		@SuppressWarnings("unchecked")
 		public GotoResult goTo(E key, boolean exactMatch)
 		{
 			// Not clear here whether we should be starting from the root really?
-			// Gotos are performed generally during result intersection where the target
+			// Gotos are performed generally during result set intersection where the target
 			// is expected to be approximately close to the current position. Anyway,
 			// starting from the root simplifies the implementations so until profiling
 			// reveals the need for something else we start from the root.
@@ -332,7 +335,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 
 		public void close()
 		{
-			// nope
+			lock.readLock().unlock();
 		}
 
 		public E current()
@@ -422,6 +425,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 			return current.key;
 		}		
 	}
+	// END IMPLEMENTATION OF Iterator/HGSearchResult
 	
 	private Node<E> root = null;
 	private int size = 0;
@@ -450,7 +454,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 			size++;
 			return new Node<E>(key, RED);
 		}
-		
+				
 		// Split 4-Nodes
 		if (isRed(h.left) && isRed(h.right))
 			h.colorFlip();		
@@ -467,7 +471,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		// Fix two reds in a row.
 		else if (isRed(h.left) && isRed(h.left.left))
 			h = h.rotateRight();
-				
+						
 		return h;
 	}
 	
@@ -491,7 +495,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		return x;		
 	}
 	
-	// The following two are for debugging only to print to coloring of a node, its
+	// The following two functions are for debugging only to print to coloring of a node, its
 	// children and its grandchildren.
 /*	private String cs(boolean b) { return b ? "red" : "black"; }	
 	private String colors(Node<E> h)
@@ -567,7 +571,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 				size--;
 				return null; // h.left is null here due to transformations going down
 			}
-			Node<E> tmp = h; // track if moveRedRight changes 'h' so we don't need call key.compareTo again
+			Node<E> tmp = h; // track if moveRedRight changes 'h' so we don't need to call key.compareTo again
 			if (!isRed(h.right) && !isRed(h.right.left))
 				tmp = h.moveRedRight();
 			// if no rotation in above line and key==h.key replace with successor and we're done
