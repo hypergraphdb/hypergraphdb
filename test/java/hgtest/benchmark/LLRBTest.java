@@ -9,7 +9,7 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 
 public class LLRBTest
 {
-	static void populate(SortedSet<HGPersistentHandle> S, int size)
+	static void populate(Collection<HGPersistentHandle> S, int size)
 	{
 		for (int i = 0; i < size; i++)
 			S.add(HGHandleFactory.makeHandle());
@@ -17,16 +17,14 @@ public class LLRBTest
 	
 	static void compare(TreeSet<HGPersistentHandle> baseSet, LLRBTree<HGPersistentHandle> tree)
 	{
-		System.out.println("LLRB tree check: " + tree.check());
 		Iterator<HGPersistentHandle> i = baseSet.iterator(), j = tree.iterator();
 		while (i.hasNext())
 		{
 			if (!j.hasNext())
 				throw new RuntimeException("Missing element from tree.");
 			else if (i.next().compareTo(j.next()) != 0)
-				throw new RuntimeException("Wrong other b/w baseSet and tree.");
-		}
-		System.out.println("Base set and LLRBTree set are the same.");		
+				throw new RuntimeException("Wrong order b/w baseSet and tree.");
+		}		
 	}
 	
 	static void randomWalk(LLRBTree<HGPersistentHandle> tree, List<HGPersistentHandle> L, int iterations)
@@ -70,23 +68,90 @@ public class LLRBTest
 		}
 	}
 	
+	public static void testRemovals(LLRBTree<HGPersistentHandle> tree, 
+									TreeSet<HGPersistentHandle> baseSet, 
+									List<HGPersistentHandle> list,
+									int removeCount)
+	{
+		// removal of min
+		list.remove(baseSet.first());
+		baseSet.remove(baseSet.first());
+		tree.removeMin();
+		if (!tree.check())
+		{
+			System.out.println("BST=" + tree.isBST() + ", balanced=" + tree.isBalanced() + 
+					", 234=" + tree.is234());
+			throw new RuntimeException("RB-tree doesn't check after removal of min.");
+		}
+		compare(baseSet, tree); 
+		
+		// removal of max
+		list.remove(baseSet.last());
+		baseSet.remove(baseSet.last());
+		tree.removeMax();
+		if (!tree.check())
+			throw new RuntimeException("RB-tree doesn't check after removal of max.");
+		compare(baseSet, tree);
+		
+		// removal of some random elements
+		for (int i = 0; i < removeCount; i++)
+		{
+			int pos = T.random(list.size());
+			HGPersistentHandle h = list.get(pos);
+			list.remove(pos);
+			baseSet.remove(h);
+			if (!tree.remove(h))
+				throw new RuntimeException("LLRBTRee.remove returned false on an existing element.");
+			if (!tree.check())
+			{
+				System.out.println("BST=" + tree.isBST() + ", balanced=" + tree.isBalanced() + 
+						", 234=" + tree.is234());				
+				throw new RuntimeException("RB-tree check failed after removal of " + h);
+			}
+			compare(baseSet, tree);			
+		} 
+	}
+	
 	public static void main(String [] argv)
 	{
-		TreeSet<HGPersistentHandle> baseSet = new TreeSet<HGPersistentHandle>();
-		populate(baseSet, 100000);
-		LLRBTree<HGPersistentHandle> tree = new LLRBTree<HGPersistentHandle>();
-		List<HGPersistentHandle> list = new ArrayList<HGPersistentHandle>();
-		list.addAll(baseSet);
-		T.shuffle(list);
-		tree.addAll(list);
-		System.out.println("Tree size:" + tree.size() + ", Tree depth: " + tree.depth());
-		compare(baseSet, tree);
-		HGRandomAccessResult rs = tree.getSearchResult();
-		rs.next();
-		System.out.println("Going back and forth...");
-//		T.backAndForth(rs, 10, 1000000);
-		System.out.println("Doing a random walk...");
-		randomWalk(tree, list, 100000);
-		System.out.println("Done.");
+		for (int n = 1; ; n++)
+		{
+			TreeSet<HGPersistentHandle> baseSet = new TreeSet<HGPersistentHandle>();
+			populate(baseSet, 10000);
+			LLRBTree<HGPersistentHandle> tree = new LLRBTree<HGPersistentHandle>();
+			List<HGPersistentHandle> list = new ArrayList<HGPersistentHandle>();
+			list.addAll(baseSet);
+			T.shuffle(list);
+			tree.addAll(list);
+			System.out.println("Tree size:" + tree.size() + ", Tree depth: " + tree.depth());
+			compare(baseSet, tree);
+			HGRandomAccessResult<HGPersistentHandle> rs = tree.getSearchResult();
+			rs.next();
+			System.out.println("Going back and forth...");
+			T.backAndForth(rs, 10, 10000);
+			System.out.println("Doing a random walk...");
+			randomWalk(tree, list, 1000);
+			System.out.println("Test removals...");
+			testRemovals(tree, baseSet, list, 20);
+			System.out.println("Test insert-remove-insert-etc. several times...");
+			for (int i = 0; i < 10; i++)
+			{
+//				System.out.println("Some new elements after removal.");
+				populate(list, 20);
+				baseSet.addAll(list);
+				tree.addAll(list);
+				if (!tree.check())
+				{
+					System.out.println("BST=" + tree.isBST() + ", balanced=" + tree.isBalanced() + 
+							", 234=" + tree.is234());				
+					throw new RuntimeException("RB-tree check failed after remove & insert");					
+				}
+				compare(baseSet, tree);
+				randomWalk(tree, list, 1000);				
+//				System.out.println("Test remove again");
+				testRemovals(tree, baseSet, list, 18);
+			}
+			System.out.println("Loopback " + n);
+		}
 	}
 }
