@@ -175,25 +175,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 			}
 			else
 				return this;
-		}
-		
-		boolean is234()
-		{  
-			// Does the tree have no red right links, and at most two (left)
-		    // red links in a row on any path?			
-		    if (isRightLeaning(this))
-		    {
-		    	System.err.println("Right leaning node");
-		    	return false;
-		    }
-		    if (isRed(this))
-		      if (isRed(left))
-		        {
-		        	System.err.println("2 consecutive reds");
-		        	return false;
-		        }
-		    return (left == null || left.is234()) && (right == null || right.is234());
-		} 		
+		}		
 	}
 	
 	private final Node<E> UNKNOWN = new Node<E>(null, BLACK);
@@ -474,11 +456,9 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 			h.colorFlip();		
 		
 		int cmp = key.compareTo(h.key);
-		if (cmp == 0)
-			; // already in set, nothing to do		
-		else if (cmp < 0)
+		if (cmp < 0)
 			h.left = insert(h.left, key);
-		else
+		else if (cmp > 0)
 			h.right = insert(h.right, key);
 		
 		// Fix right leaning tree.
@@ -511,8 +491,9 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 		return x;		
 	}
 	
-	private String cs(boolean b) { return b ? "red" : "black"; }
-	
+	// The following two are for debugging only to print to coloring of a node, its
+	// children and its grandchildren.
+/*	private String cs(boolean b) { return b ? "red" : "black"; }	
 	private String colors(Node<E> h)
 	{
 		String colors = "h -> " + cs(h.color);
@@ -541,164 +522,68 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 				colors += ", h.right.right = null";
 		}	
 		return colors;
-	}
+	} */
 	
 	private Node<E> deleteMax(Node<E> h)
 	{				
-//		System.out.println("Enter DMAX " + colors(h));
 		if (isRed(h.left) && isBlack(h.right))
-		{
-//			System.out.println("Rotate left-leaning");
 			h = h.rotateRight();
-		}
 		else if (h.right == null)
-		{
-			if (h.left != null)
-				h.left.color = h.color;
-//			System.out.println("Delete at bottom");
-			return h.left;
-		}		
-//		System.out.println("Continue lookup");
+			return null; // h.left will be null here as well 
 		if (isBlack(h.right) && isBlack(h.right.left))
-		{
-//			System.out.println("Move red right");
 			h = h.moveRedRight();
-		}
-//		if (h != root && isRed(h) && isRed(h.right) || isRed(h.right) && isRed(h.right.right))
-//			throw new RuntimeException("red red");
 		h.right = deleteMax(h.right);
 		return h.fixUp();
-/*		System.out.println("Fixing up :" + colors(h));		
-		Node<E> fixed = h.fixUp();
-		System.out.println("Fixed :" + colors(fixed));
-		boolean color = fixed.color;
-		fixed.color = BLACK;
-		if (!fixed.is234())
-			throw new RuntimeException("fixed is broken.");			
-		else
-		{
-			fixed.color = color;
-			System.out.println("Exit DMAX");
-			return fixed;
-		} */
 	}	
 	
 	private Node<E> deleteMin(Node<E> h)
 	{
-//		System.out.println("Enter delete min");
 		if (h.left == null)
-		{
-//			System.out.println("Deleting at bottom, return right=" + h.right);
-			if (h.right != null)
-				h.right.color = h.color;
-			return h.right;
-		}
+			return null; // h.right will be null here as well
 		if (isBlack(h.left) && isBlack(h.left.left))
-		{
-//			System.out.println("Borrowing from siblings.");
 			h = h.moveRedLeft();
-/*			if (!h.is234())
-			{
-				throw new RuntimeException("oops, broke it on the way down.");
-			} */
-		}
-//		System.out.println("Recurse deletemin");
 		h.left = deleteMin(h.left);
-/*		if (h.left != null && isRed(h.left.right))
-		{
-			System.err.println("failed 234 at " + h.key);
-		} 
-		System.out.println("Fixup resulting node: " + h.is234());
-		*/
-		Node<E> r = h.fixUp();
-//		System.out.println("Exiting deletemin");
-		return r;
+		return h.fixUp();
 	}
 	
 	private Node<E> delete(Node<E> h, E key)
 	{
-/*		int cmp = key.compareTo(h.key);
-		if (cmp == 0) // found
+		int cmp = key.compareTo(h.key);
+		if (cmp < 0) 
 		{
-			System.out.println("Element Found!");
-			if (h.right != null)
+			if (!isRed(h.left) && !isRed(h.left.left))
+				h = h.moveRedLeft();
+			h.left =  delete(h.left, key);
+		}
+		else  // cmp >= 0
+		{
+			if (isRed(h.left) && isBlack(h.right)) 
 			{
-				System.out.println("replacing with successor");
-				if (h.right.color == BLACK && isBlack(h.right.left))
-				{
-					h = h.moveRedRight();
-					return delete(h, key);
-				}
+				h = h.rotateRight();
+				cmp++; // if we rotate right, then current h becomes necessarily < key
+			}
+			else if (cmp == 0 && (h.right == null))
+			{
+				size--;
+				return null; // h.left is null here due to transformations going down
+			}
+			Node<E> tmp = h; // track if moveRedRight changes 'h' so we don't need call key.compareTo again
+			if (!isRed(h.right) && !isRed(h.right.left))
+				tmp = h.moveRedRight();
+			// if no rotation in above line and key==h.key replace with successor and we're done
+			if (tmp == h && cmp == 0)
+			{
 				h.key = min(h.right).key;
 				h.right = deleteMin(h.right);
 				size--;
-				Node<E> fixed = h.fixUp();
-				if (!isBalanced(fixed))
-					System.err.println("fixed is fucked");
-			}
-			else if (isRed(h.left))
-			{
-				System.out.println("no successor pushing red left down.");
-				return delete(h.rotateRight(), key);
-			}
+			} 
 			else
 			{
-				System.out.println("no successor, left is not red, returning...");				
-				size--;
-				if (h.left != null)
-					h.left.color = h.color;
-				return h.left;
+				h = tmp;
+				h.right = delete(h.right, key);
 			}
-		}
-		else if (cmp < 0)
-		{
-			if (h.left == null) // not found
-				return h.fixUp();
-			// Borrow from siblings to ensure we don't have 2 nodes (in the 2-3-4 isomorphism)
-			else if (h.left.color == BLACK && isBlack(h.left.left)) 
-				h = h.moveRedLeft();
-			h.left = delete(h.left, key);
-		}
-		else
-		{
-			// lean red links to the right
-			if (isRed(h.left) && isBlack(h.right)) 
-				h = h.rotateRight();
-			// else borrow from siblings to ensure we don't have 2 nodes
-			else if (h.right.color == BLACK && isBlack(h.right.left))
-				h = h.moveRedRight();
-			h.right = delete(h.right, key);
-		}
-		return h.fixUp(); */
-	      if (key.compareTo(h.key) < 0) 
-	      {
-	         if (!isRed(h.left) && !isRed(h.left.left))
-	            h = h.moveRedLeft();
-	         h.left =  delete(h.left, key);
-	      }
-	      else 
-	      {
-	         if (isRed(h.left) && isBlack(h.right)) 
-	            h = h.rotateRight();
-	         if (key.compareTo(h.key) == 0 && (h.right == null))
-	         {
-	        	 size--;
-	        	 if (h.left != null)
-	        		 h.left.color = h.color;
-	            return h.left;
-	         }
-	         if (!isRed(h.right) && !isRed(h.right.left))
-	            h = h.moveRedRight();
-	         if (key.compareTo(h.key) == 0)
-	         {
-	            h.key = min(h.right).key;
-	            h.right = deleteMin(h.right);
-	            size--;
-	         }
-	         else h.right = delete(h.right, key);
-	      }
-	 
-	      return h.fixUp();		
+		} 
+		return h.fixUp();		
 	}
 	
 	public void removeMax()
@@ -843,20 +728,17 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 
 	public SortedSet<E> headSet(E toElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 	
 	public SortedSet<E> subSet(E fromElement, E toElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();		
 	}
 
 	public SortedSet<E> tailSet(E fromElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -930,12 +812,31 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
     	return isBST(x.left, min, x.key) && isBST(x.right, x.key, max);
     } 
 
-    public boolean is234() { return root == null || root.is234(); }
+    public boolean is234() { return is234(root); }
 
-
+	boolean is234(Node<E> x)
+	{  
+		if (x == null) return true;
+		
+		// Does the tree have no red right links, and at most two (left)
+	    // red links in a row on any path?			
+	    if (isRightLeaning(x))
+	    {
+	    	System.err.println("Right leaning node");
+	    	return false;
+	    }
+	    if (isRed(x))
+	      if (isRed(x.left))
+	        {
+	        	System.err.println("2 consecutive reds");
+	        	return false;
+	        }
+	    return is234(x.left) && is234(x.right);
+	} 
+	
     public boolean isBalanced() { return isBalanced(root); }
     
-	public boolean isBalanced(Node r)
+	public boolean isBalanced(Node<E> r)
 	{ // Do all paths from root to leaf have same number of black edges?
 		int black = 0;     // number of black links on path from root to min
 	    Node<E> x = r;
@@ -947,7 +848,7 @@ public class LLRBTree<E extends Comparable<E>> extends AbstractSet<E>
 	    return isBalanced(r, black);
 	 }
 
-	 private boolean isBalanced(Node x, int black)
+	 private boolean isBalanced(Node<E> x, int black)
 	 { // Does every path from the root to a leaf have the given number 
 	     // of black links?
 	    if      (x == null && black == 0) return true;
