@@ -16,7 +16,6 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGAtomPredicate;
-import org.hypergraphdb.util.ArrayBasedIterator;
 import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.TempLink;
 
@@ -515,7 +514,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	{		
 		if (hg.isIncidenceSetLoaded(h))
 			return new AdjIterator(h, 
-								   new ArrayBasedIterator<HGHandle>(hg.getIncidenceSet(h)), 
+								   hg.getIncidenceSet(h).iterator(), 
 								   false);			
 		else
 			return new AdjIterator(h, 

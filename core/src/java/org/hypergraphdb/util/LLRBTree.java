@@ -388,7 +388,7 @@ public class LLRBTree<E> extends AbstractSet<E>
 
 		public void remove()
 		{			
-			throw new UnsupportedOperationException();
+			throw new UnsupportedOperationException("...because of lazy implementor: this is a TODO.");
 		}
 
 		public boolean hasPrev()
@@ -749,17 +749,17 @@ public class LLRBTree<E> extends AbstractSet<E>
 
 	public SortedSet<E> headSet(E toElement)
 	{
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("...because of lazy implementor: this is a TODO.");
 	}
 	
 	public SortedSet<E> subSet(E fromElement, E toElement)
 	{
-		throw new UnsupportedOperationException();		
+		throw new UnsupportedOperationException("...because of lazy implementor: this is a TODO.");		
 	}
 
 	public SortedSet<E> tailSet(E fromElement)
 	{
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("...because of lazy implementor: this is a TODO.");
 	}
 
 	@Override
@@ -828,8 +828,8 @@ public class LLRBTree<E> extends AbstractSet<E>
     private boolean isBST(Node<E> x, E min, E max)
     {  // Are all the values in the BST rooted at x between min and max,
       // and does the same property hold for both subtrees?
-    	if (x == null) return true;
-    	if (comparator.compare(x.key, min) > 0 || 
+    	if (x == null) return true;    	
+    	if (comparator.compare(x.key, min) < 0 || 
     		comparator.compare(max, x.key) < 0) return false;
     	return isBST(x.left, min, x.key) && isBST(x.right, x.key, max);
     } 

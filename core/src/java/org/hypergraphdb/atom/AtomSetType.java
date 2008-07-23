@@ -25,32 +25,40 @@ import org.hypergraphdb.type.HGAtomType;
  */
 public class AtomSetType implements HGAtomType 
 {
-	private HyperGraph hg;
+	private HyperGraph graph;
 	
 	public void setHyperGraph(HyperGraph hg) 
 	{
-		this.hg = hg;
+		this.graph = hg;
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
-		byte [] data = hg.getStore().getData(handle);
+		byte [] data = graph.getStore().getData(handle);
 		HGAtomSet set = new HGAtomSet();
-		set.trie.deserialize(data);
+		for (int  pos = 0; pos < data.length; pos += 16)
+			set.add(HGHandleFactory.makeHandle(data, pos));
 		return set;
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
 		HGAtomSet set = (HGAtomSet)instance;
-		HGPersistentHandle result = HGHandleFactory.makeHandle(); 
-		hg.getStore().store(result, set.trie.serialize());
+		HGPersistentHandle result = HGHandleFactory.makeHandle();
+		byte [] A = new byte[set.size()*16];
+		int pos = 0;
+		for (HGHandle h:set)
+		{
+			System.arraycopy(graph.getPersistentHandle(h).toByteArray(), 0, A, pos, 16);
+			pos += 16;
+		}
+		graph.getStore().store(result, A);
 		return result;
 	}
 
 	public void release(HGPersistentHandle handle) 
 	{
-		hg.getStore().removeData(handle);
+		graph.getStore().removeData(handle);
 	}
 
 	public boolean subsumes(Object general, Object specific) 

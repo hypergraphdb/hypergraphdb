@@ -30,7 +30,7 @@ import java.io.Serializable;
  * 
  * @author Borislav Iordanov
  */
-public interface HGPersistentHandle extends HGHandle, Serializable, Comparable<HGHandle>
+public interface HGPersistentHandle extends HGHandle, Serializable, Comparable<HGPersistentHandle>
 {
     byte [] toByteArray();
 }

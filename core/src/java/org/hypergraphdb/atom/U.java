@@ -16,6 +16,14 @@ import org.hypergraphdb.handle.HGLiveHandle;
 // implementation details...
 class U 
 {
+	static HGPersistentHandle persistentHandle(HGHandle h)
+	{
+		if (h instanceof HGPersistentHandle)
+			return (HGPersistentHandle)h;
+		else
+			return ((HGLiveHandle)h).getPersistentHandle();
+	}
+	
 	static byte [] getBytes(HGHandle h)
 	{
 		if (h instanceof HGPersistentHandle)

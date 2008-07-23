@@ -11,9 +11,9 @@ package org.hypergraphdb.cache;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.hypergraphdb.HGAtomCache;
-import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
@@ -70,7 +70,7 @@ public final class DefaultAtomCache implements HGAtomCache
     {
     	CachedIS prev, next;
     	HGPersistentHandle handle;
-    	HGHandle [] set;
+    	IncidenceSet set;
     }
     
 	private HyperGraph hg;
@@ -200,7 +200,7 @@ public final class DefaultAtomCache implements HGAtomCache
 	        
 	public void close()
 	{
-    	for (Iterator i = liveHandles.values().iterator(); i.hasNext(); )
+    	for (Iterator<LiveHandle> i = liveHandles.values().iterator(); i.hasNext(); )
     	{
     		HGLiveHandle lHandle = (HGLiveHandle)i.next();
     		hg.getEventManager().dispatch(hg, new HGAtomEvictEvent(lHandle, lHandle.getRef()));    		
@@ -298,7 +298,7 @@ public final class DefaultAtomCache implements HGAtomCache
     	return h.prev == null && h.next == null;
     }
     
-    public void incidenceSetRead(final HGPersistentHandle handle, final HGHandle [] incidenceSet)
+    public void incidenceSetRead(final HGPersistentHandle handle, final IncidenceSet incidenceSet)
     {
     	CachedIS cis = new CachedIS();
     	cis.set = incidenceSet;
@@ -312,7 +312,7 @@ public final class DefaultAtomCache implements HGAtomCache
         queueThread.addAction(new AddIncidenceSet(cis));
     }
     
-    public HGHandle [] getIncidenceSet(final HGPersistentHandle handle)
+    public IncidenceSet getIncidenceSet(final HGPersistentHandle handle)
     {
     	CachedIS cis = incidenceSets.get(handle);
     	if (cis == null)

@@ -12,10 +12,9 @@ import org.hypergraphdb.atom.HGAtomSet;
  * @author Borislav Iordanov
  *
  */
-public final class IncidenceSet
+public final class IncidenceSet extends HGAtomSet
 {
 	private HGHandle atom;
-	private HGAtomSet set;
 	
 	public IncidenceSet(HGHandle atom)
 	{
@@ -25,20 +24,5 @@ public final class IncidenceSet
 	public HGHandle getAtom()
 	{
 		return atom;
-	}
-	
-	public int size()
-	{
-		return set.size();
-	}
-	
-	/**
-	 * <p>Return a search result object for querying this incidence set. Note that even
-	 * though an <code>IncidenceSet</code> is usually an in-memory only representation, 
-	 * the return result set should be closed like all other result sets.</p>
-	 */
-	public HGRandomAccessResult getSearchResult()
-	{
-		return null;
 	}
 }

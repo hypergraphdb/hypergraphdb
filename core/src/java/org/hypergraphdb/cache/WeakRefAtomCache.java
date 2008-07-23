@@ -8,9 +8,9 @@ import java.util.IdentityHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGAtomCache;
-import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.event.HGAtomEvictEvent;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -44,8 +44,8 @@ public class WeakRefAtomCache implements HGAtomCache
 {	
 	private HyperGraph graph = null;
 	
-	private Map<HGPersistentHandle, HGHandle[]> incidenceCache = 
-		new SoftHashMap<HGPersistentHandle, HGHandle[]>();
+	private Map<HGPersistentHandle, IncidenceSet> incidenceCache = 
+		new SoftHashMap<HGPersistentHandle, IncidenceSet>();
 	
     private final Map<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
@@ -61,7 +61,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	private ReentrantReadWriteLock incidenceLock = new ReentrantReadWriteLock();
-	private ReferenceQueue refQueue = new ReferenceQueue();
+	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup phantomCleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
@@ -315,7 +315,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 
-	public HGHandle[] getIncidenceSet(HGPersistentHandle handle) 
+	public IncidenceSet getIncidenceSet(HGPersistentHandle handle) 
 	{
 		incidenceLock.readLock().lock();
 		try
@@ -328,8 +328,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 
-	public void incidenceSetRead(HGPersistentHandle handle,
-								 HGHandle[] incidenceSet) 
+	public void incidenceSetRead(HGPersistentHandle handle, IncidenceSet incidenceSet) 
 	{
 		incidenceLock.writeLock().lock();
 		try

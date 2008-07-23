@@ -183,13 +183,11 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     {
     	if (other instanceof HGLiveHandle)
     		other = ((HGLiveHandle)other).getPersistentHandle();
-    	UUIDPersistentHandle handle = (UUIDPersistentHandle)other;
-    	return uuid.compareTo(handle.uuid);
+    	return uuid.compareTo(((UUIDPersistentHandle)other).uuid);
     }
     
     public int compareTo(HGPersistentHandle other)
     {
-    	UUIDPersistentHandle handle = (UUIDPersistentHandle)other;
-    	return uuid.compareTo(handle.uuid);
+    	return uuid.compareTo(((UUIDPersistentHandle)other).uuid);    	
     }    
 }

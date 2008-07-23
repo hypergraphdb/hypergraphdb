@@ -10,9 +10,9 @@ package org.hypergraphdb;
  * 
  * @author Borislav Iordanov
  */
-public class IncidenceSetRef implements LazyRef<HGHandle[]> 
+public class IncidenceSetRef implements LazyRef<IncidenceSet> 
 {
-	private HGHandle [] set = null;
+	private IncidenceSet set = null;
 	private HGHandle atomHandle;
 	private HyperGraph graph;
 	
@@ -22,7 +22,7 @@ public class IncidenceSetRef implements LazyRef<HGHandle[]>
 		this.graph = graph;
 	}
 	
-	public HGHandle [] deref() 
+	public IncidenceSet deref() 
 	{
 		if (set == null)
 			set = graph.getIncidenceSet(atomHandle);

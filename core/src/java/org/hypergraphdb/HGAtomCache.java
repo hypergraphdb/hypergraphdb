@@ -217,7 +217,7 @@ public interface HGAtomCache
 	 * retrieved. 
 	 * @param incidenceSet The incidence set of the atom.
 	 */
-    void incidenceSetRead(final HGPersistentHandle handle, final HGHandle [] incidenceSet);
+    void incidenceSetRead(final HGPersistentHandle handle, final IncidenceSet incidenceSet);
     
     /**
      * <p>Return the incidence set of a given atom or <code>null</code> if the set is not
@@ -227,7 +227,7 @@ public interface HGAtomCache
      * @return A <code>HGHandle</code> array holding the handle of all links pointing to the
      * given atom.
      */
-    HGHandle [] getIncidenceSet(final HGPersistentHandle handle);
+    IncidenceSet getIncidenceSet(final HGPersistentHandle handle);
     
     /**
      * <p>Remove the incidence set of an atom from the cache.</p>
