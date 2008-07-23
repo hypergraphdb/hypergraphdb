@@ -100,8 +100,8 @@ public final class DefaultAtomCache implements HGAtomCache
     private LiveHandle atomQueueTail = null;
     private CachedIS incidenceSetHead = null;
     private CachedIS incidenceSetTail = null;
-    private ActionQueueThread queueThread = new ActionQueueThread("HyperGraph Cache Maintenance");
-
+    private ActionQueueThread queueThread = null;
+    
     //
     // Configuration parameters.
     //
@@ -170,7 +170,7 @@ public final class DefaultAtomCache implements HGAtomCache
 	
 	public DefaultAtomCache()
 	{
-		queueThread.start();
+		queueThread = CacheActionQueueSingleton.get();
 	}
 	
 	public void setMaxAtoms(long maxAtoms)
