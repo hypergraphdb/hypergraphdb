@@ -10,7 +10,9 @@ import org.hypergraphdb.util.RefResolver;
  * 
  * <p>
  * Implements a cache that keeps most recently used elements in memory while
- * discarding the least recently used ones.
+ * discarding the least recently used ones. Evicting elements is done in chunks
+ * determined by a percentage of the current cache's size - see the constructors
+ * for more info.
  * </p>
  *
  * @author Borislav Iordanov
@@ -20,23 +22,80 @@ import org.hypergraphdb.util.RefResolver;
  */
 public class MRUCache<Key, Value> implements HGCache<Key, Value>
 {
-	private RefResolver<Key, Value> resolver;
-	int maxSize = -1;
-	float usedMemoryThreshold, evictPercent;
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private Map<Key, Value> map = new HashMap<Key, Value>();
-	private Linked top = null;
-	private Linked cutoffTail = null;
-	private int cutoffSize = 0;
-	
-	class Linked
+	// The cache entry contains a lot of information here: 4 references = 16 bytes total.
+	// But there's no escape since we need a doubly linked list if we are to freely move
+	// an element from the middle to the top. Also, we clearly need the value there for
+	// the get operation; finally, the key is needed during evict, to remove it from the
+	// hash map itself. 
+	//
+	// Note: We could save 4 bytes per entry if we implemented the hash table
+	// within this class instead of using the standard HashMap implementation, as the 
+	// standard LinkedHashMap does. 
+	static class Entry<Key, Value>
 	{
 		Key key;
-		Linked next;
-		Linked(Key key, Linked next)
+		Value value;
+		Entry<Key, Value> next;
+		Entry<Key, Value> prev;
+		Entry(Value value, Entry<Key, Value> next, Entry<Key, Value> prev)
 		{
-			this.key = key;
+			this.value = value;
 			this.next = next;
+			this.prev = prev;
+		}
+	}
+	
+	private RefResolver<Key, Value> resolver;
+	int maxSize = -1;
+	double usedMemoryThreshold, evictPercent;
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
+	private Entry<Key, Value> top = null;
+	private Entry<Key, Value> cutoffTail = null;
+	private int cutoffSize = 0;
+	private Map<Key, Entry<Key, Value>> map = new HashMap<Key, Entry<Key, Value>>();
+	
+	class PutOnTop implements Runnable
+	{
+		Entry<Key, Value> l;
+		PutOnTop(Entry<Key, Value> l) 
+		{
+			this.l = l;
+		}
+		public void run()
+		{
+			lock.readLock().lock();
+			try
+			{
+				 // If it's already on top or it's been removed, do nothing
+				if (l.prev == null || !map.containsKey(l.key))
+					return;
+				if (l == cutoffTail)
+					cutoffTail = l.prev;
+				l.prev.next = l.next;
+				l.next.prev = l.prev;
+				l.next = top;
+				l.prev = null;
+				top.prev = l;
+				top = l;
+			}
+			finally
+			{
+				lock.readLock().unlock();
+			}
+		}
+	}
+	
+	class UnlinkEntry implements Runnable
+	{
+		Entry<Key, Value> e;
+		UnlinkEntry(Entry<Key, Value> e) { this.e = e;}
+		public void run()
+		{
+			if (e.prev != null)
+				e.prev.next = e.next;
+			if (e.next != null)
+				e.next.prev = e.prev;
+			e.prev = e.next = null;
 		}
 	}
 	
@@ -51,36 +110,48 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 		}
 		public void run()
 		{
+			Entry<Key, Value> newEntry = null;
 			lock.writeLock().lock();
 			try
 			{
-				map.put(key, value);				
-				top = new Linked(key, top);
-				if (cutoffTail == null)
-				{
-					cutoffTail = top;
-					cutoffSize = map.size();
-				}
-				else while (cutoffSize > map.size()*evictPercent)
-				{
-					cutoffTail = cutoffTail.next;
-					cutoffSize--;
-				}
-				if (maxSize >= map.size() || 
-					usedMemoryThreshold >= 
-					(float)(Runtime.getRuntime().maxMemory() - Runtime.getRuntime().freeMemory())/(float)Runtime.getRuntime().maxMemory());
-				{
-					for (; cutoffTail != null; cutoffTail = cutoffTail.next)
-						map.remove(cutoffTail.key);
-					cutoffTail = top;
-					cutoffSize = map.size();
-				}
+				if (map.containsKey(key))
+					return;
+				newEntry = new Entry<Key, Value>(value, top, null); 
+				map.put(key, newEntry);
 			}
-			finally
+			finally { lock.writeLock().unlock(); }			
+			
+			if (top != null)			
+				top.prev = newEntry; 
+			top = newEntry;
+			if (cutoffTail == null)
 			{
-				lock.writeLock().unlock();
+				cutoffTail = top;
+				cutoffSize = map.size();
+			}
+			else while (cutoffSize > map.size()*evictPercent && cutoffTail.next != null)
+			{
+				cutoffTail = cutoffTail.next;
+				cutoffSize--;
+			}
+			if (maxSize >= map.size() || 
+				usedMemoryThreshold >= 
+				(double)(Runtime.getRuntime().maxMemory() - Runtime.getRuntime().freeMemory())/(double)Runtime.getRuntime().maxMemory());
+			{
+				if (cutoffTail.prev != null)
+					cutoffTail.prev.next = null;
+				for (; cutoffTail != null; cutoffTail = cutoffTail.next)
+				{
+					lock.writeLock().lock();
+					map.remove(cutoffTail.key);
+					lock.writeLock().unlock();
+				}
 			}
 		}
+	}
+	
+	public MRUCache()
+	{		 
 	}
 	
 	/** 
@@ -95,7 +166,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 			throw new IllegalArgumentException("maxSize <= 0");
 		else if (evictCount <= 0)
 			throw new IllegalArgumentException("evictCount <= 0");			
-		this.evictPercent = (float)evictCount/(float)maxSize;
+		this.evictPercent = (double)evictCount/(double)maxSize;
 	}
 	
 	/** 
@@ -106,7 +177,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	 * @param evictPercent The percentage of elements to evict when the
 	 * usedMemoryThreshold is reached.
 	 */
-	public MRUCache(float usedMemoryThreshold, float evictPercent)
+	public MRUCache(double usedMemoryThreshold, double evictPercent)
 	{
 		if (usedMemoryThreshold <= 0)
 			throw new IllegalArgumentException("usedMemoryThreshold <= 0");		
@@ -119,16 +190,52 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	public Value get(Key key)
 	{
 		lock.readLock().lock();
-		Value v = map.get(key);
+		Entry<Key, Value> e = map.get(key);
 		lock.readLock().unlock();
-		if (v == null)
+		if (e == null)
 		{
-			v = resolver.resolve(key);
+			Value v = resolver.resolve(key);
 			CacheActionQueueSingleton.get().addAction(new AddElement(key, v));
+			return v;
 		}
-		return v;
+		else
+		{
+			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+			return e.value;
+		}
 	}
 
+	public Value getIfLoaded(Key key)
+	{
+		lock.readLock().lock();
+		Entry<Key, Value> e = map.get(key);
+		lock.readLock().unlock();
+		if (e == null)
+			return null;
+		else
+		{
+			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+			return e.value;
+		}
+	}
+	
+	public boolean isLoaded(Key key)
+	{
+		lock.readLock().lock();
+		boolean b = map.containsKey(key);
+		lock.readLock().unlock();
+		return b;
+	}
+	
+	public void remove(Key key)
+	{
+		lock.writeLock().lock();
+		Entry<Key, Value> e = map.remove(key);
+		lock.writeLock().unlock();
+		if (e != null)
+			CacheActionQueueSingleton.get().addAction(new UnlinkEntry(e));
+	}
+	
 	public RefResolver<Key, Value> getResolver()
 	{
 		return resolver;
@@ -137,5 +244,14 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	public void setResolver(RefResolver<Key, Value> resolver)
 	{
 		this.resolver = resolver;
+	}
+	
+	public void clear()
+	{
+		lock.writeLock().lock();
+		map.clear();
+		cutoffTail = top = null;
+		cutoffSize = 0;
+		lock.writeLock().unlock();
 	}
 }

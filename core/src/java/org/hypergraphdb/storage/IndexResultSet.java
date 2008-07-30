@@ -15,6 +15,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.transaction.BDBTxCursor;
 import org.hypergraphdb.util.HGUtils;
 
+import com.sleepycat.db.DatabaseException;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.OperationStatus;
@@ -28,7 +29,7 @@ import com.sleepycat.db.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
-abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
+public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 {        
     protected BDBTxCursor cursor;
     protected T current, prev, next;
@@ -251,4 +252,16 @@ abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
         } */
         closeNoException();
     }
+    
+    public int count()
+    {
+    	try
+    	{
+    		return cursor.cursor().count();
+    	}
+    	catch (DatabaseException ex)
+    	{
+    		throw new HGException(ex);
+    	}
+    }    
 }

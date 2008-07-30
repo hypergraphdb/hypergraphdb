@@ -1,6 +1,7 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.atom.HGAtomSet;
+import org.hypergraphdb.util.HGSortedSet;
 
 /**
  * 
@@ -16,8 +17,9 @@ public final class IncidenceSet extends HGAtomSet
 {
 	private HGHandle atom;
 	
-	public IncidenceSet(HGHandle atom)
+	IncidenceSet(HGHandle atom, HGSortedSet<HGHandle> impl)
 	{
+		super(impl);
 		this.atom = atom;
 	}
 	

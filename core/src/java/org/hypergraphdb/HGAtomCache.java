@@ -8,6 +8,7 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 
@@ -192,47 +193,11 @@ public interface HGAtomCache
 	 * </p>
 	 */
 	void close();
-		
+	
 	/**
-	 * <p>
-	 * Inform the cache that the incidence set of a given atom has been retrieved from permanent
-	 * storage.
-	 * </p>
-	 * 
-     * <p>
-     * The cache may decide to cache the incidence set or not. HyperGraph will usually query the
-     * cache for the incidence set of an atom before reading from storage.
-     * </p>
-     * 
-     * <p>
-     * <strong>IMPLEMENTATION NOTE:</strong> the current/default storage mechanism for HyperGraphDB 
-     * being BerkeleyDB, there is relatively little need to cache a lot of incidence sets. Usually
-     * BerkeleyDB has its own cache and since construction of a <code>HGHandle</code> from <code>byte[]</code>
-     * is quite fast (compared to atom instance construction) one can rely mostly on the underlying
-     * Berkeley DB's cache for incidence set. [<b><em>note on the note:</em></b> this is pure speculation, never
-     * measured any of this. ;)].
-     * </p>
-     * 
-	 * @param handle The <code>HGPersistentHandle</code> of the atom whose incidence set has been
-	 * retrieved. 
-	 * @param incidenceSet The incidence set of the atom.
+	 * <p>Return the incidence set cache. The incidence set cache is maintained separately
+	 * from the main atom cache. Incidence sets don't hold actual atoms, but only their
+	 * handles. Also, they are ordered and can be queried for membership efficiently.
 	 */
-    void incidenceSetRead(final HGPersistentHandle handle, final IncidenceSet incidenceSet);
-    
-    /**
-     * <p>Return the incidence set of a given atom or <code>null</code> if the set is not
-     * in the cache.</p>
-     * 
-     * @param handle The persistent handle of the atom whose incidence set is desired.
-     * @return A <code>HGHandle</code> array holding the handle of all links pointing to the
-     * given atom.
-     */
-    IncidenceSet getIncidenceSet(final HGPersistentHandle handle);
-    
-    /**
-     * <p>Remove the incidence set of an atom from the cache.</p>
-     * @param handle The <code>HGPersistentHandle</code> of the atom whose 
-     * incidence set is to be removed.
-     */
-    void removeIncidenceSet(HGPersistentHandle handle);
+	HGCache<HGPersistentHandle, IncidenceSet> getIncidenceCache();
 }

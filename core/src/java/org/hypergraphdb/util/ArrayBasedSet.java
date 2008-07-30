@@ -39,7 +39,7 @@ import org.hypergraphdb.HGRandomAccessResult;
  * @param <E>
  */
 @SuppressWarnings("unchecked")
-public class ArrayBasedSet<E> implements SortedSet<E>
+public class ArrayBasedSet<E> implements HGSortedSet<E>
 {
 	Class<E> type;
 	E [] array;
@@ -65,25 +65,88 @@ public class ArrayBasedSet<E> implements SortedSet<E>
 		}
 		return -(low + 1);  // key not found.		
 	}
-	
-	public ArrayBasedSet(E [] A)
+		
+	static <E> Comparator<E> makeComparator()
 	{
-		type = (Class<E>)A.getClass().getComponentType();
-		array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
-		comparator = new Comparator<E>()
+		return new Comparator<E>()
 		{
 			public int compare(E x, E y)
 			{
 				return ((Comparable)x).compareTo(y);
 			}
-		};
+		};		
+	}
+	
+	/**
+	 * <p>
+	 * Initialize from the given array.
+	 * </p>
+	 * 
+	 * @param A The array used to initialize. An internal array is created 
+	 * with the same size as <code>A</code> and all its elements are copied.
+	 */
+	public ArrayBasedSet(E [] A)
+	{
+		this(A, (Comparator<E>)makeComparator());
 	}
 
-	public ArrayBasedSet(E [] A, Comparator<E> comparator)
+	/**
+	 * <p>
+	 * Initialize an empty set with a given initial capacity.
+	 * </p>
+	 * 
+	 * @param A The array used to initialize. An internal array is created 
+	 * with the same type as as <code>A</code> and with <code>size</code> number
+	 * of slots. 
+	 */
+	public ArrayBasedSet(E [] A, int capacity)
+	{
+		this(A, capacity, (Comparator<E>)makeComparator());
+	}
+	
+	/**
+	 * <p>
+	 * Initialize an empty set with a given initial capacity, and a given 
+	 * comparator.
+	 * </p>
+	 * 
+	 * @param A The array used to initialize. An internal array is created 
+	 * with the same type as as <code>A</code> and with <code>size</code> number
+	 * of slots. 
+	 * @param Comparator The comparator used to compare elements. 
+	 */
+	public ArrayBasedSet(E [] A, int capacity, Comparator<E> comparator)
 	{
 		type = (Class<E>)A.getClass().getComponentType();
-		array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
+		array = (E[])java.lang.reflect.Array.newInstance(type, capacity);
+		size = 0;
 		this.comparator = comparator;
+	}
+	
+	/**
+	 * <p>
+	 * Initialize from the given array and with the given <code>Comparator</code>.
+	 * </p>
+	 * 
+	 * @param A The array used to initialize. An internal array is created 
+	 * with the same size as <code>A</code> and all its elements are copied.
+	 * @param Comparator The comparator used to compare elements.
+	 */	
+	public ArrayBasedSet(E [] A, Comparator<E> comparator)
+	{
+		this.comparator = comparator;		
+		type = (Class<E>)A.getClass().getComponentType();
+		array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
+		System.arraycopy(A, 0, array, 0, A.length);	
+		size = A.length;
+	}
+	
+	public void setFromArray(E [] A)
+	{
+		if (array.length < A.length)
+			array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
+		System.arraycopy(A, 0, array, 0, A.length);
+		this.size = A.length;
 	}
 	
 	public Comparator<? super E> comparator()

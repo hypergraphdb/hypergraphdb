@@ -234,7 +234,7 @@ class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					public HGSearchResult<HGHandle> execute()
 					{
-						return hg.getStore().getIncidenceResultSet(handle);
+						return hg.getIncidenceSet(handle).getSearchResult();
 					}
 				};
 			}

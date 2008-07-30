@@ -17,7 +17,6 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
-import org.hypergraphdb.util.SoftHashMap;
 import org.hypergraphdb.util.WeakIdentityHashMap;
 
 /**
@@ -44,8 +43,8 @@ public class WeakRefAtomCache implements HGAtomCache
 {	
 	private HyperGraph graph = null;
 	
-	private Map<HGPersistentHandle, IncidenceSet> incidenceCache = 
-		new SoftHashMap<HGPersistentHandle, IncidenceSet>();
+	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
+		new MRUCache<HGPersistentHandle, IncidenceSet>(0.9, 0.3);	
 	
     private final Map<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
@@ -60,7 +59,6 @@ public class WeakRefAtomCache implements HGAtomCache
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private ReentrantReadWriteLock incidenceLock = new ReentrantReadWriteLock();
 	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup phantomCleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
@@ -143,6 +141,16 @@ public class WeakRefAtomCache implements HGAtomCache
 	{		
 		phantomCleanupThread.start();
 		phantomCleanupThread.setPriority(Thread.MAX_PRIORITY);
+	}
+	
+	public void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache)
+	{
+		this.incidenceCache= cache;
+	}
+	
+	public HGCache<HGPersistentHandle, IncidenceSet> getIncidenceCache()
+	{
+		return incidenceCache;
 	}
 	
 	public void setHyperGraph(HyperGraph hg) 
@@ -315,32 +323,6 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 
-	public IncidenceSet getIncidenceSet(HGPersistentHandle handle) 
-	{
-		incidenceLock.readLock().lock();
-		try
-		{
-			return incidenceCache.get(handle);
-		}
-		finally
-		{
-			incidenceLock.readLock().unlock();
-		}
-	}
-
-	public void incidenceSetRead(HGPersistentHandle handle, IncidenceSet incidenceSet) 
-	{
-		incidenceLock.writeLock().lock();
-		try
-		{
-			incidenceCache.put(handle, incidenceSet);
-		}
-		finally
-		{
-			incidenceLock.writeLock().unlock();
-		}
-	}
-
 	public void remove(HGLiveHandle handle) 
 	{
 		lock.writeLock().lock();
@@ -358,18 +340,6 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}
 
-	public void removeIncidenceSet(HGPersistentHandle handle)
-	{
-		incidenceLock.writeLock().lock();
-		try
-		{
-			incidenceCache.remove(handle);
-		}
-		finally
-		{
-			incidenceLock.writeLock().unlock();
-		}		
-	}
 	
 	public boolean isFrozen(HGLiveHandle handle) 
 	{

@@ -141,7 +141,7 @@ public class SimpleALGenerator implements HGALGenerator
 		else
 			return new AdjIterator(
 					h, 
-					hg.getStore().getIncidenceResultSet(hg.getPersistentHandle(h)), 
+					hg.getIncidenceSet(h).getSearchResult(), 
 					true);
 	}
 	

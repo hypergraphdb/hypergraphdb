@@ -65,14 +65,7 @@ public final class DefaultAtomCache implements HGAtomCache
     		this.ref = ref;
     	}
     }
-	
-    private static class CachedIS
-    {
-    	CachedIS prev, next;
-    	HGPersistentHandle handle;
-    	IncidenceSet set;
-    }
-    
+	    
 	private HyperGraph hg;
     
     /**
@@ -90,16 +83,13 @@ public final class DefaultAtomCache implements HGAtomCache
     /**
      * HGPersistentHandle -> incidence set  
      */
-    private final HashMap<HGPersistentHandle, CachedIS> 
-    	incidenceSets = new HashMap<HGPersistentHandle, CachedIS>();
+    private HGCache<HGPersistentHandle, IncidenceSet> incidenceSets = null;
     
     private long retrievalCount = 0;
     private long lastAccessTime = System.currentTimeMillis();
     private double retrievalFrequencyWeight = 10.0;
     private double lastAccessTimeWeight = 1.0;
     private LiveHandle atomQueueTail = null;
-    private CachedIS incidenceSetHead = null;
-    private CachedIS incidenceSetTail = null;
     private ActionQueueThread queueThread = null;
     
     //
@@ -173,6 +163,16 @@ public final class DefaultAtomCache implements HGAtomCache
 		queueThread = CacheActionQueueSingleton.get();
 	}
 	
+	public void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache)
+	{
+		this.incidenceSets = cache;
+	}
+	
+	public HGCache<HGPersistentHandle, IncidenceSet> getIncidenceCache()
+	{
+		return incidenceSets;
+	}
+
 	public void setMaxAtoms(long maxAtoms)
 	{
 		this.maxAtoms = maxAtoms;
@@ -208,8 +208,7 @@ public final class DefaultAtomCache implements HGAtomCache
     	liveHandles.clear();
     	atoms.clear();
     	incidenceSets.clear();
-    	atomQueueTail = null;
-    	incidenceSetHead = incidenceSetTail = null;		
+    	atomQueueTail = null;		
     	queueThread.stopRunning();
 	}
 	
@@ -298,45 +297,13 @@ public final class DefaultAtomCache implements HGAtomCache
     	return h.prev == null && h.next == null;
     }
     
-    public void incidenceSetRead(final HGPersistentHandle handle, final IncidenceSet incidenceSet)
-    {
-    	CachedIS cis = new CachedIS();
-    	cis.set = incidenceSet;
-    	cis.handle = handle;
-    	if (incidenceSets.size() >= maxIncidenceSets)
-    	{
-    		queueThread.addAction(new IncidenceEvictAction(maxIncidenceSets/10));
-    		queueThread.completeAll();
-    	}
-        incidenceSets.put(handle, cis);
-        queueThread.addAction(new AddIncidenceSet(cis));
-    }
-    
-    public IncidenceSet getIncidenceSet(final HGPersistentHandle handle)
-    {
-    	CachedIS cis = incidenceSets.get(handle);
-    	if (cis == null)
-    		return null;
-        queueThread.addAction(new MoveISTop(cis));   	
-    	return cis.set;
-    }
-        
-    public void removeIncidenceSet(HGPersistentHandle handle)
-	{
-    	incidenceSets.remove(handle);
-	}
 
 	/**
      * <p>Remove a live handle and all its associations from the cache.</p>
      */
     public void remove(HGLiveHandle handle)
     {
-    	CachedIS cis = incidenceSets.get(handle.getPersistentHandle());
-    	if (cis != null)
-    	{
-    		incidenceSets.remove(handle.getPersistentHandle());
-    		queueThread.addAction(new IncidenceDetachAction(cis));
-    	}
+    	incidenceSets.remove(handle.getPersistentHandle());
         atoms.remove(handle.getRef());
         liveHandles.remove(handle.getPersistentHandle());
     	queueThread.addAction(new AtomDetachAction((LiveHandle)handle));        
@@ -346,91 +313,7 @@ public final class DefaultAtomCache implements HGAtomCache
     //
     // Actions for queue maintenance
     //
-    
-    /**
-     * Remove N incidence sets from the tail of the queue.
-     */
-    private class IncidenceEvictAction implements Runnable
-    {
-    	long n;
-    	IncidenceEvictAction(long n) { this.n = n; }
-    	
-    	public void run()
-    	{
-    		if (incidenceSetTail == null)
-    			return;
-    		CachedIS newTail = incidenceSetTail;
-    		while (n-- > 0 && newTail.prev != null)
-    		{
-    			incidenceSets.remove(newTail.handle);
-    			newTail =  newTail.prev;
-    		}
-    		if (newTail.prev == null)
-    		{
-    			incidenceSets.remove(newTail.handle);
-    			incidenceSetTail = incidenceSetHead = null;
-    		}
-    		else
-    		{
-    			newTail.next = null;
-    			incidenceSetTail = newTail;
-    		}
-    	}
-    }
-    
-    public class IncidenceDetachAction implements Runnable
-    {
-    	CachedIS cis;
-    	IncidenceDetachAction(CachedIS cis) { this.cis = cis; }
-    	public void run()
-    	{
-    		if (cis.prev != null)
-    			cis.prev.next = cis.next;
-    		if (cis.next != null)
-    			cis.next.prev = cis.prev;
-    		if (cis == incidenceSetHead)
-    			incidenceSetHead = cis.next;
-    		if (cis == incidenceSetTail)
-    			incidenceSetTail = cis.prev;    		
-    	}
-    }
-    
-    private class AddIncidenceSet implements Runnable
-    {
-    	CachedIS cis;
-    	public AddIncidenceSet(CachedIS cis) { this.cis = cis; }
-    	public void run()
-    	{
-    		cis.prev = null;
-        	cis.next = incidenceSetHead;
-            if (incidenceSetHead != null)
-                incidenceSetHead.prev = cis;
-        	incidenceSetHead = cis;
-        	if (incidenceSetTail == null)
-        		incidenceSetTail = cis;
-    	}
-    }
-    
-    private class MoveISTop implements Runnable
-    {
-    	CachedIS cis;
-    	public MoveISTop(CachedIS cis) { this.cis = cis; }
-    	public void run()
-    	{
-        	if (cis.prev == null) // already at top?
-        		return;
-        	
-        	cis.prev.next = cis.next;
-        	if (cis.next != null)
-        		cis.next.prev = cis.prev;
-        	
-        	cis.prev = null;
-        	cis.next = incidenceSetHead;
-        	incidenceSetHead.prev = cis; 
-        	incidenceSetHead = cis;    		
-    	}
-    }
-    
+       
     private class AtomAccessedAction implements Runnable
     {
     	LiveHandle atom;

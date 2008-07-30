@@ -502,7 +502,7 @@ public class HGStore
         }        
     }
     
-    public HGHandle [] getIncidenceSet(HGPersistentHandle handle)
+    public HGPersistentHandle [] getIncidenceSet(HGPersistentHandle handle)
     {
         if (handle == null)
             throw new NullPointerException("HGStore.getIncidenceSet called with a null handle.");
@@ -515,8 +515,8 @@ public class HGStore
             cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
-                return new HGHandle[0];
-            HGHandle [] result = new HGHandle[cursor.count()];
+                return new HGPersistentHandle[0];
+            HGPersistentHandle [] result = new HGPersistentHandle[cursor.count()];
             for (int i = 0; status == OperationStatus.SUCCESS; i++)
             {
                 result[i] = UUIDPersistentHandle.makeHandle(value.getData());
@@ -545,7 +545,7 @@ public class HGStore
      * @return The <code>HGSearchResult</code> iterating over the incidence set. 
      */
     @SuppressWarnings("unchecked")    
-    public HGSearchResult<HGHandle> getIncidenceResultSet(HGPersistentHandle handle)
+    public HGSearchResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
     {
         if (handle == null)
             throw new NullPointerException("HGStore.getIncidenceSet called with a null handle.");
@@ -561,7 +561,7 @@ public class HGStore
             if (status == OperationStatus.NOTFOUND)
             {
             	cursor.close();
-                return (HGSearchResult<HGHandle>)HGSearchResult.EMPTY;
+                return (HGSearchResult<HGPersistentHandle>)HGSearchResult.EMPTY;
             }
             else
             	return new SingleKeyResultSet(tx.attachCursor(cursor), key, BAtoHandle.getInstance());            

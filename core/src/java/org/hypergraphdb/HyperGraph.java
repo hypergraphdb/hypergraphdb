@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 
+import org.hypergraphdb.cache.MRUCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.DefaultLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -35,7 +36,7 @@ import org.hypergraphdb.util.Pair;
  * </p>
  * 
  * <p>
- * Because HyperGraphDB is primarely an embedded database, it does not rely on a client-server
+ * Because HyperGraphDB is primarily an embedded database, it does not rely on a client-server
  * model and therefore there is no notion of a connection. The database is accessed by
  * instantiating an instance of this class and then using its methods. An instance of this
  * class is essentially a connection to the database and it must be always properly closed
@@ -235,6 +236,11 @@ public /*final*/ class HyperGraph
 	        store = new HGStore(location, config);
 	        cache = new WeakRefAtomCache();
 	        cache.setHyperGraph(this);
+	        MRUCache<HGPersistentHandle, IncidenceSet> incidenceCache = new 
+	        							MRUCache<HGPersistentHandle, IncidenceSet>();
+	        incidenceCache.setResolver(new ISRefResolver(this));
+	        ((WeakRefAtomCache)cache).setIncidenceCache(incidenceCache);
+	        
 	        typeSystem = new HGTypeSystem(this);    
 	        
 	        //
@@ -476,7 +482,7 @@ public /*final*/ class HyperGraph
      */
     public boolean isIncidenceSetLoaded(HGHandle h)
     {
-    	return cache.getIncidenceSet(getPersistentHandle(h)) != null;
+    	return cache.getIncidenceCache().isLoaded(getPersistentHandle(h));
     }
     
     /**
@@ -694,18 +700,10 @@ public /*final*/ class HyperGraph
         // If the incidence set of the newly fetched atom is already loaded,
         // traverse it to update the target handles of all links pointing to it.
         //
-        IncidenceSet incidenceSet = cache.getIncidenceSet(persistentHandle);
+        IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(persistentHandle);
         if (incidenceSet != null)
-            for (HGHandle h : incidenceSet)
-            {
-            	HGLiveHandle lh = cache.get((HGPersistentHandle)h);
-            	if (lh != null)
-                {
-                    HGLink incidenceLink = (HGLink)lh.getRef();
-                    if (incidenceLink != null) // ref may be null because of cache eviction
-                    	updateLinkLiveHandle(incidenceLink, liveHandle);
-                }
-            }
+        	this.updateLinksInIncidenceSet(incidenceSet, liveHandle);
+        
         //
         // If the newly fetched atom is a link, update all loaded incidence
         // sets, of which it is part, with its live handle. 
@@ -890,7 +888,6 @@ public /*final*/ class HyperGraph
         HGPersistentHandle typeHandle = layout[0];
         HGPersistentHandle valueHandle = layout[1];
         HGAtomType type = typeSystem.getType(typeHandle);	        
-        IncidenceSet incidenceSet = cache.getIncidenceSet(pHandle);
         
         //
         // Clean all indexing entries related to this atom.
@@ -919,36 +916,14 @@ public /*final*/ class HyperGraph
         //
         // Handle links pointing to this atom:
         //
-        if (incidenceSet != null)
-        {
-	        for (HGHandle h : incidenceSet)
-		        if (!keepIncidentLinks)
-		        	removeTransaction(h, keepIncidentLinks);
-		        else
-		        	targetRemoved(h, pHandle);
-        }
-        else
-        {
-        	HGSearchResult<HGHandle> irs = null;
-        	try
-        	{
-        		irs = store.getIncidenceResultSet(pHandle);
-        		while (irs.hasNext())
-        		{
-        			HGHandle link = irs.next();
-			        if (!keepIncidentLinks)
-			        	removeTransaction(link, keepIncidentLinks);
-			        else
-			        	targetRemoved(link, pHandle);	        			
-        		}
-        	}
-        	finally
-        	{
-        		HGUtils.closeNoException(irs);
-        	}
-        }
-        cache.removeIncidenceSet(pHandle);        
-        store.removeIncidenceSet(pHandle);
+        IncidenceSet incidenceSet = cache.getIncidenceCache().get(pHandle);        
+        for (HGHandle h : incidenceSet)
+	        if (!keepIncidentLinks)
+	        	removeTransaction(h, keepIncidentLinks);
+	        else
+	        	targetRemoved(h, pHandle);
+        store.removeIncidenceSet(pHandle);        
+        cache.getIncidenceCache().remove(pHandle);        
         eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));    	
     }
     
@@ -1179,65 +1154,16 @@ public /*final*/ class HyperGraph
     }
     
     /**
-     * <p>Return a <code>HGHandle</code> array of all <code>HGLink</code>s pointing 
-     * to the atom referred by the passed in handle.</p>
+     * <p>Return the <code>IncidenceSet</code>, that is the set ofall <code>HGLink</code>s pointing 
+     * to, the atom referred by the passed in handle.</p>
      * 
      * @param handle The handle of the atom whose incidence set is desired.
-     * @return An array of  <code>HGHandle</code>s of all the links pointing to this atom.
-     * The returned array may have 0 elements, but it will never be <code>null</code>.
+     * @return The atom's <code>IncidenceSet</code>. 
+     * The returned set may have 0 elements, but it will never be <code>null</code>.
      */
     public IncidenceSet getIncidenceSet(HGHandle handle)
     {
-        HGLiveHandle lHandle = null;
-        HGPersistentHandle pHandle;
-        
-        if (handle instanceof HGPersistentHandle)
-        {
-            pHandle = (HGPersistentHandle)handle;
-        	lHandle = cache.get(pHandle);            
-        }
-        else
-        {
-            lHandle = (HGLiveHandle)handle;
-            pHandle = lHandle.getPersistentHandle();
-        }
-        
-        IncidenceSet result = cache.getIncidenceSet(pHandle);
-        
-        if (result == null)
-        {
-        	result = new IncidenceSet(lHandle != null ? lHandle : pHandle);
-            HGSearchResult<HGHandle> rs = store.getIncidenceResultSet(pHandle);
-            
-            try
-            {
-	            //
-	            // Update persistent handles with live handles
-	            //
-	            while (rs.hasNext())
-	            {
-	            	HGPersistentHandle curr = (HGPersistentHandle)rs.next();
-	            	result.add(curr);	            	
-	            	if (lHandle != null)
-	            	{
-		                //
-		                // If the incidence link is loaded, use its live handle in the
-		                // incidence set.
-		                //
-		                HGLiveHandle liveLink = cache.get(curr);
-		                HGLink link = (HGLink)liveLink.getRef();
-		                if (link != null)
-		                	updateLinkLiveHandle(link, lHandle);
-	            	}
-	            }
-            }
-            finally
-            {
-            	HGUtils.closeNoException(rs);
-            }
-            cache.incidenceSetRead(pHandle, result);            
-        }
-        return result;
+    	return cache.getIncidenceCache().get(getPersistentHandle(handle));
     }
     
     public int getSystemFlags(HGHandle handle)
@@ -1598,6 +1524,20 @@ public /*final*/ class HyperGraph
     	}    	
     }
     
+    void updateLinksInIncidenceSet(IncidenceSet incidenceSet, HGLiveHandle liveHandle)
+    {
+    	for (HGHandle h : incidenceSet)
+        {
+        	HGLiveHandle lh = cache.get((HGPersistentHandle)h);
+        	if (lh != null)
+            {
+                HGLink incidenceLink = (HGLink)lh.getRef();
+                if (incidenceLink != null) // ref may be null because of cache eviction
+                	updateLinkLiveHandle(incidenceLink, liveHandle);
+            }
+        }    	
+    }
+    
     /**
      * Update a link to point to a "live" target instead of holding a 
      * persistent handle. This is slightly inefficient as it needs
@@ -1605,9 +1545,10 @@ public /*final*/ class HyperGraph
      * a distinction b/w ordered and unordered links might become useful
      * for efficiency purposes: an unordered link would be able to use
      * a hash lookup on its handles to find the one that needs to be updated,
-     * instead of a linear traversal.
+     * instead of a linear traversal. On the other, link arities tend to be
+     * rather small, usually 2-3, so it shouldn't be a problem. 
      */
-    private void updateLinkLiveHandle(HGLink link, HGLiveHandle lHandle)
+    void updateLinkLiveHandle(HGLink link, HGLiveHandle lHandle)
     {
         int arity = link.getArity();
         for (int i = 0; i < arity; i++)
@@ -1623,16 +1564,16 @@ public /*final*/ class HyperGraph
         }
     }
         
-    private void updateTargetsIncidenceSets(HGLiveHandle newLink)
+    void updateTargetsIncidenceSets(HGLiveHandle newLink)
     {
         HGLink link = (HGLink)get(newLink); 
         for (int i = 0; i < link.getArity(); i++)
         {
-            HGPersistentHandle targetHandle = getPersistentHandle(link.getTargetAt(i)); 
-            IncidenceSet targetIncidenceSet = cache.getIncidenceSet(targetHandle);
+            HGPersistentHandle targetHandle = getPersistentHandle(link.getTargetAt(i));
+            store.addIncidenceLink(targetHandle, newLink.getPersistentHandle());            
+            IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetHandle);
             if (targetIncidenceSet != null)
             	targetIncidenceSet.add(newLink);
-            store.addIncidenceLink(targetHandle, newLink.getPersistentHandle());
         }                   
     }
 
@@ -1667,18 +1608,11 @@ public /*final*/ class HyperGraph
     private void removeFromIncidenceSet(HGPersistentHandle targetAtom,
     									HGLiveHandle incidentLiveLink,
     									HGPersistentHandle incidentLink)
-    {        
-        //
-        // Remove from cached incidence set, if present.
-        //
-        IncidenceSet targetIncidenceSet = cache.getIncidenceSet(targetAtom);
+    {       
+    	store.removeIncidenceLink(targetAtom, incidentLink);
+        IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetAtom);
         if (targetIncidenceSet != null)
-        {
-        	if (targetIncidenceSet.remove(incidentLink))
-        		store.removeIncidenceLink(targetAtom, incidentLink);
-        }   	
-        else
-        	store.removeIncidenceLink(targetAtom, incidentLink);
+        	targetIncidenceSet.remove(incidentLink);
     }
 
     /**

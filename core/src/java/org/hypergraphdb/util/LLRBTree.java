@@ -29,7 +29,7 @@ import org.hypergraphdb.HGSearchResult;
  * interface.
  */
 public class LLRBTree<E> extends AbstractSet<E>
-						 implements SortedSet<E>, Cloneable, java.io.Serializable
+						 implements HGSortedSet<E>, Cloneable, java.io.Serializable
 {
 	private static final long serialVersionUID = -1;
 	

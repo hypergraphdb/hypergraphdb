@@ -518,7 +518,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 								   false);			
 		else
 			return new AdjIterator(h, 
-								   hg.getStore().getIncidenceResultSet(hg.getPersistentHandle(h)), 
+								   hg.getIncidenceSet(h).getSearchResult(), 
 								   true);
 	}
 	

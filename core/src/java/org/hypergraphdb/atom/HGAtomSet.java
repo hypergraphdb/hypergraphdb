@@ -11,7 +11,8 @@ package org.hypergraphdb.atom;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.hypergraphdb.util.LLRBTree;
+import org.hypergraphdb.util.ArrayBasedSet;
+import org.hypergraphdb.util.HGSortedSet;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -33,14 +34,24 @@ import java.util.SortedSet;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class HGAtomSet implements SortedSet<HGHandle>
+public class HGAtomSet implements HGSortedSet<HGHandle>
 {	
     static final long serialVersionUID = -1L;    
-	private LLRBTree<HGPersistentHandle> tree = new LLRBTree<HGPersistentHandle>();
+	private HGSortedSet<HGPersistentHandle> impl = null;
 
+	public HGAtomSet()
+	{
+		this.impl = new ArrayBasedSet<HGPersistentHandle>(new HGPersistentHandle[0]); //new LLRBTree<HGPersistentHandle>();
+	}
+	
+	public HGAtomSet(HGSortedSet implementation)
+	{
+		this.impl = implementation;
+	}
+	
 	public HGRandomAccessResult<HGHandle>  getSearchResult()
 	{
-		return (HGRandomAccessResult)tree.getSearchResult();
+		return (HGRandomAccessResult)impl.getSearchResult();
 	}
     public Comparator<? super HGHandle> comparator()
 	{
@@ -48,27 +59,27 @@ public class HGAtomSet implements SortedSet<HGHandle>
 	}
 	public HGHandle first()
 	{
-		return tree.first();
+		return impl.first();
 	}
 	public SortedSet<HGHandle> headSet(HGHandle h)
 	{
-		return (SortedSet)tree.headSet(U.persistentHandle(h));
+		return (SortedSet)impl.headSet(U.persistentHandle(h));
 	}
 	public HGHandle last()
 	{
-		return tree.last();
+		return impl.last();
 	}
 	public SortedSet<HGHandle> subSet(HGHandle fromElement, HGHandle toElement)
 	{
-		return (SortedSet)tree.subSet(U.persistentHandle(fromElement), U.persistentHandle(toElement));
+		return (SortedSet)impl.subSet(U.persistentHandle(fromElement), U.persistentHandle(toElement));
 	}
 	public SortedSet<HGHandle> tailSet(HGHandle h)
 	{
-		return (SortedSet)tree.tailSet(U.persistentHandle(h));
+		return (SortedSet)impl.tailSet(U.persistentHandle(h));
 	}
 	public boolean add(HGHandle h)
 	{
-		return tree.add(U.persistentHandle(h));
+		return impl.add(U.persistentHandle(h));
 	}
 	public boolean addAll(Collection<? extends HGHandle> c)
 	{
@@ -79,11 +90,11 @@ public class HGAtomSet implements SortedSet<HGHandle>
 	}
 	public void clear()
 	{
-		tree.clear();
+		impl.clear();
 	}
 	public boolean contains(Object o)
 	{
-		return tree.contains(U.persistentHandle((HGHandle)o));
+		return impl.contains(U.persistentHandle((HGHandle)o));
 	}
 	public boolean containsAll(Collection<?> c)
 	{
@@ -94,15 +105,15 @@ public class HGAtomSet implements SortedSet<HGHandle>
 	}
 	public boolean isEmpty()
 	{
-		return tree.isEmpty();
+		return impl.isEmpty();
 	}
 	public Iterator<HGHandle> iterator()
 	{
-		return (Iterator)tree.iterator();
+		return (Iterator)impl.iterator();
 	}
 	public boolean remove(Object o)
 	{
-		return tree.remove(U.persistentHandle((HGHandle)o));
+		return impl.remove(U.persistentHandle((HGHandle)o));
 	}
 	public boolean removeAll(Collection<?> c)
 	{
@@ -113,19 +124,19 @@ public class HGAtomSet implements SortedSet<HGHandle>
 	}
 	public boolean retainAll(Collection<?> c)
 	{
-		return tree.retainAll(c);
+		return impl.retainAll(c);
 	}
 	public int size()
 	{
-		return tree.size();
+		return impl.size();
 	}
 	public Object[] toArray()
 	{
-		return tree.toArray();
+		return impl.toArray();
 	}
 	public <T> T[] toArray(T[] a)
 	{
-		return tree.toArray(a);
+		return impl.toArray(a);
 	}
 	
 	public int hashCode() { return System.identityHashCode(this); }
