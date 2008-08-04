@@ -308,7 +308,18 @@ public /*final*/ class HyperGraph
         try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
     	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
     	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
-        try { store.close();								 	 } catch (Throwable t) { problems.add(t); }
+        try 
+        { 
+        	store.checkPointThread.stop = true;
+        	while (store.checkPointThread.running)
+        		try { Thread.sleep(500); }
+        		catch (InterruptedException ex) { /* need to wait here until it stops... */}
+        	store.close();								 	 
+        } 
+        catch (Throwable t) 
+        { 
+        	problems.add(t); 
+        }
         is_open = false;
         for (Throwable t : problems)
         {

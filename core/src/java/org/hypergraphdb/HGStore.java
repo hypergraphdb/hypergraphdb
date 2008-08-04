@@ -98,7 +98,7 @@ public class HGStore
         envConfig.setCacheSize(20*1014*1024);
         envConfig.setCacheCount(50);
         envConfig.setErrorPrefix("BERKELEYDB");
-        envConfig.setErrorStream(System.out);
+        envConfig.setErrorStream(System.out);        
         if (config.isTransactional())
         {
 	        envConfig.setInitializeLocking(true);
@@ -109,9 +109,9 @@ public class HGStore
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
 	        envConfig.setLogAutoRemove(true);
-	        envConfig.setMaxLockers(1000);
-	        envConfig.setMaxLockObjects(100000);
-	        envConfig.setMaxLocks(100000);
+	        envConfig.setMaxLockers(200);
+	        envConfig.setMaxLockObjects(20000);
+	        envConfig.setMaxLocks(20000);
 	//        envConfig.setRunFatalRecovery(true);	        
         }
         
@@ -143,26 +143,7 @@ public class HGStore
 	        else
 	        {
 	        	final Environment fenv = env;
-		        Thread checkPointThread = new Thread(new Runnable()
-		        {
-		        	public void run()
-		        	{
-		        		try
-		        		{
-		        			while (true)
-		        			{
-		        				Thread.sleep(30000);
-		        				env.checkpoint(null);
-		        			}
-		        		}
-		        		catch (Throwable t)
-		        		{
-		        			System.err.println("HGDB CHECKPOINT THREAD exiting with: " + t.toString());
-		        		}
-		        	}
-		        });
-	        	checkPointThread.setName("HGCHECKPOINT");
-	        	checkPointThread.setDaemon(true);
+		        checkPointThread = new CheckPointThread();
 	        	checkPointThread.start();
 	        }
         }
@@ -1000,4 +981,46 @@ public class HGStore
             catch (Throwable t) { t.printStackTrace(); }
         } 
    	}
+    
+    CheckPointThread checkPointThread = null;
+    
+    class CheckPointThread extends Thread 
+    {
+    	boolean stop = false;
+    	boolean running = false;
+    	
+    	CheckPointThread()
+    	{
+        	this.setName("HGCHECKPOINT");
+        	this.setDaemon(true);    	    		
+    	}
+    	
+    	public void run()
+    	{
+    		try
+    		{
+    			running = true;
+    			while (!stop)
+    			{
+    				Thread.sleep(30000);
+    				if (!stop)
+    					try { env.checkpoint(null); }
+    					catch (DatabaseException ex) { throw new Error(ex); }
+    			}
+    		}
+    		catch (InterruptedException ex)
+    		{
+    			// exit gracefully on interrupt
+    		}
+    		catch (Throwable t)
+    		{    			
+    			System.err.println("HGDB CHECKPOINT THREAD exiting with: " + t.toString() + ", stack trace follows...");
+    			t.printStackTrace(System.err);
+    		}
+    		finally
+    		{
+    			running = false;
+    		}
+    	}
+    }
 }

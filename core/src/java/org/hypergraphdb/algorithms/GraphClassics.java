@@ -6,6 +6,7 @@ import org.hypergraphdb.*;
 import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.Pair;
 
 /**
  * 
@@ -18,6 +19,44 @@ import org.hypergraphdb.util.Mapping;
  */
 public class GraphClassics
 {
+	/**
+	 * 
+	 * <p>
+	 * Detect whether a sub-graph has cycles. Links are specified through an
+	 * <code>HGALGenerator</code> as usual.
+	 * </p>
+	 *
+	 * @param root The starting point for sub-graph exploration.
+	 * @param adjencyGenerator Generator for atoms adjacent to the current node being examined.
+	 * @return <code>true</code> if the sub-graph has cycles and <code>false</code> otherwise.
+	 */
+	public static boolean hasCycles(final HGHandle root, final HGALGenerator adjencyGenerator)
+	{
+		HGAtomSet visited = new HGAtomSet();
+		Queue<HGHandle> to_explore = new LinkedList<HGHandle>();
+		to_explore.add(root);
+		while (!to_explore.isEmpty())
+		{
+			HGHandle next = to_explore.remove();
+			visited.add(next);
+			HGSearchResult<HGHandle> rs = adjencyGenerator.generate(next);
+			try
+			{
+				while (rs.hasNext())
+				{
+					HGHandle x = rs.next();
+					if (visited.contains(x))
+						return true;
+					to_explore.add(x);
+				}
+			}
+			finally
+			{
+				rs.close();
+			}
+		}
+		return false;
+	}
 	
 	/**
 	 * <p>
