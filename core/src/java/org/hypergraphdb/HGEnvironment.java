@@ -11,6 +11,8 @@ package org.hypergraphdb;
 import java.io.File;
 import java.util.*;
 
+import org.hypergraphdb.util.MemoryWarningSystem;
+
 /**
  * <p>
  * This class provides some facilities to manage several open HyperGraph databases
@@ -30,6 +32,7 @@ public class HGEnvironment
 {		
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
 	private static Map<String, HGConfiguration> configs = new HashMap<String, HGConfiguration>();
+	private static MemoryWarningSystem memWarning = null;	
 	
 	synchronized static void set(String location, HyperGraph graph)
 	{
@@ -47,6 +50,22 @@ public class HGEnvironment
 		if (last == '/' || last == '\\')
 			location = location.substring(0, location.length() - 1);
 		return location;
+	}
+	
+	/**
+	 * <p>
+	 * Return the singleton {@link MemoryWarningSystem} attached to this
+	 * JVM.
+	 * </p> 
+	 */
+	public static synchronized MemoryWarningSystem getMemoryWarningSystem() 
+	{
+		if (memWarning == null)
+		{
+			memWarning = new MemoryWarningSystem();
+			memWarning.setPercentageUsageThreshold(0.9);
+		}
+		return memWarning;
 	}
 	
 	/**

@@ -9,6 +9,7 @@
 package org.hypergraphdb.util;
 
 import java.util.LinkedList;
+import java.util.concurrent.Semaphore;
 
 /**
  * <p>
@@ -57,6 +58,12 @@ public class ActionQueueThread extends Thread
 	private long completedCount = 0;
 	
 	/**
+	 * The thread can be paused and resumed at the granularity of a single
+	 * action.
+	 */
+	private Semaphore pauseMutex = new Semaphore(1);	
+	
+	/**
 	 * <p>Default constructor. Unnamed action queue with a default
 	 * max size.
 	 * </p> 
@@ -100,7 +107,7 @@ public class ActionQueueThread extends Thread
 	public void run()
 	{
 		for (running = true; running; )
-		{
+		{			
 			Runnable action = null;
 			
 			synchronized (actionList)
@@ -114,10 +121,13 @@ public class ActionQueueThread extends Thread
 			}
 			
 			try
-			{
+			{	
+				pauseMutex.acquire();
 				action.run();
-				if (actionList.size() <= nonBlockingSize * freeFactor)
-					this.setPriority(Thread.NORM_PRIORITY);
+			}
+			catch (InterruptedException ex)
+			{
+				break;
 			}
 			catch (Throwable t)
 			{
@@ -125,7 +135,8 @@ public class ActionQueueThread extends Thread
 			}
 			finally
 			{
-				completedCount++;				
+				completedCount++;
+				pauseMutex.release();
 			}
 		}
 		
@@ -138,8 +149,29 @@ public class ActionQueueThread extends Thread
 			action.run();
 		}
 	}
+		
+	/**
+	 * <p>Suspend the execution of actions until the <code>resumeActions</code> method is
+	 * called. Block until the current action completes execution.</p>
+	 */
+	public void pauseActions()
+	{		
+		try
+		{
+			pauseMutex.acquire();
+		}
+		catch (InterruptedException ex) { }
+	}
 	
-	public void addAction(Runnable runnable)
+	/**
+	 * <p>Resume action processing previously paused by a call to <code>pauseActions</code>.</p>
+	 */
+	public void resumeActions() 
+	{ 
+		pauseMutex.release(); 
+	}
+
+	public void addAction(Runnable action)
 	{
 		//
 		// Make sure we don't store too many elements in the update list.
@@ -148,9 +180,9 @@ public class ActionQueueThread extends Thread
 		//
 		if (actionList.size() > nonBlockingSize)
 		{
-			this.setPriority(Thread.NORM_PRIORITY + 2);
+//			this.setPriority(Thread.NORM_PRIORITY + 2);
 			
-/*			while (actionList.size() > nonBlockingSize * freeFactor)
+			while (actionList.size() > nonBlockingSize * freeFactor)
 			{
 				try
 				{
@@ -160,11 +192,26 @@ public class ActionQueueThread extends Thread
 				{
 					break;
 				}
-			} */
+			}
 		}
 		synchronized (actionList)
 		{
-			actionList.addLast(runnable);
+			actionList.addLast(action);
+			actionList.notify();
+		}
+	}
+	
+	/**
+	 * <p>Put an action in front of the queue so that it's executed 
+	 * next or close to next. This method will not block even
+	 * if the size of the accumulated actions exceeds the blocking
+	 * threshold </p>
+	 */
+	public void prependAction(Runnable action)
+	{
+		synchronized (actionList)
+		{
+			actionList.addFirst(action);
 			actionList.notify();
 		}
 	}
@@ -192,6 +239,18 @@ public class ActionQueueThread extends Thread
 		}
 	}
 
+	/**
+	 * <p>Clear all actions. The currently executing actions will still complete,
+	 *  but all others will be removed.</p>
+	 */
+	public void clearAll()
+	{
+		synchronized (actionList)
+		{
+			actionList.clear();
+		}
+	}
+	
 	/**
 	 * <p>Return the total number of actions executed by this thread, whether or not
 	 * the actions have terminated with an exception.</p>

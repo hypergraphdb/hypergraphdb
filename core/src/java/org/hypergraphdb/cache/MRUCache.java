@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.hypergraphdb.HGEnvironment;
+import org.hypergraphdb.util.ActionQueueThread;
+import org.hypergraphdb.util.MemoryWarningSystem;
 import org.hypergraphdb.util.RefResolver;
 
 /**
@@ -37,8 +40,9 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 		Value value;
 		Entry<Key, Value> next;
 		Entry<Key, Value> prev;
-		Entry(Value value, Entry<Key, Value> next, Entry<Key, Value> prev)
+		Entry(Key key, Value value, Entry<Key, Value> next, Entry<Key, Value> prev)
 		{
+			this.key = key;
 			this.value = value;
 			this.next = next;
 			this.prev = prev;
@@ -47,12 +51,24 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	
 	private RefResolver<Key, Value> resolver;
 	int maxSize = -1;
-	double usedMemoryThreshold, evictPercent;
+	float usedMemoryThreshold, evictPercent;
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
 	private Entry<Key, Value> top = null;
 	private Entry<Key, Value> cutoffTail = null;
 	private int cutoffSize = 0;
 	private Map<Key, Entry<Key, Value>> map = new HashMap<Key, Entry<Key, Value>>();
+	
+	class ClearAction implements Runnable
+	{
+		public void run()
+		{
+			lock.writeLock().lock();
+			map.clear();
+			cutoffTail = top = null;
+			cutoffSize = 0;
+			lock.writeLock().unlock();			
+		}
+	}
 	
 	class PutOnTop implements Runnable
 	{
@@ -72,7 +88,8 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 				if (l == cutoffTail)
 					cutoffTail = l.prev;
 				l.prev.next = l.next;
-				l.next.prev = l.prev;
+				if (l.next != null)
+					l.next.prev = l.prev;
 				l.next = top;
 				l.prev = null;
 				top.prev = l;
@@ -99,6 +116,26 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 		}
 	}
 	
+	private void adjustCutoffTail()
+	{
+		if (cutoffTail == null)
+		{
+			cutoffTail = top;
+			cutoffSize = map.size();
+		}
+		double desired = map.size()*evictPercent;
+		while (cutoffSize > desired && cutoffTail.next != null)
+		{
+			cutoffTail = cutoffTail.next;
+			cutoffSize--;
+		}
+		while (cutoffSize < desired && cutoffTail.prev != null)
+		{
+			cutoffTail = cutoffTail.prev;
+			cutoffSize++;
+		}		
+	}
+	
 	class AddElement implements Runnable 
 	{
 		Key key;
@@ -116,7 +153,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 			{
 				if (map.containsKey(key))
 					return;
-				newEntry = new Entry<Key, Value>(value, top, null); 
+				newEntry = new Entry<Key, Value>(key, value, top, null); 
 				map.put(key, newEntry);
 			}
 			finally { lock.writeLock().unlock(); }			
@@ -124,34 +161,65 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 			if (top != null)			
 				top.prev = newEntry; 
 			top = newEntry;
-			if (cutoffTail == null)
-			{
-				cutoffTail = top;
-				cutoffSize = map.size();
-			}
-			else while (cutoffSize > map.size()*evictPercent && cutoffTail.next != null)
-			{
-				cutoffTail = cutoffTail.next;
-				cutoffSize--;
-			}
-			if (maxSize >= map.size() || 
-				usedMemoryThreshold >= 
-				(double)(Runtime.getRuntime().maxMemory() - Runtime.getRuntime().freeMemory())/(double)Runtime.getRuntime().maxMemory());
-			{
-				if (cutoffTail.prev != null)
-					cutoffTail.prev.next = null;
-				for (; cutoffTail != null; cutoffTail = cutoffTail.next)
-				{
-					lock.writeLock().lock();
-					map.remove(cutoffTail.key);
-					lock.writeLock().unlock();
-				}
-			}
+			adjustCutoffTail();
 		}
 	}
 	
+	class EvictAction implements Runnable
+	{
+		public void run()
+		{
+			if (top == null)
+				return;
+/*			double used = (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/
+			(double)Runtime.getRuntime().maxMemory();
+			System.out.println("EVICT ACTION CALLED -- " + map.size() + ", " + used);
+			System.out.println("EVICT ACTION EVICTING :" + Runtime.getRuntime().freeMemory());
+			int evicted = 0; */
+			adjustCutoffTail();
+			if (cutoffTail.prev != null)
+				cutoffTail.prev.next = null;
+			for (; cutoffTail != null; cutoffTail = cutoffTail.next)
+			{
+				lock.writeLock().lock();
+				map.remove(cutoffTail.key);
+				lock.writeLock().unlock();
+//				evicted++;
+			}
+			System.gc();
+//			System.out.println("EVICTION COMPLETED :" + evicted + ", "  + Runtime.getRuntime().freeMemory());
+		}
+	}
+	
+	private MemoryWarningSystem.Listener memListener = new MemoryWarningSystem.Listener()
+	{
+		public void memoryUsageLow(long usedMemory, long maxMemory)
+		{
+			CacheActionQueueSingleton.get().pauseActions();
+			try
+			{
+				new EvictAction().run();
+			}
+			finally
+			{
+				CacheActionQueueSingleton.get().resumeActions();
+			}
+		}
+	};
+	
+	private void initMemoryListener()
+	{
+		HGEnvironment.getMemoryWarningSystem().addListener(memListener);
+	}
+	
+	protected void finalize()
+	{
+		HGEnvironment.getMemoryWarningSystem().removeListener(memListener);
+	}
+	
 	public MRUCache()
-	{		 
+	{
+		initMemoryListener();
 	}
 	
 	/** 
@@ -161,12 +229,13 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	 */
 	public MRUCache(int maxSize, int evictCount)
 	{
+		this();
 		this.maxSize = maxSize;
 		if (maxSize <= 0) 
 			throw new IllegalArgumentException("maxSize <= 0");
 		else if (evictCount <= 0)
 			throw new IllegalArgumentException("evictCount <= 0");			
-		this.evictPercent = (double)evictCount/(double)maxSize;
+		this.evictPercent = (float)evictCount/(float)maxSize;		
 	}
 	
 	/** 
@@ -177,14 +246,15 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	 * @param evictPercent The percentage of elements to evict when the
 	 * usedMemoryThreshold is reached.
 	 */
-	public MRUCache(double usedMemoryThreshold, double evictPercent)
+	public MRUCache(float usedMemoryThreshold, float evictPercent)
 	{
+		this();
 		if (usedMemoryThreshold <= 0)
 			throw new IllegalArgumentException("usedMemoryThreshold <= 0");		
 		this.usedMemoryThreshold = usedMemoryThreshold;
 		if (evictPercent <= 0)
 			throw new IllegalArgumentException("evictPercent <= 0");		
-		this.evictPercent = evictPercent;
+		this.evictPercent = evictPercent;		
 	}
 	
 	public Value get(Key key)
@@ -248,10 +318,14 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	
 	public void clear()
 	{
-		lock.writeLock().lock();
-		map.clear();
-		cutoffTail = top = null;
-		cutoffSize = 0;
-		lock.writeLock().unlock();
+		ActionQueueThread aq = CacheActionQueueSingleton.get();
+		aq.addAction(new ClearAction());
+		aq.completeAll();
+		
+	}
+	
+	public void clearNonBlocking()
+	{
+		CacheActionQueueSingleton.get().addAction(new ClearAction());
 	}
 }

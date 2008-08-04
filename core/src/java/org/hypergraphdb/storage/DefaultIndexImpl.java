@@ -16,6 +16,7 @@ import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
+import org.hypergraphdb.transaction.VanillaTransaction;
 
 import com.sleepycat.db.BtreeStats;
 import com.sleepycat.db.Database;
@@ -66,7 +67,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     protected TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();
-    	if (tx == null)
+    	if (tx == null || tx instanceof VanillaTransaction)
     		return TransactionBDBImpl.nullTransaction();
     	else
     		return (TransactionBDBImpl)tx;

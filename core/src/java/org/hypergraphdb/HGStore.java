@@ -20,6 +20,7 @@ import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
+import org.hypergraphdb.transaction.VanillaTransaction;
 
 /**
  * <p>
@@ -74,7 +75,7 @@ public class HGStore
     private TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();;
-    	if (tx == null)
+    	if (tx == null || tx instanceof VanillaTransaction)
     		return TransactionBDBImpl.nullTransaction();
     	else
     		return (TransactionBDBImpl)tx;

@@ -44,7 +44,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	private HyperGraph graph = null;
 	
 	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
-		new MRUCache<HGPersistentHandle, IncidenceSet>(0.9, 0.3);	
+		new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);	
 	
     private final Map<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();

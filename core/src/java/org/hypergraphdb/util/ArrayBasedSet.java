@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGRandomAccessResult;
 
@@ -45,6 +46,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	E [] array;
 	Comparator<E> comparator = null;
 	int size = 0;
+	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	int lookup(E key)
 	{
@@ -143,10 +145,18 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	
 	public void setFromArray(E [] A)
 	{
-		if (array.length < A.length)
-			array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
-		System.arraycopy(A, 0, array, 0, A.length);
-		this.size = A.length;
+		lock.writeLock().lock();
+		try
+		{
+			if (array.length < A.length)
+				array = (E[])java.lang.reflect.Array.newInstance(type, A.length);
+			System.arraycopy(A, 0, array, 0, A.length);
+			this.size = A.length;
+		}
+		finally
+		{
+			lock.writeLock().unlock();
+		}		
 	}
 	
 	public Comparator<? super E> comparator()
@@ -156,9 +166,17 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public E first()
 	{
-		if (size == 0)
-			throw new NoSuchElementException();
-		return array[0];
+		lock.readLock().lock();
+		try
+		{
+			if (size == 0)
+				throw new NoSuchElementException();
+			return array[0];
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 
 	public SortedSet<E> headSet(E toElement)
@@ -168,9 +186,17 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public E last()
 	{
-		if (size == 0)
-			throw new NoSuchElementException();
-		return array[size-1];
+		lock.readLock().lock();
+		try
+		{
+			if (size == 0)
+				throw new NoSuchElementException();
+			return array[size-1];
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 
 	public SortedSet<E> subSet(E fromElement, E toElement)
@@ -185,27 +211,35 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public boolean add(E o)
 	{
-		int idx = lookup((E)o);
-		
-		if (idx >= 0)
-			return false;
-		else 
-			idx = -(idx + 1);
-		if (size < array.length)
+		lock.writeLock().lock();
+		try
 		{
-			System.arraycopy(array, idx, array, idx + 1, size - idx);
-			array[idx] = o;
+			int idx = lookup((E)o);
+			
+			if (idx >= 0)
+				return false;
+			else 
+				idx = -(idx + 1);
+			if (size < array.length)
+			{
+				System.arraycopy(array, idx, array, idx + 1, size - idx);
+				array[idx] = o;
+			}
+			else // need to grow the array...
+			{
+				E [] tmp = (E[])java.lang.reflect.Array.newInstance(type, (int)(1.5 * size) + 1);
+				System.arraycopy(array, 0, tmp, 0, idx);
+				tmp[idx] = o;
+				System.arraycopy(array, idx, tmp, idx + 1, size - idx);
+				array = tmp;
+			}
+			size++;
+			return true;
 		}
-		else // need to grow the array...
+		finally
 		{
-			E [] tmp = (E[])java.lang.reflect.Array.newInstance(type, (int)(1.5 * size) + 1);
-			System.arraycopy(array, 0, tmp, 0, idx);
-			tmp[idx] = o;
-			System.arraycopy(array, idx, tmp, idx + 1, size - idx);
-			array = tmp;
+			lock.writeLock().unlock();
 		}
-		size++;
-		return true;
 	}
 
 	public boolean addAll(Collection<? extends E> c)
@@ -219,12 +253,16 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public void clear()
 	{
+		lock.writeLock().lock();
 		size = 0;
+		lock.writeLock().unlock();
 	}
 
 	public boolean contains(Object o)
 	{
-		return lookup((E)o) >= 0;
+		lock.readLock().lock();
+		try { return lookup((E)o) >= 0; }
+		finally { lock.readLock().unlock(); }
 	}
 
 	public boolean containsAll(Collection<?> c)
@@ -237,27 +275,37 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public boolean isEmpty()
 	{
-		return size == 0;
+		lock.readLock().lock();
+		try { return size == 0; }
+		finally { lock.readLock().unlock(); }
 	}
 
 	public Iterator<E> iterator()
 	{
-		return new ResultSet();
+		return new ResultSet(false);
 	}
 
 	public HGRandomAccessResult<E> getSearchResult()
 	{
-		return new ResultSet();
+		return new ResultSet(true);
 	}
 	
 	public boolean remove(Object o)
 	{
-		int idx = lookup((E)o);
-		if (idx < 0)
-			return false;
-		System.arraycopy(array, idx + 1, array, idx, size - idx);
-		size--;
-		return true;
+		lock.writeLock().lock();
+		try
+		{
+			int idx = lookup((E)o);
+			if (idx < 0)
+				return false;
+			System.arraycopy(array, idx + 1, array, idx, size - idx);
+			size--;
+			return true;
+		}
+		finally
+		{
+			lock.writeLock().unlock();
+		}
 	}
 
 	public boolean removeAll(Collection<?> c)
@@ -271,36 +319,63 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public boolean retainAll(Collection<?> c)
 	{
-		boolean modified = false;
-		for (int i = 0; i < size; i++)
-			if (!c.contains(array[i]))
-			{
-				System.arraycopy(array, i + 1, array, i, size - i);
-				size--;
-				modified = true;
-			}
-		return modified;
+		lock.writeLock().lock();
+		try
+		{
+			boolean modified = false;
+			for (int i = 0; i < size; i++)
+				if (!c.contains(array[i]))
+				{
+					System.arraycopy(array, i + 1, array, i, size - i);
+					size--;
+					modified = true;
+				}
+			return modified;
+		}
+		finally
+		{
+			lock.writeLock().unlock();
+		}
 	}
 
 	public int size()
 	{
-		return size;
+		lock.readLock().lock();
+		try { return size; }
+		finally { lock.readLock().unlock(); }
 	}
 
 	public Object[] toArray()
 	{
-		return array;
+		lock.readLock().lock();
+		try
+		{
+			Object [] A = new Object[array.length];
+			System.arraycopy(array, 0, A, 0, array.length);
+			return A;
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
 	}
 
 	public <T> T[] toArray(T[] a)
 	{
-		return (T[])array;
+		return (T[])toArray();
 	}
 	
 	class ResultSet implements HGRandomAccessResult<E>
 	{
 		int pos = -1;
+		boolean locked;
 		
+		ResultSet(boolean locked) 
+		{ 
+			this.locked = locked;
+			if (locked)
+				lock.readLock().lock();
+		}
 		public GotoResult goTo(E value, boolean exactMatch)
 		{
 			int idx = lookup(value);			
@@ -348,6 +423,11 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 		public void close()
 		{
+			if (locked)
+			{
+				lock.readLock().unlock();
+				locked = false;
+			}
 		}
 
 		public E current()

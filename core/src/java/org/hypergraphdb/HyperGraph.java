@@ -25,7 +25,6 @@ import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
 import org.hypergraphdb.util.HGLogger;
-import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
 
 /**
@@ -237,7 +236,7 @@ public /*final*/ class HyperGraph
 	        cache = new WeakRefAtomCache();
 	        cache.setHyperGraph(this);
 	        MRUCache<HGPersistentHandle, IncidenceSet> incidenceCache = new 
-	        							MRUCache<HGPersistentHandle, IncidenceSet>();
+	        							MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
 	        incidenceCache.setResolver(new ISRefResolver(this));
 	        ((WeakRefAtomCache)cache).setIncidenceCache(incidenceCache);
 	        

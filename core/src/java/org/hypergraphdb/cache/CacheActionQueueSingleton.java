@@ -18,7 +18,7 @@ public class CacheActionQueueSingleton
 	
 	static
 	{
-		queue.setPriority(Thread.NORM_PRIORITY + 2);
+		queue.setPriority(Thread.NORM_PRIORITY + 3);
 		queue.start();
 	}
 	
