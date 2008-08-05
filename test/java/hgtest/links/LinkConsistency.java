@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hypergraphdb.*;
+import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.util.HGUtils;
 
@@ -16,6 +17,7 @@ public class LinkConsistency
 	private List<HGPersistentHandle> failed = new ArrayList<HGPersistentHandle>();
 	private int stopAfter = 1;
 	private boolean ignoreCache = false;
+	private boolean forceCache = false;
 	private boolean ignoreMissing = false;
 	
 	public LinkConsistency(HyperGraph graph)
@@ -43,7 +45,6 @@ public class LinkConsistency
 		this.cond = cond;
 	}
 
-
 	public boolean isIgnoreCache()
 	{
 		return ignoreCache;
@@ -53,7 +54,17 @@ public class LinkConsistency
 	{
 		this.ignoreCache = ignoreCache;
 	}
-	
+		
+	public boolean isForceCache()
+	{
+		return forceCache;
+	}
+
+	public void setForceCache(boolean forceCache)
+	{
+		this.forceCache = forceCache;
+	}
+
 	public HyperGraph getGraph()
 	{
 		return graph;
@@ -85,18 +96,23 @@ public class LinkConsistency
 	 */
 	public boolean isIncidenceSetMember(HGPersistentHandle link, HGPersistentHandle target)
 	{
-		HGHandle [] is = null;
-		if (!ignoreCache && graph.isIncidenceSetLoaded(target))
+		IncidenceSet is = null;
+		if (forceCache || (!ignoreCache && graph.isIncidenceSetLoaded(target)))
+		{
 			is = graph.getIncidenceSet(target);
+			for (HGHandle h : is)
+				if (h.equals(link))
+					return true;			
+		}
 		else
 		{
-			is = graph.getStore().getIncidenceSet(target);
-			if (is == null && !ignoreMissing)
+			HGHandle [] isArray = graph.getStore().getIncidenceSet(target);
+			if (isArray == null && !ignoreMissing)
 				throw new TestException("The incidence set of atom " + target + " is not available from the HGStore.");
+			for (HGHandle h : isArray)
+				if (h.equals(link))
+					return true;
 		}
-		for (HGHandle h : is)
-			if (h.equals(link))
-				return true;
 		return false;
 	}
 	
@@ -155,9 +171,14 @@ public class LinkConsistency
 	
 	public boolean isIncidenceSetConsistent(HGPersistentHandle atom)
 	{
-		HGHandle [] is = null;
-		if (ignoreCache || !graph.isIncidenceSetLoaded(atom))
-			is = graph.getStore().getIncidenceSet(atom);
+		HGAtomSet is = null;
+		if (!forceCache && (ignoreCache || !graph.isIncidenceSetLoaded(atom)))
+		{
+			HGPersistentHandle [] A = graph.getStore().getIncidenceSet(atom);
+			is = new HGAtomSet();
+			for (HGPersistentHandle h : A) 
+				is.add(h);
+		}
 		else
 			is = graph.getIncidenceSet(atom);
 		if (is == null)
