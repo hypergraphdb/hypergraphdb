@@ -59,7 +59,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+	private ReferenceQueue refQueue = new ReferenceQueue();
 	private PhantomCleanup phantomCleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
@@ -159,6 +159,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		phantomCleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
 	}
 	
+	@SuppressWarnings("unchecked")
 	public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
 								 Object atom,
 								 byte flags) 
@@ -188,6 +189,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		return h;
 	}
 
+	@SuppressWarnings("unchecked")
 	public HGManagedLiveHandle atomRead(HGPersistentHandle pHandle,
 									    Object atom, 
 									    byte flags, 

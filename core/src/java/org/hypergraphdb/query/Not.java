@@ -33,7 +33,7 @@ public class Not implements HGQueryCondition, HGAtomPredicate
 	
 	public boolean satisfies(HyperGraph hg, HGHandle  value)
 	{
-		return !negated.satisfies(null, value);
+		return !negated.satisfies(hg, value);
 	}	
 	
 	public String toString()
