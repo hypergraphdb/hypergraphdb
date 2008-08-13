@@ -19,6 +19,7 @@ public class CacheActionQueueSingleton
 	static
 	{
 		queue.setPriority(Thread.NORM_PRIORITY + 3);
+		queue.setDaemon(true);
 		queue.start();
 	}
 	
