@@ -153,6 +153,16 @@ public class HGStore
         }
     }
 
+    DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle> getIncidenceDbAsIndex()
+    {
+    	return new DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle>(
+    			env,
+    			incidence_db,
+			    transactionManager,
+				BAtoHandle.getInstance(), 
+				BAtoHandle.getInstance(),
+				null);
+    }
     /**
      * <p>Create and return a transaction factory for this <code>HGStore</code>.</p>
      */

@@ -51,6 +51,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     protected HGTransactionManager transactionManager;
     protected String name;
     protected Database db;
+    private   boolean owndb;
     protected Comparator comparator;
     protected boolean sort_duplicates = true;
     protected ByteArrayConverter<KeyType> keyConverter;
@@ -72,6 +73,25 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     	else
     		return (TransactionBDBImpl)tx;
     }
+
+    public DefaultIndexImpl(Environment env,
+    						Database db,
+							HGTransactionManager transactionManager,
+							ByteArrayConverter<KeyType> keyConverter,
+							ByteArrayConverter<ValueType> valueConverter,
+							Comparator comparator)
+	{
+		this.db = db;
+		this.env = env;
+		this.transactionManager = transactionManager;
+		this.keyConverter = keyConverter;
+		this.valueConverter = valueConverter;
+		this.comparator = comparator;
+		owndb = false;
+		try { name = db.getDatabaseName(); }
+		catch (Exception ex) { throw new HGException(ex); }
+		
+	}
     
     public DefaultIndexImpl(String indexName, 
     						Environment env,
@@ -86,6 +106,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
         this.comparator = comparator;
+        owndb = true;
     }
     
     public String getName()
@@ -126,7 +147,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
     public void close()
     {
-    	if (db == null)
+    	if (db == null || !owndb)
     		return;
         try
         {
@@ -281,10 +302,48 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         ValueType result = null;
         Cursor cursor = null;
         try
-        {        	
+        {
             cursor = db.openCursor(txn().getBDBTransaction(), null);
-            OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
-            if (status == OperationStatus.SUCCESS && cursor.count() > 0)
+            OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT); // cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+            if (status == OperationStatus.SUCCESS)
+               result = valueConverter.fromByteArray(value.getData());
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to lookup index '" + 
+                                  name + "': " + ex.toString(), 
+                                  ex);
+        }
+        finally
+        {
+            if (cursor != null)
+                try { cursor.close(); } catch (Throwable t) { }
+        }
+        return result;
+    }
+
+    /**
+     * <p>
+     * Find the last entry, assuming ordered duplicates, corresponding to the 
+     * given key.
+     * </p>
+     * 
+     * @param key The key whose last entry is sought.
+     * @return The last (i.e. greatest, i.e. maximum) data value for that key
+     * or null if the set of entries for the key is empty.
+     */
+    public ValueType findLast(KeyType key)
+    {
+        checkOpen();
+        DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
+        DatabaseEntry value = new DatabaseEntry();        
+        ValueType result = null;
+        Cursor cursor = null;
+        try
+        {
+            cursor = db.openCursor(txn().getBDBTransaction(), null);            
+            OperationStatus status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
+            if (status == OperationStatus.SUCCESS)
                result = valueConverter.fromByteArray(value.getData());
         }
         catch (Exception ex)

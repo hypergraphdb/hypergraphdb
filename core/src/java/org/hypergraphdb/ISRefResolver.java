@@ -1,6 +1,7 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.handle.HGLiveHandle;
+import org.hypergraphdb.storage.DBKeyedSortedSet;
 import org.hypergraphdb.storage.IndexResultSet;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.RefResolver;
@@ -15,6 +16,7 @@ import org.hypergraphdb.util.RefResolver;
  * @author Borislav Iordanov
  *
  */
+@SuppressWarnings("unchecked")
 class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
@@ -43,7 +45,8 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				return result;
 			}
 			else
-				throw new UnsupportedOperationException("need to cache incidence sets > " + keepInMemoryThreshold + " elements, this is a todo.");
+				return new IncidenceSet(key, 
+										new DBKeyedSortedSet(graph.getStore().getIncidenceDbAsIndex(), key));
 		}
 		finally
 		{

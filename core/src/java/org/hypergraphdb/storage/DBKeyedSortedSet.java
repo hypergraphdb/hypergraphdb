@@ -18,126 +18,197 @@ import org.hypergraphdb.util.HGSortedSet;
  * @author Borislav Iordanov
  *
  */
-public class DBKeyedSortedSet<T> implements HGSortedSet<T>
+@SuppressWarnings("unchecked")
+public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 {
+	private Key key;
+	private Comparator<T> comparator = null;
+	private DefaultIndexImpl<Key, T> index = null;
+	
+	static <E> Comparator<E> makeComparator()
+	{
+		return new Comparator<E>()
+		{
+			public int compare(E x, E y)
+			{
+				return ((Comparable)x).compareTo(y);
+			}
+		};		
+	}
+	
+	public DBKeyedSortedSet(DefaultIndexImpl<Key, T> idx, Key key)
+	{
+		this.index = idx;
+		this.key = key;
+		comparator = makeComparator();
+	}
+
+	public DBKeyedSortedSet(DefaultIndexImpl<Key, T> idx, Key key, Comparator<T> comparator)
+	{
+		this.index = idx;
+		this.key = key;
+		this.comparator = comparator;		 
+	}
+	
 	
 	public HGRandomAccessResult<T> getSearchResult()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return index.find(key);
 	}
 
 	public Comparator<T> comparator()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return comparator;
 	}
 
 	public T first()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return index.findFirst(key);
 	}
 
 	public SortedSet<T> headSet(T toElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	public T last()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return index.findLast(key);
 	}
 
 	public SortedSet<T> subSet(T fromElement, T toElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
-	}
+		throw new UnsupportedOperationException();	}
 
 	public SortedSet<T> tailSet(T fromElement)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();	
 	}
 
 	public boolean add(T o)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		if (contains(o))
+			return false;
+		index.addEntry(key, o);
+		return true;
 	}
 
 	public boolean addAll(Collection c)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		boolean modified = false;
+		for (T x : (Collection<T>)c)
+			modified = modified || add(x);
+		return modified;
 	}
 
 	public void clear()
 	{
-		// TODO Auto-generated method stub
-
+		index.removeAllEntries(key);
 	}
 
 	public boolean contains(Object o)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		HGRandomAccessResult<T> rs = getSearchResult();
+		try 
+		{ 
+			return rs.goTo((T)o, true) == HGRandomAccessResult.GotoResult.found; 
+		}
+		finally
+		{
+			rs.close();
+		}
 	}
 
 	public boolean containsAll(Collection c)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		HGRandomAccessResult<T> rs = getSearchResult();
+		try 
+		{ 
+			for (T x : (Collection<T>)c)			
+				if (rs.goTo(x, true) != HGRandomAccessResult.GotoResult.found)
+					return false;
+			return true;
+		}
+		finally
+		{
+			rs.close();
+		}
 	}
 
 	public boolean isEmpty()
 	{
-		// TODO Auto-generated method stub
-		return false;
+		return first() == null;
 	}
 
 	public Iterator<T> iterator()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException("Use getSearchResult and make sure you close it.");
 	}
 
 	public boolean remove(Object o)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		if (contains(o))
+		{
+			index.removeEntry(key, (T)o);
+			return true;
+		}
+		else
+			return false;
 	}
 
 	public boolean removeAll(Collection c)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		boolean modified = false;
+		for (Object x : c)
+			modified = modified || remove(x);
+		return modified;
 	}
 
 	public boolean retainAll(Collection c)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		throw new UnsupportedOperationException();
 	}
 
 	public int size()
 	{
-		// TODO Auto-generated method stub
-		return 0;
+		return (int)index.count(key);
 	}
 
 	public Object[] toArray()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		HGRandomAccessResult<T> rs = getSearchResult();
+		try
+		{
+			int size = size();
+	        Object [] a = new Object[size];
+	        for (int i = 0; i < size; i++)
+	        	a[i] = rs.next();
+	        return a;
+		}
+		finally
+		{
+			rs.close();
+		}
 	}
 
 	public Object[] toArray(Object[] a)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		HGRandomAccessResult<T> rs = getSearchResult();
+		try
+		{
+	        int size = size();
+	        if (a.length < size)
+	            a = (T[])java.lang.reflect.Array
+			.newInstance(a.getClass().getComponentType(), size);
+	        for (int i = 0; i < size; i++)
+	        	a[i] = rs.next();
+	        if (a.length > size)
+	        	a[size] = null;
+	        return a;
+		}
+		finally
+		{
+			rs.close();
+		}
 	}
 }

@@ -263,5 +263,21 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     	{
     		throw new HGException(ex);
     	}
-    }    
+    }
+    
+    /**
+     * Remove current element. After that cursor becomes invalid, so next(), prev()
+     * operations will fail. However, a goTo operation should work. 
+     */
+    public void removeCurrent()
+    {
+    	try
+    	{
+    		cursor.cursor().delete();
+    	}
+    	catch (DatabaseException ex)
+    	{
+    		throw new HGException(ex);
+    	}
+    }
 }
