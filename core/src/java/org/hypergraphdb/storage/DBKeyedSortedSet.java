@@ -73,7 +73,7 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 
 	public T last()
 	{
-		return index.findLast(key);
+		throw new UnsupportedOperationException("No easy BerkeleyDB method for this one, need to iterate until the end - unefficient.");
 	}
 
 	public SortedSet<T> subSet(T fromElement, T toElement)
@@ -140,8 +140,36 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 		return first() == null;
 	}
 
+	/**
+	 * <p>
+	 * This iterator is intended for use when full iteration is performed on the set. 
+	 * Otherwise, the underlying DB cursor remains open and locks DB pages forever.
+	 * </p>
+	 */
 	public Iterator<T> iterator()
 	{
+/*		final HGRandomAccessResult<T> rs = getSearchResult();
+		return new Iterator<T>()
+		{
+			boolean closed = false;
+			public void remove() { throw new UnsupportedOperationException(); }
+			public boolean hasNext() 
+			{
+				return !closed && rs.hasNext();
+			}
+			public T next()
+			{
+				T n = rs.next();
+				if (!rs.hasNext())
+				{
+					rs.close();
+					closed = true;
+				}
+				return n;
+			}
+			
+			protected void finalize() { if (!closed) rs.close(); } 
+		}; */
 		throw new UnsupportedOperationException("Use getSearchResult and make sure you close it.");
 	}
 

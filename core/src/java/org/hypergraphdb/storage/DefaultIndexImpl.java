@@ -304,7 +304,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         try
         {
             cursor = db.openCursor(txn().getBDBTransaction(), null);
-            OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT); // cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+            OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                result = valueConverter.fromByteArray(value.getData());
         }
