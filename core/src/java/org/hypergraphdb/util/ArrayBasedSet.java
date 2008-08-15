@@ -298,7 +298,8 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 			int idx = lookup((E)o);
 			if (idx < 0)
 				return false;
-			System.arraycopy(array, idx + 1, array, idx, size - idx);
+			else if (idx < size - 1) // if it's not the last element			
+				System.arraycopy(array, idx + 1, array, idx, size - idx - 1);
 			size--;
 			return true;
 		}
