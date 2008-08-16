@@ -9,6 +9,7 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 
@@ -852,18 +853,7 @@ public /*final*/ class HyperGraph
     
     private void removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
     {
-        HGPersistentHandle pHandle = null;
-        HGLiveHandle lHandle = null;
-        if (handle instanceof HGLiveHandle)
-        {
-            lHandle = (HGLiveHandle)handle;            
-            pHandle = lHandle.getPersistentHandle(); 
-        }
-        else
-        {
-            pHandle = (HGPersistentHandle)handle;
-            lHandle = cache.get(pHandle);
-        }
+        HGPersistentHandle pHandle = getPersistentHandle(handle);
 
         HGPersistentHandle [] layout = store.getLink(pHandle);        
         
@@ -912,8 +902,6 @@ public /*final*/ class HyperGraph
         TypeUtils.releaseValue(HyperGraph.this, valueHandle);
         type.release(valueHandle);         
         store.removeLink(pHandle);
-        if (lHandle != null)
-            cache.remove(lHandle);
         
         //
         // If it's a link, remove it from the incidence sets of all its 
@@ -921,19 +909,31 @@ public /*final*/ class HyperGraph
         //
         if (layout.length > 2)
             for (int i = 2; i < layout.length; i++)
-            	removeFromIncidenceSet(layout[i], lHandle, pHandle);
+            	removeFromIncidenceSet(layout[i], pHandle);
 
         //
         // Handle links pointing to this atom:
         //
-        IncidenceSet incidenceSet = cache.getIncidenceCache().get(pHandle);        
-        for (HGHandle h : incidenceSet)
-	        if (!keepIncidentLinks)
-	        	removeTransaction(h, keepIncidentLinks);
-	        else
-	        	targetRemoved(h, pHandle);
+        if (keepIncidentLinks)        	
+        {
+        	IncidenceSet incidenceSet = cache.getIncidenceCache().get(pHandle); 
+            HGSearchResult<HGHandle> rsInc = incidenceSet.getSearchResult();
+            try { while (rsInc.hasNext()) targetRemoved(rsInc.next(), pHandle); }
+            finally { rsInc.close(); }        	
+        }
+        else // Need to load in memory because circular dependencies might create deadlocks
+        {
+        	IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(pHandle);
+        	if (incidenceSet != null)
+        		for (HGHandle h : incidenceSet)
+        			removeTransaction(h, true);
+        	else
+        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
+        			removeTransaction(h, true);
+        }
         store.removeIncidenceSet(pHandle);        
-        cache.getIncidenceCache().remove(pHandle);        
+        cache.getIncidenceCache().remove(pHandle);
+        cache.remove(cache.get(atom));        
         eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));    	
     }
     
@@ -1536,16 +1536,24 @@ public /*final*/ class HyperGraph
     
     void updateLinksInIncidenceSet(IncidenceSet incidenceSet, HGLiveHandle liveHandle)
     {
-    	for (HGHandle h : incidenceSet)
-        {
-        	HGLiveHandle lh = cache.get((HGPersistentHandle)h);
-        	if (lh != null)
-            {
-                HGLink incidenceLink = (HGLink)lh.getRef();
-                if (incidenceLink != null) // ref may be null because of cache eviction
-                	updateLinkLiveHandle(incidenceLink, liveHandle);
-            }
-        }    	
+    	HGSearchResult<HGHandle> rs = incidenceSet.getSearchResult();
+    	try
+    	{
+	    	while (rs.hasNext())
+	        {
+	        	HGLiveHandle lh = cache.get((HGPersistentHandle)rs.next());
+	        	if (lh != null)
+	            {
+	                HGLink incidenceLink = (HGLink)lh.getRef();
+	                if (incidenceLink != null) // ref may be null because of cache eviction
+	                	updateLinkLiveHandle(incidenceLink, liveHandle);
+	            }
+	        }
+    	}
+    	finally
+    	{
+    		rs.close();
+    	}
     }
     
     /**
@@ -1616,7 +1624,6 @@ public /*final*/ class HyperGraph
      * removed - cannot be <code>null</code>.
      */
     private void removeFromIncidenceSet(HGPersistentHandle targetAtom,
-    									HGLiveHandle incidentLiveLink,
     									HGPersistentHandle incidentLink)
     {       
     	store.removeIncidenceLink(targetAtom, incidentLink);
@@ -1796,13 +1803,13 @@ public /*final*/ class HyperGraph
 				}    		
 				for (int i = 2; i < layout.length; i++)
 					if (!newTargets.contains(layout[i]))
-						removeFromIncidenceSet(layout[i], lHandle, pHandle);
+						removeFromIncidenceSet(layout[i], pHandle);
 	    	}
 	    	else 
 	        {
 	    		newLayout = new HGPersistentHandle[2];
 				for (int i = 2; i < layout.length; i++)
-					removeFromIncidenceSet(layout[i], lHandle, pHandle);
+					removeFromIncidenceSet(layout[i], pHandle);
 	        }
 			newLayout[0] = layout[0];
 			newLayout[1] = layout[1];    	
