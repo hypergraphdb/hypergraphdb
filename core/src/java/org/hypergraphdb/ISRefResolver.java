@@ -33,7 +33,7 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 		try
 		{
 			int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
-			if (size < keepInMemoryThreshold)
+			if (size < keepInMemoryThreshold && false)
 			{
 				HGPersistentHandle [] A = new HGPersistentHandle[size];
 				for (int i = 0; i < A.length; i++)

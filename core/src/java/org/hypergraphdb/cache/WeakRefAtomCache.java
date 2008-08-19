@@ -278,6 +278,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		while (phantomCleanupThread.isAlive() )
 			try { phantomCleanupThread.join(); } catch (InterruptedException ex) { }
 		PhantomHandle.returnEnqueued.set(Boolean.TRUE);
+		try { processRefQueue(); } catch (InterruptedException ex) { }
 		for (Iterator<Map.Entry<HGPersistentHandle, PhantomHandle>> i = liveHandles.entrySet().iterator(); 
 			 i.hasNext(); ) 
 		{

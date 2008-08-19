@@ -50,6 +50,27 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
                     "DefaultIndexImpl.IndexResultSet: attempt to perform an operation on a closed or invalid cursor.");            
     }
     
+    /**
+     * 
+     * <p>
+     * Copy <code>data</code> into the <code>entry</code>. Adjust <code>entry</code>'s
+     * byte buffer if needed.
+     * </p>
+     *
+     * @param entry
+     * @param data
+     */
+    protected void assignData(DatabaseEntry entry, byte [] data)
+    {
+    	byte [] dest = entry.getData();
+    	if (dest == null || dest.length != data.length)
+    	{
+    		dest = new byte[data.length];
+    		entry.setData(dest);
+    	}
+    	System.arraycopy(data, 0, dest, 0, data.length);
+    }
+    
     protected final void moveNext()
     {
         checkCursor();
@@ -101,7 +122,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
      * @param cursor
      * @param key
      */
-    public IndexResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
+    public IndexResultSet(BDBTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
     {
 /*        id = idcounter++;
         System.out.println("Constructing index set with id " + id);
@@ -111,7 +132,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
             } */
         this.converter = converter;
         this.cursor = cursor;
-        this.key = key == null ? new DatabaseEntry() : key;
+        this.key = new DatabaseEntry();
+        if (keyIn != null)
+        	assignData(this.key, keyIn.getData());
 	    try
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
@@ -140,7 +163,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     public GotoResult goTo(T value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
-    	data.setData(B);
+    	assignData(data, B);
     	try
     	{
     		if (exactMatch)
@@ -155,11 +178,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     		}
     		else 
     		{
-    			byte [] save = new byte[data.getData().length];
-    			System.arraycopy(data.getData(), 0, save, 0, save.length);   
     			if (cursor.cursor().getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
-    				GotoResult result = HGUtils.eq(save, data.getData()) ? GotoResult.found : GotoResult.close; 
+    				GotoResult result = HGUtils.eq(B, data.getData()) ? GotoResult.found : GotoResult.close; 
     				positionToCurrent(data.getData());
     				return result;
     			}    				

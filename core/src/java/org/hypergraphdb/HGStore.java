@@ -1020,7 +1020,9 @@ public class HGStore
     		}
     		catch (InterruptedException ex)
     		{
-    			// exit gracefully on interrupt
+    			if (stop)
+					try { env.checkpoint(null); }
+    			 	catch (DatabaseException dx) { throw new Error(dx); }    				
     		}
     		catch (Throwable t)
     		{    			

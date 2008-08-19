@@ -66,11 +66,13 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     {            
     }
     
-    public KeyScanResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
+    public KeyScanResultSet(BDBTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
     {
         this.converter = converter;
         this.cursor = cursor;
-        this.key = key == null ? new DatabaseEntry() : key;
+        this.key = new DatabaseEntry();
+        if (keyIn != null)
+        	assignData(key, keyIn.getData());
 	    try
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
@@ -86,7 +88,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     public GotoResult goTo(T value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
-    	key.setData(B);
+    	assignData(key, B);
     	try
     	{
     		if (exactMatch)
@@ -101,12 +103,10 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     		}
     		else 
     		{
-    			byte [] save = new byte[key.getData().length];
-    			System.arraycopy(key.getData(), 0, save, 0, save.length);    		
     			if (cursor.cursor().getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(key.getData());    				
-    				return HGUtils.eq(save, key.getData()) ? GotoResult.found : GotoResult.close;
+    				return HGUtils.eq(B, key.getData()) ? GotoResult.found : GotoResult.close;
     			}
     			else
     				return GotoResult.nothing;    			

@@ -34,7 +34,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     {        
     }
     
-    public SingleValueResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
+    public SingleValueResultSet(BDBTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
     {
         //
     	// The following is bit hacky because we want to avoid some of the default behavior
@@ -43,7 +43,9 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     	// of the current value.
         this.converter = converter;
         this.cursor = cursor;
-        this.key = key == null ? new DatabaseEntry() : key;        
+        this.key = new DatabaseEntry();
+        if (keyIn != null)
+        	assignData(key, keyIn.getData());        
 	    try
 	    {
 	        ((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT);
@@ -95,7 +97,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     public GotoResult goTo(T value, boolean exactMatch)
     {
     	byte [] B = converter.toByteArray(value);
-    	pkey.setData(B);
+    	assignData(pkey, B);
     	try
     	{
     		if (exactMatch)
@@ -110,12 +112,10 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     		}
     		else
     		{
-    			byte [] save = new byte[pkey.getData().length];
-    			System.arraycopy(pkey.getData(), 0, save, 0, save.length);    		
     			if (((SecondaryCursor)cursor.cursor()).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(pkey.getData());
-    				return HGUtils.eq(save, pkey.getData()) ? GotoResult.found : GotoResult.close;
+    				return HGUtils.eq(B, pkey.getData()) ? GotoResult.found : GotoResult.close;
     			}
     			else
     				return GotoResult.nothing;     			
