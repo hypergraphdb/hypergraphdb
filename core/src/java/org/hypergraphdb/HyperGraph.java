@@ -10,7 +10,6 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.cache.SimpleCache;
@@ -936,8 +935,11 @@ public /*final*/ class HyperGraph
 	        {
 	        	IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(pHandle);
 	        	if (incidenceSet != null)
-	        		for (HGHandle h : incidenceSet)
-	        			removeTransaction(h, true);
+	        	{
+		        	HGSearchResult<HGHandle> rsInc = incidenceSet.getSearchResult();
+		        	try { while (rsInc.hasNext()) removeTransaction(rsInc.next(), true); }
+		            finally { rsInc.close(); }		        	
+	        	}
 	        	else
 	        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
 	        			removeTransaction(h, true);
@@ -1105,19 +1107,34 @@ public /*final*/ class HyperGraph
     public void define(final HGPersistentHandle atomHandle, 
     				   final HGHandle typeHandle, 
     				   final HGHandle valueHandle, 
-    				   final HGHandle [] outgoingSet)
+    				   final HGLink   outgoingSet)
     {
-    	getTransactionManager().transact(new Callable<Object>() 
+    	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
-	    	HGPersistentHandle [] layout = new HGPersistentHandle[outgoingSet == null ? 2 : 2 + outgoingSet.length];
+	    	HGPersistentHandle [] layout = new HGPersistentHandle[outgoingSet == null ? 2 : 2 + outgoingSet.getArity()];
 	    	layout[0] = getPersistentHandle(typeHandle);
 	    	layout[1] = getPersistentHandle(valueHandle);
 	    	if (outgoingSet != null)
-	    		for (int i = 0; i < outgoingSet.length; i++)
-	    			layout[i + 2] = getPersistentHandle(outgoingSet[i]);
+	    		for (int i = 0; i < outgoingSet.getArity(); i++)
+	    			layout[i + 2] = getPersistentHandle(outgoingSet.getTargetAt(i));
 	    	store.store(atomHandle, layout);
 	    	indexByType.addEntry(layout[0], atomHandle);
-	    	indexByValue.addEntry(layout[1], atomHandle);	    	
+	    	indexByValue.addEntry(layout[1], atomHandle);
+	    	
+	    	// Need to construct the value and add it to atom indices.	    	
+	    	HGAtomType type = get(typeHandle);
+	    	ReadyRef<HGHandle[]> linkRef = null;
+	    	if (outgoingSet != null)
+	    	{
+	    		HGHandle [] targets = new HGHandle[outgoingSet.getArity()];
+		    	System.arraycopy(layout, 2, targets, 0, targets.length);
+		    	updateTargetsIncidenceSets(atomHandle, outgoingSet);
+		    	linkRef = new ReadyRef<HGHandle[]>(targets);
+    		}
+	        idx_manager.maybeIndex(layout[0], 
+	        					   type, 
+	        					   atomHandle,
+	        					   type.make(layout[1], linkRef, null));	        	    	
 	    	return null;
     	}});
     }
@@ -1138,17 +1155,11 @@ public /*final*/ class HyperGraph
      * already exists with this handle, it will be replaced. This parameter cannot be <code>null</code>.
      * @param instance The handle of the atom's value. May be <code>null</code> in which case the default
      * HyperGraph <code>NullType</code> is used. 
-     * @param outgoingSet If the atom is a link, this parameter specifies the set of atoms pointed to by the link.
-     * If this parameter is <code>null</code> or of size 0, then the atom is not a link.
      */
-    public void define(final HGPersistentHandle atomHandle, 
-    				   final Object instance, 
-    				   final HGHandle [] outgoingSet,
-    				   final byte flags)
+    public void define(final HGPersistentHandle atomHandle, final Object instance, final byte flags)
     {
-    	getTransactionManager().transact(new Callable<Object>() 
-    	{ public Object call() {
-	    	// HGPersistentHandle [] layout = new HGPersistentHandle[outgoingSet == null ? 2 : 2 + outgoingSet.length];    	
+    	getTransactionManager().ensureTransaction(new Callable<Object>() 
+    	{ public Object call() {    	
 	    	HGHandle typeHandle = null;
 	    	if (instance == null)
 	    		typeHandle = HGTypeSystem.NULLTYPE_PERSISTENT_HANDLE;
@@ -1157,8 +1168,16 @@ public /*final*/ class HyperGraph
 	    	if (typeHandle == null)
 	    		throw new HGException("Could not find HyperGraph type for object of type " + instance.getClass());
 	    	HGAtomType type = typeSystem.getType(typeHandle);
-	    	HGPersistentHandle valueHandle = type.store(instance);
-	    	define(atomHandle, typeHandle, valueHandle, outgoingSet);
+	    	HGLink link = null;
+	    	Object payload = instance;
+	    	if (instance instanceof HGLink)
+	    	{
+	    		link = (HGLink)instance;
+	    		if (instance instanceof HGValueLink)
+	    			payload = ((HGValueLink)instance).getValue();
+	    	}
+	    	HGPersistentHandle valueHandle = type.store(payload);
+	    	define(atomHandle, typeHandle, valueHandle, link);
 	    	HyperGraph.this.atomAdded(atomHandle, instance, flags);
 	    	return null;
     	}});
@@ -1170,13 +1189,10 @@ public /*final*/ class HyperGraph
      *  
      * @param atomHandle The handle of the atom to define.
      * @param instance The atom's runtime instance.
-     * @param outgoingSet The target set when the atom is a link.
      */
-    public void define(final HGPersistentHandle atomHandle, 
-			   final Object instance, 
-			   final HGHandle [] outgoingSet)
+    public void define(final HGPersistentHandle atomHandle, final Object instance)
     {
-    	define(atomHandle, instance, outgoingSet, (byte)0);
+    	define(atomHandle, instance, (byte)0);
     }
     
     /**
@@ -1360,16 +1376,14 @@ public /*final*/ class HyperGraph
 	        // Store in database.
 	        //	        
 	        HGPersistentHandle pHandle = store.store(layout);	        
-	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);	        
-	        	        
+	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);        	        	        
+	        indexByType.addEntry(pTypeHandle, pHandle);
+	        indexByValue.addEntry(valueHandle, pHandle);
+	        idx_manager.maybeIndex(pTypeHandle, type, pHandle, payload);	
 	        //
 	        // Update the incidence sets of all its targets.
 	        //
-	        updateTargetsIncidenceSets(lHandle);
-	        
-	        indexByType.addEntry(pTypeHandle, pHandle);
-	        indexByValue.addEntry(valueHandle, pHandle);
-	        idx_manager.maybeIndex(pTypeHandle, type, pHandle, payload);	        
+	        updateTargetsIncidenceSets(pHandle, outgoingSet);	        
 	        return lHandle;
     	}});
     }
@@ -1599,17 +1613,18 @@ public /*final*/ class HyperGraph
         }
     }
         
-    void updateTargetsIncidenceSets(HGLiveHandle newLink)
+    void updateTargetIncidenceSet(HGPersistentHandle targetHandle, HGPersistentHandle linkHandle)
     {
-        HGLink link = (HGLink)get(newLink); 
+        store.addIncidenceLink(targetHandle, linkHandle);            
+        IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetHandle);
+        if (targetIncidenceSet != null)
+        	targetIncidenceSet.add(linkHandle);    	
+    }
+    
+    void updateTargetsIncidenceSets(HGPersistentHandle atomHandle, HGLink link)
+    {
         for (int i = 0; i < link.getArity(); i++)
-        {
-            HGPersistentHandle targetHandle = getPersistentHandle(link.getTargetAt(i));
-            store.addIncidenceLink(targetHandle, newLink.getPersistentHandle());            
-            IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetHandle);
-            if (targetIncidenceSet != null)
-            	targetIncidenceSet.add(newLink);
-        }                   
+        	updateTargetIncidenceSet(getPersistentHandle(link.getTargetAt(i)), atomHandle);                   
     }
 
     private void targetRemoved(HGHandle linkHandle, HGHandle target)
@@ -1837,12 +1852,13 @@ public /*final*/ class HyperGraph
 				{
 					HGPersistentHandle target = getPersistentHandle(newLink.getTargetAt(i)); 
 					newLayout[2 + i] = target;
-					if (layout.length > 2) 
-						newTargets.add(target);
+					newTargets.add(target);
 				}    		
 				for (int i = 2; i < layout.length; i++)
-					if (!newTargets.contains(layout[i]))
+					if (!newTargets.remove(layout[i])) // remove targets that were there before, so we don't touch them below
 						removeFromIncidenceSet(layout[i], pHandle);
+				for (HGPersistentHandle newTarget : newTargets)
+					updateTargetIncidenceSet(newTarget, pHandle);
 	    	}
 	    	else 
 	        {

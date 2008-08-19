@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
  * 
  * @author Borislav Iordanov
  */
-class EmptySearchResult implements HGSearchResult<Object> 
+class EmptySearchResult implements HGRandomAccessResult<Object> 
 {
 	public void close() { }
 	public Object current() { throw new NoSuchElementException("This is an emtpy HGSearchResult"); }
@@ -30,4 +30,5 @@ class EmptySearchResult implements HGSearchResult<Object>
 	public Object next() { throw new NoSuchElementException("This is an emtpy HGSearchResult"); }
 	public void remove() { new UnsupportedOperationException("This is an emtpy HGSearchResult");}
 	public boolean isOrdered() { return true; }
+	public GotoResult goTo(Object x, boolean exactMatch) { return GotoResult.nothing; }
 }

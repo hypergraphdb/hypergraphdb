@@ -23,9 +23,11 @@ import com.sleepycat.db.SecondaryDatabase;
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
 
+@SuppressWarnings("unchecked")
 public class DefaultBiIndexImpl<KeyType, ValueType> 
 	extends DefaultIndexImpl<KeyType, ValueType> implements HGBidirectionalIndex<KeyType, ValueType>
 {
@@ -130,7 +132,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
             else 
             {
                 try { cursor.close(); } catch (Throwable t) { }
-                result = new SingleValueResultSet<KeyType>();
+                result = (HGRandomAccessResult<KeyType>)HGSearchResult.EMPTY;
             }
         }
         catch (Exception ex)

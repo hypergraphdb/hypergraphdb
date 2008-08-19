@@ -53,11 +53,7 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
             throw new HGException(t);
         }                        
     }
-    
-    public KeyRangeBackwardResultSet()
-    {            
-    }
-    
+
     public KeyRangeBackwardResultSet(BDBTxCursor cursor, DatabaseEntry key,  ByteArrayConverter<T> converter)
     {
         super(cursor, key, converter);         

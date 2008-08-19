@@ -61,10 +61,6 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
 	{
 		return true;
 	}
-	
-    public KeyScanResultSet()
-    {            
-    }
     
     public KeyScanResultSet(BDBTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
     {

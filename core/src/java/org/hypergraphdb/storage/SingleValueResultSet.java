@@ -30,10 +30,6 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
 {
     private DatabaseEntry pkey = new DatabaseEntry();
     
-    public SingleValueResultSet()
-    {        
-    }
-    
     public SingleValueResultSet(BDBTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
     {
         //

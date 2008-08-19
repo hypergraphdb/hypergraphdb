@@ -29,10 +29,6 @@ import com.sleepycat.db.OperationStatus;
 public class SingleKeyResultSet<T> extends IndexResultSet<T>
 {
 	private boolean ordered = false;
-	
-    public SingleKeyResultSet()
-    {            
-    }
     
     public SingleKeyResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {

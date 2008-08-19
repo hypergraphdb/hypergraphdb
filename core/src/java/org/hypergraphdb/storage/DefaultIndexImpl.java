@@ -12,6 +12,7 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -185,7 +186,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             else 
             {
                 try { cursor.close(); } catch (Throwable t) { }
-                result = new SingleKeyResultSet();
+                result = HGSearchResult.EMPTY;
             }                
         }
         catch (Exception ex)
@@ -216,7 +217,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             else 
             {
                 try { cursor.close(); } catch (Throwable t) { }
-                result = new SingleKeyResultSet();
+                result = HGSearchResult.EMPTY;
             }                
         }
         catch (Exception ex)
@@ -380,7 +381,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             else 
             {
                 try { cursor.close(); } catch (Throwable t) { }
-                result = new SingleKeyResultSet();
+                result = HGSearchResult.EMPTY;
             }
         }
         catch (Exception ex)
@@ -430,7 +431,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	                return new KeyRangeForwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
             else
                 try { cursor.close(); } catch (Throwable t) { }
-                return new SingleKeyResultSet();
+                return (HGRandomAccessResult<ValueType>)HGSearchResult.EMPTY;
         }
         catch (Exception ex)
         {
