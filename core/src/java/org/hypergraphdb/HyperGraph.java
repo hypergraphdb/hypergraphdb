@@ -10,6 +10,7 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.cache.SimpleCache;
@@ -855,13 +856,13 @@ public /*final*/ class HyperGraph
     {
         HGPersistentHandle pHandle = getPersistentHandle(handle);
 
-/*        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
+        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
         													   TxAttribute.IN_REMOVAL, 
         													   HashSet.class); 
         if (inRemoval.contains(handle))
         	return;
         else
-        	inRemoval.add(pHandle); */
+        	inRemoval.add(pHandle);
         
         try
         {
@@ -951,7 +952,7 @@ public /*final*/ class HyperGraph
         }
         finally
         {
-//        	inRemoval.remove(pHandle);
+        	inRemoval.remove(pHandle);
         }
     }
     
@@ -1658,11 +1659,11 @@ public /*final*/ class HyperGraph
     private void removeFromIncidenceSet(HGPersistentHandle targetAtom,
     									HGPersistentHandle incidentLink)
     {       
-/*        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
+        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
 															   TxAttribute.IN_REMOVAL, 
 															   HashSet.class); 
         if (inRemoval.contains(targetAtom))
-        	return; */
+        	return;
     	store.removeIncidenceLink(targetAtom, incidentLink);
         IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetAtom);
         if (targetIncidenceSet != null)
