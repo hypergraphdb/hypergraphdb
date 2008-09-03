@@ -100,9 +100,17 @@ public class LinkConsistency
 		if (forceCache || (!ignoreCache && graph.isIncidenceSetLoaded(target)))
 		{
 			is = graph.getIncidenceSet(target);
-			for (HGHandle h : is)
-				if (h.equals(link))
-					return true;			
+			HGSearchResult<HGHandle> rs = is.getSearchResult();
+			try
+			{
+				while (rs.hasNext())
+					if (rs.next().equals(link))
+						return true;
+			}
+			finally
+			{
+				rs.close();
+			}
 		}
 		else
 		{
@@ -183,10 +191,18 @@ public class LinkConsistency
 			is = graph.getIncidenceSet(atom);
 		if (is == null)
 			return true;
-		for (HGHandle h : is)
-			if (!isLinkMember(graph.getPersistentHandle(h), atom))
-				return false;
-		return true;
+		HGSearchResult<HGHandle> rs = is.getSearchResult();
+		try
+		{
+			while (rs.hasNext())
+				if (!isLinkMember(graph.getPersistentHandle(rs.next()), atom))
+					return false;
+			return true;
+		}
+		finally
+		{
+			rs.close();
+		}
 	}
 	
 	public void checkConsistency()
