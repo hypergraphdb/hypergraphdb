@@ -138,29 +138,27 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	
 	class AddElement implements Runnable 
 	{
-		Key key;
-		Value value;
-		public AddElement(Key key, Value value)
+		Entry<Key, Value> e;
+		public AddElement(Entry<Key, Value> e)
 		{
-			this.key = key;
-			this.value = value;			
+			this.e = e;
 		}
 		public void run()
 		{
-			Entry<Key, Value> newEntry = null;
-			lock.writeLock().lock();
+			lock.readLock().lock();
 			try
 			{
-				if (map.containsKey(key))
+				if (!map.containsKey(e.key)) // it could have been removed before we got link it to the list
 					return;
-				newEntry = new Entry<Key, Value>(key, value, top, null); 
-				map.put(key, newEntry);
+				e.next = top;
+				if (top != null)			
+					top.prev = e; 
+				top = e;
 			}
-			finally { lock.writeLock().unlock(); }			
-			
-			if (top != null)			
-				top.prev = newEntry; 
-			top = newEntry;
+			finally
+			{
+				lock.readLock().unlock();
+			}
 			adjustCutoffTail();
 		}
 	}
@@ -264,8 +262,19 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 		lock.readLock().unlock();
 		if (e == null)
 		{
+			lock.writeLock().lock();
+			e = map.get(key);
+			if (e != null)
+			{
+				lock.writeLock().unlock();
+				CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+				return e.value;				
+			}
 			Value v = resolver.resolve(key);
-			CacheActionQueueSingleton.get().addAction(new AddElement(key, v));
+			e = new Entry<Key, Value>(key, v, null, null);
+			map.put(key, e);
+			lock.writeLock().unlock();
+			CacheActionQueueSingleton.get().addAction(new AddElement(e));
 			return v;
 		}
 		else
@@ -327,5 +336,17 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	public void clearNonBlocking()
 	{
 		CacheActionQueueSingleton.get().addAction(new ClearAction());
+	}
+	
+	/**
+	 * Check that the map contains exactly the same elements as the linked list.
+	 * Throw an exception if that is not the case. This method is intended for
+	 * testing. Could be used in a production runtime for monitoring but it should
+	 * be kept in mind that it might take quite a long time. The method will block all
+	 * other activity on the cache. 
+	 */
+	public void checkConsistent()
+	{
+		
 	}
 }

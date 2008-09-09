@@ -13,7 +13,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.hypergraphdb.cache.SimpleCache;
+import org.hypergraphdb.cache.HGCache;
+import org.hypergraphdb.cache.MRUCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.DefaultLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -237,8 +238,9 @@ public /*final*/ class HyperGraph
 	        store = new HGStore(location, config);
 	        cache = new WeakRefAtomCache();
 	        cache.setHyperGraph(this);
-	        SimpleCache<HGPersistentHandle, IncidenceSet> incidenceCache = new 
-	        							SimpleCache<HGPersistentHandle, IncidenceSet>(); // (0.9f, 0.3f);
+	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
+	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
+	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();
 	        incidenceCache.setResolver(new ISRefResolver(this));
 	        ((WeakRefAtomCache)cache).setIncidenceCache(incidenceCache);
 	        
@@ -855,7 +857,6 @@ public /*final*/ class HyperGraph
     private void removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
     {
         HGPersistentHandle pHandle = getPersistentHandle(handle);
-
         Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
         													   TxAttribute.IN_REMOVAL, 
         													   HashSet.class); 
@@ -945,7 +946,7 @@ public /*final*/ class HyperGraph
 	        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
 	        			removeTransaction(h, true);
 	        }
-	        store.removeIncidenceSet(pHandle);        
+	        store.removeIncidenceSet(pHandle);   
 	        cache.getIncidenceCache().remove(pHandle);
 	        cache.remove(cache.get(atom));        
 	        eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));

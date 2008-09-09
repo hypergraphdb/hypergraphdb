@@ -16,12 +16,15 @@ import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.event.HGLoadPredefinedTypeEvent;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
@@ -79,7 +82,7 @@ public class HGTypeSystem
 
 	public static final HGAtomType top = Top.getInstance();
 
-	private HyperGraph hg = null;
+	private HyperGraph graph = null;
 	private Map<Class<?>, HGHandle> classToAtomType = Collections.synchronizedMap(new ClassToTypeCache());
 	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
@@ -90,12 +93,12 @@ public class HGTypeSystem
 	{
 		if (classToTypeDB == null)
 		{
-			classToTypeDB = hg.getStore().getBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
+			classToTypeDB = graph.getStore().getBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
 			                                       BAtoString.getInstance(),
 			                                       BAtoHandle.getInstance(),
 			                                       null);
 			if (classToTypeDB == null)
-				classToTypeDB = hg.getStore().createBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
+				classToTypeDB = graph.getStore().createBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
 				                                          BAtoString.getInstance(),
 				                                          BAtoHandle.getInstance(),
 				                                          null);
@@ -107,12 +110,12 @@ public class HGTypeSystem
 	{
 		if (aliases == null)
 		{
-			aliases = hg.getStore().getBidirectionalIndex(TYPE_ALIASES_DB_NAME,
+			aliases = graph.getStore().getBidirectionalIndex(TYPE_ALIASES_DB_NAME,
 			                                   BAtoString.getInstance(),
 			                                   BAtoHandle.getInstance(),
 			                                   null);
 			if (aliases == null)
-				aliases = hg.getStore().createBidirectionalIndex(TYPE_ALIASES_DB_NAME,
+				aliases = graph.getStore().createBidirectionalIndex(TYPE_ALIASES_DB_NAME,
 				                                     BAtoString.getInstance(),
 				                                     BAtoHandle.getInstance(),
 				                                     null);
@@ -124,12 +127,12 @@ public class HGTypeSystem
 	{
 		if (predefinedTypesDB == null)
 		{
-			predefinedTypesDB = hg.getStore().getIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
+			predefinedTypesDB = graph.getStore().getIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
 			                                 BAtoHandle.getInstance(),
 			                                 BAtoString.getInstance(),
 			                                 null);
 			if (predefinedTypesDB == null)
-				predefinedTypesDB = hg.getStore().createIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
+				predefinedTypesDB = graph.getStore().createIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
 				                                BAtoHandle.getInstance(),
 				                                BAtoString.getInstance(),
 				                                null);
@@ -144,49 +147,49 @@ public class HGTypeSystem
 				TOP_PERSISTENT_HANDLE,
 				HGHandleFactory.nullHandle()
 			};
-		hg.getStore().store(handle, layout);
+		graph.getStore().store(handle, layout);
 //		if (hg.indexByType.)
-		hg.indexByType.addEntry(TOP_PERSISTENT_HANDLE, handle);
+		graph.indexByType.addEntry(TOP_PERSISTENT_HANDLE, handle);
 	}
 
 	void bootstrap(String typeDefResource)
 	{
-		top.setHyperGraph(hg);
-		HGLiveHandle topHandle = hg.cache.atomRead(TOP_PERSISTENT_HANDLE, top, (byte)HGSystemFlags.DEFAULT);
+		top.setHyperGraph(graph);
+		HGLiveHandle topHandle = graph.cache.atomRead(TOP_PERSISTENT_HANDLE, top, (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(Top.class, topHandle); // TOP is its own type
 		classToAtomType.put(Object.class, topHandle); // TOP also corresponds to the java.lang.Object "top type"
-		hg.cache.freeze(topHandle);
+		graph.cache.freeze(topHandle);
 
 		HGAtomType plainLinktype = new PlainLinkType();
-		plainLinktype.setHyperGraph(hg);
-		HGLiveHandle plainLinkHandle = hg.cache.atomRead(PLAINLINK_PERSISTENT_HANDLE, plainLinktype, (byte)HGSystemFlags.DEFAULT);
+		plainLinktype.setHyperGraph(graph);
+		HGLiveHandle plainLinkHandle = graph.cache.atomRead(PLAINLINK_PERSISTENT_HANDLE, plainLinktype, (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(HGPlainLink.class, plainLinkHandle);
-		hg.cache.freeze(plainLinkHandle);
+		graph.cache.freeze(plainLinkHandle);
 
 		HGAtomType linkType = new LinkType();
-		linkType.setHyperGraph(hg);
-		HGLiveHandle linkHandle = hg.cache.atomRead(LINK_PERSISTENT_HANDLE, linkType, (byte)HGSystemFlags.DEFAULT);
+		linkType.setHyperGraph(graph);
+		HGLiveHandle linkHandle = graph.cache.atomRead(LINK_PERSISTENT_HANDLE, linkType, (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(HGLink.class, linkHandle);
-		hg.cache.freeze(linkHandle);
+		graph.cache.freeze(linkHandle);
 
 		HGAtomType subsumesType = new SubsumesType();
-		subsumesType.setHyperGraph(hg);
-		HGLiveHandle subsumesHandle = hg.cache.atomRead(SUBSUMES_PERSISTENT_HANDLE, subsumesType, (byte)HGSystemFlags.DEFAULT);
+		subsumesType.setHyperGraph(graph);
+		HGLiveHandle subsumesHandle = graph.cache.atomRead(SUBSUMES_PERSISTENT_HANDLE, subsumesType, (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(HGSubsumes.class, subsumesHandle);
-		hg.cache.freeze(subsumesHandle);
+		graph.cache.freeze(subsumesHandle);
 
 		//
 		// If we are actually creating a new database, populate with primitive types.
 		//
-		if (hg.getStore().getLink(TOP_PERSISTENT_HANDLE) == null)
+		if (graph.getStore().getLink(TOP_PERSISTENT_HANDLE) == null)
 		{
 			addPrimitiveTypeToStore(TOP_PERSISTENT_HANDLE);
 			addPrimitiveTypeToStore(LINK_PERSISTENT_HANDLE);
 			addPrimitiveTypeToStore(PLAINLINK_PERSISTENT_HANDLE);
 			addPrimitiveTypeToStore(SUBSUMES_PERSISTENT_HANDLE);
-			hg.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, LINK_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
-			hg.add(new HGSubsumes(LINK_PERSISTENT_HANDLE, PLAINLINK_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
-			hg.add(new HGSubsumes(PLAINLINK_PERSISTENT_HANDLE, SUBSUMES_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
+			graph.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, LINK_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
+			graph.add(new HGSubsumes(LINK_PERSISTENT_HANDLE, PLAINLINK_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
+			graph.add(new HGSubsumes(PLAINLINK_PERSISTENT_HANDLE, SUBSUMES_PERSISTENT_HANDLE), SUBSUMES_PERSISTENT_HANDLE);
 			storePrimitiveTypes(typeDefResource);
 		}
 	}
@@ -240,7 +243,7 @@ public class HGTypeSystem
 			   String typeClassName = tok.nextToken();
 			   Class<?> typeClass = Class.forName(typeClassName);
 			   HGAtomType type = (HGAtomType)typeClass.newInstance();
-			   type.setHyperGraph(hg);
+			   type.setHyperGraph(graph);
 			   HGPersistentHandle pHandle = HGHandleFactory.makeHandle(pHandleStr);
 			   if (tok.hasMoreTokens()) {
 				   while (tok.hasMoreTokens())
@@ -272,8 +275,8 @@ public class HGTypeSystem
 
 	HGLiveHandle loadPredefinedType(HGPersistentHandle pHandle)
 	{
-		hg.getEventManager().dispatch(hg, new HGLoadPredefinedTypeEvent(pHandle));
-		HGLiveHandle result = hg.cache.get(pHandle);
+		graph.getEventManager().dispatch(graph, new HGLoadPredefinedTypeEvent(pHandle));
+		HGLiveHandle result = graph.cache.get(pHandle);
 		if (result != null)
 			return result;
 		else
@@ -289,7 +292,7 @@ public class HGTypeSystem
 			{
 				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
 				HGAtomType type = (HGAtomType)clazz.newInstance();
-				type.setHyperGraph(hg);
+				type.setHyperGraph(graph);
 				return (HGLiveHandle)addPredefinedType(pHandle, type, null);
 			}
 			catch (Throwable ex)
@@ -311,11 +314,11 @@ public class HGTypeSystem
 	 */
 	public void defineTypeAtom(final HGPersistentHandle handle, final Class<?> clazz)
 	{
-		if (hg.getTransactionManager().getContext().getCurrent() != null)
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
 		{
-			hg.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+			graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
 			classToAtomType.put(clazz, handle);
-			getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));
+			getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
 			HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
 			if (h == null)
 				throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");				
@@ -324,12 +327,12 @@ public class HGTypeSystem
 
 		}
 		else
-			hg.getTransactionManager().transact(new Callable<HGHandle>() {
+			graph.getTransactionManager().transact(new Callable<HGHandle>() {
 			public HGHandle call()
 			{
-				hg.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+				graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
 				classToAtomType.put(clazz, handle);
-				getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(handle));
+				getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
 				HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
 				if (h == null)
 					throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");					
@@ -344,10 +347,10 @@ public class HGTypeSystem
 	{
 		try
 		{
-			if (hg.getTransactionManager().getContext().getCurrent() != null)
+			if (graph.getTransactionManager().getContext().getCurrent() != null)
 				return makeNewJavaType(clazz);
 			else
-				return hg.getTransactionManager().transact(new Callable<HGHandle>()
+				return graph.getTransactionManager().transact(new Callable<HGHandle>()
 						{ public HGHandle call() { return makeNewJavaType(clazz); } });
 		}
 		catch (RuntimeException t)
@@ -363,16 +366,16 @@ public class HGTypeSystem
 		// First, create a dummy type for the class, so that recursive type
 		// references don't lead to an infinite recursion here.
 		//
-		HGHandle newHandle = hg.add(clazz, NULLTYPE_PERSISTENT_HANDLE);
+		HGHandle newHandle = graph.add(clazz, NULLTYPE_PERSISTENT_HANDLE);
 		classToAtomType.put(clazz, newHandle);
-		getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(newHandle));
+		getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(newHandle));
 		HGHandle inferred = defineNewJavaTypeTransaction(newHandle, clazz);
 		if (inferred == null)
 		{
 			// rollback changes
 			getClassToTypeDB().removeAllEntries(clazz.getName());
 			classToAtomType.remove(clazz);
-			hg.remove(newHandle);
+			graph.remove(newHandle);
 			return null;
 		}
 		else
@@ -400,7 +403,7 @@ public class HGTypeSystem
 		//
 		HGHandle typeConstructor = getTypeHandle(inferredHGType.getClass());
 		if (!typeConstructor.equals(TOP_PERSISTENT_HANDLE))
-			hg.replace(newHandle, inferredHGType, typeConstructor);
+			graph.replace(newHandle, inferredHGType, typeConstructor);
 		//
 		// TODO: we are assuming here that if the defineHGType call above did not return
 		// a newly created type, but an already existing one, its type constructor can
@@ -411,18 +414,18 @@ public class HGTypeSystem
 		else
 		{
 			// We have a predefined type. We must erase the dummy atom instead of replacing it.
-			hg.remove(newHandle);
+			graph.remove(newHandle);
 
 			// A predefined type is a frozen atom in the cache, so its live handle is available
 			// from the Java instance.
-			HGHandle result = hg.cache.get(inferredHGType);
+			HGHandle result = graph.cache.get(inferredHGType);
 
 			//
 			// Update the Class -> type handle mapping.
 			//
 			classToAtomType.put(clazz, result);
-			getClassToTypeDB().removeEntry(clazz.getName(), hg.getPersistentHandle(newHandle));
-			getClassToTypeDB().addEntry(clazz.getName(), hg.getPersistentHandle(result));
+			getClassToTypeDB().removeEntry(clazz.getName(), graph.getPersistentHandle(newHandle));
+			getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(result));
 			newHandle = result;
 		}
 
@@ -432,16 +435,16 @@ public class HGTypeSystem
 		// we need a corresponding Java binding for this type, e.g. a JavaBeanBinding.
 		//
 		HGAtomType type = javaTypes.getJavaBinding(newHandle, inferredHGType, clazz);
-		type.setHyperGraph(hg);
+		type.setHyperGraph(graph);
 
 		//
 		// the result of hg.add may or may not be stored in the cache: if it is, replace the run-time
 		// instance of
 		//
 		if (newHandle instanceof HGLiveHandle)
-			hg.cache.atomRefresh((HGLiveHandle)newHandle, type);
+			graph.cache.atomRefresh((HGLiveHandle)newHandle, type);
 		else
-			newHandle = hg.cache.atomRead((HGPersistentHandle)newHandle, type, (byte)HGSystemFlags.DEFAULT);
+			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle, type, (byte)HGSystemFlags.DEFAULT);
 
 		// Now, examine the super type and implemented interfaces
 		// First, make sure we've mapped all interfaces
@@ -453,7 +456,7 @@ public class HGTypeSystem
 				throw new HGException("Unable to infer HG type for interface " +
 				                       interfaces[i].getName());
 			else
-				hg.add(new HGSubsumes(interfaceHandle, newHandle));
+				graph.add(new HGSubsumes(interfaceHandle, newHandle));
 		}
 		//
 		// Next, navigate to the superclass.
@@ -469,11 +472,11 @@ public class HGTypeSystem
 				                      " the superclass of " + clazz.getName());
 			}
 			else
-				hg.add(new HGSubsumes(superHandle, newHandle));
+				graph.add(new HGSubsumes(superHandle, newHandle));
 		}
 		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitely
 		else if (clazz.isInterface())
-			hg.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, newHandle));
+			graph.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, newHandle));
 
 		//
 		// ouf, we're done
@@ -488,7 +491,7 @@ public class HGTypeSystem
 	 */
 	public HGTypeSystem(HyperGraph hg)
 	{
-		this.hg = hg;
+		this.graph = hg;
 		//
 		// Initialize databases to avoid heaving to synchronize later.
 		//
@@ -506,7 +509,7 @@ public class HGTypeSystem
 	 */
 	public HyperGraph getHyperGraph()
 	{
-		return hg;
+		return graph;
 	}
 
 	/** 
@@ -562,7 +565,7 @@ public class HGTypeSystem
 			type = javaTypes.getJavaBinding(handle, type, clazz);
 			if (refreshInCache)
 			{
-				hg.cache.atomRefresh(handle, type);
+				graph.cache.atomRefresh(handle, type);
 				classToAtomType.put(clazz, handle);
 			}
 		}
@@ -615,10 +618,10 @@ public class HGTypeSystem
 	 */
 	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class<?> clazz)
 	{
-		if (hg.getTransactionManager().getContext().getCurrent() != null)
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
 			return addPredefinedTypeTransaction(handle, type, clazz);
 		else
-			return hg.getTransactionManager().transact(new Callable<HGHandle>()
+			return graph.getTransactionManager().transact(new Callable<HGHandle>()
 				{ public HGHandle call() { return addPredefinedTypeTransaction(handle, type, clazz); } });
 	}
 	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, Class<?> clazz)
@@ -626,10 +629,10 @@ public class HGTypeSystem
 		//
 		// Make sure the type is in storage...
 		//
-		if (hg.getStore().getLink(handle) == null)
+		if (graph.getStore().getLink(handle) == null)
 		{
 			addPrimitiveTypeToStore(handle);
-			hg.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, handle), SUBSUMES_PERSISTENT_HANDLE);
+			graph.add(new HGSubsumes(TOP_PERSISTENT_HANDLE, handle), SUBSUMES_PERSISTENT_HANDLE);
 			try
 			{
 				//
@@ -643,8 +646,8 @@ public class HGTypeSystem
 			catch (NoSuchMethodException e) { /* Log this some day when we have logging. */}
 		}
 
-		HGLiveHandle typeHandle = hg.cache.atomRead(handle, type, (byte)HGSystemFlags.DEFAULT);
-		hg.cache.freeze(typeHandle);
+		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, (byte)HGSystemFlags.DEFAULT);
+		graph.cache.freeze(typeHandle);
 		classToAtomType.put(type.getClass(), classToAtomType.get(Top.class));
 		if (clazz != null)
 		{
@@ -671,7 +674,7 @@ public class HGTypeSystem
 	 */
 	public Class<?> getClassForType(HGHandle typeHandle)
 	{
-		String classname = getClassToTypeDB().findFirstByValue(hg.getPersistentHandle(typeHandle));
+		String classname = getClassToTypeDB().findFirstByValue(graph.getPersistentHandle(typeHandle));
 		return classname != null ? loadClass(classname) : null;
 	}
 	
@@ -683,7 +686,7 @@ public class HGTypeSystem
 	 */
 	public HGAtomType getType(HGHandle handle)
 	{
-		return (HGAtomType)hg.get(handle);
+		return (HGAtomType)graph.get(handle);
 	}
 
 	/**
@@ -711,7 +714,7 @@ public class HGTypeSystem
 	 */
 	public HGAtomType getAtomType(Class<?> clazz)
 	{
-		return (HGAtomType)hg.get(getTypeHandle(clazz));
+		return (HGAtomType)graph.get(getTypeHandle(clazz));
 	}
 
 	/**
@@ -819,7 +822,7 @@ public class HGTypeSystem
 		{
 			HGPersistentHandle handle = getAliases().findFirst(alias);
 			if (handle != null)
-				return hg.refreshHandle(handle);
+				return graph.refreshHandle(handle);
 			else
 				return null;
 		}
@@ -827,11 +830,11 @@ public class HGTypeSystem
 
 	public HGHandle getTypeHandle(HGHandle atomHandle)
 	{
-		HGPersistentHandle [] layout = hg.getStore().getLink(hg.getPersistentHandle(atomHandle));
+		HGPersistentHandle [] layout = graph.getStore().getLink(graph.getPersistentHandle(atomHandle));
 		if (layout == null || layout.length == 0)
 			throw new HGException("Could not retrieve atom with handle " +
-			                      hg.getPersistentHandle(atomHandle) + " from the HyperGraph store.");
-		HGHandle live = hg.cache.get(layout[0]);
+			                      graph.getPersistentHandle(atomHandle) + " from the HyperGraph store.");
+		HGHandle live = graph.cache.get(layout[0]);
 		return live == null ? layout[0] : live;
 	}
 
@@ -854,7 +857,7 @@ public class HGTypeSystem
 		if (x == null)
 			throw new NullPointerException(
 			        "HGTypeSystem.getAtomType(Object) invoked with a null object -- and 'null' has no type.");
-		HGHandle atom = hg.getHandle(x);
+		HGHandle atom = graph.getHandle(x);
 		if (atom != null)
 			return getTypeHandle(atom);
 		else
@@ -873,10 +876,10 @@ public class HGTypeSystem
 	 */
 	public void addAlias(final HGHandle typeHandle, final String alias)
 	{
-		if (hg.getTransactionManager().getContext().getCurrent() != null)
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
 			addAliasTransaction(typeHandle, alias);
 		else
-			hg.getTransactionManager().transact(new Callable<Object>()
+			graph.getTransactionManager().transact(new Callable<Object>()
 				{ public Object call() { addAliasTransaction(typeHandle, alias); return null; } });
 	}
 	private void addAliasTransaction(HGHandle typeHandle, String alias)
@@ -886,7 +889,7 @@ public class HGTypeSystem
 		{
 			HGPersistentHandle handle = aliases.findFirst(alias);
 			if (handle == null)
-				aliases.addEntry(alias, hg.getPersistentHandle(typeHandle));
+				aliases.addEntry(alias, graph.getPersistentHandle(typeHandle));
 			else
 				throw new HGException("Alias '" + alias + "' already defined.");
 		}
@@ -904,7 +907,7 @@ public class HGTypeSystem
 	public Set<String> findAliases(HGHandle typeHandle)
 	{
 		Set<String> result =  new HashSet<String>();
-		HGSearchResult<String> rs = getAliases().findByValue(hg.getPersistentHandle(typeHandle));
+		HGSearchResult<String> rs = getAliases().findByValue(graph.getPersistentHandle(typeHandle));
 		try
 		{
 			while (rs.hasNext())
@@ -928,10 +931,10 @@ public class HGTypeSystem
 	 */
 	public void removeAlias(final String alias)
 	{
-		if (hg.getTransactionManager().getContext().getCurrent() != null)
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
 			removeAliasTransaction(alias);
 		else
-			hg.getTransactionManager().transact(new Callable<Object>()
+			graph.getTransactionManager().transact(new Callable<Object>()
 				{ public Object call() { removeAliasTransaction(alias); return null; } });
 	}
 	private void removeAliasTransaction(String alias)
@@ -954,14 +957,28 @@ public class HGTypeSystem
 	 */
 	void remove(final HGPersistentHandle typeHandle, final HGAtomType type)
 	{
-		if (hg.getTransactionManager().getContext().getCurrent() != null)
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
 			removeTransaction(typeHandle, type);
 		else
-			hg.getTransactionManager().transact(new Callable<Object>()
+			graph.getTransactionManager().transact(new Callable<Object>()
 				{ public Object call() { removeTransaction(typeHandle, type); return null; } });
 	}
 	private void removeTransaction(HGPersistentHandle typeHandle, HGAtomType type)
 	{
+		//
+		// Remove subsumes relationships.
+		//
+		List<HGHandle> subsumesLinks = hg.findAll(graph, hg.and(hg.incident(typeHandle), hg.type(HGSubsumes.class)));
+		for (HGHandle h : subsumesLinks)
+			graph.remove(h);
+		
+		//
+		// Remove HGTypeStructuralInfo attached to this type.
+		//		
+		HGHandle typeStruct = hg.findOne(graph, hg.and(hg.type(HGTypeStructuralInfo.class), hg.eq("typeHandle", typeHandle)));
+		if (typeStruct != null)
+			graph.remove(typeStruct);
+		
 		//
 		// Remove all aliases
 		//
@@ -1027,14 +1044,14 @@ public class HGTypeSystem
 					HGLiveHandle h = (HGLiveHandle)eldest.getValue();
 					if (h.getRef() == null)
 						return true; //if it has been evicted from the atom cache, removed it from here too
-					else if (hg.cache.isFrozen(h))
+					else if (graph.cache.isFrozen(h))
 						return get(eldest.getKey()) == null; // this will return false and put the element on top of the list
 					else
 						return false; // simply return false, but don't remove since it's still in the cache
 				}
 				else
 				{
-					HGLiveHandle h = hg.cache.get((HGPersistentHandle)eldest.getValue());
+					HGLiveHandle h = graph.cache.get((HGPersistentHandle)eldest.getValue());
 					if (h != null)
 					{
 						eldest.setValue(h);
