@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.util.ActionQueueThread;
+import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.MemoryWarningSystem;
 import org.hypergraphdb.util.RefResolver;
 
@@ -23,7 +24,7 @@ import org.hypergraphdb.util.RefResolver;
  * @param <Key>
  * @param <Value>
  */
-public class MRUCache<Key, Value> implements HGCache<Key, Value>
+public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 {
 	// The cache entry contains a lot of information here: 4 references = 16 bytes total.
 	// But there's no escape since we need a doubly linked list if we are to freely move
@@ -212,7 +213,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	
 	protected void finalize()
 	{
-		HGEnvironment.getMemoryWarningSystem().removeListener(memListener);
+		close();
 	}
 	
 	public MRUCache()
@@ -348,5 +349,10 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>
 	public void checkConsistent()
 	{
 		
+	}
+	
+	public void close()
+	{
+		HGEnvironment.getMemoryWarningSystem().removeListener(memListener);		
 	}
 }

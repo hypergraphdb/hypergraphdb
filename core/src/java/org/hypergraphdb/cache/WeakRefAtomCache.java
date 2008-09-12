@@ -17,6 +17,7 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
+import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.WeakIdentityHashMap;
 
 /**
@@ -43,8 +44,7 @@ public class WeakRefAtomCache implements HGAtomCache
 {	
 	private HyperGraph graph = null;
 	
-	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
-		new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);	
+	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = null; // to be configured by the HyperGraph instance
 	
     private final Map<HGPersistentHandle, PhantomHandle> 
     	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
@@ -293,6 +293,8 @@ public class WeakRefAtomCache implements HGAtomCache
 		PhantomHandle.returnEnqueued.set(Boolean.FALSE);
 		frozenAtoms.clear();		
 		incidenceCache.clear();
+		if (incidenceCache instanceof CloseMe)
+			((CloseMe)incidenceCache).close();
 		atoms.clear();
 		liveHandles.clear();
 	}
