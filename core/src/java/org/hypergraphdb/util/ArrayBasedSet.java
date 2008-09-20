@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.SortedSet;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGRandomAccessResult;
@@ -46,7 +47,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	E [] array;
 	Comparator<E> comparator = null;
 	int size = 0;
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	private ReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	int lookup(E key)
 	{
@@ -158,7 +159,19 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 			lock.writeLock().unlock();
 		}		
 	}
-	
+		
+	public ReadWriteLock getLock()
+	{
+		return lock;
+	}
+
+	public void setLock(ReadWriteLock lock)
+	{
+		if (lock == null)
+			throw new NullPointerException("ArrayBasedSet.lock can't be null.");
+		this.lock = lock;
+	}
+
 	public Comparator<? super E> comparator()
 	{
 		return comparator;

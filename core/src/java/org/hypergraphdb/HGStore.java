@@ -50,10 +50,10 @@ public class HGStore
 		String osname = System.getProperty("os.name");
 		if (osname.indexOf("win") > -1 || osname.indexOf("Win") > -1)
 		{
-			System.loadLibrary("msvcr71");
-			System.loadLibrary("msvcp71");			
-			System.loadLibrary("libdb44");
-			System.loadLibrary("libdb_java44");			
+//			System.loadLibrary("msvcr71");
+//			System.loadLibrary("msvcp71");			
+//			System.loadLibrary("libdb47");
+//			System.loadLibrary("libdb_java47");	
 		}
 	}
 	
@@ -95,8 +95,8 @@ public class HGStore
         envConfig.setAllowCreate(true);
         envConfig.setInitializeCache(true);  
         //envConfig.setCacheSize(config.getStoreCacheSize());
-        envConfig.setCacheSize(20*1014*1024);
-        envConfig.setCacheCount(50);
+//        envConfig.setCacheSize(20*1014*1024); // 20MB
+//        envConfig.setCacheCount(50); // x 50 blocks
         envConfig.setErrorPrefix("BERKELEYDB");
         envConfig.setErrorStream(System.out);        
         if (config.isTransactional())
@@ -177,9 +177,9 @@ public class HGStore
 	    			TransactionConfig tconfig = new TransactionConfig();
 //	    			tconfig.setNoSync(true);
 	    			if (parent != null)
-	    				return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent).getBDBTransaction(), tconfig));
+	    				return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent).getBDBTransaction(), tconfig), env);
 	    			else
-	    				return new TransactionBDBImpl(env.beginTransaction(null, tconfig)); 
+	    				return new TransactionBDBImpl(env.beginTransaction(null, tconfig), env); 
     			}
     			catch (DatabaseException ex)
     			{
@@ -382,8 +382,7 @@ public class HGStore
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to retrieve link with handle " + handle + 
-                                  ": " + ex.toString(), ex);
+            throw new HGException("Failed to retrieve link with handle " + handle, ex);
         }
     }
 
@@ -411,8 +410,7 @@ public class HGStore
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to retrieve link with handle " + handle + 
-                                  ": " + ex.toString(), ex);
+            throw new HGException("Failed to retrieve link with handle " + handle, ex);
         }
     }
     
@@ -489,8 +487,7 @@ public class HGStore
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to retrieve link with handle " + handle + 
-                                  ": " + ex.toString(), ex);
+            throw new HGException("Failed to retrieve link with handle " + handle, ex);
         }        
     }
     
@@ -518,8 +515,7 @@ public class HGStore
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to retrieve incidence set for handle " + handle + 
-                                  ": " + ex.toString(), ex);
+            throw new HGException("Failed to retrieve incidence set for handle " + handle, ex);
         }
         finally
         {

@@ -11,10 +11,6 @@ package org.hypergraphdb.query;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.ReadyRef;
-import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -40,7 +36,7 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
 	 * the java.lang.Comparable, but this breaks HyperGraph paradigm where such semantics
 	 * are defined by the types, not their values.
 	 */
-	protected boolean compareToValue(HyperGraph graph, Object x, HGHandle type)
+	protected boolean compareToValue(HyperGraph graph, Object x)
 	{
 		if (x instanceof HGValueLink)
 			x = ((HGValueLink)x).getValue();
@@ -60,11 +56,6 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     			throw new HGException("Wrong operator code [" + operator + "] passed to SimpleValueCondition.");
     	}
  	}
-	
-	protected abstract boolean satisfies(HyperGraph hg, 
-								 		 HGHandle atomHandle,
-								 		 Object atom,
-								 		 HGHandle type);
 	
 	public SimpleValueCondition(Object value)
 	{
@@ -87,35 +78,6 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     {
         return operator;
     }
-
-	public boolean satisfies(HyperGraph hg, HGHandle handle) 
-	{
-		HGHandle type = null;
-		Object atom = null;
-		if (hg.isLoaded(handle))
-		{
-			atom = hg.get(handle);
-			type = hg.getTypeSystem().getTypeHandle(handle);			
-		}
-		else
-		{
-			HGPersistentHandle [] layout = hg.getStore().getLink((HGPersistentHandle)handle);
-            HGHandle [] targets = new HGHandle[layout.length - 2];
-            for (int i = 2; i < layout.length; i++)
-            	targets[i-2] = layout[i];
-			type = layout[0];
-			TypeUtils.initiateAtomConstruction(hg, layout[1]);
-			atom = hg.getTypeSystem().getType(type).make(layout[1], 
-														 new ReadyRef<HGHandle[]>(targets), 
-														 null);
-			TypeUtils.atomConstructionComplete(hg, layout[1]);
-		}
-		
-		if (atom == null)
-			return false;
-		else
-			return satisfies(hg, handle, atom, type);
-	}
 	
 	public int hashCode()
 	{

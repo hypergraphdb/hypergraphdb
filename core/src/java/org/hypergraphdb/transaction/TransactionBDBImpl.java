@@ -9,20 +9,28 @@ import java.util.Set;
 
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.Environment;
 import com.sleepycat.db.Transaction;
 
 public class TransactionBDBImpl implements HGTransaction
 {
+	private Environment env;
 	private Transaction t;
 	private HashMap<String, Object> attributes = new HashMap<String, Object>();
 	private Set<BDBTxCursor> bdbCursors = new HashSet<BDBTxCursor>();
 	private boolean aborting = false;
 	
-	public static TransactionBDBImpl nullTransaction() { return new TransactionBDBImpl(null); }
+	public static final TransactionBDBImpl nullTransaction() { return new TransactionBDBImpl(null, null); }
 	
-	public TransactionBDBImpl(Transaction t)
+	public TransactionBDBImpl(Transaction t, Environment env)
 	{
 		this.t = t;
+		this.env = env;
+	}
+	
+	public Environment getBDBEnvironment()
+	{
+		return env;
 	}
 	
 	public Transaction getBDBTransaction()

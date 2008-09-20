@@ -22,6 +22,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.TypePlusCondition;
+import org.hypergraphdb.transaction.HGTransactionException;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -31,6 +32,7 @@ import org.hypergraphdb.util.HGUtils;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public final class TypeUtils 
 {
 	/**
@@ -259,11 +261,20 @@ public final class TypeUtils
 			HGSearchResult<HGHandle> rs = null;
 			try
 			{
-				rs = graph.find(new TypePlusCondition(type));
 				int fetched = 0;
-				while (fetched < batch.length && rs.hasNext())
-					batch[fetched++] = rs.next();
-				rs.close();
+				graph.getTransactionManager().beginTransaction();
+				try
+				{
+					rs = graph.find(new TypePlusCondition(type));					
+					while (fetched < batch.length && rs.hasNext())
+						batch[fetched++] = rs.next();
+					rs.close();
+				}
+				finally
+				{
+					try { graph.getTransactionManager().endTransaction(true); }
+					catch (HGTransactionException tex) { throw new HGException(tex); }
+				}
 				done = fetched == 0;
 				graph.getTransactionManager().beginTransaction();
 				try

@@ -50,11 +50,16 @@ public class AtomPartCondition extends SimpleValueCondition
 		this.dimensionPath = dimensionPath;
 	}
 
-	protected boolean satisfies(HyperGraph hg, HGHandle atomHandle, Object atom, HGHandle type) 
+	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
+		Object atom = null;
+		atom = hg.get(handle);
+		if (atom == null)
+			return false;		
+		HGHandle type = hg.getTypeSystem().getTypeHandle(handle);			
 		HGTypedValue projected = TypeUtils.project(hg, type, atom, dimensionPath, false);
 		if (projected != null)
-			return compareToValue(hg, projected.getValue(), projected.getType());
+			return compareToValue(hg, projected.getValue());
 		else
 			return false;
 	}

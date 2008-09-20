@@ -24,7 +24,10 @@ public class SimplyLinkedQueue<T>
 	{ 
 		Node<T> n = new Node<T>(data, null);
 		if (tail != null)
+		{
 			tail.next = n;
+			tail = tail.next;
+		}
 		else
 			head = tail = n;
 		size++;

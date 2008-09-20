@@ -1520,7 +1520,15 @@ public /*final*/ class HyperGraph
     	{
 	    	getTransactionManager().transact(new Callable<Object>() 
 	  	    { public Object call() {
-		    	if ((lHandle.getFlags() & HGSystemFlags.MUTABLE) != 0)
+	  	    	
+	  	    	// The following (both the code for MUTABLE and MANAGED flags) cause
+	  	    	// deadlocks with a 'get' operation in the PhnatomHandle while
+	  	    	// an atom is waiting to be de-queued: graph.get(handle) blocks 
+	  	    	// on waiting for the PhantomHandle to return, which in turn waits
+	  	    	// for the atom (currently being GC-ed) to be dequeued, but this 
+	  	    	// doesn't happen because unloadAtom can't proceed due to simultaneous
+	  	    	// DB write with the get operation.
+/*		    	if ((lHandle.getFlags() & HGSystemFlags.MUTABLE) != 0)
 		    	{
 		    		//TODO: Maybe this should be done somewhere else or differently...
 		    		//in atomAdded() attribs are added only for MANAGED flag
@@ -1540,7 +1548,7 @@ public /*final*/ class HyperGraph
 		    		//
 		    		 // rawSave(lHandle.getPersistentHandle(), instance);
 		    		replace(lHandle, instance);
-		    	}
+		    	} 
 		    	if ((lHandle.getFlags() & HGSystemFlags.MANAGED) != 0)
 		    	{
 		    		HGManagedLiveHandle mHandle = (HGManagedLiveHandle)lHandle;
@@ -1549,7 +1557,7 @@ public /*final*/ class HyperGraph
 		    		attrib.retrievalCount += mHandle.getRetrievalCount();
 		    		attrib.lastAccessTime = Math.max(mHandle.getLastAccessTime(), attrib.lastAccessTime);
 		    		setAtomAttributes(lHandle.getPersistentHandle(), attrib);
-		    	}
+		    	} */
 		    	return null;
 	    	}});
     	}

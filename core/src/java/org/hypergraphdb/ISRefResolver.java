@@ -3,6 +3,7 @@ package org.hypergraphdb;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.DBKeyedSortedSet;
 import org.hypergraphdb.storage.IndexResultSet;
+import org.hypergraphdb.transaction.BDBTxLock;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.RefResolver;
 
@@ -38,7 +39,9 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				HGPersistentHandle [] A = new HGPersistentHandle[size];
 				for (int i = 0; i < A.length; i++)
 					A[i] = rs.next();
-				IncidenceSet result = new IncidenceSet(key, new ArrayBasedSet<HGHandle>(A));
+				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A);
+//				impl.setLock(new BDBTxLock(graph, key.toByteArray()));
+				IncidenceSet result = new IncidenceSet(key, impl);
 				HGLiveHandle lHandle = graph.cache.get(key);
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);

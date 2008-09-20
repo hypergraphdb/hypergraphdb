@@ -40,9 +40,14 @@ public class AtomValueCondition extends SimpleValueCondition
     	super(value, operator);
     }
 
-	protected boolean satisfies(HyperGraph hg, HGHandle atomHandle, Object atom, HGHandle type) 
+	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
-		return compareToValue(hg, atom, type);
+		Object atom = null;
+		atom = hg.get(handle);		
+		if (atom == null)
+			return false;
+		else
+			return compareToValue(hg, atom);
 	}
 	
 	public String toString()

@@ -23,6 +23,8 @@ public class HGTransactionManager
 	private ThreadLocal<HGTransactionContext> tcontext =  new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
 	
+	public TxMonitor txMonitor = null;
+	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>
 	 * otherwise.</p>
@@ -137,9 +139,14 @@ public class HGTransactionManager
 	 * @return The newly created transaction.
 	 */
 	public HGTransaction createTransaction(HGTransaction parent)
-	{
+	{		 
 		if (enabled)
-			return factory.createTransaction(parent);
+		{
+			HGTransaction result = factory.createTransaction(parent);
+			if (txMonitor != null)
+				txMonitor.transactionCreated(result);
+			return result;
+		}
 		else
 			return new VanillaTransaction();
 	}
@@ -269,30 +276,28 @@ public class HGTransactionManager
 				endTransaction(true);
 				return result;
 			}  
-	    	catch (HGTransactionException ex)
-	    	{
-	    		throw new HGException(ex);
-	    	}
-			catch (RuntimeException ex)
+			catch (Throwable t)
 			{
 				try { endTransaction(false); }
-		    	catch (HGTransactionException tex) { throw new HGException(ex); }
-		    	
+		    	catch (HGTransactionException tex) { tex.printStackTrace(System.err); }			    	
+				
+				// If there is a DeadlockException at the root of this, we have to simply abort
+				// the transaction and try again.				
 		    	boolean is_deadlock = false;
-				for (Throwable cause = ex.getCause(); cause != null; cause = cause.getCause())					
+				for (Throwable cause = t.getCause(); cause != null; cause = cause.getCause())					
 					if (cause instanceof DeadlockException)
 					{
 						is_deadlock = true;
 						break;
 					}
+				
 				if (!is_deadlock)
-					throw ex;
-			}
-			catch (Throwable t)
-			{
-				try { endTransaction(false); }
-		    	catch (HGTransactionException tex) { throw new HGException(t); }				
-				throw new HGException(t);
+				{
+					if (t instanceof RuntimeException)
+						throw (RuntimeException)t;
+					else
+						throw new HGException(t);
+				}		
 			}
 		}
 	}
