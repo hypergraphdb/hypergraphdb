@@ -464,6 +464,26 @@ public class HGStore
     		return readHandles(data, offset, data.length - offset);
     }
 
+    public boolean containsLink(HGPersistentHandle handle)
+    {
+        DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+        DatabaseEntry value = new DatabaseEntry();
+        try
+		{
+            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+			{
+				System.out.println(value.toString());
+				return true;
+			}
+		} catch (DatabaseException ex)
+		{
+            throw new HGException("Failed to retrieve link with handle " + handle + 
+                    ": " + ex.toString(), ex);
+		}       
+		
+		return false;
+    }
+    
     /**
      * <p>Retrieve the raw data buffer stored at <code>handle</code>.</p>
      * 

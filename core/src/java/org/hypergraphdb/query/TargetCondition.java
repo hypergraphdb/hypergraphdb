@@ -19,6 +19,11 @@ public class TargetCondition implements HGQueryCondition, HGAtomPredicate
 {
 	private HGHandle link;
 
+	public TargetCondition()
+	{
+		
+	}
+	
 	public TargetCondition(HGHandle link)
 	{
 		this.link = link;
@@ -29,6 +34,11 @@ public class TargetCondition implements HGQueryCondition, HGAtomPredicate
 		return link;
 	}
 	
+	public void setLink(HGHandle link)
+	{
+		this.link = link;
+	}
+
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
 	{
 		if (graph.isLoaded(link))

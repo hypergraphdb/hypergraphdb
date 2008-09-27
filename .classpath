@@ -28,5 +28,7 @@
 	<classpathentry kind="lib" path="viewer/jars/l2fprod-common-sheet.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolo.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolox.jar"/>
+	<classpathentry kind="lib" path="core/jars/jxta.jar"/>
+	<classpathentry kind="lib" path="core/jars/jxtashell.jar"/>
 	<classpathentry kind="output" path="core/build"/>
 </classpath>

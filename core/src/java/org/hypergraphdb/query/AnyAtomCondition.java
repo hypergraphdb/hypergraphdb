@@ -33,4 +33,9 @@ public class AnyAtomCondition implements HGQueryCondition, HGAtomPredicate
 	{
 		return x instanceof AnyAtomCondition;
 	}
+	
+	public String toString()
+	{
+		return "any()";
+	}
 }

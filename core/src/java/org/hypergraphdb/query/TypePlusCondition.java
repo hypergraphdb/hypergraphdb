@@ -35,6 +35,10 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 		subTypes.add(baseType);		
 	}
 	
+	public TypePlusCondition()
+	{
+		
+	}
 	public TypePlusCondition(HGHandle baseType)
 	{
 		this.baseType = baseType;

@@ -73,26 +73,39 @@ public class SubsumedCondition extends SubsumesImpl implements HGQueryCondition,
 		}
 	}
 	
+	public SubsumedCondition()
+	{
+		
+	}
+	
 	public SubsumedCondition(Object generalValue)
 	{
-		this.generalValue = generalValue;
-		impl = new AtomBased();
+		setGeneralValue(generalValue);
 	}
 	
 	public SubsumedCondition(HGHandle general)
 	{
-		this.general = general;
-		impl = new HandleBased();
+		setGeneralHandle(general);
 	}
 	
 	public HGHandle getGeneralHandle()
 	{
 		return general;
 	}
+	public void setGeneralHandle(HGHandle general)
+	{
+		this.general = general;
+		if (this.general != null) impl = new HandleBased();	
+	}
 	
 	public Object getGeneralValue()
 	{
 		return generalValue;
+	}
+	public void setGeneralValue(Object generalValue)
+	{
+		this.generalValue = generalValue;
+		if (generalValue != null) impl = new AtomBased();
 	}
 	
 	public final boolean satisfies(HyperGraph hg, HGHandle specific) 
@@ -102,7 +115,7 @@ public class SubsumedCondition extends SubsumesImpl implements HGQueryCondition,
 	
 	public int hashCode() 
 	{ 
-		return general.hashCode();
+		return (general != null) ? general.hashCode() : generalValue.hashCode();
 	}
 	
 	public boolean equals(Object x)

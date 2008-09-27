@@ -31,6 +31,10 @@ public abstract class TraversalCondition implements HGQueryCondition
 				    reverseOrder = false,
 				    returnSource = false;
 
+	public TraversalCondition()
+	{
+		
+	}
 	public TraversalCondition(HGHandle startAtom)
 	{
 		this.startAtom = startAtom;

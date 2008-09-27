@@ -27,6 +27,10 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 {
 	private int arity;
 	
+	public ArityCondition()
+	{
+		arity = 0;
+	}
 	public ArityCondition(int arity)
 	{
 		this.arity = arity;
@@ -77,4 +81,15 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 		result.append(")");
 		return result.toString();
 	}
+
+	public int getArity()
+	{
+		return arity;
+	}
+
+	public void setArity(int arity)
+	{
+		this.arity = arity;
+	}
+	
 }

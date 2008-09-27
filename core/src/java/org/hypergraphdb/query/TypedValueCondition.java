@@ -25,6 +25,10 @@ public class TypedValueCondition extends AtomValueCondition
 	private Class<?> javaClass;
 	private HGHandle typeHandle;
 
+	public TypedValueCondition()
+	{
+		
+	}
 	public TypedValueCondition(HGHandle typeHandle, Object value)
 	{
 		this(typeHandle, value, ComparisonOperator.EQ);

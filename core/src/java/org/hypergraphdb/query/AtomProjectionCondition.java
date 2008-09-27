@@ -25,6 +25,11 @@ public class AtomProjectionCondition implements HGQueryCondition, HGAtomPredicat
 	private HGQueryCondition baseSetCondition;
 	private HashMap<HGHandle, HGHandle> baseSet = null;
 	
+	public AtomProjectionCondition()
+	{
+		
+	}
+	
 	public AtomProjectionCondition(String dimensionPath, HGQueryCondition baseSetCondition)
 	{
 		this.dimensionPath = TypeUtils.parseDimensionPath(dimensionPath);
@@ -95,4 +100,17 @@ public class AtomProjectionCondition implements HGQueryCondition, HGAtomPredicat
 				   HGUtils.eq(baseSetCondition, c.baseSetCondition);
 		}
 	}
+
+	public void setDimensionPath(String[] dimensionPath)
+	{
+		this.dimensionPath = dimensionPath;
+	}
+
+	public void setBaseSetCondition(HGQueryCondition baseSetCondition)
+	{
+		this.baseSetCondition = baseSetCondition;
+	}
+	
+	
+	
 }

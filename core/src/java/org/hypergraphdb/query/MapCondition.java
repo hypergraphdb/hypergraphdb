@@ -10,6 +10,11 @@ public class MapCondition implements HGQueryCondition
 	private HGQueryCondition cond;
 	private Mapping<?, ?> mapping;
 	
+	public MapCondition()
+	{
+		
+	}
+	
 	public MapCondition(HGQueryCondition condition, Mapping<?, ?> mapping)
 	{
 		this.cond = condition;
@@ -25,12 +30,22 @@ public class MapCondition implements HGQueryCondition
 	{
 		return cond;
 	}
-	
+
+	public void setCondition(HGQueryCondition cond)
+	{
+		this.cond = cond;
+	}
+
 	public Mapping<?, ?> getMapping()
 	{
 		return mapping;
 	}
 	
+	public void setMapping(Mapping<?, ?> mapping)
+	{
+		this.mapping = mapping;
+	}
+
 	public int hashCode() 
 	{ 
 		return HGUtils.hashThem(cond, mapping);  

@@ -16,6 +16,10 @@ import org.hypergraphdb.algorithms.HGTraversal;
  */
 public class DFSCondition extends TraversalCondition
 {
+	public DFSCondition()
+	{
+		
+	}
 	public DFSCondition(HGHandle startAtom)
 	{
 		super(startAtom);

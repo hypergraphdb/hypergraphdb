@@ -26,6 +26,10 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 {
 	private HGHandle target;
 	
+	public IncidentCondition()
+	{
+		
+	}
 	public IncidentCondition(HGHandle target)
 	{
 		this.target = target;
@@ -36,6 +40,11 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 		return target;
 	}
 	
+	public void setTarget(HGHandle target)
+	{
+		this.target = target;
+	}
+
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
 		//

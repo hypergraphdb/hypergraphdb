@@ -82,7 +82,7 @@ public class BonesOfBeans
             bean.getClass().getName());
         else if (index >= 0 && !(desc instanceof IndexedPropertyDescriptor))
             throw new HGException("Property " + propname +
-            " could is not an indexed property in bean " +
+            " is not an indexed property in bean " +
             bean.getClass().getName());
         else
             return desc;
@@ -227,9 +227,9 @@ public class BonesOfBeans
      * <code>PropertyDescriptor</code> instead of the property name.
      */
     public static void setProperty(Object bean,
-    PropertyDescriptor prop,
-    int index,
-    Object newvalue)
+	    PropertyDescriptor prop,
+	    int index,
+	    Object newvalue)
     {
         try
         {
@@ -298,9 +298,9 @@ public class BonesOfBeans
      * <code>index >= 0 </code> and the property is not an indexed property.
      */
     public static void setProperty(Object bean,
-    String propname,
-    int index,
-    Object newvalue)
+	    String propname,
+	    int index,
+	    Object newvalue)
     {
         setProperty(bean, getorthrow_propdesc(bean, propname, index), index, newvalue);
     }
@@ -316,8 +316,8 @@ public class BonesOfBeans
      * <code>index >= 0 </code> and the property is not an indexed property.
      */
     public static void setProperty(Object bean,
-    String propname,
-    Object newvalue)
+    		String propname,
+    		Object newvalue)
     {
         setProperty(bean, propname, -1, newvalue);
     }

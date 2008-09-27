@@ -38,6 +38,11 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
     private Class<?> c;
 	private HGHandle handle;
 	
+	public AtomTypeCondition()
+	{
+		
+	}
+	
     public AtomTypeCondition(Class<?> javaClass)
     {
         if (javaClass == null)

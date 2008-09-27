@@ -30,6 +30,11 @@ import org.hypergraphdb.util.HGUtils;
 public class AtomValueCondition extends SimpleValueCondition 
 {
    
+	public AtomValueCondition()
+	{
+	   
+	}
+	
 	public AtomValueCondition(Object value)
 	{
 		super(value);

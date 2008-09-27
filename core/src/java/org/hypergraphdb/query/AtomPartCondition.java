@@ -27,6 +27,11 @@ public class AtomPartCondition extends SimpleValueCondition
 {
 	private String [] dimensionPath;
 	
+	public AtomPartCondition()
+	{
+		super(null, ComparisonOperator.EQ);
+	}
+	
     public AtomPartCondition(String [] dimensionPath, Object value)
     {
         this (dimensionPath, value, ComparisonOperator.EQ);

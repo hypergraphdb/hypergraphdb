@@ -30,6 +30,10 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 {
 	private HashSet<HGHandle> targetSet = null;
 	
+	public LinkCondition()
+	{
+		
+	}
 	public LinkCondition(HGHandle [] targets)
 	{
 		this.targetSet = new HashSet<HGHandle>();
@@ -44,6 +48,15 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 		return targetSet;
 	}
 	
+	
+	public HashSet<HGHandle> getTargetSet()
+	{
+		return targetSet;
+	}
+	public void setTargetSet(HashSet<HGHandle> targetSet)
+	{
+		this.targetSet = targetSet;
+	}
 	/**
 	 * <p>Return <code>true</code> if <code>handle</code> points to a link whose
 	 * target set is a superset of this condition's <code>targetSet</code>.</p>

@@ -16,7 +16,7 @@
 	</target>
 
 	<target name="core" depends="init">
-      <ant dir="core" target="core-jar"/>
+      <ant dir="core" target="all"/>
 	</target>
 
 	<target name="viewer" depends="init">

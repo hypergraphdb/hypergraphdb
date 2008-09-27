@@ -26,6 +26,10 @@ public class Not implements HGQueryCondition, HGAtomPredicate
 {
 	private HGAtomPredicate negated;
 	
+	public Not()
+	{
+		
+	}
 	public Not(HGAtomPredicate negated)
 	{
 		this.negated = negated;
@@ -55,5 +59,14 @@ public class Not implements HGQueryCondition, HGAtomPredicate
 			return false;
 		else
 			return ((Not)x).negated.equals(negated);
-	}	
+	}
+	
+	public HGAtomPredicate getPredicate()
+	{
+		return negated;
+	}
+	public void setPredicate(HGAtomPredicate predicate)
+	{
+		this.negated = predicate;
+	}
 }

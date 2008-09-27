@@ -51,6 +51,10 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		return targetsBuffer;
 	}
 	
+	public OrderedLinkCondition()
+	{
+		
+	}
 	public OrderedLinkCondition(HGHandle [] targetSet)
 	{
 		this.targetSet = targetSet;
@@ -63,6 +67,16 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		return targetSet;
 	}
 	
+	public HGHandle[] getTargets()
+	{
+		return targetSet;
+	}
+
+	public void setTargets(HGHandle[] targetSet)
+	{
+		this.targetSet = targetSet;
+	}
+
 	public void setTarget(int pos, HGHandle newTarget)
 	{
 		targetSet[pos] = newTarget;

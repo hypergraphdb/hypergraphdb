@@ -32,14 +32,14 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
         
     /**
      * <p>Default constructor create a new UUID.</p>
-     */
-    private UUIDPersistentHandle()
+     */    
+    public UUIDPersistentHandle()
     {
         byte[] rnd = new byte[16];        
         rndGenerator.nextBytes(rnd);        
-        uuid = new UUID(UUID.TYPE_RANDOM_BASED, rnd);    	
-    	// uuid = UUID.randomUUID();
+        uuid = new UUID(UUID.TYPE_RANDOM_BASED, rnd);    	    	
     }
+
     
     private UUIDPersistentHandle(UUID uuid)
     {

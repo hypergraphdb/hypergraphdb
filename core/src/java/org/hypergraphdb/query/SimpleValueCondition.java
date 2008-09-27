@@ -57,6 +57,10 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     	}
  	}
 	
+	public SimpleValueCondition()
+	{
+		
+	}
 	public SimpleValueCondition(Object value)
 	{
 		this.value = value;
@@ -73,11 +77,19 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     {
         return value;
     }
-    
+	public void setValue(Object value)
+	{
+		this.value = value;
+	}
+
     public ComparisonOperator getOperator()
     {
         return operator;
     }
+	public void setOperator(ComparisonOperator operator)
+	{
+		this.operator = operator;
+	}
 	
 	public int hashCode()
 	{
