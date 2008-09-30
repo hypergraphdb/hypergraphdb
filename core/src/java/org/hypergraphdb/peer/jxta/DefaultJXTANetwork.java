@@ -751,9 +751,6 @@ public class DefaultJXTANetwork implements JXTANetwork{
 		peerAdvs.put((Advertisement)peerId, interest);
 	}
 
-
-
-	@Override
 	public Object getPeerId(Object peer)
 	{
 		return peerAdvIds.get(peer);

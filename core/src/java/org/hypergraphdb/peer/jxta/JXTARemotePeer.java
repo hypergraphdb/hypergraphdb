@@ -73,7 +73,7 @@ public class JXTARemotePeer extends RemotePeer
 	{
 		Object atom = get(handle);
 		
-		getLocalPeer().getHGDB().addOrReplace(handle, atom);
+		getLocalPeer().getHGDB().define(handle, atom);
 	}
 
 	/* (non-Javadoc)

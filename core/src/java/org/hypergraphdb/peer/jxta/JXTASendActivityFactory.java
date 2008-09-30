@@ -23,7 +23,6 @@ public class JXTASendActivityFactory implements PeerRelatedActivityFactory
 		this.pipeAdv = pipeAdv;
 	}
 	
-	@Override
 	public PeerRelatedActivity createActivity()
 	{
 		return new JXTASendActivity(peerGroup, pipeAdv);

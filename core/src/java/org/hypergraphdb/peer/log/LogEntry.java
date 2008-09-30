@@ -37,7 +37,7 @@ public class LogEntry implements Comparable<LogEntry>
 			{
 				logDb.replace(handle, value);
 			}else{
-				logDb.add(handle, value);
+				logDb.define(handle, value);
 			}
 
 			logEntryHandle = logDb.getPersistentHandle(handle);

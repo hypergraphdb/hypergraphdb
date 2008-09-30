@@ -511,12 +511,7 @@ public /*final*/ class HyperGraph
      */
     public HGHandle add(Object atom)
     {
-    	return add(null, atom, 0);
-    }
-    
-    public HGHandle add(HGPersistentHandle handle, Object atom)
-    {
-    	return add(handle, atom, 0);
+    	return add(atom, 0);
     }
     
     /**
@@ -535,10 +530,6 @@ public /*final*/ class HyperGraph
      */
     public HGHandle add(Object atom, int flags)
     {
-    	return add(null, atom, flags);
-    }
-    public HGHandle add(HGPersistentHandle handle, Object atom, int flags)
-    {
     	HGHandle result;
     	
         if (atom instanceof HGLink)
@@ -550,14 +541,14 @@ public /*final*/ class HyperGraph
             HGHandle type = typeSystem.getTypeHandle(value.getClass());
             if (type == null)
             	throw new HGException("Unable to create HyperGraph type for class " + value.getClass().getName());
-            result = addLink(handle, value, type, link, (byte)flags);
+            result = addLink(value, type, link, (byte)flags);
         }
         else
         {
         	HGHandle type = typeSystem.getTypeHandle(atom.getClass());
             if (type == null)
             	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
-            result = addNode(handle, atom, type, (byte)flags);
+            result = addNode(atom, type, (byte)flags);
         }
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
@@ -572,20 +563,7 @@ public /*final*/ class HyperGraph
      */
     public HGHandle add(Object atom, HGHandle type)
     {
-    	return add(null, atom, type, 0);
-    }
-    
-    public HGHandle add(HGPersistentHandle handle, Object atom, HGHandle type)
-    {
-    	return add(handle, atom, type, 0);
-    }
-    
-    public HGHandle addOrReplace(HGPersistentHandle handle, Object atom)
-    {
-    	if (getStore().containsLink(handle)) replace(handle, atom);
-    	else add(handle, atom);
-    	
-    	return handle;
+    	return add(atom, type, 0);
     }
     /**
      * <p>Add a new atom with a specified type and system flags to the database.</p>
@@ -599,10 +577,6 @@ public /*final*/ class HyperGraph
      */
     public HGHandle add(Object atom, HGHandle type, int flags)
     {
-    	return add(null, atom, type, flags);
-    }
-    public HGHandle add(HGPersistentHandle handle, Object atom, HGHandle type, int flags)
-    {
     	HGHandle result;
         if (atom instanceof HGLink)
         {
@@ -613,7 +587,7 @@ public /*final*/ class HyperGraph
             result = addLink(value, type, link, (byte)flags);
         }
         else
-            result = addNode(handle, atom, type, (byte)flags);
+            result = addNode(atom, type, (byte)flags);
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
     }
@@ -1357,10 +1331,6 @@ public /*final*/ class HyperGraph
     
     private HGLiveHandle addNode(final Object payload, final HGHandle typeHandle, final byte flags)
     {
-    	return addNode(null, payload, typeHandle, flags);
-    }
-    private HGLiveHandle addNode(final HGPersistentHandle handle, final Object payload, final HGHandle typeHandle, final byte flags)
-    {
     	return getTransactionManager().transact(new Callable<HGLiveHandle>() 
     	{ public HGLiveHandle call() {
 	    	HGAtomType type = typeSystem.getType(typeHandle);
@@ -1370,9 +1340,7 @@ public /*final*/ class HyperGraph
 	        HGPersistentHandle [] layout = new HGPersistentHandle[2];            
 	        layout[0] = pTypeHandle;
 	        layout[1] = valueHandle;
-
-	        HGPersistentHandle pHandle = (handle == null) ? store.store(layout) : store.store(handle, layout);
-	        final HGLiveHandle lHandle = atomAdded(pHandle, payload, flags);
+	        final HGLiveHandle lHandle = atomAdded(store.store(layout), payload, flags);
 	        indexByType.addEntry(pTypeHandle, lHandle.getPersistentHandle());
 	        indexByValue.addEntry(valueHandle, lHandle.getPersistentHandle());
 	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistentHandle(), payload);	        
@@ -1387,15 +1355,6 @@ public /*final*/ class HyperGraph
      * atom is always the outgoingSet parameter though.
      */
     private HGLiveHandle addLink(final Object payload, 
-			 final HGHandle typeHandle, 
-			 final HGLink outgoingSet, 
-			 final byte flags)
-	{
-    	return addLink(null, payload, typeHandle, outgoingSet, flags);
-	}
-    
-    private HGLiveHandle addLink(final HGPersistentHandle handle, 
-    							 final Object payload, 
     							 final HGHandle typeHandle, 
     							 final HGLink outgoingSet, 
     							 final byte flags)
@@ -1417,13 +1376,12 @@ public /*final*/ class HyperGraph
 	        
 	        //
 	        // Store in database.
-	        //
-	        HGPersistentHandle pHandle = (handle == null) ? store.store(layout) : store.store(handle, layout);
-	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);	        
+	        //	        
+	        HGPersistentHandle pHandle = store.store(layout);	        
+	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);        	        	        
 	        indexByType.addEntry(pTypeHandle, pHandle);
 	        indexByValue.addEntry(valueHandle, pHandle);
 	        idx_manager.maybeIndex(pTypeHandle, type, pHandle, payload);	
-	        
 	        //
 	        // Update the incidence sets of all its targets.
 	        //

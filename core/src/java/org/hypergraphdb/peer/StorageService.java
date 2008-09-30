@@ -70,7 +70,7 @@ public class StorageService
 		
 		
 		ownAddedHandles.add(handle);	
-		graph.add((HGPersistentHandle)handle, value);
+		graph.define((HGPersistentHandle)handle, value);
 		
 		return handle;
 		
