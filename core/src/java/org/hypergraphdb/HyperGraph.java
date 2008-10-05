@@ -849,7 +849,7 @@ public /*final*/ class HyperGraph
     	if (eventManager.dispatch(this, new HGAtomRemoveRequestEvent(handle)) == HGListener.Result.cancel)
     		return false;
     	
-    	getTransactionManager().transact(new Callable<Object>() 
+    	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() { removeTransaction(handle, keepIncidentLinks); return null; }});
     	return true;
     }
@@ -1178,7 +1178,7 @@ public /*final*/ class HyperGraph
 	    		if (instance instanceof HGValueLink)
 	    			payload = ((HGValueLink)instance).getValue();
 	    	}
-	    	HGPersistentHandle valueHandle = type.store(payload);
+	    	HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
 	    	define(atomHandle, typeHandle, valueHandle, link);
 	    	HyperGraph.this.atomAdded(atomHandle, instance, flags);
 	    	return null;
@@ -1229,7 +1229,7 @@ public /*final*/ class HyperGraph
     
     public void setSystemFlags(final HGHandle handle, final int flags)
     {
-    	getTransactionManager().transact(new Callable<Object>() 
+    	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
 	    	//
 	    	// NOTE: there are several cases here. We may be switching from
@@ -1331,11 +1331,11 @@ public /*final*/ class HyperGraph
     
     private HGLiveHandle addNode(final Object payload, final HGHandle typeHandle, final byte flags)
     {
-    	return getTransactionManager().transact(new Callable<HGLiveHandle>() 
+    	return getTransactionManager().ensureTransaction(new Callable<HGLiveHandle>() 
     	{ public HGLiveHandle call() {
 	    	HGAtomType type = typeSystem.getType(typeHandle);
 	    	HGPersistentHandle pTypeHandle = getPersistentHandle(typeHandle);    	
-	        HGPersistentHandle valueHandle = type.store(payload);  
+	        HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);  
 	
 	        HGPersistentHandle [] layout = new HGPersistentHandle[2];            
 	        layout[0] = pTypeHandle;
@@ -1359,11 +1359,11 @@ public /*final*/ class HyperGraph
     							 final HGLink outgoingSet, 
     							 final byte flags)
     {
-    	return getTransactionManager().transact(new Callable<HGLiveHandle>() 
+    	return getTransactionManager().ensureTransaction(new Callable<HGLiveHandle>() 
         { public HGLiveHandle call() {
 	    	HGAtomType type = typeSystem.getType(typeHandle);
 	    	HGPersistentHandle pTypeHandle = getPersistentHandle(typeHandle);
-	        HGPersistentHandle valueHandle = type.store(payload);            
+	        HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);            
 	        
 	        //
 	        // Prepare link layout.
@@ -1392,6 +1392,8 @@ public /*final*/ class HyperGraph
     
     private HGLiveHandle atomAdded(HGPersistentHandle pHandle, Object instance, byte flags)
     {
+    	if (instance instanceof HGGraphHolder)
+    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);    	
         if ( (flags & HGSystemFlags.MANAGED) != 0)
         {
         	AtomAttrib attribs = new AtomAttrib();
@@ -1427,7 +1429,7 @@ public /*final*/ class HyperGraph
      */
     private Pair<HGLiveHandle, Object> loadAtom(final HGPersistentHandle persistentHandle,  final HGLiveHandle liveHandle)    
     {
-    	return getTransactionManager().transact(new Callable<Pair<HGLiveHandle, Object>>() 
+    	return getTransactionManager().ensureTransaction(new Callable<Pair<HGLiveHandle, Object>>() 
  	    { public Pair<HGLiveHandle, Object> call() {
 	        Object instance;        
 	        HGPersistentHandle [] link = store.getLink(persistentHandle);
@@ -1453,7 +1455,7 @@ public /*final*/ class HyperGraph
 	        IncidenceSetRef isref = new IncidenceSetRef(persistentHandle, HyperGraph.this);
 	        
 	        HGAtomType type = typeSystem.getType(typeHandle);
-	        TypeUtils.initiateAtomConstruction(HyperGraph.this, valueHandle);
+//	        TypeUtils.initiateAtomConstruction(HyperGraph.this, valueHandle);
 	        if (link.length == 2)	        	
 	            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
 	        else
@@ -1483,7 +1485,7 @@ public /*final*/ class HyperGraph
 	            if (! (instance instanceof HGLink))
 	                instance = new HGValueLink(instance, targets);
 	        }
-	        TypeUtils.atomConstructionComplete(HyperGraph.this, valueHandle);
+//	        TypeUtils.atomConstructionComplete(HyperGraph.this, valueHandle);
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {
@@ -1518,7 +1520,7 @@ public /*final*/ class HyperGraph
     {
     	try
     	{
-	    	getTransactionManager().transact(new Callable<Object>() 
+	    	getTransactionManager().ensureTransaction(new Callable<Object>() 
 	  	    { public Object call() {
 	  	    	
 	  	    	// The following (both the code for MUTABLE and MANAGED flags) cause
@@ -1739,11 +1741,11 @@ public /*final*/ class HyperGraph
     		for (int i = 2; i < layout.length; i++)
     			targetSet[i - 2] = layout[i];
     	}
-    	TypeUtils.initiateAtomConstruction(HyperGraph.this, layout[1]);
+//    	TypeUtils.initiateAtomConstruction(HyperGraph.this, layout[1]);
     	Object result = type.make(layout[1], 
     							  new ReadyRef<HGHandle[]>(targetSet), 
     							  new IncidenceSetRef(atomHandle, this));
-    	TypeUtils.atomConstructionComplete(HyperGraph.this, layout[1]);
+//    	TypeUtils.atomConstructionComplete(HyperGraph.this, layout[1]);
         if (targetSet.length > 0 && ! (result instanceof HGLink))
             result = new HGValueLink(result, targetSet);
         if (result instanceof HGAtomType)
@@ -1768,7 +1770,7 @@ public /*final*/ class HyperGraph
 								 final Object atom, 
 								 final HGHandle typeHandle)
     {
-    	getTransactionManager().transact(new Callable<Object>() 
+    	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ 
     		public Object call() { replaceTransaction(lHandle, pHandle, atom, typeHandle); return null; }
     	});    	
@@ -1842,7 +1844,7 @@ public /*final*/ class HyperGraph
 	        
 	        TypeUtils.releaseValue(HyperGraph.this, layout[1]);
 	        oldType.release(layout[1]);
-	        layout[1] = type.store(newValue);
+	        layout[1] = TypeUtils.storeValue(this, newValue, type);
 	        layout[0] = getPersistentHandle(typeHandle);
 	    	indexByValue.removeEntry(oldValueHandle, pHandle);
 	    	indexByValue.addEntry(layout[1], pHandle);
@@ -1904,7 +1906,7 @@ public /*final*/ class HyperGraph
 		TypeUtils.releaseValue(this, layout[1]);
 		oldType.release(layout[1]);
 		indexByValue.removeEntry(layout[1], instanceHandle);
-		layout[1] = newType.store(oldInstance);
+		layout[1] = TypeUtils.storeValue(this, oldInstance, newType);
 		indexByValue.addEntry(layout[1], instanceHandle);
 		Object newInstance = rawMake(layout, newType, instanceHandle);
 		

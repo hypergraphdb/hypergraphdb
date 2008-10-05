@@ -32,11 +32,9 @@ public class BDBTxLock implements ReadWriteLock
 	private DatabaseEntry objectId;
 	private BDBReadLock readLock = new BDBReadLock();
 	private BDBWriteLock writeLock = new BDBWriteLock();
-	int lockerId;
 	
 	private int getLockerId()
 	{
-		if (1 == 1) return lockerId;
 		try
 		{
 			return ((TransactionBDBImpl)graph.getTransactionManager().getContext().getCurrent()).getBDBTransaction().getId();
@@ -194,19 +192,8 @@ public class BDBTxLock implements ReadWriteLock
 		byte [] tmp = new byte[objectId.getData().length];
 		System.arraycopy(objectId.getData(), 0, tmp, 0, tmp.length);
 		this.objectId = new DatabaseEntry(tmp);
-		try{
-		lockerId = getEnv().createLockerID();
-		}
-		catch (Exception ex) { throw new HGException(ex); }
 	}
 	
-	protected void finalize()
-	{
-		try{
-			 getEnv().freeLockerID(lockerId);
-			}
-			catch (Exception ex) { throw new HGException(ex); }		
-	}
 	public Lock readLock()
 	{
 		return readLock;
@@ -215,5 +202,15 @@ public class BDBTxLock implements ReadWriteLock
 	public Lock writeLock()
 	{
 		return writeLock;
+	}
+	
+	public HyperGraph getGraph()
+	{
+		return graph;
+	}
+	
+	public byte [] getObjectId()
+	{
+		return objectId.getData();
 	}
 }

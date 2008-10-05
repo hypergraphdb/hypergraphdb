@@ -22,6 +22,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.TypePlusCondition;
+import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionException;
 import org.hypergraphdb.util.HGUtils;
 
@@ -152,8 +153,9 @@ public final class TypeUtils
 	
 	private static final String JAVA_REF_MAP = "JAVA_REF_VALUE_MAP".intern();
 	private static final String HANDLE_REF_SET = "HANDLE_REF_SET".intern();
-	private static ThreadLocal<Map<HGPersistentHandle, Object>> HANDLE_REF_MAP = 
-		new ThreadLocal<Map<HGPersistentHandle, Object>>();
+	private static final String HANDLE_REF_MAP = "HANDLE_REF_MAP".intern();
+/*	private static ThreadLocal<Map<HGPersistentHandle, Object>> HANDLE_REF_MAP = 
+		new ThreadLocal<Map<HGPersistentHandle, Object>>(); */
 	
 	public interface WrappedRuntimeInstance { Object getRealInstance(); }
 	
@@ -169,13 +171,15 @@ public final class TypeUtils
 		return refMap;
 	}
 	
-	public static Map<HGPersistentHandle, Object> getThreadHandleRefMap()
+	public static Map<HGPersistentHandle, Object> getThreadHandleRefMap(HyperGraph graph)
 	{
-		Map<HGPersistentHandle, Object> refMap = HANDLE_REF_MAP.get(); 
+		Map<HGPersistentHandle, Object> refMap =  
+			(Map<HGPersistentHandle, Object>)graph.getTransactionManager().getContext().getCurrent().getAttribute(HANDLE_REF_MAP);
+			// HANDLE_REF_MAP.get(); 
 		if (refMap == null)
 		{
 			refMap = new HashMap<HGPersistentHandle, Object>();
-			HANDLE_REF_MAP.set(refMap);			
+			graph.getTransactionManager().getContext().getCurrent().setAttribute(HANDLE_REF_MAP, refMap);			
 		}
 		return refMap;
 	}
@@ -201,42 +205,47 @@ public final class TypeUtils
 		return result;
 	}
 	
-	public static boolean isValueReleased(HyperGraph hg, HGPersistentHandle h)
+	public static boolean isValueReleased(HyperGraph graph, HGPersistentHandle h)
 	{
-		return getTransactionHandleSet(hg).contains(h);
+		return getTransactionHandleSet(graph).contains(h);
 	}
 	
-	public static void releaseValue(HyperGraph hg, HGPersistentHandle h)
+	@SuppressWarnings("unchecked")
+	public static void releaseValue(HyperGraph graph, HGPersistentHandle h)
 	{
-		getTransactionHandleSet(hg).add(h);
+		Object instance =  getThreadHandleRefMap(graph).remove(h);
+		if (instance != null)
+			getTransactionObjectRefMap(graph).remove(instance);
+		getTransactionHandleSet(graph).add(h);
 	}
 	
-	public static HGPersistentHandle storeValue(HyperGraph hg, Object value, HGAtomType type)
+	public static HGPersistentHandle storeValue(HyperGraph graph, Object value, HGAtomType type)
 	{
-		Map<Object, HGPersistentHandle> refMap = getTransactionObjectRefMap(hg);
+		Map<Object, HGPersistentHandle> refMap = getTransactionObjectRefMap(graph);
 		HGPersistentHandle result = refMap.get(value);
 		if (result == null)
 		{
 			result = type.store(value);
 			refMap.put(value, result);
 		}
+		getThreadHandleRefMap(graph).put(result, value);
 		return result;
 	}
 	
-	public static void initiateAtomConstruction(HyperGraph graph, HGPersistentHandle h)
+/*	public static void initiateAtomConstruction(HyperGraph graph, HGPersistentHandle h)
 	{
-	}
+	} */
 	
-	public static void setValueFor(HyperGraph hg, HGPersistentHandle h, Object value)
+	public static void setValueFor(HyperGraph graph, HGPersistentHandle h, Object value)
 	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap();
+		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph);
 		if (!refMap.containsKey(h))
 			refMap.put(h, value);
 	}
 	
-	public static Object makeValue(HyperGraph hg, HGPersistentHandle h, HGAtomType type)
+	public static Object makeValue(HyperGraph graph, HGPersistentHandle h, HGAtomType type)
 	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(); 
+		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph); 
 		Object result = refMap.get(h);
 		if (result == null)
 		{
@@ -246,11 +255,11 @@ public final class TypeUtils
 		return result;
 	}
 	
-	public static void atomConstructionComplete(HyperGraph graph, HGPersistentHandle h)
+/*	public static void atomConstructionComplete(HyperGraph graph, HGPersistentHandle h)
 	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap();
+		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph);
 		refMap.clear();
-	}
+	} */
 	
 	public static boolean deleteInstances(HyperGraph graph, HGHandle type)
 	{		
