@@ -12,26 +12,19 @@ import org.hypergraphdb.util.HGUtils;
 @SuppressWarnings("unchecked")
 public class CompositeIndexer extends HGIndexer
 {
-	private HGHandle [] indexerPartHandles;
 	private HGIndexer [] indexerParts = null;
 	
-	private void fetchIndexers(HyperGraph graph)
-	{
-		if (indexerParts != null)
-			return;
-		this.indexerParts = new HGIndexer[indexerParts.length];		
-		for (int i = 0; i < indexerPartHandles.length; i++)
-			indexerParts[i] = graph.get(indexerPartHandles[i]);
-	}
 	
 	public CompositeIndexer()
 	{		
 	}
-	
-	public CompositeIndexer(HGHandle type, HGHandle [] indexerParts)
+		
+	public CompositeIndexer(HGHandle type, HGIndexer [] indexerParts)
 	{
 		super(type);
-		this.indexerPartHandles = indexerParts;
+		if (indexerParts == null || indexerParts.length == 0)
+			throw new IllegalArgumentException("Attempt to construct CompositeIndexer with null or empty parts.");		
+		this.indexerParts = indexerParts;
 	}
 	
 	@Override
@@ -39,7 +32,7 @@ public class CompositeIndexer extends HGIndexer
 	{
 		if (! (other instanceof CompositeIndexer))
 			return false;
-		return HGUtils.eq(indexerPartHandles, ((CompositeIndexer)other).indexerPartHandles);
+		return HGUtils.eq(indexerParts, ((CompositeIndexer)other).indexerParts);
 	}
 
 	@Override
@@ -57,7 +50,6 @@ public class CompositeIndexer extends HGIndexer
 	@Override
 	public Object getKey(HyperGraph graph, Object atom)
 	{
-		fetchIndexers(graph);
 		byte [][] keys = new byte[indexerParts.length][];
 		int size = 1;
 		for (int i = 0; i < indexerParts.length; i++)
@@ -83,9 +75,20 @@ public class CompositeIndexer extends HGIndexer
 	@Override
 	public int hashCode()
 	{
-		int x = indexerPartHandles.length;
-		for (HGHandle h : indexerPartHandles)
-			x ^= h.hashCode() >> 16;
+		if (indexerParts == null) return 0;
+		int x = indexerParts.length;
+		for (HGIndexer ind : indexerParts)
+			x ^= ind.hashCode() >> 16;
 		return x;
 	}
+
+	public HGIndexer[] getIndexerParts()
+	{
+		return indexerParts;
+	}
+
+	public void setIndexerParts(HGIndexer[] indexerParts)
+	{
+		this.indexerParts = indexerParts;
+	}	
 }

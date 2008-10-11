@@ -16,6 +16,7 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.*;
 import org.hypergraphdb.storage.BAtoHandle;
+import org.hypergraphdb.storage.ByteArrayConverter;
 
 /**
  * <p>
@@ -76,12 +77,12 @@ public class HGIndexManager
 		{
 			String name = getIndexName(indexer);
 			result = graph.getStore().getIndex(name, 
-											   indexer.getConverter(graph), 
+											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 											   BAtoHandle.getInstance(), 
 											   indexer.getComparator(graph));
 			if (result == null)
 				result = graph.getStore().createIndex(name, 
-													  indexer.getConverter(graph), 
+													  (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 													  BAtoHandle.getInstance(), 
 													  indexer.getComparator(graph));
 			indices.put(indexer, result);
