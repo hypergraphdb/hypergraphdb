@@ -65,7 +65,7 @@ public abstract class HGIndexer
 
 	/**
 	 * <p>
-	 * Return an index key for the given atom.
+	 * Returns an index key for the given atom.
 	 * </p>
 	 * 
 	 * @param graph The current <code>HyperGraph</code> instance.
@@ -78,13 +78,13 @@ public abstract class HGIndexer
 	
 	/**
 	 * <p>Return a <code>ByteArrayConverter</code> capable of translating keys
-	 * return by this indexer to/from a <code>byte[]</code>.
+	 * returned by this indexer to/from a <code>byte[]</code>.
 	 *  
 	 * @param graph The current HyperGraph instance.
 	 * @return The <code>ByteArrayConverter</code> for type of index keys 
 	 * return by this indexer or <code>null</code> if keys are of type <code>byte[]</code>. 
 	 */
-	public abstract ByteArrayConverter getConverter(HyperGraph graph);
+	public abstract ByteArrayConverter<?> getConverter(HyperGraph graph);
 	
 	/**
 	 * <p>
@@ -94,10 +94,17 @@ public abstract class HGIndexer
 	 * to convert them to the appropriate run-time type for performing the comparison
 	 * if need be.
 	 * </p>
+	 * 
+	 * <p>
+	 * The method may return <code>null</code> if a default byte-by-byte comparator is to be
+	 * used.
+	 * </p>
+	 * 
 	 * @param graph The current HyperGraph instance.
-	 * @return A comparator used to compare key values return by this indexer. 
+	 * @return A comparator used to compare key values return by this indexer or 
+	 * <code>null</code> to use a default byte-by-byte comparison of keys. 
 	 */
-	public abstract Comparator getComparator(HyperGraph graph);
+	public abstract Comparator<?> getComparator(HyperGraph graph);
 	
 	/**
 	 * <p>Declared to enforce implementation.</p> 
