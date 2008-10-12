@@ -25,10 +25,14 @@ import org.hypergraphdb.query.ComparisonOperator;
 @SuppressWarnings("unchecked")
 public class IndexBasedQuery extends HGQuery<Object>
 {
+    public static enum ScanType { none, keys, values };
+    
     private HGIndex<? extends Object, ? extends Object> index;
     private Object key;
     private ComparisonOperator operator = ComparisonOperator.EQ;
-    private boolean scanKeys = true;
+    private ScanType scanType = ScanType.none;
+    
+
     
 /*    public static final int EQ= 0;
     public static final int LT = 1;
@@ -46,10 +50,10 @@ public class IndexBasedQuery extends HGQuery<Object>
      * @param scanKeys <code>true</code> if all keys must be scanned and 
      * <code>false</code> if all values must be scanned instead.
      */
-    public IndexBasedQuery(HGIndex<Object, Object> index, boolean scanKeys)
+    public IndexBasedQuery(HGIndex<Object, Object> index, ScanType scanType)
     {
     	this.index = index;
-    	this.scanKeys = scanKeys;
+    	this.scanType = scanType;
     }
     
     public IndexBasedQuery(HGIndex<? extends Object, ? extends Object> index, Object key)
@@ -67,24 +71,26 @@ public class IndexBasedQuery extends HGQuery<Object>
     
     public HGRandomAccessResult<Object> execute()
     {
-    	if (key == null)
-    		return scanKeys ? 
-    				((HGIndex<Object, Object>)index).scanKeys() : 
-    				((HGIndex<Object, Object>)index).scanValues();
-    	switch (operator)
+    	switch (scanType)
     	{
-    		case EQ:
-    			return ((HGIndex<Object, Object>)index).find(key);
-    		case LT:
-    			return ((HGSortIndex<Object, Object>)index).findLT(key);
-    		case GT:
-    			return ((HGSortIndex<Object, Object>)index).findGT(key);
-    		case LTE:
-    			return ((HGSortIndex<Object, Object>)index).findLTE(key);
-    		case GTE:
-    			return ((HGSortIndex<Object, Object>)index).findGTE(key);   
+    		case keys: return ((HGIndex<Object, Object>)index).scanKeys();
+    		case values: ((HGIndex<Object, Object>)index).scanValues();
     		default:
-    			throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
-    	}
+		    	switch (operator)
+		    	{
+		    		case EQ:
+		    			return ((HGIndex<Object, Object>)index).find(key);
+		    		case LT:
+		    			return ((HGSortIndex<Object, Object>)index).findLT(key);
+		    		case GT:
+		    			return ((HGSortIndex<Object, Object>)index).findGT(key);
+		    		case LTE:
+		    			return ((HGSortIndex<Object, Object>)index).findLTE(key);
+		    		case GTE:
+		    			return ((HGSortIndex<Object, Object>)index).findGTE(key);   
+		    		default:
+		    			throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
+		    	}
+	    }
     }
 }

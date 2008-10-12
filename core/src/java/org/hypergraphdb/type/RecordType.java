@@ -247,6 +247,8 @@ public class RecordType implements HGCompositeType
     public void release(HGPersistentHandle handle)
     {    	
         HGPersistentHandle [] layout = graph.getStore().getLink(handle);
+        if (layout == null)
+        	System.out.println("oops, no data for : " + handle);
         if (layout.length != slots.size() * 2)
             throw new HGException("RecordType.remove: Record value of handle " + 
                                   handle + 

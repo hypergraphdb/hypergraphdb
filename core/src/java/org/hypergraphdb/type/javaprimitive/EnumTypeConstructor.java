@@ -8,6 +8,7 @@ import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -40,7 +41,8 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		String classname = (String)stringType.make(layout[0], null, null);
 		try
 		{
-			result.setEnumType((Class<Enum>)Class.forName(classname));
+			Class<Enum> cl = HGUtils.loadClass(classname);
+			result.setEnumType(cl);
 		}
 		catch (ClassNotFoundException ex)
 		{

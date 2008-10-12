@@ -144,4 +144,10 @@ public class HGUtils
 		else
 			throw new HGException(t);
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> loadClass(String classname) throws ClassNotFoundException
+	{
+		return (Class<T>)Thread.currentThread().getContextClassLoader().loadClass(classname);		
+	}
 }

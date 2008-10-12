@@ -12,11 +12,14 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSCombiner<T>
 {
+	private static final Object UNKNOWN = new Object();
+	
 	private HGRandomAccessResult<T> left, right;
-	private T current = null, next = null, prev = null;
-	private int lookahead = 0;
+	private Object current = UNKNOWN, next = UNKNOWN, prev = UNKNOWN;
+//	private int lookahead = 0;
 	
 	private void swap()
 	{
@@ -114,13 +117,15 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				case found: 
 				{
 					current = left.current();
-					prev = back();
+/*					prev = back();
 					if (prev != null)
 						advance();
 					if ( (next = advance()) != null)
 						lookahead = 1;
 					else
-						lookahead = 0;
+						lookahead = 0; */
+					//lookahead = 0;
+					next = prev = UNKNOWN;
 					return true;
 				}
 				case close:
@@ -155,8 +160,8 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	{
 		this.left = (HGRandomAccessResult<T>)left;
 		this.right = (HGRandomAccessResult<T>)right;
-		next = advance();
-		lookahead = 1;
+//		next = advance();
+//		lookahead = 1;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -195,12 +200,14 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			if (r_r == GotoResult.found)
 			{
 				current = left.current();
-				prev = back();
+/*				prev = back();
 				if (prev != null) advance();
 				if ( (next = advance()) != null)
 					lookahead = 1;
 				else
-					lookahead = 0;
+					lookahead = 0; */
+				next = prev = UNKNOWN;
+//				lookahead = 0;
 				return GotoResult.found;
 			}
 			else // r_r == close
@@ -251,10 +258,10 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 
 	public T current() 
 	{
-		if (current == null)
+		if (current == UNKNOWN)
 			throw new NoSuchElementException();
 		else
-			return current;
+			return (T)current;
 	}
 
 	public boolean isOrdered() 
@@ -264,18 +271,20 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 
 	public boolean hasPrev() 
 	{
+		if (prev == UNKNOWN)
+			prev = back();
 		return prev != null;
 	}
 
 	public T prev() 
 	{
-		if (prev == null)
+		if (!hasPrev())
 			throw new NoSuchElementException();
 		else
 		{
 			next = current;
 			current = prev;
-	        lookahead++;
+/*	        lookahead++;
 	        while (true)
 	        {
 	        	prev = back();
@@ -283,25 +292,28 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	        		break;
 	        	if (--lookahead == -1)
 	        		break;
-	        }
-			return current;
+	        } */
+			prev = UNKNOWN;
+			return (T)current;
 		}
 	}
 
 	public boolean hasNext() 
 	{
+		if (next == UNKNOWN)
+			next = advance();
 		return next != null;
 	}
 
 	public T next() 
 	{
-		if (next == null)
+		if (!hasNext())
 			throw new NoSuchElementException();
 		else
 		{
 			prev = current;
 			current = next;
-	        lookahead--;
+/*	        lookahead--;
 	        while (true)
 	        {
 	        	next = advance();
@@ -309,8 +321,9 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	        		break;
 	        	if (++lookahead == 1)
 	        		break;
-	        }
-			return current;
+	        } */
+			next = UNKNOWN;
+			return (T)current;
 		}
 	}
 

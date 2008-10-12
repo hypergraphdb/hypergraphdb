@@ -29,11 +29,14 @@ import com.sleepycat.db.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 {        
+	private static final Object UNKNOWN = new Object();
+	
     protected BDBTxCursor cursor;
-    protected T current, prev, next;
-    protected int lookahead = 0;
+    protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;
+//    protected int lookahead = 0;
     protected DatabaseEntry key;        
     protected DatabaseEntry data = new DatabaseEntry();
     protected ByteArrayConverter<T> converter;
@@ -73,10 +76,11 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     
     protected final void moveNext()
     {
-        checkCursor();
+//        checkCursor();
         prev = current;
         current = next;
-        lookahead--;
+        next = UNKNOWN;
+/*        lookahead--;
         while (true)
         {
         	next = advance();
@@ -84,15 +88,16 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
         		break;
         	if (++lookahead == 1)
         		break;
-        }
+        } */
     }
     
     protected final void movePrev()
     {
-        checkCursor();
+//        checkCursor();
         next = current;
         current = prev;
-        lookahead++;
+        prev = UNKNOWN;
+/*        lookahead++;
         while (true)
         {
         	prev = back();
@@ -100,7 +105,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
         		break;
         	if (--lookahead == -1)
         		break;
-        }
+        } */
     }
     
     protected abstract T advance();
@@ -139,7 +144,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(data.getData());
-	        lookahead = 1;
+//	        lookahead = 1;
 	    }
 	    catch (Throwable t)
 	    {
@@ -150,14 +155,15 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected void positionToCurrent(byte [] data)
     {
 		current = converter.fromByteArray(data);
-        prev = back();
+/*        prev = back();
         if (prev != null)
         	advance();  	
 		next = advance();		
         if (next != null) 
         	lookahead = 1;
-        else 
-        	lookahead = 0;
+        else */ 
+//        	lookahead = 0;
+        prev = next = UNKNOWN;
     }
     
     public GotoResult goTo(T value, boolean exactMatch)
@@ -202,7 +208,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 
         try
         {
-            current = next = prev = null;
+            current = next = prev = UNKNOWN;
             key = null;
             cursor.close();
         }
@@ -219,18 +225,22 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     
     public final T current()     
     {
-    	if (current == null)
+    	if (current == UNKNOWN)
     		throw new NoSuchElementException();
-    	return current; 
+    	return (T)current; 
     }
     
     public final boolean hasPrev()    
-    { 
+    {
+    	if (prev == UNKNOWN)
+    		prev = back();
     	return prev != null; 
     }
     
     public final boolean hasNext()    
     { 
+    	if (next == UNKNOWN)
+    		next = advance();
     	return next != null; 
     }
     
