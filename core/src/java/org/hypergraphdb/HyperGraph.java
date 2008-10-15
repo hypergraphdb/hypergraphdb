@@ -10,6 +10,7 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -22,6 +23,8 @@ import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.type.*;
 import org.hypergraphdb.atom.HGStats;
+import org.hypergraphdb.maintenance.MaintenanceException;
+import org.hypergraphdb.maintenance.MaintenanceOperation;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
@@ -225,6 +228,37 @@ public /*final*/ class HyperGraph
 	}
 
 	/**
+	 * <p>Execute all currently scheduled maintenance operations. Note that calling this
+	 * method can potentially take a long time. Also, it is imperative that no other
+	 * thread accesses this HyperGraphDB instance while the maintenance operations are
+	 * being executed.
+	 * </p>
+	 * <p>
+	 * This method is invoked by default when a HyperGraphDB instance is open, unless
+	 * the <code>HGConfiguration</code> specifies that maintenance operations must be
+	 * canceled or skipped. The method is made public for convenience to applications that
+	 * "know" what they are doing - the same effect can be achieved by closing and re-opening
+	 * the HyperGraphDB instance, but with the side effect of loosing all cached information. 
+	 * </p>
+	 */
+	public void runMaintenance()
+	{
+		List<MaintenanceOperation> L = HGQuery.hg.getAll(this, HGQuery.hg.typePlus(MaintenanceOperation.class));
+		for (MaintenanceOperation op : L)
+			try 
+			{ 
+				op.execute(this);
+				remove(getHandle(op));
+			}
+			catch (MaintenanceException ex)
+			{
+				ex.printStackTrace(System.err);
+				if (ex.isFatal())
+					break;
+			}
+	}
+	
+	/**
      * <p>Open the database if it's not already open.</p>
      */
     private synchronized void open()
@@ -287,7 +321,19 @@ public /*final*/ class HyperGraph
 	        // it all remains an implementation detail.
 	        typeSystem.getJavaTypeFactory().initNonDefaultMappers();
 	        
-	        eventManager.dispatch(this, new HGOpenedEvent());	    	
+	        eventManager.dispatch(this, new HGOpenedEvent());	
+	        
+	        if (config != null)
+	        {
+	        	if (config.getCancelMaintenance())
+	        	{
+	        		List<HGHandle> L = HGQuery.hg.findAll(this, HGQuery.hg.typePlus(MaintenanceOperation.class));
+	        		for (HGHandle x : L)
+	        			remove(x);
+	        	}
+	        	else if (!config.getSkipMaintenance())
+	        		runMaintenance();
+	        }
     	}
     	catch (Throwable t)
     	{

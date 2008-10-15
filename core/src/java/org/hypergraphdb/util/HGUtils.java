@@ -11,6 +11,8 @@ package org.hypergraphdb.util;
 import java.io.PrintStream;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGSearchResult;
 
 /**
@@ -149,5 +151,15 @@ public class HGUtils
 	public static <T> Class<T> loadClass(String classname) throws ClassNotFoundException
 	{
 		return (Class<T>)Thread.currentThread().getContextClassLoader().loadClass(classname);		
+	}
+	
+	public static HGHandle [] toHandleArray(HGLink link)
+	{
+		if (link == null)
+			return null;
+		HGHandle [] A = new HGHandle[link.getArity()];
+		for (int i = 0; i < link.getArity(); i++)
+			A[i] = link.getTargetAt(i);
+		return A;
 	}
 }

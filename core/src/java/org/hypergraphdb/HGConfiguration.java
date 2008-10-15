@@ -20,6 +20,8 @@ public class HGConfiguration
 	
 	private boolean transactional;
 	private long storeCacheSize = DEFAULT_STORE_CACHE;
+	private boolean skipMaintenance = false;
+	private boolean cancelMaintenance = false;
 	
 	public HGConfiguration()
 	{
@@ -90,4 +92,39 @@ public class HGConfiguration
 	{
 		this.storeCacheSize = storeCacheSize;
 	}
+
+	/** 
+	 * <p>Return true if HyperGraph should skip scheduled maintenance operations when
+	 * it is open. Return false otherwise.</p> 
+	 */
+	public boolean getSkipMaintenance()
+	{
+		return skipMaintenance;
+	}
+
+	/**
+	 * <p>Specify whether HyperGraph should skip maintenance operation when it is being open.</p>
+	 */
+	public void setSkipMaintenance(boolean skipMaintenance)
+	{
+		this.skipMaintenance = skipMaintenance;
+	}
+
+	/**
+	 * <p>Return true if HyperGraph will cancel maintenance operation when it is being open.
+	 * Canceling maintenance operations will delete them so they'll never be run.</p>
+	 */	
+	public boolean getCancelMaintenance()
+	{
+		return cancelMaintenance;
+	}
+
+	/**
+	 * <p>Specify whether HyperGraph should cancel maintenance operation when it is being open.
+	 * Canceling maintenance operations will delete them so they'll never be run.</p>
+	 */		
+	public void setCancelMaintenance(boolean cancelMaintenance)
+	{
+		this.cancelMaintenance = cancelMaintenance;
+	}	
 }

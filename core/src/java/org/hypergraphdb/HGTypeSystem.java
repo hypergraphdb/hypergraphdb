@@ -758,16 +758,12 @@ public class HGTypeSystem
 	}
 
 	/**
-	 * <p>Return the <code>HGHandle</code> of the HyperGraph type representing a given
-	 * Java class. If no type has been associated yet with that particular <code>Class</code>, a
-	 * new one will be created using the currently active <code>JavaTypeFactory</code>.</p>
-	 *
-	 * @param clazz The <code>Class</code> instance of the Java class. Cannot be <code>null</code>
-	 * @return The <code>HGHandle</code> for that class. If the Java class hasn't been previously
-	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
-	 * will be returned.
+	 * <p>
+	 * Return the HyperGraphDB type handle corresponding to the given Java class if
+	 * a type for this class was previously defined. Return <code>null</code> otherwise.
+	 * </p>
 	 */
-	public HGHandle getTypeHandle(Class<?> clazz)
+	public HGHandle getTypeHandleIfDefined(Class<?> clazz)
 	{
 		if (clazz.isPrimitive())
 			clazz = BonesOfBeans.wrapperEquivalentOf(clazz);
@@ -803,8 +799,23 @@ public class HGTypeSystem
 			//throw new HGException("Could not handle array type for " + clazz.getComponentType().getName() +
 			//		" since there is no HyperGraph neither for this array type, nor for the generic Object[].");
 		}
-
-		return defineNewJavaType(clazz);
+		return null;
+	}
+	
+	/**
+	 * <p>Return the <code>HGHandle</code> of the HyperGraph type representing a given
+	 * Java class. If no type has been associated yet with that particular <code>Class</code>, a
+	 * new one will be created using the currently active <code>JavaTypeFactory</code>.</p>
+	 *
+	 * @param clazz The <code>Class</code> instance of the Java class. Cannot be <code>null</code>
+	 * @return The <code>HGHandle</code> for that class. If the Java class hasn't been previously
+	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
+	 * will be returned.
+	 */
+	public HGHandle getTypeHandle(Class<?> clazz)
+	{
+		HGHandle h = getTypeHandleIfDefined(clazz);
+		return h != null ? h : defineNewJavaType(clazz);
 	}
 
 	/**

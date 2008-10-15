@@ -8,9 +8,11 @@
  */
 package org.hypergraphdb.type;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -21,8 +23,11 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
+import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.query.TypePlusCondition;
-import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionException;
 import org.hypergraphdb.util.HGUtils;
 
@@ -260,6 +265,47 @@ public final class TypeUtils
 		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph);
 		refMap.clear();
 	} */
+	
+	public static List<HGHandle> subsumesClosure(HyperGraph graph, HGHandle baseType)
+	{
+		DefaultALGenerator alGenerator = new DefaultALGenerator(graph, 
+																new AtomTypeCondition(HGSubsumes.class),											
+												                null,
+												                false,
+												                true,
+												                false);
+		HGDepthFirstTraversal traversal = new HGDepthFirstTraversal(baseType, alGenerator);
+		ArrayList<HGHandle> subTypes = new ArrayList<HGHandle>();
+		while (traversal.hasNext())
+			subTypes.add(traversal.next().getSecond());
+		subTypes.add(baseType);
+		return subTypes;
+	}
+	
+	public static boolean deleteType(HyperGraph graph, Class<?> type, boolean recursive)
+	{
+		HGHandle th = graph.getTypeSystem().getTypeHandleIfDefined(type);
+		if (th == null)
+			return true;
+		else if (recursive)
+		{
+			List<HGHandle> L = subsumesClosure(graph, th);
+			for (HGHandle h : L)
+				if (!deleteType(graph, h))
+						return false;
+			return true;
+		}
+		else
+			return deleteType(graph, th);
+	}
+	
+	public static boolean deleteType(HyperGraph graph, HGHandle type)
+	{
+		if (deleteInstances(graph, type))
+			return graph.remove(type);
+		else
+			return false;
+	}
 	
 	public static boolean deleteInstances(HyperGraph graph, HGHandle type)
 	{		

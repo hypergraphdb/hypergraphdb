@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.*;
+import org.hypergraphdb.maintenance.ApplyNewIndexer;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
 
@@ -52,8 +53,8 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 public class HGIndexManager 
 {
 	private HyperGraph graph;	
-	private HashMap<HGIndexer, HGIndex<? extends Object, HGPersistentHandle>> indices = 
-			new HashMap<HGIndexer, HGIndex<? extends Object, HGPersistentHandle>>();	
+	private HashMap<HGIndexer, HGIndex<? extends Object, ? extends Object>> indices = 
+			new HashMap<HGIndexer, HGIndex<? extends Object, ? extends Object>>();	
 	private HashMap<HGHandle, List<HGIndexer>> indexers = new HashMap<HGHandle, List<HGIndexer>>();
 	
 	private String getIndexName(HGIndexer indexer)
@@ -70,20 +71,26 @@ public class HGIndexManager
 	}
 	
 	// TODO: this needs to be made thread safe.
-	private <KeyType extends Object> HGIndex<KeyType, HGPersistentHandle> getOrCreateIndex(HGIndexer indexer)
+	private <KeyType extends Object, ValueType extends Object> 
+		HGIndex<KeyType, ValueType> getOrCreateIndex(HGIndexer indexer)
 	{
-		HGIndex<KeyType, HGPersistentHandle> result = (HGIndex<KeyType, HGPersistentHandle>)indices.get(indexer);
-		if (result == null)
+		HGIndex<KeyType, ValueType> result = (HGIndex<KeyType, ValueType>)indices.get(indexer);
+		if (result == null)			
 		{
 			String name = getIndexName(indexer);
+			ByteArrayConverter<ValueType> converter = null;
+			if (indexer instanceof HGValueIndexer)
+				converter = (ByteArrayConverter<ValueType>)((HGValueIndexer)indexer).getValueConverter(graph);
+			else
+				converter = (ByteArrayConverter<ValueType>)BAtoHandle.getInstance();
 			result = graph.getStore().getIndex(name, 
 											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
-											   BAtoHandle.getInstance(), 
+											   converter, 
 											   indexer.getComparator(graph));
 			if (result == null)
 				result = graph.getStore().createIndex(name, 
 													  (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
-													  BAtoHandle.getInstance(), 
+													  converter, 
 													  indexer.getComparator(graph));
 			indices.put(indexer, result);
 		}
@@ -206,7 +213,7 @@ public class HGIndexManager
 	 * @return <code>true</code> if a new index was created and <code>false</code>
 	 * otherwise.
 	 */
-	public <KeyType> HGIndex<KeyType, HGPersistentHandle> register(HGIndexer indexer)
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> register(HGIndexer indexer)
 	{
 		List<HGIndexer> forType = indexers.get(indexer.getType());
 		
@@ -218,23 +225,30 @@ public class HGIndexManager
 		
 		if (!forType.contains(indexer))
 		{
-			graph.add(indexer);			
+			HGHandle hIndexer = graph.add(indexer);			
 			forType.add(indexer);
-			HGIndex<KeyType, HGPersistentHandle> idx = getOrCreateIndex(indexer);
-			HGSearchResult<HGPersistentHandle> rs = null;
+			HGIndex<KeyType, ValueType> idx = getOrCreateIndex(indexer);
+			graph.add(new ApplyNewIndexer(hIndexer));
+/*			HGSearchResult<HGPersistentHandle> rs = null;
 			try
 			{
+				HGValueIndexer vindexer = null;
+				if (indexer instanceof HGValueIndexer)
+					vindexer = (HGValueIndexer)indexer;
 				rs = graph.find(hg.type(indexer.getType()));
 				while (rs.hasNext())
 				{
 					Object atom = graph.get(rs.next());
-					idx.addEntry((KeyType)indexer.getKey(graph, atom), rs.current());
+					if (vindexer != null)
+						idx.addEntry((KeyType)indexer.getKey(graph, atom), (ValueType)vindexer.getValue(graph, atom)); 
+					else
+						idx.addEntry((KeyType)indexer.getKey(graph, atom), (ValueType)rs.current());
 				}
 			}
 			finally
 			{
 				rs.close();
-			}
+			} */
 			return idx;
 		}
 		else
@@ -253,9 +267,9 @@ public class HGIndexManager
 	 * @return The method will return <code>null</code> if the passed in <code>HGIndexer</code>
 	 * hasn't been registered with the index manager. 
 	 */
-	public <KeyType> HGIndex<KeyType, HGPersistentHandle> getIndex(HGIndexer indexer)
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(HGIndexer indexer)
 	{
-		HGIndex<KeyType, HGPersistentHandle> result = (HGIndex<KeyType, HGPersistentHandle>)indices.get(indexer);
+		HGIndex<KeyType, ValueType> result = (HGIndex<KeyType, ValueType>)indices.get(indexer);
 		if (result == null)
 		{
 			List<HGIndexer> L = indexers.get(indexer.getType());			
@@ -305,9 +319,11 @@ public class HGIndexManager
 			return;
 		for (HGIndexer indexer : indList)
 		{
-			HGIndex<Object, HGPersistentHandle> idx = getOrCreateIndex(indexer);
-			Object key = indexer.getKey(graph, atom);
-			idx.addEntry(key, atomHandle);
+			HGIndex<Object, Object> idx = getOrCreateIndex(indexer);
+			Object key = indexer.getKey(graph, atom);			
+			Object value = (indexer instanceof HGValueIndexer) ? ((HGValueIndexer)indexer).getValue(graph, atom) 
+						   : atomHandle;
+			idx.addEntry(key, value);
 		}
 	}
 	
@@ -332,9 +348,11 @@ public class HGIndexManager
 			return;
 		for (HGIndexer indexer : indList)
 		{
-			HGIndex<Object, HGPersistentHandle> idx = getOrCreateIndex(indexer);
-			Object key = indexer.getKey(graph, atom);
-			idx.removeEntry(key, atomHandle);
+			HGIndex<Object, Object> idx = getOrCreateIndex(indexer);
+			Object key = indexer.getKey(graph, atom);			
+			Object value = (indexer instanceof HGValueIndexer) ? ((HGValueIndexer)indexer).getValue(graph, atom) 
+						   : atomHandle;
+			idx.removeEntry(key, value);
 		}
 	}
 }

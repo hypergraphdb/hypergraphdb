@@ -13,6 +13,10 @@ public class TargetToTargetIndexer extends HGValueIndexer
 {
 	private int fromTarget, toTarget;
 	
+	public TargetToTargetIndexer()
+	{		
+	}
+	
 	public TargetToTargetIndexer(HGHandle type, int fromTarget, int toTarget)
 	{
 		super(type);
@@ -100,7 +104,11 @@ public class TargetToTargetIndexer extends HGValueIndexer
 	@Override
 	public boolean equals(Object other)
 	{
-		// TODO Auto-generated method stub
-		return false;
+		if (! (other instanceof TargetToTargetIndexer))
+			return false;
+		TargetToTargetIndexer i = (TargetToTargetIndexer)other;
+		return HGUtils.eq(getType(), i.getType()) && 
+			   fromTarget == i.fromTarget &&
+			   toTarget == i.toTarget;
 	}	
 }
