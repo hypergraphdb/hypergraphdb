@@ -161,9 +161,18 @@ public class HGIndexManager
 		int i = forType.indexOf(indexer);
 		if (i < 0)
 			return false;
-		deleteIndex(forType.get(i));
-		graph.remove(graph.getHandle(forType.get(i)));
-		forType.remove(i);
+		HGHandle hIndexer = graph.getHandle(forType.get(i));
+		
+		// Make sure there's no MaintenanceOperation based on this indexer 
+		// currently scheduled.
+		HGHandle maintenanceOp = hg.findOne(graph, 
+										    hg.and(hg.type(ApplyNewIndexer.class), 
+										    	   hg.eq("hIndexer", hIndexer)));
+		if (maintenanceOp != null)
+			graph.remove(maintenanceOp);
+		graph.remove(hIndexer);
+		deleteIndex(forType.get(i));		
+		forType.remove(i);		 
 		return true;
 	}
 	
