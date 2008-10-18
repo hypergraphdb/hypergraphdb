@@ -23,6 +23,7 @@ import org.hypergraphdb.query.SubsumesCondition;
 import org.hypergraphdb.query.TargetCondition;
 import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.TypedValueCondition;
+import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.type.HGAtomType;
 
 // This is a temporary implementation, to research a bit what's involved in

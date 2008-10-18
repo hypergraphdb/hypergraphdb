@@ -306,6 +306,25 @@ public class HGIndexManager
 	{
 		return this.indexers.get(type);
 	}
+
+	/**
+	 * <p>Return the predefined index from types to atoms. That is, each key
+	 * in this index is a type handle and its values are all atoms with that type.</p>
+	 */
+	public HGIndex<HGPersistentHandle, HGPersistentHandle> getIndexByType()
+	{
+		return graph.indexByType;
+	}
+
+	/** 
+	 * <p>Return the predefined index from values to atoms. That is, each key
+	 * in this index is a value handle and its <em> index values</em> are all atoms 
+	 * with that value handle.</p> 
+	 */
+	public HGIndex<HGPersistentHandle, HGPersistentHandle> getIndexByValue()
+	{
+		return graph.indexByValue;
+	}
 	
 	/**
 	 * <p>

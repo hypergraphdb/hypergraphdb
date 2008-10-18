@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.query.*;
+import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
 import org.hypergraphdb.util.CompositeMapping;
