@@ -1,8 +1,10 @@
 package org.hypergraphdb.query.cond2qry;
 
-import java.util.IdentityHashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGQuery;
@@ -20,9 +22,48 @@ import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 @SuppressWarnings("unchecked")
 public class AndToQuery implements ConditionToQuery
 {
+	/**
+	 * 
+	 * <p>
+	 * Order QueryMetaData instance by the expected size of the result set. The logic
+	 * is a bit convoluted because there are 3 numbers in play: lower bound (LB) of
+	 * the result, upper bound (UB) and expected size (E). We use the expected size
+	 * if available, otherwise we use the upper bound if available or the lower bound
+	 * with a "lowest priority". The assumption here is the E when provided should be 
+	 * fairly accurate so there's no need to be overly conservative. In most cases, 
+	 * the size is actually either known completely (e.g. in an index) or nothing
+	 * is know about it. If no size (LB, UB or E) is known for at least one of the 
+	 * parameters of the compare method, then the two are deemed equal (i.e. 0 is
+	 * returned).
+	 * </p>
+	 *
+	 * @author Borislav Iordanov
+	 *
+	 */
+	private static class BySizeComparator implements Comparator<QueryMetaData>
+	{
+		public int compare(QueryMetaData o1, QueryMetaData o2)
+		{
+			long left = o1.sizeExpected > -1 ? o1.sizeExpected : 
+						o1.sizeUB > -1 ? o1.sizeUB : o1.sizeLB;
+			if (left == -1)
+				return 0;
+			long right = o2.sizeExpected > -1 ? o2.sizeExpected : 
+						 o2.sizeUB > -1 ? o2.sizeUB : o2.sizeLB;
+			if (right == -1 || left == right)
+				return 0;
+			else if (left > right)
+				return 1;
+			else
+				return -1;				
+		}		
+	}
+	
+	private static BySizeComparator bySizeComparator = new BySizeComparator();
+	
 	public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition condition)
 	{
-		QueryMetaData x = QueryMetaData.ORACCESS.clone(); // assume we have ORACCESS, but check below
+		QueryMetaData x = QueryMetaData.ORACCESS.clone(condition); // assume we have ORACCESS, but check below
 		boolean ispredicate = true;
 		x.predicateCost = 0;
 		for (HGQueryCondition sub : ((And)condition))
@@ -66,33 +107,33 @@ public class AndToQuery implements ConditionToQuery
 		// - O: ordered results
 		// - P: not translatable to one of the above categories, but usable as predicates
 		// - W: neither of the above (i.e. unordered, non-random-access, non-predicate yielding conditions
-		IdentityHashMap<HGQueryCondition, Double> ORA = new IdentityHashMap<HGQueryCondition, Double>();
-		IdentityHashMap<HGQueryCondition, Double> RA = new IdentityHashMap<HGQueryCondition, Double>();
-		IdentityHashMap<HGQueryCondition, Double> O = new IdentityHashMap<HGQueryCondition, Double>();
-		IdentityHashMap<HGAtomPredicate, Double> P = new IdentityHashMap<HGAtomPredicate, Double>();
-		IdentityHashMap<HGQueryCondition, QueryMetaData> W = new IdentityHashMap<HGQueryCondition, QueryMetaData>();
+		List<QueryMetaData> ORA = new ArrayList<QueryMetaData>();
+		List<QueryMetaData> RA = new ArrayList<QueryMetaData>();
+		List<QueryMetaData> O = new ArrayList<QueryMetaData>();
+		List<QueryMetaData> P = new ArrayList<QueryMetaData>();
+		List<QueryMetaData> W = new ArrayList<QueryMetaData>();
 		
 		for (HGQueryCondition sub : and)
 		{
 			ConditionToQuery transformer = ToQueryMap.getInstance().get(sub.getClass());
 			if (transformer == null)
 			{
-				P.put((HGAtomPredicate)sub, 0.0);
+				P.add(QueryMetaData.MISTERY.clone(sub));
 				continue;
 			}
 			QueryMetaData qmd = transformer.getMetaData(graph, sub);
 			if (qmd.predicateOnly)
-				P.put((HGAtomPredicate)sub, qmd.predicateCost);
+				P.add(qmd);
 			else if (qmd.ordered && qmd.randomAccess)
-				ORA.put(sub, qmd.predicateCost);
+				ORA.add(qmd);
 			else if (qmd.ordered)
-				O.put(sub, qmd.predicateCost);
+				O.add(qmd);
 			else if (qmd.randomAccess)
-				RA.put(sub, qmd.predicateCost);
+				RA.add(qmd);
 			else if (qmd.predicateCost > -1)
-				P.put((HGAtomPredicate)sub, qmd.predicateCost);
+				P.add(qmd);
 			else
-				W.put(sub, qmd);
+				W.add(qmd);
 		}
 
 		//
@@ -110,15 +151,16 @@ public class AndToQuery implements ConditionToQuery
 		// First ORA sets - we just build up nested zig-zag intersections
 		if (ORA.size() > 1)
 		{
-			Iterator<Map.Entry<HGQueryCondition, Double>> i = ORA.entrySet().iterator();
-			c1 = i.next().getKey();
-			c2 = i.next().getKey();
+			Collections.sort(ORA, bySizeComparator);
+			Iterator<QueryMetaData> i = ORA.iterator();
+			c1 = i.next().cond;
+			c2 = i.next().cond;
 			result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 										   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
 										   new ZigZagIntersectionResult());
 			while (i.hasNext())
 			{
-				c1 = i.next().getKey();
+				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
 											   new ZigZagIntersectionResult());
@@ -126,25 +168,26 @@ public class AndToQuery implements ConditionToQuery
 		}
 		else if (ORA.size() == 1)
 		{
-			O.putAll(ORA);
+			O.addAll(ORA);
 			ORA.clear();
 		}
 		
 		// Next O sets - we just build up nested sorted intersections
 		if (O.size() > 1)
 		{
-			Iterator<Map.Entry<HGQueryCondition, Double>> i = O.entrySet().iterator();
+			Collections.sort(O, bySizeComparator);
+			Iterator<QueryMetaData> i = O.iterator();
 			if (result == null)
 			{
-				c1 = i.next().getKey();
-				c2 = i.next().getKey();
+				c1 = i.next().cond;
+				c2 = i.next().cond;
 				result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 											   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
 											   new SortedIntersectionResult()); 
 			}
 			while (i.hasNext())
 			{
-				c1 = i.next().getKey();
+				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 											   new SortedIntersectionResult());					
@@ -152,7 +195,7 @@ public class AndToQuery implements ConditionToQuery
 		}
 		else if (O.size() == 1)
 		{
-			c1 = O.keySet().iterator().next();
+			c1 = O.iterator().next().cond;
 			if (result == null)
 				result = ToQueryMap.toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 			else
@@ -164,26 +207,26 @@ public class AndToQuery implements ConditionToQuery
 		if (result == null)
 			if (W.size() > 0)
 			{
-				Iterator<Map.Entry<HGQueryCondition, QueryMetaData>> i = W.entrySet().iterator();
+				Iterator<QueryMetaData> i = W.iterator();
 				long n = 0;
 				while (i.hasNext())
 				{
-					Map.Entry<HGQueryCondition, QueryMetaData> curr = i.next();
-					if (n < curr.getValue().getSizeExpected())
-						c1 = curr.getKey();
+					QueryMetaData curr = i.next();
+					if (n < curr.getSizeExpected())
+						c1 = curr.cond;
 				}
 				result = ToQueryMap.toQuery(graph, c1); //toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 				W.remove(c1);
 			}
 			else if (RA.size() > 0)
 			{
-				Iterator<Map.Entry<HGQueryCondition, Double>> i = RA.entrySet().iterator();
+				Iterator<QueryMetaData> i = RA.iterator();
 				double cost = 0.0;
 				while (i.hasNext())
 				{
-					Map.Entry<HGQueryCondition, Double> curr = i.next();
-					if (cost < curr.getValue())
-						c1 = curr.getKey();
+					QueryMetaData curr = i.next();
+					if (cost < curr.predicateCost)
+						c1 = curr.cond;
 				}
 				result = ToQueryMap.toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 				RA.remove(c1);						
@@ -195,11 +238,13 @@ public class AndToQuery implements ConditionToQuery
 		// in memory sets and again into predicates.				
 		
 		// Transform RAs into predicates
-		for (Iterator<Map.Entry<HGQueryCondition, Double>> i = RA.entrySet().iterator(); i.hasNext(); )
+		for (Iterator<QueryMetaData> i = RA.iterator(); i.hasNext(); )
 		{
-			Map.Entry<HGQueryCondition, Double> curr = i.next();
-			c1 = curr.getKey();
-			P.put(new RABasedPredicate(ToQueryMap.toQuery(graph, c1)) /* toQueryMap.get(c1.getClass()).getQuery(graph, c1)) */, curr.getValue());
+			QueryMetaData curr = i.next();
+			c1 = curr.cond;
+			QueryMetaData pqmd = QueryMetaData.MISTERY.clone(new RABasedPredicate(ToQueryMap.toQuery(graph, c1)));
+			pqmd.predicateCost = curr.predicateCost;
+			P.add(pqmd);
 		}
 		
 		// Add predicates in order from the less costly to execute to the most costly...
@@ -207,13 +252,13 @@ public class AndToQuery implements ConditionToQuery
 		{
 			double predicateCost = Double.MAX_VALUE;
 			HGAtomPredicate lessCostly = null;
-			for (Iterator<Map.Entry<HGAtomPredicate, Double>> i = P.entrySet().iterator(); i.hasNext(); )
+			for (Iterator<QueryMetaData> i = P.iterator(); i.hasNext(); )
 			{
-				Map.Entry<HGAtomPredicate, Double> curr = i.next();
-				if (curr.getValue() < predicateCost)
+				QueryMetaData curr = i.next();
+				if (curr.predicateCost < predicateCost)
 				{
-					predicateCost = curr.getValue();
-					lessCostly = curr.getKey();
+					predicateCost = curr.predicateCost;
+					lessCostly = curr.pred;
 				}
 			}
 			result = new PredicateBasedFilter(graph, result, lessCostly);
@@ -222,10 +267,10 @@ public class AndToQuery implements ConditionToQuery
 		
 		// add Ws as predicates that lazily load their entire result sets into memory
 		// this assumes that all result sets of Ws are UUID handles
-		for (Iterator<Map.Entry<HGQueryCondition, QueryMetaData>> i = W.entrySet().iterator(); i.hasNext(); )
+		for (Iterator<QueryMetaData> i = W.iterator(); i.hasNext(); )
 		{
-			Map.Entry<HGQueryCondition, QueryMetaData> curr = i.next();
-			HGQuery q = ToQueryMap.toQuery(graph, curr.getKey()); // toQueryMap.get(curr.getKey().getClass()).getQuery(graph, curr.getKey());
+			QueryMetaData curr = i.next();
+			HGQuery q = ToQueryMap.toQuery(graph, curr.cond);
 			result = new PredicateBasedFilter(graph, result, new DelayedSetLoadPredicate(q));
 		}
 		

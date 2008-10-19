@@ -19,7 +19,10 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 		ZigZagIntersectionResult zigzag = new ZigZagIntersectionResult(left, right);
 		while (zigzag.hasNext())
 			set.add(zigzag.next());
-		intersection = (HGRandomAccessResult<T>)set.getSearchResult();
+		intersection = (HGRandomAccessResult<T>)set.getSearchResult();		
+		left.close();
+		right.close();
+		left = right = null;		
 	}
 	
 	public GotoResult goTo(T value, boolean exactMatch)

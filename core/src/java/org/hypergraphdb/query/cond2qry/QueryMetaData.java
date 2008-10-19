@@ -1,6 +1,9 @@
 package org.hypergraphdb.query.cond2qry;
 
-public class QueryMetaData implements Cloneable
+import org.hypergraphdb.query.HGAtomPredicate;
+import org.hypergraphdb.query.HGQueryCondition;
+
+class QueryMetaData implements Cloneable
 {
 	public final static QueryMetaData EMPTY = new QueryMetaData(true, true, 0, 0);
 	public final static QueryMetaData MISTERY = new QueryMetaData(false, false);
@@ -8,6 +11,8 @@ public class QueryMetaData implements Cloneable
 	public final static QueryMetaData RACCESS = new QueryMetaData(false, true);
 	public final static QueryMetaData ORACCESS = new QueryMetaData(true, true);
 	
+	public HGQueryCondition cond;
+	public HGAtomPredicate pred;
 	public boolean ordered;
 	public boolean randomAccess;
 	public long sizeLB;
@@ -88,4 +93,18 @@ public class QueryMetaData implements Cloneable
 	{
 		return new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost); 
 	}
+	
+	public QueryMetaData clone(HGQueryCondition cond)
+	{
+		QueryMetaData cl = new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost);
+		cl.cond = cond;
+		return cl;
+	}
+	
+	public QueryMetaData clone(HGAtomPredicate cond)
+	{
+		QueryMetaData cl = new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost);
+		cl.pred = pred;
+		return cl;
+	}		
 }

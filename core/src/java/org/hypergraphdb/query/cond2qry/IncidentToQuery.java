@@ -13,7 +13,7 @@ public class IncidentToQuery implements ConditionToQuery
 
 	public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
 	{
-		QueryMetaData x = QueryMetaData.ORACCESS.clone();
+		QueryMetaData x = QueryMetaData.ORACCESS.clone(c);
 		x.predicateCost = 1;
 		final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());		
 		x.sizeLB = x.sizeExpected = x.sizeUB = graph.getIncidenceSet(handle).size();

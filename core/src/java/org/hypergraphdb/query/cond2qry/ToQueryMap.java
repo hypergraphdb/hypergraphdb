@@ -72,27 +72,35 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				x.predicateCost = 0.5;
 				return x;
 			}			
 		});
 		instance.put(AtomTypeCondition.class, new ConditionToQuery()
 		{
-			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+			private HGPersistentHandle getTypeHandle(HyperGraph graph, HGQueryCondition c)
 			{
 				AtomTypeCondition ac = (AtomTypeCondition)c;
                 HGHandle h = ac.getTypeHandle();
                 if (h == null)
                     h = graph.getTypeSystem().getTypeHandle(ac.getJavaClass());
+                return graph.getPersistentHandle(h);
+			}
+			
+			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+			{
 				return new SearchableBasedQuery(graph.getIndexManager().getIndexByType(), 
-												graph.getPersistentHandle(h),
+												getTypeHandle(graph, c),
 												ComparisonOperator.EQ);									
 			}
-			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.ORACCESS.clone();
+				QueryMetaData x = QueryMetaData.ORACCESS.clone(c);
 				x.predicateCost = 1;
+				x.sizeExpected = 
+				x.sizeLB = 
+				x.sizeUB = graph.getIndexManager().getIndexByType().count(getTypeHandle(graph, c));
 				return x;
 			}			
 		});
@@ -166,11 +174,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
                 if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
                 	type instanceof HGOrderedSearchable)
                 {
-                	 qmd = QueryMetaData.MISTERY.clone();
+                	 qmd = QueryMetaData.MISTERY.clone(c);
                 }
                 else
                 {
-                	qmd = QueryMetaData.ORDERED.clone();
+                	qmd = QueryMetaData.ORDERED.clone(c);
                 }
                 qmd.predicateCost = 2.5;
                 return qmd;
@@ -235,7 +243,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				x.predicateCost = 1;
 				return x;
 			}
@@ -267,7 +275,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				// this is kind of approx. as the predicate may return very quickly 
 				// or end up doing an all separate query on its own
 				x.predicateCost = 5;
@@ -283,7 +291,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				x.predicateCost = -1;
 				x.predicateOnly = false;
 				return x;
@@ -298,7 +306,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				return QueryMetaData.MISTERY;
+				return QueryMetaData.MISTERY.clone(c);
 			}
 		});			
 		instance.put(SubsumedCondition.class, new ConditionToQuery()
@@ -326,7 +334,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				// this is kind of approx. as the predicate may return very quickly 
 				// or end up doing an all separate query on its own
 				x.predicateCost = 5;
@@ -364,9 +372,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			{
 				QueryMetaData qmd;
 				if (((OrderedLinkCondition)c).targets().length == 0)					
-					qmd = QueryMetaData.EMPTY.clone();
+					qmd = QueryMetaData.EMPTY.clone(c);
 				else
-					qmd = QueryMetaData.MISTERY.clone();
+					qmd = QueryMetaData.MISTERY.clone(c);
 				qmd.predicateCost = 0.5;
 				return qmd;
 			}
@@ -407,7 +415,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				return QueryMetaData.ORACCESS.clone();
+				return QueryMetaData.ORACCESS.clone(c);
 			}
 		});				
 		instance.put(IndexedPartCondition.class, new ConditionToQuery()
@@ -424,7 +432,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				return QueryMetaData.ORACCESS.clone();
+				return QueryMetaData.ORACCESS.clone(c);
 			}
 		});		
 		instance.put(And.class, new AndToQuery());
@@ -460,7 +468,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.ORACCESS.clone(); // TODO - this is only true in the worst case!
+				QueryMetaData x = QueryMetaData.ORACCESS.clone(c); // TODO - this is only true in the worst case!
 				boolean ispredicate = true;
 				x.predicateCost = 0;
 				for (HGQueryCondition sub : ((Or)c))
@@ -501,7 +509,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
 				// throw new HGException("Can't use an AtomPartCondition alone, please restrict your query by atom type or other general criteria.");
-				QueryMetaData qmd = QueryMetaData.MISTERY;
+				QueryMetaData qmd = QueryMetaData.MISTERY.clone(c);
 				qmd.predicateCost = 1.5;
 				qmd.predicateOnly = true;
 				return qmd;
@@ -532,7 +540,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.MISTERY.clone();
+				QueryMetaData x = QueryMetaData.MISTERY.clone(c);
 				x.predicateCost = 100; // this is because they will be a query involved in the predicate etc...expensive stuff
 				return x;
 			}

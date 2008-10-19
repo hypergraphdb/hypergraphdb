@@ -19,7 +19,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	
 	private HGRandomAccessResult<T> left, right;
 	private Object current = UNKNOWN, next = UNKNOWN, prev = UNKNOWN;
-//	private int lookahead = 0;
 	
 	private void swap()
 	{
@@ -55,12 +54,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				case close:
 				{
 					use_next = false;
-/*					if (right instanceof ZigZagIntersectionResult)
-						if (((ZigZagIntersectionResult)right).current == null)
-						{
-							System.out.println("oops trouble coming");
-							right.goTo(x, false);
-						} */
 					swap();		
 					break;
 				}
@@ -76,9 +69,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	
 	private T back()
 	{
-/*		HGRandomAccessResult<T> starting_left = left, starting_right = right; 
-		T save_left = left.current();		
-	 	T save_right = right.current(); */
 		T result = null;
 		while (true)
 		{
@@ -93,11 +83,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			else
 				swap();
 		}
-/*		if (result == null)
-		{
-			starting_left.goTo(save_left, true);
-			starting_right.goTo(save_right, true);
-		} */
 		return result;
 	}
 
@@ -117,14 +102,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				case found: 
 				{
 					current = left.current();
-/*					prev = back();
-					if (prev != null)
-						advance();
-					if ( (next = advance()) != null)
-						lookahead = 1;
-					else
-						lookahead = 0; */
-					//lookahead = 0;
 					next = prev = UNKNOWN;
 					return true;
 				}
@@ -139,12 +116,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 				}				
 			}
 		}
-/*		prev = back();
-		current = advance();
-		if (current == null)
-			return false;
-		next = advance();
-		return true; */
 	}
 		
 	public ZigZagIntersectionResult()
@@ -160,8 +131,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 	{
 		this.left = (HGRandomAccessResult<T>)left;
 		this.right = (HGRandomAccessResult<T>)right;
-//		next = advance();
-//		lookahead = 1;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -200,14 +169,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 			if (r_r == GotoResult.found)
 			{
 				current = left.current();
-/*				prev = back();
-				if (prev != null) advance();
-				if ( (next = advance()) != null)
-					lookahead = 1;
-				else
-					lookahead = 0; */
 				next = prev = UNKNOWN;
-//				lookahead = 0;
 				return GotoResult.found;
 			}
 			else // r_r == close
@@ -235,7 +197,7 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 					return GotoResult.nothing;
 				}
 			}
-			else
+			else // both are 'close'
 			{
 				int cmp = ((Comparable<T>)left.current()).compareTo(right.current());
 				if (cmp == 0 && positionTo(left) || cmp > 0 && positionTo(left) || positionTo(right))
@@ -284,15 +246,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		{
 			next = current;
 			current = prev;
-/*	        lookahead++;
-	        while (true)
-	        {
-	        	prev = back();
-	        	if (prev == null)
-	        		break;
-	        	if (--lookahead == -1)
-	        		break;
-	        } */
 			prev = UNKNOWN;
 			return (T)current;
 		}
@@ -313,15 +266,6 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		{
 			prev = current;
 			current = next;
-/*	        lookahead--;
-	        while (true)
-	        {
-	        	next = advance();
-	        	if (next == null)
-	        		break;
-	        	if (++lookahead == 1)
-	        		break;
-	        } */
 			next = UNKNOWN;
 			return (T)current;
 		}

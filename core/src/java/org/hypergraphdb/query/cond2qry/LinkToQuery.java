@@ -21,11 +21,11 @@ public class LinkToQuery implements ConditionToQuery
 		QueryMetaData qmd;
 		if (((LinkCondition)c).targets().size() == 0)
 		{
-			qmd = QueryMetaData.EMPTY.clone();
+			qmd = QueryMetaData.EMPTY.clone(c);
 		}
 		else
 		{
-			qmd = QueryMetaData.ORDERED.clone();
+			qmd = QueryMetaData.ORDERED.clone(c);
 		}
 		qmd.predicateCost = 0.5;
 		return qmd;
