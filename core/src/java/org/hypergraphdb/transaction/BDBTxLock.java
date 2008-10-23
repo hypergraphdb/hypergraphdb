@@ -52,17 +52,18 @@ public class BDBTxLock implements ReadWriteLock
 	
 	private class BDBReadLock implements Lock
 	{
-		com.sleepycat.db.Lock lock;
+		com.sleepycat.db.Lock lock = null;
 		
 		BDBReadLock()
 		{
 		}
 		
-		public void lock()
+		public synchronized void lock()
 		{
 			try
 			{
-				lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.READ);
+				if (lock == null)
+					lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.READ);
 			}
 			catch (DatabaseException ex)
 			{
@@ -80,12 +81,13 @@ public class BDBTxLock implements ReadWriteLock
 			throw new UnsupportedOperationException();
 		}
 
-		public boolean tryLock()
+		public synchronized boolean tryLock()
 		{
 			try
 			{
-				lock = getEnv().getLock(getLockerId(), true, objectId, LockRequestMode.READ);
-				return true;
+				if (lock == null)
+					lock = getEnv().getLock(getLockerId(), true, objectId, LockRequestMode.READ);
+				return lock != null;
 			}
 			catch (LockNotGrantedException le)
 			{
@@ -102,11 +104,15 @@ public class BDBTxLock implements ReadWriteLock
 			throw new UnsupportedOperationException();			
 		}
 
-		public void unlock()
+		public synchronized void unlock()
 		{
 			try
 			{
-				getEnv().putLock(lock);
+				if (lock != null)
+				{
+					getEnv().putLock(lock);
+					lock = null;
+				}
 			}
 			catch (DatabaseException ex)
 			{

@@ -90,7 +90,7 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
         Slot slot = (Slot)instance;
         HGTypeSystem typeSystem = hg.getTypeSystem();        
         HGPersistentHandle valueTypeHandle = hg.getPersistentHandle(slot.getValueType());
-        if (find(slot).hasNext())
+        if (getIndex().findFirst(slotToByteArray(slot)) != null)
             throw new HGException("Attempting to create a duplicate slot: [name=" +
                         slot.getLabel() + ", value type=" + valueTypeHandle);
         else
@@ -119,7 +119,7 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
 
     public HGSearchResult<HGPersistentHandle> find(Slot key)
     {
-        byte [] asByteArray = slotToByteArray((Slot)key);
+        byte [] asByteArray = slotToByteArray(key);
         return getIndex().find(asByteArray);
     }
     

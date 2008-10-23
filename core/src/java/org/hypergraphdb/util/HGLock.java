@@ -6,6 +6,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.transaction.BDBTxLock;
+import org.hypergraphdb.transaction.HGTransaction;
+import org.hypergraphdb.transaction.TransactionBDBImpl;
 
 /**
  * 
@@ -28,7 +30,8 @@ public class HGLock implements ReadWriteLock
 	
 	ReadWriteLock getApplicableLock()
 	{
-		if (txLock.getGraph().getTransactionManager().getContext().getCurrent() == null)
+		HGTransaction tx = txLock.getGraph().getTransactionManager().getContext().getCurrent(); 
+		if (tx == null || ! (tx instanceof TransactionBDBImpl))
 		{
 			if (defaultLock == null)
 				defaultLock = new ReentrantReadWriteLock();

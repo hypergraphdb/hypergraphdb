@@ -251,17 +251,17 @@ public class AndToQuery implements ConditionToQuery
 		while (!P.isEmpty())
 		{
 			double predicateCost = Double.MAX_VALUE;
-			HGAtomPredicate lessCostly = null;
+			QueryMetaData lessCostly = null;
 			for (Iterator<QueryMetaData> i = P.iterator(); i.hasNext(); )
 			{
 				QueryMetaData curr = i.next();
 				if (curr.predicateCost < predicateCost)
 				{
 					predicateCost = curr.predicateCost;
-					lessCostly = curr.pred;
+					lessCostly = curr;
 				}
 			}
-			result = new PredicateBasedFilter(graph, result, lessCostly);
+			result = new PredicateBasedFilter(graph, result, lessCostly.pred);
 			P.remove(lessCostly);
 		}
 		

@@ -21,7 +21,7 @@ import org.hypergraphdb.util.RefResolver;
 class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
-	int keepInMemoryThreshold = 10000;
+	int keepInMemoryThreshold = 100000;
 	
 	ISRefResolver(HyperGraph graph)
 	{

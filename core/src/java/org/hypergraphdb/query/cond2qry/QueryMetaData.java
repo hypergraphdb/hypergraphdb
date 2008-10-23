@@ -94,17 +94,21 @@ class QueryMetaData implements Cloneable
 		return new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost); 
 	}
 	
-	public QueryMetaData clone(HGQueryCondition cond)
+	public QueryMetaData clone(HGQueryCondition condition)
 	{
 		QueryMetaData cl = new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost);
-		cl.cond = cond;
+		cl.cond = condition;
+		if (condition instanceof HGAtomPredicate)
+			cl.pred = (HGAtomPredicate)condition;		
 		return cl;
 	}
 	
-	public QueryMetaData clone(HGAtomPredicate cond)
+	public QueryMetaData clone(HGAtomPredicate predicate)
 	{
 		QueryMetaData cl = new QueryMetaData(ordered, randomAccess, sizeLB, sizeUB, sizeExpected, predicateCost);
-		cl.pred = pred;
+		cl.pred = predicate;
+		if (predicate instanceof HGQueryCondition)
+			cl.cond = (HGQueryCondition)predicate;
 		return cl;
 	}		
 }

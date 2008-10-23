@@ -70,19 +70,34 @@ public class ApplyNewIndexer implements MaintenanceOperation
 			{
 				rs = (HGRandomAccessResult<HGPersistentHandle>)(HGRandomAccessResult)
 						graph.find(hg.type(indexer.getType()));
-				if (lastProcessed == null && !rs.hasNext())
-					return; 
-				GotoResult gt = rs.goTo(lastProcessed, false);
-				if (gt == GotoResult.nothing) // last processed was actually last element in result set
-					return;
-				else if (gt == GotoResult.found)
+				if (lastProcessed == null)
 				{
-					if (!rs.hasNext())
+					if (!rs.hasNext()) 
+					{
+						graph.getTransactionManager().endTransaction(false);
+						return; 
+					}
+					else rs.next();
+				}
+				else
+				{
+					GotoResult gt = rs.goTo(lastProcessed, false);
+					if (gt == GotoResult.nothing) // last processed was actually last element in result set
+					{
+						graph.getTransactionManager().endTransaction(false);						
 						return;
-					else
-						rs.next();
-				} // else we are already positioned after the last processed, which is not present for god know why?
-				
+					}
+					else if (gt == GotoResult.found)
+					{
+						if (!rs.hasNext())
+						{
+							graph.getTransactionManager().endTransaction(false);							
+							return;
+						}
+						else
+							rs.next();
+					} // else we are already positioned after the last processed, which is not present for god know why?
+				}				
 				for (int i = 0; i < batchSize; i++)
 				{
 					Object atom = graph.get(rs.current());

@@ -150,7 +150,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
                 	//
                 	return new PredicateBasedFilter(hg,
                 			new PipeQuery(new SearchableBasedQuery((HGSearchable<?,?>)type, value, vc.getOperator()),
-                						  new SearchableBasedQuery(hg.getIndexManager().getIndexByType(), 
+                						  new SearchableBasedQuery(hg.getIndexManager().getIndexByValue(), 
                          										  null,
                          										  ComparisonOperator.EQ)),
                          	new AtomTypeCondition(typeHandle));     	
