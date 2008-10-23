@@ -177,6 +177,14 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 		return comparator;
 	}
 
+	public E getAt(int i)
+	{
+		if (i < 0 || i > size())
+			throw new IllegalArgumentException("index " + i + " out of bounds [0," + size() + ").");
+		else
+			return array[i];
+	}
+	
 	public E first()
 	{
 		lock.readLock().lock();

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.util.HGSortedSet;
 
@@ -23,7 +24,7 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 {
 	private Key key;
 	private Comparator<T> comparator = null;
-	private DefaultIndexImpl<Key, T> index = null;
+	private HGIndex<Key, T> index = null;
 	
 	static <E> Comparator<E> makeComparator()
 	{
@@ -36,14 +37,14 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 		};		
 	}
 	
-	public DBKeyedSortedSet(DefaultIndexImpl<Key, T> idx, Key key)
+	public DBKeyedSortedSet(HGIndex<Key, T> idx, Key key)
 	{
 		this.index = idx;
 		this.key = key;
 		comparator = makeComparator();
 	}
 
-	public DBKeyedSortedSet(DefaultIndexImpl<Key, T> idx, Key key, Comparator<T> comparator)
+	public DBKeyedSortedSet(HGIndex<Key, T> idx, Key key, Comparator<T> comparator)
 	{
 		this.index = idx;
 		this.key = key;
