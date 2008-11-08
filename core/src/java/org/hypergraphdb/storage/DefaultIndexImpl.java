@@ -239,7 +239,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         try
         {
             OperationStatus result = db.put(txn().getBDBTransaction(), dbkey, dbvalue);
-            if (result != OperationStatus.SUCCESS)
+            if (result != OperationStatus.SUCCESS && result != OperationStatus.KEYEXIST)
                 throw new Exception("OperationStatus: " + result);            
         }
         catch (Exception ex)

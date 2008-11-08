@@ -25,7 +25,8 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
 {    
     /**
      * <p>
-     * Add an entry to the index.
+     * Add an entry to the index. If that entry is already present, calling this
+     * method should have no effect.
      * </p>
      * 
      * @param key The entry's key part.
