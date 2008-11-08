@@ -209,7 +209,7 @@ public class HGUtils
 				rs = (HGRandomAccessResult<T>)query.execute();
 				if (lastProcessed == null)
 				{
-					while (first > 1)
+					while (first > 0)
 					{
 						if (!rs.hasNext())
 						{

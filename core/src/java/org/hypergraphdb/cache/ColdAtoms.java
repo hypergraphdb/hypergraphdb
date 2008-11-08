@@ -1,8 +1,7 @@
 package org.hypergraphdb.cache;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.SoftReference;
-
+import org.hypergraphdb.HGEnvironment;
+import org.hypergraphdb.util.MemoryWarningSystem;
 import org.hypergraphdb.util.SimplyLinkedQueue;
 
 /**
@@ -19,32 +18,32 @@ public class ColdAtoms
 {
 	public static int DEFAULT_BUCKET_SIZE = 2000;
 	int bucket_size;
+	int evictFactor = 3; // evict 1/3 of elements when memory is about to fill up
 	private SimplyLinkedQueue<Object []> buckets = new SimplyLinkedQueue<Object[]>();
 	int pos = 0;
 	
-	private final ReferenceQueue<Object> queue = new ReferenceQueue<Object>();	
-	SoftReference<Object> lowMemIndicator = new SoftReference<Object>(new Object(), queue);
-	
-	private void processQueue()
+	private MemoryWarningSystem.Listener memListener = new MemoryWarningSystem.Listener()
 	{
-		if (queue.poll() != null)
+		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
-			Runtime rt = Runtime.getRuntime();
-			double free = rt.freeMemory();
-			double max = rt.maxMemory();
-			double used = (max - free)/max;
-			if (used < 0.9) // percentage if used memory before we release it should be made configurable....
-				return;
-			if (buckets.size() > 1)
-				buckets.fetch();
-			// reset the low memory indicator
-			lowMemIndicator = new SoftReference<Object>(new Object(), queue);
+			synchronized (buckets)
+			{
+				int cnt = buckets.size() / evictFactor;
+				while (cnt-- > 0)
+					buckets.fetch();
+			}				
 		}
+	};
+	
+	private void initMemoryListener()
+	{
+		HGEnvironment.getMemoryWarningSystem().addListener(memListener);
 	}
 	
 	public ColdAtoms()
 	{
 		this(DEFAULT_BUCKET_SIZE);
+		initMemoryListener();
 	}
 	
 	/**
@@ -58,16 +57,16 @@ public class ColdAtoms
 		buckets.put(new Object[bucket_size]);
 	}
 	
-	// TODO: would it be beneficial to do more fine grained synchronization here?
-	// not really clear...
-	public synchronized void add(Object atom)
+	public void add(Object atom)
 	{
-		processQueue();
-		if (pos >= bucket_size)
+		synchronized (buckets)
 		{
-			buckets.put(new Object[bucket_size]);
-			pos = 0;
-		}		
-		buckets.peekBack()[pos++] = atom;
+			if (pos >= bucket_size)
+			{
+				buckets.put(new Object[bucket_size]);
+				pos = 0;
+			}		
+			buckets.peekBack()[pos++] = atom;
+		}
 	}
 }

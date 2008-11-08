@@ -8,6 +8,8 @@
  */
 package org.hypergraphdb;
 
+import java.util.Iterator;
+
 /**
  * <p>
  * A default <code>HGLink</code> implementation provided by hypergraph. 
@@ -15,7 +17,7 @@ package org.hypergraphdb;
  * 
  * @author Borislav Iordanov
  */
-public class HGPlainLink implements HGLink
+public class HGPlainLink implements HGLink, Iterable<HGHandle>
 {
 	/**
 	 * An array of <code>HGHandle</code>s representing the target set
@@ -79,5 +81,16 @@ public class HGPlainLink implements HGLink
     	System.arraycopy(outgoingSet, 0, newOutgoing, 0, i);
     	System.arraycopy(outgoingSet, i + 1, newOutgoing, i, outgoingSet.length - i -1);
     	outgoingSet = newOutgoing;
+    }
+    
+    public Iterator<HGHandle> iterator()
+    {
+    	return new Iterator<HGHandle>()
+    	{
+    		private int curr = 0;    		
+    		public void remove() { throw new UnsupportedOperationException(); }
+    		public boolean hasNext() { return curr < outgoingSet.length; }
+    		public HGHandle next() { return outgoingSet[curr++]; }
+    	};
     }
 }
