@@ -50,8 +50,9 @@ public class HGStore
 		String osname = System.getProperty("os.name");
 		if (osname.indexOf("win") > -1 || osname.indexOf("Win") > -1)
 		{
-//			System.loadLibrary("msvcr80");
-//			System.loadLibrary("msvcp80");			
+//			System.loadLibrary("msvcm90");
+//			System.loadLibrary("msvcr90");
+//			System.loadLibrary("msvcp90");			
 			System.loadLibrary("libdb47");
 			System.loadLibrary("libdb_java47");	
 		}
