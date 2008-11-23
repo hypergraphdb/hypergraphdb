@@ -179,10 +179,40 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public E getAt(int i)
 	{
-		if (i < 0 || i > size())
-			throw new IllegalArgumentException("index " + i + " out of bounds [0," + size() + ").");
-		else
-			return array[i];
+		lock.readLock().lock();
+		try
+		{
+			if (i < 0 || i > size())
+				throw new IllegalArgumentException("index " + i + " out of bounds [0," + size() + ").");
+			else
+				return array[i];
+		}
+		finally
+		{
+			lock.readLock().unlock();
+		}
+	}
+
+	public E removeAt(int i)
+	{
+		lock.writeLock().lock();
+		try
+		{
+			if (i < 0 || i > size())
+				throw new IllegalArgumentException("index " + i + " out of bounds [0," + size() + ").");
+			else
+			{
+				E result = array[i];
+				if (i < size - 1) // if it's not the last element			
+					System.arraycopy(array, i + 1, array, i, size - i - 1);
+				size--;				
+				return result;
+			}
+		}
+		finally
+		{
+			lock.writeLock().unlock();
+		}
 	}
 	
 	public E first()

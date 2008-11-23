@@ -109,6 +109,24 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         return super.isOpen() && secondaryDb != null;
     }
     
+    public void addEntry(KeyType key, ValueType value)
+    {
+        checkOpen();
+        DatabaseEntry dbkey = new DatabaseEntry(keyConverter.toByteArray(key));
+        DatabaseEntry dbvalue = new DatabaseEntry(valueConverter.toByteArray(value)); 
+        try
+        {
+            OperationStatus result = db.put(txn().getBDBTransaction(), dbkey, dbvalue);
+            if (result != OperationStatus.SUCCESS && result != OperationStatus.KEYEXIST)
+                throw new Exception("OperationStatus: " + result);            
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to add entry to index '" + 
+                                  name + "': " + ex.toString(), ex);
+        }
+    }
+    
     public HGRandomAccessResult<KeyType> findByValue(ValueType value)
     {
         if (!isOpen())

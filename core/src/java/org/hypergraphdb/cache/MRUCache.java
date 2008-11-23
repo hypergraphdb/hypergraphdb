@@ -2,6 +2,7 @@ package org.hypergraphdb.cache;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGEnvironment;
@@ -53,7 +54,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	private RefResolver<Key, Value> resolver;
 	int maxSize = -1;
 	float usedMemoryThreshold, evictPercent;
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();	
+	private ReadWriteLock lock = null;	
 	private Entry<Key, Value> top = null;
 	private Entry<Key, Value> cutoffTail = null;
 	private int cutoffSize = 0;
@@ -219,6 +220,12 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	public MRUCache()
 	{
 		initMemoryListener();
+		this.lock = new ReentrantReadWriteLock();
+	}
+	
+	public MRUCache(ReadWriteLock lockImplementation)
+	{
+		this.lock = lockImplementation;
 	}
 	
 	/** 
@@ -349,6 +356,11 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	public void checkConsistent()
 	{
 		
+	}
+	
+	public void setLockImplementation(ReadWriteLock lockImplementation)
+	{
+		this.lock = lockImplementation;
 	}
 	
 	public void close()

@@ -45,16 +45,18 @@ public interface HGLink
     HGHandle getTargetAt(int i);
     
     /**
-     * <p>Notify the <code>HGLink</code> that one of its target atoms should be refered to
+     * <p>Notify the <code>HGLink</code> that one of its target atoms should be referred to
      * by a different <code>HGHandle</code> instance. Generally, implementation should update their reference
      * to this target with the passed in <em>live</em> handle.</p> 
      * 
      * <p>
      * <strong>IMPORTANT NOTE:</strong> This method should never be called by application
-     * code. It is strictly reserved to the HyperGraph implementation which guarantuees that
+     * code. It is strictly reserved to the HyperGraph implementation which guarantees that
      * the new handle will always refer to the same atom. The method should essentially
      * perform a <code>setTargetAt</code> operation, but a more elaborate name was chosen
-     * to reflect the intended usage.
+     * to reflect the intended usage. Note also that the intent is not for an implementation
+     * to attempt a database update! The intent is to only update the runtime representation 
+     * of the set of targets pointed to be this link. 
      * </p>
      * 
      * @param i The index of the target that was loaded.

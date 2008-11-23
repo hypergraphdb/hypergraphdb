@@ -29,6 +29,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
+import org.hypergraphdb.util.HGLock;
 import org.hypergraphdb.util.HGLogger;
 import org.hypergraphdb.util.Pair;
 
@@ -92,6 +93,10 @@ public /*final*/ class HyperGraph
     public static final LazyRef<HGHandle[]> EMTPY_HANDLE_SET_REF = new ReadyRef<HGHandle[]>(new HGHandle[0]);
     public static final HGPersistentHandle [] EMPTY_PERSISTENT_HANDLE_SET = new HGPersistentHandle[0];
     
+    /**
+     * An object ID for locking the incidence set cache within a DB transaction.
+     */
+    private static final byte [] INCIDENCE_CACHE_ID = HGHandleFactory.makeHandle("128d0be0-b062-11dd-b416-0002a5d5c51b").toByteArray();
     
     private static final String TYPES_CONFIG_FILE = "/org/hypergraphdb/types";
     private static final String TYPES_INDEX_NAME = "HGATOMTYPE";
@@ -274,6 +279,8 @@ public /*final*/ class HyperGraph
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
 	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
+	        ((MRUCache<HGPersistentHandle, IncidenceSet>)incidenceCache).setLockImplementation(
+	        		new HGLock(this, INCIDENCE_CACHE_ID));
 	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();
 	        incidenceCache.setResolver(new ISRefResolver(this));
 	        ((WeakRefAtomCache)cache).setIncidenceCache(incidenceCache);
