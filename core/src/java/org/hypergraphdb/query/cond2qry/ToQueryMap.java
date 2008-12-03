@@ -220,6 +220,20 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				
 			}
 		});
+		instance.put(ValueAsPredicateOnly.class, new ConditionToQuery()
+		{
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
+			{
+				return null;
+			}
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				QueryMetaData qmd = QueryMetaData.MISTERY.clone();
+				qmd.predicateOnly = true;
+				qmd.pred = (HGAtomPredicate)c;
+				return qmd;
+			}
+		});		
 		instance.put(TargetCondition.class, new ConditionToQuery()
         {
 			public HGQuery<HGHandle> getQuery(final HyperGraph graph, final HGQueryCondition c)

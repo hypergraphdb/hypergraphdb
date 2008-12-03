@@ -8,6 +8,7 @@
  */
 package org.hypergraphdb.query.cond2qry;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,6 +26,7 @@ import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.ByTargetIndexer;
+import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.*;
 
 /**
@@ -272,7 +274,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					typeHandle = graph.getTypeSystem().getTypeHandle(byType.getJavaClass());
 				if (byValue != null)
 				{
-					out.add(new TypedValueCondition(typeHandle, byValue.getValue(), byValue.getOperator()));
+					out.add(byTypedValue = new TypedValueCondition(typeHandle, byValue.getValue(), byValue.getOperator()));
 					out.remove(byType);
 					out.remove(byValue);					
 					byType = null;
@@ -306,8 +308,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							else if (byTypedValue != null)
 							{
 								out.remove(byTypedValue);
-								out.add(new AtomValueCondition(byTypedValue.getValue(), 
-															   byTypedValue.getOperator()));
+								out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
+															     byTypedValue.getOperator()));
 								byTypedValue = null;
 							}
 							out.remove(pc);
@@ -370,6 +372,24 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			return cond;
 	}	
 
+	private List<AtomPartCondition> getAtomIndexedPartsConditions(HyperGraph graph, HGHandle hType, Object value)
+	{
+		ArrayList<AtomPartCondition> L = new ArrayList<AtomPartCondition>();
+		List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(hType);
+		if (indexers == null)
+			return L;
+		for (HGIndexer idx : indexers)
+		{
+			if (idx instanceof ByPartIndexer)
+			{
+				String [] dimPath = ((ByPartIndexer)idx).getDimensionPath();
+				Object partValue = TypeUtils.project(graph, hType, value, dimPath, true).getValue();
+				L.add(new AtomPartCondition(dimPath, partValue));
+			}
+		}
+		return L;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private HGQueryCondition expand(HyperGraph graph, HGQueryCondition cond)
 	{
@@ -399,8 +419,32 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (tc.getJavaClass() == null)
 				tc.setJavaClass(graph.getTypeSystem().getClassForType(tc.getTypeHandle()));
 			else if (tc.getTypeHandle() == null)
-				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));			
+				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));
+			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, tc.getTypeHandle(), tc.getValue());
+			if (!indexedParts.isEmpty())
+			{
+				And and = hg.and(cond);
+				for (AtomPartCondition pc : indexedParts)
+					and.add(pc);
+				cond = and;
+			}
 		}
+		else if (cond instanceof AtomValueCondition)
+		{
+			AtomValueCondition vc = (AtomValueCondition)cond;
+            Object value = vc.getValue();
+            if (value == null)
+                throw new HGException("Search by null values is not supported yet.");
+            HGHandle type = graph.getTypeSystem().getTypeHandle(value);			
+			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, type, value);
+			if (!indexedParts.isEmpty())
+			{
+				And and = hg.and(cond, new AtomTypeCondition(type));
+				for (AtomPartCondition pc : indexedParts)
+					and.add(pc);
+				cond = and;
+			}
+		}		
 		else if (cond instanceof List)
 		{
 			List<HGQueryCondition> L = (List<HGQueryCondition>)cond;

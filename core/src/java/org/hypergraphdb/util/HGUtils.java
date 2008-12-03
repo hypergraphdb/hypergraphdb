@@ -12,7 +12,6 @@ import java.io.PrintStream;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
@@ -177,7 +176,7 @@ public class HGUtils
 	 * </p>
 	 *
 	 * <p>
-	 * The <code>startAfter</code> and <code>first</code> parameters defined a starting point
+	 * The <code>startAfter</code> and <code>first</code> parameters define a starting point
 	 * for the process. Use either one of them, but not both.
 	 * </p>
 	 * 

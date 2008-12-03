@@ -26,12 +26,15 @@ public class ColdAtoms
 	{
 		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
+			System.out.println("FREE COLD ATOMS START " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
 			synchronized (buckets)
 			{
 				int cnt = buckets.size() / evictFactor;
 				while (cnt-- > 0)
 					buckets.fetch();
 			}				
+			System.gc();
+			System.out.println("FREE COLD ATOMS END " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
 		}
 	};
 	
