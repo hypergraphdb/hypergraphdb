@@ -47,7 +47,6 @@ public class ByTargetIndexer extends HGIndexer
 	@Override
 	public Comparator<?> getComparator(HyperGraph graph)
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
 

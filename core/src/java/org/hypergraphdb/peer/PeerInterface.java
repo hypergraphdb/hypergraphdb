@@ -18,7 +18,8 @@ import org.hypergraphdb.query.HGAtomPredicate;
  * TODO: manage threads from this object
  *
  */
-public interface PeerInterface extends Runnable{
+public interface PeerInterface extends Runnable
+{
 	/**
 	 * Because implementors can be of any type, the configuration is an Object, no constraints 
 	 * to impose here as there is no common set of configuration properties.

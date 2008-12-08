@@ -31,8 +31,6 @@ import org.hypergraphdb.peer.workflow.TaskFactory;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.Pair;
 
-import static org.hypergraphdb.peer.Structs.*;
-
 /**
  * @author Cipri Costa
  *
@@ -40,7 +38,8 @@ import static org.hypergraphdb.peer.Structs.*;
  * Also manages resources like task allocation and threads.
  */
 
-public class JXTAPeerInterface implements PeerInterface{
+public class JXTAPeerInterface implements PeerInterface
+{
 	private Object config;
 	PipeAdvertisement pipeAdv = null;
 	
@@ -110,40 +109,52 @@ public class JXTAPeerInterface implements PeerInterface{
 	        System.out.println("Starting ServerSocket");
 	        JxtaServerSocket serverSocket = null;
 	        
-	        try {
-	        	serverSocket = new JxtaServerSocket(jxtaNetwork.getPeerGroup(), pipeAdv);
+	        try 
+	        {
+	            serverSocket = new JxtaServerSocket(jxtaNetwork.getPeerGroup(), pipeAdv);
 	            serverSocket.setSoTimeout(0);
-	        } catch (IOException e) {
+	        } 
+	        catch (IOException e) 
+	        {
 	            System.out.println("failed to create a server socket");
 	            e.printStackTrace();
 	        }
 	        
 	        //TODO implement a stop method
-	        while (true) {
-	            try {
+	        while (true) 
+	        {
+	            try 
+	            {
 	                System.out.println("Waiting for connections");
 	                Socket socket = serverSocket.accept();
-	                if (socket != null) {
+	                if (socket != null) 
+	                {
 	                    System.out.println("New socket connection accepted");
 	                    Thread thread = new Thread(new ConnectionHandler(socket), "Connection Handler Thread");
 	                    thread.start();
 	                }
-	            } catch (Exception e) {
+	            } 
+	            catch (Exception e) 
+	            {
 	                e.printStackTrace();
 	            }
 	        }
 		}
 	}
 
-	private class ConnectionHandler implements Runnable{
+	private class ConnectionHandler implements Runnable
+	{
 		private Socket socket;
 		
-		public ConnectionHandler(Socket socket){
+		public ConnectionHandler(Socket socket)
+		{
 			this.socket = socket;
 		}
 
-		private void handleRequest(Socket socket) {
-            try {
+		private void handleRequest(Socket socket) 
+		{
+            try 
+            {
             	System.out.println("JXTAPeerInterface: connection received");
             	
             	InputStream in = socket.getInputStream();
@@ -151,9 +162,11 @@ public class JXTAPeerInterface implements PeerInterface{
 
                 //get the data through the protocol
             	Object msg = null;
-            	try{
+            	try
+            	{
             		msg = protocol.readMessage(in);
-            	}catch(Exception ex)
+            	}
+            	catch(Exception ex)
                 {
                 	ex.printStackTrace();
                 }
@@ -161,26 +174,30 @@ public class JXTAPeerInterface implements PeerInterface{
                 if (tasks.containsKey(getPart(msg, SEND_TASK_ID)))
                 {
                 	tasks.get(getPart(msg, SEND_TASK_ID)).handleMessage(msg);
-                }else{
-	                Pair<Performative, String> key = new Pair<Performative, String>(Performative.valueOf(getPart(msg, PERFORMATIVE).toString()), (String)getPart(msg, ACTION));
+                }
+                else
+                {
+	                Pair<Performative, String> key = new Pair<Performative, String>(Performative.valueOf(
+	                		getPart(msg, PERFORMATIVE).toString()), 
+	                		(String)getPart(msg, ACTION));
 	                if (taskFactories.containsKey(key))
 	                {
 	                	TaskActivity<?> task = taskFactories.get(key).newTask(JXTAPeerInterface.this, msg);
-
 	                	new Thread(task).start();
 	                }
                 }
                 in.close();
-
-                socket.close();
-                
+                socket.close();                
                 System.out.println("JXTAPeerInterface: connection closed");
-            } catch (Exception ie) {
+            } 
+            catch (Exception ie) 
+            {
                 ie.printStackTrace();
             }
         }
 
-		public void run() {
+		public void run() 
+		{
 			handleRequest(socket);
 		}
 	}
@@ -222,6 +239,4 @@ public class JXTAPeerInterface implements PeerInterface{
 	{
 		return jxtaNetwork;
 	}
-
-
 }

@@ -9,7 +9,8 @@ import java.io.OutputStream;
  * @author Cipri Costa
  * Simple class for now that serializes messages. Will become the point where the format of the serialization is decided.
  */
-public class Protocol {
+public class Protocol 
+{
 	private final static byte[] SIGNATURE = "HGBD".getBytes();
 //	private static MessageFactory messageFactory = new MessageFactory();
 	
@@ -24,16 +25,18 @@ public class Protocol {
 	 * @return
 	 * @throws IOException
 	 */
-	public Object readMessage(InputStream in) throws IOException{
+	public Object readMessage(InputStream in) throws IOException
+	{
 		Object result = null;
 		
 		//get & verify signature
-		if (ProtocolUtils.verifySignature(in, SIGNATURE)){
-			ObjectSerializer serializer = new ObjectSerializer();
-			
-			result = serializer.deserialize(in);
-			
-		}else{
+		if (ProtocolUtils.verifySignature(in, SIGNATURE))
+		{
+			ObjectSerializer serializer = new ObjectSerializer();			
+			result = serializer.deserialize(in);			
+		}
+		else
+		{
 			System.out.println("ERROR: Signature does not match");
 		}
 		
@@ -41,13 +44,11 @@ public class Protocol {
 		return result;
 	}
 	
-	public Object handleResponse(InputStream in) throws IOException{
-		Object result = null;
-		
-		if (ProtocolUtils.verifySignature(in, SIGNATURE)){
-			result = new ObjectSerializer().deserialize(in);
-		}
-		
+	public Object handleResponse(InputStream in) throws IOException
+	{
+		Object result = null;		
+		if (ProtocolUtils.verifySignature(in, SIGNATURE))
+			result = new ObjectSerializer().deserialize(in);			
 		return result;
 	}
 

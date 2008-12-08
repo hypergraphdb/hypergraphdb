@@ -7,14 +7,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.protocol.Performative;
@@ -24,11 +21,9 @@ import org.hypergraphdb.peer.workflow.CatchUpTaskClient;
 import org.hypergraphdb.peer.workflow.CatchUpTaskServer;
 import org.hypergraphdb.peer.workflow.GetInterestsTask;
 import org.hypergraphdb.peer.workflow.PublishInterestsTask;
-import org.hypergraphdb.peer.workflow.QueryTaskClient;
 import org.hypergraphdb.peer.workflow.QueryTaskServer;
 import org.hypergraphdb.peer.workflow.RememberTaskServer;
 import org.hypergraphdb.query.HGAtomPredicate;
-import org.hypergraphdb.query.HGQueryCondition;
 
 /**
  * @author Cipri Costa
@@ -100,7 +95,6 @@ public class HyperGraphPeer
 		loadConfig(configFile);
 	}
 	
-
 	/**
 	 * Creates a peer from a file containing the JSON object and a given local database.
 	 * @param configFile
@@ -183,39 +177,38 @@ public class HyperGraphPeer
 				String peerInterfaceType = (String)getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				
-				if (peerInterface != null){
-					if (peerInterface.configure(configuration, user, passwd))
-					{
-						status = true;
-					
-						Thread thread = new Thread(peerInterface, "peerInterface");
-		                thread.start();
-		                
-		                //configure services
-		                if (hasLocalStorage || hasTempDb)
-		                {
-		        			registerTasks();
+				if (peerInterface.configure(configuration, user, passwd))
+				{
+					status = true;
+				
+					Thread thread = new Thread(peerInterface, "peerInterface");
+	                thread.start();
+	                
+	                //configure services
+	                if (hasLocalStorage || hasTempDb)
+	                {
+	        			registerTasks();
 
-			        		log = new Log(tempGraph, peerInterface);
+		        		log = new Log(tempGraph, peerInterface);
 
-			        		//TODO: this should not be an indefinite wait ... 
-			        		if (!hasLocalStorage)
-			        		{
-			                	peerInterface.getPeerNetwork().waitForRemotePipe();
-			                }
-			        		
-							storage = new StorageService(graph, tempGraph, peerInterface, log);
+		        		//TODO: this should not be an indefinite wait ... 
+		        		if (!hasLocalStorage)
+		        		{
+		                	peerInterface.getPeerNetwork().waitForRemotePipe();
+		                }
+		        		
+						storage = new StorageService(graph, tempGraph, peerInterface, log);
 
-		                }	
-					}
-				}else{
-					System.out.println("Can not start HGBD: peer interface could not be instantiated");
+	                }	
 				}
-
-			}catch(Exception ex){
+			}
+			catch(Exception ex)
+			{
 				System.out.println("Can not start HGBD: " + ex);
 			}
-		}else {
+		}
+		else 
+		{
 			System.out.println("Can not start HGBD: configuration not loaded");
 		}
 		
@@ -303,8 +296,9 @@ public class HyperGraphPeer
 	}
 
 	/**
-	 * Registers an application provided type in the database type systems. All peers that handle a give type must have the type registered
-	 * apriori (and with the same handle)
+	 * Registers an application provided type in the database type systems. 
+	 * All peers that handle a given type must have the type registered
+	 * a priori (and with the same handle).
 	 * @param handle
 	 * @param clazz
 	 */
@@ -313,7 +307,7 @@ public class HyperGraphPeer
 		if (storage != null)
 		{
 			storage.registerType(handle, clazz);
-		}		
+		}
 	}
 
 	public HyperGraph getHGDB()
@@ -371,6 +365,5 @@ public class HyperGraphPeer
 	public PeerInterface getPeerInterface()
 	{
 		return peerInterface;
-	}
-	
+	}	
 }

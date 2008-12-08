@@ -88,5 +88,5 @@ public class ObjectSerializer
 
 		return result;
 	}
-
+	
 }

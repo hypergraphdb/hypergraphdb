@@ -7,23 +7,29 @@ import java.util.Arrays;
 
 public class ProtocolUtils {
 
-	public static boolean verifySignature(InputStream in, byte[] signature) {
-		byte[] streamData = new byte[signature.length];
-		
-		try{
-			if (in.read(streamData) == signature.length){
+	public static boolean verifySignature(InputStream in, byte[] signature) 
+	{
+		byte[] streamData = new byte[signature.length];		
+		try
+		{
+			if (in.read(streamData) == signature.length)
 				return Arrays.equals(streamData, signature);
-			}
-		}catch(IOException ex){
-			ex.printStackTrace();
 		}
-		
+		catch(IOException ex)
+		{
+			ex.printStackTrace();
+		}		
 		return false;
 	}
-	public static void writeSignature(OutputStream out, byte[] signature){
-		try{
+	
+	public static void writeSignature(OutputStream out, byte[] signature)
+	{
+		try
+		{
 			out.write(signature);
-		}catch(IOException ex){
+		}
+		catch(IOException ex)
+		{
 			ex.printStackTrace();
 		}
 	}

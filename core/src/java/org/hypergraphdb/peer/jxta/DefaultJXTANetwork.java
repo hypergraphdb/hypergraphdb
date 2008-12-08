@@ -75,7 +75,8 @@ import org.hypergraphdb.util.Pair;
  * Handles problems related to the JXTA network : intialize, stop, discovery, publishing, etc
  * </p>
  */
-public class DefaultJXTANetwork implements JXTANetwork{
+public class DefaultJXTANetwork implements JXTANetwork
+{
 	private static int RDV_WAIT_TIMEOUT = 3000;
 	
 	private static NetworkManager peerManager = null;
