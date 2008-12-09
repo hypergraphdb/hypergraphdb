@@ -1,0 +1,26 @@
+{
+"hasLocalStorage"	: true,
+"hasTempStorage"	: true,
+"localDB"           : "./hgdb/mainDb",
+"tempDB"            : "./hgdb/tempDb",
+
+"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
+
+"jxta"		:
+{
+	"jxtaDir"	: "./hgdb/.jxta",
+	"peerName"	: "MyPeer2",
+	"peerGroup"	: "HGDBNET",
+
+	"mode"		: "EDGE",
+	"tcp"		:
+	{
+		"enabled"	: true,
+		"port"		: 9801
+	},
+    "needsRendezVous" : true,        
+    "rdvs"          : ["tcp://kobrix.com:9702"],
+    "needsRelay"    : true,        
+    "relays"        : ["tcp://kobrix.com:9702"],
+}
+}

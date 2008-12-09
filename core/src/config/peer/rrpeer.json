@@ -1,0 +1,30 @@
+/*
+ * A simple configuration for running a peer that acts as
+ * a rendez-vous and a relay. 
+ */
+{
+"hasLocalStorage"	: false,
+"hasTempStorage"	: false,
+"threadPoolSize"    : 20,
+
+"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
+
+"jxta"		:
+{
+	"jxtaDir"	: "./hgdb/.jxta",
+	"peerName"	: "MainRendezVous",
+	"peerGroup"	: "MyGroup",
+
+	"mode"		: "RENDEZVOUS_RELAY",
+	"tcp"		:
+	{
+		"enabled"	: true,
+		"port"		: 9702
+	},
+	"http"		:
+	{
+		"enabled"	: true,
+		"port"		: 9703
+	}
+}
+}
