@@ -3,17 +3,16 @@
  * a rendez-vous and a relay. 
  */
 {
-"hasLocalStorage"	: false,
-"hasTempStorage"	: false,
 "threadPoolSize"    : 20,
-
 "interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
 
 "jxta"		:
 {
+	"user" : "user",
+	"password" : "pwd",
 	"jxtaDir"	: "./hgdb/.jxta",
 	"peerName"	: "MainRendezVous",
-	"peerGroup"	: "MyGroup",
+	"peerGroup"	: "HGDBNET",
 
 	"mode"		: "RENDEZVOUS_RELAY",
 	"tcp"		:
