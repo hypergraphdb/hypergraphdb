@@ -23,5 +23,7 @@ public class StartPeer
         	//catch up ...                
         	server.catchUp();          		
         }
+        while (true)
+        	try { Thread.sleep(5000); } catch (InterruptedException ex) { break; }
 	}
 }

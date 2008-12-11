@@ -1,17 +1,23 @@
 package org.hypergraphdb.peer;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.hypergraphdb.query.HGAtomPredicate;
 
 /**
+ * <p>
+ * A representation of the peer network. Contains info about other peers and implements
+ * the actual connection and communication with the network.
+ * </p>
+ * 
  * @author ciprian.costa
- * Implementors will handle the available information about the peer network
  */
 public interface PeerNetwork
 {
-	boolean init(Object config, String username, String passwd);
-	void start();
+	boolean configure(Map<String, Object> config);
+	void join(ExecutorService executorService);
 
 	//get/set atom interests for known peers
 	void setAtomInterests(Object peer, HGAtomPredicate interest);

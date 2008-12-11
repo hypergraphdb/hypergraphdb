@@ -7,7 +7,6 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.Subgraph;
-import org.hypergraphdb.peer.workflow.RememberTaskClient;
 
 /**
  * @author ciprian.costa

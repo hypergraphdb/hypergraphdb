@@ -43,7 +43,7 @@ public abstract class TaskActivity<StateType> extends AbstractActivity<StateType
 	 */
 	private HashMap<StateType, LinkedBlockingQueue<AbstractActivity<?>>> activityQueues = new HashMap<StateType, LinkedBlockingQueue<AbstractActivity<?>>>();
 	/**
-	 * Used to detrmine the queue of an activity based on the change in the activity state
+	 * Used to determine the queue of an activity based on the change in the activity state
 	 */
 	private HashMap<Object, StateType> conversationQueueMaping = new HashMap<Object, StateType>();
 	/**

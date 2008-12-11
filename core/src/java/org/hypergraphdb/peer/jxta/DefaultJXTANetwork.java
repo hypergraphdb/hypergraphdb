@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 
 import net.jxta.credential.AuthenticationCredential;
 import net.jxta.credential.Credential;
@@ -27,19 +28,15 @@ import net.jxta.discovery.DiscoveryListener;
 import net.jxta.discovery.DiscoveryService;
 import net.jxta.document.Advertisement;
 import net.jxta.document.AdvertisementFactory;
-import net.jxta.document.Document;
 import net.jxta.document.Element;
-import net.jxta.document.ExtendableAdvertisement;
 import net.jxta.document.MimeMediaType;
 import net.jxta.document.StructuredDocument;
 import net.jxta.document.StructuredDocumentFactory;
 import net.jxta.document.StructuredTextDocument;
 import net.jxta.document.TextElement;
-import net.jxta.document.XMLElement;
 import net.jxta.endpoint.EndpointService;
 import net.jxta.endpoint.MessageTransport;
 import net.jxta.exception.PeerGroupException;
-import net.jxta.exception.ProtocolNotSupportedException;
 import net.jxta.id.ID;
 import net.jxta.id.IDFactory;
 import net.jxta.impl.endpoint.relay.RelayClient;
@@ -66,7 +63,7 @@ import net.jxta.rendezvous.RendezVousService;
 
 import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.query.HGAtomPredicate;
-import org.hypergraphdb.util.Pair;
+
 
 /**
  * @author Cipri Costa
@@ -94,7 +91,7 @@ public class DefaultJXTANetwork implements JXTANetwork
             URI.create("urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000133BF5414AC624CC8AD3AF6AEC2C8264306"));
 
 	
-	public boolean init(Object config, String username, String passwd)
+	public boolean configure(Map<String, Object> config)
 	{
 		boolean result = false;
 		
@@ -121,7 +118,9 @@ public class DefaultJXTANetwork implements JXTANetwork
 	    	dumpNetworkConfig(configurator);
 	    	
 	    	peerManager.startNetwork();
-	    } catch (Exception e) {
+	    } 
+	    catch (Exception e) 
+	    {
 	    	e.printStackTrace();
 	    }
 	    
@@ -131,18 +130,25 @@ public class DefaultJXTANetwork implements JXTANetwork
 	    	netPeerGroup = peerManager.getNetPeerGroup();
 	    	try
 			{
-				createCustomGroup(config, username, passwd);
+	    		String username = (String)config.get("user");
+	    		String password = (String)config.get("password");
+				createCustomGroup(config, username, password);
 				if (hgdbGroup != null)
 				{
 					System.out.println("Trying to join the group ... ");
-					result = joinCustomGroup(username, passwd, (configMode == ConfigMode.RENDEZVOUS || configMode == ConfigMode.RENDEZVOUS_RELAY));
+					result = joinCustomGroup(username, password, 
+							(configMode == ConfigMode.RENDEZVOUS || 
+							 configMode == ConfigMode.RENDEZVOUS_RELAY));
 				}
 				
-			} catch (Exception e)
+			} 
+	    	catch (Exception e)
 			{
 				e.printStackTrace();
 			}
-	    }else{
+	    }
+	    else
+	    {
 	    	System.out.println("PeerManager can not be instantiated");
 	    }
 	    
@@ -180,7 +186,8 @@ public class DefaultJXTANetwork implements JXTANetwork
 	    			try
 					{
 						Thread.sleep(3000);
-					} catch (InterruptedException e)
+					}
+	    			catch (InterruptedException e)
 					{
 					}
 	    		}
@@ -591,10 +598,10 @@ public class DefaultJXTANetwork implements JXTANetwork
 		return newGroupImpl;
 	}
 	
-	public void start()
+	public void join(ExecutorService executorService)
 	{
-    	new Thread(new AdvPublisher()).start();
-    	new Thread(new AdvSubscriber()).start();
+    	executorService.execute(new AdvPublisher());
+    	executorService.execute(new AdvSubscriber());
 	}
 	
 	public PeerGroup getPeerGroup()

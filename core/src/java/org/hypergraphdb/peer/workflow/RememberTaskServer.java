@@ -32,21 +32,21 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 	private ProposalConversation conversation;
 	private Timestamp last_version;
 	private Timestamp current_version;
+	private StorageService storage;
 	
-	public RememberTaskServer(PeerInterface peerInterface, HyperGraphPeer peer)
+	public RememberTaskServer(HyperGraphPeer peer, StorageService storage)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(peer.getPeerInterface(), State.Started, State.Done);
 		this.peer = peer;
-		
+		this.storage = storage;
 		setState(State.Started);
 	}
 	
-	public RememberTaskServer(PeerInterface peerInterface, HyperGraphPeer peer, Object msg)
+	public RememberTaskServer(HyperGraphPeer peer, StorageService storage, Object msg)
 	{
-		//super(peerInterface, msg.getTaskId(), State.Started, State.Done);
-		super(peerInterface, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
+		super(peer.getPeerInterface(), (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
 		this.peer = peer;
-
+		this.storage = storage;
 		//start the conversation
 		PeerRelatedActivity activity = (PeerRelatedActivity)getPeerInterface().newSendActivityFactory().createActivity();
 		conversation = new ProposalConversation(activity, getPeerInterface(), msg);	
@@ -86,7 +86,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, REPLY_TO));//.getReplyTo());
 		if (peer.getLog().registerRequest(peerId, last_version, current_version))
 		{
-			ArrayList<Object> contents = (ArrayList<Object>)getPart(msg, CONTENTS);
+			ArrayList<Object> contents = getPart(msg, CONTENTS);
 			
 			for(Object content : contents)
 			{
@@ -96,16 +96,16 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 				if (operation == StorageService.Operation.Create)
 				{
 					Subgraph subgraph = (Subgraph) getPart(content, CONTENT);
-					handle = peer.getStorage().addSubgraph(subgraph);
+					handle = storage.addSubgraph(subgraph);
 				}else if (operation == StorageService.Operation.Update){
 					Subgraph subgraph = (Subgraph) getPart(content, CONTENT);
-					handle = peer.getStorage().updateSubgraph(subgraph);
+					handle = storage.updateSubgraph(subgraph);
 				}else if (operation == StorageService.Operation.Remove){
 					handle = (HGPersistentHandle)getPart(content, CONTENT);
-					peer.getStorage().remove(handle);
+					storage.remove(handle);
 				}else if (operation == StorageService.Operation.Copy){
 					Subgraph subgraph = (Subgraph) getPart(content, CONTENT);
-					handle = peer.getStorage().addOrReplaceSubgraph(subgraph);
+					handle = storage.addOrReplaceSubgraph(subgraph);
 				}
 				handles.add(svalue(handle));
 			}
@@ -149,14 +149,20 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 	public static class RememberTaskServerFactory implements TaskFactory
 	{
 		private HyperGraphPeer peer;
+		private StorageService storage;
+		
 		public RememberTaskServerFactory(HyperGraphPeer peer)
 		{
+			// Storage instance is shared by all task coming out of this factory...
+			storage = new StorageService(peer.getHGDB(), 
+										 peer.getTempDb(), 
+										 peer.getPeerInterface(), 
+										 peer.getLog());
 			this.peer = peer;
 		}
 		public TaskActivity<?> newTask(PeerInterface peerInterface, Object msg)
 		{
-			return new RememberTaskServer(peerInterface, peer, msg);
+			return new RememberTaskServer(peer, storage, msg);
 		}
-		
 	}
 }

@@ -1,6 +1,8 @@
 package org.hypergraphdb.peer;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.peer.workflow.TaskActivity;
@@ -18,7 +20,7 @@ import org.hypergraphdb.query.HGAtomPredicate;
  * TODO: manage threads from this object
  *
  */
-public interface PeerInterface extends Runnable
+public interface PeerInterface
 {
 	/**
 	 * Because implementors can be of any type, the configuration is an Object, no constraints 
@@ -27,7 +29,19 @@ public interface PeerInterface extends Runnable
 	 * @param configuration
 	 * @return
 	 */
-	boolean configure(Object configuration, String user, String passwd);
+	boolean configure(Map<String, Object> configuration);
+	
+	/**
+	 * <p>
+	 * Execute the message handling loop of this interface. This method is akin to a vanilla
+	 * <code>run</code>, but with the additional constraint that a specific 
+	 * <code>ExecutorService</code> must be used for the main message handling thread as
+	 * well as for all activities triggered by this <code>PeerInterface</code>.
+	 * </p>
+	 * 
+	 * @param executorService
+	 */
+	void run(ExecutorService executorService);
 	
 	//factory methods to obtain activities that are specific to the peer implementation
 	//TODO redesign

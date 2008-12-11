@@ -3,14 +3,15 @@ package org.hypergraphdb.peer.jxta;
 import static org.hypergraphdb.peer.HGDBOntology.ACTION;
 import static org.hypergraphdb.peer.HGDBOntology.PERFORMATIVE;
 import static org.hypergraphdb.peer.HGDBOntology.SEND_TASK_ID;
-import static org.hypergraphdb.peer.Structs.getOptPart;
-import static org.hypergraphdb.peer.Structs.getPart;
+import static org.hypergraphdb.peer.Structs.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 
 import net.jxta.id.IDFactory;
 import net.jxta.pipe.PipeID;
@@ -40,7 +41,7 @@ import org.hypergraphdb.util.Pair;
 
 public class JXTAPeerInterface implements PeerInterface
 {
-	private Object config;
+	private Map<String, Object> config;
 	PipeAdvertisement pipeAdv = null;
 	
 	/**
@@ -54,58 +55,28 @@ public class JXTAPeerInterface implements PeerInterface
 	private HashMap<UUID, TaskActivity<?>> tasks = new HashMap<UUID, TaskActivity<?>>();
 	private HGAtomPredicate atomInterests;
 	
-	private boolean hasCustomInterface;
-	
-	public boolean configure(Object configuration, String user, String passwd) 
+	public boolean configure(Map<String, Object> configuration) 
 	{
-		boolean result = true;
-		
-		System.out.println("JXTAPeerInterface: configure");
-
-		//get the part we are interested in
-		boolean hasTempDb = (Boolean)getOptPart(configuration, true, PeerConfig.HAS_TEMP_STORAGE);
-		boolean hasLocalStorage = (Boolean)getPart(configuration, PeerConfig.HAS_LOCAL_STORAGE);
-
-		hasCustomInterface = hasLocalStorage || hasTempDb;
-		config = getPart(configuration, JXTAConfig.CONFIG_NAME);
-		result = jxtaNetwork.init(config, user, passwd);
-
-		if (result && hasCustomInterface)
-		{
-			String peerName = (String)getOptPart(config, "HGDBPeer", JXTAConfig.PEER_NAME);
-			
-			PipeID pipeID = IDFactory.newPipeID(jxtaNetwork.getPeerGroup().getPeerGroupID());
-			System.out.println("created pipe: " + pipeID.toString());
-			pipeAdv = HGAdvertisementsFactory.newPipeAdvertisement(pipeID, peerName);
-			
-			jxtaNetwork.addOwnPipe(pipeID);
-			jxtaNetwork.publishAdv(pipeAdv);
-			jxtaNetwork.start();
-		}
-		
-		return result;		
-	}
-
-	public PeerFilter newFilterActivity(PeerFilterEvaluator evaluator)
-	{
-		JXTAPeerFilter result = new JXTAPeerFilter(jxtaNetwork.getAdvertisements());
-		
-		if (evaluator == null) evaluator = new DefaultPeerFilterEvaluator(null);
-		result.setEvaluator(evaluator);
-		
-		return result;
-	}
-
-
-	public PeerRelatedActivityFactory newSendActivityFactory()
-	{
-		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
+		return jxtaNetwork.configure(getStruct(configuration, JXTAConfig.CONFIG_NAME));
 	}
 	
-	public void run() 
+	private void startNetwork(final ExecutorService executorService)
 	{
-		if (hasCustomInterface)
-		{
+		String peerName = (String)getOptPart(config, "HGDBPeer", JXTAConfig.PEER_NAME);
+		
+		PipeID pipeID = IDFactory.newPipeID(jxtaNetwork.getPeerGroup().getPeerGroupID());
+		System.out.println("created pipe: " + pipeID.toString());
+		pipeAdv = HGAdvertisementsFactory.newPipeAdvertisement(pipeID, peerName);
+		
+		jxtaNetwork.addOwnPipe(pipeID);
+		jxtaNetwork.publishAdv(pipeAdv);
+		jxtaNetwork.join(executorService);		
+	}
+	
+	public void run(final ExecutorService executorService) 
+	{
+		startNetwork(executorService);
+		executorService.execute(new Runnable() { public void run() {
 	        System.out.println("Starting ServerSocket");
 	        JxtaServerSocket serverSocket = null;
 	        
@@ -130,8 +101,7 @@ public class JXTAPeerInterface implements PeerInterface
 	                if (socket != null) 
 	                {
 	                    System.out.println("New socket connection accepted");
-	                    Thread thread = new Thread(new ConnectionHandler(socket), "Connection Handler Thread");
-	                    thread.start();
+	                    executorService.execute(new ConnectionHandler(socket, executorService));
 	                }
 	            } 
 	            catch (Exception e) 
@@ -139,19 +109,38 @@ public class JXTAPeerInterface implements PeerInterface
 	                e.printStackTrace();
 	            }
 	        }
-		}
+		
+		}});
 	}
 
+	public PeerFilter newFilterActivity(PeerFilterEvaluator evaluator)
+	{
+		JXTAPeerFilter result = new JXTAPeerFilter(jxtaNetwork.getAdvertisements());
+		
+		if (evaluator == null) evaluator = new DefaultPeerFilterEvaluator(null);
+		result.setEvaluator(evaluator);
+		
+		return result;
+	}
+
+
+	public PeerRelatedActivityFactory newSendActivityFactory()
+	{
+		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
+	}
+	
 	private class ConnectionHandler implements Runnable
 	{
 		private Socket socket;
+		private ExecutorService executorService;
 		
-		public ConnectionHandler(Socket socket)
+		public ConnectionHandler(Socket socket, ExecutorService executorService)
 		{
 			this.socket = socket;
+			this.executorService = executorService;
 		}
 
-		private void handleRequest(Socket socket) 
+		private void handleRequest(Socket socket, ExecutorService executorService) 
 		{
             try 
             {
@@ -177,13 +166,13 @@ public class JXTAPeerInterface implements PeerInterface
                 }
                 else
                 {
-	                Pair<Performative, String> key = new Pair<Performative, String>(Performative.valueOf(
-	                		getPart(msg, PERFORMATIVE).toString()), 
+	                Pair<Performative, String> key = new Pair<Performative, String>(
+	                		Performative.valueOf(getPart(msg, PERFORMATIVE).toString()), 
 	                		(String)getPart(msg, ACTION));
 	                if (taskFactories.containsKey(key))
 	                {
 	                	TaskActivity<?> task = taskFactories.get(key).newTask(JXTAPeerInterface.this, msg);
-	                	new Thread(task).start();
+	                	executorService.execute(task);
 	                }
                 }
                 in.close();
@@ -198,7 +187,7 @@ public class JXTAPeerInterface implements PeerInterface
 
 		public void run() 
 		{
-			handleRequest(socket);
+			handleRequest(socket, executorService);
 		}
 	}
 
@@ -211,8 +200,6 @@ public class JXTAPeerInterface implements PeerInterface
 	public void execute(PeerRelatedActivity activity)
 	{
 		activity.run();
-//		new Thread(activity).start();
-	
 	}
 
 

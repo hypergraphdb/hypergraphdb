@@ -45,7 +45,6 @@ import org.hypergraphdb.query.TypedValueCondition;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
 import org.hypergraphdb.type.BonesOfBeans;
 import org.hypergraphdb.util.Pair;
-import org.hypergraphdb.util.TwoWayMap;
 
 
 /**
@@ -59,6 +58,7 @@ import org.hypergraphdb.util.TwoWayMap;
  * @author Borislav Iordanov
  *
  */
+@SuppressWarnings("unchecked")
 public class Structs
 {	
 	/**
@@ -328,21 +328,26 @@ public class Structs
 	 * @param args
 	 * @return
 	 */
-	public static Object getPart(Object source, Object...args)
+	public static <T> T getPart(Object source, Object...args)
 	{
 		if (args == null) return null;
 		
-		if (args.length == 0) return createObject(source);
-		if (args.length == 1) return getStructPart(source, args[0]);
+		if (args.length == 0) return (T)createObject(source);
+		if (args.length == 1) return (T)getStructPart(source, args[0]);
 		else 
 		{
 			List<Object> l = new ArrayList<Object>();
 			for (Object x : args) l.add(x);
 	
-			return getStructPart(source, l, 0);
+			return (T)getStructPart(source, l, 0);
 		}
 	}
 
+	public static Map<String, Object> getStruct(Object source, Object...args)
+	{
+		return (Map<String, Object>)getPart(source, args);
+	}
+	
 	public static boolean hasPart(Object source, Object...args)
 	{
 		if ((args == null) || (source == null)) return false;
@@ -357,7 +362,7 @@ public class Structs
 			return hasStructPart(source, l, 0);
 		}
 	}
-	public static Object getOptPart(Object source, Object defaultValue, Object...args)
+	public static <T> T getOptPart(Object source, T defaultValue, Object...args)
 	{
 		if (source == null) return defaultValue;
 		if (hasPart(source, args)) return getPart(source, args);
@@ -384,8 +389,10 @@ public class Structs
 	{
 		if (!(path instanceof List))
 		{
-			return getStructPart(source, path);
-		}else{
+			return getStructPart(source, path);		
+		}
+		else
+		{
 			List<Object> list = (List<Object>)path;
 			if ((list.size() < pos) || (pos < 0)) return null;
 			
@@ -401,13 +408,16 @@ public class Structs
 	{
 		if (source instanceof Map){
 			return ((Map)source).containsKey(position.toString());
-		}else if (source instanceof List)
+		}
+		else if (source instanceof List)
 		{
 			Integer listPos = (Integer)position;
 			return (listPos >= 0) && (listPos < ((List)source).size());
-		}else return false;
-		
+		}
+		else 
+			return false;		
 	}
+	
 	private static Object getStructPart(Object source, Object position)
 	{
 		if (source instanceof Map){
@@ -431,7 +441,8 @@ public class Structs
 		if (source instanceof CustomSerializedValue)
 		{
 			return ((CustomSerializedValue)source).get();
-		}else if (source instanceof List)
+		}
+		else if (source instanceof List)
 		{
 			List<Object> data = (List<Object>)source;
 			
@@ -443,26 +454,32 @@ public class Structs
 				if (hgInvertedMappers.containsKey(className))
 				{
 					return hgInvertedMappers.get(className).getObject(data.get(1));
-				}else {
+				}
+				else 
+				{
 					Number num = getNumber(data);
-					if (num != null) return num;
-					else{
+					if (num != null) 
+						return num;
+					else
+					{
 						Class<?> clazz = getBeanClass(className);
 						if (clazz == null) return source;
 						else return createObject(data, clazz);
 					}
 				}
-			}else {
+			}
+			else 
+			{
 				List<Object> result = new ArrayList<Object>();
 				for(Object o : data)
 				{
 					result.add(createObject(o));
-				}
-					
+				}					
 				return result;
-			}
-			
-		}else return source;
+			}			
+		}
+		else 
+			return source;
 	}
 	
 	private static Class<?> getBeanClass(String className)

@@ -7,23 +7,24 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.log.Log;
-import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
 import org.hypergraphdb.peer.workflow.CatchUpTaskClient;
-import org.hypergraphdb.peer.workflow.CatchUpTaskServer;
 import org.hypergraphdb.peer.workflow.GetInterestsTask;
 import org.hypergraphdb.peer.workflow.PublishInterestsTask;
-import org.hypergraphdb.peer.workflow.QueryTaskServer;
-import org.hypergraphdb.peer.workflow.RememberTaskServer;
 import org.hypergraphdb.query.HGAtomPredicate;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * @author Cipri Costa
@@ -31,16 +32,17 @@ import org.hypergraphdb.query.HGAtomPredicate;
  * Main class for the local peer. It will start the peer (set up the interface and register in the network) given a configuration.
  * 
  * The class will wrap an existing HyperGraph instance. It is possible to create an instance of this class with an existing HyperGraph, or 
- * allow the peer to create its own based on the configuration properties. A separate hyperGraph instance will be created for the temporary storage 
+ * allow the peer to create its own based on the configuration properties.  
  * (if it is needed).
  * 
  */
+@SuppressWarnings("unchecked")
 public class HyperGraphPeer 
 {
 	/**
 	 * The object used to configure the peer.
 	 */
-	private Object configuration;
+	private Map<String, Object> configuration;
 	
 	/**
 	 * Object used for communicating with other peers
@@ -62,27 +64,39 @@ public class HyperGraphPeer
 	 */
 	private Log log;
 	
+
 	/**
-	 * Object that monitors the lcoal database and propagates changes accordingly.
+	 * Execution of all peer asynchronous activities goes through this ExecutorService.  
 	 */
-	private StorageService storage;
+	private ExecutorService executorService = null;
+	
+	// Assuming 'configuration' is set, initialize the rest of the member variables.
+	private void init()
+	{
+		Number threadPoolSize = (Number)configuration.get("threadPoolSize");
+		if (threadPoolSize == null || threadPoolSize.intValue() <= 0)
+			executorService = Executors.newCachedThreadPool();
+		else
+			executorService = Executors.newFixedThreadPool(threadPoolSize.intValue());
+	}
 	
 	/**
 	 * Creates a peer from a JSON object.
 	 * @param configuration
 	 */
-	public HyperGraphPeer(Object configuration)
+	public HyperGraphPeer(Map<String, Object> configuration)
 	{
 		this.configuration = configuration;
+		init();
 	}
 	
 	/**
 	 * Creates a peer from a JSON object and a given local database.
 	 * @param configuration
 	 */
-	public HyperGraphPeer(Object configuration, HyperGraph graph)
+	public HyperGraphPeer(Map<String, Object> configuration, HyperGraph graph)
 	{
-		this(configuration);
+		this(configuration);		
 		this.graph = graph;
 	}
 	
@@ -93,6 +107,7 @@ public class HyperGraphPeer
 	public HyperGraphPeer(File configFile)
 	{
 		loadConfig(configFile);
+		init();
 	}
 	
 	/**
@@ -105,13 +120,14 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void loadConfig(File configFile)
 	{
 		JSONReader reader = new JSONReader();
 
 		try
 		{
-			configuration = getPart(reader.read(getContents(configFile)));
+			configuration = (Map<String, Object>)getPart(reader.read(getContents(configFile)));
 			
 		} catch (IOException e)
 		{
@@ -157,54 +173,54 @@ public class HyperGraphPeer
 			//get required objects
 			try
 			{
-				boolean hasTempDb = (Boolean)getOptPart(configuration, true, PeerConfig.HAS_TEMP_STORAGE);
-				if (hasTempDb)
+				String option = getOptPart(configuration, null, PeerConfig.TEMP_DB);				
+				if (!HGUtils.isEmpty(option))
 				{
-					//create cache database - this should eventually be an actual cache, not just another database
-					tempGraph = HGEnvironment.get((String)getOptPart(configuration, ".tempdb", PeerConfig.TEMP_DB));
+					tempGraph = HGEnvironment.get(option);
+					GenericSerializer.setTempDB(tempGraph);
 				}
-				
-				GenericSerializer.setTempDB(tempGraph);
 
-				//create the local database
-				boolean hasLocalStorage = (Boolean)getPart(configuration, PeerConfig.HAS_LOCAL_STORAGE);
-				if (hasLocalStorage && (graph == null))
-				{
-					graph = HGEnvironment.get((String)getOptPart(configuration, ".hgdb", PeerConfig.LOCAL_DB));
-				}
+				option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
+				if (!HGUtils.isEmpty(option))
+					graph = HGEnvironment.get(option);
+				
 				
 				//load and start interface
-				String peerInterfaceType = (String)getPart(configuration, PeerConfig.INTERFACE_TYPE);
+				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				
-				if (peerInterface.configure(configuration, user, passwd))
+				if (peerInterface.configure(configuration))
 				{
 					status = true;
 				
-					Thread thread = new Thread(peerInterface, "peerInterface");
-	                thread.start();
-	                
+					peerInterface.run(executorService);
+					
 	                //configure services
-	                if (hasLocalStorage || hasTempDb)
-	                {
-	        			registerTasks();
-
+	                if (tempGraph != null)	                
 		        		log = new Log(tempGraph, peerInterface);
+	        		//TODO: this should not be an indefinite wait ... 
+	        		if (graph == null)
+	                	peerInterface.getPeerNetwork().waitForRemotePipe();						
 
-		        		//TODO: this should not be an indefinite wait ... 
-		        		if (!hasLocalStorage)
-		        		{
-		                	peerInterface.getPeerNetwork().waitForRemotePipe();
-		                }
-		        		
-						storage = new StorageService(graph, tempGraph, peerInterface, log);
-
-	                }	
+					// Call all bootstrapping operations configured:					
+					List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");					
+					if (bootstrapOperations != null)
+						for (Object x : bootstrapOperations)
+						{
+							String classname = getPart(x, "class");
+							if (classname == null)
+								throw new RuntimeException("No 'class' specified in bootstrap operation.");
+							Map<String, Object> config = getPart(x, "config");
+							if (config == null)
+								config = new HashMap<String, Object>();
+							BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
+							boot.bootstrap(this, config);
+						} 
 				}
 			}
 			catch(Exception ex)
 			{
-				System.out.println("Can not start HGBD: " + ex);
+				ex.printStackTrace();				
 			}
 		}
 		else 
@@ -213,18 +229,6 @@ public class HyperGraphPeer
 		}
 		
 		return status;
-	}
-
-	/**
-	 * Registers the tasks that can be created by the peer interface when a message is received.
-	 */
-	private void registerTasks()
-	{
-		peerInterface.registerTaskFactory(Performative.CallForProposal, HGDBOntology.REMEMBER_ACTION, new RememberTaskServer.RememberTaskServerFactory(this));
-		peerInterface.registerTaskFactory(Performative.Request, HGDBOntology.ATOM_INTEREST, new PublishInterestsTask.PublishInterestsFactory());
-		peerInterface.registerTaskFactory(Performative.Request, HGDBOntology.QUERY, new QueryTaskServer.QueryTaskFactory(this));
-		peerInterface.registerTaskFactory(Performative.Request, HGDBOntology.CATCHUP, new CatchUpTaskServer.CatchUpTaskServerFactory(this));
-		peerInterface.registerTaskFactory(Performative.Inform, HGDBOntology.ATOM_INTEREST, new GetInterestsTask.GetInterestsFactory());
 	}
 	
 	/**
@@ -295,37 +299,11 @@ public class HyperGraphPeer
 		this.log = log;
 	}
 
-	/**
-	 * Registers an application provided type in the database type systems. 
-	 * All peers that handle a given type must have the type registered
-	 * a priori (and with the same handle).
-	 * @param handle
-	 * @param clazz
-	 */
-	public void registerType(HGPersistentHandle handle, Class<?> clazz)
-	{
-		if (storage != null)
-		{
-			storage.registerType(handle, clazz);
-		}
-	}
-
 	public HyperGraph getHGDB()
 	{
 		return graph;
 	}
 
-	public StorageService getStorage()
-	{
-		return storage;
-	}
-
-	public void setStorage(StorageService storage)
-	{
-		this.storage = storage;
-	}
-
-	
 	/**
 	 * 
 	 * @return A list with all the connected peers in the form of RemotePeer objects.
@@ -365,5 +343,10 @@ public class HyperGraphPeer
 	public PeerInterface getPeerInterface()
 	{
 		return peerInterface;
-	}	
+	}
+	
+	public ExecutorService getExecutorService()
+	{
+		return executorService;
+	}
 }
