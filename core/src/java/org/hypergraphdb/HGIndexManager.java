@@ -167,7 +167,7 @@ public class HGIndexManager
 		// currently scheduled.
 		HGHandle maintenanceOp = hg.findOne(graph, 
 										    hg.and(hg.type(ApplyNewIndexer.class), 
-										    	   hg.eq("hIndexer", hIndexer)));
+										    	   hg.eq("HIndexer", hIndexer)));
 		if (maintenanceOp != null)
 			graph.remove(maintenanceOp);
 		graph.remove(hIndexer);

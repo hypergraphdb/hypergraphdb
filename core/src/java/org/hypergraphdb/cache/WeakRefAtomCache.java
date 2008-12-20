@@ -138,9 +138,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	}
 	
 	public WeakRefAtomCache()
-	{		
-		phantomCleanupThread.start();
+	{
 		phantomCleanupThread.setPriority(Thread.MAX_PRIORITY);
+		phantomCleanupThread.setDaemon(true);		
+		phantomCleanupThread.start();
 	}
 	
 	public void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache)
