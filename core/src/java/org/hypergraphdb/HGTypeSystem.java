@@ -366,7 +366,7 @@ public class HGTypeSystem
 		// First, create a dummy type for the class, so that recursive type
 		// references don't lead to an infinite recursion here.
 		//
-		HGHandle newHandle = graph.add(clazz, NULLTYPE_PERSISTENT_HANDLE);
+		HGHandle newHandle = graph.add(new Object(), NULLTYPE_PERSISTENT_HANDLE);
 		classToAtomType.put(clazz, newHandle);
 		getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(newHandle));
 		HGHandle inferred = defineNewJavaTypeTransaction(newHandle, clazz);
