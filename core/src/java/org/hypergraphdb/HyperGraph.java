@@ -1158,11 +1158,15 @@ public /*final*/ class HyperGraph
      * @param valueHandle The handle of the atom's value. This parameter cannot be <code>null</code>.
      * @param outgoingSet If the atom is a link, this parameter specifies the set of atoms pointed to by the link.
      * If this parameter is <code>null</code> or of size 0, then the atom is not a link.
+     * @param instance The runtime instance of the atom. The runtime instance is needed in order to
+     * update any indices related to the atom. If this parameter is <code>null</code>, an attempt to 
+     * construct the instance from the <code>valueHandle</code> will be made.
      */
     public void define(final HGPersistentHandle atomHandle, 
     				   final HGHandle typeHandle, 
     				   final HGHandle valueHandle, 
-    				   final HGLink   outgoingSet)
+    				   final HGLink   outgoingSet,
+    				   final Object instance)
     {
     	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
@@ -1189,7 +1193,7 @@ public /*final*/ class HyperGraph
 	        idx_manager.maybeIndex(layout[0], 
 	        					   type, 
 	        					   atomHandle,
-	        					   type.make(layout[1], linkRef, null));	        	    	
+	        					   instance == null ? type.make(layout[1], linkRef, null) : instance);	        	    	
 	    	return null;
     	}});
     }
@@ -1232,7 +1236,7 @@ public /*final*/ class HyperGraph
 	    			payload = ((HGValueLink)instance).getValue();
 	    	}
 	    	HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
-	    	define(atomHandle, typeHandle, valueHandle, link);
+	    	define(atomHandle, typeHandle, valueHandle, link, instance);
 	    	HyperGraph.this.atomAdded(atomHandle, instance, flags);
 	    	return null;
     	}});
