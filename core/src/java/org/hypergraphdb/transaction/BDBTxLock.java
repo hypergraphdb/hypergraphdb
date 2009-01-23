@@ -132,7 +132,7 @@ public class BDBTxLock implements ReadWriteLock
 		public void lock()
 		{
 			try
-			{
+			{				
 				lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.WRITE);
 			}
 			catch (DatabaseException ex)

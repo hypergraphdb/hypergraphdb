@@ -94,7 +94,11 @@ public class HGTransactionManager
 	 * a transaction context will be created and bound to a thread
 	 * if need be, every time a new transaction is requested. So when 
 	 * HyperGraph is embedded in a client application, there is no
-	 * need to explicitely attach/detach contexts to threads. 
+	 * need to explicitly attach/detach contexts to threads. However, in 
+	 * an environment using thread pooling such as is common in servers where
+	 * a single transaction can span multiple requests, use the 
+	 * <code>threadAttach</code> and <code>threadDetach</code> methods
+	 * to switch transactions contexts bound to clients.  
 	 * </p>
 	 * 
 	 * @param tContext
@@ -111,12 +115,12 @@ public class HGTransactionManager
 	 * a transaction context will be created and bound to a thread
 	 * if need be, every time a new transaction is requested. So when 
 	 * HyperGraph is embedded in a client application, there is no
-	 * need to explicitely attach/detach contexts to threads. 
+	 * need to explicitly attach/detach contexts to threads. 
 	 * </p>
 	 * 
 	 * <p>
 	 * <strong>IMPORTANT NOTE:</strong> when managing transaction
-	 * contexts explicitely, you are responsible for closing
+	 * contexts explicitly, you are responsible for closing
 	 * all pending transactions in the context before disposing of it.
 	 * This is done by invoking the <code>HGTransactionContext.endAll</code>
 	 * method. 

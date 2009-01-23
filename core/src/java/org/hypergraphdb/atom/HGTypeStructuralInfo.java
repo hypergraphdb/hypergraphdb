@@ -21,7 +21,7 @@ import org.hypergraphdb.HGPersistentHandle;
  * undirected when using the terminology for links of arity 2). This structural uniformity
  * is not enforced by HyperGraph, but it can be declared, for purposes such as applying better
  * visualization algorithms and query optimization, by adding a <code>HGTypeStructuralInfo</code>
- * with the relevant information.
+ * atom with the relevant information.
  * </p>
  * <p>
  * If an application adds such structural information for a

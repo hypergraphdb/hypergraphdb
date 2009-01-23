@@ -316,7 +316,7 @@ public class HGTypeSystem
 	{
 		if (graph.getTransactionManager().getContext().getCurrent() != null)
 		{
-			graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+			graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null, new Object());
 			classToAtomType.put(clazz, handle);
 			getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
 			HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
@@ -330,7 +330,7 @@ public class HGTypeSystem
 			graph.getTransactionManager().transact(new Callable<HGHandle>() {
 			public HGHandle call()
 			{
-				graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null);
+				graph.define(handle, NULLTYPE_PERSISTENT_HANDLE, NULLTYPE_PERSISTENT_HANDLE, null, new Object());
 				classToAtomType.put(clazz, handle);
 				getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
 				HGHandle h = defineNewJavaTypeTransaction(handle, clazz);

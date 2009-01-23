@@ -11,6 +11,7 @@ import org.hypergraphdb.peer.workflow.GetInterestsTask;
 import org.hypergraphdb.peer.workflow.PublishInterestsTask;
 import org.hypergraphdb.peer.workflow.QueryTaskServer;
 import org.hypergraphdb.peer.workflow.RememberTaskServer;
+import org.hypergraphdb.query.AnyAtomCondition;
 
 public class ReplicationBootstrap implements BootstrapPeer
 {
@@ -31,6 +32,8 @@ public class ReplicationBootstrap implements BootstrapPeer
 													new CatchUpTaskServer.CatchUpTaskServerFactory(peer));
 		peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
 													HGDBOntology.ATOM_INTEREST, 
-													new GetInterestsTask.GetInterestsFactory());		
+													new GetInterestsTask.GetInterestsFactory());
+    	peer.setAtomInterests(new AnyAtomCondition());                
+    	peer.catchUp();          				
 	}
 }

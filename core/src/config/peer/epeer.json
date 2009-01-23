@@ -19,8 +19,8 @@
 		"port"		: 9801
 	},
     "needsRendezVous" : true,        
-    "rdvs"          : ["tcp://kobrix.com:9702"],
+    "rdvs"          : ["tcp://192.168.2.100:9702"],
     "needsRelay"    : true,        
-    "relays"        : ["tcp://kobrix.com:9702"],
+    "relays"        : ["tcp://192.168.2.100:9702"],
 }
 }

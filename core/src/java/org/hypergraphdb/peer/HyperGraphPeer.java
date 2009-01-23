@@ -120,7 +120,6 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private void loadConfig(File configFile)
 	{
 		JSONReader reader = new JSONReader();
@@ -199,8 +198,8 @@ public class HyperGraphPeer
 	                if (tempGraph != null)	                
 		        		log = new Log(tempGraph, peerInterface);
 	        		//TODO: this should not be an indefinite wait ... 
-	        		if (graph == null)
-	                	peerInterface.getPeerNetwork().waitForRemotePipe();						
+//	        		if (graph == null)
+//	                	peerInterface.getPeerNetwork().waitForRemotePipe();						
 
 					// Call all bootstrapping operations configured:					
 					List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");					

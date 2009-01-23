@@ -2,8 +2,6 @@ package org.hypergraphdb.peer;
 
 import java.io.File;
 
-import org.hypergraphdb.query.AnyAtomCondition;
-
 public class StartPeer
 {
 	public static void main(String[] args)
@@ -15,14 +13,7 @@ public class StartPeer
 		}
 		
         HyperGraphPeer server = new HyperGraphPeer(new File(args[0]));
-        if (server.start("user", "pwd"))        
-        {                
-        	//peer is started ...                
-        	//set atom interests ...                
-        	server.setAtomInterests(new AnyAtomCondition());                
-        	//catch up ...                
-        	server.catchUp();          		
-        }
+        server.start("user", "pwd");
         while (true)
         	try { Thread.sleep(5000); } catch (InterruptedException ex) { break; }
 	}

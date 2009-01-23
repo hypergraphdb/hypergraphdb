@@ -364,9 +364,10 @@ public class Structs
 	}
 	public static <T> T getOptPart(Object source, T defaultValue, Object...args)
 	{
-		if (source == null) return defaultValue;
-		if (hasPart(source, args)) return getPart(source, args);
-		else return defaultValue;
+		if (source == null) return defaultValue;		
+		if (hasPart(source, args)) 
+			defaultValue = (T)getPart(source, args);
+		return defaultValue;
 	}
 	private static boolean hasStructPart(Object source, Object path, int pos)
 	{
