@@ -40,7 +40,8 @@ import net.jxta.exception.PeerGroupException;
 import net.jxta.id.ID;
 import net.jxta.id.IDFactory;
 import net.jxta.impl.endpoint.relay.RelayClient;
-import net.jxta.impl.membership.passwd.PasswdMembershipService;
+import net.jxta.impl.endpoint.relay.RelayServer;
+//import net.jxta.impl.membership.passwd.PasswdMembershipService;
 import net.jxta.impl.peergroup.StdPeerGroupParamAdv;
 import net.jxta.impl.rendezvous.RendezVousServiceInterface;
 import net.jxta.impl.rendezvous.rpv.PeerView;
@@ -64,311 +65,355 @@ import net.jxta.rendezvous.RendezVousService;
 import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.query.HGAtomPredicate;
 
-
 /**
  * @author Cipri Costa
- *
+ * 
  * <p>
- * Handles problems related to the JXTA network : intialize, stop, discovery, publishing, etc
+ * Handles problems related to the JXTA network : intialize, stop, discovery,
+ * publishing, etc
  * </p>
  */
 public class DefaultJXTANetwork implements JXTANetwork
 {
-	private static int RDV_WAIT_TIMEOUT = 3000;
-	
-	private static NetworkManager peerManager = null;
-	private static PeerGroup netPeerGroup = null;
-	private static PeerGroup hgdbGroup = null;
-	
-	private LinkedList<Advertisement> ownAdvs = new LinkedList<Advertisement>();
-	private Map<Advertisement, HGAtomPredicate> peerAdvs = Collections.synchronizedMap(new HashMap<Advertisement, HGAtomPredicate>());
-	private Map<Advertisement, String> peerAdvIds = new HashMap<Advertisement, String>();
-	private Set<PipeID> ownPipes = new HashSet<PipeID>();
-	
-	private int advTimetoLive;
-	
-    private final static ModuleSpecID PROTECTED_GROUP_MSID = (ModuleSpecID) ID.create(
-            URI.create("urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000133BF5414AC624CC8AD3AF6AEC2C8264306"));
+    private static int RDV_WAIT_TIMEOUT = 3000;
 
-	
-	public boolean configure(Map<String, Object> config)
-	{
-		boolean result = false;
-		
-		NetworkManager.ConfigMode configMode = ConfigMode.ADHOC;
-		//Start network
-	    try 
-	    {
-	    	String peerName = (String)getOptPart(config, "HGDBPeer", JXTAConfig.PEER_NAME);
-	    	String mode = (String)getOptPart(config, "ADHOC", JXTAConfig.MODE);
-	    	String jxtaDir = (String)getOptPart(config, ".jxta", JXTAConfig.JXTA_DIR);
+    private static NetworkManager peerManager = null;
+    private static PeerGroup netPeerGroup = null;
+    private static PeerGroup hgdbGroup = null;
 
-	    	configMode = NetworkManager.ConfigMode.valueOf(NetworkManager.ConfigMode.class, mode);
-	    	
-	    	System.out.println("Initializing instance " + peerName + " ...");   	
-	    	URI configURI = new File(jxtaDir).toURI();
-	    	
-	    	System.out.println("Using config file: " + configURI.toString());
-	    
-	    	peerManager = new NetworkManager(configMode, peerName, configURI);
+    private LinkedList<Advertisement> ownAdvs = new LinkedList<Advertisement>();
+    private Map<Advertisement, HGAtomPredicate> peerAdvs = Collections.synchronizedMap(new HashMap<Advertisement, HGAtomPredicate>());
+    private Map<Advertisement, String> peerAdvIds = new HashMap<Advertisement, String>();
+    private Set<PipeID> ownPipes = new HashSet<PipeID>();
 
-	    	NetworkConfigurator configurator = peerManager.getConfigurator(); 
-	    	configureNetwork(configurator, config);
-	    	
-	    	dumpNetworkConfig(configurator);
-	    	
-	    	peerManager.startNetwork();
-	    } 
-	    catch (Exception e) 
-	    {
-	    	e.printStackTrace();
-	    }
-	    
-	    //Join custom group
-	    if (peerManager != null)
-	    {
-	    	netPeerGroup = peerManager.getNetPeerGroup();
-	    	try
-			{
-	    		String username = (String)config.get("user");
-	    		String password = (String)config.get("password");
-				createCustomGroup(config, username, password);
-				if (hgdbGroup != null)
-				{
-					System.out.println("Trying to join the group ... ");
-					result = joinCustomGroup(username, password, 
-							(configMode == ConfigMode.RENDEZVOUS || 
-							 configMode == ConfigMode.RENDEZVOUS_RELAY));
-				}
-				
-			} 
-	    	catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-	    }
-	    else
-	    {
-	    	System.out.println("PeerManager can not be instantiated");
-	    }
-	    
-	    //wait for rendezvous if needed
-	    Boolean needsRendezVous = (Boolean)getOptPart(config, false, JXTAConfig.NEEDS_RENDEZ_VOUS);
-	    System.out.println("Waiting for rendezvous: " + needsRendezVous);
-	    if (needsRendezVous)
-    	{
-    		boolean rdvFound = false;
-    		while (!rdvFound)
-    		{
-	    		System.out.println("start waiting for rendezvous...");
-	    		rdvFound = waitForRendezVous(hgdbGroup);
-    			
-    			try{Thread.sleep(3000);} catch (InterruptedException e){}
-    		}
-    	}
+    private int advTimetoLive;
 
-	    //wait for realy
-	    Boolean needsRelay = (Boolean)getOptPart(config, false, JXTAConfig.NEEDS_RELAY);
-	    System.out.println("Waiting for realy: " + needsRelay);
-    	if (needsRelay)
-    	{
-    		boolean relayFound = false;
-    		while (!relayFound)
-    		{
-    			System.out.println("start waiting for relays...");
-    			relayFound = waitForRelay();
-    			
-	    		if (relayFound) System.out.println("Relay found!");
-	    		else 
-	    		{
-	    			System.out.println("No relays found...");
-	    			
-	    			try
-					{
-						Thread.sleep(3000);
-					}
-	    			catch (InterruptedException e)
-					{
-					}
-	    		}
-    		}
-    	}
+    private final static ModuleSpecID PROTECTED_GROUP_MSID = (ModuleSpecID) ID.create(URI.create("urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000133BF5414AC624CC8AD3AF6AEC2C8264306"));
 
-    	this.advTimetoLive = ((Long)getOptPart(config, 10000L, JXTAConfig.ADVERTISEMENT_TTL)).intValue();
-	    			
-		System.out.println("Finished initializing");
+    public boolean configure(Map<String, Object> config)
+    {
+        boolean result = false;
 
-		return result;
-	}
+        NetworkManager.ConfigMode configMode = ConfigMode.ADHOC;
+        // Start network
+        try
+        {
+            String peerName = (String) getOptPart(config, "HGDBPeer",
+                                                  JXTAConfig.PEER_NAME);
+            String mode = (String) getOptPart(config, "ADHOC", JXTAConfig.MODE);
+            String jxtaDir = (String) getOptPart(config, ".jxta",
+                                                 JXTAConfig.JXTA_DIR);
 
-	private void configureNetwork(NetworkConfigurator configurator, Object config)
-	{
-		//peerid?
-				
-		//name
-		configurator.setName((String)getOptPart(config, "HGDBPeer", JXTAConfig.PEER_NAME));
-		
-		//tcp transport
-		if (hasPart(config, JXTAConfig.TCP))
-		{
-			Object tcpConfig = getPart(config, JXTAConfig.TCP);
-			if (hasPart(tcpConfig, JXTAConfig.ENABLED))
-				configurator.setTcpEnabled((Boolean)getPart(tcpConfig, JXTAConfig.ENABLED));
-			if (hasPart(tcpConfig, JXTAConfig.INCOMING))
-				configurator.setTcpIncoming((Boolean)getPart(tcpConfig, JXTAConfig.INCOMING));
-			if (hasPart(tcpConfig, JXTAConfig.OUTGOING))
-				configurator.setTcpOutgoing((Boolean)getPart(tcpConfig, JXTAConfig.ENABLED));
-			
-			if (hasPart(tcpConfig, JXTAConfig.PORT))
-				configurator.setTcpPort(((Long)getPart(tcpConfig, JXTAConfig.PORT)).intValue());
-			if (hasPart(tcpConfig, JXTAConfig.START_PORT))
-				configurator.setTcpStartPort(((Long)getPart(tcpConfig, JXTAConfig.START_PORT)).intValue());
-			if (hasPart(tcpConfig, JXTAConfig.END_PORT))
-				configurator.setTcpEndPort(((Long)getPart(tcpConfig, JXTAConfig.END_PORT)).intValue());
-		}
+            configMode = NetworkManager.ConfigMode.valueOf(NetworkManager.ConfigMode.class,
+                                                           mode);
 
-		//http transport
-		if (hasPart(config, JXTAConfig.HTTP))
-		{
-			Object httpConfig = getPart(config, JXTAConfig.HTTP);
-			if (hasPart(httpConfig, JXTAConfig.ENABLED))
-				configurator.setHttpEnabled((Boolean)getPart(httpConfig, JXTAConfig.ENABLED));
-			if (hasPart(httpConfig, JXTAConfig.INCOMING))
-				configurator.setHttpIncoming((Boolean)getPart(httpConfig, JXTAConfig.INCOMING));
-			if (hasPart(httpConfig, JXTAConfig.OUTGOING))
-				configurator.setHttpOutgoing((Boolean)getPart(httpConfig, JXTAConfig.ENABLED));
-			
-			if (hasPart(httpConfig, JXTAConfig.PORT))
-				configurator.setHttpPort(((Long)getPart(httpConfig, JXTAConfig.PORT)).intValue());
-		}
-		
-		//rdv config - which rdvs to use
-		if (hasPart(config, JXTAConfig.RELAYS))
-		{
-			configurator.clearRelaySeeds();
-			List<Object> relays = (List<Object>)getPart(config, JXTAConfig.RELAYS);
-			
-			for(Object relay:relays)
-			{
-				if (relay instanceof String)
-				{
-					configurator.addSeedRelay(URI.create((String)relay));
-				}
-			}
-		}
-		
-		//relay config - which relays to use
-		if (hasPart(config, JXTAConfig.RENDEZVOUS))
-		{
-			configurator.clearRendezvousSeeds();
-			List<Object> rdvs = (List<Object>)getPart(config, JXTAConfig.RENDEZVOUS);
-			
-			for(Object rdv:rdvs)
-			{
-				if (rdv instanceof String)
-				{
-					configurator.addSeedRendezvous(URI.create((String)rdv));
-				}
-			}
-		}
-		
-		//pse (authentification)?
-	}
+            System.out.println("Initializing instance " + peerName + " ...");
+            URI configURI = new File(jxtaDir).toURI();
 
-	private boolean waitForRendezVous(PeerGroup group)
-	{
-		boolean rdvFound = false;
-		
-		RendezVousService rdv = group.getRendezVousService();
-		Enumeration<ID> rdvs = rdv.getConnectedRendezVous();
+            System.out.println("Using config file: " + configURI.toString());
 
-		if (rdvs.hasMoreElements()) 
-		{
-			rdvFound = true;
-			System.out.println("Rendezvous Connections :");
-			RendezVousServiceInterface stdRdv;
-			net.jxta.impl.rendezvous.StdRendezVousService stdRdvProvider = null;
-			while (rdvs.hasMoreElements()) 
-	    	{
-	        	try 
-	        	{
-	            	ID connection = (PeerID) rdvs.nextElement();
-	        
-	            	if (rdv instanceof net.jxta.impl.rendezvous.RendezVousServiceInterface) 
-	            	{
-	                    stdRdv = (RendezVousServiceInterface) rdv;
-	                    PeerView rpv = null;
+            peerManager = new NetworkManager(configMode, peerName, configURI);
 
-	                    System.out.print("\t" + connection);
-		                if (null != stdRdv) 
-		                {
-		                    net.jxta.impl.rendezvous.RendezVousServiceProvider provider = stdRdv.getRendezvousProvider();
-	                    
-		                    if (provider instanceof net.jxta.impl.rendezvous.StdRendezVousService) 
-		                    {
-		                    	stdRdvProvider = (net.jxta.impl.rendezvous.StdRendezVousService) provider;
-		                    }
-	                    
-		                    rpv = stdRdv.getPeerView();
-		                }
+            NetworkConfigurator configurator = peerManager.getConfigurator();
+            configureNetwork(configurator, config);
 
-		                if (null != stdRdvProvider) 
-		                {
-		                	System.out.println("\t" + stdRdvProvider.getPeerConnection(connection));
-	                    } else {
-	                    	String peerName = idToName(group.getDiscoveryService(), connection);
-	                        System.out.println("\t" + peerName);
-	                    }
-	            	}
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-	        }
-	    }
-		
-		return rdvFound;
-	}
-		
-	private boolean waitForRelay()
-	{
-		boolean hasRelay = false;
-		
-        EndpointService endpoint = hgdbGroup.getEndpointService();
+            dumpNetworkConfig(configurator);
 
-        Iterator it = endpoint.getAllMessageTransports();
+            peerManager.startNetwork();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 
-        while (it.hasNext()) {
-            MessageTransport mt = (MessageTransport) it.next();
-
-            try 
+        // Join custom group
+        if (peerManager != null)
+        {
+            netPeerGroup = peerManager.getNetPeerGroup();
+            try
             {
-                if (mt instanceof RelayClient) 
+                String username = (String) config.get("user");
+                String password = (String) config.get("password");
+                createCustomGroup(config, username, password);
+                if (hgdbGroup != null)
                 {
-                    RelayClient er = (RelayClient) mt;
- 
-                    List allRelays = er.getActiveRelays(null);
+                    System.out.println("Trying to join the group ... ");
+                    result = joinCustomGroup(username,
+                                             password,
+                                             (configMode == ConfigMode.RENDEZVOUS || configMode == ConfigMode.RENDEZVOUS_RELAY));
+                }
 
-                    if ((null != allRelays) && !allRelays.isEmpty()) 
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+        else
+        {
+            System.out.println("PeerManager can not be instantiated");
+        }
+
+        // wait for rendezvous if needed
+        Boolean needsRendezVous = (Boolean) getOptPart(
+                                                       config,
+                                                       false,
+                                                       JXTAConfig.NEEDS_RENDEZ_VOUS);
+        System.out.println("Waiting for rendezvous: " + needsRendezVous);
+        if (needsRendezVous)
+        {
+            boolean rdvFound = false;
+            while (!rdvFound)
+            {
+                System.out.println("start waiting for rendezvous...");
+                rdvFound = waitForRendezVous(hgdbGroup);
+
+                try
+                {
+                    Thread.sleep(3000);
+                }
+                catch (InterruptedException e)
+                {
+                }
+            }
+        }
+
+        // wait for realy
+        Boolean needsRelay = (Boolean) getOptPart(config, false,
+                                                  JXTAConfig.NEEDS_RELAY);
+        System.out.println("Waiting for realy: " + needsRelay);
+        if (needsRelay)
+        {
+            boolean relayFound = false;
+            while (!relayFound)
+            {
+                System.out.println("start waiting for relays...");
+                relayFound = waitForRelay();
+
+                if (relayFound)
+                    System.out.println("Relay found!");
+                else
+                {
+                    System.out.println("No relays found...");
+
+                    try
                     {
-                    	hasRelay = true;
-                        System.out.println("Active Relay Servers : ");
-                        for (Object allRelay : allRelays) 
+                        Thread.sleep(3000);
+                    }
+                    catch (InterruptedException e)
+                    {
+                    }
+                }
+            }
+        }
+
+        this.advTimetoLive = ((Long) getOptPart(config, 10000L,
+                                                JXTAConfig.ADVERTISEMENT_TTL)).intValue();
+
+        System.out.println("Finished initializing");
+
+        return result;
+    }
+
+    private void configureNetwork(NetworkConfigurator configurator,
+                                  Object config)
+    {
+        // peerid?
+
+        // name
+        configurator.setName((String) getOptPart(config, "HGDBPeer",
+                                                 JXTAConfig.PEER_NAME));
+
+        // tcp transport
+        if (hasPart(config, JXTAConfig.TCP))
+        {
+            Object tcpConfig = getPart(config, JXTAConfig.TCP);
+            if (hasPart(tcpConfig, JXTAConfig.ENABLED))
+                configurator.setTcpEnabled((Boolean) getPart(tcpConfig,
+                                                             JXTAConfig.ENABLED));
+            if (hasPart(tcpConfig, JXTAConfig.INCOMING))
+                configurator.setTcpIncoming((Boolean) getPart(
+                                                              tcpConfig,
+                                                              JXTAConfig.INCOMING));
+            if (hasPart(tcpConfig, JXTAConfig.OUTGOING))
+                configurator.setTcpOutgoing((Boolean) getPart(
+                                                              tcpConfig,
+                                                              JXTAConfig.ENABLED));
+
+            if (hasPart(tcpConfig, JXTAConfig.PORT))
+                configurator.setTcpPort(((Long) getPart(tcpConfig,
+                                                        JXTAConfig.PORT)).intValue());
+            if (hasPart(tcpConfig, JXTAConfig.START_PORT))
+                configurator.setTcpStartPort(((Long) getPart(
+                                                             tcpConfig,
+                                                             JXTAConfig.START_PORT)).intValue());
+            if (hasPart(tcpConfig, JXTAConfig.END_PORT))
+                configurator.setTcpEndPort(((Long) getPart(tcpConfig,
+                                                           JXTAConfig.END_PORT)).intValue());
+        }
+
+        // http transport
+        if (hasPart(config, JXTAConfig.HTTP))
+        {
+            Object httpConfig = getPart(config, JXTAConfig.HTTP);
+            if (hasPart(httpConfig, JXTAConfig.ENABLED))
+                configurator.setHttpEnabled((Boolean) getPart(
+                                                              httpConfig,
+                                                              JXTAConfig.ENABLED));
+            if (hasPart(httpConfig, JXTAConfig.INCOMING))
+                configurator.setHttpIncoming((Boolean) getPart(
+                                                               httpConfig,
+                                                               JXTAConfig.INCOMING));
+            if (hasPart(httpConfig, JXTAConfig.OUTGOING))
+                configurator.setHttpOutgoing((Boolean) getPart(
+                                                               httpConfig,
+                                                               JXTAConfig.ENABLED));
+
+            if (hasPart(httpConfig, JXTAConfig.PORT))
+                configurator.setHttpPort(((Long) getPart(httpConfig,
+                                                         JXTAConfig.PORT)).intValue());
+        }
+
+        // relay config - which relays to use
+        if (hasPart(config, JXTAConfig.RELAYS))
+        {
+            configurator.clearRelaySeeds();
+            List<Object> relays = (List<Object>) getPart(config,
+                                                         JXTAConfig.RELAYS);
+
+            for (Object relay : relays)
+            {
+                if (relay instanceof String)
+                {
+                    configurator.addSeedRelay(URI.create((String) relay));
+                }
+            }
+        }
+        
+        // rdv config - which rdvs to use
+        if (hasPart(config, JXTAConfig.RENDEZVOUS))
+        {
+            configurator.clearRendezvousSeeds();
+            List<Object> rdvs = (List<Object>) getPart(config,
+                                                       JXTAConfig.RENDEZVOUS);
+
+            for (Object rdv : rdvs)
+            {
+                if (rdv instanceof String)
+                {
+                    configurator.addSeedRendezvous(URI.create((String) rdv));
+                }
+            }
+        }
+
+        // pse (authentification)?
+    }
+
+    private boolean waitForRendezVous(PeerGroup group)
+    {
+        boolean rdvFound = false;
+
+        RendezVousService rdv = group.getRendezVousService();
+        Enumeration<ID> rdvs = rdv.getConnectedRendezVous();
+
+        if (rdvs.hasMoreElements())
+        {
+            rdvFound = true;
+            System.out.println("Rendezvous Connections :");
+            RendezVousServiceInterface stdRdv;
+            net.jxta.impl.rendezvous.StdRendezVousService stdRdvProvider = null;
+            while (rdvs.hasMoreElements())
+            {
+                try
+                {
+                    ID connection = (PeerID) rdvs.nextElement();
+
+                    if (rdv instanceof net.jxta.impl.rendezvous.RendezVousServiceInterface)
+                    {
+                        stdRdv = (RendezVousServiceInterface) rdv;
+                        PeerView rpv = null;
+
+                        System.out.print("\t" + connection);
+                        if (null != stdRdv)
                         {
-                            AccessPointAdvertisement ap = (AccessPointAdvertisement) allRelay;
-                            System.out.println("\t" + getPeerName(mt, ap) + " [" + ap.getPeerID() + "]");
+                            net.jxta.impl.rendezvous.RendezVousServiceProvider provider = stdRdv.getRendezvousProvider();
+
+                            if (provider instanceof net.jxta.impl.rendezvous.StdRendezVousService)
+                            {
+                                stdRdvProvider = (net.jxta.impl.rendezvous.StdRendezVousService) provider;
+                            }
+
+                            rpv = stdRdv.getPeerView();
+                        }
+
+                        if (null != stdRdvProvider)
+                        {
+                            System.out.println("\t"
+                                               + stdRdvProvider.getPeerConnection(connection));
+                        }
+                        else
+                        {
+                            String peerName = idToName(
+                                                       group.getDiscoveryService(),
+                                                       connection);
+                            System.out.println("\t" + peerName);
                         }
                     }
                 }
-            } catch (Exception ex) 
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return rdvFound;
+    }
+
+    private boolean waitForRelay()
+    {
+        boolean hasRelay = false;
+
+        EndpointService endpoint = hgdbGroup.getEndpointService();
+
+        Iterator<?> it = endpoint.getAllMessageTransports();
+
+        while (it.hasNext())
+        {
+            MessageTransport mt = (MessageTransport) it.next();
+
+            try
+            {
+                if (mt instanceof RelayClient)
+                {
+                    RelayClient er = (RelayClient) mt;
+                    
+                    List<?> allRelays = er.getActiveRelays(null);
+
+                    if ((null != allRelays) && !allRelays.isEmpty())
+                    {
+                        hasRelay = true;
+                        System.out.println("Active Relay Servers : ");
+                        for (Object allRelay : allRelays)
+                        {
+                            AccessPointAdvertisement ap = (AccessPointAdvertisement) allRelay;
+                            System.out.println("\t" + getPeerName(mt, ap)
+                                               + " [" + ap.getPeerID() + "]");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
             {
                 ex.printStackTrace();
             }
         }
-        
-        return hasRelay;
-	}
 
-    private String getPeerName(MessageTransport mt, AccessPointAdvertisement adv) {
+        return hasRelay;
+    }
+
+    private String getPeerName(MessageTransport mt, AccessPointAdvertisement adv)
+    {
 
         EndpointService endpoint = mt.getEndpointService();
         DiscoveryService discovery = endpoint.getGroup().getDiscoveryService();
@@ -378,432 +423,499 @@ public class DefaultJXTANetwork implements JXTANetwork
         return idToName(discovery, id);
     }
 
-    private String idToName(DiscoveryService discovery, ID id) {
-        
+    private String idToName(DiscoveryService discovery, ID id)
+    {
+
         String idstring = id.toString();
         String name = null;
-        
-        try 
+
+        try
         {
             Enumeration<Advertisement> res;
-            
-            if (id instanceof PeerID) 
+
+            if (id instanceof PeerID)
             {
-                res = discovery.getLocalAdvertisements(DiscoveryService.PEER, "PID", idstring);
-                
-                if (res.hasMoreElements()) 
+                res = discovery.getLocalAdvertisements(DiscoveryService.PEER,
+                                                       "PID", idstring);
+
+                if (res.hasMoreElements())
                 {
                     name = ((PeerAdvertisement) res.nextElement()).getName();
                 }
-            } else if (id instanceof PeerGroupID) {
-                res = discovery.getLocalAdvertisements(DiscoveryService.GROUP, "GID", idstring);
-                
-                if (res.hasMoreElements()) 
+            }
+            else if (id instanceof PeerGroupID)
+            {
+                res = discovery.getLocalAdvertisements(DiscoveryService.GROUP,
+                                                       "GID", idstring);
+
+                if (res.hasMoreElements())
                 {
                     name = ((PeerGroupAdvertisement) res.nextElement()).getName();
                 }
             }
-        } catch (IOException failed) {
-        	failed.printStackTrace();	
         }
-                
+        catch (IOException failed)
+        {
+            failed.printStackTrace();
+        }
+
         return name;
     }
-    
-	private void createCustomGroup(Object config, String username, String passwd) throws Exception
-	{
-		String groupName = (String)getOptPart(config, "HGDBGroup", JXTAConfig.GROUP_NAME);
-		
-		System.out.println("Joining group " + groupName);
-		PeerGroupID groupId = IDFactory.newPeerGroupID(netPeerGroup.getPeerGroupID(), groupName.getBytes());
-		
-		//try to find it, if not, publish it
-		Enumeration<Advertisement> advs;
-		
-		advs = netPeerGroup.getDiscoveryService().getLocalAdvertisements(DiscoveryService.GROUP, "GID", groupId.toString());
-		if (advs != null)
-		{
-			if (advs.hasMoreElements())
-			{
-				Advertisement adv = advs.nextElement();
-				if (adv != null)
-				{
-					System.out.println("Found local group advertisement... ");
-					hgdbGroup = netPeerGroup.newGroup(adv);				
-				}
-			}
-		}
 
-		if (hgdbGroup == null)
-		{
-			DiscoveryListener listener = new DiscoveryListener()
-			{
-				public void discoveryEvent(DiscoveryEvent evnt)
-				{
-					Advertisement adv = evnt.getSearchResults().nextElement();
-					
-					System.out.println("Remote group: " + adv);
-					System.out.println("Found remote group advertisement... ");
-					try
-					{
-						hgdbGroup = netPeerGroup.newGroup(adv);
-					} catch (PeerGroupException e)
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}		
-				}
-			};
-			
-			netPeerGroup.getDiscoveryService().getRemoteAdvertisements(null, DiscoveryService.GROUP, null, null, 100, listener);
-			
-			try
-			{
-				Thread.sleep(3000);
-			}catch(InterruptedException ex){}
-	
-			netPeerGroup.getDiscoveryService().removeDiscoveryListener(listener);
-		}
-		
-		if (hgdbGroup == null)
-		{
-			System.out.println("Can not find local group advertisements. Creating a new group ... ");
+    private void createCustomGroup(Object config, String username, String passwd) throws Exception
+    {
+        String groupName = (String) getOptPart(config, "HGDBGroup",
+                                               JXTAConfig.GROUP_NAME);
 
-			ModuleImplAdvertisement implAdv = null; 
-				
-			try
-			{
-				implAdv = createGroupAdv();
-			}catch(Exception ex)
-			{
-				ex.printStackTrace();
-			}
-			
-			netPeerGroup.getDiscoveryService().publish(implAdv);
-			netPeerGroup.getDiscoveryService().remotePublish(implAdv);
-			
-			PeerGroupAdvertisement groupAdv = (PeerGroupAdvertisement) AdvertisementFactory.newAdvertisement(PeerGroupAdvertisement.getAdvertisementType());
-		    groupAdv.setPeerGroupID(groupId);
-		    groupAdv.setModuleSpecID(implAdv.getModuleSpecID()); 
-		    groupAdv.setName(groupName);
-		    groupAdv.setDescription("HGDB Group");
+        System.out.println("Joining group " + groupName);
+        PeerGroupID groupId = IDFactory.newPeerGroupID(netPeerGroup.getPeerGroupID(),
+                                                       groupName.getBytes());
 
-			StructuredTextDocument loginInfo = (StructuredTextDocument)StructuredDocumentFactory.newStructuredDocument(new MimeMediaType("text/xml"), "Parm");
-			String loginString = username + ":" + PasswdMembershipService.makePsswd(passwd) + ":";
-			TextElement loginElement = loginInfo.createElement("login", loginString);
-			loginInfo.appendChild(loginElement);
-			groupAdv.putServiceParam(PeerGroup.membershipClassID, loginInfo);
+        // try to find it, if not, publish it
+        Enumeration<Advertisement> advs;
 
-			
-			hgdbGroup = netPeerGroup.newGroup(groupAdv);
-			
-			System.out.println("publishing group...");
-			netPeerGroup.getDiscoveryService().remotePublish(groupAdv);
-			System.out.println("Group published successfully.");
-		}
-	}
-	
-	private boolean joinCustomGroup(String user, String passwd, boolean beRendevous) throws Exception
-	{
-		boolean isJoined = false;
-		
-		StructuredDocument myCredentials = null;
-		
-		AuthenticationCredential cred = new AuthenticationCredential(hgdbGroup, null, myCredentials);
-		Authenticator auth = hgdbGroup.getMembershipService().apply(cred);
-	
-		if (auth != null)
-		{
-			authenticateMe(auth, user, passwd);
-			
-			if (auth.isReadyForJoin())
-			{
-				try
-				{
-					Credential myCred = hgdbGroup.getMembershipService().join(auth);
-					isJoined = true;
-					System.out.println("Group joined");
-					
-					if (beRendevous)
-					{
-						System.out.println("Starting group rendezvous...");
-						hgdbGroup.getRendezVousService().startRendezVous();
-					}
-				}catch(PeerGroupException ex)
-				{
-					System.out.println("incorrect password");
-				}
-			} else System.out.println("group not joined 1");
-		} else System.out.println("group not joined 2");
-		
-		
-		return isJoined;
-	}
-	
-    void authenticateMe(Authenticator auth, String login, String password) 
+        advs = netPeerGroup.getDiscoveryService().getLocalAdvertisements(DiscoveryService.GROUP,
+                                                                         "GID",
+                                                                         groupId.toString());
+        if (advs != null)
+        {
+            if (advs.hasMoreElements())
+            {
+                Advertisement adv = advs.nextElement();
+                if (adv != null)
+                {
+                    System.out.println("Found local group advertisement... ");
+                    hgdbGroup = netPeerGroup.newGroup(adv);
+                }
+            }
+        }
+
+        if (hgdbGroup == null)
+        {
+            DiscoveryListener listener = new DiscoveryListener()
+            {
+                public void discoveryEvent(DiscoveryEvent evnt)
+                {
+                    Advertisement adv = evnt.getSearchResults().nextElement();
+
+                    System.out.println("Remote group: " + adv);
+                    System.out.println("Found remote group advertisement... ");
+                    try
+                    {
+                        hgdbGroup = netPeerGroup.newGroup(adv);
+                    }
+                    catch (PeerGroupException e)
+                    {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            netPeerGroup.getDiscoveryService().getRemoteAdvertisements(null,
+                                                                       DiscoveryService.GROUP,
+                                                                       null,
+                                                                       null,
+                                                                       100,
+                                                                       listener);
+
+            try
+            {
+                Thread.sleep(3000);
+            }
+            catch (InterruptedException ex)
+            {
+            }
+
+            netPeerGroup.getDiscoveryService().removeDiscoveryListener(listener);
+        }
+
+        if (hgdbGroup == null)
+        {
+            System.out.println("Can not find local group advertisements. Creating a new group ... ");
+
+            ModuleImplAdvertisement implAdv = null;
+
+            try
+            {
+                implAdv = createGroupAdv();
+            }
+            catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+
+            netPeerGroup.getDiscoveryService().publish(implAdv);
+            netPeerGroup.getDiscoveryService().remotePublish(implAdv);
+
+            PeerGroupAdvertisement groupAdv = (PeerGroupAdvertisement) AdvertisementFactory.newAdvertisement(PeerGroupAdvertisement.getAdvertisementType());
+            groupAdv.setPeerGroupID(groupId);
+            groupAdv.setModuleSpecID(implAdv.getModuleSpecID());
+            groupAdv.setName(groupName);
+            groupAdv.setDescription("HGDB Group");
+
+/*            StructuredTextDocument loginInfo = 
+                (StructuredTextDocument) StructuredDocumentFactory.newStructuredDocument(new MimeMediaType("text/xml"),"Parm");
+            String loginString = username + ":"
+                                 + PasswdMembershipService.makePsswd(passwd == null ? "password" : passwd)
+                                 + ":";
+            TextElement loginElement = loginInfo.createElement("login",
+                                                               loginString);
+            loginInfo.appendChild(loginElement);
+            groupAdv.putServiceParam(PeerGroup.membershipClassID, loginInfo); */
+
+            hgdbGroup = netPeerGroup.newGroup(groupAdv);
+
+            System.out.println("publishing group...");
+            netPeerGroup.getDiscoveryService().remotePublish(groupAdv);
+            System.out.println("Group published successfully.");
+        }
+    }
+
+    private boolean joinCustomGroup(String user, String passwd,
+                                    boolean beRendevous) throws Exception
+    {
+        boolean isJoined = false;
+
+        StructuredDocument myCredentials = null;
+
+        AuthenticationCredential cred = new AuthenticationCredential(hgdbGroup,
+                                                                     null,
+                                                                     myCredentials);
+        Authenticator auth = hgdbGroup.getMembershipService().apply(cred);
+
+        if (auth != null)
+        {
+//            authenticateMe(auth, user, passwd);
+
+            if (auth.isReadyForJoin())
+            {
+                try
+                {
+//                    Credential myCred = hgdbGroup.getMembershipService().join(auth);
+                    isJoined = true;
+                    System.out.println("Group joined");
+
+                    if (beRendevous)
+                    {
+                        System.out.println("Starting group rendezvous...");
+                        hgdbGroup.getRendezVousService().startRendezVous();
+                    }
+                }
+                catch (Throwable ex)
+                {
+                    System.out.println("incorrect password");
+                }
+            }
+            else
+                System.out.println("group not joined 1");
+        }
+        else
+            System.out.println("group not joined 2");
+
+        return isJoined;
+    }
+
+    void authenticateMe(Authenticator auth, String login, String password)
     {
         Method[] methods = auth.getClass().getMethods();
 
-        try 
+        try
         {
-        	for (int meth=0; meth<methods.length; meth++) 
-        	{
-        		if (methods[meth].getName().equals("setAuth1Identity")) 
-        		{
-        			Object [] authLogin = {login};
-        			methods[meth].invoke(auth, authLogin);
-        		}
-        		else if (methods[meth].getName().equals("setAuth2_Password")) 
-        		{
-        			Object [] authPassword = {password};
-        			methods[meth].invoke(auth, authPassword);
-        		}
-        	}
-        } catch (Exception e) {
-          e.printStackTrace();
+            for (int meth = 0; meth < methods.length; meth++)
+            {
+                if (methods[meth].getName().equals("setAuth1Identity"))
+                {
+                    Object[] authLogin =
+                    { login };
+                    methods[meth].invoke(auth, authLogin);
+                }
+                else if (methods[meth].getName().equals("setAuth2_Password"))
+                {
+                    Object[] authPassword =
+                    { password };
+                    methods[meth].invoke(auth, authPassword);
+                }
+            }
         }
-      }
-	
-	private ModuleImplAdvertisement createGroupAdv() throws Exception
-	{
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private ModuleImplAdvertisement createGroupAdv() throws Exception
+    {
         ModuleImplAdvertisement newGroupImpl;
 
         newGroupImpl = netPeerGroup.getAllPurposePeerGroupImplAdvertisement();
 
         newGroupImpl.setModuleSpecID(PROTECTED_GROUP_MSID);
         newGroupImpl.setDescription("HGDB Protected Group");
-		
-        StdPeerGroupParamAdv params = new StdPeerGroupParamAdv(newGroupImpl.getParam());
+
+        StdPeerGroupParamAdv params = new StdPeerGroupParamAdv(
+                                                               newGroupImpl.getParam());
 
         Map services = params.getServices();
 
-        ModuleImplAdvertisement membershipAdv = (ModuleImplAdvertisement) services.get(PeerGroup.membershipClassID);
-      
-        services.remove(PeerGroup.membershipClassID);
+//        ModuleImplAdvertisement membershipAdv = (ModuleImplAdvertisement) services.get(PeerGroup.membershipClassID);
 
-        ModuleImplAdvertisement implAdv = (ModuleImplAdvertisement) AdvertisementFactory.newAdvertisement(
-                ModuleImplAdvertisement.getAdvertisementType());
+//        services.remove(PeerGroup.membershipClassID);
 
-		implAdv.setModuleSpecID(PasswdMembershipService.passwordMembershipSpecID);
-		implAdv.setCode(PasswdMembershipService.class.getName());
-		
-		implAdv.setCompat(membershipAdv.getCompat());
-		implAdv.setUri(membershipAdv.getUri());
-		implAdv.setProvider(membershipAdv.getProvider());
-		implAdv.setDescription("Password Membership Service");
-		
-		services.put(PeerGroup.membershipClassID, implAdv);
-		newGroupImpl.setParam((Element) params.getDocument(MimeMediaType.XMLUTF8));
+/*        ModuleImplAdvertisement implAdv = (ModuleImplAdvertisement) AdvertisementFactory.newAdvertisement(ModuleImplAdvertisement.getAdvertisementType());
 
-		return newGroupImpl;
-	}
-	
-	public void join(ExecutorService executorService)
-	{
-    	executorService.execute(new AdvPublisher());
-    	executorService.execute(new AdvSubscriber());
-	}
-	
-	public PeerGroup getPeerGroup()
-	{
-		return netPeerGroup;
-	}
-	
-	public void publishAdv(Advertisement adv)
-	{
-		synchronized(this)
-		{
-			ownAdvs.addLast(adv);
-		}
-		netPeerGroup.getDiscoveryService().remotePublish(adv);
-	}
-	public Advertisement getPipeAdv()
-	{
-		return ownAdvs.getFirst();
-	}
-	public Set<Advertisement> getAdvertisements()
-	{
-		return peerAdvs.keySet();
-	}
-	private class AdvPublisher implements Runnable
-	{
-		public void run()
-		{
-	        DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
+        implAdv.setModuleSpecID(PasswdMembershipService.passwordMembershipSpecID);
+        implAdv.setCode(PasswdMembershipService.class.getName());
 
-	        long expiration = 5 * 1000;//DiscoveryService.DEFAULT_EXPIRATION;
-	        long waittime = 5 * 1000;//DiscoveryService.DEFAULT_EXPIRATION;
-	        
-	        try {
-	            while (true) {
-	            	for(Advertisement adv : ownAdvs)
-	            	{
-	            		//System.out.println("publishing: " + adv.getID().toString());
-	            		
-	            		discoveryService.publish(adv, advTimetoLive, expiration);
-	            		discoveryService.remotePublish(adv, expiration);
-	            	}
-	                try {
-	                    Thread.sleep(waittime);
-	                } catch (Exception e) {
-	                }
-	            }
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
-		}
-	}
-	
-	private class AdvSubscriber implements Runnable, DiscoveryListener
-	{
+        implAdv.setCompat(membershipAdv.getCompat());
+        implAdv.setUri(membershipAdv.getUri());
+        implAdv.setProvider(membershipAdv.getProvider());
+        implAdv.setDescription("Password Membership Service");
 
-		public void run()
-		{
-	        long waittime = 1000L;
-	        DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
+        services.put(PeerGroup.membershipClassID, implAdv); */
+        newGroupImpl.setParam((Element) params.getDocument(MimeMediaType.XMLUTF8));
 
-	        try {
-	        	Enumeration<Advertisement> localAdvs = discoveryService.getLocalAdvertisements(DiscoveryService.ADV, null, null);
-	        	loadAdvs(localAdvs, "local");
-	        	
-	        	// Add ourselves as a DiscoveryListener for DiscoveryResponse events
-	        	discoveryService.addDiscoveryListener(this);
-	        	
-	        	while (true)
-	        	{
-	        		//System.out.println("Getting remote advertisements");
-		        	discoveryService.getRemoteAdvertisements(null,  DiscoveryService.ADV,  null, null, 100, null);
-	                try {
-	                    Thread.sleep(waittime);
-	                } catch (Exception e) {
-	                    // ignored
-	                }
+        return newGroupImpl;
+    }
 
-		        	
-	        	}
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        }
+    public void join(ExecutorService executorService)
+    {
+        executorService.execute(new AdvPublisher());
+        executorService.execute(new AdvSubscriber());
+    }
 
-		}
+    public PeerGroup getPeerGroup()
+    {
+        return netPeerGroup;
+    }
 
-		public void discoveryEvent(DiscoveryEvent ev)
-		{
-	        DiscoveryResponseMsg res = ev.getResponse();
+    public void publishAdv(Advertisement adv)
+    {
+        synchronized (this)
+        {
+            ownAdvs.addLast(adv);
+        }
+        netPeerGroup.getDiscoveryService().remotePublish(adv);
+    }
 
-	        // let's get the responding peer's advertisement
-	        String peerName = ev.getSource().toString();
-	        	        
-	        //System.out.println(" [  Got a Discovery Response [" + res.getResponseCount() + " elements]  from peer : " + peerName + "  ]");
-	        /*PeerAdvertisement peerAdv = res.getPeerAdvertisement();
-	       */	        
-	        //not interested in selfs advertisements
+    public Advertisement getPipeAdv()
+    {
+        return ownAdvs.getFirst();
+    }
 
-	        Enumeration<Advertisement> advs = res.getAdvertisements();
+    public Set<Advertisement> getAdvertisements()
+    {
+        return peerAdvs.keySet();
+    }
 
-	        loadAdvs(advs, peerName);
-		}
-		
-		private void loadAdvs(Enumeration<Advertisement> advs, String peerName)
-		{
-	        Advertisement adv;
-	        
-	        if (advs != null) {
-	            while (advs.hasMoreElements()) {
-	                adv = advs.nextElement();
-	                if (adv instanceof PipeAdvertisement)
-	                {
-	                	if (!peerAdvs.containsKey(adv))
-	                	{
-	                		PipeID pipeId = (PipeID) ((PipeAdvertisement)adv).getPipeID();
-	                		
-	                		if (!ownPipes.contains(pipeId))
-	                		{
-		                		peerAdvs.put(adv, null);
-		                		peerAdvIds.put(adv, peerName);
-	                		}
-	                		
-	                	}
-	                }
-	            }
-	        }
+    private class AdvPublisher implements Runnable
+    {
+        public void run()
+        {
+            DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
 
-		}
-		
-	}
-	public boolean hasRemotePipes()
-	{
-		return !peerAdvs.isEmpty();
-	}
-	private void dumpNetworkConfig(NetworkConfigurator configurator)
-	{
-		System.out.println("Configuration: ");
-		System.out.println("	PeerID = " + configurator.getPeerID().toString());
-		System.out.println("	Name = " + configurator.getName());
-		
-	}
+            long expiration = 5 * 1000;// DiscoveryService.DEFAULT_EXPIRATION;
+            long waittime = 5 * 1000;// DiscoveryService.DEFAULT_EXPIRATION;
 
-	public void addOwnPipe(PipeID pipeId)
-	{
-		ownPipes.add(pipeId);
-	}
+            try
+            {
+                while (true)
+                {
+                    for (Advertisement adv : ownAdvs)
+                    {
+                        // System.out.println("publishing: " +
+                        // adv.getID().toString());
 
-	public HGAtomPredicate getAtomInterests(Object peerId)
-	{
-		return peerAdvs.get(peerId);
-	}
+                        discoveryService.publish(adv, advTimetoLive, expiration);
+                        discoveryService.remotePublish(adv, expiration);
+                    }
+                    try
+                    {
+                        Thread.sleep(waittime);
+                    }
+                    catch (Exception e)
+                    {
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	public void setAtomInterests(Object peerId, HGAtomPredicate interest)
-	{
-		System.out.println("Peer " + ((PipeAdvertisement)peerId).getName() + " is interested in " + interest);
-		peerAdvs.put((Advertisement)peerId, interest);
-	}
+    private class AdvSubscriber implements Runnable, DiscoveryListener
+    {
 
-	public Object getPeerId(Object peer)
-	{
-		return peerAdvIds.get(peer);
-	}
+        public void run()
+        {
+            long waittime = 1000L;
+            DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
 
-	public void waitForRemotePipe()
-	{
-		while (peerAdvs.isEmpty())
-		{
-			System.out.println("DefaultJXTANetwork: waiting for remote pipe advertisement");
-			try
-			{
-				Thread.sleep(1000);
-			} catch (InterruptedException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
+            try
+            {
+                Enumeration<Advertisement> localAdvs = discoveryService.getLocalAdvertisements(
+                                                                                               DiscoveryService.ADV,
+                                                                                               null,
+                                                                                               null);
+                loadAdvs(localAdvs, "local");
 
-	public List<RemotePeer> getConnectedPeers()
-	{
-		ArrayList<RemotePeer> peers = new ArrayList<RemotePeer>();
-		for(Entry<Advertisement, String> advId : peerAdvIds.entrySet())
-		{
-			peers.add(new JXTARemotePeer(advId.getKey()));
-		}
+                // Add ourselves as a DiscoveryListener for DiscoveryResponse
+                // events
+                discoveryService.addDiscoveryListener(this);
 
-		return peers;
-	}
+                while (true)
+                {
+                    // System.out.println("Getting remote advertisements");
+                    discoveryService.getRemoteAdvertisements(
+                                                             null,
+                                                             DiscoveryService.ADV,
+                                                             null, null, 100,
+                                                             null);
+                    try
+                    {
+                        Thread.sleep(waittime);
+                    }
+                    catch (Exception e)
+                    {
+                        // ignored
+                    }
 
-	public RemotePeer getConnectedPeer(String peerName)
-	{
-		RemotePeer peer = null;
-		
-		for(Entry<Advertisement, String> advId : peerAdvIds.entrySet())
-		{
-			if (peerName.equals(((PipeAdvertisement)advId.getKey()).getName()))
-			{
-				peer = new JXTARemotePeer(advId.getKey());
-				break;
-			}
-		}
-		
-		return peer;
-	}
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        public void discoveryEvent(DiscoveryEvent ev)
+        {
+            DiscoveryResponseMsg res = ev.getResponse();
+
+            // let's get the responding peer's advertisement
+            String peerName = ev.getSource().toString();
+
+            // System.out.println(" [ Got a Discovery Response [" +
+            // res.getResponseCount() + " elements] from peer : " + peerName + "
+            // ]");
+            /*
+             * PeerAdvertisement peerAdv = res.getPeerAdvertisement();
+             */
+            // not interested in selfs advertisements
+            Enumeration<Advertisement> advs = res.getAdvertisements();
+
+            loadAdvs(advs, peerName);
+        }
+
+        private void loadAdvs(Enumeration<Advertisement> advs, String peerName)
+        {
+            Advertisement adv;
+
+            if (advs != null)
+            {
+                while (advs.hasMoreElements())
+                {
+                    adv = advs.nextElement();
+                    if (adv instanceof PipeAdvertisement)
+                    {
+                        if (!peerAdvs.containsKey(adv))
+                        {
+                            PipeID pipeId = (PipeID) ((PipeAdvertisement) adv).getPipeID();
+
+                            if (!ownPipes.contains(pipeId))
+                            {
+                                peerAdvs.put(adv, null);
+                                peerAdvIds.put(adv, peerName);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    public boolean hasRemotePipes()
+    {
+        return !peerAdvs.isEmpty();
+    }
+
+    private void dumpNetworkConfig(NetworkConfigurator configurator)
+    {
+        System.out.println("Configuration: ");
+        System.out.println("	PeerID = " + configurator.getPeerID().toString());
+        System.out.println("	Name = " + configurator.getName());
+
+    }
+
+    public void addOwnPipe(PipeID pipeId)
+    {
+        ownPipes.add(pipeId);
+    }
+
+    public HGAtomPredicate getAtomInterests(Object peerId)
+    {
+        return peerAdvs.get(peerId);
+    }
+
+    public void setAtomInterests(Object peerId, HGAtomPredicate interest)
+    {
+        System.out.println("Peer " + ((PipeAdvertisement) peerId).getName()
+                           + " is interested in " + interest);
+        peerAdvs.put((Advertisement) peerId, interest);
+    }
+
+    public Object getPeerId(Object peer)
+    {
+        return peerAdvIds.get(peer);
+    }
+
+    public void waitForRemotePipe()
+    {
+        while (peerAdvs.isEmpty())
+        {
+            System.out.println("DefaultJXTANetwork: waiting for remote pipe advertisement");
+            try
+            {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public List<RemotePeer> getConnectedPeers()
+    {
+        ArrayList<RemotePeer> peers = new ArrayList<RemotePeer>();
+        for (Entry<Advertisement, String> advId : peerAdvIds.entrySet())
+        {
+            peers.add(new JXTARemotePeer(advId.getKey()));
+        }
+
+        return peers;
+    }
+
+    public RemotePeer getConnectedPeer(String peerName)
+    {
+        RemotePeer peer = null;
+
+        for (Entry<Advertisement, String> advId : peerAdvIds.entrySet())
+        {
+            if (peerName.equals(((PipeAdvertisement) advId.getKey()).getName()))
+            {
+                peer = new JXTARemotePeer(advId.getKey());
+                break;
+            }
+        }
+
+        return peer;
+    }
 }

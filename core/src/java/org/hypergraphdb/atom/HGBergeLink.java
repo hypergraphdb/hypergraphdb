@@ -11,7 +11,9 @@ import org.hypergraphdb.HGPlainLink;
  * <p>
  * A <code>HGBergeLink</code> represent a <em>hyperarc</em> or <em>hyperedge</em> in the 
  * mathematical theory of hypergraphs. A hyperarc has a target set that is partitioned
- * into a <em>head</em> and a <em>tail</em>. 
+ * into a <em>head</em> and a <em>tail</em>. The name comes from the presumed inventor of this
+ * type of arc, Claude Berge. If it turns out the latter did not actually come up with
+ * the definition, too bad for the naming choice :) 
  * </p>
  * 
  * @author Borislav Iordanov

@@ -166,8 +166,9 @@ public class JXTAPeerInterface implements PeerInterface
                 }
                 else
                 {
+                    Object x = getPart(msg, PERFORMATIVE); // variable needed because of Java 5 compiler bug                    
 	                Pair<Performative, String> key = new Pair<Performative, String>(
-	                		Performative.valueOf(getPart(msg, PERFORMATIVE).toString()), 
+	                		Performative.valueOf(x.toString()), 
 	                		(String)getPart(msg, ACTION));
 	                if (taskFactories.containsKey(key))
 	                {

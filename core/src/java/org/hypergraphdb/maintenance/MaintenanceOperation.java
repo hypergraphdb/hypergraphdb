@@ -15,12 +15,11 @@ import org.hypergraphdb.HyperGraph;
  *
  * <p>
  * <code>MaintenanceOperation</code>s are created and scheduled to run upon the next time
- * a the HyperGraph is opened. This is done simply by adding an instance of this interface
+ * the HyperGraph is opened. This is done simply by adding an instance of this interface
  * as a HyperGraph atom. HyperGraph will detect and run all maintenance operations the next 
- * time it is open. The only way to enforce the execution of a maintenance operation within
- * running application is to close and re-open the HyperGraph database. It is also possible
- * to skip and/or cancel scheduled maintenance operations by setting the appropriate startup
- * flags in the <code>HGConfiguration</code> used to open a database.  
+ * time it is open. It is also possible to skip and/or cancel scheduled maintenance operations 
+ * by setting the appropriate startup flags in the <code>HGConfiguration</code> used 
+ * to open a database.  
  * </p>
  * 
  * <p>
@@ -30,7 +29,7 @@ import org.hypergraphdb.HyperGraph;
  * </p>
  *
  * <p>
- * It is possible for force execution of all scheduled maintenance operation at any point in time
+ * It is possible to force execution of all scheduled maintenance operation at any point in time
  * by calling the <code>HyperGraph.runMaintenance()</code> method. However, an application must
  * make sure that no other threads are accessing the database and potentially causing inconsistent 
  * or corrupted data. 

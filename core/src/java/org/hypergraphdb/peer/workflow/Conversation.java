@@ -67,7 +67,8 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
 	{
 		StateType state = getState();
 		
-		Pair<StateType, Performative> key = new Pair<StateType, Performative>(state, Performative.valueOf(getPart(msg, PERFORMATIVE).toString()));
+		Object x = getPart(msg, PERFORMATIVE); // variable needed because of Java 5 compiler bug
+		Pair<StateType, Performative> key = new Pair<StateType, Performative>(state, Performative.valueOf(x.toString()));
 		StateType newState = performativeTransitions.get(key);
 
 		if ((newState != null) && compareAndSetState(state, newState))

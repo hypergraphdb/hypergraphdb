@@ -754,11 +754,14 @@ public class Structs
 			
 			PipeAdvertisement adv = (PipeAdvertisement)AdvertisementFactory.newAdvertisement(PipeAdvertisement.getAdvertisementType());
 			
-			adv.setType(getPart(struct, "type").toString());
-			adv.setName(getPart(struct, "name").toString());
+			Object x = getPart(struct, "type"); // variable needed because of Java 5 compiler bug
+			adv.setType(x.toString());
+			x = getPart(struct, "name");
+			adv.setName(x.toString());
 			try
 			{
-				adv.setPipeID(IDFactory.fromURI(URI.create(getPart(struct, "id").toString())));
+			    x = getPart(struct, "id");
+				adv.setPipeID(IDFactory.fromURI(URI.create(x.toString())));
 			} catch (URISyntaxException e)
 			{
 				// TODO Auto-generated catch block

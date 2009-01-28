@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,10 @@ import java.util.concurrent.Executors;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
@@ -118,6 +121,43 @@ public class HyperGraphPeer
 	{
 		this(configFile);
 		this.graph = graph;
+	}
+	
+	/**
+	 * <p>
+	 * Return this peer's identity.
+	 * </p>
+	 */
+	public HGPeerIdentity getIdentity()
+	{
+	    if (graph == null)
+	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
+	    List<PrivatePeerIdentity> all = hg.getAll(graph, hg.type(PrivatePeerIdentity.class));
+	    if (all.isEmpty())
+	    {
+	        // Create new identity.
+	        PrivatePeerIdentity id = new PrivatePeerIdentity();
+	        id.setId(HGHandleFactory.makeHandle());
+	        java.net.InetAddress localMachine = null;
+	        try
+	        {
+	            localMachine = java.net.InetAddress.getLocalHost();
+	            id.setHostname(localMachine.getHostName());
+	            id.setIpAddress(localMachine.getHostAddress());	            
+	        }
+	        catch (UnknownHostException ex)
+	        {
+	            // TODO: how to we deal with this?
+	            ex.printStackTrace(System.err);	            
+	        }
+	        id.setGraphLocation(graph.getLocation());
+	        graph.add(id);
+	        return id.makePublicIdentity();
+	    }
+	    else if (all.size() > 1)
+	        throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
+	    else
+	        return all.get(0).makePublicIdentity();
 	}
 	
 	private void loadConfig(File configFile)
