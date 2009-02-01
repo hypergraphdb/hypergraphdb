@@ -11,7 +11,6 @@ import org.hypergraphdb.query.HGAtomPredicate;
 
 
 /**
- * @author Cipri Costa
  *
  * This interface is implemented by classes that handle incoming and outgoing message
  * traffic for the peer. 
@@ -19,6 +18,7 @@ import org.hypergraphdb.query.HGAtomPredicate;
  * and allocate objects. 
  * TODO: manage threads from this object
  *
+ * @author Cipri Costa
  */
 public interface PeerInterface
 {
@@ -30,6 +30,9 @@ public interface PeerInterface
 	 * @return
 	 */
 	boolean configure(Map<String, Object> configuration);
+	
+
+	void stop();
 	
 	/**
 	 * <p>
@@ -68,5 +71,6 @@ public interface PeerInterface
 
 	void setAtomInterests(HGAtomPredicate pred);
 	HGAtomPredicate getAtomInterests();
+
 
 }

@@ -17,6 +17,8 @@ import org.hypergraphdb.query.HGAtomPredicate;
 public interface PeerNetwork
 {
 	boolean configure(Map<String, Object> config);
+	void stop();
+
 	void join(ExecutorService executorService);
 
 	//get/set atom interests for known peers

@@ -30,7 +30,7 @@ import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.HGUtils;
 
 /**
- * @author Cipri Costa
+ * 
  *
  * Main class for the local peer. It will start the peer (set up the interface and register in the network) given a configuration.
  * 
@@ -38,6 +38,7 @@ import org.hypergraphdb.util.HGUtils;
  * allow the peer to create its own based on the configuration properties.  
  * (if it is needed).
  * 
+ * @author Cipri Costa
  */
 @SuppressWarnings("unchecked")
 public class HyperGraphPeer 
@@ -270,6 +271,21 @@ public class HyperGraphPeer
 		return status;
 	}
 	
+	public void stop()
+	{
+		if (peerInterface != null){
+			peerInterface.stop();
+		}
+		
+		if (graph != null){
+			graph.close();
+		}
+		
+		if (tempGraph != null){
+			tempGraph.close();
+		}
+	}
+	
 	/**
 	 * Initializes a catch-up phase. During this all the known peers will be connected to see if any information has been sent to this peer 
 	 * while it was off line. If there is any, the peer should not resume normal operations until this task completes. 
@@ -295,10 +311,7 @@ public class HyperGraphPeer
 	}
 	
 
-	void stop()
-	{
-		
-	}
+	
 
 /*	private HGHandle storeSubgraph(Subgraph subGraph, HGStore store)
 	{

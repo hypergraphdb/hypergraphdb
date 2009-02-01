@@ -45,6 +45,7 @@ import net.jxta.impl.endpoint.relay.RelayServer;
 import net.jxta.impl.peergroup.StdPeerGroupParamAdv;
 import net.jxta.impl.rendezvous.RendezVousServiceInterface;
 import net.jxta.impl.rendezvous.rpv.PeerView;
+import net.jxta.impl.util.AdvCooker;
 import net.jxta.membership.Authenticator;
 import net.jxta.peer.PeerID;
 import net.jxta.peergroup.PeerGroup;
@@ -66,12 +67,13 @@ import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.query.HGAtomPredicate;
 
 /**
- * @author Cipri Costa
  * 
  * <p>
  * Handles problems related to the JXTA network : intialize, stop, discovery,
  * publishing, etc
  * </p>
+ * 
+ * @author Cipri Costa
  */
 public class DefaultJXTANetwork implements JXTANetwork
 {
@@ -85,11 +87,12 @@ public class DefaultJXTANetwork implements JXTANetwork
     private Map<Advertisement, HGAtomPredicate> peerAdvs = Collections.synchronizedMap(new HashMap<Advertisement, HGAtomPredicate>());
     private Map<Advertisement, String> peerAdvIds = new HashMap<Advertisement, String>();
     private Set<PipeID> ownPipes = new HashSet<PipeID>();
-
     private int advTimetoLive;
-
     private final static ModuleSpecID PROTECTED_GROUP_MSID = (ModuleSpecID) ID.create(URI.create("urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000133BF5414AC624CC8AD3AF6AEC2C8264306"));
 
+    private AdvPublisher advPublisher;
+    private AdvSubscriber advSubscriber;
+    
     public boolean configure(Map<String, Object> config)
     {
         boolean result = false;
@@ -120,12 +123,14 @@ public class DefaultJXTANetwork implements JXTANetwork
             dumpNetworkConfig(configurator);
 
             peerManager.startNetwork();
+
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
 
+        
         // Join custom group
         if (peerManager != null)
         {
@@ -148,6 +153,8 @@ public class DefaultJXTANetwork implements JXTANetwork
             {
                 e.printStackTrace();
             }
+            
+
         }
         else
         {
@@ -215,6 +222,30 @@ public class DefaultJXTANetwork implements JXTANetwork
         return result;
     }
 
+	public void stop()
+	{
+		if (peerManager != null)
+		{
+			advPublisher.stop();
+			advSubscriber.stop();
+			
+			if (netPeerGroup.isRendezvous())
+				netPeerGroup.getRendezVousService().stopRendezVous();
+			
+			netPeerGroup.stopApp();
+
+			if (hgdbGroup.isRendezvous())
+				hgdbGroup.getRendezVousService().stopRendezVous();
+			
+			hgdbGroup.getEndpointService().stopApp();
+			
+			hgdbGroup.stopApp();
+			peerManager.stopNetwork();
+		}else{
+			System.out.println("Peer manager is null, nothing to stop here");
+		}
+	}
+    
     private void configureNetwork(NetworkConfigurator configurator,
                                   Object config)
     {
@@ -680,8 +711,11 @@ public class DefaultJXTANetwork implements JXTANetwork
 
     public void join(ExecutorService executorService)
     {
-        executorService.execute(new AdvPublisher());
-        executorService.execute(new AdvSubscriber());
+    	advPublisher = new AdvPublisher();
+        executorService.execute(advPublisher);
+        
+        advSubscriber = new AdvSubscriber();
+        executorService.execute(advSubscriber);
     }
 
     public PeerGroup getPeerGroup()
@@ -710,6 +744,13 @@ public class DefaultJXTANetwork implements JXTANetwork
 
     private class AdvPublisher implements Runnable
     {
+    	private volatile boolean isRunning = false;
+    	
+    	public void stop()
+    	{
+    		isRunning = false;
+    	}
+    	
         public void run()
         {
             DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
@@ -719,7 +760,8 @@ public class DefaultJXTANetwork implements JXTANetwork
 
             try
             {
-                while (true)
+            	isRunning = true;
+                while (isRunning)
                 {
                     for (Advertisement adv : ownAdvs)
                     {
@@ -747,7 +789,13 @@ public class DefaultJXTANetwork implements JXTANetwork
 
     private class AdvSubscriber implements Runnable, DiscoveryListener
     {
-
+    	private volatile boolean isRunning = false;
+    	
+    	public void stop()
+    	{
+    		isRunning = false;
+    	}
+ 
         public void run()
         {
             long waittime = 1000L;
@@ -765,7 +813,8 @@ public class DefaultJXTANetwork implements JXTANetwork
                 // events
                 discoveryService.addDiscoveryListener(this);
 
-                while (true)
+                isRunning = true;
+                while (isRunning)
                 {
                     // System.out.println("Getting remote advertisements");
                     discoveryService.getRemoteAdvertisements(
@@ -783,6 +832,8 @@ public class DefaultJXTANetwork implements JXTANetwork
                     }
 
                 }
+                
+                discoveryService.removeDiscoveryListener(this);
             }
             catch (Exception e)
             {
@@ -918,4 +969,5 @@ public class DefaultJXTANetwork implements JXTANetwork
 
         return peer;
     }
+
 }

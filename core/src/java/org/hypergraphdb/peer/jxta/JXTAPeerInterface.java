@@ -39,7 +39,7 @@ import org.hypergraphdb.util.Pair;
  * Also manages resources like task allocation and threads.
  */
 
-public class JXTAPeerInterface implements PeerInterface
+public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 {
 	private Map<String, Object> config;
 	PipeAdvertisement pipeAdv = null;
@@ -55,9 +55,25 @@ public class JXTAPeerInterface implements PeerInterface
 	private HashMap<UUID, TaskActivity<?>> tasks = new HashMap<UUID, TaskActivity<?>>();
 	private HGAtomPredicate atomInterests;
 	
+	private ExecutorService executorService;
+	private JXTAServer jxtaServer = null;
+	
 	public boolean configure(Map<String, Object> configuration) 
 	{
 		return jxtaNetwork.configure(getStruct(configuration, JXTAConfig.CONFIG_NAME));
+	}
+	
+	public void stop()
+	{
+		if (jxtaNetwork != null)
+		{
+			jxtaNetwork.stop();
+		}
+		
+		if (jxtaServer != null)
+		{
+			jxtaServer.stop();
+		}
 	}
 	
 	private void startNetwork(final ExecutorService executorService)
@@ -75,44 +91,21 @@ public class JXTAPeerInterface implements PeerInterface
 	
 	public void run(final ExecutorService executorService) 
 	{
+		this.executorService = executorService;
 		startNetwork(executorService);
-		executorService.execute(new Runnable() { public void run() {
-	        System.out.println("Starting ServerSocket");
-	        JxtaServerSocket serverSocket = null;
-	        
-	        try 
-	        {
-	            serverSocket = new JxtaServerSocket(jxtaNetwork.getPeerGroup(), pipeAdv);
-	            serverSocket.setSoTimeout(0);
-	        } 
-	        catch (IOException e) 
-	        {
-	            System.out.println("failed to create a server socket");
-	            e.printStackTrace();
-	        }
-	        
-	        //TODO implement a stop method
-	        while (true) 
-	        {
-	            try 
-	            {
-	                System.out.println("Waiting for connections");
-	                Socket socket = serverSocket.accept();
-	                if (socket != null) 
-	                {
-	                    System.out.println("New socket connection accepted");
-	                    executorService.execute(new ConnectionHandler(socket, executorService));
-	                }
-	            } 
-	            catch (Exception e) 
-	            {
-	                e.printStackTrace();
-	            }
-	        }
 		
-		}});
+		jxtaServer = new JXTAServer(this);
+		if (jxtaServer.initialize(jxtaNetwork.getPeerGroup(), pipeAdv))
+		{
+			executorService.execute(jxtaServer);
+		}
 	}
-
+	
+	public void handleRequest(Socket socket)
+	{
+		executorService.execute(new ConnectionHandler(socket, executorService));
+	}
+	
 	public PeerFilter newFilterActivity(PeerFilterEvaluator evaluator)
 	{
 		JXTAPeerFilter result = new JXTAPeerFilter(jxtaNetwork.getAdvertisements());
@@ -128,6 +121,8 @@ public class JXTAPeerInterface implements PeerInterface
 	{
 		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
 	}
+	
+
 	
 	private class ConnectionHandler implements Runnable
 	{
@@ -227,4 +222,5 @@ public class JXTAPeerInterface implements PeerInterface
 	{
 		return jxtaNetwork;
 	}
+
 }
