@@ -367,11 +367,14 @@ public /*final*/ class HyperGraph
     	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
         try 
         { 
-        	store.checkPointThread.stop = true;
-        	store.checkPointThread.interrupt();
-        	while (store.checkPointThread.running)
-        		try { Thread.sleep(500); }
-        		catch (InterruptedException ex) { /* need to wait here until it stops... */}
+            if (store.checkPointThread != null)
+            {
+            	store.checkPointThread.stop = true;
+            	store.checkPointThread.interrupt();
+            	while (store.checkPointThread.running)
+            		try { Thread.sleep(500); }
+            		catch (InterruptedException ex) { /* need to wait here until it stops... */}
+            }
         	store.close();								 	 
         } 
         catch (Throwable t) 

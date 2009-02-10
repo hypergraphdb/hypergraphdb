@@ -31,22 +31,17 @@ public class StorageService
 	Set<HGHandle> ownUpdatedHandles = new HashSet<HGHandle>();
 	Set<HGHandle> ownRemovedHandles = new HashSet<HGHandle>();
 
-	private PeerInterface peerInterface;
+	private HyperGraphPeer thisPeer;
 	private Log log;
 	
 	private boolean autoSkip = false;
 	
-	public StorageService()
+	public StorageService(HyperGraphPeer thisPeer)
 	{
-		
-	}
-
-	public StorageService(HyperGraph graph, HyperGraph logGraph, PeerInterface peerInterface, Log log)
-	{
-		this.graph = graph;
-		this.logGraph = logGraph;
-		this.peerInterface = peerInterface;
-		this.log = log;
+	    this.thisPeer = thisPeer;
+		this.graph = thisPeer.getHGDB();
+		this.logGraph = thisPeer.getTempDb();
+		this.log = thisPeer.getLog();
 		
 		graph.getEventManager().addListener(HGAtomAddedEvent.class, new AtomAddedListener());
 		graph.getEventManager().addListener(HGAtomRemovedEvent.class, new AtomRemovedListener());
@@ -127,7 +122,7 @@ public class StorageService
 				//someone else added ... propagate ... 
 				System.out.println("Add to propagate: " + handle);
 
-				RememberTaskClient client = new RememberTaskClient(peerInterface, hg.get(handle), log, hg, hg.getPersistentHandle(handle), Operation.Create);
+				RememberTaskClient client = new RememberTaskClient(thisPeer, hg.get(handle), log, hg, hg.getPersistentHandle(handle), Operation.Create);
 				client.run();
 			}
 			
@@ -150,7 +145,7 @@ public class StorageService
 			}else{
 				System.out.println("Remove to propagate: " + handle);
 				
-				RememberTaskClient client = new RememberTaskClient(peerInterface, null, log, hg, hg.getPersistentHandle(handle), Operation.Remove);
+				RememberTaskClient client = new RememberTaskClient(thisPeer, null, log, hg, hg.getPersistentHandle(handle), Operation.Remove);
 				client.run();
 			}
 			
@@ -171,7 +166,7 @@ public class StorageService
 			}else{
 				System.out.println("Replace to propagate: " + handle);
 				
-				RememberTaskClient client = new RememberTaskClient(peerInterface, hg.get(handle), log, hg, hg.getPersistentHandle(handle), Operation.Update);
+				RememberTaskClient client = new RememberTaskClient(thisPeer, hg.get(handle), log, hg, hg.getPersistentHandle(handle), Operation.Update);
 				client.run();
 			}
 			

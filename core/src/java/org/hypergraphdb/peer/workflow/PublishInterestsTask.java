@@ -3,9 +3,8 @@ package org.hypergraphdb.peer.workflow;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.hypergraphdb.peer.HGDBOntology;
+import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerFilter;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Performative;
@@ -32,9 +31,9 @@ public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.Stat
 	 * @param peerInterface
 	 * @param pred
 	 */
-	public PublishInterestsTask(PeerInterface peerInterface, HGAtomPredicate pred)
+	public PublishInterestsTask(HyperGraphPeer thisPeer, HGAtomPredicate pred)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		this.pred = pred;
 	}
 
@@ -44,12 +43,12 @@ public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.Stat
 	 * @param peer
 	 * @param msg
 	 */
-	public PublishInterestsTask(PeerInterface peerInterface, Object msg)
+	public PublishInterestsTask(HyperGraphPeer thisPeer, Object msg)
 	{
-		super(peerInterface, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
+		super(thisPeer, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
 
 		//start the conversation
-		pred = peerInterface.getAtomInterests();
+		pred = thisPeer.getPeerInterface().getAtomInterests();
 		sendToTarget = getPart(msg, REPLY_TO);
 	}
 
@@ -92,7 +91,7 @@ public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.Stat
 		public PublishInterestsFactory()
 		{
 		}
-		public TaskActivity<?> newTask(PeerInterface peerInterface, Object msg)
+		public TaskActivity<?> newTask(HyperGraphPeer peerInterface, Object msg)
 		{
 			return new PublishInterestsTask(peerInterface, msg);
 		}

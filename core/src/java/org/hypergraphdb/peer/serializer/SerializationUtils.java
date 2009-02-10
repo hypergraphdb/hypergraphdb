@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import org.hypergraphdb.peer.protocol.ObjectSerializer;
-
 public class SerializationUtils
 {
 	public static Integer deserializeInt(InputStream in){

@@ -9,7 +9,6 @@ import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
-import static org.hypergraphdb.peer.Messages.*;
 
 /**
  * @author Cipri Costa

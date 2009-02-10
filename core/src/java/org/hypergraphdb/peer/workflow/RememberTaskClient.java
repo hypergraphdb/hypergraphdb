@@ -11,16 +11,14 @@ import org.hypergraphdb.HyperGraph;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
 import org.hypergraphdb.peer.PeerFilter;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.StorageService;
-import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.log.LogEntry;
-import org.hypergraphdb.peer.log.Timestamp;
 import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 import org.hypergraphdb.peer.protocol.Performative;
@@ -54,37 +52,37 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	
 	//private StorageService.Operation operation;
 	
-	public RememberTaskClient(PeerInterface peerInterface, Log log, Object targetPeer, List<Object> batch)
+	public RememberTaskClient(HyperGraphPeer thisPeer, Log log, Object targetPeer, List<Object> batch)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		this.log = log;
 		this.targetPeer = targetPeer;		
 		this.batch = batch;
 	}
 
-	public RememberTaskClient(PeerInterface peerInterface, Object value, Log log, HyperGraph hg, HGPersistentHandle handle, StorageService.Operation operation)
+	public RememberTaskClient(HyperGraphPeer thisPeer, Object value, Log log, HyperGraph hg, HGPersistentHandle handle, StorageService.Operation operation)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		batch = new ArrayList<Object>();
 		batch.add(new RememberEntity(handle, value, operation));
 		this.log = log;
 		
-		evaluator = new InterestEvaluator(peerInterface, hg);
+		evaluator = new InterestEvaluator(thisPeer.getPeerInterface(), hg);
 		
 	}
 	
-	public RememberTaskClient(PeerInterface peerInterface, Object value, Log log, HGPersistentHandle handle, Object targetPeer, StorageService.Operation operation)
+	public RememberTaskClient(HyperGraphPeer thisPeer, Object value, Log log, HGPersistentHandle handle, Object targetPeer, StorageService.Operation operation)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		batch = new ArrayList<Object>();
 		batch.add(new RememberEntity(handle, value, operation));
 		this.log = log;
 		this.targetPeer = targetPeer;		
 	}
 	
-	public RememberTaskClient(PeerInterface peerInterface, LogEntry entry, Object targetPeer, Log log)
+	public RememberTaskClient(HyperGraphPeer thisPeer, LogEntry entry, Object targetPeer, Log log)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		
 		entries = new ArrayList<LogEntry>();
 		entries.add(entry);
@@ -253,6 +251,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	 * @param fromActivity
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public State handleConfirm(AbstractActivity<?> fromActivity)
 	{
 		Object msg = ((ProposalConversation)fromActivity).getMessage();	

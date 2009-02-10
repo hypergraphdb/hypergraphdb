@@ -19,7 +19,6 @@ import java.util.UUID;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Subgraph;
@@ -29,14 +28,11 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 {
 	protected enum State {Started, Done}
 	
-	private HyperGraphPeer peer;
 	private Object msg;
 	
-	public QueryTaskServer(PeerInterface peerInterface, HyperGraphPeer peer, Object msg)
+	public QueryTaskServer(HyperGraphPeer thisPeer, Object msg)
 	{
-		super(peerInterface, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
-
-		this.peer = peer;
+		super(thisPeer, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
 		this.msg = msg;
 	}
 
@@ -49,11 +45,11 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 		
 		if (query instanceof HGHandle)
 		{
-			Subgraph subgraph = peer.getSubgraph((HGHandle)query);
+			Subgraph subgraph = getThisPeer().getSubgraph((HGHandle)query);
 			
 			combine(reply, struct(CONTENT, list(object(subgraph))));
 		}else if (query instanceof HGQueryCondition){
-			HGSearchResult<HGHandle> results = peer.getHGDB().find((HGQueryCondition)query);
+			HGSearchResult<HGHandle> results = getThisPeer().getHGDB().find((HGQueryCondition)query);
 
 			ArrayList<Object> resultingContent = new ArrayList<Object>();
 			while(results.hasNext())
@@ -62,9 +58,9 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 				
 				if (getObject)
 				{
-					resultingContent.add(object(peer.getSubgraph(handle)));
+					resultingContent.add(object(getThisPeer().getSubgraph(handle)));
 				}else{
-					resultingContent.add(peer.getHGDB().getPersistentHandle(handle));
+					resultingContent.add(getThisPeer().getHGDB().getPersistentHandle(handle));
 				}
 			}
 			
@@ -87,14 +83,12 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 	
 	public static class QueryTaskFactory implements TaskFactory
 	{
-		private HyperGraphPeer peer;
-		public QueryTaskFactory(HyperGraphPeer peer)
+		public QueryTaskFactory()
 		{
-			this.peer = peer;
 		}
-		public TaskActivity<?> newTask(PeerInterface peerInterface, Object msg)
+		public TaskActivity<?> newTask(HyperGraphPeer peer, Object msg)
 		{
-			return new QueryTaskServer(peerInterface, peer, msg);
+			return new QueryTaskServer(peer, msg);
 		}
 		
 	}

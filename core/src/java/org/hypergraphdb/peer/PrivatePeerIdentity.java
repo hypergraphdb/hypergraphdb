@@ -1,19 +1,21 @@
 package org.hypergraphdb.peer;
 
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
  * <p>
  * This is a simple data structure that represents a HyperGraphDB peer identity. The
- * class is package private and intended for use only by the HGDB API which will
- * attempt to ensure uniqueness 
+ * class is intended for use only by the HGDB API which will attempt to ensure uniqueness.
+ * To store info about other peer, use the derived <code>HGPeerIdentity</code> class which
+ * is only different from this one by its type. 
  * </p>
  * 
  * @author Borislav Iordanov
  * 
  */
-class PrivatePeerIdentity
+public class PrivatePeerIdentity
 {
     private HGPersistentHandle id;
     private String hostname;
@@ -21,6 +23,11 @@ class PrivatePeerIdentity
     private String graphLocation;
     private String name;
 
+    public PrivatePeerIdentity()
+    {
+        
+    }
+    
     public HGPeerIdentity makePublicIdentity()
     {
         HGPeerIdentity pid = new HGPeerIdentity();
@@ -80,5 +87,24 @@ class PrivatePeerIdentity
     public void setGraphLocation(String graphLocation)
     {
         this.graphLocation = graphLocation;
-    }    
+    }
+    
+    public int hashCode()
+    {
+        return id == null ? 0 : id.hashCode();
+    }
+    
+    public boolean equals(Object x)
+    {
+        if (! (x instanceof PrivatePeerIdentity))
+            return false;
+        else
+            return HGUtils.eq(id, ((PrivatePeerIdentity)x).id);
+    }
+    
+    public String toString()
+    {
+        return "HGPeerIdentity[" + id + "," + hostname + "," + 
+            ipAddress + "," + graphLocation + "," + name + "]"; 
+    }
 }

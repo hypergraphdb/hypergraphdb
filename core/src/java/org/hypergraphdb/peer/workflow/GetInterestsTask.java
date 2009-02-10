@@ -4,8 +4,8 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerFilter;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Performative;
@@ -31,14 +31,14 @@ public class GetInterestsTask extends TaskActivity<GetInterestsTask.State>
     // TODO: temporary
     private AtomicInteger count = new AtomicInteger();
 
-    public GetInterestsTask(PeerInterface peerInterface)
+    public GetInterestsTask(HyperGraphPeer thisPeer)
     {
-        super(peerInterface, State.Started, State.Done);
+        super(thisPeer, State.Started, State.Done);
     }
 
-    public GetInterestsTask(PeerInterface peerInterface, Object msg)
+    public GetInterestsTask(HyperGraphPeer thisPeer, Object msg)
     {
-        super(peerInterface, (UUID) getPart(msg, SEND_TASK_ID), State.Started,
+        super(thisPeer, (UUID) getPart(msg, SEND_TASK_ID), State.Started,
               State.Done);
 
         this.msg = msg;
@@ -126,7 +126,7 @@ public class GetInterestsTask extends TaskActivity<GetInterestsTask.State>
         {
         }
 
-        public TaskActivity<?> newTask(PeerInterface peerInterface, Object msg)
+        public TaskActivity<?> newTask(HyperGraphPeer peerInterface, Object msg)
         {
             return new GetInterestsTask(peerInterface, msg);
         }

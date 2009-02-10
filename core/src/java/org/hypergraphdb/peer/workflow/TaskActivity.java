@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.hypergraphdb.peer.HGDBOntology;
+import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -34,7 +36,7 @@ import static org.hypergraphdb.peer.Structs.*;
 public abstract class TaskActivity<StateType> extends AbstractActivity<StateType> implements ActivityStateListener
 {
     private UUID taskId;
-    private PeerInterface peerInterface;
+    private HyperGraphPeer thisPeer;
 
     /**
      * map of active conversations
@@ -61,29 +63,35 @@ public abstract class TaskActivity<StateType> extends AbstractActivity<StateType
      */
     private HashSet<Object> conversationStates = new HashSet<Object>();
 
-    public TaskActivity(PeerInterface peerInterface, StateType start,
+    public TaskActivity(HyperGraphPeer thisPeer, StateType start,
                         StateType end)
     {
-        this(peerInterface, UUID.randomUUID(), start, end);
+        this(thisPeer, UUID.randomUUID(), start, end);
     }
 
-    public TaskActivity(PeerInterface peerInterface, UUID taskId,
+    public TaskActivity(HyperGraphPeer thisPeer, UUID taskId,
                         StateType start, StateType end)
     {
         super(start, end);
 
-        this.peerInterface = peerInterface;
+        this.thisPeer = thisPeer;
         this.taskId = taskId;
 
-        peerInterface.registerTask(taskId, this);
+        thisPeer.getPeerInterface().registerTask(taskId, this);
     }
-
+    
+    protected void sendReply(Object originalMsg, Object reply)
+    {
+        getPeerInterface().send(getPart(originalMsg, HGDBOntology.REPLY_TO), reply);
+    }
+    
     /**
      * Executes a transition
      * 
      * @param method
      * @param activity
      */
+    @SuppressWarnings("unchecked")
     protected void handleActivity(Method method, AbstractActivity<?> activity)
     {
         try
@@ -295,13 +303,13 @@ public abstract class TaskActivity<StateType> extends AbstractActivity<StateType
         this.taskId = taskId;
     }
 
+    public HyperGraphPeer getThisPeer()
+    {
+        return thisPeer;
+    }
+    
     public PeerInterface getPeerInterface()
     {
-        return peerInterface;
-    }
-
-    public void setPeerInterface(PeerInterface peerInterface)
-    {
-        this.peerInterface = peerInterface;
+        return thisPeer.getPeerInterface();
     }
 }

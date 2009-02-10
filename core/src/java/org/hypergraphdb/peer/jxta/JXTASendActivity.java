@@ -15,64 +15,64 @@ import org.hypergraphdb.peer.protocol.Protocol;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
 
-
 /**
  * @author Cipri Costa
- *
- * An Activity that will send the attached message to the sent destination. If the ReplyTo address of the message is 
- * null, the address of the current peer will be set.
+ * 
+ * An Activity that will send the attached message to the sent destination. If
+ * the ReplyTo address of the message is null, the address of the current peer
+ * will be set.
  */
 
 public class JXTASendActivity extends PeerRelatedActivity
 {
-	private PeerGroup peerGroup;
-	private Advertisement pipeAdv;
-	
-	public JXTASendActivity(PeerGroup peerGroup, Advertisement pipeAdv)
-	{
-		this.peerGroup = peerGroup;
-		this.pipeAdv = pipeAdv;
-	}
+    private PeerGroup peerGroup;
+    private Advertisement pipeAdv;
 
+    public JXTASendActivity(PeerGroup peerGroup, Advertisement pipeAdv)
+    {
+        this.peerGroup = peerGroup;
+        this.pipeAdv = pipeAdv;
+    }
 
-	public void run()
-	{
-		try
-		{
-			PipeAdvertisement targetPipeAdv = null;
-			PeerID peerId = null;
-			
-			//recreate destination advertisement based on the type of the target attribute
-			if (target instanceof PipeAdvertisement)
-			{
-				targetPipeAdv = (PipeAdvertisement)target;
-			}
-			
-			System.out.println("Sending " + msg + " to adv: " + targetPipeAdv.getName());
-			
- 			JxtaSocket socket = new JxtaSocket(peerGroup, peerId, targetPipeAdv, 50000, true);
+    public void run()
+    {
+        try
+        {
+            PipeAdvertisement targetPipeAdv = null;
+            PeerID peerId = null;
 
-	        OutputStream out = socket.getOutputStream();
+            // recreate destination advertisement based on the type of the
+            // target attribute
+            if (target instanceof PipeAdvertisement)
+            {
+                targetPipeAdv = (PipeAdvertisement) target;
+            }
 
-	        Protocol protocol = new Protocol();
-	        //send message
-	        Object msg = getMessage();
-	        
-	        //set our self as replyTo if that was not already set.
-	        if (getPart(msg, REPLY_TO) == null)
-	        {
-	        	combine(msg, struct(REPLY_TO, pipeAdv));
-	        }
-	        
-	        //
-	        protocol.writeMessage(out, getMessage());
-	        out.flush();
+            System.out.println("Sending " + msg + " to adv: "
+                               + targetPipeAdv.getName());
 
+            JxtaSocket socket = new JxtaSocket(peerGroup, peerId,
+                                               targetPipeAdv, 50000, true);
 
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		} 
-	}
+            OutputStream out = socket.getOutputStream();
 
+            Protocol protocol = new Protocol();
+            // send message
+            Object msg = getMessage();
+
+            // set our self as replyTo if that was not already set.
+            if (getPart(msg, REPLY_TO) == null)
+            {
+                combine(msg, struct(REPLY_TO, pipeAdv));
+            }
+            
+            //
+            protocol.writeMessage(out, getMessage());
+            out.flush();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
 }

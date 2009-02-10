@@ -3,8 +3,6 @@ package org.hypergraphdb.peer.jxta;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.ExecutorService;
-
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.socket.JxtaServerSocket;
@@ -56,11 +54,9 @@ public class JXTAServer implements Runnable
 			{
 	            try 
 	            {
-	                System.out.println("Waiting for connections");
 	                Socket socket = serverSocket.accept();
 	                if (socket != null) 
 	                {
-	                    System.out.println("New socket connection accepted");
 	                    requestHandler.handleRequest(socket);
 	                }
 

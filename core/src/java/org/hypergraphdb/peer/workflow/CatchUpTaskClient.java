@@ -6,12 +6,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerFilter;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Performative;
-import org.hypergraphdb.query.HGQueryCondition;
-
 import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -30,9 +27,9 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 	private AtomicInteger count = new AtomicInteger(1);
 	private HyperGraphPeer peer;
 	
-	public CatchUpTaskClient(PeerInterface peerInterface, Object catchUpWith, HyperGraphPeer peer)
+	public CatchUpTaskClient(HyperGraphPeer thisPeer, Object catchUpWith, HyperGraphPeer peer)
 	{
-		super(peerInterface, State.Started, State.Done);
+		super(thisPeer, State.Started, State.Done);
 		
 		this.catchUpWith = catchUpWith;
 		this.peer = peer;

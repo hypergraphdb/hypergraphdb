@@ -14,6 +14,7 @@ public class HGDBOntology
 	
 	//public static final String PERF_CALL_FOR_PROPOSAL = "cfp";
 	
+	public static final String AFFIRM_IDENTITY = "affirm-identity";
 	public static final String REMEMBER_ACTION = "remember";
 	public static final String ATOM_INTEREST = "atom_interest";
 	public static final String CATCHUP = "catchup";

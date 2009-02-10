@@ -184,6 +184,9 @@ public class HGStore
     			}
     			catch (DatabaseException ex)
     			{
+    			    System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
+    			    ex.printStackTrace(System.err);
+    			    System.exit(-1);
     				throw new HGException("Failed to create BerkeleyDB transaction object.", ex);
     			}
     		}

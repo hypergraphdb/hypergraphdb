@@ -15,21 +15,20 @@ import org.hypergraphdb.query.AnyAtomCondition;
 
 public class ReplicationBootstrap implements BootstrapPeer
 {
-
 	public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
-	{		
+	{
 		peer.getPeerInterface().registerTaskFactory(Performative.CallForProposal, 
 												    HGDBOntology.REMEMBER_ACTION, 
-												    new RememberTaskServer.RememberTaskServerFactory(peer));
+												    new RememberTaskServer.RememberTaskServerFactory());
 		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
 												    HGDBOntology.ATOM_INTEREST, 
 												    new PublishInterestsTask.PublishInterestsFactory());
 		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
 													HGDBOntology.QUERY, 
-													new QueryTaskServer.QueryTaskFactory(peer));
+													new QueryTaskServer.QueryTaskFactory());
 		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
 													HGDBOntology.CATCHUP, 
-													new CatchUpTaskServer.CatchUpTaskServerFactory(peer));
+													new CatchUpTaskServer.CatchUpTaskServerFactory());
 		peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
 													HGDBOntology.ATOM_INTEREST, 
 													new GetInterestsTask.GetInterestsFactory());

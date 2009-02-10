@@ -26,7 +26,7 @@ public class ColdAtoms
 	{
 		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
-			System.out.println("FREE COLD ATOMS START " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
+//			System.out.println("FREE COLD ATOMS START " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
 			synchronized (buckets)
 			{
 				int cnt = buckets.size() / evictFactor;
@@ -34,7 +34,7 @@ public class ColdAtoms
 					buckets.fetch();
 			}				
 			System.gc();
-			System.out.println("FREE COLD ATOMS END " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
+//			System.out.println("FREE COLD ATOMS END " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
 		}
 	};
 	

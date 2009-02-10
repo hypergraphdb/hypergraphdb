@@ -3,7 +3,6 @@ package org.hypergraphdb.peer.jxta;
 import java.util.Set;
 
 import net.jxta.document.Advertisement;
-import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.peer.PeerFilter;
 

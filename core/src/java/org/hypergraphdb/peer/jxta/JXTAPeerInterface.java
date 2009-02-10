@@ -5,10 +5,10 @@ import static org.hypergraphdb.peer.HGDBOntology.PERFORMATIVE;
 import static org.hypergraphdb.peer.HGDBOntology.SEND_TASK_ID;
 import static org.hypergraphdb.peer.Structs.*;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -16,8 +16,8 @@ import java.util.concurrent.ExecutorService;
 import net.jxta.id.IDFactory;
 import net.jxta.pipe.PipeID;
 import net.jxta.protocol.PipeAdvertisement;
-import net.jxta.socket.JxtaServerSocket;
 
+import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerConfig;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
@@ -41,6 +41,7 @@ import org.hypergraphdb.util.Pair;
 
 public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 {
+    private String peerName = null;
 	private Map<String, Object> config;
 	PipeAdvertisement pipeAdv = null;
 	
@@ -48,7 +49,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	 * used to create the message
 	 */
 	private Protocol protocol = new Protocol();
-	
+	private HyperGraphPeer thisPeer = null;
 	private JXTANetwork jxtaNetwork = new DefaultJXTANetwork();
 
 	private HashMap<Pair<Performative, String>, TaskFactory> taskFactories = new HashMap<Pair<Performative,String>, TaskFactory>();
@@ -60,7 +61,9 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	
 	public boolean configure(Map<String, Object> configuration) 
 	{
-		return jxtaNetwork.configure(getStruct(configuration, JXTAConfig.CONFIG_NAME));
+	    config = getPart(configuration, "jxta");
+	    peerName = (String)getOptPart(config, "HGDBPeer", PeerConfig.PEER_NAME);
+		return jxtaNetwork.configure(configuration);
 	}
 	
 	public void stop()
@@ -77,9 +80,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	}
 	
 	private void startNetwork(final ExecutorService executorService)
-	{
-		String peerName = (String)getOptPart(config, "HGDBPeer", JXTAConfig.PEER_NAME);
-		
+	{		
 		PipeID pipeID = IDFactory.newPipeID(jxtaNetwork.getPeerGroup().getPeerGroupID());
 		System.out.println("created pipe: " + pipeID.toString());
 		pipeAdv = HGAdvertisementsFactory.newPipeAdvertisement(pipeID, peerName);
@@ -106,6 +107,16 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		executorService.execute(new ConnectionHandler(socket, executorService));
 	}
 	
+	public HyperGraphPeer getThisPeer()
+	{
+	    return thisPeer;
+	}
+	
+	public void setThisPeer(HyperGraphPeer thisPeer)
+	{
+	    this.thisPeer = thisPeer;
+	}
+	
 	public PeerFilter newFilterActivity(PeerFilterEvaluator evaluator)
 	{
 		JXTAPeerFilter result = new JXTAPeerFilter(jxtaNetwork.getAdvertisements());
@@ -122,7 +133,37 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
 	}
 	
+	public void send(Object target, Object msg)
+	{
+	    PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
+	    PeerRelatedActivity act = activityFactory.createActivity(); 
+        act.setTarget(target);
+        act.setMessage(msg);
+        execute(act);    
+	}
+	
+	public void broadcast(Object msg)
+	{
+	    //
+	    // TODO: we should replace this with a real broadcast. Unfortunately,
+	    // JXTA doesn't have one. The following discussion is relevant:
+	    // http://forums.java.net/jive/thread.jspa?messageID=324744&#324744
+	    //
+        PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
+        PeerFilter peerFilter = newFilterActivity(null);
+        peerFilter.filterTargets();
+        Iterator<Object> it = peerFilter.iterator();
 
+        // do startup tasks - filter peers and send messages
+        while (it.hasNext())
+        {
+            Object target = it.next();
+            PeerRelatedActivity act = activityFactory.createActivity(); 
+            act.setTarget(target);
+            act.setMessage(msg);
+            execute(act);
+        }	    
+	}
 	
 	private class ConnectionHandler implements Runnable
 	{
@@ -167,7 +208,8 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	                		(String)getPart(msg, ACTION));
 	                if (taskFactories.containsKey(key))
 	                {
-	                	TaskActivity<?> task = taskFactories.get(key).newTask(JXTAPeerInterface.this, msg);
+	                	TaskActivity<?> task = taskFactories.get(key).newTask(thisPeer, 
+	                	                                                      msg);
 	                	executorService.execute(task);
 	                }
                 }
@@ -195,7 +237,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 
 	public void execute(PeerRelatedActivity activity)
 	{
-		activity.run();
+	    executorService.execute(activity);
 	}
 
 
@@ -222,5 +264,4 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	{
 		return jxtaNetwork;
 	}
-
 }

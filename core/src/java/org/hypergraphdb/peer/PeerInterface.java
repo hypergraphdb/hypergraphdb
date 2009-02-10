@@ -31,9 +31,6 @@ public interface PeerInterface
 	 */
 	boolean configure(Map<String, Object> configuration);
 	
-
-	void stop();
-	
 	/**
 	 * <p>
 	 * Execute the message handling loop of this interface. This method is akin to a vanilla
@@ -45,14 +42,47 @@ public interface PeerInterface
 	 * @param executorService
 	 */
 	void run(ExecutorService executorService);
-	
+
+	/**
+	 * <p>
+	 * Stop the <code>PeerInterface</code> - no more messages are going to be
+	 * received or sent.
+	 * </p>
+	 */
+    void stop();
+    
+    /**
+     * <p>
+     * Return the <code>HyperGraphPeer</code> to which this <code>PeerInterface</code>
+     * is bound.
+     * </p>
+     */
+    HyperGraphPeer getThisPeer();
+    
+    /**
+     * <p>
+     * Internally used to initialize the <code>PeerInterface</code>, don't call in application code.
+     * </p> 
+     */
+    void setThisPeer(HyperGraphPeer thisPeer);
+    
 	//factory methods to obtain activities that are specific to the peer implementation
 	//TODO redesign
 	PeerNetwork getPeerNetwork();
 	PeerFilter newFilterActivity(PeerFilterEvaluator evaluator);
 	PeerRelatedActivityFactory newSendActivityFactory();
+	
+	/**
+	 * <p>
+	 * Broadcast a message to all members of this peer's group.
+	 * </p>
+	 * 
+	 * @param msg
+	 */
+	void broadcast(Object msg);
 
-
+	void send(Object networkTarget, Object msg);
+	
 	void registerTaskFactory(Performative performative, String action, TaskFactory convFactory);
 
 
@@ -66,11 +96,17 @@ public interface PeerInterface
 	 */
 	void registerTask(UUID taskId, TaskActivity<?> task);
 	
-	//TODO replace with an Executor approach
+	/**
+	 * <p>
+	 * Run the given activity. This method can be called only while the peer
+	 * interface is currently running. The activity will be executed using
+	 * the <code>ExecutorService</code> passed to the <code>run</code> method.
+	 * </p>
+	 * 
+	 * @param activity The activity to execute. 
+	 */
 	void execute(PeerRelatedActivity activity);
 
 	void setAtomInterests(HGAtomPredicate pred);
 	HGAtomPredicate getAtomInterests();
-
-
 }

@@ -23,11 +23,13 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
+import org.hypergraphdb.peer.workflow.AffirmIdentityTask;
 import org.hypergraphdb.peer.workflow.CatchUpTaskClient;
 import org.hypergraphdb.peer.workflow.GetInterestsTask;
 import org.hypergraphdb.peer.workflow.PublishInterestsTask;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.TwoWayMap;
 
 /**
  * 
@@ -57,6 +59,14 @@ public class HyperGraphPeer
 	 * The local database of the peer. The peer will be listening on any changes to the local database and replciate them accordingly.
 	 */
 	private HyperGraph graph = null;
+	
+	/**
+	 * The HGDB-based long term identity of this peer.
+	 */
+	private HGPeerIdentity identity = null;
+	
+    private TwoWayMap<Object, HGPeerIdentity> peerIdentities = 
+        new TwoWayMap<Object, HGPeerIdentity>(); 
 	
 	/**
 	 * Temporary storage for all types of things, including replication and subgraph serialization.
@@ -131,34 +141,60 @@ public class HyperGraphPeer
 	 */
 	public HGPeerIdentity getIdentity()
 	{
+	    if (identity != null)
+	        return identity;
 	    if (graph == null)
 	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
-	    List<PrivatePeerIdentity> all = hg.getAll(graph, hg.type(PrivatePeerIdentity.class));
+        java.net.InetAddress localMachine = null;
+        try
+        {
+            localMachine = java.net.InetAddress.getLocalHost();
+            System.out.println("Local machine identified: " + 
+                               localMachine.getHostName() + "/" +
+                               localMachine.getHostAddress());    
+        }
+        catch (UnknownHostException ex)
+        {
+            // TODO: how to we deal with this?
+            ex.printStackTrace(System.err);             
+        }	    
+        String peerName = (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME);
+	    List<PrivatePeerIdentity> all = hg.getAll(graph, hg.type(PrivatePeerIdentity.class));	    
 	    if (all.isEmpty())
 	    {
 	        // Create new identity.
 	        PrivatePeerIdentity id = new PrivatePeerIdentity();
 	        id.setId(HGHandleFactory.makeHandle());
-	        java.net.InetAddress localMachine = null;
-	        try
-	        {
-	            localMachine = java.net.InetAddress.getLocalHost();
-	            id.setHostname(localMachine.getHostName());
-	            id.setIpAddress(localMachine.getHostAddress());	            
-	        }
-	        catch (UnknownHostException ex)
-	        {
-	            // TODO: how to we deal with this?
-	            ex.printStackTrace(System.err);	            
-	        }
 	        id.setGraphLocation(graph.getLocation());
-	        graph.add(id);
-	        return id.makePublicIdentity();
+            id.setHostname(localMachine.getHostName());
+            id.setIpAddress(localMachine.getHostAddress());
+            id.setName(peerName);
+	        graph.define(id.getId(), id);
+	        return identity = id.makePublicIdentity();
 	    }
 	    else if (all.size() > 1)
 	        throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
 	    else
-	        return all.get(0).makePublicIdentity();
+	    {
+            if (!HGUtils.eq(all.get(0).getName(), peerName))
+            {
+                all.get(0).setName(peerName);
+                graph.update(all.get(0));
+            }
+	        identity = all.get(0).makePublicIdentity();
+	        if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
+	            !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||
+	            !HGUtils.eq(identity.getGraphLocation(), graph.getLocation()))
+	        {
+	            // Need to create a new identity.
+	            graph.remove(identity.getId());
+	            HGPersistentHandle newId = HGHandleFactory.makeHandle();
+	            identity.setId(newId);
+	            all.get(0).setId(newId);
+	            graph.define(newId, all.get(0));
+	        }
+	        return identity;
+	    }
 	}
 	
 	private void loadConfig(File configFile)
@@ -222,17 +258,18 @@ public class HyperGraphPeer
 
 				option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
 				if (!HGUtils.isEmpty(option))
-					graph = HGEnvironment.get(option);
-				
+				{
+					graph = HGEnvironment.get(option);					
+				}
 				
 				//load and start interface
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
+				peerInterface.setThisPeer(this);
 				
 				if (peerInterface.configure(configuration))
 				{
-					status = true;
-				
+					status = true;					
 					peerInterface.run(executorService);
 					
 	                //configure services
@@ -256,6 +293,19 @@ public class HyperGraphPeer
 							BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
 							boot.bootstrap(this, config);
 						} 
+					peerInterface.getPeerNetwork().addPeerPresenceListener(
+                       new PeerPresenceListener()
+                       {
+                           public void peerJoined(Object target)
+                           {
+                               AffirmIdentityTask task = new AffirmIdentityTask(HyperGraphPeer.this, null, target);
+                               task.run();
+                           }
+                           public void peerLeft(Object target) 
+                           { 
+                               unbindNetworkTargetFromIdentity(target); 
+                           }
+                       });
 				}
 			}
 			catch(Exception ex)
@@ -292,7 +342,7 @@ public class HyperGraphPeer
 	 */
 	public void catchUp()
 	{
-		CatchUpTaskClient catchUpTask = new CatchUpTaskClient(peerInterface, null, this);
+		CatchUpTaskClient catchUpTask = new CatchUpTaskClient(this, null, this);
 		catchUpTask.run();
 	}
 	
@@ -306,7 +356,7 @@ public class HyperGraphPeer
 	{
 		peerInterface.setAtomInterests(pred);
 		
-		PublishInterestsTask publishTask = new PublishInterestsTask(peerInterface, pred);
+		PublishInterestsTask publishTask = new PublishInterestsTask(this, pred);
 		publishTask.run();
 	}
 	
@@ -336,7 +386,7 @@ public class HyperGraphPeer
 	 */
 	public void updateNetworkProperties()
 	{
-		GetInterestsTask task = new GetInterestsTask(peerInterface);
+		GetInterestsTask task = new GetInterestsTask(this);
 		
 		task.run();
 	}
@@ -401,4 +451,25 @@ public class HyperGraphPeer
 	{
 		return executorService;
 	}
+	
+    public HGPeerIdentity getIdentity(Object networkTarget)
+    {
+        return peerIdentities.getY(networkTarget); 
+    }
+	
+    public Object getNetworkTarget(HGPeerIdentity id)
+    {
+        return peerIdentities.getX(id); 
+    }
+    
+    public void bindIdentityToNetworkTarget(HGPeerIdentity id, Object networkTarget)
+    {
+        peerIdentities.add(networkTarget, id);
+        System.out.println("Adding peer " + id + " at " + getIdentity());
+    }
+    
+    public void unbindNetworkTargetFromIdentity(Object networkTarget)
+    {
+        peerIdentities.removeX(networkTarget);
+    }
 }

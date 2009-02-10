@@ -2,6 +2,7 @@ package org.hypergraphdb.peer.jxta;
 
 import static org.hypergraphdb.peer.Structs.getPart;
 import static org.hypergraphdb.peer.Structs.getOptPart;
+import static org.hypergraphdb.peer.Structs.getStruct;
 import static org.hypergraphdb.peer.Structs.hasPart;
 
 import java.io.File;
@@ -63,6 +64,8 @@ import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
 
+import org.hypergraphdb.peer.PeerConfig;
+import org.hypergraphdb.peer.PeerPresenceListener;
 import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.query.HGAtomPredicate;
 
@@ -86,6 +89,9 @@ public class DefaultJXTANetwork implements JXTANetwork
     private LinkedList<Advertisement> ownAdvs = new LinkedList<Advertisement>();
     private Map<Advertisement, HGAtomPredicate> peerAdvs = Collections.synchronizedMap(new HashMap<Advertisement, HGAtomPredicate>());
     private Map<Advertisement, String> peerAdvIds = new HashMap<Advertisement, String>();
+    private List<PeerPresenceListener> peerPresenceListeners = 
+        new ArrayList<PeerPresenceListener>(); 
+    
     private Set<PipeID> ownPipes = new HashSet<PipeID>();
     private int advTimetoLive;
     private final static ModuleSpecID PROTECTED_GROUP_MSID = (ModuleSpecID) ID.create(URI.create("urn:jxta:uuid-DEADBEEFDEAFBABAFEEDBABE0000000133BF5414AC624CC8AD3AF6AEC2C8264306"));
@@ -96,15 +102,15 @@ public class DefaultJXTANetwork implements JXTANetwork
     public boolean configure(Map<String, Object> config)
     {
         boolean result = false;
-
         NetworkManager.ConfigMode configMode = ConfigMode.ADHOC;
+        String peerName = (String) getOptPart(config, "HGDBPeer", PeerConfig.PEER_NAME);        
+        Map<String, Object> jxtaConfig = getStruct(config, JXTAConfig.CONFIG_NAME);
+        
         // Start network
         try
-        {
-            String peerName = (String) getOptPart(config, "HGDBPeer",
-                                                  JXTAConfig.PEER_NAME);
-            String mode = (String) getOptPart(config, "ADHOC", JXTAConfig.MODE);
-            String jxtaDir = (String) getOptPart(config, ".jxta",
+        {                        
+            String mode = (String) getOptPart(jxtaConfig, "ADHOC", JXTAConfig.MODE);
+            String jxtaDir = (String) getOptPart(jxtaConfig, ".jxta",
                                                  JXTAConfig.JXTA_DIR);
 
             configMode = NetworkManager.ConfigMode.valueOf(NetworkManager.ConfigMode.class,
@@ -118,7 +124,8 @@ public class DefaultJXTANetwork implements JXTANetwork
             peerManager = new NetworkManager(configMode, peerName, configURI);
 
             NetworkConfigurator configurator = peerManager.getConfigurator();
-            configureNetwork(configurator, config);
+            configurator.setName(peerName);
+            configureNetwork(configurator, jxtaConfig);
 
             dumpNetworkConfig(configurator);
 
@@ -137,9 +144,9 @@ public class DefaultJXTANetwork implements JXTANetwork
             netPeerGroup = peerManager.getNetPeerGroup();
             try
             {
-                String username = (String) config.get("user");
-                String password = (String) config.get("password");
-                createCustomGroup(config, username, password);
+                String username = (String) jxtaConfig.get("user");
+                String password = (String) jxtaConfig.get("password");
+                createCustomGroup(jxtaConfig, username, password);
                 if (hgdbGroup != null)
                 {
                     System.out.println("Trying to join the group ... ");
@@ -163,7 +170,7 @@ public class DefaultJXTANetwork implements JXTANetwork
 
         // wait for rendezvous if needed
         Boolean needsRendezVous = (Boolean) getOptPart(
-                                                       config,
+                                                       jxtaConfig,
                                                        false,
                                                        JXTAConfig.NEEDS_RENDEZ_VOUS);
         System.out.println("Waiting for rendezvous: " + needsRendezVous);
@@ -186,7 +193,7 @@ public class DefaultJXTANetwork implements JXTANetwork
         }
 
         // wait for realy
-        Boolean needsRelay = (Boolean) getOptPart(config, false,
+        Boolean needsRelay = (Boolean) getOptPart(jxtaConfig, false,
                                                   JXTAConfig.NEEDS_RELAY);
         System.out.println("Waiting for realy: " + needsRelay);
         if (needsRelay)
@@ -214,7 +221,7 @@ public class DefaultJXTANetwork implements JXTANetwork
             }
         }
 
-        this.advTimetoLive = ((Long) getOptPart(config, 10000L,
+        this.advTimetoLive = ((Long) getOptPart(jxtaConfig, 10000L,
                                                 JXTAConfig.ADVERTISEMENT_TTL)).intValue();
 
         System.out.println("Finished initializing");
@@ -250,10 +257,6 @@ public class DefaultJXTANetwork implements JXTANetwork
                                   Object config)
     {
         // peerid?
-
-        // name
-        configurator.setName((String) getOptPart(config, "HGDBPeer",
-                                                 JXTAConfig.PEER_NAME));
 
         // tcp transport
         if (hasPart(config, JXTAConfig.TCP))
@@ -742,6 +745,7 @@ public class DefaultJXTANetwork implements JXTANetwork
         return peerAdvs.keySet();
     }
 
+    
     private class AdvPublisher implements Runnable
     {
     	private volatile boolean isRunning = false;
@@ -767,7 +771,6 @@ public class DefaultJXTANetwork implements JXTANetwork
                     {
                         // System.out.println("publishing: " +
                         // adv.getID().toString());
-
                         discoveryService.publish(adv, advTimetoLive, expiration);
                         discoveryService.remotePublish(adv, expiration);
                     }
@@ -803,10 +806,8 @@ public class DefaultJXTANetwork implements JXTANetwork
 
             try
             {
-                Enumeration<Advertisement> localAdvs = discoveryService.getLocalAdvertisements(
-                                                                                               DiscoveryService.ADV,
-                                                                                               null,
-                                                                                               null);
+                Enumeration<Advertisement> localAdvs = 
+                    discoveryService.getLocalAdvertisements(DiscoveryService.ADV, null, null);
                 loadAdvs(localAdvs, "local");
 
                 // Add ourselves as a DiscoveryListener for DiscoveryResponse
@@ -817,8 +818,7 @@ public class DefaultJXTANetwork implements JXTANetwork
                 while (isRunning)
                 {
                     // System.out.println("Getting remote advertisements");
-                    discoveryService.getRemoteAdvertisements(
-                                                             null,
+                    discoveryService.getRemoteAdvertisements(null,
                                                              DiscoveryService.ADV,
                                                              null, null, 100,
                                                              null);
@@ -880,8 +880,9 @@ public class DefaultJXTANetwork implements JXTANetwork
                             {
                                 peerAdvs.put(adv, null);
                                 peerAdvIds.put(adv, peerName);
+                                for (PeerPresenceListener listener : peerPresenceListeners)
+                                    listener.peerJoined(adv);
                             }
-
                         }
                     }
                 }
@@ -957,7 +958,6 @@ public class DefaultJXTANetwork implements JXTANetwork
     public RemotePeer getConnectedPeer(String peerName)
     {
         RemotePeer peer = null;
-
         for (Entry<Advertisement, String> advId : peerAdvIds.entrySet())
         {
             if (peerName.equals(((PipeAdvertisement) advId.getKey()).getName()))
@@ -970,4 +970,13 @@ public class DefaultJXTANetwork implements JXTANetwork
         return peer;
     }
 
+    public void addPeerPresenceListener(PeerPresenceListener listener)
+    {
+        peerPresenceListeners.add(listener);
+    }
+
+    public void removePeerPresenceListener(PeerPresenceListener listener)
+    {
+        peerPresenceListeners.remove(listener);
+    }    
 }

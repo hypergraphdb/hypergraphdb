@@ -156,7 +156,8 @@ public class Structs
 			//certain objects do not expose bean like interfaces but still need to be serialized.
 			Pair<StructsMapper, String> mapper = hgMappers.get(x.getClass());
 			return list(mapper.getSecond(), mapper.getFirst().getStruct(x));
-		}else if (hgClassNames.containsKey(x.getClass()))
+		}
+		else if (hgClassNames.containsKey(x.getClass()))
 		{
 			//beans with short names for their type
 			if (!addClassName) 
@@ -690,7 +691,17 @@ public class Structs
 		return l;
 	}
 	
-	public static void combine(Object o1, Object o2)
+	/**
+	 * <p>
+	 * Merge the second argument into the first and return the latter. If the 
+	 * arguments are both maps or both lists, all entries from the second are 
+	 * stored in the first. Otherwise, nothing is done.
+	 * </p>
+	 * @param o1 The target of the merge.
+	 * @param o2 The source of the merge.
+	 * @return The possibly modified <code>o1</code>.
+	 */
+	public static Object combine(Object o1, Object o2)
 	{
 		if (o1 instanceof Map)
 		{
@@ -707,7 +718,7 @@ public class Structs
 				((List)o1).add(o2);
 			}
 		}
-
+		return o1;
 	}
 	
 	/**

@@ -2,13 +2,14 @@ package org.hypergraphdb.peer.workflow;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.Subgraph;
@@ -28,24 +29,21 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 {
 	protected enum State {Started, HandleAccepted, HandleRejected, Done};
 	
-	private HyperGraphPeer peer;
 	private ProposalConversation conversation;
 	private Timestamp last_version;
 	private Timestamp current_version;
 	private StorageService storage;
 	
-	public RememberTaskServer(HyperGraphPeer peer, StorageService storage)
+	public RememberTaskServer(HyperGraphPeer thisPeer, StorageService storage)
 	{
-		super(peer.getPeerInterface(), State.Started, State.Done);
-		this.peer = peer;
+		super(thisPeer, State.Started, State.Done);
 		this.storage = storage;
 		setState(State.Started);
 	}
 	
-	public RememberTaskServer(HyperGraphPeer peer, StorageService storage, Object msg)
+	public RememberTaskServer(HyperGraphPeer thisPeer, StorageService storage, Object msg)
 	{
-		super(peer.getPeerInterface(), (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
-		this.peer = peer;
+		super(thisPeer, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
 		this.storage = storage;
 		//start the conversation
 		PeerRelatedActivity activity = (PeerRelatedActivity)getPeerInterface().newSendActivityFactory().createActivity();
@@ -84,7 +82,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 		List<Object> handles = new ArrayList<Object>();
 		
 		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, REPLY_TO));//.getReplyTo());
-		if (peer.getLog().registerRequest(peerId, last_version, current_version))
+		if (getThisPeer().getLog().registerRequest(peerId, last_version, current_version))
 		{
 			ArrayList<Object> contents = getPart(msg, CONTENTS);
 			
@@ -124,7 +122,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 				handle = peer.getStorage().addOrReplaceSubgraph(subgraph);
 			}
 */			
-			peer.getLog().finishRequest(peerId, last_version, current_version);
+			getThisPeer().getLog().finishRequest(peerId, last_version, current_version);
 			System.out.println("RememberActivityServer: remembered " + handles);
 			
 			Object reply = getReply(msg);
@@ -148,21 +146,28 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 
 	public static class RememberTaskServerFactory implements TaskFactory
 	{
-		private HyperGraphPeer peer;
-		private StorageService storage;
+		private Map<HyperGraphPeer, StorageService> storage = 
+		    new HashMap<HyperGraphPeer, StorageService>();
 		
-		public RememberTaskServerFactory(HyperGraphPeer peer)
-		{
-			// Storage instance is shared by all task coming out of this factory...
-			storage = new StorageService(peer.getHGDB(), 
-										 peer.getTempDb(), 
-										 peer.getPeerInterface(), 
-										 peer.getLog());
-			this.peer = peer;
+		// TODO - how do we clean up this storage map when HyperGraphPeer
+		// instances are closed???
+		private synchronized StorageService getStorage(HyperGraphPeer peer)		
+		{		    
+		    StorageService ss = storage.get(peer);
+		    if (ss == null)
+		    {
+		        ss = new StorageService(peer);
+		        storage.put(peer, ss);
+		    }
+		    return ss;
 		}
-		public TaskActivity<?> newTask(PeerInterface peerInterface, Object msg)
+		
+		public RememberTaskServerFactory()
 		{
-			return new RememberTaskServer(peer, storage, msg);
+		}
+		public TaskActivity<?> newTask(HyperGraphPeer peer, Object msg)
+		{
+			return new RememberTaskServer(peer, getStorage(peer), msg);
 		}
 	}
 }

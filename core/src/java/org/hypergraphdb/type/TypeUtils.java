@@ -282,21 +282,27 @@ public final class TypeUtils
 		return subTypes;
 	}
 	
+	public static boolean deleteType(HyperGraph graph, HGHandle th, boolean recursive)
+	{
+        if (recursive)
+        {
+            List<HGHandle> L = subsumesClosure(graph, th);
+            for (HGHandle h : L)
+                if (!deleteType(graph, h))
+                        return false;
+            return true;
+        }
+        else
+            return deleteType(graph, th);	    
+	}
+	
 	public static boolean deleteType(HyperGraph graph, Class<?> type, boolean recursive)
 	{
 		HGHandle th = graph.getTypeSystem().getTypeHandleIfDefined(type);
 		if (th == null)
 			return true;
-		else if (recursive)
-		{
-			List<HGHandle> L = subsumesClosure(graph, th);
-			for (HGHandle h : L)
-				if (!deleteType(graph, h))
-						return false;
-			return true;
-		}
 		else
-			return deleteType(graph, th);
+		    return deleteType(graph, th, recursive);
 	}
 	
 	public static boolean deleteType(HyperGraph graph, HGHandle type)
