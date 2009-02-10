@@ -13,7 +13,7 @@
 	"jxtaDir"	: "./hgdb/.jxta",
 	"peerName"	: "MainRendezVous",
 	"peerGroup"	: "HGDBNET",
-
+                   
 	"mode"		: "RENDEZVOUS_RELAY",
 	"tcp"		:
 	{

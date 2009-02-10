@@ -1,17 +1,19 @@
 {
 "hasLocalStorage"	: true,
 "hasTempStorage"	: true,
-"localDB"           : "./hgdb_edge/mainDb",
-"tempDB"            : "./hgdb_edge/tempDb",
-"bootstrap" : [ {"class" : "org.hypergraphdb.peer.bootstrap.ReplicationBootstrap", "config" : {}}]
+"localDB"           : "./hgdb_edge/mainDb1",
+"tempDB"            : "./hgdb_edge/tempDb1",
+"bootstrap" : [ /* {"class" : "org.hypergraphdb.peer.bootstrap.ReplicationBootstrap", "config" : {}}, */ 
+                {"class" : "org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap", "config" : {}}
+              ],
 "interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
+"peerName"	: "Peer1",
 
 "jxta"		:
 {
     "user" : "bolerio",
     "password" : "password",
-	"jxtaDir"	: "./hgdb_edge/.jxta",
-	"peerName"	: "MyPeer",
+	"jxtaDir"	: "./hgdb_edge/.jxta1",
 	"peerGroup"	: "HGDBNET",
 
 	"mode"		: "EDGE",
