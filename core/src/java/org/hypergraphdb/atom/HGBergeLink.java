@@ -20,7 +20,12 @@ import org.hypergraphdb.HGPlainLink;
  */
 public class HGBergeLink extends HGPlainLink
 {
-	private int tailIndex = -1;
+	private int tailIndex = 0;
+	
+	public HGBergeLink(HGHandle...targets)
+	{
+	    super(targets);
+	}
 	
 	public HGBergeLink(int tailIndex, HGHandle...targets)
 	{
