@@ -3,6 +3,7 @@ package org.hypergraphdb.type;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -91,7 +92,8 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		try
 		{
 			Field field = javaClass.getDeclaredField(desc.getName());
-			return field.getAnnotation(HGIgnore.class) == null;
+			return field.getAnnotation(HGIgnore.class) == null && 
+				  (field.getModifiers() & Modifier.TRANSIENT) == 0; 
 		}
 		catch (NoSuchFieldException ex)
 		{
@@ -124,16 +126,18 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		// whether there is at least one property that is both readable and
 		// writeable.
 		//
-		for (PropertyDescriptor d : descriptors.values()) {
-			if (d.getReadMethod() != null && d.getWriteMethod() != null) {
+		for (PropertyDescriptor d : descriptors.values()) 
+		{
+			if (d.getReadMethod() != null && d.getWriteMethod() != null && includeProperty(javaClass, d)) 
+			{
 				is_record = true;
 				break;
 			}
 		}
 
-		boolean is_abstract = javaTypes.isAbstract(javaClass);
-		boolean is_default_constructible = javaTypes.isDefaultConstructible(javaClass);
-		boolean is_link = javaTypes.isLink(javaClass);
+		boolean is_abstract = JavaTypeFactory.isAbstract(javaClass);
+		boolean is_default_constructible = JavaTypeFactory.isDefaultConstructible(javaClass);
+		boolean is_link = JavaTypeFactory.isLink(javaClass);
 		boolean is_serializable = java.io.Serializable.class.isAssignableFrom(javaClass);
 
 		is_record = is_record && (is_default_constructible || is_link);
@@ -204,7 +208,8 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		//     
 		else if (is_serializable)
 			return typeSystem.getAtomType(java.io.Serializable.class);
-		else if (is_default_constructible || is_link) {
+		else if (is_default_constructible || is_link) 
+		{
 			// Nothing much more we can do...., perhaps some other default,
 			// perhaps not.
 			return new RecordType();

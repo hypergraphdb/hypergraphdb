@@ -20,7 +20,10 @@ import java.lang.annotation.RetentionPolicy;
  * <p>
  * The most common case where a bean property is to be ignored is when a 
  * getter/setter combination does not actually correspond to some independent
- * internal bean field.
+ * internal bean field. Note that in case it <b>DOES</b> correspond to an 
+ * internal bean field, but you don't want to save it anyway, you can also
+ * declare the field as <code>transient</code> - the standard Java 
+ * mechanism to ignore a field during serialization/persistence.
  * </p>
  * 
  * @author Borislav Iordanov
