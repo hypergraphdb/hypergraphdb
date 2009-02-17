@@ -1,10 +1,16 @@
 package org.hypergraphdb.peer;
 
+import java.util.concurrent.Callable;
+
 /**
- * @author Cipri Costa
- * A runnable object that executes a task against a given peer 
+ * <p>
+ * A callable object that executes a task against a given peer with a 
+ * <code>boolean</code> result indicating success or failure.
+ * </p>
+ * 
+ * @author Cipri Costa 
  */
-public abstract class PeerRelatedActivity implements Runnable
+public abstract class PeerRelatedActivity implements Callable<Boolean>
 {
 	protected Object target;
 	protected Object msg;

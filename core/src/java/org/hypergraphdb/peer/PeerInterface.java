@@ -3,6 +3,7 @@ package org.hypergraphdb.peer;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.peer.workflow.TaskActivity;
@@ -81,7 +82,7 @@ public interface PeerInterface
 	 */
 	void broadcast(Object msg);
 
-	void send(Object networkTarget, Object msg);
+	Future<Boolean> send(Object networkTarget, Object msg);
 	
 	void registerTaskFactory(Performative performative, String action, TaskFactory convFactory);
 
@@ -97,6 +98,15 @@ public interface PeerInterface
 	void registerTask(UUID taskId, TaskActivity<?> task);
 	
 	/**
+	 * Remove a task managed by this peer interface. This should be generally
+	 * done after a task reaches its "end" state. Once a task is removed from the
+	 * peer interface, incoming messages will no longer be associated with it.
+	 * 
+	 * @param taskId
+	 */
+	void unregisterTask(UUID taskId);
+	
+	/**
 	 * <p>
 	 * Run the given activity. This method can be called only while the peer
 	 * interface is currently running. The activity will be executed using
@@ -105,7 +115,7 @@ public interface PeerInterface
 	 * 
 	 * @param activity The activity to execute. 
 	 */
-	void execute(PeerRelatedActivity activity);
+	Future<Boolean> execute(PeerRelatedActivity activity);
 
 	void setAtomInterests(HGAtomPredicate pred);
 	HGAtomPredicate getAtomInterests();

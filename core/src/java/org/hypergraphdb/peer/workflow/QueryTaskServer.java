@@ -49,7 +49,7 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 			
 			combine(reply, struct(CONTENT, list(object(subgraph))));
 		}else if (query instanceof HGQueryCondition){
-			HGSearchResult<HGHandle> results = getThisPeer().getHGDB().find((HGQueryCondition)query);
+			HGSearchResult<HGHandle> results = getThisPeer().getGraph().find((HGQueryCondition)query);
 
 			ArrayList<Object> resultingContent = new ArrayList<Object>();
 			while(results.hasNext())
@@ -60,7 +60,7 @@ public class QueryTaskServer extends TaskActivity<QueryTaskServer.State>
 				{
 					resultingContent.add(object(getThisPeer().getSubgraph(handle)));
 				}else{
-					resultingContent.add(getThisPeer().getHGDB().getPersistentHandle(handle));
+					resultingContent.add(getThisPeer().getGraph().getPersistentHandle(handle));
 				}
 			}
 			

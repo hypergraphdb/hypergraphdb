@@ -401,7 +401,7 @@ public class HyperGraphPeer
 		this.log = log;
 	}
 
-	public HyperGraph getHGDB()
+	public HyperGraph getGraph()
 	{
 		return graph;
 	}

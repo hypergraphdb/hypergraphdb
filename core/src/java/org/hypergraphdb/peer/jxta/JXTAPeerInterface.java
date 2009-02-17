@@ -7,11 +7,13 @@ import static org.hypergraphdb.peer.Structs.*;
 
 import java.io.InputStream;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import net.jxta.id.IDFactory;
 import net.jxta.pipe.PipeID;
@@ -52,8 +54,10 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	private HyperGraphPeer thisPeer = null;
 	private JXTANetwork jxtaNetwork = new DefaultJXTANetwork();
 
-	private HashMap<Pair<Performative, String>, TaskFactory> taskFactories = new HashMap<Pair<Performative,String>, TaskFactory>();
-	private HashMap<UUID, TaskActivity<?>> tasks = new HashMap<UUID, TaskActivity<?>>();
+	private Map<Pair<Performative, String>, TaskFactory> taskFactories = 
+	    Collections.synchronizedMap(new HashMap<Pair<Performative,String>, TaskFactory>());
+	private Map<UUID, TaskActivity<?>> tasks = 
+	    Collections.synchronizedMap(new HashMap<UUID, TaskActivity<?>>());
 	private HGAtomPredicate atomInterests;
 	
 	private ExecutorService executorService;
@@ -133,13 +137,13 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
 	}
 	
-	public void send(Object target, Object msg)
+	public Future<Boolean> send(Object target, Object msg)
 	{
 	    PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
 	    PeerRelatedActivity act = activityFactory.createActivity(); 
         act.setTarget(target);
         act.setMessage(msg);
-        execute(act);    
+        return execute(act);    
 	}
 	
 	public void broadcast(Object msg)
@@ -202,7 +206,8 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
                 }
                 else
                 {
-                    Object x = getPart(msg, PERFORMATIVE); // variable needed because of Java 5 compiler bug                    
+                    // variable 'x' needed because of Java 5 compiler bug
+                    Object x = getPart(msg, PERFORMATIVE);                     
 	                Pair<Performative, String> key = new Pair<Performative, String>(
 	                		Performative.valueOf(x.toString()), 
 	                		(String)getPart(msg, ACTION));
@@ -234,10 +239,14 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		tasks.put(taskId, task);
 	}
 
-
-	public void execute(PeerRelatedActivity activity)
+	public void unregisterTask(UUID taskId)
 	{
-	    executorService.execute(activity);
+	    tasks.remove(taskId);
+	}
+
+	public Future<Boolean> execute(PeerRelatedActivity activity)
+	{
+	    return executorService.submit(activity);
 	}
 
 

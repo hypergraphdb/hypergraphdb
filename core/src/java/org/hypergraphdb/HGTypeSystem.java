@@ -1025,7 +1025,8 @@ public class HGTypeSystem
 					Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
 					classToAtomType.remove(clazz);
 				}
-				catch (ClassNotFoundException ex) { }
+				catch (ClassNotFoundException ex) 
+				{ /* if we couldn't load the class, it's probably in the runtime cache */}
 			}
 		}
 		catch (Throwable t)

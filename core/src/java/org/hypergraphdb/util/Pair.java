@@ -10,7 +10,7 @@ package org.hypergraphdb.util;
 
 /**
  * <p>
- * The inexplicably missing class from the <code>java.util</code>. A generic, immutable <code>Pair</code>
+ * The inexplicably missing class from the <code>java.util</code> package. A generic, immutable <code>Pair</code>
  * class. Hash code computed at construction time and cached.
  * </p>
  *  

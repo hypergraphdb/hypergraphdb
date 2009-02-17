@@ -39,7 +39,7 @@ public class StorageService
 	public StorageService(HyperGraphPeer thisPeer)
 	{
 	    this.thisPeer = thisPeer;
-		this.graph = thisPeer.getHGDB();
+		this.graph = thisPeer.getGraph();
 		this.logGraph = thisPeer.getTempDb();
 		this.log = thisPeer.getLog();
 		

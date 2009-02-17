@@ -34,7 +34,7 @@ public class JXTASendActivity extends PeerRelatedActivity
         this.pipeAdv = pipeAdv;
     }
 
-    public void run()
+    public Boolean call()
     {
         try
         {
@@ -69,10 +69,12 @@ public class JXTASendActivity extends PeerRelatedActivity
             //
             protocol.writeMessage(out, getMessage());
             out.flush();
+            return true;
         }
         catch (IOException e)
         {
             e.printStackTrace();
+            return false;
         }
     }
 }

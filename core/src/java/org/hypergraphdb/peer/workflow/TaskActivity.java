@@ -205,8 +205,7 @@ public abstract class TaskActivity<StateType> extends AbstractActivity<StateType
                 if (activity != null)
                 {
                     // get step info
-                    Pair<StateType, Method> dest = transitions.get(new Pair<StateType, Object>(
-                                                                                               getState(),
+                    Pair<StateType, Method> dest = transitions.get(new Pair<StateType, Object>(getState(),
                                                                                                activity.getState()));
 
                     if (compareAndSetState(getState(), dest.getFirst()))
@@ -232,6 +231,7 @@ public abstract class TaskActivity<StateType> extends AbstractActivity<StateType
                 }
             }
         }
+        thisPeer.getPeerInterface().unregisterTask(getTaskId());
     }
 
     protected void registerConversation(Conversation<?> conversation,

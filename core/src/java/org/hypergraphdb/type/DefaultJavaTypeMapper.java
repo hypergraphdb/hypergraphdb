@@ -39,8 +39,12 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 			Class<?> propType = desc.getPropertyType();
 			if (propType.isPrimitive())
 				propType = BonesOfBeans.wrapperEquivalentOf(propType);
+			HGHandle propTypeHandle = typeSystem.getTypeHandle(propType);
+			if (propTypeHandle == null)
+                throw new HGException("Unable to get HyperGraph type for Java class " + 
+                                      propType.getName() + ": make sure it's default or 'link' constructible.");			    
 			compositeType.addProjection(new HGAbstractCompositeType.Projection(
-					desc.getName(), typeSystem.getTypeHandle(propType)));
+					desc.getName(), propTypeHandle));
 		}
 		return compositeType;
 	}
@@ -178,6 +182,9 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 				if (propType.isPrimitive())
 					propType = BonesOfBeans.wrapperEquivalentOf(propType);
 				HGHandle valueTypeHandle = typeSystem.getTypeHandle(propType);
+				if (valueTypeHandle == null)
+				    throw new HGException("Unable to get HyperGraph type for Java class " + 
+				                          propType.getName() + ": make sure it's default or 'link' constructible.");
 				HGHandle slotHandle = javaTypes.getSlotHandle(desc.getName(), 
 															  valueTypeHandle);
 				Slot slot = graph.get(slotHandle);

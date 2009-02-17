@@ -368,6 +368,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			}
 			return out;
 		}
+		else if (cond instanceof MapCondition)
+		{
+		    MapCondition mcond = (MapCondition)cond;
+		    return new MapCondition(simplify(mcond.getCondition()),
+		                            mcond.getMapping());
+		}
 		else
 			return cond;
 	}	
@@ -469,6 +475,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					result.add(new IncidentCondition(h));
 			cond = result;
 		}		
+		else if (cond instanceof MapCondition)
+		{
+            MapCondition mcond = (MapCondition)cond;
+            cond = new MapCondition(expand(graph, mcond.getCondition()),
+                                    mcond.getMapping());		    
+		}
 		return cond;
 	}
 	

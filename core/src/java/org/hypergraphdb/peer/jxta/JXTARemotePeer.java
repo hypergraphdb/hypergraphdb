@@ -82,7 +82,7 @@ public class JXTARemotePeer extends RemotePeer
     {
         Object atom = get(handle);
 
-        getLocalPeer().getHGDB().define(handle, atom);
+        getLocalPeer().getGraph().define(handle, atom);
     }
 
     /*
@@ -144,8 +144,8 @@ public class JXTARemotePeer extends RemotePeer
     @Override
     public void copyTo(HGHandle handle)
     {
-        Object atom = getLocalPeer().getHGDB().get(handle);
-        HGPersistentHandle persHandle = getLocalPeer().getHGDB().getPersistentHandle(handle);
+        Object atom = getLocalPeer().getGraph().get(handle);
+        HGPersistentHandle persHandle = getLocalPeer().getGraph().getPersistentHandle(handle);
 
         if (insideBatch())
         {

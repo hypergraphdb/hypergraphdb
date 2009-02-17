@@ -52,9 +52,9 @@ public class SerializableType implements HGAtomType
 	{
 		try
 		{
-			ByteArrayInputStream in = new ByteArrayInputStream(hg.getStore().getData(handle));
-			ObjectInputStream objectIn = new ObjectInputStream(in);		
-			return objectIn.readObject();
+		    ByteArrayInputStream in = new ByteArrayInputStream(hg.getStore().getData(handle));
+    		ObjectInputStream objectIn = new ObjectInputStream(in);		
+    		return objectIn.readObject();
 		}
 		catch (Exception ex)
 		{
