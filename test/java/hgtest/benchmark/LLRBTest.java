@@ -131,7 +131,7 @@ public class LLRBTest
 			list.remove(pos);
 			baseSet.remove(h);
 			if (!tree.remove(h))
-				throw new RuntimeException("LLRBTRee.remove returned false on an existing element.");
+				throw new RuntimeException("ArrayBasedSet.remove returned false on an existing element.");
 			compare(baseSet, tree);			
 		} 
 	}
@@ -192,13 +192,18 @@ public class LLRBTest
 			array.addAll(list);
 			System.out.println("Array size: " + array.size());
 			compare(baseSet, array);
-			HGRandomAccessResult<HGPersistentHandle> rs = array.getSearchResult();
+/*			HGRandomAccessResult<HGPersistentHandle> rs = array.getSearchResult();
 			rs.next();
 			System.out.println("Going back and forth...");
 			T.backAndForth(rs, 10, 10000);
 			System.out.println("Doing a random walk...");
 			randomWalk(array, list, 1000);
-			System.out.println("Test removals...");
+			System.out.println("Test removals..."); */
+			HGPersistentHandle h = array.first();
+			array.remove(h);
+			baseSet.remove(h);
+			list.remove(list.indexOf(h));
+			compare(baseSet, array);
 			testArrayRemovals(array, baseSet, list, 20);
 			System.out.println("Test insert-remove-insert-etc. several times...");
 			for (int i = 0; i < 10; i++)
@@ -216,7 +221,7 @@ public class LLRBTest
 	
 	public static void main(String [] argv)
 	{
-		//testArraySet(20);
-		testLLRBTree(20);
+		testArraySet(20);
+		// testLLRBTree(20);
 	}
 }
