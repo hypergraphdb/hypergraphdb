@@ -66,7 +66,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	public boolean configure(Map<String, Object> configuration) 
 	{
 	    config = getPart(configuration, "jxta");
-	    peerName = (String)getOptPart(config, "HGDBPeer", PeerConfig.PEER_NAME);
+	    peerName = (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME);
 		return jxtaNetwork.configure(configuration);
 	}
 	

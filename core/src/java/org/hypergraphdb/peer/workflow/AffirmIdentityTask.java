@@ -88,7 +88,8 @@ public class AffirmIdentityTask extends TaskActivity<AffirmIdentityTask.State>
         try
         {            
             HGPeerIdentity thisId = getThisPeer().getIdentity();
-            Performative perf = Performative.valueOf(getPart(msg, PERFORMATIVE).toString());
+            Object x = getPart(msg, PERFORMATIVE);
+            Performative perf = Performative.valueOf(x.toString());
             HGPeerIdentity id = parseIdentity(getStruct(msg, CONTENT));
             Object reply = getReply(msg);            
             if (perf == Inform)

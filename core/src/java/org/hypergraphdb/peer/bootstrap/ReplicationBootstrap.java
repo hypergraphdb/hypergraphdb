@@ -32,7 +32,7 @@ public class ReplicationBootstrap implements BootstrapPeer
 		peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
 													HGDBOntology.ATOM_INTEREST, 
 													new GetInterestsTask.GetInterestsFactory());
-    	peer.setAtomInterests(new AnyAtomCondition());                
+//    	peer.setAtomInterests(new AnyAtomCondition());                
     	peer.catchUp();          				
 	}
 }

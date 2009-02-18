@@ -173,7 +173,7 @@ public class Log
 		Peer peer = getPeer(peerId);
 		
 		//if other versions should be written before ...
-		if (peer.getLastFrom().compareTo(last_version) != 0)
+		if (peer.getLastFrom().compareTo(last_version) != 0 && false)
 		{
 			
 			try

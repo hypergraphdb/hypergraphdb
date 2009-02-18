@@ -16,6 +16,11 @@ import net.jxta.document.AdvertisementFactory;
 import net.jxta.id.IDFactory;
 import net.jxta.protocol.PipeAdvertisement;
 
+import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.handle.HGLiveHandle;
+import org.hypergraphdb.handle.PhantomHandle;
+import org.hypergraphdb.handle.PhantomManagedHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.serializer.CustomSerializedValue;
@@ -279,7 +284,6 @@ public class Structs
 		hgClassNames.put(MapCondition.class, "mapCond");
 		hgClassNames.put(LinkProjectionMapping.class, "linkProj");
 		
-		hgClassNames.put(UUIDPersistentHandle.class, "uuidHandle");
 		hgClassNames.put(Timestamp.class, "time");
 		
 		hgClassNames.put(LinkCondition.class, "link");
@@ -290,6 +294,9 @@ public class Structs
 		}
 		
 		addMapper(UUID.class, new UUIDStructsMapper(), "uuid");
+		addMapper(UUIDPersistentHandle.class, new HandleMapper(), "persistent-handle");
+		addMapper(PhantomManagedHandle.class, new HandleMapper(), "live-managed-handle");
+		addMapper(PhantomHandle.class, new HandleMapper(), "live-handle");
 		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
 		
 	}
@@ -750,9 +757,26 @@ public class Structs
 			UUID uuid = (UUID)value;
 			return list(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
 		}
-		
 	}
-	
+
+    public static class HandleMapper implements StructsMapper
+    {
+        public Object getObject(Object struct)
+        {
+            return HGHandleFactory.makeHandle(struct.toString());
+        }
+
+        public Object getStruct(Object value)
+        {            
+            if (value instanceof HGPersistentHandle)
+                return value.toString();
+            else if (value instanceof HGLiveHandle)
+                return ((HGLiveHandle)value).getPersistentHandle().toByteArray();
+            else
+                throw new RuntimeException("Attempt to serialize something that is not a HG handle as a HG handle.");
+        }
+    }
+    
 	/**
 	 * @author ciprian.costa
 	 *

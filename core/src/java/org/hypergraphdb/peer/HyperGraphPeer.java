@@ -199,19 +199,10 @@ public class HyperGraphPeer
 	
 	private void loadConfig(File configFile)
 	{
-		JSONReader reader = new JSONReader();
-
-		try
-		{
-			configuration = (Map<String, Object>)getPart(reader.read(getContents(configFile)));
-			
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		configuration = loadConfiguration(configFile);
 	}
 	
-	private String getContents(File file) throws IOException
+	private static String getContents(File file) throws IOException
 	{
 		StringBuilder contents = new StringBuilder();
 	
@@ -231,6 +222,19 @@ public class HyperGraphPeer
 	    }
 
 	    return contents.toString();
+	}
+	
+	public static Map<String,Object> loadConfiguration(File configFile)	
+	{
+	    JSONReader reader = new JSONReader();
+	    try
+	    {
+	        return (Map<String, Object>)getPart(reader.read(getContents(configFile)));	            
+	    } 
+	    catch (IOException e)
+	    {
+	        throw new RuntimeException(e);	        
+	    }
 	}
 	
 	/**
