@@ -211,7 +211,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	{
 		System.out.println("RememeberTaskClient: handleProposal");
 		//there is a proposal, handle that
-		ProposalConversation conversation = (ProposalConversation)fromActivity;
+		ProposalConversation conversation = (ProposalConversation)(AbstractActivity<ProposalConversation.State>)fromActivity;
 		
 		//decide to accept or not ... for now just accept
 		if (true)
@@ -254,7 +254,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	@SuppressWarnings("unchecked")
 	public State handleConfirm(AbstractActivity<?> fromActivity)
 	{
-		Object msg = ((ProposalConversation)fromActivity).getMessage();	
+		Object msg = ((ProposalConversation)(AbstractActivity<ProposalConversation.State>)fromActivity).getMessage();	
 		
 		results = (ArrayList<HGHandle>)getPart(msg, CONTENT);
 

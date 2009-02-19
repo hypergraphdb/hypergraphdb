@@ -76,7 +76,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 	{		
 		System.out.println("RememberActivityServer: acccepting");
 
-		ProposalConversation conv = (ProposalConversation)conversation;
+		ProposalConversation conv = (ProposalConversation)(AbstractActivity<ProposalConversation.State>)conversation;
 		Object msg = ((Conversation<?>)conversation).getMessage();		
 		
 		List<Object> handles = new ArrayList<Object>();
