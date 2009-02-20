@@ -57,7 +57,7 @@
 		</jar>
 	</target>
 
-	<target name="peer-jar" depends="peer-compile">
+	<target name="peer-jar" depends="peer-compile" description="Create HGDB peer jar file.">
 		<jar basedir="${build}" jarfile="${jars}/${peer-jar-name}">
 			<exclude name="**/*.jar" />
 			<exclude name="**/*.bak" />
@@ -65,7 +65,7 @@
 		</jar>
 	</target>
 	
-	<target name="full-jar" depends="core-compile, peer-compile" >
+	<target name="full-jar" depends="core-compile, peer-compile" description="Create HGDB Full jar file (both core and peer).">
 		<jar basedir="${build}" jarfile="${jars}/${full-jar-name}">
 			<exclude name="**/*.jar" />
 			<exclude name="**/*.bak" />

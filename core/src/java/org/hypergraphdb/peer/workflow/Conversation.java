@@ -35,7 +35,11 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
 
 	private HashMap<Pair<StateType, Performative>, StateType> performativeTransitions = new HashMap<Pair<StateType,Performative>, StateType>();
 	
-	public Conversation(PeerRelatedActivity sendActivity, PeerInterface peerInterface, Object msg, StateType start, StateType end)
+	public Conversation(PeerRelatedActivity sendActivity, 
+	                    PeerInterface peerInterface, 
+	                    Object msg, 
+	                    StateType start, 
+	                    StateType end)
 	{
 		Object conversationId = getPart(msg, CONVERSATION_ID);
 		if ((conversationId == null) || conversationId.equals(NULL_UUID))

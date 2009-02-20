@@ -43,9 +43,9 @@ public class StorageService
 		this.logGraph = thisPeer.getTempDb();
 		this.log = thisPeer.getLog();
 		
-		graph.getEventManager().addListener(HGAtomAddedEvent.class, new AtomAddedListener());
+/*		graph.getEventManager().addListener(HGAtomAddedEvent.class, new AtomAddedListener());
 		graph.getEventManager().addListener(HGAtomRemovedEvent.class, new AtomRemovedListener());
-		graph.getEventManager().addListener(HGAtomReplacedEvent.class, new AtomReplacedListener());
+		graph.getEventManager().addListener(HGAtomReplacedEvent.class, new AtomReplacedListener()); */
 	}
 	
 	private HGHandle storeSubgraph(Subgraph subGraph, HGStore store)
