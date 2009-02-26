@@ -1,17 +1,11 @@
 package org.hypergraphdb.peer.jxta;
 
-import static org.hypergraphdb.peer.HGDBOntology.ACTION;
-import static org.hypergraphdb.peer.HGDBOntology.PERFORMATIVE;
-import static org.hypergraphdb.peer.HGDBOntology.SEND_TASK_ID;
 import static org.hypergraphdb.peer.Structs.*;
 
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -20,6 +14,8 @@ import net.jxta.pipe.PipeID;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.PeerConfig;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
@@ -27,12 +23,7 @@ import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerNetwork;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
-import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.peer.protocol.Protocol;
-import org.hypergraphdb.peer.workflow.TaskActivity;
-import org.hypergraphdb.peer.workflow.TaskFactory;
-import org.hypergraphdb.query.HGAtomPredicate;
-import org.hypergraphdb.util.Pair;
 
 /**
  * @author Cipri Costa
@@ -44,7 +35,6 @@ import org.hypergraphdb.util.Pair;
 public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 {
     private String peerName = null;
-	private Map<String, Object> config;
 	PipeAdvertisement pipeAdv = null;
 	
 	/**
@@ -53,19 +43,15 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	private Protocol protocol = new Protocol();
 	private HyperGraphPeer thisPeer = null;
 	private JXTANetwork jxtaNetwork = new DefaultJXTANetwork();
-
-	private Map<Pair<Performative, String>, TaskFactory> taskFactories = 
-	    Collections.synchronizedMap(new HashMap<Pair<Performative,String>, TaskFactory>());
-	private Map<UUID, TaskActivity<?>> tasks = 
-	    Collections.synchronizedMap(new HashMap<UUID, TaskActivity<?>>());
-	private HGAtomPredicate atomInterests;
+	private MessageHandler messageHandler;
+	
 	
 	private ExecutorService executorService;
 	private JXTAServer jxtaServer = null;
+
 	
 	public boolean configure(Map<String, Object> configuration) 
 	{
-	    config = getPart(configuration, "jxta");
 	    peerName = (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME);
 		return jxtaNetwork.configure(configuration);
 	}
@@ -85,6 +71,8 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	
 	private void startNetwork(final ExecutorService executorService)
 	{		
+	    assert messageHandler != null : new 
+	        NullPointerException("No message handler for PeerInterface " + this);
 		PipeID pipeID = IDFactory.newPipeID(jxtaNetwork.getPeerGroup().getPeerGroupID());
 		System.out.println("created pipe: " + pipeID.toString());
 		pipeAdv = HGAdvertisementsFactory.newPipeAdvertisement(pipeID, peerName);
@@ -92,6 +80,11 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		jxtaNetwork.addOwnPipe(pipeID);
 		jxtaNetwork.publishAdv(pipeAdv);
 		jxtaNetwork.join(executorService);		
+	}
+	
+	public void setMessageHandler(MessageHandler messageHandler)
+	{
+	    this.messageHandler = messageHandler;
 	}
 	
 	public void run(final ExecutorService executorService) 
@@ -143,7 +136,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	    PeerRelatedActivity act = activityFactory.createActivity(); 
         act.setTarget(target);
         act.setMessage(msg);
-        return execute(act);    
+        return executorService.submit(act);    
 	}
 	
 	public void broadcast(Object msg)
@@ -165,7 +158,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
             PeerRelatedActivity act = activityFactory.createActivity(); 
             act.setTarget(target);
             act.setMessage(msg);
-            execute(act);
+            executorService.submit(act);
         }	    
 	}
 	
@@ -180,51 +173,38 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 			this.executorService = executorService;
 		}
 
+		@SuppressWarnings("unchecked")
 		private void handleRequest(Socket socket, ExecutorService executorService) 
 		{
+		    InputStream in = null;
             try 
             {
-            	System.out.println("JXTAPeerInterface: connection received");
-            	
-            	InputStream in = socket.getInputStream();
-            	//OutputStream out = socket.getOutputStream();
-
-                //get the data through the protocol
-            	Object msg = null;
+            	in = socket.getInputStream();
             	try
             	{
-            		msg = protocol.readMessage(in);
+            		final Message msg = new Message((Map<String, Object>)protocol.readMessage(in));            		
+                    executorService.execute(new Runnable()
+                    {
+                        public void run() { messageHandler.handleMessage(msg); }
+                    }
+                    );            		
             	}
             	catch(Exception ex)
                 {
+            		// TODO: where are those messages reported? Do we simply send a 
+            		// NotUnderstand response?
                 	ex.printStackTrace();
+                	return;
                 }
-                System.out.println("received: " + msg.toString());
-                if (tasks.containsKey(getPart(msg, SEND_TASK_ID)))
-                {
-                	tasks.get(getPart(msg, SEND_TASK_ID)).handleMessage(msg);
-                }
-                else
-                {
-                    // variable 'x' needed because of Java 5 compiler bug
-                    Object x = getPart(msg, PERFORMATIVE);                     
-	                Pair<Performative, String> key = new Pair<Performative, String>(
-	                		Performative.valueOf(x.toString()), 
-	                		(String)getPart(msg, ACTION));
-	                if (taskFactories.containsKey(key))
-	                {
-	                	TaskActivity<?> task = taskFactories.get(key).newTask(thisPeer, 
-	                	                                                      msg);
-	                	executorService.execute(task);
-	                }
-                }
-                in.close();
-                socket.close();                
-                System.out.println("JXTAPeerInterface: connection closed");
             } 
             catch (Exception ie) 
             {
-                ie.printStackTrace();
+                ie.printStackTrace(System.err);
+            }
+            finally
+            {
+                if (in != null) try { in.close(); } catch (Throwable t) { t.printStackTrace(System.err); }
+                try { socket.close(); } catch (Throwable t) { t.printStackTrace(System.err); }                                
             }
         }
 
@@ -232,41 +212,6 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		{
 			handleRequest(socket, executorService);
 		}
-	}
-
-	public void registerTask(UUID taskId, TaskActivity<?> task)
-	{
-		tasks.put(taskId, task);
-	}
-
-	public void unregisterTask(UUID taskId)
-	{
-	    tasks.remove(taskId);
-	}
-
-	public Future<Boolean> execute(PeerRelatedActivity activity)
-	{
-	    return executorService.submit(activity);
-	}
-
-
-	public void registerTaskFactory(Performative performative, String action, TaskFactory taskFactory)
-	{
-		Pair<Performative, String> key = new Pair<Performative, String>(performative, action);
-		
-		taskFactories.put(key, taskFactory);
-		
-	}
-
-	public void setAtomInterests(HGAtomPredicate pred)
-	{
-		atomInterests = pred;
-		
-	}
-
-	public HGAtomPredicate getAtomInterests()
-	{
-		return atomInterests;
 	}
 
 	public PeerNetwork getPeerNetwork()

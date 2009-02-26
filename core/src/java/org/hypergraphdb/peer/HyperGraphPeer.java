@@ -23,11 +23,10 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
-import org.hypergraphdb.peer.workflow.AffirmIdentityTask;
-import org.hypergraphdb.peer.workflow.CatchUpTaskClient;
-import org.hypergraphdb.peer.workflow.GetInterestsTask;
-import org.hypergraphdb.peer.workflow.PublishInterestsTask;
-import org.hypergraphdb.query.HGAtomPredicate;
+import org.hypergraphdb.peer.workflow.ActivityManager;
+import org.hypergraphdb.peer.workflow.AffirmIdentity;
+import org.hypergraphdb.peer.workflow.replication.CatchUpTaskClient;
+import org.hypergraphdb.peer.workflow.replication.GetInterestsTask;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.TwoWayMap;
 
@@ -54,6 +53,11 @@ public class HyperGraphPeer
 	 * Object used for communicating with other peers
 	 */
 	private PeerInterface peerInterface = null;
+	
+	/**
+	 * Manage the logic and scheduling of peer activities.
+	 */
+	private ActivityManager activityManager = null;
 		
 	/**
 	 * The local database of the peer. The peer will be listening on any changes to the local database and replciate them accordingly.
@@ -92,6 +96,7 @@ public class HyperGraphPeer
 			executorService = Executors.newCachedThreadPool();
 		else
 			executorService = Executors.newFixedThreadPool(threadPoolSize.intValue());
+		activityManager = new ActivityManager(this);		
 	}
 	
 	/**
@@ -275,6 +280,7 @@ public class HyperGraphPeer
 				{
 					status = true;					
 					peerInterface.run(executorService);
+					activityManager.start();
 					
 	                //configure services
 	                if (tempGraph != null)	                
@@ -302,8 +308,8 @@ public class HyperGraphPeer
                        {
                            public void peerJoined(Object target)
                            {
-                               AffirmIdentityTask task = new AffirmIdentityTask(HyperGraphPeer.this, null, target);
-                               task.run();
+                               AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
+                               activityManager.initiateActivity(task);
                            }
                            public void peerLeft(Object target) 
                            { 
@@ -356,13 +362,13 @@ public class HyperGraphPeer
 	 * 
 	 * @param pred An atom predicate that needs to be matched by an atom in order for any operations on the atom to be sent to this peer.
 	 */
-	public void setAtomInterests(HGAtomPredicate pred)
+/*	public void setAtomInterests(HGAtomPredicate pred)
 	{
 		peerInterface.setAtomInterests(pred);
 		
 		PublishInterestsTask publishTask = new PublishInterestsTask(this, pred);
 		publishTask.run();
-	}
+	} */
 	
 
 	
@@ -446,6 +452,11 @@ public class HyperGraphPeer
 		return tempGraph;
 	}
 
+	public ActivityManager getActivityManager()
+	{
+	    return activityManager;
+	}
+	
 	public PeerInterface getPeerInterface()
 	{
 		return peerInterface;

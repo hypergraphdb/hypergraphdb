@@ -37,6 +37,5 @@ public abstract class PeerRelatedActivity implements Callable<Boolean>
 	public void setMessage(Object msg)
 	{
 		this.msg = msg;
-	}
-	
+	}	
 }

@@ -2,9 +2,6 @@ package org.hypergraphdb.peer.workflow;
 
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
-
-import org.hypergraphdb.peer.PeerInterface;
-import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.protocol.Performative;
 
 /**
@@ -25,23 +22,21 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 {
 	public enum State {Started, Proposed, Accepted, Rejected, Confirmed, Disconfirmed, Done};
 
-	public ProposalConversation(PeerRelatedActivity sendActivity, PeerInterface peerInterface, Object msg)
+	public ProposalConversation(TaskActivity<?> task, Object peer)
 	{
-		super(sendActivity, peerInterface, msg, State.Started, State.Done);
+		super(task, peer, State.Started, State.Done);
 		
 		//serverside flow
 		registerPerformativeTransition(State.Proposed, Performative.Accept, State.Accepted);
 
 		//client side flow
-		registerPerformativeTransition(State.Started, Performative.Proposal, State.Proposed);
-		
+		registerPerformativeTransition(State.Started, Performative.Propose, State.Proposed);		
 		registerPerformativeTransition(State.Accepted, Performative.Confirm, State.Confirmed);
 		registerPerformativeTransition(State.Accepted, Performative.Disconfirm, State.Disconfirmed);
-
 	}
 
 	/**
-	 * called by server task when a proposal is to be sent
+	 * Server-side behavior: send a proposal.
 	 * @param msg
 	 * @return
 	 */
@@ -49,10 +44,10 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	{		
 		if (compareAndSetState(State.Started, State.Proposed))
 		{
-			combine(msg, struct(PERFORMATIVE, Performative.Proposal));
+			combine(msg, struct(PERFORMATIVE, Performative.Propose));
 
-			setMessage(msg);
-			sendMessage();
+//			setMessage(msg);
+			say(msg);
 			return true;
 		}
 		return false;
@@ -68,8 +63,8 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 		{
 			combine(msg, struct(PERFORMATIVE, Performative.Accept));
 
-			setMessage(msg);
-			sendMessage();
+//			setMessage(msg);
+			say(msg);
 			
 			return true;
 		}
@@ -101,8 +96,8 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 		{
 			combine(msg, struct(PERFORMATIVE, Performative.Confirm));
 
-			setMessage(msg);
-			sendMessage();
+//			setMessage(msg);
+			say(msg);
 
 			return true;
 		}

@@ -12,7 +12,7 @@ import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.StorageService.Operation;
 import org.hypergraphdb.peer.workflow.QueryTaskClient;
-import org.hypergraphdb.peer.workflow.RememberTaskClient;
+import org.hypergraphdb.peer.workflow.replication.RememberTaskClient;
 import org.hypergraphdb.query.HGQueryCondition;
 
 /**
@@ -47,8 +47,8 @@ public class JXTARemotePeer extends RemotePeer
                                                         getLocalPeer().getTempDb(),
                                                         targets.iterator(),
                                                         condition, getObjects);
-        queryTask.run();
-
+        
+        getLocalPeer().getActivityManager().initiateActivity(queryTask);        
         return queryTask.getResult();
     }
 
@@ -67,7 +67,7 @@ public class JXTARemotePeer extends RemotePeer
                                                         getLocalPeer().getTempDb(),
                                                         targets.iterator(),
                                                         handle);
-        queryTask.run();
+        getLocalPeer().getActivityManager().initiateActivity(queryTask);
 
         ArrayList<?> result = queryTask.getResult();
 

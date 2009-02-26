@@ -1,10 +1,11 @@
 package org.hypergraphdb.peer.log;
 
-import org.hypergraphdb.peer.StorageService;
-
 /**
  * @author ciprian.costa
  * Ensures ordering on events originated for the current peer.
+ * 
+ * TODO: this seems like implementation of a logical clock, should be renamed and
+ * it's behavior/usage documented...
  */
 public class Timestamp implements Comparable<Timestamp>
 {

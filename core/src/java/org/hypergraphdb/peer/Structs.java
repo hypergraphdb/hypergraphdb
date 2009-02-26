@@ -698,6 +698,12 @@ public class Structs
 		return l;
 	}
 	
+	public static Message combine(Message msg, Map<String, Object> s)
+	{
+	    msg.putAll(s);
+	    return msg;
+	}
+	
 	/**
 	 * <p>
 	 * Merge the second argument into the first and return the latter. If the 
@@ -708,7 +714,7 @@ public class Structs
 	 * @param o2 The source of the merge.
 	 * @return The possibly modified <code>o1</code>.
 	 */
-	public static Object combine(Object o1, Object o2)
+	public static <T> T combine(T o1, T o2)
 	{
 		if (o1 instanceof Map)
 		{

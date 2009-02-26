@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -22,13 +23,8 @@ import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.query.HGQueryCondition;
 
-public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
+public class QueryTaskClient extends Activity
 {
-    protected enum State
-    {
-        Started, Done
-    }
-
     private AtomicInteger count = new AtomicInteger(1);
 
     private PeerFilterEvaluator evaluator = null;
@@ -43,17 +39,15 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
 
     public QueryTaskClient(HyperGraphPeer thisPeer, HyperGraph tempGraph)
     {
-        super(thisPeer, State.Started, State.Done);
-
+        super(thisPeer);
         this.tempGraph = tempGraph;
-
     }
 
     public QueryTaskClient(HyperGraphPeer thisPeer, HyperGraph tempGraph,
                            PeerFilterEvaluator evaluator,
                            HGQueryCondition cond, boolean getObject)
     {
-        super(thisPeer, State.Started, State.Done);
+        super(thisPeer);
 
         this.evaluator = evaluator;
         this.handle = null;
@@ -66,7 +60,7 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
                            Iterator<Object> targets, HGQueryCondition cond,
                            boolean getObject)
     {
-        super(thisPeer, State.Started, State.Done);
+        super(thisPeer);
 
         this.targets = targets;
         this.handle = null;
@@ -78,7 +72,7 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
     public QueryTaskClient(HyperGraphPeer thisPeer, HyperGraph tempGraph,
                            PeerFilterEvaluator evaluator, HGHandle handle)
     {
-        super(thisPeer, State.Started, State.Done);
+        super(thisPeer);
 
         this.evaluator = evaluator;
         this.handle = handle;
@@ -89,7 +83,7 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
     public QueryTaskClient(HyperGraphPeer thisPeer, HyperGraph tempGraph,
                            Iterator<Object> targets, HGHandle handle)
     {
-        super(thisPeer, State.Started, State.Done);
+        super(thisPeer);
 
         this.targets = targets;
         this.handle = handle;
@@ -111,8 +105,7 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
         }
     }
 
-    @Override
-    protected void startTask()
+    public void initiate()
     {
         PeerRelatedActivityFactory activityFactory = getPeerInterface().newSendActivityFactory();
         Iterator<Object> it = getTargets();
@@ -126,9 +119,8 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
 
         if (count.decrementAndGet() == 0)
         {
-            setState(State.Done);
+            getState().assign(WorkflowState.Completed);
         }
-
     }
 
     private void sendMessage(PeerRelatedActivityFactory activityFactory,
@@ -136,7 +128,7 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
     {
         count.incrementAndGet();
 
-        Object msg = createMessage(Performative.Request, QUERY, getTaskId());
+        Object msg = createMessage(Performative.Request, QUERY, getId());
         combine(msg, struct(CONTENT, struct(SLOT_QUERY,
                                             (handle == null) ? cond : handle,
                                             SLOT_GET_OBJECT, getObject)));
@@ -145,10 +137,10 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
         activity.setTarget(target);
         activity.setMessage(msg);
 
-        getPeerInterface().execute(activity);
+        getThisPeer().getExecutorService().submit(activity); // TODO: what about the result??
     }
 
-    public void handleMessage(Object msg)
+    public void handleMessage(Message msg)
     {
         // get result
         ArrayList<?> reply = (ArrayList<?>) getPart(msg, CONTENT);
@@ -165,12 +157,11 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
             {
                 result.add(elem);
             }
-
         }
 
         if (count.decrementAndGet() == 0)
         {
-            setState(State.Done);
+            getState().assign(WorkflowState.Completed);
         }
     }
 
@@ -183,5 +174,4 @@ public class QueryTaskClient extends TaskActivity<QueryTaskClient.State>
     {
         this.result = result;
     }
-
 }

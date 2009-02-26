@@ -1,19 +1,34 @@
 package org.hypergraphdb.peer.protocol;
 
 /**
- * @author Cipri Costa
- * This will be refactored to become an open set.
+ * <p>
+ * The FIPA standard communicative acts. 
+ * </p>
+ * 
+ * @author Cipri Costa and Borislav Iordanov
  */
 public enum Performative
 {
-	CallForProposal, 
-	Proposal, 
+	Accept,
+	AcceptProposal,
+	Agree,
+	CallForProposal,
+	Confirm,
+	Disconfirm,
+	Failure, 
 	Inform, 
-	InformRef, 
-	Accept, 
-	RejectProposal, 
-	Confirm, 
-	Disconfirm, 
+	InformIf,
+	InformRef,
+	NotUnderstood,
+	Propagate,
+	Propose,
+	Proxy,
+	QueryIf,
+	QueryRef,
+	Refuse,	
+	RejectProposal,	  
 	Request,
-	NotUnderstood
+	RequestWhen,
+	RequestWhenever,
+	Subscribe
 }

@@ -1,15 +1,8 @@
 package org.hypergraphdb.peer;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import org.hypergraphdb.peer.protocol.Performative;
-import org.hypergraphdb.peer.workflow.TaskActivity;
-import org.hypergraphdb.peer.workflow.TaskFactory;
-import org.hypergraphdb.query.HGAtomPredicate;
-
 
 /**
  *
@@ -23,6 +16,15 @@ import org.hypergraphdb.query.HGAtomPredicate;
  */
 public interface PeerInterface
 {
+    /**
+     * <p>
+     * There is only one <code>MessageHandler</code> for incoming message through
+     * a given <code>PeerInterface</code> and this method sets it for this one.
+     * </p>
+     * @param message
+     */
+    void setMessageHandler(MessageHandler message);
+    
 	/**
 	 * Because implementors can be of any type, the configuration is an Object, no constraints 
 	 * to impose here as there is no common set of configuration properties.
@@ -83,40 +85,4 @@ public interface PeerInterface
 	void broadcast(Object msg);
 
 	Future<Boolean> send(Object networkTarget, Object msg);
-	
-	void registerTaskFactory(Performative performative, String action, TaskFactory convFactory);
-
-
-	/**
-	 * Register a task. All subsequent messages that have this task id are redirected to the 
-	 * registered task. The task will have to decide if they are part of an existing conversation 
-	 * or if a conversation has to be created for the message.
-	 * 
-	 * @param taskId
-	 * @param task
-	 */
-	void registerTask(UUID taskId, TaskActivity<?> task);
-	
-	/**
-	 * Remove a task managed by this peer interface. This should be generally
-	 * done after a task reaches its "end" state. Once a task is removed from the
-	 * peer interface, incoming messages will no longer be associated with it.
-	 * 
-	 * @param taskId
-	 */
-	void unregisterTask(UUID taskId);
-	
-	/**
-	 * <p>
-	 * Run the given activity. This method can be called only while the peer
-	 * interface is currently running. The activity will be executed using
-	 * the <code>ExecutorService</code> passed to the <code>run</code> method.
-	 * </p>
-	 * 
-	 * @param activity The activity to execute. 
-	 */
-	Future<Boolean> execute(PeerRelatedActivity activity);
-
-	void setAtomInterests(HGAtomPredicate pred);
-	HGAtomPredicate getAtomInterests();
 }

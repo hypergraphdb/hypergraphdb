@@ -2,6 +2,11 @@ package org.hypergraphdb.peer;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
 
+import java.util.Map;
+import java.util.UUID;
+
+import org.hypergraphdb.peer.protocol.Performative;
+
 
 /**
  * @author Cipri Costa
@@ -10,16 +15,26 @@ import static org.hypergraphdb.peer.Structs.*;
  */
 public class Messages
 {
-	public static Object createMessage(Object performative, Object action, Object taskId)
+	public static Message createMessage(Performative performative, String action, UUID activityId)
 	{
-		return struct(PERFORMATIVE, performative, ACTION, action, SEND_TASK_ID, taskId);
+		return new Message(struct(PERFORMATIVE, performative, 
+		                          ACTIVITY_TYPE, action, 
+		                          CONVERSATION_ID, activityId));
 	}
 	
-	public static Object getReply(Object msg)
+	public static Message getReply(Message msg)
 	{
-		return struct(ACTION, getPart(msg, ACTION),
-				CONVERSATION_ID, getPart(msg, CONVERSATION_ID),
-				RECEIVED_TASK_ID, getPart(msg, SEND_TASK_ID),
-				SEND_TASK_ID, getPart(msg, SEND_TASK_ID));
+		Map<String, Object> s = struct(ACTIVITY_TYPE, getPart(msg, ACTIVITY_TYPE),
+		                               CONVERSATION_ID, getPart(msg, CONVERSATION_ID));
+		String replyWith = getPart(msg, REPLY_WITH);
+		if (replyWith != null)
+		    return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
+		else
+		    return new Message(s);
+	}
+	
+	public static String getSender(Message msg)
+	{
+	    return getPart(msg, REPLY_TO);	  
 	}
 }

@@ -33,16 +33,11 @@ public abstract class AbstractActivity<StateType> implements Runnable
      */
     private HashMap<StateType, ArrayList<ActivityStateListener>> stateListeners = new HashMap<StateType, ArrayList<ActivityStateListener>>();
 
-    private StateType startState;
-    private StateType endState;
+    protected final StateType startState;
+    protected final StateType endState;
 
     private CountDownLatch latch;
     protected CountDownLatch stateChangedLatch;
-
-    public AbstractActivity()
-    {
-        this(null, null);
-    }
 
     public AbstractActivity(StateType start, StateType end)
     {
@@ -51,18 +46,24 @@ public abstract class AbstractActivity<StateType> implements Runnable
     }
 
     /**
+     * <p>
+     * Called by the framework to initiate a new activity. This method is only invoked
+     * at the peer initiating the activity. Once an activity has been initiated, its state
+     * changes to <code>start</code>.   
+     * </p> 
+     */
+    protected abstract void initiate();
+    
+    /**
      * Overriden by implementors to do the actual work
      */
     protected abstract void doRun();
-
+    
     public void run()
     {
         latch = new CountDownLatch(1);
         stateChangedLatch = new CountDownLatch(1);
-        if (startState != null)
-            setState(startState);
         doRun();
-
         try
         {
             latch.await();
@@ -73,7 +74,7 @@ public abstract class AbstractActivity<StateType> implements Runnable
             e.printStackTrace();
         }
     }
-
+    
     /**
      * returns true if the end state was set and is the current state
      * 
@@ -81,17 +82,13 @@ public abstract class AbstractActivity<StateType> implements Runnable
      */
     protected boolean isStopped()
     {
-        if ((endState != null) && endState.equals(getState()))
-        {
-            return true;
-        }
-        else
-            return false;
+        return endState.equals(getState());
     }
 
     protected void afterStateChanged(StateType newValue)
     {
-        if ((endState != null) && (latch != null) && endState.equals(newValue))
+        callStateListeners();
+        if (latch != null && endState.equals(newValue))
         {
             System.out.println("latch released");
             latch.countDown();
@@ -154,7 +151,7 @@ public abstract class AbstractActivity<StateType> implements Runnable
      * implementors need to decide when they are ready to report the state
      * change to interested objects.
      */
-    protected void stateChanged()
+    private void callStateListeners()
     {
         StateType newState = state.get();
         ArrayList<ActivityStateListener> list = stateListeners.get(newState);
@@ -165,5 +162,21 @@ public abstract class AbstractActivity<StateType> implements Runnable
                 listener.stateChanged(newState, this);
             }
         }
+    }
+ 
+    /**
+     * <p>Return the object indicating a starting state for this activity.</p> 
+     */
+    public StateType getStartState()
+    {
+        return startState;
+    }
+
+    /**
+     * <p>Return the object indicating an ending state for this activity.</p> 
+     */    
+    public StateType getEndState()
+    {
+        return endState;
     }
 }
