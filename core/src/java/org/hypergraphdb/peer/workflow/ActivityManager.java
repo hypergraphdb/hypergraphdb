@@ -258,19 +258,21 @@ public class ActivityManager implements MessageHandler
                 msgAttrs.put("performative", onMessage.performative());
             }
             
+            Transition t = new MethodCallTransition(m);
             for (String from : aFromState.value())
             {
                 WorkflowStateConstant fromState = WorkflowState.toStateConstant(from);
                 if (msgAttrs != null)
                     map.setTransition(fromState, 
                                       msgAttrs, 
-                                      new MethodCallTransition(m));
+                                      t);
                 if (atActivity != null)
                 {
                     for (String to : onState.value())                        
                         map.setTransition(fromState, 
                                           atActivity.value(), 
-                                          WorkflowState.toStateConstant(to));
+                                          WorkflowState.toStateConstant(to),
+                                          t);
                 }
             }
         }
@@ -474,6 +476,9 @@ public class ActivityManager implements MessageHandler
             throws InterruptedException, ExecutionException, TimeoutException
         {
             waiting = true;
+            // TODO: if we time out, we must clear waiting flag, if no other
+            // threads are waiting...so we need a difference mechanism to detect
+            // if there's a wait on the future!
             latch.await(timeout, unit);
             return result;
         }

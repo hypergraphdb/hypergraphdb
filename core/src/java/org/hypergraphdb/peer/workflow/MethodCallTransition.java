@@ -36,4 +36,9 @@ public class MethodCallTransition implements Transition
     {
         return method;
     }
+    
+    public String toString()
+    {
+        return "MethodCallTransition:" + method;
+    }
 }

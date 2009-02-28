@@ -6,8 +6,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * <p>
@@ -66,8 +64,7 @@ public class WorkflowState
     public static final WorkflowStateConstant Completed = makeStateConstant("Completed");
     public static final WorkflowStateConstant Failed = makeStateConstant("Failed");
     public static final WorkflowStateConstant Canceled = makeStateConstant("Canceled");
-    
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+        
     protected AtomicReference<String> name = new AtomicReference<String>(Limbo.name.get());
     protected List<StateListener> listeners = null;
 
