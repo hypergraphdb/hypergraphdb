@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -50,7 +51,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
     /**
      * The last message sent or received.
      */
-    private Object msg;
+    private Message msg;
 
     private Map<Pair<StateType, Performative>, StateType> performativeTransitions = 
         new HashMap<Pair<StateType, Performative>, StateType>();
@@ -80,7 +81,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
                 fromState, performative), toState);
     }
 
-    public void handleIncomingMessage(Object msg)
+    public void handleIncomingMessage(Message msg)
     {
         compareAndSetState(null, startState);
 
@@ -116,7 +117,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
         task.getPeerInterface().send(peer, msg);
     }
 
-    public Object getMessage()
+    public Message getMessage()
     {
         return msg;
     }

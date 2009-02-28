@@ -6,17 +6,18 @@ import org.hypergraphdb.peer.BootstrapPeer;
 import org.hypergraphdb.peer.HGDBOntology;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.replication.CatchUpTaskServer;
+import org.hypergraphdb.peer.replication.GetInterestsTask;
+import org.hypergraphdb.peer.replication.PublishInterestsTask;
+import org.hypergraphdb.peer.replication.RememberTaskServer;
+import org.hypergraphdb.peer.replication.Replication;
 import org.hypergraphdb.peer.workflow.QueryTaskServer;
-import org.hypergraphdb.peer.workflow.replication.CatchUpTaskServer;
-import org.hypergraphdb.peer.workflow.replication.GetInterestsTask;
-import org.hypergraphdb.peer.workflow.replication.PublishInterestsTask;
-import org.hypergraphdb.peer.workflow.replication.RememberTaskServer;
-import org.hypergraphdb.query.AnyAtomCondition;
 
 public class ReplicationBootstrap implements BootstrapPeer
 {
 	public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
 	{
+        peer.getActivityManager().registerActivityClass(PublishInterestsTask.class);	    
 /*		peer.getPeerInterface().registerTaskFactory(Performative.CallForProposal, 
 												    HGDBOntology.REMEMBER_ACTION, 
 												    new RememberTaskServer.RememberTaskServerFactory());
@@ -32,7 +33,10 @@ public class ReplicationBootstrap implements BootstrapPeer
 		peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
 													HGDBOntology.ATOM_INTEREST, 
 													new GetInterestsTask.GetInterestsFactory()); */
-//    	peer.setAtomInterests(new AnyAtomCondition());                
-    	peer.catchUp();          				
+
+	    Replication replication = new Replication(peer);
+	    peer.getObjectContext().put(Replication.class.getName(), replication);
+	    // TODO: read atom interests from configuration....	   
+    	replication.catchUp();          				
 	}
 }

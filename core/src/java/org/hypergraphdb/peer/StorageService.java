@@ -13,7 +13,7 @@ import org.hypergraphdb.event.HGAtomReplacedEvent;
 import org.hypergraphdb.event.HGEvent;
 import org.hypergraphdb.event.HGListener;
 import org.hypergraphdb.peer.log.Log;
-import org.hypergraphdb.peer.workflow.replication.RememberTaskClient;
+import org.hypergraphdb.peer.replication.RememberTaskClient;
 
 /**
  * @author ciprian.costa

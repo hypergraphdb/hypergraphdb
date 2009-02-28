@@ -1,4 +1,4 @@
-package org.hypergraphdb.peer.workflow;
+package org.hypergraphdb.peer.replication;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -13,6 +13,7 @@ import static org.hypergraphdb.peer.HGDBOntology.*;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
@@ -22,6 +23,11 @@ import org.hypergraphdb.peer.log.LogEntry;
 import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.workflow.AbstractActivity;
+import org.hypergraphdb.peer.workflow.Conversation;
+import org.hypergraphdb.peer.workflow.ProposalConversation;
+import org.hypergraphdb.peer.workflow.TaskActivity;
+import org.hypergraphdb.peer.workflow.ProposalConversation.State;
 
 /**
  * @author Cipri Costa
@@ -93,7 +99,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		batch.add(new RememberEntity(null, null, entry.getOperation()));
 	}
 
-	protected void startTask()
+	protected void initiate()
 	{		
 		//initialize
 		registerConversationHandler(State.Started, ProposalConversation.State.Proposed, "handleProposal", State.HandleProposal);
@@ -183,21 +189,13 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		activity.setTarget(target);
 		activity.setMessage(msg);
 		
-		getPeerInterface().execute(activity);
+		getThisPeer().getExecutorService().submit(activity);
 
 	}
-	/* (non-Javadoc)
-	 * @see org.hypergraphdb.peer.workflow.TaskActivity#createNewConversation(org.hypergraphdb.peer.protocol.Message)
-	 * 
-	 * This function is called when the server started a conversation and the conversation has to be started on the cleint too.
-	 */
-	protected Conversation<?> createNewConversation(Object msg)
-	{
-		//TODO refactor
-		PeerRelatedActivityFactory activityFactory = getPeerInterface().newSendActivityFactory();
-		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 
-		return new ProposalConversation(activity, getPeerInterface(), msg);
+	protected Conversation<?> createNewConversation(Message msg)
+	{
+		return new ProposalConversation(this, getSender(msg));
 	}
 	
 	/**
@@ -207,6 +205,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	 * @param fromActivity
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public State handleProposal(AbstractActivity<?> fromActivity)
 	{
 		System.out.println("RememeberTaskClient: handleProposal");
@@ -227,7 +226,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 						CONTENT, (entry.getOperation() == StorageService.Operation.Remove) ? entry.getHandle() : object(entry.getData()))
 				);
 			}
-			combine(reply, struct(CONTENTS, contents));
+			combine(reply, struct(CONTENT, contents));
 						
 /*			if (rememberEntity.getOperation() == StorageService.Operation.Remove)
 			{

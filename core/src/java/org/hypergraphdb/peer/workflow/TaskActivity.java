@@ -9,6 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.hypergraphdb.peer.HGDBOntology;
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -198,7 +199,7 @@ public abstract class TaskActivity<StateType>
      * @param msg The message just received.
      * 
      */
-    public void handleMessage(Object msg)
+    public void handleMessage(Message msg)
     {
         System.out.println("TaskActivity: handleMessage ");
         Conversation<?> conversation = null;
@@ -311,7 +312,7 @@ public abstract class TaskActivity<StateType>
      * @return A newly created <code>Conversation</code>. The default implementation
      * returns <code>null</code>.
      */
-    protected Conversation<?> createNewConversation(Object msg)
+    protected Conversation<?> createNewConversation(Message msg)
     {
         return null;
     }

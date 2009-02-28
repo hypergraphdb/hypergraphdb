@@ -11,8 +11,8 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.StorageService.Operation;
+import org.hypergraphdb.peer.replication.RememberTaskClient;
 import org.hypergraphdb.peer.workflow.QueryTaskClient;
-import org.hypergraphdb.peer.workflow.replication.RememberTaskClient;
 import org.hypergraphdb.query.HGQueryCondition;
 
 /**

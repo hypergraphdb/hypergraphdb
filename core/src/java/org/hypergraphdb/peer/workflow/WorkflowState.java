@@ -65,7 +65,7 @@ public class WorkflowState
     public static final WorkflowStateConstant Failed = makeStateConstant("Failed");
     public static final WorkflowStateConstant Canceled = makeStateConstant("Canceled");
         
-    protected AtomicReference<String> name = new AtomicReference<String>(Limbo.name.get());
+    protected AtomicReference<String> name = new AtomicReference<String>("Limbo".intern());
     protected List<StateListener> listeners = null;
 
     // Cannot change the state to "boundary" values once it's already there.
@@ -101,11 +101,12 @@ public class WorkflowState
      */    
     public synchronized static WorkflowStateConstant makeStateConstant(String name)
     {
-        WorkflowStateConstant result = constantPool.get(name);
-        if (result != null)
+        String interned = name.intern();
+        WorkflowStateConstant result = constantPool.get(interned);
+        if (result == null)
         {
-            result = new WorkflowStateConstant(name.intern());
-            constantPool.put(result.name.get(), result);            
+            result = new WorkflowStateConstant(interned);
+            constantPool.put(interned, result);            
         }
         return result;
     }
@@ -116,7 +117,7 @@ public class WorkflowState
      */
     public synchronized static WorkflowStateConstant toStateConstant(String name)
     {
-        WorkflowStateConstant c = constantPool.get(name);
+        WorkflowStateConstant c = constantPool.get(name.intern());
         if (c == null)
             throw new RuntimeException("Unknown state constant: " + name);
         return c;
@@ -217,9 +218,19 @@ public class WorkflowState
         return name.get() == Started.name.get();
     }
     
+    public void setStarted()
+    {
+        assign(Started);
+    }
+    
     public boolean isCompleted()
     {
         return name.get() == Completed.name.get();
+    }
+    
+    public void setCompleted()
+    {
+        assign(Completed);
     }
     
     public boolean isFailed()
@@ -227,9 +238,19 @@ public class WorkflowState
         return name.get() == Failed.name.get();
     }
     
+    public void setFailed()
+    {
+        assign(Failed);
+    }
+    
     public boolean isCanceled()
     {
         return name.get() == Canceled.name.get();
+    }
+    
+    public void setCanceled()
+    {
+        assign(Canceled);
     }
     
     /**
@@ -238,7 +259,7 @@ public class WorkflowState
     public boolean isFinished()
     {
         return isCompleted() || isFailed() || isCanceled();
-    }
+    }    
     
     public int hashCode()
     {

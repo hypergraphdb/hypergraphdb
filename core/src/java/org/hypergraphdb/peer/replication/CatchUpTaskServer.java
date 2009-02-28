@@ -1,10 +1,11 @@
-package org.hypergraphdb.peer.workflow.replication;
+package org.hypergraphdb.peer.replication;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.log.LogEntry;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.workflow.TaskActivity;
@@ -32,7 +33,7 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
     }
 
     @Override
-    public void handleMessage(Object msg)
+    public void handleMessage(Message msg)
     {
         Timestamp lastTimestamp = (Timestamp) getPart(msg, CONTENT,
                                                       SLOT_LAST_VERSION);

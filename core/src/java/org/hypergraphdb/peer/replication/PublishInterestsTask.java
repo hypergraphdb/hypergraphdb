@@ -1,13 +1,15 @@
-package org.hypergraphdb.peer.workflow;
+package org.hypergraphdb.peer.replication;
 
 import java.util.Iterator;
 import java.util.UUID;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.workflow.Activity;
 import org.hypergraphdb.query.HGAtomPredicate;
 import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
@@ -18,13 +20,10 @@ import static org.hypergraphdb.peer.HGDBOntology.*;
  * A task that is used by a peer to publish its interests in the entire network
  * or by the peer interface to respond to queries about a peers interests.
  */
-public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.State>
+public class PublishInterestsTask extends Activity
 {
 	private HGAtomPredicate pred;
-	private Object sendToTarget = null;
 	
-	protected enum State {Started, Done};
-
 	/**
 	 * Constructor called by current peer to publish his interests
 	 * 
@@ -33,7 +32,7 @@ public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.Stat
 	 */
 	public PublishInterestsTask(HyperGraphPeer thisPeer, HGAtomPredicate pred)
 	{
-		super(thisPeer, State.Started, State.Done);
+		super(thisPeer);
 		this.pred = pred;
 	}
 
@@ -43,58 +42,46 @@ public class PublishInterestsTask extends TaskActivity<PublishInterestsTask.Stat
 	 * @param peer
 	 * @param msg
 	 */
-	public PublishInterestsTask(HyperGraphPeer thisPeer, Object msg)
+	public PublishInterestsTask(HyperGraphPeer thisPeer, UUID id)
 	{
-		super(thisPeer, (UUID)getPart(msg, SEND_TASK_ID), State.Started, State.Done);
-
+		super(thisPeer, id);
 		//start the conversation
-		pred = thisPeer.getPeerInterface().getAtomInterests();
-		sendToTarget = getPart(msg, REPLY_TO);
+		pred = Replication.get(thisPeer).getAtomInterests();
 	}
 
-	protected void startTask()
+	public void initiate()
 	{
 		PeerRelatedActivityFactory activityFactory = getPeerInterface().newSendActivityFactory();
-		if (sendToTarget != null)
-		{
-			//send only to this peer
-			sendMessage(activityFactory, sendToTarget);
-		}else{
-			PeerFilter peerFilter = getPeerInterface().newFilterActivity(null);
+		PeerFilter peerFilter = getPeerInterface().newFilterActivity(null);
 
-			peerFilter.filterTargets();
-			Iterator<Object> it = peerFilter.iterator();
-			while (it.hasNext())
-			{
-				Object target = it.next();
-				sendMessage(activityFactory, target);
-			}			
-		}
-		
-		setState(State.Done);
+		peerFilter.filterTargets();
+		Iterator<Object> it = peerFilter.iterator();
+		while (it.hasNext())
+		{
+			Object target = it.next();
+			sendMessage(activityFactory, target);
+		}			
+		getState().setCompleted();
+	}
+	
+	@Override
+	public void handleMessage(Message msg)
+	{
+		Object sendToTarget = getPart(msg, REPLY_TO);
+		//send only to this peer
+		sendMessage(getPeerInterface().newSendActivityFactory(), sendToTarget);
+        getState().setCompleted();
 	}
 	
 	private void sendMessage(PeerRelatedActivityFactory activityFactory, Object target)
 	{
-		Object msg = createMessage(Performative.Inform, ATOM_INTEREST, getTaskId());
+		Object msg = createMessage(Performative.Inform, ATOM_INTEREST, getId());
 		combine(msg, struct(CONTENT, pred));
 		
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 		activity.setTarget(target);
 		activity.setMessage(msg);
 		
-		getPeerInterface().execute(activity);
-	}
-	
-	public static class PublishInterestsFactory implements TaskFactory
-	{
-		public PublishInterestsFactory()
-		{
-		}
-		public TaskActivity<?> newTask(HyperGraphPeer peerInterface, Object msg)
-		{
-			return new PublishInterestsTask(peerInterface, msg);
-		}
-		
+		getThisPeer().getExecutorService().submit(activity);
 	}
 }

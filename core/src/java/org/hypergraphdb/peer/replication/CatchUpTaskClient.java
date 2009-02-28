@@ -1,4 +1,4 @@
-package org.hypergraphdb.peer.workflow.replication;
+package org.hypergraphdb.peer.replication;
 
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,14 +28,14 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 
 	private Object catchUpWith;
 	private AtomicInteger count = new AtomicInteger(1);
-	private HyperGraphPeer peer;
+	private HyperGraphPeer thisPeer;
 	
-	public CatchUpTaskClient(HyperGraphPeer thisPeer, Object catchUpWith, HyperGraphPeer peer)
+	public CatchUpTaskClient(HyperGraphPeer thisPeer, Object catchUpWith)
 	{
 		super(thisPeer, State.Started, State.Done);
 		
 		this.catchUpWith = catchUpWith;
-		this.peer = peer;
+		this.thisPeer = thisPeer;
 	}
 	
 	@Override
@@ -71,8 +71,8 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 
 		Object msg = createMessage(Performative.Request, CATCHUP, getTaskId());
 		combine(msg, struct(CONTENT, 
-				struct(SLOT_LAST_VERSION, peer.getLog().getLastFrom(target), 
-						SLOT_INTEREST, getPeerInterface().getAtomInterests())));
+				struct(SLOT_LAST_VERSION, thisPeer.getLog().getLastFrom(target), 
+						SLOT_INTEREST, Replication.get(thisPeer).getAtomInterests())));
 				
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 		activity.setTarget(target);

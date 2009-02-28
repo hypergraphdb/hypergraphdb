@@ -1,4 +1,4 @@
-package org.hypergraphdb.peer.workflow.replication;
+package org.hypergraphdb.peer.replication;
 
 
 import java.util.ArrayList;
@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.peer.log.Timestamp;
@@ -53,8 +54,8 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 	}
 
 	@Override
-    protected Conversation<?> createNewConversation(Object msg)
-    {	    
+    protected Conversation<?> createNewConversation(Message msg)
+    { 	   
         return new ProposalConversation(this, getSender(msg));
     }
 	
@@ -79,14 +80,14 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 		System.out.println("RememberActivityServer: acccepting");
 
 		ProposalConversation conv = (ProposalConversation)(AbstractActivity<ProposalConversation.State>)conversation;
-		Object msg = ((Conversation<?>)conversation).getMessage();		
+		Message msg = ((Conversation<?>)conversation).getMessage();		
 		
 		List<Object> handles = new ArrayList<Object>();
 		
 		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, REPLY_TO));//.getReplyTo());
 		if (getThisPeer().getLog().registerRequest(peerId, last_version, current_version))
 		{
-			ArrayList<Object> contents = getPart(msg, CONTENTS);
+			ArrayList<Object> contents = getPart(msg, CONTENT);
 			
 			for(Object content : contents)
 			{

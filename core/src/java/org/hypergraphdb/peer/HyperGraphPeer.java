@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,12 +22,12 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.log.Log;
+import org.hypergraphdb.peer.replication.GetInterestsTask;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
 import org.hypergraphdb.peer.workflow.ActivityManager;
+import org.hypergraphdb.peer.workflow.ActivityResult;
 import org.hypergraphdb.peer.workflow.AffirmIdentity;
-import org.hypergraphdb.peer.workflow.replication.CatchUpTaskClient;
-import org.hypergraphdb.peer.workflow.replication.GetInterestsTask;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.TwoWayMap;
 
@@ -58,7 +59,13 @@ public class HyperGraphPeer
 	 * Manage the logic and scheduling of peer activities.
 	 */
 	private ActivityManager activityManager = null;
-		
+	
+	/**
+	 * A map of arbitrary objects shared between activities.
+	 */
+	private Map<String, Object> context = 
+	    Collections.synchronizedMap(new HashMap<String, Object>());
+	
 	/**
 	 * The local database of the peer. The peer will be listening on any changes to the local database and replciate them accordingly.
 	 */
@@ -345,17 +352,7 @@ public class HyperGraphPeer
 			tempGraph.close();
 		}
 	}
-	
-	/**
-	 * Initializes a catch-up phase. During this all the known peers will be connected to see if any information has been sent to this peer 
-	 * while it was off line. If there is any, the peer should not resume normal operations until this task completes. 
-	 */
-	public void catchUp()
-	{
-		CatchUpTaskClient catchUpTask = new CatchUpTaskClient(this, null, this);
-		catchUpTask.run();
-	}
-	
+		
 	/**
 	 * Announces the interests of this peer. All the other peers that notice this announcement will send any content that matches the given predicate,
 	 * regardless of whether this peer is on or off line.
@@ -369,15 +366,7 @@ public class HyperGraphPeer
 		PublishInterestsTask publishTask = new PublishInterestsTask(this, pred);
 		publishTask.run();
 	} */
-	
 
-	
-
-/*	private HGHandle storeSubgraph(Subgraph subGraph, HGStore store)
-	{
-		return SubgraphManager.store(subGraph, store);
-	}
-*/	
 	//TODO use streams?
 	public Subgraph getSubgraph(HGHandle handle)
 	{
@@ -385,7 +374,9 @@ public class HyperGraphPeer
 		{
 			System.out.println("Handle found in local repository");
 			return new Subgraph(graph, (HGPersistentHandle)handle);			
-		}else {
+		}
+		else 
+		{
 			System.out.println("Handle NOT found in local repository");
 			return null;
 		}
@@ -397,8 +388,17 @@ public class HyperGraphPeer
 	public void updateNetworkProperties()
 	{
 		GetInterestsTask task = new GetInterestsTask(this);
-		
-		task.run();
+		ActivityResult result = null;
+		try
+		{
+		    result = activityManager.initiateActivity(task).get();
+		}
+		catch (Exception ex)
+		{
+		    throw new RuntimeException(ex);
+		}
+		if (result.getException() != null)
+		    HGUtils.throwRuntimeException(result.getException());
 	}
 
 	public Log getLog()
@@ -469,22 +469,48 @@ public class HyperGraphPeer
 	
     public HGPeerIdentity getIdentity(Object networkTarget)
     {
-        return peerIdentities.getY(networkTarget); 
+        synchronized (peerIdentities)
+        {
+            return peerIdentities.getY(networkTarget);
+        }
     }
 	
     public Object getNetworkTarget(HGPeerIdentity id)
     {
-        return peerIdentities.getX(id); 
+        synchronized (peerIdentities)
+        {
+            return peerIdentities.getX(id);
+        }
     }
     
     public void bindIdentityToNetworkTarget(HGPeerIdentity id, Object networkTarget)
     {
-        peerIdentities.add(networkTarget, id);
-        System.out.println("Adding peer " + id + " at " + getIdentity());
+        synchronized (peerIdentities)
+        {            
+            peerIdentities.add(networkTarget, id);
+            System.out.println("Adding peer " + id + " at " + getIdentity());
+        }
     }
     
-    public void unbindNetworkTargetFromIdentity(Object networkTarget)
+    public void unbindNetworkTargetFromIdentity(Object networkTarget)    
     {
-        peerIdentities.removeX(networkTarget);
+        synchronized (peerIdentities)
+        {        
+            peerIdentities.removeX(networkTarget);
+        }            
+    }
+    
+    /**
+     * <p>
+     * The <code>objectContext</code> is just a peer-global map of objects that
+     * are shared between activities. Such objects can be instantiated at configuration
+     * time by <code>BootstrapPeer</code> implementation and/or create, removed or
+     * modified at a later time. The map is merely a convenience way to store and
+     * refer to such peer-wide objects.
+     * </p> 
+     */
+    public Map<String, Object> getObjectContext()
+    {
+        return context;
     }
 }

@@ -243,11 +243,14 @@ public class ActivityManager implements MessageHandler
                    " or neither.");
              
             if (aFromState == null)
+            {
                 if (onMessage != null || atActivity != null || onState != null)
                     throw new RuntimeException("A transition method needs to be annotated with " +
-                                " with a FromState annotation.");                
-            else
-                if (onMessage == null && atActivity == null)
+                                " with a FromState annotation.");
+                else
+                    continue;
+            }
+            else if (onMessage == null && atActivity == null)
                     throw new RuntimeException("A transition method needs to be annotated either " +
                                 " with an OnMessage or both AtActivity and OnActivityState annotations.");
                 
