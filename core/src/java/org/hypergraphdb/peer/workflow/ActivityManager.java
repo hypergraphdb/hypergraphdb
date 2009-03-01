@@ -84,7 +84,7 @@ public class ActivityManager implements MessageHandler
         }
     );
 
-    private Thread schedulerThread = new Thread() 
+    private Thread schedulerThread = new Thread("HGDB Peer Scheduler") 
     {
         public void run()
         {
@@ -103,7 +103,7 @@ public class ActivityManager implements MessageHandler
                     {
                         if (globalQueue.isEmpty())                    
                             Thread.sleep(100); // really? sleep here? that much?                        
-                        globalQueue.add(a);
+                        globalQueue.put(a);
                     }
                 }
                 catch (InterruptedException ex) { break; }
@@ -169,7 +169,16 @@ public class ActivityManager implements MessageHandler
                 finally
                 {
                     parentActivity.lastActionTimestamp = System.currentTimeMillis();
-                    globalQueue.add(findRootActivity(parentActivity));
+                    Activity rootActivity = findRootActivity(parentActivity);
+                    try
+                    {
+                        globalQueue.put(rootActivity);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        // nothing really we can do about this
+                        handleActivityException(rootActivity, ex, null);
+                    }
                 }
             }
          };  
@@ -200,7 +209,16 @@ public class ActivityManager implements MessageHandler
                 finally
                 {
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
-                    globalQueue.add(findRootActivity(activity));
+                    Activity rootActivity = findRootActivity(activity);
+                    try
+                    {
+                        globalQueue.put(rootActivity);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        // nothing really we can do about this
+                        handleActivityException(rootActivity, ex, null);
+                    }
                 }
             }
          };  
@@ -223,7 +241,16 @@ public class ActivityManager implements MessageHandler
                 finally
                 {
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
-                    globalQueue.add(findRootActivity(activity));
+                    Activity rootActivity = findRootActivity(activity);
+                    try
+                    {
+                        globalQueue.put(rootActivity);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        // nothing really we can do about this
+                        handleActivityException(rootActivity, ex, null);
+                    }
                 }                
             }
          };  
@@ -301,7 +328,7 @@ public class ActivityManager implements MessageHandler
      * 
      * @param activityClass The class implementing the activity. 
      */
-    public void registerActivityClass(Class<? extends Activity> activityClass)
+    public void registerActivityType(Class<? extends Activity> activityClass)
     {
         registerActivityType(activityClass.getName(), 
                              activityClass, 
@@ -321,6 +348,12 @@ public class ActivityManager implements MessageHandler
                                      ActivityFactory factory)
     {
         registerActivityType(activityClass.getName(), activityClass, factory);
+    }
+
+    public void registerActivityType(String type, 
+                                     Class<? extends Activity> activityClass) 
+    {
+        registerActivityType(type, activityClass, new DefaultActivityFactory(activityClass));
     }
     
     public void registerActivityType(String type, 
@@ -368,6 +401,16 @@ public class ActivityManager implements MessageHandler
 
             activities.put(activity.getId(), activity);
         }
+        ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
+        activity.initiate();        
+        activity.getState().compareAndAssign(Limbo, Started);        
+        return future;
+    }
+    
+    private ActivityFuture insertNewActivity(final Activity activity, 
+                                             final Activity parentActivity,
+                                             final ActivityListener listener)
+    {
         final CountDownLatch completionLatch = new CountDownLatch(1);
         final ActivityFuture future = new ActivityFuture(activity, completionLatch);
         activity.future = future;        
@@ -404,15 +447,16 @@ public class ActivityManager implements MessageHandler
             });
         }
         else
-            globalQueue.add(activity);
-        activity.initiate();        
-        activity.getState().compareAndAssign(Limbo, Started);        
+        try
+        {
+            globalQueue.put(activity);
+        }
+        catch (InterruptedException ex)
+        {
+            // nothing really we can do about this
+            handleActivityException(activity, ex, null);
+        }
         return future;
-    }
-    
-    public Activity getParent(Activity a)
-    {
-        return parents.get(a);
     }
     
     public void handleMessage(final Message msg)
@@ -430,26 +474,56 @@ public class ActivityManager implements MessageHandler
         ActivityType type = null;
         if (activity == null)
         {
+            Activity parentActivity = null;            
             UUID parentId = getPart(msg, PARENT_SCOPE);
-            Activity parentActivity = activities.get(parentId);
-            if (parentActivity == null)
-                notUnderstood(msg, " unkown parent activity " + parentId);
-            else
-            {    
-                type = activityTypes.get(getPart(msg, ACTIVITY_TYPE));
-                activity = type.getFactory().make(thisPeer, activityId, msg);
-                parents.put(activity, parentActivity);
-                activity.getState().compareAndAssign(Limbo, Started);
+            if (parentId != null)
+            {
+                parentActivity = activities.get(parentId);
+                if (parentActivity == null)
+                {
+                    // Or should we just ignore the fact that we don't know about
+                    // the parent activity here? It seems ok that sub-activities
+                    // could be b/w a different group of peers than the parent
+                    // activities
+                    notUnderstood(msg, " unkown parent activity " + parentId);
+                    return;
+                }
             }
+            type = activityTypes.get(getPart(msg, ACTIVITY_TYPE));
+            if (type == null)
+            {
+                notUnderstood(msg, " unkown activity type '" + type + "'");
+                return;                
+            } 
+            activity = type.getFactory().make(thisPeer, activityId, msg);
+            insertNewActivity(activity, parentActivity, null);
+            activity.getState().compareAndAssign(Limbo, Started);
         }
         else
             type = activityTypes.get(activity.getType());
-        if (activity instanceof FSMActivity)
-            activity.queue.add(makeTransitionAction(type, activity, msg));
-        else
-            activity.queue.add(makeMessageHandleAction(activity, msg));
+        try
+        {
+            if (activity instanceof FSMActivity)
+                activity.queue.put(makeTransitionAction(type, activity, msg));
+            else
+                activity.queue.put(makeMessageHandleAction(activity, msg));
+        }
+        catch (InterruptedException ex)
+        {
+            // Main message handling thread is being interrupted, we are probably shutting the application
+            // down, so nothing much to do...
+            handleActivityException(activity, ex, msg);
+        }
     }
     
+    public Activity getParent(Activity a)
+    {
+        return parents.get(a);
+    }
+    
+    //-------------------------------------------------------------------------
+    // 
+    //
     class ActivityFuture implements Future<ActivityResult>
     {
         ActivityResult result;

@@ -282,12 +282,15 @@ public class HyperGraphPeer
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(this);
-				
+
 				if (peerInterface.configure(configuration))
 				{
-					status = true;					
+					status = true;
+					
+					// the order of the following 3 statements is important
+	                activityManager.start();
+		            peerInterface.setMessageHandler(activityManager);
 					peerInterface.run(executorService);
-					activityManager.start();
 					
 	                //configure services
 	                if (tempGraph != null)	                

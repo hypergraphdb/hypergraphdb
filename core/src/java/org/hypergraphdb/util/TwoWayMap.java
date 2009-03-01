@@ -4,6 +4,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * <p>
+ * A bi-directional map <code>X <-> Y</code>. For lack of better terms
+ * (yes, we considered "domain" and "range") the map is between a set of 
+ * Xs and a set of Ys.
+ * </p>
+ * 
+ * <p>
+ * Note that this class is <b>not</b> thread-safe. 
+ * </p>
+ * 
+ * @author Borislav Iordanov
+ *
+ * @param <X>
+ * @param <Y>
+ */
 public class TwoWayMap<X,Y>
 {
 	private Map<X,Y> xtoy = new HashMap<X,Y>();

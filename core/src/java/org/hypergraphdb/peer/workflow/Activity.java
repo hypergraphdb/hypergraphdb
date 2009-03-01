@@ -64,7 +64,7 @@ public abstract class Activity
     /**
      * The current state of the activity
      */
-    private WorkflowState state;
+    private WorkflowState state = WorkflowState.makeState();
 
     protected HyperGraphPeer getThisPeer()
     {

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.workflow.Activity;
 
 
 /**
@@ -15,10 +16,15 @@ import org.hypergraphdb.peer.protocol.Performative;
  */
 public class Messages
 {
-	public static Message createMessage(Performative performative, String action, UUID activityId)
+    public static Message createMessage(Performative performative, Activity activity)
+    {
+        return createMessage(performative, activity.getType(), activity.getId());
+    }
+    
+	public static Message createMessage(Performative performative, String type, UUID activityId)
 	{
 		return new Message(struct(PERFORMATIVE, performative, 
-		                          ACTIVITY_TYPE, action, 
+		                          ACTIVITY_TYPE, type, 
 		                          CONVERSATION_ID, activityId));
 	}
 	

@@ -15,6 +15,8 @@ import org.hypergraphdb.peer.Message;
 
 public class AffirmIdentity extends FSMActivity
 {
+    public static final String TYPE_NAME = "affirm-identity";
+    
     Object target = null;
     AtomicInteger count = null;
     
@@ -54,11 +56,15 @@ public class AffirmIdentity extends FSMActivity
         this.target = target;
     }
     
+    public String getType()
+    {
+        return TYPE_NAME;        
+    }
+    
     public void initiate()
     {
-        Object inform = combine(createMessage(Inform, 
-                                              AFFIRM_IDENTITY, 
-                                              getId()),                                              
+        Object inform = combine(createMessage(Inform,
+                                              this),                                              
                                 struct(CONTENT, 
                                        makeIdentityStruct(getThisPeer().getIdentity())));
         if (target == null)
@@ -68,7 +74,7 @@ public class AffirmIdentity extends FSMActivity
     }
 
     @FromState("Started")
-    @OnMessage(performative="Inform}")
+    @OnMessage(performative="Inform")
     @PossibleOutcome("Completed")
     public WorkflowState onInform(Message msg)
     {
@@ -89,7 +95,7 @@ public class AffirmIdentity extends FSMActivity
     }
 
     @FromState("Started")
-    @OnMessage(performative="Confirm}")
+    @OnMessage(performative="Confirm")
     @PossibleOutcome("Completed")    
     public WorkflowState onConfirm(Message msg)
     {
@@ -99,7 +105,7 @@ public class AffirmIdentity extends FSMActivity
     }
     
     @FromState("Started")
-    @OnMessage(performative="Disconfirm}")
+    @OnMessage(performative="Disconfirm")
     @PossibleOutcome("Failed")    
     public WorkflowState onDisconfirm(Message msg)
     {

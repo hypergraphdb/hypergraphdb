@@ -887,7 +887,6 @@ public class DefaultJXTANetwork implements JXTANetwork
                     }
                 }
             }
-
         }
 
     }

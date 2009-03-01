@@ -17,7 +17,7 @@ public class ReplicationBootstrap implements BootstrapPeer
 {
 	public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
 	{
-        peer.getActivityManager().registerActivityClass(PublishInterestsTask.class);	    
+        peer.getActivityManager().registerActivityType(PublishInterestsTask.class);	    
 /*		peer.getPeerInterface().registerTaskFactory(Performative.CallForProposal, 
 												    HGDBOntology.REMEMBER_ACTION, 
 												    new RememberTaskServer.RememberTaskServerFactory());

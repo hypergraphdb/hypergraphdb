@@ -34,6 +34,16 @@ public class HGUtils
 		return s == null || s.length() == 0;
 	}
 	
+	public static RuntimeException throwRuntimeException(Throwable t)
+	{
+	    if (t instanceof RuntimeException)
+	        throw (RuntimeException)t;
+	    else if (t instanceof Error)
+	        throw (Error)t;
+	    else
+	        throw new RuntimeException(t);
+	}
+	
     public static Throwable getRootCause(Throwable t)
     {
     	if (t != null)

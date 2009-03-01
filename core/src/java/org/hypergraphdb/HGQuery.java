@@ -43,7 +43,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 		return new ExpressionBasedQuery(hg, expression);
 	} */
 
-	@SuppressWarnings("unchecked")
 	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph hg, HGQueryCondition condition)
 	{
 		return (HGQuery<SearchResult>)new ExpressionBasedQuery(hg, condition);
@@ -294,7 +293,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * @param condition The query condition.
     	 * @return
     	 */
-        @SuppressWarnings("unchecked")
     	public static <T> T getOne(HyperGraph graph, HGQueryCondition condition)
     	{
     		HGHandle h = findOne(graph, condition);
