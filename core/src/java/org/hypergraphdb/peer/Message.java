@@ -96,4 +96,9 @@ public class Message implements Map<String, Object>
     {
         return map.values();
     }
+    
+    public String toString()
+    {
+        return map.toString();
+    }
 }

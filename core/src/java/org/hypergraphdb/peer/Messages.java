@@ -39,7 +39,7 @@ public class Messages
 		    return new Message(s);
 	}
 	
-	public static String getSender(Message msg)
+	public static Object getSender(Message msg)
 	{
 	    return getPart(msg, REPLY_TO);	  
 	}

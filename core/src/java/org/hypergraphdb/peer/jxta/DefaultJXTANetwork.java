@@ -875,14 +875,17 @@ public class DefaultJXTANetwork implements JXTANetwork
                         if (!peerAdvs.containsKey(adv))
                         {
                             PipeID pipeId = (PipeID) ((PipeAdvertisement) adv).getPipeID();
-
+                            System.out.println("Received new adv: " + adv);
                             if (!ownPipes.contains(pipeId))
                             {
                                 peerAdvs.put(adv, null);
                                 peerAdvIds.put(adv, peerName);
+                                System.out.println("Add new advertisment, calling listeners.");
                                 for (PeerPresenceListener listener : peerPresenceListeners)
                                     listener.peerJoined(adv);
                             }
+                            else
+                                System.out.println("but in own pipes...");
                         }
                     }
                 }

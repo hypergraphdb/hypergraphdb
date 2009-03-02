@@ -115,6 +115,7 @@ public class ActivityManager implements MessageHandler
     {
         activity.future.result.exception = exception;
         activity.getState().assign(WorkflowState.Failed); // TODO: what if already in ending state?
+        exception.printStackTrace(System.err);
     }
     
     private Activity findRootActivity(Activity a)
@@ -158,7 +159,7 @@ public class ActivityManager implements MessageHandler
                                                               activity.getState().getConst());
                     
                     if (transition == null)
-                        return;                    
+                        return;
                     WorkflowStateConstant result = transition.apply(parentActivity, activity);
                     parentActivity.getState().assign(result);
                 }
@@ -198,8 +199,11 @@ public class ActivityManager implements MessageHandler
                         type.getTransitionMap().getTransition(activity.getState().getConst(), 
                                                               msg);
                     if (transition == null)
-                        notUnderstood(msg, " no state transition defined for this performative.");                    
+                        notUnderstood(msg, " no state transition defined for this performative.");
+                    else
+                        System.out.println("Running transition " + transition + " on msg " + msg);
                     WorkflowStateConstant result = transition.apply(activity, msg);
+                    System.out.println("Transition finished with " + result);
                     activity.getState().assign(result);
                 }
                 catch (Throwable t)
@@ -461,6 +465,7 @@ public class ActivityManager implements MessageHandler
     
     public void handleMessage(final Message msg)
     {        
+        System.out.println("Received message " + msg);
         UUID activityId = getPart(msg,  CONVERSATION_ID);
         if (activityId == null)
         {
