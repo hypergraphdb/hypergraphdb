@@ -5,6 +5,7 @@ import static org.hypergraphdb.peer.workflow.WorkflowState.*;
 import static org.hypergraphdb.peer.Structs.*;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -63,7 +64,8 @@ public class ActivityManager implements MessageHandler
         {
             // Priorities are compared as follows: if one of the two activities
             // has a Future.get blocking for it to complete, but not the other,
-            // that activity has a higher priority. Otherwise, a weight based
+            // that activity has a higher priority whenever its action queue is 
+            // NOT empty. Otherwise, a weight based
             // on the amount of time elapsed since an action was taken on an activity
             // and the size of its own action queue is calculated and whoever has the
             // bigger weight has priority.
@@ -71,11 +73,11 @@ public class ActivityManager implements MessageHandler
             {
                 if (left.future.waiting)
                 {
-                    if (!right.future.waiting)
-                        return 1;
+                    if (!right.future.waiting && !left.queue.isEmpty())
+                        return -1;
                 }
-                else if (right.future.waiting)
-                    return -1;
+                else if (right.future.waiting && !right.queue.isEmpty())
+                    return 1;
                 long st = System.currentTimeMillis();
                 long diff = (st-right.lastActionTimestamp)*right.queue.size()-
                             (st-left.lastActionTimestamp)*left.queue.size(); 
@@ -105,7 +107,7 @@ public class ActivityManager implements MessageHandler
                     {
                         if (globalQueue.isEmpty())                    
                             Thread.sleep(100); // really? sleep here? that much?
-                        a.lastActionTimestamp = System.currentTimeMillis();                        
+                        a.lastActionTimestamp = System.currentTimeMillis();
                         globalQueue.put(a);
                     }
 //                    Thread.sleep(1000);

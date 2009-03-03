@@ -188,7 +188,8 @@ public class WorkflowState
     {
         String s = validateStateChange(newState);
         if (s == null)
-            throw new IllegalArgumentException("Invalid state change to " + newState.name.get());        
+            throw new IllegalArgumentException(
+                "Invalid state change to " + newState.name.get() + " while current is " + toString());        
         if (name.compareAndSet(s, newState.name.get()))
             for (StateListener l : listeners)
                 l.stateChanged(this);
