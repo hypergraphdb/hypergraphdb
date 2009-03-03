@@ -287,6 +287,19 @@ public class HyperGraphPeer
 				{
 					status = true;
 					
+                    peerInterface.getPeerNetwork().addPeerPresenceListener(
+                       new PeerPresenceListener()
+                       {
+                           public void peerJoined(Object target)
+                           {
+                               AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
+                               activityManager.initiateActivity(task);
+                           }
+                           public void peerLeft(Object target) 
+                           { 
+                               unbindNetworkTargetFromIdentity(target); 
+                           }
+                       });					
 					// the order of the following 3 statements is important
 	                activityManager.start();
 		            peerInterface.setMessageHandler(activityManager);
@@ -313,19 +326,6 @@ public class HyperGraphPeer
 							BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
 							boot.bootstrap(this, config);
 						} 
-					peerInterface.getPeerNetwork().addPeerPresenceListener(
-                       new PeerPresenceListener()
-                       {
-                           public void peerJoined(Object target)
-                           {
-                               AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
-                               activityManager.initiateActivity(task);
-                           }
-                           public void peerLeft(Object target) 
-                           { 
-                               unbindNetworkTargetFromIdentity(target); 
-                           }
-                       });
 				}
 			}
 			catch(Exception ex)

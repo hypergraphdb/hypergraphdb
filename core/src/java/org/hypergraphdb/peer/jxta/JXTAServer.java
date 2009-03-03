@@ -26,7 +26,7 @@ public class JXTAServer implements Runnable
         try 
         {
             serverSocket = new JxtaServerSocket(peerGroup, pipeAdv);
-            serverSocket.setSoTimeout(100);
+//            serverSocket.setSoTimeout(100);
      
             return true;
         } 

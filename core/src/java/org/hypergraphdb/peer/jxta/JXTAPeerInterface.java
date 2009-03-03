@@ -185,7 +185,11 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
             		final Message msg = new Message((Map<String, Object>)protocol.readMessage(in));            		
                     executorService.execute(new Runnable()
                     {
-                        public void run() { messageHandler.handleMessage(msg); }
+                        public void run() 
+                        { 
+                            try { messageHandler.handleMessage(msg); }
+                            catch (Throwable t) { t.printStackTrace(System.err); } 
+                        }
                     }
                     );            		
             	}

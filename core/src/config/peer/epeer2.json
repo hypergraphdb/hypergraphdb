@@ -3,7 +3,7 @@
 "hasTempStorage"	: true,
 "localDB"           : "./hgdb_edge/mainDb2",
 "tempDB"            : "./hgdb_edge/tempDb2",
-"bootstrap" : [ {"class" : "org.hypergraphdb.peer.bootstrap.ReplicationBootstrap", "config" : {}}, 
+"bootstrap" : [ /* {"class" : "org.hypergraphdb.peer.bootstrap.ReplicationBootstrap", "config" : {}}, */ 
                 {"class" : "org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap", "config" : {}}
               ],
 "interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",

@@ -127,4 +127,9 @@ public abstract class Activity
     {
         return id; 
     }
+    
+    public String toString()
+    {
+        return "activity[" + getId() + "]:" + getType();
+    }
 }

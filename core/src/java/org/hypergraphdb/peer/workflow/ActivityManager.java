@@ -77,8 +77,8 @@ public class ActivityManager implements MessageHandler
                 else if (right.future.waiting)
                     return -1;
                 long st = System.currentTimeMillis();
-                long diff = (st-left.lastActionTimestamp)*left.queue.size() - 
-                            (st-right.lastActionTimestamp)*right.queue.size();
+                long diff = (st-right.lastActionTimestamp)*right.queue.size()-
+                            (st-left.lastActionTimestamp)*left.queue.size(); 
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             }
         }
@@ -93,18 +93,23 @@ public class ActivityManager implements MessageHandler
                 try
                 {
                     Activity a = globalQueue.take();
+//                    System.out.println("activity pulled:" + a + "," + a.lastActionTimestamp + "," + a.future.waiting);
                     if (!a.queue.isEmpty())
                     {
                         Runnable r = a.queue.take();
+                        System.out.println("Found action " + r + " in queue " + a);
                         globalQueue.remove(a); // the action will re-insert the activity at the end 
                         thisPeer.getExecutorService().execute(r);
                     }
                     else 
                     {
                         if (globalQueue.isEmpty())                    
-                            Thread.sleep(100); // really? sleep here? that much?                        
+                            Thread.sleep(100); // really? sleep here? that much?
+                        a.lastActionTimestamp = System.currentTimeMillis();                        
                         globalQueue.put(a);
                     }
+//                    Thread.sleep(1000);
+//                    System.out.println("global queue size=" + globalQueue.size());
                 }
                 catch (InterruptedException ex) { break; }
             }
@@ -199,7 +204,10 @@ public class ActivityManager implements MessageHandler
                         type.getTransitionMap().getTransition(activity.getState().getConst(), 
                                                               msg);
                     if (transition == null)
+                    {
+                        System.out.println("Can't make transition for " + activity + " and msg=" + msg);
                         notUnderstood(msg, " no state transition defined for this performative.");
+                    }
                     else
                         System.out.println("Running transition " + transition + " on msg " + msg);
                     WorkflowStateConstant result = transition.apply(activity, msg);
@@ -421,8 +429,10 @@ public class ActivityManager implements MessageHandler
         activity.getState().addListener(new StateListener() {
             public void stateChanged(WorkflowState state)
             {
+                System.out.println("Activity state change " + activity + " to " + state.toString());
                 if (state.isFinished())
                 {
+                    System.out.println("Activity " + activity + " is finished.");
                     completionLatch.countDown();
                     if (listener != null)
                         try { listener.activityFinished(future.get()); }
@@ -502,7 +512,8 @@ public class ActivityManager implements MessageHandler
             } 
             activity = type.getFactory().make(thisPeer, activityId, msg);
             insertNewActivity(activity, parentActivity, null);
-            activity.getState().compareAndAssign(Limbo, Started);
+            System.out.println("inserted new activity in queue ");
+            activity.getState().compareAndAssign(Limbo, Started);            
         }
         else
             type = activityTypes.get(activity.getType());
@@ -512,13 +523,14 @@ public class ActivityManager implements MessageHandler
                 activity.queue.put(makeTransitionAction(type, activity, msg));
             else
                 activity.queue.put(makeMessageHandleAction(activity, msg));
+            System.out.println("Added transition action to " + activity + " on msg  "+ msg);
         }
         catch (InterruptedException ex)
         {
             // Main message handling thread is being interrupted, we are probably shutting the application
             // down, so nothing much to do...
             handleActivityException(activity, ex, msg);
-        }
+        }        
     }
     
     public Activity getParent(Activity a)
