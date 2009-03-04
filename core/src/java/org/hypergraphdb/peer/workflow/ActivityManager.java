@@ -5,7 +5,6 @@ import static org.hypergraphdb.peer.workflow.WorkflowState.*;
 import static org.hypergraphdb.peer.Structs.*;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
@@ -71,12 +71,12 @@ public class ActivityManager implements MessageHandler
             // bigger weight has priority.
             public int compare(Activity left, Activity right)
             {
-                if (left.future.waiting)
+                if (left.future.isWaitedOn())
                 {
-                    if (!right.future.waiting && !left.queue.isEmpty())
+                    if (!right.future.isWaitedOn() && !left.queue.isEmpty())
                         return -1;
                 }
-                else if (right.future.waiting && !right.queue.isEmpty())
+                else if (right.future.isWaitedOn() && !right.queue.isEmpty())
                     return 1;
                 long st = System.currentTimeMillis();
                 long diff = (st-right.lastActionTimestamp)*right.queue.size()-
@@ -99,8 +99,7 @@ public class ActivityManager implements MessageHandler
                     if (!a.queue.isEmpty())
                     {
                         Runnable r = a.queue.take();
-                        System.out.println("Found action " + r + " in queue " + a);
-                        globalQueue.remove(a); // the action will re-insert the activity at the end 
+                        System.out.println("Found action " + r + " in queue " + a); 
                         thisPeer.getExecutorService().execute(r);
                     }
                     else 
@@ -356,7 +355,7 @@ public class ActivityManager implements MessageHandler
      * </p>
      * 
      * @param activityClass The class implementing the activity. 
-     * @param factory The activity factory associated 
+     * @param factory The activity factory associated with this type. 
      */
     public void registerActivityType(Class<? extends Activity> activityClass, 
                                      ActivityFactory factory)
@@ -364,12 +363,28 @@ public class ActivityManager implements MessageHandler
         registerActivityType(activityClass.getName(), activityClass, factory);
     }
 
+    /**
+     * <p>
+     * Register an activity type with the specified non-default type name.
+     * </p>
+     * @param type The type name.
+     * @param activityClass The class that implements the activity.
+     */
     public void registerActivityType(String type, 
                                      Class<? extends Activity> activityClass) 
     {
         registerActivityType(type, activityClass, new DefaultActivityFactory(activityClass));
     }
     
+    /**
+     * <p>
+     * Register an activity type with the specified non-default type name and 
+     * factory.
+     * </p>
+     * @param type The type name.
+     * @param activityClass The class that implements the activity.
+     * @param factory The activity factory associated with this type. 
+     */
     public void registerActivityType(String type, 
                                      Class<? extends Activity> activityClass, 
                                      ActivityFactory factory)
@@ -416,8 +431,8 @@ public class ActivityManager implements MessageHandler
             activities.put(activity.getId(), activity);
         }
         ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
-        activity.initiate();        
         activity.getState().compareAndAssign(Limbo, Started);        
+        activity.initiate();                       
         return future;
     }
     
@@ -547,7 +562,12 @@ public class ActivityManager implements MessageHandler
     {
         ActivityResult result;
         CountDownLatch latch;
-        boolean waiting = false;
+        AtomicInteger waiting = new AtomicInteger(0);
+        
+        boolean isWaitedOn()
+        {
+            return waiting.get() > 0;
+        }
         
         public ActivityFuture(Activity activity, CountDownLatch latch)
         {
@@ -563,20 +583,38 @@ public class ActivityManager implements MessageHandler
         public ActivityResult get() 
             throws InterruptedException, ExecutionException
         {
-            waiting = true;
-            latch.await();
+            waiting.incrementAndGet();
+            try
+            {
+                latch.await();
+            }
+            catch (InterruptedException ex)
+            {
+                waiting.decrementAndGet();
+                throw ex;
+            }
             return result;
         }
 
         public ActivityResult get(long timeout, TimeUnit unit) 
             throws InterruptedException, ExecutionException, TimeoutException
-        {
-            waiting = true;
-            // TODO: if we time out, we must clear waiting flag, if no other
-            // threads are waiting...so we need a difference mechanism to detect
-            // if there's a wait on the future!
-            latch.await(timeout, unit);
-            return result;
+        {            
+            waiting.incrementAndGet();
+            try
+            {
+                if (!latch.await(timeout, unit))
+                {
+                    waiting.decrementAndGet();
+                    return null;
+                }
+                else
+                    return result;
+            }
+            catch (InterruptedException ex)
+            {
+                waiting.decrementAndGet();
+                throw ex;
+            }            
         }
 
         public boolean isCancelled()
@@ -587,6 +625,6 @@ public class ActivityManager implements MessageHandler
         public boolean isDone()
         {
             return result.getActivity().getState().isFinished();
-        }        
+        }               
     }
 }

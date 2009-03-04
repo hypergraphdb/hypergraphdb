@@ -2,6 +2,7 @@ package org.hypergraphdb.peer.workflow;
 
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
@@ -71,11 +72,35 @@ public abstract class Activity
         return thisPeer;
     }
     
+    /**
+     * <p>Return the <code>PeerInterface</code> instance for communicating
+     * with other peers. This is a convenience method that is equivalent to 
+     * <code>getThisPeer().getPeerInterface()</code>.
+     * </p>
+     */
     protected PeerInterface getPeerInterface()
     {
         return thisPeer.getPeerInterface();
     }
 
+    /**
+     * <p>
+     * Add an action to the action queue to be scheduled for execution some time
+     * in the future.
+     * </p>
+     * 
+     * @param action The action in the form of a <code>Runnable</code> object. 
+     * If <code>null</code>, it will be ignored.
+     * @throws InterruptedException If the current thread is interrupted during
+     * the put into the action queue(which is a blocking queue).
+     */
+    protected void addAction(Runnable action) throws InterruptedException
+    {
+        if (action == null)
+            return;
+        queue.put(action);
+    }
+    
     public Activity(HyperGraphPeer thisPeer)
     {
         this.thisPeer = thisPeer; 
@@ -92,7 +117,7 @@ public abstract class Activity
      * <p>
      * Called by the framework to initiate a new activity. This method is only invoked
      * at the peer initiating the activity. Once an activity has been initiated, its state
-     * changes to <code>start</code>.   
+     * changes to <code>Started</code>.   
      * </p> 
      */
     public abstract void initiate();
@@ -106,11 +131,25 @@ public abstract class Activity
      */
     public abstract void handleMessage(Message message);
     
-    public WorkflowState getState()
+    /**
+     * <p>Return this activity's workflow state.</p>
+     */
+    public final WorkflowState getState()
     {
         return state;
     }
 
+    /**
+     * <p>
+     * Return the <code>Future</code> object representing the completion
+     * of this activity.
+     * </p>
+     */
+    public final Future<ActivityResult> getFuture()
+    {
+        return future;
+    }
+    
     /**
      * <p>
      * Return the type name of this activity. By the default to fully-qualified 
@@ -123,7 +162,7 @@ public abstract class Activity
         return this.getClass().getName();
     }
     
-    public UUID getId()
+    public final UUID getId()
     {
         return id; 
     }
