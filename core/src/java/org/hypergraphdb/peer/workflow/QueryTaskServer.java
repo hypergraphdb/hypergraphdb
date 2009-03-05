@@ -1,6 +1,5 @@
 package org.hypergraphdb.peer.workflow;
 
-import static org.hypergraphdb.peer.HGDBOntology.CONTENT;
 import static org.hypergraphdb.peer.HGDBOntology.SLOT_GET_OBJECT;
 import static org.hypergraphdb.peer.HGDBOntology.SLOT_QUERY;
 import static org.hypergraphdb.peer.Structs.combine;
@@ -17,6 +16,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.query.HGQueryCondition;
 
@@ -34,15 +34,15 @@ public class QueryTaskServer extends Activity
     @Override
     public void handleMessage(Message msg)
     {
-        boolean getObject = (Boolean) getPart(msg, CONTENT, SLOT_GET_OBJECT);
-        Object query = getPart(msg, CONTENT, SLOT_QUERY);
+        boolean getObject = (Boolean) getPart(msg, Messages.CONTENT, SLOT_GET_OBJECT);
+        Object query = getPart(msg, Messages.CONTENT, SLOT_QUERY);
         Object reply = getReply(msg);
 
         if (query instanceof HGHandle)
         {
             Subgraph subgraph = getThisPeer().getSubgraph((HGHandle) query);
 
-            combine(reply, struct(CONTENT, list(object(subgraph))));
+            combine(reply, struct(Messages.CONTENT, list(object(subgraph))));
         }
         else if (query instanceof HGQueryCondition)
         {
@@ -65,11 +65,11 @@ public class QueryTaskServer extends Activity
                 }
             }
 
-            combine(reply, struct(CONTENT, resultingContent));
+            combine(reply, struct(Messages.CONTENT, resultingContent));
         }
         else
         {
-            combine(reply, struct(CONTENT, null));
+            combine(reply, struct(Messages.CONTENT, null));
         }
 
         getPeerInterface().send(getSender(msg), reply);

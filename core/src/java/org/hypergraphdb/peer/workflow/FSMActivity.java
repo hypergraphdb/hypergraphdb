@@ -2,8 +2,12 @@ package org.hypergraphdb.peer.workflow;
 
 import java.util.UUID;
 
+import org.hypergraphdb.peer.ExceptionAtPeer;
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import static org.hypergraphdb.peer.Messages.*;
+import static org.hypergraphdb.peer.Structs.*;
 
 /**
  * <p>
@@ -16,6 +20,55 @@ import org.hypergraphdb.peer.Message;
  */
 public abstract class FSMActivity extends Activity
 {
+    /**
+     * <p>
+     * Called by default by the framework in case a peer send
+     * a <code>Failure</code> performative and there's no transition
+     * defined for it. 
+     * </p>
+     * 
+     * <p>
+     * The default implementation of this method is to fail the whole
+     * activity. To change this behavior, you can either define appropriate 
+     * transition for the <code>Failure</code> performative or simply
+     * override this method in your activity class. 
+     * </p>
+     * 
+     * @param msg The message that is reporting the peer failure.
+     */
+    protected void onPeerFailure(Message msg)
+    {
+        HGPeerIdentity id = getThisPeer().getIdentity(getSender(msg));
+        this.future.result.exception = new ExceptionAtPeer(id,
+                                                           (String)getPart(msg, CONTENT));
+        getState().assign(WorkflowState.Failed);
+    }
+
+    /**
+     * <p>
+     * Called by default by the framework in case a peer send
+     * a <code>NotUnderstand</code> performative and there's no transition
+     * defined for it. 
+     * </p>
+     * 
+     * <p>
+     * The default implementation of this method is to fail the whole
+     * activity. To change this behavior, you can either define appropriate 
+     * transition for the <code>NotUnderstand</code> performative or simply
+     * override this method in your activity class. 
+     * </p>
+     * 
+     * @param msg The message that is reporting the peer failure.
+     */    
+    protected void onPeerNotUnderstand(Message msg)
+    {
+        HGPeerIdentity id = getThisPeer().getIdentity(getSender(msg));
+        this.future.result.exception = new ExceptionAtPeer(id,
+                                                           "Peer did not understand last message:" +
+                                                           getPart(msg, CONTENT));
+        getState().assign(WorkflowState.Failed);        
+    }
+    
     public FSMActivity(HyperGraphPeer thisPeer)
     {
         super(thisPeer);

@@ -9,6 +9,7 @@ import net.jxta.peergroup.PeerGroup;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.socket.JxtaSocket;
 
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.protocol.Protocol;
 
@@ -61,9 +62,9 @@ public class JXTASendActivity extends PeerRelatedActivity
             Object msg = getMessage();
 
             // set our self as replyTo if that was not already set.
-            if (getPart(msg, REPLY_TO) == null)
+            if (getPart(msg, Messages.REPLY_TO) == null)
             {
-                combine(msg, struct(REPLY_TO, pipeAdv));
+                combine(msg, struct(Messages.REPLY_TO, pipeAdv));
             }
             
             //

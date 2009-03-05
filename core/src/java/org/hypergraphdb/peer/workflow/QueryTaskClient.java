@@ -14,6 +14,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -129,7 +130,7 @@ public class QueryTaskClient extends Activity
         count.incrementAndGet();
 
         Object msg = createMessage(Performative.Request, QUERY, getId());
-        combine(msg, struct(CONTENT, struct(SLOT_QUERY,
+        combine(msg, struct(Messages.CONTENT, struct(SLOT_QUERY,
                                             (handle == null) ? cond : handle,
                                             SLOT_GET_OBJECT, getObject)));
 
@@ -143,7 +144,7 @@ public class QueryTaskClient extends Activity
     public void handleMessage(Message msg)
     {
         // get result
-        ArrayList<?> reply = (ArrayList<?>) getPart(msg, CONTENT);
+        ArrayList<?> reply = (ArrayList<?>) getPart(msg, Messages.CONTENT);
         result = new ArrayList<Object>();
 
         for (int i = 0; i < reply.size(); i++)

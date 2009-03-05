@@ -12,6 +12,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 
 public class AffirmIdentity extends FSMActivity
 {
@@ -65,7 +66,7 @@ public class AffirmIdentity extends FSMActivity
     {
         Object inform = combine(createMessage(Inform,
                                               this),                                              
-                                struct(CONTENT, 
+                                struct(Messages.CONTENT, 
                                        makeIdentityStruct(getThisPeer().getIdentity())));
         if (target == null)
             getPeerInterface().broadcast(inform);
@@ -79,16 +80,16 @@ public class AffirmIdentity extends FSMActivity
     public WorkflowState onInform(Message msg)
     {
         HGPeerIdentity thisId = getThisPeer().getIdentity();
-        HGPeerIdentity id = parseIdentity(getStruct(msg, CONTENT));
+        HGPeerIdentity id = parseIdentity(getStruct(msg, Messages.CONTENT));
         Message reply = getReply(msg);        
         if (id.getId().equals(thisId.getId()))
-            combine(reply, struct(PERFORMATIVE, Disconfirm));
+            combine(reply, struct(Messages.PERFORMATIVE, Disconfirm));
         else
         {
-            combine(reply, combine(struct(PERFORMATIVE, Confirm),
-                                   struct(CONTENT, 
+            combine(reply, combine(struct(Messages.PERFORMATIVE, Confirm),
+                                   struct(Messages.CONTENT, 
                                           makeIdentityStruct(getThisPeer().getIdentity()))));
-            getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, REPLY_TO));
+            getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, Messages.REPLY_TO));
         }
         getPeerInterface().send(getSender(msg), reply);
         return WorkflowState.Completed;
@@ -99,8 +100,8 @@ public class AffirmIdentity extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowState onConfirm(Message msg)
     {
-        HGPeerIdentity id = parseIdentity(getStruct(msg, CONTENT));
-        getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, REPLY_TO));
+        HGPeerIdentity id = parseIdentity(getStruct(msg, Messages.CONTENT));
+        getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, Messages.REPLY_TO));
         return WorkflowState.Completed;
     }
     

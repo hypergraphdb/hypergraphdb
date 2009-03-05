@@ -7,9 +7,9 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.hypergraphdb.peer.HGDBOntology;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -86,7 +86,7 @@ public abstract class TaskActivity<StateType>
     
     protected void sendReply(Object originalMsg, Object reply)
     {
-        getPeerInterface().send(getPart(originalMsg, HGDBOntology.REPLY_TO), reply);
+        getPeerInterface().send(getPart(originalMsg, Messages.REPLY_TO), reply);
     }
     
     /**
@@ -203,7 +203,7 @@ public abstract class TaskActivity<StateType>
     {
         System.out.println("TaskActivity: handleMessage ");
         Conversation<?> conversation = null;
-        UUID conversationId = getPart(msg, CONVERSATION_ID);
+        UUID conversationId = getPart(msg, Messages.CONVERSATION_ID);
         if (conversationId != null)
             conversation = conversations.get(conversationId);            
         if (conversation == null)

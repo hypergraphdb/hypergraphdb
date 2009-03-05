@@ -91,6 +91,10 @@ public class HGHandleFactory
      * </p>
      */    
     public static final HGPersistentHandle anyHandle = makeHandle("332c5a05-37c2-11dc-b44d-8884da7d2355");
+    
+    /**
+     * <p>Return the {@link anyHandle}. </p>
+     */
     public static HGPersistentHandle anyHandle()
     {
     	return anyHandle;

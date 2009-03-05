@@ -14,6 +14,12 @@ import java.util.Map;
  * JSON configuration property.  
  * </p>
  *
+ * <p>
+ * Note that bootstrap operations are performed <strong>before</strong> the peer
+ * joins the peer network, so they cannot rely messaging with other peers in
+ * order to complete. 
+ * </p>
+ * 
  * @author Borislav Iordanov
  *
  */

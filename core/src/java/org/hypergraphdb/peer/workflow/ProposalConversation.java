@@ -2,6 +2,8 @@ package org.hypergraphdb.peer.workflow;
 
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
+
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.protocol.Performative;
 
 /**
@@ -44,7 +46,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	{		
 		if (compareAndSetState(State.Started, State.Proposed))
 		{
-			combine(msg, struct(PERFORMATIVE, Performative.Propose));
+			combine(msg, struct(Messages.PERFORMATIVE, Performative.Propose));
 
 //			setMessage(msg);
 			say(msg);
@@ -61,7 +63,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	{
 		if (compareAndSetState(State.Proposed, State.Accepted))
 		{
-			combine(msg, struct(PERFORMATIVE, Performative.Accept));
+			combine(msg, struct(Messages.PERFORMATIVE, Performative.Accept));
 
 //			setMessage(msg);
 			say(msg);
@@ -94,7 +96,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 		System.out.println("ProposalConversation: confirm");
 		if (compareAndSetState(State.Accepted, State.Confirmed))
 		{
-			combine(msg, struct(PERFORMATIVE, Performative.Confirm));
+			combine(msg, struct(Messages.PERFORMATIVE, Performative.Confirm));
 
 //			setMessage(msg);
 			say(msg);

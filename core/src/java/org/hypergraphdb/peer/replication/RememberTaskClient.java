@@ -14,6 +14,7 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
@@ -178,7 +179,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		LogEntry lastEntry = entries.get(entries.size() - 1);
 		
 		combine(msg, struct(
-				CONTENT, struct(
+				Messages.CONTENT, struct(
 						SLOT_LAST_VERSION, firstEntry.getLastTimestamp(getPeerInterface().getPeerNetwork().getPeerId(target)),
 						SLOT_CURRENT_VERSION, lastEntry.getTimestamp()
 					)
@@ -222,11 +223,11 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 			for(LogEntry entry : entries)
 			{
 				contents.add(
-					struct(OPERATION, entry.getOperation(),
-						CONTENT, (entry.getOperation() == StorageService.Operation.Remove) ? entry.getHandle() : object(entry.getData()))
+					struct(Messages.OPERATION, entry.getOperation(),
+						Messages.CONTENT, (entry.getOperation() == StorageService.Operation.Remove) ? entry.getHandle() : object(entry.getData()))
 				);
 			}
-			combine(reply, struct(CONTENT, contents));
+			combine(reply, struct(Messages.CONTENT, contents));
 						
 /*			if (rememberEntity.getOperation() == StorageService.Operation.Remove)
 			{
@@ -255,9 +256,9 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	{
 		Object msg = ((ProposalConversation)(AbstractActivity<ProposalConversation.State>)fromActivity).getMessage();	
 		
-		results = (ArrayList<HGHandle>)getPart(msg, CONTENT);
+		results = (ArrayList<HGHandle>)getPart(msg, Messages.CONTENT);
 
-		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, REPLY_TO));
+		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, Messages.REPLY_TO));
 		log.confirmFromPeer(peerId, entries.get(entries.size() - 1).getTimestamp());
 		
 		if (count.decrementAndGet() == 0) return State.Done;

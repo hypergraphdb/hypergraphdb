@@ -300,6 +300,20 @@ public class HyperGraphPeer
                                unbindNetworkTargetFromIdentity(target); 
                            }
                        });					
+                    // Call all bootstrapping operations configured:                    
+                    List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");                 
+                    if (bootstrapOperations != null)
+                        for (Object x : bootstrapOperations)
+                        {
+                            String classname = getPart(x, "class");
+                            if (classname == null)
+                                throw new RuntimeException("No 'class' specified in bootstrap operation.");
+                            Map<String, Object> config = getPart(x, "config");
+                            if (config == null)
+                                config = new HashMap<String, Object>();
+                            BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
+                            boot.bootstrap(this, config);
+                        }                    
 					// the order of the following 3 statements is important
 	                activityManager.start();
 		            peerInterface.setMessageHandler(activityManager);
@@ -311,21 +325,6 @@ public class HyperGraphPeer
 	        		//TODO: this should not be an indefinite wait ... 
 //	        		if (graph == null)
 //	                	peerInterface.getPeerNetwork().waitForRemotePipe();						
-
-					// Call all bootstrapping operations configured:					
-					List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");					
-					if (bootstrapOperations != null)
-						for (Object x : bootstrapOperations)
-						{
-							String classname = getPart(x, "class");
-							if (classname == null)
-								throw new RuntimeException("No 'class' specified in bootstrap operation.");
-							Map<String, Object> config = getPart(x, "config");
-							if (config == null)
-								config = new HashMap<String, Object>();
-							BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
-							boot.bootstrap(this, config);
-						} 
 				}
 			}
 			catch(Exception ex)

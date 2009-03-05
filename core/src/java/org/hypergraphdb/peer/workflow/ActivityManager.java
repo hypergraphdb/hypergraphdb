@@ -1,8 +1,8 @@
 package org.hypergraphdb.peer.workflow;
 
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.workflow.WorkflowState.*;
 import static org.hypergraphdb.peer.Structs.*;
+import static org.hypergraphdb.peer.Messages.*;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -24,6 +24,7 @@ import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.util.HGUtils;
 
 
 /**
@@ -120,8 +121,14 @@ public class ActivityManager implements MessageHandler
     private void handleActivityException(Activity activity, Throwable exception, Message msg)
     {
         activity.future.result.exception = exception;
-        activity.getState().assign(WorkflowState.Failed); // TODO: what if already in ending state?
+        // TODO: what if already in ending state? is that possible?
+        activity.getState().assign(WorkflowState.Failed); 
         exception.printStackTrace(System.err);
+        if (msg != null)
+            thisPeer.getPeerInterface().send(getSender(msg), 
+                                             getReply(msg, 
+                                                      Performative.Failure, 
+                                                      HGUtils.printStackTrace(exception)));
     }
     
     private Activity findRootActivity(Activity a)
@@ -136,13 +143,9 @@ public class ActivityManager implements MessageHandler
         try 
         { 
             Object reply = combine(Messages.getReply(msg), 
-                                   struct(PERFORMATIVE, Performative.NotUnderstood));
-            // TODO: pass in 'explanation' somehow here...          
-            Object replyTarget = getPart(msg, REPLY_TO);
-            if (replyTarget != null)
-                thisPeer.getPeerInterface().send(replyTarget, reply);
-            else
-                throw new Exception("Unknown reply target for message : " + msg);            
+                                   struct(PERFORMATIVE, Performative.NotUnderstood,
+                                          CONTENT, msg));
+            thisPeer.getPeerInterface().send(getSender(msg), reply);
         }
         catch (Throwable t)
         {
@@ -193,7 +196,7 @@ public class ActivityManager implements MessageHandler
     
 
     private Runnable makeTransitionAction(final ActivityType type,
-                                          final Activity activity, 
+                                          final FSMActivity activity, 
                                           final Message msg)
     {
         return new Runnable() {
@@ -206,14 +209,21 @@ public class ActivityManager implements MessageHandler
                                                               msg);
                     if (transition == null)
                     {
-                        System.out.println("Can't make transition for " + activity + " and msg=" + msg);
-                        notUnderstood(msg, " no state transition defined for this performative.");
+                        Performative perf = Performative.valueOf((String)getPart(msg, PERFORMATIVE));
+                        if (perf == Performative.Failure)
+                            activity.onPeerFailure(msg);
+                        else if (perf == Performative.NotUnderstood)
+                            activity.onPeerNotUnderstand(msg);
+                        else
+                            notUnderstood(msg, " no state transition defined for this performative.");
                     }
                     else
+                    {
                         System.out.println("Running transition " + transition + " on msg " + msg);
-                    WorkflowStateConstant result = transition.apply(activity, msg);
-                    System.out.println("Transition finished with " + result);
-                    activity.getState().assign(result);
+                        WorkflowStateConstant result = transition.apply(activity, msg);
+                        System.out.println("Transition finished with " + result);
+                        activity.getState().assign(result);
+                    }
                 }
                 catch (Throwable t)
                 {
@@ -493,7 +503,7 @@ public class ActivityManager implements MessageHandler
     public void handleMessage(final Message msg)
     {        
         System.out.println("Received message " + msg);
-        UUID activityId = getPart(msg,  CONVERSATION_ID);
+        UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
         if (activityId == null)
         {
             notUnderstood(msg, " missing conversation-id in message");
@@ -507,7 +517,7 @@ public class ActivityManager implements MessageHandler
         if (activity == null)
         {
             Activity parentActivity = null;            
-            UUID parentId = getPart(msg, PARENT_SCOPE);
+            UUID parentId = getPart(msg, Messages.PARENT_SCOPE);
             if (parentId != null)
             {
                 parentActivity = activities.get(parentId);
@@ -521,7 +531,7 @@ public class ActivityManager implements MessageHandler
                     return;
                 }
             }
-            type = activityTypes.get(getPart(msg, ACTIVITY_TYPE));
+            type = activityTypes.get(getPart(msg, Messages.ACTIVITY_TYPE));
             if (type == null)
             {
                 notUnderstood(msg, " unkown activity type '" + type + "'");
@@ -537,7 +547,7 @@ public class ActivityManager implements MessageHandler
         try
         {
             if (activity instanceof FSMActivity)
-                activity.queue.put(makeTransitionAction(type, activity, msg));
+                activity.queue.put(makeTransitionAction(type, (FSMActivity)activity, msg));
             else
                 activity.queue.put(makeMessageHandleAction(activity, msg));
             System.out.println("Added transition action to " + activity + " on msg  "+ msg);

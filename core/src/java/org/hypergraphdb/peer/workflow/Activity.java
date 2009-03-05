@@ -84,6 +84,17 @@ public abstract class Activity
     }
 
     /**
+     * <p>A convenience method to send a message to a target peer.</p>
+     * 
+     * @param target The message recipient.
+     * @param msg The message.
+     */
+    protected void send(Object target, Message msg)
+    {
+        getPeerInterface().send(target, msg);
+    }
+    
+    /**
      * <p>
      * Add an action to the action queue to be scheduled for execution some time
      * in the future.

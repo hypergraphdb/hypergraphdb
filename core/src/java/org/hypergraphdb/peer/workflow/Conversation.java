@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.util.Pair;
 import static org.hypergraphdb.peer.HGDBOntology.*;
@@ -87,7 +88,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
 
         StateType state = getState();
 
-        Object x = getPart(msg, PERFORMATIVE); // variable needed because of
+        Object x = getPart(msg, Messages.PERFORMATIVE); // variable needed because of
                                                // Java 5 compiler bug
         Pair<StateType, Performative> key = new Pair<StateType, Performative>(
                 state, Performative.valueOf(x.toString()));
@@ -113,7 +114,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
      */
     protected void say(Object msg)
     {
-        combine(msg, struct(CONVERSATION_ID, getId()));
+        combine(msg, struct(Messages.CONVERSATION_ID, getId()));
         task.getPeerInterface().send(peer, msg);
     }
 

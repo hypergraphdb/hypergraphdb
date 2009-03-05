@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
@@ -67,7 +68,7 @@ public class PublishInterestsTask extends Activity
 	@Override
 	public void handleMessage(Message msg)
 	{
-		Object sendToTarget = getPart(msg, REPLY_TO);
+		Object sendToTarget = getPart(msg, Messages.REPLY_TO);
 		//send only to this peer
 		sendMessage(getPeerInterface().newSendActivityFactory(), sendToTarget);
         getState().setCompleted();
@@ -76,7 +77,7 @@ public class PublishInterestsTask extends Activity
 	private void sendMessage(PeerRelatedActivityFactory activityFactory, Object target)
 	{
 		Object msg = createMessage(Performative.Inform, ATOM_INTEREST, getId());
-		combine(msg, struct(CONTENT, pred));
+		combine(msg, struct(Messages.CONTENT, pred));
 		
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 		activity.setTarget(target);

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.log.LogEntry;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.workflow.TaskActivity;
@@ -35,12 +36,12 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
     @Override
     public void handleMessage(Message msg)
     {
-        Timestamp lastTimestamp = (Timestamp) getPart(msg, CONTENT,
+        Timestamp lastTimestamp = (Timestamp) getPart(msg, Messages.CONTENT,
                                                       SLOT_LAST_VERSION);
-        HGAtomPredicate interest = (HGAtomPredicate) getPart(msg, CONTENT,
+        HGAtomPredicate interest = (HGAtomPredicate) getPart(msg, Messages.CONTENT,
                                                              SLOT_INTEREST);
 
-        System.out.println("Catch up request from " + getPart(msg, REPLY_TO)
+        System.out.println("Catch up request from " + getPart(msg, Messages.REPLY_TO)
                            + " starting from " + lastTimestamp
                            + " with interest " + interest);
 
@@ -52,7 +53,7 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
         {
             System.out.println("Should catch up with: " + entry.getTimestamp());
 
-            Object sendToPeer = getPart(msg, REPLY_TO);
+            Object sendToPeer = getPart(msg, Messages.REPLY_TO);
             entry.setLastTimestamp(getPeerInterface().getPeerNetwork().getPeerId(sendToPeer),
                                    lastTimestamp);
 

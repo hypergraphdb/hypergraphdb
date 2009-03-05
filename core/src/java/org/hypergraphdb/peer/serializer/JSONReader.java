@@ -182,6 +182,8 @@ public class JSONReader
             ret.add(value);
             if (read() == COMMA) 
                 value = read();
+            else if (token != ARRAY_END)
+                throw new RuntimeException("Unexpected token in array " + token);
         }
         
         if ((ret.size() == 2) && 

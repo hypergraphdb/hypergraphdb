@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
@@ -78,9 +79,9 @@ public class GetInterestsTask extends Activity
     public void handleMessage(Message msg)
     {
         getPeerInterface().getPeerNetwork().setAtomInterests(getPart(msg,
-                                                                     REPLY_TO),
+                                                                     Messages.REPLY_TO),
                                                              (HGAtomPredicate) getPart(msg,
-                                                                                       CONTENT));
+                                                                                       Messages.CONTENT));
 
         if (count.decrementAndGet() == 0)
         {

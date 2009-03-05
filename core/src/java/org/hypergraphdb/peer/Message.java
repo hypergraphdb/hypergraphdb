@@ -23,18 +23,18 @@ public class Message implements Map<String, Object>
 
     public String getPerformative()
     {
-        return (String)get(PERFORMATIVE);
+        return (String)get(Messages.PERFORMATIVE);
     }
     
     public UUID getConversationId()
     {
-        return (UUID)get(CONVERSATION_ID);
+        return (UUID)get(Messages.CONVERSATION_ID);
     }
     
     @SuppressWarnings("unchecked")
     public <T> T getContent()
     {
-        return (T)get(CONTENT);
+        return (T)get(Messages.CONTENT);
     }
     
     public void clear()
