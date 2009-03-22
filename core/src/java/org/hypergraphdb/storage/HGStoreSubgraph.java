@@ -28,25 +28,21 @@ public class HGStoreSubgraph implements StorageGraph
         this.store = store;
     }
     
-    @Override
     public byte[] getData(HGPersistentHandle handle)
     {
         return store.getData(handle);
     }
 
-    @Override
     public HGPersistentHandle[] getLink(HGPersistentHandle handle)
     {
         return store.getLink(handle);
     }
 
-    @Override
     public HGPersistentHandle getRoot()
     {
         return root;
     }
 
-    @Override
     public Iterator<Pair<HGPersistentHandle, Object>> iterator()
     {
         return new SubgraphIterator();
