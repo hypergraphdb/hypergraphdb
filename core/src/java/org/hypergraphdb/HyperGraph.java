@@ -14,8 +14,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.hypergraphdb.cache.DefaultAtomCache;
 import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.cache.MRUCache;
+import org.hypergraphdb.cache.PhantomRefAtomCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.DefaultLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -283,7 +285,7 @@ public /*final*/ class HyperGraph
 	        		new HGLock(this, INCIDENCE_CACHE_ID));
 	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();
 	        incidenceCache.setResolver(new ISRefResolver(this));
-	        ((WeakRefAtomCache)cache).setIncidenceCache(incidenceCache);
+	        cache.setIncidenceCache(incidenceCache);
 	        
 	        typeSystem = new HGTypeSystem(this);    
 	        
@@ -351,12 +353,17 @@ public /*final*/ class HyperGraph
     	}    	
     }
     
+    // A lock that makes sure only one thread can close the HGDB instance.
+    private Object closeLock = new Object();
+    
     /**
      * <p>Gracefully close all resources associated with the run-time instance
      * of <code>HyperGraph</code>. </p>
      */
     public void close()
     {
+        synchronized (closeLock) 
+        {
         if (!is_open)
             return;
         ArrayList<Throwable> problems = new ArrayList<Throwable>();
@@ -387,6 +394,7 @@ public /*final*/ class HyperGraph
         	System.err.println("Problem during HyperGraph close, stack trace of exception follows:");
         	t.printStackTrace(System.err);
         }
+        } // synchronize closing
     }
     
     /** 
@@ -1516,6 +1524,8 @@ public /*final*/ class HyperGraph
 	        
 	        HGAtomType type = typeSystem.getType(typeHandle);
 //	        TypeUtils.initiateAtomConstruction(HyperGraph.this, valueHandle);
+	        if (type == null)
+	            throw new HGException("Unable to find type with handle " + typeHandle + " in database.");
 	        if (link.length == 2)	        	
 	            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
 	        else

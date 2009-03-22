@@ -199,56 +199,98 @@ public class WorkflowState
                                                       " which changed recently from " + s);            
     }
     
+    /**
+     * <p>Add a state change listener.</p>
+     * 
+     * @param l A non null listener.
+     */
     public void addListener(StateListener l)
     {
         listeners.add(l);
     }
-    
+
+    /**
+     * <p>Remove a previously added state change listener.</p>
+     * 
+     * @param l A non null listener.
+     */
     public void removeListener(StateListener l)
     {
         listeners.remove(l);        
     }
     
+    /**
+     * <p>Return <code>true</code> iff this object represents a <em>Limbo</em>
+     * state.</p>  
+     */
     public boolean isInLimbo()
     {
         return name.get() == Limbo.name.get();
     }
-    
+
+    /**
+     * <p>Return <code>true</code> iff this object represents a <em>Started</em>
+     * state.</p>  
+     */    
     public boolean isStarted()    
     {
         return name.get() == Started.name.get();
     }
     
+    /**
+     * <p>Assign the <em>Started</em> state constant to this object.</p>
+     */
     public void setStarted()
     {
         assign(Started);
     }
     
+    /**
+     * <p>Return <code>true</code> iff this object represents a <em>Completed</em>
+     * state.</p>  
+     */    
     public boolean isCompleted()
     {
         return name.get() == Completed.name.get();
     }
     
+    /**
+     * <p>Assign the <em>Completed</em> state constant to this object.</p>
+     */    
     public void setCompleted()
     {
         assign(Completed);
     }
     
+    /**
+     * <p>Return <code>true</code> iff this object represents a <em>Failed</em>
+     * state.</p>  
+     */    
     public boolean isFailed()
     {
         return name.get() == Failed.name.get();
     }
     
+    /**
+     * <p>Assign the <em>Failed</em> state constant to this object.</p>
+     */    
     public void setFailed()
     {
         assign(Failed);
     }
     
+    /**
+     * <p>Return <code>true</code> iff this object represents a <em>Canceled</em>
+     * state.</p>  
+     */    
     public boolean isCanceled()
     {
         return name.get() == Canceled.name.get();
     }
     
+    /**
+     * <p>Assign the <em>Canceled</em> state constant to this object.</p>
+     */    
     public void setCanceled()
     {
         assign(Canceled);

@@ -26,13 +26,16 @@ public class GetClassForType extends FSMActivity
     private HGHandle typeHandle;
     private String className;
     
-    public GetClassForType(HyperGraphPeer thisPeer, HGHandle typeHandle, HGPeerIdentity target)
+    public GetClassForType(HyperGraphPeer thisPeer, HGHandle typeHandle, Object target)
     {
-        super(thisPeer);
+        super(thisPeer);        
+        if (target instanceof HGPeerIdentity)
+            this.target = (HGPeerIdentity)target;
+        else
+            this.target = thisPeer.getIdentity(target);
         this.typeHandle = typeHandle;
-        this.target = target;
     }
-    
+
     public GetClassForType(HyperGraphPeer thisPeer, UUID id)
     {
         super(thisPeer, id);

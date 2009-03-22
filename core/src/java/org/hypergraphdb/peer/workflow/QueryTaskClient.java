@@ -19,10 +19,10 @@ import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
-import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.storage.StorageGraph;
 
 public class QueryTaskClient extends Activity
 {
@@ -150,9 +150,9 @@ public class QueryTaskClient extends Activity
         for (int i = 0; i < reply.size(); i++)
         {
             Object elem = getPart(reply, i);
-            if (elem instanceof Subgraph)
+            if (elem instanceof StorageGraph)
             {
-                result.add(SubgraphManager.get((Subgraph) elem, tempGraph));
+                result.add(SubgraphManager.get((StorageGraph) elem, tempGraph));
             }
             else
             {

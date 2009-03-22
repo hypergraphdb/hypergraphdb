@@ -17,8 +17,8 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.storage.StorageGraph;
 
 public class QueryTaskServer extends Activity
 {
@@ -34,13 +34,15 @@ public class QueryTaskServer extends Activity
     @Override
     public void handleMessage(Message msg)
     {
-        boolean getObject = (Boolean) getPart(msg, Messages.CONTENT, SLOT_GET_OBJECT);
+        boolean getObject = (Boolean) getPart(msg,
+                                              Messages.CONTENT,
+                                              SLOT_GET_OBJECT);
         Object query = getPart(msg, Messages.CONTENT, SLOT_QUERY);
         Object reply = getReply(msg);
 
         if (query instanceof HGHandle)
         {
-            Subgraph subgraph = getThisPeer().getSubgraph((HGHandle) query);
+            StorageGraph subgraph = getThisPeer().getSubgraph((HGHandle) query);
 
             combine(reply, struct(Messages.CONTENT, list(object(subgraph))));
         }
@@ -71,7 +73,6 @@ public class QueryTaskServer extends Activity
         {
             combine(reply, struct(Messages.CONTENT, null));
         }
-
         getPeerInterface().send(getSender(msg), reply);
     }
 }

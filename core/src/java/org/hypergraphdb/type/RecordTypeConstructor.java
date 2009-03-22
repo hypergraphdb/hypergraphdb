@@ -8,6 +8,8 @@
  */
 package org.hypergraphdb.type;
 
+import java.util.Iterator;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
@@ -53,4 +55,21 @@ public class RecordTypeConstructor extends HGAtomTypeBase
         graph.getStore().removeLink(handle);
     }
 
+    /**
+     * <p>Return <code>true</code> if the slot set of the <code>general</code> parameter
+     * is a subset of the slot set of the <code>specific</code> parameter.</p>
+     */
+    public boolean subsumes(Object general, Object specific)
+    {
+        RecordType G = (RecordType)general;
+        RecordType S = (RecordType)specific;
+        for (Iterator<String> i = G.getDimensionNames(); i.hasNext(); )
+        {
+            HGProjection p = G.getProjection(i.next());
+            HGProjection p2 = S.getProjection(p.getName());
+            if (p2 == null || !p.getType().equals(p2.getType()))
+                return false;
+        }
+        return true;
+    }    
 }

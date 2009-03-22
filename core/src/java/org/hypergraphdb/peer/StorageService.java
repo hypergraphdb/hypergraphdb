@@ -14,6 +14,7 @@ import org.hypergraphdb.event.HGEvent;
 import org.hypergraphdb.event.HGListener;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.replication.RememberTaskClient;
+import org.hypergraphdb.storage.StorageGraph;
 
 /**
  * @author ciprian.costa
@@ -48,12 +49,13 @@ public class StorageService
 		graph.getEventManager().addListener(HGAtomReplacedEvent.class, new AtomReplacedListener()); */
 	}
 	
-	private HGHandle storeSubgraph(Subgraph subGraph, HGStore store)
-	{
-		return SubgraphManager.store(subGraph, store);
+	public HGHandle storeSubgraph(StorageGraph subGraph, HGStore store)
+	{	    
+		SubgraphManager.store(subGraph, store);
+		return subGraph.getRoot();
 	}
 	
-	public HGHandle addSubgraph(Subgraph subgraph)
+	public HGHandle addSubgraph(StorageGraph subgraph)
 	{
 		//TODO remake to add directly to store and INDEX
 		HGStore store = logGraph.getStore();
@@ -69,7 +71,7 @@ public class StorageService
 		
 	}
 
-	public HGHandle updateSubgraph(Subgraph subgraph)
+	public HGHandle updateSubgraph(StorageGraph subgraph)
 	{
 		HGStore store = logGraph.getStore();
 		HGHandle handle = storeSubgraph(subgraph, store);
@@ -83,9 +85,9 @@ public class StorageService
 	}
 
 
-	public HGHandle addOrReplaceSubgraph(Subgraph subgraph)
+	public HGHandle addOrReplaceSubgraph(StorageGraph subgraph)
 	{
-		HGPersistentHandle handle = (HGPersistentHandle)subgraph.getHandle();
+		HGPersistentHandle handle = (HGPersistentHandle)subgraph.getRoot();
 		
 		if (graph.getStore().containsLink(handle))
 		{

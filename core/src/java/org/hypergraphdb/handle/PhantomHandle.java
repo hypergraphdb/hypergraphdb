@@ -135,10 +135,8 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		return x;
 	}
 
-	public void accessed()
-	{
-	}
-
+	public void accessed() { }
+	
 	public final int hashCode()
 	{
 		return persistentHandle.hashCode();

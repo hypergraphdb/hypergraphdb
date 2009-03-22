@@ -80,8 +80,9 @@ public class ActivityManager implements MessageHandler
                 else if (right.future.isWaitedOn() && !right.queue.isEmpty())
                     return 1;
                 long st = System.currentTimeMillis();
-                long diff = (st-right.lastActionTimestamp)*right.queue.size()-
-                            (st-left.lastActionTimestamp)*left.queue.size(); 
+                long diff = (st-right.lastActionTimestamp)*(1 + right.queue.size())-
+                            (st-left.lastActionTimestamp)*(1 + left.queue.size());
+                // can't simply cast diff to int cause it'll screw up the sign
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             }
         }
@@ -97,10 +98,10 @@ public class ActivityManager implements MessageHandler
                 {
                     Activity a = globalQueue.take();
 //                    System.out.println("activity pulled:" + a + "," + a.lastActionTimestamp + "," + a.future.waiting);
-                    if (!a.queue.isEmpty())
+                    if (!a.queue.isEmpty() && !a.getState().isFinished())
                     {
                         Runnable r = a.queue.take();
-                        System.out.println("Found action " + r + " in queue " + a); 
+//                        System.out.println("Found action " + r + " in queue " + a); 
                         thisPeer.getExecutorService().execute(r);
                     }
                     else 
@@ -108,7 +109,8 @@ public class ActivityManager implements MessageHandler
                         if (globalQueue.isEmpty())                    
                             Thread.sleep(100); // really? sleep here? that much?
                         a.lastActionTimestamp = System.currentTimeMillis();
-                        globalQueue.put(a);
+                        if (!a.getState().isFinished())
+                            globalQueue.put(a);
                     }
 //                    Thread.sleep(1000);
 //                    System.out.println("global queue size=" + globalQueue.size());
@@ -469,6 +471,13 @@ public class ActivityManager implements MessageHandler
                     // be designed in such a way that the message content should be such that either
                     // it's ok to create a brand new activity from it, or it should be refused with a
                     // "not-understood" performative.
+                        
+                    // The question is: is it correct to remove activities when they reach a 
+                    // finished state. It is unlikely that the globalQueue.remove below will
+                    // actually remove the activity from the global queue because this listener
+                    // is probably called within a thread executing an activity "action". And
+                    // the activity is in fact not in the global queue while one of its actions
+                    // is being executed.
                     globalQueue.remove(activity);
                     activities.remove(activity.getId());
                 }

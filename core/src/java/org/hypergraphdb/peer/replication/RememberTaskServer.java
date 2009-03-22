@@ -13,7 +13,6 @@ import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.StorageService;
-import org.hypergraphdb.peer.Subgraph;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.Conversation;
@@ -21,6 +20,7 @@ import org.hypergraphdb.peer.workflow.ProposalConversation;
 import org.hypergraphdb.peer.workflow.TaskActivity;
 import org.hypergraphdb.peer.workflow.TaskFactory;
 import org.hypergraphdb.peer.workflow.ProposalConversation.State;
+import org.hypergraphdb.storage.StorageGraph;
 
 import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
@@ -97,16 +97,16 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 				HGHandle handle = null;
 				if (operation == StorageService.Operation.Create)
 				{
-					Subgraph subgraph = (Subgraph) getPart(content, Messages.CONTENT);
+					StorageGraph subgraph = (StorageGraph) getPart(content, Messages.CONTENT);
 					handle = storage.addSubgraph(subgraph);
 				}else if (operation == StorageService.Operation.Update){
-					Subgraph subgraph = (Subgraph) getPart(content, Messages.CONTENT);
+				    StorageGraph subgraph = (StorageGraph) getPart(content, Messages.CONTENT);
 					handle = storage.updateSubgraph(subgraph);
 				}else if (operation == StorageService.Operation.Remove){
 					handle = (HGPersistentHandle)getPart(content, Messages.CONTENT);
 					storage.remove(handle);
 				}else if (operation == StorageService.Operation.Copy){
-					Subgraph subgraph = (Subgraph) getPart(content, Messages.CONTENT);
+				    StorageGraph subgraph = (StorageGraph) getPart(content, Messages.CONTENT);
 					handle = storage.addOrReplaceSubgraph(subgraph);
 				}
 				handles.add(svalue(handle));

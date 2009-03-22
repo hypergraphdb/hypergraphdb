@@ -298,6 +298,7 @@ public class Structs
 		addMapper(PhantomManagedHandle.class, new HandleMapper(), "live-managed-handle");
 		addMapper(PhantomHandle.class, new HandleMapper(), "live-handle");
 		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
+//		addMapper(Subgraph.class, new SubGraphMapper(), "storage-graph");
 		
 	}
 	
@@ -744,7 +745,22 @@ public class Structs
 		Object getStruct(Object value);
 		Object getObject(Object struct);
 	}
-	
+/*	
+	public static class SubGraphMapper implements StructsMapper
+	{
+        public Object getObject(Object struct)
+        {
+            ArrayList<Object> data = (ArrayList<Object>)struct;
+            return new UUID((Long)data.get(0), (Long)data.get(1));
+        }
+
+        public Object getStruct(Object value)
+        {
+            Subgraph sg = (Subgraph)value;
+            return list(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
+        }	    
+	}
+	*/
 	/**
 	 * @author ciprian.costa
 	 *
@@ -777,7 +793,7 @@ public class Structs
             if (value instanceof HGPersistentHandle)
                 return value.toString();
             else if (value instanceof HGLiveHandle)
-                return ((HGLiveHandle)value).getPersistentHandle().toByteArray();
+                return ((HGLiveHandle)value).getPersistentHandle().toString();
             else
                 throw new RuntimeException("Attempt to serialize something that is not a HG handle as a HG handle.");
         }

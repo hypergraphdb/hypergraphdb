@@ -29,7 +29,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 		super(task, peer, State.Started, State.Done);
 		
 		//serverside flow
-		registerPerformativeTransition(State.Proposed, Performative.Accept, State.Accepted);
+		registerPerformativeTransition(State.Proposed, Performative.AcceptProposal, State.Accepted);
 
 		//client side flow
 		registerPerformativeTransition(State.Started, Performative.Propose, State.Proposed);		
@@ -63,7 +63,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	{
 		if (compareAndSetState(State.Proposed, State.Accepted))
 		{
-			combine(msg, struct(Messages.PERFORMATIVE, Performative.Accept));
+			combine(msg, struct(Messages.PERFORMATIVE, Performative.AcceptProposal));
 
 //			setMessage(msg);
 			say(msg);

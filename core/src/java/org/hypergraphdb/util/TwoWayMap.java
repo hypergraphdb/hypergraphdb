@@ -3,6 +3,7 @@ package org.hypergraphdb.util;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -53,6 +54,8 @@ public class TwoWayMap<X,Y>
 			}
 		};
 	}
+	public Set<Y> getYSet() { return ytox.keySet(); }
+	public Set<X> getXSet() { return xtoy.keySet(); }
 	public Y removeX(X x) { Y y = xtoy.remove(x); if (y != null) ytox.remove(y); return y;}
 	public X removeY(Y y) { X x = ytox.remove(y); if (x != null) xtoy.remove(x); return x;}
 	public Y getY(X x) { return xtoy.get(x); }

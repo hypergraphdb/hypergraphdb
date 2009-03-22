@@ -13,7 +13,6 @@ import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.protocol.Protocol;
 
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
 
 /**
@@ -48,7 +47,8 @@ public class JXTASendActivity extends PeerRelatedActivity
             {
                 targetPipeAdv = (PipeAdvertisement) target;
             }
-
+            else
+                throw new Exception("Network target '" + target + "' is not a PipeAdvertisement");
             System.out.println("Sending " + msg + " to adv: "
                                + targetPipeAdv.getName());
 
@@ -72,7 +72,7 @@ public class JXTASendActivity extends PeerRelatedActivity
             out.flush();
             return true;
         }
-        catch (IOException e)
+        catch (Throwable e)
         {
             e.printStackTrace();
             return false;

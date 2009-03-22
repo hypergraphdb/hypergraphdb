@@ -2,7 +2,6 @@ package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -11,12 +10,11 @@ import org.hypergraphdb.HGAtomCache;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSet;
-import org.hypergraphdb.event.HGAtomEvictEvent;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
-import org.hypergraphdb.handle.PhantomHandle;
-import org.hypergraphdb.handle.PhantomManagedHandle;
+import org.hypergraphdb.handle.WeakHandle;
+import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.WeakIdentityHashMap;
 
@@ -46,21 +44,21 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = null; // to be configured by the HyperGraph instance
 	
-    private final Map<HGPersistentHandle, PhantomHandle> 
-    	liveHandles = new HashMap<HGPersistentHandle, PhantomHandle>();
+    private final Map<HGPersistentHandle, WeakHandle> 
+    	liveHandles = new HashMap<HGPersistentHandle, WeakHandle>();
 		
 	private Map<Object, HGLiveHandle> atoms = 
 		new WeakIdentityHashMap<Object, HGLiveHandle>();
 	
-	private Map<HGLiveHandle, Object> frozenAtoms = 
-		new IdentityHashMap<HGLiveHandle, Object>();
+	private Map<HGLiveHandle, Object> frozenAtoms =	new IdentityHashMap<HGLiveHandle, Object>();
+	
 	private ColdAtoms coldAtoms = new ColdAtoms();
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private ReferenceQueue refQueue = new ReferenceQueue();
-	private PhantomCleanup phantomCleanupThread = new PhantomCleanup();
+    private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+	private PhantomCleanup cleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
 	
@@ -68,7 +66,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	// This handle class is used to read atoms during closing of the cache. Because
 	// closing the HyperGraph may involve a lot of cleanup activity where it's necessary
 	// to read atoms (mostly types) into main memory just temporarily, we need some
-	// way to enact this temporarility. 
+	// way to enact this temporarity. 
 	//
 	private static class TempLiveHandle extends DefaultManagedLiveHandle
 	{
@@ -85,11 +83,11 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private void processRefQueue() throws InterruptedException
 	{
-		PhantomHandle ref = (PhantomHandle)refQueue.remove(phantomQueuePollInterval);
+		WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
 		while (ref != null)
 		{
-			graph.getEventManager().dispatch(graph, 
-					 new HGAtomEvictEvent(ref, ref.fetchRef()));
+//			graph.getEventManager().dispatch(graph, 
+//					 new HGAtomEvictEvent(ref, ref.fetchRef()));
 			lock.writeLock().lock();
 			try
 			{
@@ -101,7 +99,7 @@ public class WeakRefAtomCache implements HGAtomCache
 			}
 			ref.clear();
 			synchronized (ref) { ref.notifyAll(); }			
-			ref = (PhantomHandle)refQueue.poll();
+			ref = (WeakHandle)refQueue.poll();
 		}
 	}
 	
@@ -111,7 +109,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		
 	    public void run() 
 	    {
-			PhantomHandle.returnEnqueued.set(Boolean.TRUE);
+//			WeakHandle.returnEnqueued.set(Boolean.TRUE);
 	        for (done = false; !done; ) 
 	        {
 	        	try 
@@ -128,7 +126,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	        		t.printStackTrace(System.err);
 	        	}
 	        }
-			PhantomHandle.returnEnqueued.set(Boolean.FALSE);
+//			WeakHandle.returnEnqueued.set(Boolean.FALSE);
 	    }
 
 	    public void end()
@@ -139,9 +137,9 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public WeakRefAtomCache()
 	{
-		phantomCleanupThread.setPriority(Thread.MAX_PRIORITY);
-		phantomCleanupThread.setDaemon(true);		
-		phantomCleanupThread.start();
+		cleanupThread.setPriority(Thread.MAX_PRIORITY);
+		cleanupThread.setDaemon(true);		
+		cleanupThread.start();
 	}
 	
 	public void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache)
@@ -157,10 +155,9 @@ public class WeakRefAtomCache implements HGAtomCache
 	public void setHyperGraph(HyperGraph hg) 
 	{
 		this.graph = hg;
-		phantomCleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
+		cleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
 	}
 	
-	@SuppressWarnings("unchecked")
 	public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
 								 Object atom,
 								 byte flags) 
@@ -172,13 +169,13 @@ public class WeakRefAtomCache implements HGAtomCache
 			return result;
 		}		
 		lock.writeLock().lock();
-		PhantomHandle h = null;
+		WeakHandle h = null;
 		try
 		{			
 			h = liveHandles.get(pHandle);
 			if (h != null)
 				return h;
-			h = new PhantomHandle(atom, pHandle, flags, refQueue);			
+			h = new WeakHandle(atom, pHandle, flags, refQueue);			
 			atoms.put(atom, h);
 			liveHandles.put(pHandle, h);
 			coldAtoms.add(atom);
@@ -190,7 +187,6 @@ public class WeakRefAtomCache implements HGAtomCache
 		return h;
 	}
 
-	@SuppressWarnings("unchecked")
 	public HGManagedLiveHandle atomRead(HGPersistentHandle pHandle,
 									    Object atom, 
 									    byte flags, 
@@ -203,14 +199,14 @@ public class WeakRefAtomCache implements HGAtomCache
 			atoms.put(atom, result);
 			return result;
 		}
-		PhantomManagedHandle h = null;
+		WeakManagedHandle h = null;
 		lock.writeLock().lock();
 		try
 		{
-			h = (PhantomManagedHandle)liveHandles.get(pHandle);
+			h = (WeakManagedHandle)liveHandles.get(pHandle);
 			if (h != null)
 				return h;
-			h = new PhantomManagedHandle(atom, 
+			h = new WeakManagedHandle(atom, 
 										 pHandle, 
 										 flags, 
 										 refQueue,
@@ -231,8 +227,8 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 		if (closing)
 		{
-			if (handle instanceof PhantomHandle)
-				((PhantomHandle)handle).storeRef(atom);
+			if (handle instanceof WeakHandle)
+				((WeakHandle)handle).clear();
 			else
 				((TempLiveHandle)handle).setRef(atom);
 			return;
@@ -244,27 +240,27 @@ public class WeakRefAtomCache implements HGAtomCache
 		
 		try
 		{
-			PhantomHandle ph = (PhantomHandle)handle;
-			PhantomHandle existing = liveHandles.get(ph.getPersistentHandle());
-			
-			if (existing != ph)
-			{
-				if (existing != null)
-				{
-					liveHandles.remove(existing.getPersistentHandle());
-					atoms.remove(existing.getRef());				
-				}
-				ph.storeRef(atom);
-				liveHandles.put(ph.getPersistentHandle(), ph);
-				atoms.put(atom, ph);
-				coldAtoms.add(atom);
-			}		
-			else if (ph.getRef() != atom)
-			{
-				atoms.remove(ph.getRef());
-				ph.storeRef(atom);
-				atoms.put(atom, ph);
-			}
+		    WeakHandle newLive = null;
+		    if (handle instanceof WeakManagedHandle)
+		        newLive = new WeakManagedHandle(atom, 
+		                                        handle.getPersistentHandle(), 
+		                                        handle.getFlags(), 
+		                                        refQueue,
+		                                        ((WeakManagedHandle)handle).getRetrievalCount(),
+		                                        ((WeakManagedHandle)handle).getRetrievalCount());
+		    else
+		        newLive = new WeakHandle(atom, 
+		                                 handle.getPersistentHandle(),
+		                                 handle.getFlags(),
+		                                 refQueue);
+		    liveHandles.put(handle.getPersistentHandle(), newLive);
+		    Object curr = handle.getRef();
+		    if (curr != null)
+		    {
+		        atoms.remove(curr);
+		    }
+		    atoms.put(atom, newLive);
+            coldAtoms.add(atom);
 		}
 		finally
 		{
@@ -275,23 +271,23 @@ public class WeakRefAtomCache implements HGAtomCache
 	public void close() 
 	{	
 		closing = true;
-		phantomCleanupThread.end();	
-		while (phantomCleanupThread.isAlive() )
-			try { phantomCleanupThread.join(); } catch (InterruptedException ex) { }
-		PhantomHandle.returnEnqueued.set(Boolean.TRUE);
-		try { processRefQueue(); } catch (InterruptedException ex) { }
-		for (Iterator<Map.Entry<HGPersistentHandle, PhantomHandle>> i = liveHandles.entrySet().iterator(); 
-			 i.hasNext(); ) 
-		{
-			PhantomHandle h = i.next().getValue();
-			Object x = h.fetchRef();
-			graph.getEventManager().dispatch(graph, new HGAtomEvictEvent(h, x));			
-			if (h.isEnqueued())
-			{
-				h.clear();
-			}
-		}
-		PhantomHandle.returnEnqueued.set(Boolean.FALSE);
+		cleanupThread.end();	
+		while (cleanupThread.isAlive() )
+			try { cleanupThread.join(); } catch (InterruptedException ex) { }
+//		WeakHandle.returnEnqueued.set(Boolean.TRUE);
+//		try { processRefQueue(); } catch (InterruptedException ex) { }
+//		for (Iterator<Map.Entry<HGPersistentHandle, WeakHandle>> i = liveHandles.entrySet().iterator(); 
+//			 i.hasNext(); ) 
+//		{
+//		    WeakHandle h = i.next().getValue();
+//			Object x = h.fetchRef();
+//			graph.getEventManager().dispatch(graph, new HGAtomEvictEvent(h, x));			
+//			if (h.isEnqueued())
+//			{
+//				h.clear();
+//			}
+//		}
+//		WeakHandle.returnEnqueued.set(Boolean.FALSE);
 		frozenAtoms.clear();		
 		incidenceCache.clear();
 		if (incidenceCache instanceof CloseMe)
@@ -305,7 +301,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		lock.readLock().lock();
 		try
 		{
-			PhantomHandle h = liveHandles.get(pHandle);
+		    WeakHandle h = liveHandles.get(pHandle);
 			if (h != null)
 				h.accessed();
 			return h;
@@ -336,8 +332,8 @@ public class WeakRefAtomCache implements HGAtomCache
 		{
 			atoms.remove(handle.getRef());
 			// Shouldn't use clear here, since we might be gc-ing the ref!
-			if (handle instanceof PhantomHandle)
-				((PhantomHandle)handle).storeRef(null);
+//			if (handle instanceof WeakHandle)
+//				((WeakHandle)handle).storeRef(null);
 			liveHandles.remove(handle.getPersistentHandle());			
 		}
 		finally

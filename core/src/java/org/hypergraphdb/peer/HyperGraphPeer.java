@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,6 +29,8 @@ import org.hypergraphdb.peer.serializer.JSONReader;
 import org.hypergraphdb.peer.workflow.ActivityManager;
 import org.hypergraphdb.peer.workflow.ActivityResult;
 import org.hypergraphdb.peer.workflow.AffirmIdentity;
+import org.hypergraphdb.storage.HGStoreSubgraph;
+import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.TwoWayMap;
 
@@ -370,12 +373,13 @@ public class HyperGraphPeer
 	} */
 
 	//TODO use streams?
-	public Subgraph getSubgraph(HGHandle handle)
+	public StorageGraph getSubgraph(HGHandle handle)
 	{
-		if (graph.getStore().containsLink((HGPersistentHandle)handle))
+	    HGPersistentHandle pHandle = graph.getPersistentHandle(handle);
+		if (graph.getStore().containsLink(pHandle))
 		{
 			System.out.println("Handle found in local repository");
-			return new Subgraph(graph, (HGPersistentHandle)handle);			
+			return new HGStoreSubgraph(pHandle, graph.getStore());			
 		}
 		else 
 		{
@@ -422,8 +426,10 @@ public class HyperGraphPeer
 	 * 
 	 * @return A list with all the connected peers in the form of RemotePeer objects.
 	 */
-	public List<RemotePeer> getConnectedPeers()
+	public Set<HGPeerIdentity> getConnectedPeers()
 	{
+	    return peerIdentities.getYSet();
+	    /*
 		List<RemotePeer> peers = peerInterface.getPeerNetwork().getConnectedPeers();
 		
 		for(RemotePeer peer : peers)
@@ -431,7 +437,7 @@ public class HyperGraphPeer
 			peer.setLocalPeer(this);
 		}
 		
-		return peers;
+		return peers; */
 	}
 	
 	/**

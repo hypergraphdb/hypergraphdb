@@ -46,6 +46,7 @@ public class JXTAServer implements Runnable
 	
 	public void run()
 	{
+	    Thread.currentThread().setName("JXTA Server");
 		if (serverSocket != null)
 		{
 			isRunning = true;

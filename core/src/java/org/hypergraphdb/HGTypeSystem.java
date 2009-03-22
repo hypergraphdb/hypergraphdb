@@ -674,9 +674,27 @@ public class HGTypeSystem
 	 */
 	public Class<?> getClassForType(HGHandle typeHandle)
 	{
-		String classname = getClassToTypeDB().findFirstByValue(graph.getPersistentHandle(typeHandle));
+		String classname = getClassNameForType(typeHandle);
 		return classname != null ? loadClass(classname) : null;
 	}
+
+    /**
+     * <p>
+     * Return the Java classname that corresponds to the given HyperGraphDB type handle. The
+     * result is the name of the class class of the run-time instances constructed with 
+     * the type identified
+     * by <code>typeHandle</code>. 
+     * </p>
+     * 
+     * @param typeHandle The <code>HGHandle</code> identifying the type whose runtime Java
+     * class is required.
+     * @return The Java class name corresponding to <code>typeHandle</code> or <code>null</code>
+     * if there's no such correspondence.
+     */	
+	public String getClassNameForType(HGHandle typeHandle)
+    {
+        return getClassToTypeDB().findFirstByValue(graph.getPersistentHandle(typeHandle));
+    }
 	
 	/**
 	 * <p>Return the <code>HGAtomType</code> by its <code>HGHandle</code>.</p>

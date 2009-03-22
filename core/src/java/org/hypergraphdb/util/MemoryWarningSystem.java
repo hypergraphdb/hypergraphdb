@@ -56,24 +56,24 @@ public class MemoryWarningSystem
 
 	public MemoryWarningSystem() 
 	{
-	    MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
-	    tenuredGenPool = this.findTenuredGenPool();
-	    NotificationEmitter emitter = (NotificationEmitter) mbean;
-	    emitter.addNotificationListener(new NotificationListener() 
-	    {
-	    	public void handleNotification(Notification n, Object hb) 
-	    	{
-	    		if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) 
-	    		{	    			
-		            long maxMemory = tenuredGenPool.getUsage().getMax();
-		            long usedMemory = tenuredGenPool.getUsage().getUsed();
-		            for (Listener listener : listeners) 
-		            {
-		              listener.memoryUsageLow(usedMemory, maxMemory);
-		            }
-	    		}
-	    	}
-	    }, null, null);
+//	    MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
+//	    tenuredGenPool = this.findTenuredGenPool();
+//	    NotificationEmitter emitter = (NotificationEmitter) mbean;
+//	    emitter.addNotificationListener(new NotificationListener() 
+//	    {
+//	    	public void handleNotification(Notification n, Object hb) 
+//	    	{
+//	    		if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) 
+//	    		{	    			
+//		            long maxMemory = tenuredGenPool.getUsage().getMax();
+//		            long usedMemory = tenuredGenPool.getUsage().getUsed();
+//		            for (Listener listener : listeners) 
+//		            {
+//		              listener.memoryUsageLow(usedMemory, maxMemory);
+//		            }
+//	    		}
+//	    	}
+//	    }, null, null);
 	}
 
 	public boolean addListener(Listener listener) 
@@ -91,9 +91,9 @@ public class MemoryWarningSystem
 		if (percentage <= 0.0 || percentage > 1.0) 
 			throw new IllegalArgumentException("Percentage not in range");
 
-	    long maxMemory = tenuredGenPool.getUsage().getMax();
-	    long warningThreshold = (long) (maxMemory * percentage);
-	    tenuredGenPool.setUsageThreshold(warningThreshold);	    
+//	    long maxMemory = tenuredGenPool.getUsage().getMax();
+//	    long warningThreshold = (long) (maxMemory * percentage);
+	//    tenuredGenPool.setUsageThreshold(warningThreshold);	    
 	}
 
 	public double getPercentageUsageThreshold()
@@ -109,14 +109,16 @@ public class MemoryWarningSystem
      */
 	private MemoryPoolMXBean findTenuredGenPool() 
 	{
+	    MemoryPoolMXBean last = null;
 		for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans()) 
 		{
 			// I don't know whether this approach is better, or whether
 			// we should rather check for the pool name "Tenured Gen"?
-			if (pool.getType() == MemoryType.HEAP && pool.isUsageThresholdSupported())
-				return pool;
-      
+//			if (pool.getType() == MemoryType.HEAP && pool.isUsageThresholdSupported())
+				last = pool;
+				System.out.println("pool " + pool);
 		}
-		throw new AssertionError("Could not find tenured space");
+		return last;
+		//throw new AssertionError("Could not find tenured space");
 	}
 }

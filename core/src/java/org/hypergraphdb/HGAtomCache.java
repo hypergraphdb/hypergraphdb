@@ -111,7 +111,7 @@ public interface HGAtomCache
 	 * 
 	 * @param handle The <code>HGLiveHandle</code> handle of the atom to be refreshed.
 	 * @param atom The atom value. <code>HyperGraph</code> will obtain this value
-	 * either from the cache, in case the atom has already been refetched from storage
+	 * either from the cache, in case the atom has already been re-fetched from storage
 	 * after the eviction event, or it will retrieve and create a new run-time instance.
 	 */
 	void atomRefresh(HGLiveHandle handle, Object atom);
@@ -200,4 +200,12 @@ public interface HGAtomCache
 	 * handles. Also, they are ordered and can be queried for membership efficiently.
 	 */
 	HGCache<HGPersistentHandle, IncidenceSet> getIncidenceCache();
+	
+	/**
+	 * <p>
+	 * Set the implementation of the incidence sets cache to use.
+	 * </p>
+	 * @param cache
+	 */
+	void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache);
 }

@@ -5,9 +5,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerInterface;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -89,9 +91,36 @@ public abstract class Activity
      * @param target The message recipient.
      * @param msg The message.
      */
+    protected void send(HGPeerIdentity target, Message msg)
+    {
+        Object networkTarget = thisPeer.getNetworkTarget(target);
+        if (networkTarget == null)
+            throw new RuntimeException("Unknown network target for peer " + 
+                                       target + " - perhaps it dropped from the network?");
+        try
+        {
+            if (!getPeerInterface().send(networkTarget, msg).get())
+                throw new RuntimeException("Failed to send msg '" + msg + "' to " + target);
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * <p>A convenience method to send a message to a target peer.</p>
+     * 
+     * @param target The message recipient - could be a <code>HGPeerIdentity</code>
+     * or a transport-dependent network target.
+     * @param msg The message.
+     */
     protected void send(Object target, Message msg)
     {
-        getPeerInterface().send(target, msg);
+        if (target instanceof HGPeerIdentity)
+            send((HGPeerIdentity)target, msg);
+        else
+            getPeerInterface().send(target, msg);
     }
     
     /**
@@ -181,5 +210,18 @@ public abstract class Activity
     public String toString()
     {
         return "activity[" + getId() + "]:" + getType();
+    }
+    
+    public int hashCode()
+    {
+        return HGUtils.hashIt(getId());
+    }
+    
+    public boolean equals(Object x)
+    {
+        if (! (x instanceof Activity))
+            return false;
+        else
+            return HGUtils.eq(getId(), ((Activity)x).getId());
     }
 }

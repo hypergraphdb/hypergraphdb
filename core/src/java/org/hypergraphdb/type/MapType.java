@@ -11,6 +11,7 @@ package org.hypergraphdb.type;
 import java.util.Map;
 import java.util.Iterator;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HGPersistentHandle;
@@ -76,9 +77,13 @@ public class MapType implements HGAtomType
 			Object key = entry.getKey();
 			Object value = entry.getValue();
 			HGHandle typeHandle = hg.getTypeSystem().getTypeHandle(key.getClass());
+			if (typeHandle == null)
+			    throw new HGException("Unable to get HG type for class '" + key.getClass() + "'");
 			layout[pos++] = hg.getPersistentHandle(typeHandle);
 			layout[pos++] = TypeUtils.storeValue(hg, key, hg.getTypeSystem().getType(typeHandle));
 			typeHandle = hg.getTypeSystem().getTypeHandle(value.getClass());
+            if (typeHandle == null)
+                throw new HGException("Unable to get HG type for class '" + value.getClass() + "'");			
 			layout[pos++] = hg.getPersistentHandle(typeHandle);
 			layout[pos++] = TypeUtils.storeValue(hg, value, hg.getTypeSystem().getType(typeHandle));
 		}		
