@@ -76,7 +76,7 @@ public class And extends ArrayList<HGQueryCondition> implements HGQueryCondition
         	HGQueryCondition c = get(i);
         	if (! (c instanceof HGAtomPredicate))
         		throw new Error("Attempt to use And as a predicate where the sub-condition " + c + " is not a predicate.");
-            if (((HGAtomPredicate)c).satisfies(hg, value))
+            if (!((HGAtomPredicate)c).satisfies(hg, value))
                 return false;
         }
         return true;

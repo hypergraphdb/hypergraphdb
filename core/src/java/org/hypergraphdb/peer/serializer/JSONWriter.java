@@ -12,7 +12,6 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Stack;
@@ -24,7 +23,7 @@ import java.util.Stack;
 public class JSONWriter
 {
     private StringBuffer buf = new StringBuffer();
-    private Stack calls = new Stack();
+    private Stack<Object> calls = new Stack<Object>();
     boolean emitClassName = true;
     private ArrayList<CustomSerializedValue> customValues = new ArrayList<CustomSerializedValue>();
     

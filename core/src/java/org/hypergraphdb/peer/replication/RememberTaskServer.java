@@ -19,7 +19,6 @@ import org.hypergraphdb.peer.workflow.Conversation;
 import org.hypergraphdb.peer.workflow.ProposalConversation;
 import org.hypergraphdb.peer.workflow.TaskActivity;
 import org.hypergraphdb.peer.workflow.TaskFactory;
-import org.hypergraphdb.peer.workflow.ProposalConversation.State;
 import org.hypergraphdb.storage.StorageGraph;
 
 import static org.hypergraphdb.peer.HGDBOntology.*;

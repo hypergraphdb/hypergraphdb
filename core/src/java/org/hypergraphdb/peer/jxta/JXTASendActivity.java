@@ -1,6 +1,5 @@
 package org.hypergraphdb.peer.jxta;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import net.jxta.document.Advertisement;

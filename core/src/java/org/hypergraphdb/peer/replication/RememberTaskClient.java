@@ -28,7 +28,6 @@ import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.Conversation;
 import org.hypergraphdb.peer.workflow.ProposalConversation;
 import org.hypergraphdb.peer.workflow.TaskActivity;
-import org.hypergraphdb.peer.workflow.ProposalConversation.State;
 
 /**
  * @author Cipri Costa

@@ -1,6 +1,5 @@
 package org.hypergraphdb.peer.workflow;
 
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
 
 import org.hypergraphdb.peer.Messages;

@@ -102,6 +102,11 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			}
 			return or;
 		}
+        else if (C instanceof MapCondition)
+        {
+            MapCondition mcond = (MapCondition)C;
+            return new MapCondition(toDNF(mcond.getCondition()), mcond.getMapping());
+        }		
 		else
 			return C;
 	}

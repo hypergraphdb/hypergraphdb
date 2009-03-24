@@ -12,7 +12,6 @@ import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.util.Pair;
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.Structs.*;
 
 /**

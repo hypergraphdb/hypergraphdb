@@ -3,8 +3,6 @@ package org.hypergraphdb.peer.serializer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.SubgraphManager;

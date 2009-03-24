@@ -2,7 +2,6 @@ package org.hypergraphdb.peer.workflow;
 
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.Structs.*;
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import static org.hypergraphdb.peer.protocol.Performative.*;
 
 import java.util.Map;

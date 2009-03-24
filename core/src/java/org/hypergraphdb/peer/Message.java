@@ -1,6 +1,5 @@
 package org.hypergraphdb.peer;
 
-import static org.hypergraphdb.peer.HGDBOntology.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
