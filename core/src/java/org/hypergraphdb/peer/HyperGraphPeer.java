@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -82,6 +83,9 @@ public class HyperGraphPeer
     private TwoWayMap<Object, HGPeerIdentity> peerIdentities = 
         new TwoWayMap<Object, HGPeerIdentity>(); 
 	
+    private List<PeerPresenceListener> peerListeners = 
+        new ArrayList<PeerPresenceListener>();
+    
 	/**
 	 * Temporary storage for all types of things, including replication and subgraph serialization.
 	 */
@@ -238,7 +242,7 @@ public class HyperGraphPeer
 
 	    return contents.toString();
 	}
-	
+		
 	public static Map<String,Object> loadConfiguration(File configFile)	
 	{
 	    JSONReader reader = new JSONReader();
@@ -291,7 +295,7 @@ public class HyperGraphPeer
 					status = true;
 					
                     peerInterface.getPeerNetwork().addPeerPresenceListener(
-                       new PeerPresenceListener()
+                       new NetworkPeerPresenceListener()
                        {
                            public void peerJoined(Object target)
                            {
@@ -496,7 +500,8 @@ public class HyperGraphPeer
         synchronized (peerIdentities)
         {            
             peerIdentities.add(networkTarget, id);
-            System.out.println("Adding peer " + id + " at " + getIdentity());
+            for (PeerPresenceListener listener : peerListeners)
+                listener.peerJoined(id);
         }
     }
     
@@ -505,6 +510,9 @@ public class HyperGraphPeer
         synchronized (peerIdentities)
         {        
             peerIdentities.removeX(networkTarget);
+            HGPeerIdentity id = peerIdentities.getY(networkTarget);
+            for (PeerPresenceListener listener : peerListeners)
+                listener.peerLeft(id);            
         }            
     }
     
@@ -520,5 +528,15 @@ public class HyperGraphPeer
     public Map<String, Object> getObjectContext()
     {
         return context;
+    }
+    
+    public void addPeerPresenceListener(PeerPresenceListener listener)
+    {
+        peerListeners.add(listener);
+    }
+    
+    public void removePeerPresenceListener(PeerPresenceListener listener)
+    {
+        peerListeners.remove(listener);
     }
 }

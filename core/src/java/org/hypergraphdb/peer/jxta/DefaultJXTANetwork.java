@@ -58,8 +58,8 @@ import net.jxta.protocol.PeerGroupAdvertisement;
 import net.jxta.protocol.PipeAdvertisement;
 import net.jxta.rendezvous.RendezVousService;
 
+import org.hypergraphdb.peer.NetworkPeerPresenceListener;
 import org.hypergraphdb.peer.PeerConfig;
-import org.hypergraphdb.peer.PeerPresenceListener;
 import org.hypergraphdb.peer.RemotePeer;
 import org.hypergraphdb.query.HGAtomPredicate;
 
@@ -83,8 +83,8 @@ public class DefaultJXTANetwork implements JXTANetwork
     private LinkedList<Advertisement> ownAdvs = new LinkedList<Advertisement>();
     private Map<Advertisement, HGAtomPredicate> peerAdvs = Collections.synchronizedMap(new HashMap<Advertisement, HGAtomPredicate>());
     private Map<Advertisement, String> peerAdvIds = new HashMap<Advertisement, String>();
-    private List<PeerPresenceListener> peerPresenceListeners = 
-        new ArrayList<PeerPresenceListener>(); 
+    private List<NetworkPeerPresenceListener> peerPresenceListeners = 
+        new ArrayList<NetworkPeerPresenceListener>(); 
     
     private Set<PipeID> ownPipes = new HashSet<PipeID>();
     private int advTimetoLive;
@@ -875,7 +875,7 @@ public class DefaultJXTANetwork implements JXTANetwork
                                 peerAdvs.put(adv, null);
                                 peerAdvIds.put(adv, peerName);
                                 System.out.println("Add new advertisment, calling listeners.");
-                                for (PeerPresenceListener listener : peerPresenceListeners)
+                                for (NetworkPeerPresenceListener listener : peerPresenceListeners)
                                     listener.peerJoined(adv);
                             }
 //                            else
@@ -966,12 +966,12 @@ public class DefaultJXTANetwork implements JXTANetwork
         return peer;
     }
 
-    public void addPeerPresenceListener(PeerPresenceListener listener)
+    public void addPeerPresenceListener(NetworkPeerPresenceListener listener)
     {
         peerPresenceListeners.add(listener);
     }
 
-    public void removePeerPresenceListener(PeerPresenceListener listener)
+    public void removePeerPresenceListener(NetworkPeerPresenceListener listener)
     {
         peerPresenceListeners.remove(listener);
     }    

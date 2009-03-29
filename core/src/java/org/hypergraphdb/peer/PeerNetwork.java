@@ -32,6 +32,6 @@ public interface PeerNetwork
 	List<RemotePeer> getConnectedPeers();
 	RemotePeer getConnectedPeer(String peerName);
 	
-	void addPeerPresenceListener(PeerPresenceListener listener);
-	void removePeerPresenceListener(PeerPresenceListener listener);
+	void addPeerPresenceListener(NetworkPeerPresenceListener listener);
+	void removePeerPresenceListener(NetworkPeerPresenceListener listener);
 }
