@@ -153,9 +153,7 @@ public class DefaultJXTANetwork implements JXTANetwork
             catch (Exception e)
             {
                 e.printStackTrace();
-            }
-            
-
+            }          
         }
         else
         {
@@ -163,8 +161,7 @@ public class DefaultJXTANetwork implements JXTANetwork
         }
 
         // wait for rendezvous if needed
-        Boolean needsRendezVous = (Boolean) getOptPart(
-                                                       jxtaConfig,
+        Boolean needsRendezVous = (Boolean) getOptPart(jxtaConfig,
                                                        false,
                                                        JXTAConfig.NEEDS_RENDEZ_VOUS);
         System.out.println("Waiting for rendezvous: " + needsRendezVous);
@@ -227,7 +224,7 @@ public class DefaultJXTANetwork implements JXTANetwork
 	{
 		if (peerManager != null)
 		{
-			advPublisher.stop();
+			advPublisher.stop();			
 			advSubscriber.stop();
 			
 			if (netPeerGroup.isRendezvous())
@@ -238,11 +235,13 @@ public class DefaultJXTANetwork implements JXTANetwork
 			if (hgdbGroup.isRendezvous())
 				hgdbGroup.getRendezVousService().stopRendezVous();
 			
-			hgdbGroup.getEndpointService().stopApp();
-			
+			hgdbGroup.getEndpointService().stopApp();			
 			hgdbGroup.stopApp();
+			
 			peerManager.stopNetwork();
-		}else{
+		}
+		else
+		{
 			System.out.println("Peer manager is null, nothing to stop here");
 		}
 	}
@@ -741,25 +740,31 @@ public class DefaultJXTANetwork implements JXTANetwork
 
     
     private class AdvPublisher implements Runnable
-    {
-    	private volatile boolean isRunning = false;
+    {    	
+    	private volatile Thread thisThread = null;
     	
     	public void stop()
     	{
-    		isRunning = false;
+    	    Thread t = thisThread;
+    	    thisThread = null;    	    
+    	    if (t != null)
+    	    {
+                try { t.join(1000); } catch (InterruptedException e) { }
+                if (t.isAlive())
+                    t.interrupt();                
+    	    }
     	}
     	
         public void run()
-        {
+        {            
             DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
 
             long expiration = 5 * 1000;// DiscoveryService.DEFAULT_EXPIRATION;
             long waittime = 5 * 1000;// DiscoveryService.DEFAULT_EXPIRATION;
-
+            thisThread = Thread.currentThread();
             try
-            {
-            	isRunning = true;
-                while (isRunning)
+            {            	
+                while (thisThread != null)
                 {
                     for (Advertisement adv : ownAdvs)
                     {
@@ -780,24 +785,35 @@ public class DefaultJXTANetwork implements JXTANetwork
             catch (Exception e)
             {
                 e.printStackTrace();
+            }  
+            finally
+            {
+                thisThread = null;
             }
         }
     }
 
     private class AdvSubscriber implements Runnable, DiscoveryListener
     {
-    	private volatile boolean isRunning = false;
+        private volatile Thread thisThread = null;
     	
-    	public void stop()
-    	{
-    		isRunning = false;
-    	}
+        public void stop()
+        {
+            Thread t = thisThread;
+            thisThread = null;
+            if (t != null)
+            {
+                try { t.join(1000); } catch (InterruptedException e) { }
+                if (t.isAlive())
+                    t.interrupt();
+            }
+        }
  
         public void run()
-        {
+        {            
             long waittime = 1000L;
             DiscoveryService discoveryService = hgdbGroup.getDiscoveryService();
-
+            thisThread = Thread.currentThread();
             try
             {
                 Enumeration<Advertisement> localAdvs = 
@@ -808,8 +824,7 @@ public class DefaultJXTANetwork implements JXTANetwork
                 // events
                 discoveryService.addDiscoveryListener(this);
 
-                isRunning = true;
-                while (isRunning)
+                while (thisThread != null)
                 {
                     // System.out.println("Getting remote advertisements");
                     discoveryService.getRemoteAdvertisements(null,
@@ -832,8 +847,11 @@ public class DefaultJXTANetwork implements JXTANetwork
             catch (Exception e)
             {
                 e.printStackTrace();
+            }           
+            finally
+            {
+                thisThread = null;
             }
-
         }
 
         public void discoveryEvent(DiscoveryEvent ev)

@@ -36,12 +36,16 @@ public interface JavaTypeMapper extends HGGraphHolder
 	 * <p>
 	 * This method should return a brand new <code>HGAtomType</code> that will subsequently
 	 * be saved as a type atom with handle <code>typeHandle</code> and associated with
-	 * the <code>javaClass</code> class.
+	 * the <code>javaClass</code> class. The method should return <code>null</code> in
+	 * case it cannot (or it determines that it should not) create a <code>HGAtomType</code>.
+	 * In the case the JavaTypeFactory will move on to try the next of the registered
+	 * type mappers.
 	 * </p>
 	 * 
 	 * @param javaClass
 	 * @param typeHandle
-	 * @return
+	 * @return A newly created <code>HGAtomType</code> corresponding to the passed in Java
+	 * class or <code>null</code> if such a type could not be created.
 	 */
 	HGAtomType defineHGType(Class<?> javaClass, 
 							HGHandle typeHandle);

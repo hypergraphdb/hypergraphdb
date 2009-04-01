@@ -14,8 +14,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
@@ -263,8 +265,12 @@ public class HyperGraphPeer
 	 * @param passwd Password to use to authenticate against the group.
 	 * @return
 	 */
-	public boolean start(String user, String passwd)
+	public Future<Boolean> start(String user, String passwd)
 	{
+	    return executorService.submit(new Callable<Boolean>() 
+	    {
+	    public Boolean call() {    
+	    
 		boolean status = false;
 		
 		if (configuration != null)
@@ -288,7 +294,7 @@ public class HyperGraphPeer
 				//load and start interface
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
-				peerInterface.setThisPeer(this);
+				peerInterface.setThisPeer(HyperGraphPeer.this);
 
 				if (peerInterface.configure(configuration))
 				{
@@ -319,7 +325,7 @@ public class HyperGraphPeer
                             if (config == null)
                                 config = new HashMap<String, Object>();
                             BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
-                            boot.bootstrap(this, config);
+                            boot.bootstrap(HyperGraphPeer.this, config);
                         }                    
 					// the order of the following 3 statements is important
 	                activityManager.start();
@@ -345,21 +351,29 @@ public class HyperGraphPeer
 		}
 		
 		return status;
+		
+	    }});
 	}
 	
 	public void stop()
 	{
-		if (peerInterface != null){
+	    //
+	    // Gives chance to all threads to exit:
+	    //
+        activityManager.stop();	    
+		if (peerInterface != null)
 			peerInterface.stop();
-		}
 		
-		if (graph != null){
-			graph.close();
-		}
+		//
+		// Force exit of any remaining running threads.
+		//
+		this.executorService.shutdownNow();
 		
-		if (tempGraph != null){
+	    activityManager.clear();	 
+	    this.peerIdentities.clear();
+	    
+		if (tempGraph != null)
 			tempGraph.close();
-		}
 	}
 		
 	/**
@@ -499,6 +513,9 @@ public class HyperGraphPeer
     {
         synchronized (peerIdentities)
         {            
+            HGPeerIdentity oldId = peerIdentities.getY(networkTarget);
+            if (oldId != null && oldId.equals(id))
+                return;
             peerIdentities.add(networkTarget, id);
             for (PeerPresenceListener listener : peerListeners)
                 listener.peerJoined(id);

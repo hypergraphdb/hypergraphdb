@@ -44,11 +44,9 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	private HyperGraphPeer thisPeer = null;
 	private JXTANetwork jxtaNetwork = new DefaultJXTANetwork();
 	private MessageHandler messageHandler;
-	
-	
+		
 	private ExecutorService executorService;
 	private JXTAServer jxtaServer = null;
-
 	
 	public boolean configure(Map<String, Object> configuration) 
 	{
@@ -58,14 +56,13 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	
 	public void stop()
 	{
+        if (jxtaServer != null)
+        {
+            jxtaServer.stop();
+        }	    
 		if (jxtaNetwork != null)
 		{
 			jxtaNetwork.stop();
-		}
-		
-		if (jxtaServer != null)
-		{
-			jxtaServer.stop();
 		}
 	}
 	

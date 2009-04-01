@@ -86,22 +86,23 @@ public class ActivityManager implements MessageHandler
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             }
         }
-    );
-
-    private Thread schedulerThread = new Thread("HGDB Peer Scheduler") 
+    );    
+    
+    private class ActivitySchedulingThread extends Thread
     {
+        volatile boolean schedulerRunning = false;
+        
+        public ActivitySchedulingThread() { super("HGDB Peer Scheduler"); }
         public void run()
         {
-            while (true)
+            for (schedulerRunning = true; schedulerRunning; )
             {
                 try
                 {
                     Activity a = globalQueue.take();
-//                    System.out.println("activity pulled:" + a + "," + a.lastActionTimestamp + "," + a.future.waiting);
                     if (!a.queue.isEmpty() && !a.getState().isFinished())
                     {
                         Runnable r = a.queue.take();
-//                        System.out.println("Found action " + r + " in queue " + a); 
                         thisPeer.getExecutorService().execute(r);
                     }
                     else 
@@ -112,13 +113,13 @@ public class ActivityManager implements MessageHandler
                         if (!a.getState().isFinished())
                             globalQueue.put(a);
                     }
-//                    Thread.sleep(1000);
-//                    System.out.println("global queue size=" + globalQueue.size());
                 }
                 catch (InterruptedException ex) { break; }
             }
         }
-    };
+    }
+    
+    private ActivitySchedulingThread schedulerThread = null;
     
     private void handleActivityException(Activity activity, Throwable exception, Message msg)
     {
@@ -340,7 +341,57 @@ public class ActivityManager implements MessageHandler
     
     public void start()
     {
+        schedulerThread = new ActivitySchedulingThread();        
         schedulerThread.start();
+    }
+
+    public void stop()
+    {        
+        if (schedulerThread == null)
+            return;
+        schedulerThread.schedulerRunning = false;
+        try 
+        {
+            if (schedulerThread.isAlive())
+                schedulerThread.join();
+        }
+        catch (InterruptedException ex)
+        {            
+        }
+        finally
+        {
+            schedulerThread = null;
+        }
+    }
+    
+    /**
+     * <p>
+     * Clear all internal data structures such as registered activities,
+     * queues of pending actions etc. This method should never be called
+     * while the scheduler is currently running.
+     * </p>
+     */
+    public void clear()
+    {
+        this.activities.clear();
+        this.activityTypes.clear();
+        this.parents.clear();
+        this.globalQueue.clear();
+    }
+    
+    /**
+     * <p>
+     * Clear all activity-related data structures. This method should 
+     * never be called while the scheduler is currently running. Registered
+     * activity types remain so there's no need to re-register and the start
+     * method could be called again.
+     * </p>
+     */    
+    public void clearActivities()
+    {
+        this.activities.clear();
+        this.parents.clear();
+        this.globalQueue.clear();        
     }
     
     /**

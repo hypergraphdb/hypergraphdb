@@ -9,9 +9,9 @@ import net.jxta.socket.JxtaServerSocket;
 
 public class JXTAServer implements Runnable
 {
+    private volatile Thread thisThread;
 	private JXTARequestHandler requestHandler;
     private JxtaServerSocket serverSocket = null;
-    private volatile boolean isRunning = false;
     
 	public JXTAServer(JXTARequestHandler requestHandler)
 	{
@@ -39,19 +39,25 @@ public class JXTAServer implements Runnable
         return false;
 	}
 	
-	public void stop()
-	{
-		isRunning = false;
-	}
+    public void stop()
+    {
+        Thread t = thisThread;
+        thisThread = null;
+        if (t != null)
+        {
+            try { t.join(1000); } catch (InterruptedException e) { }
+            if (t.isAlive())
+                t.interrupt();
+        }
+    }
 	
 	public void run()
 	{
-	    Thread.currentThread().setName("JXTA Server");
-		if (serverSocket != null)
+	    thisThread = Thread.currentThread();
+	    thisThread.setName("JXTA Server");
+		try { if (serverSocket != null)
 		{
-			isRunning = true;
-		
-			while (isRunning)
+			while (thisThread != null)
 			{
 	            try 
 	            {
@@ -60,29 +66,30 @@ public class JXTAServer implements Runnable
 	                {
 	                    requestHandler.handleRequest(socket);
 	                }
-
 	            }
 	            catch(SocketTimeoutException e)
-	            {
-	            	
+	            {	            	
 	            }
-	            catch (Exception e) 
-	            {
-	                e.printStackTrace();
-	            }
+                catch (IOException e)
+                {
+                    if (thisThread != null) // thread interrupt will cause a SocketException
+                        e.printStackTrace();
+                }
 			}
 			
 			try
 			{
 				serverSocket.close();
-			} catch (IOException e)
+			} 
+			catch (IOException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
 			System.out.println("JXTAServer stooped");
-		}
+		} } 
+		finally { thisThread = null; }
 			
 	}
 
