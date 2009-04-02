@@ -33,6 +33,7 @@ import org.hypergraphdb.query.IndexCondition;
 import org.hypergraphdb.query.IndexedPartCondition;
 import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.MapCondition;
+import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
 import org.hypergraphdb.query.SubsumedCondition;
@@ -63,6 +64,18 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 	
 	static
 	{
+	    instance.put(Nothing.class, new ConditionToQuery()
+        { 
+            public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+            {
+                return HGQuery.NOP;                     
+            }
+            
+            public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+            {
+                return QueryMetaData.EMPTY;
+            }           
+        });
 		instance.put(AnyAtomCondition.class, new ConditionToQuery()
 		{ 
 			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
@@ -568,7 +581,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		ConditionToQuery transformer = (ConditionToQuery)instance.get(condition.getClass());
 		if (transformer == null)
 			throw new HGException("The query condition '" + condition + 
-					"' could not be translated to an executable query because it is not specific enough. " +
+					"' could not be translated to an executable query either because it is not specific enough. " +
 					"Please try to contrain the query futher, for example by specifying the atom's types or " +
 					"incidence sets or some indexed property value.");
 		else
