@@ -22,28 +22,39 @@ public class Messages
     
 	public static Message createMessage(Performative performative, String type, UUID activityId)
 	{
-		return new Message(struct(Messages.PERFORMATIVE, performative, 
-		                          Messages.ACTIVITY_TYPE, type, 
-		                          Messages.CONVERSATION_ID, activityId));
+		return new Message(struct(PERFORMATIVE, performative, 
+		                          ACTIVITY_TYPE, type, 
+		                          CONVERSATION_ID, activityId));
 	}
 
     public static Message getReply(Message msg, Performative performative, Object content)
     {
-        return (Message)combine(getReply(msg, performative), struct(Messages.CONTENT, content));
+        return (Message)combine(getReply(msg, performative), struct(CONTENT, content));
     }
 	
 	public static Message getReply(Message msg, Performative performative)
 	{
-	    return (Message)combine(getReply(msg), struct(Messages.PERFORMATIVE, performative));
+	    return (Message)combine(getReply(msg), struct(PERFORMATIVE, performative));
+	}
+	
+	public static Message makeReply(Activity activity, Performative performative, String replyWith)
+	{
+        Map<String, Object> s = struct(ACTIVITY_TYPE, activity.getType(),
+                                       CONVERSATION_ID, activity.getId(),
+                                       PERFORMATIVE, performative);        
+        if (replyWith != null)
+            return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
+        else
+            return new Message(s);	    
 	}
 	
 	public static Message getReply(Message msg)
 	{
-		Map<String, Object> s = struct(Messages.ACTIVITY_TYPE, getPart(msg, Messages.ACTIVITY_TYPE),
-		                               Messages.CONVERSATION_ID, getPart(msg, Messages.CONVERSATION_ID));
-		String replyWith = getPart(msg, Messages.REPLY_WITH);
+		Map<String, Object> s = struct(ACTIVITY_TYPE, getPart(msg, ACTIVITY_TYPE),
+		                               CONVERSATION_ID, getPart(msg, CONVERSATION_ID));
+		String replyWith = getPart(msg, REPLY_WITH);
 		if (replyWith != null)
-		    return new Message(combine(s, struct(Messages.IN_REPLY_TO, replyWith)));
+		    return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
 		else
 		    return new Message(s);
 	}

@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
@@ -84,7 +85,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 		
 		List<Object> handles = new ArrayList<Object>();
 		
-		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, Messages.REPLY_TO));//.getReplyTo());
+		HGPeerIdentity peerId = getPeerInterface().getThisPeer().getIdentity(getPart(msg, Messages.REPLY_TO));//.getReplyTo());
 		if (getThisPeer().getLog().registerRequest(peerId, last_version, current_version))
 		{
 			ArrayList<Object> contents = getPart(msg, Messages.CONTENT);

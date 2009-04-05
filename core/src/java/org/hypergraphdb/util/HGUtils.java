@@ -8,6 +8,7 @@
  */
 package org.hypergraphdb.util;
 
+import java.io.File;
 import java.io.PrintStream;
 
 import org.hypergraphdb.HGException;
@@ -286,4 +287,19 @@ public class HGUtils
 			}
 		}		
 	}
+	
+    public static void directoryRecurse(File top, Mapping<File, Boolean> mapping) 
+    {        
+        File[] subs = top.listFiles();        
+        if (subs != null) 
+        {        
+            for(File sub : subs)
+            {
+                if (sub.isDirectory()) 
+                    directoryRecurse(sub, mapping);
+                mapping.eval(sub);            
+            }            
+            mapping.eval(top);
+        }        
+    }	
 }

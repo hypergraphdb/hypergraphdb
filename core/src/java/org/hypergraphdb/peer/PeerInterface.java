@@ -1,7 +1,6 @@
 package org.hypergraphdb.peer;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
@@ -29,22 +28,21 @@ public interface PeerInterface
 	 * Because implementors can be of any type, the configuration is an Object, no constraints 
 	 * to impose here as there is no common set of configuration properties.
 	 * 
-	 * @param configuration
-	 * @return
+	 * @param configuration A JSON-like structure holding the network-level configuration parameters.
+	 * @throws RuntimeException This method may throw an unchecked exception if the configuration
+	 * is not correct.
 	 */
-	boolean configure(Map<String, Object> configuration);
+	void configure(Map<String, Object> configuration);
 	
 	/**
 	 * <p>
-	 * Execute the message handling loop of this interface. This method is akin to a vanilla
-	 * <code>run</code>, but with the additional constraint that a specific 
-	 * <code>ExecutorService</code> must be used for the main message handling thread as
+	 * Execute the message handling loop of this interface. Implementations are expected
+	 * to use the <code>HyperGraphPeer</code>'s 
+	 * <code>ExecutorService</code>  for the main message handling thread as
 	 * well as for all activities triggered by this <code>PeerInterface</code>.
 	 * </p>
-	 * 
-	 * @param executorService
 	 */
-	void run(ExecutorService executorService);
+	void start();
 
 	/**
 	 * <p>
@@ -64,14 +62,16 @@ public interface PeerInterface
     
     /**
      * <p>
-     * Internally used to initialize the <code>PeerInterface</code>, don't call in application code.
+     * Internally used to initialize the <code>PeerInterface</code>, don't call in 
+     * application code. Implementation should maintain a <code>HyperGraphPeer</code>
+     * member variable and return it in the <code>getThisPeer</code> method.
      * </p> 
      */
     void setThisPeer(HyperGraphPeer thisPeer);
     
 	//factory methods to obtain activities that are specific to the peer implementation
 	//TODO redesign
-	PeerNetwork getPeerNetwork();
+//	PeerNetwork getPeerNetwork();
 	PeerFilter newFilterActivity(PeerFilterEvaluator evaluator);
 	PeerRelatedActivityFactory newSendActivityFactory();
 	
@@ -85,4 +85,8 @@ public interface PeerInterface
 	void broadcast(Object msg);
 
 	Future<Boolean> send(Object networkTarget, Object msg);
+	
+    void addPeerPresenceListener(NetworkPeerPresenceListener listener);
+    void removePeerPresenceListener(NetworkPeerPresenceListener listener);
+	
 }

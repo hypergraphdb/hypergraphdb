@@ -9,7 +9,6 @@ import org.hypergraphdb.peer.cact.GetClassForType;
 
 public class CACTBootstrap implements BootstrapPeer
 {
-    @Override
     public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
     {
         peer.getActivityManager().registerActivityType(GetClassForType.TYPENAME, GetClassForType.class);

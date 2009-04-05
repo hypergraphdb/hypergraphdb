@@ -2,7 +2,6 @@ package org.hypergraphdb.peer.jxta;
 
 import static org.hypergraphdb.peer.Structs.*;
 
-import java.io.InputStream;
 import java.net.Socket;
 import java.util.Iterator;
 import java.util.Map;
@@ -14,16 +13,14 @@ import net.jxta.pipe.PipeID;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
+import org.hypergraphdb.peer.NetworkPeerPresenceListener;
 import org.hypergraphdb.peer.PeerConfig;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerInterface;
-import org.hypergraphdb.peer.PeerNetwork;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
-import org.hypergraphdb.peer.protocol.Protocol;
 
 /**
  * @author Cipri Costa
@@ -40,18 +37,18 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	/**
 	 * used to create the message
 	 */
-	private Protocol protocol = new Protocol();
 	private HyperGraphPeer thisPeer = null;
-	private JXTANetwork jxtaNetwork = new DefaultJXTANetwork();
+	private DefaultJXTANetwork jxtaNetwork = new DefaultJXTANetwork();
 	private MessageHandler messageHandler;
 		
 	private ExecutorService executorService;
 	private JXTAServer jxtaServer = null;
 	
-	public boolean configure(Map<String, Object> configuration) 
+	public void configure(Map<String, Object> configuration) 
 	{
 	    peerName = (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME);
-		return jxtaNetwork.configure(configuration);
+		if (!jxtaNetwork.configure(configuration))
+		    throw new RuntimeException("Failed to configure JXTA network.");
 	}
 	
 	public void stop()
@@ -84,9 +81,8 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	    this.messageHandler = messageHandler;
 	}
 	
-	public void run(final ExecutorService executorService) 
+	public void start() 
 	{
-		this.executorService = executorService;
 		startNetwork(executorService);
 		
 		jxtaServer = new JXTAServer(this);
@@ -98,7 +94,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	
 	public void handleRequest(Socket socket)
 	{
-		executorService.execute(new ConnectionHandler(socket, executorService));
+		executorService.execute(new ConnectionHandler(socket, messageHandler, executorService));
 	}
 	
 	public HyperGraphPeer getThisPeer()
@@ -159,64 +155,13 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
         }	    
 	}
 	
-	private class ConnectionHandler implements Runnable
-	{
-		private Socket socket;
-		private ExecutorService executorService;
-		
-		public ConnectionHandler(Socket socket, ExecutorService executorService)
-		{
-			this.socket = socket;
-			this.executorService = executorService;
-		}
-
-		@SuppressWarnings("unchecked")
-		private void handleRequest(Socket socket, ExecutorService executorService) 
-		{
-		    InputStream in = null;
-            try 
-            {
-            	in = socket.getInputStream();
-            	try
-            	{
-            		final Message msg = new Message((Map<String, Object>)protocol.readMessage(in));            		
-                    executorService.execute(new Runnable()
-                    {
-                        public void run() 
-                        { 
-                            try { messageHandler.handleMessage(msg); }
-                            catch (Throwable t) { t.printStackTrace(System.err); } 
-                        }
-                    }
-                    );            		
-            	}
-            	catch(Exception ex)
-                {
-            		// TODO: where are those messages reported? Do we simply send a 
-            		// NotUnderstand response?
-                	ex.printStackTrace();
-                	return;
-                }
-            } 
-            catch (Exception ie) 
-            {
-                ie.printStackTrace(System.err);
-            }
-            finally
-            {
-                if (in != null) try { in.close(); } catch (Throwable t) { t.printStackTrace(System.err); }
-                try { socket.close(); } catch (Throwable t) { t.printStackTrace(System.err); }                                
-            }
-        }
-
-		public void run() 
-		{
-			handleRequest(socket, executorService);
-		}
-	}
-
-	public PeerNetwork getPeerNetwork()
-	{
-		return jxtaNetwork;
-	}
+	public void addPeerPresenceListener(NetworkPeerPresenceListener listener)
+    {
+        jxtaNetwork.addPeerPresenceListener(listener);
+    }
+    
+    public void removePeerPresenceListener(NetworkPeerPresenceListener listener)
+    {
+        jxtaNetwork.removePeerPresenceListener(listener);
+    }	
 }

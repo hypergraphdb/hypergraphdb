@@ -72,7 +72,7 @@ import org.hypergraphdb.query.HGAtomPredicate;
  * 
  * @author Cipri Costa
  */
-public class DefaultJXTANetwork implements JXTANetwork
+public class DefaultJXTANetwork // implements JXTANetwork
 {
     private static int RDV_WAIT_TIMEOUT = 3000;
 

@@ -2,6 +2,7 @@ package org.hypergraphdb.peer;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.peer.replication.Replication;
 import org.hypergraphdb.query.HGAtomPredicate;
 
 /**
@@ -25,7 +26,10 @@ public class InterestEvaluator implements PeerFilterEvaluator
 	{
 		System.out.println("InterestsPeerFilterEvaluator: evaluating " + handle + " for " + target);
 		
-		HGAtomPredicate pred = peerInterface.getPeerNetwork().getAtomInterests(target);
+		HGPeerIdentity id = peerInterface.getThisPeer().getIdentity(target);
+		if (id == null)
+		    return false;		
+		HGAtomPredicate pred = Replication.get(peerInterface.getThisPeer()).getOthersInterests().get(id);
 		return (pred != null) && pred.satisfies(hg, handle);
 	}
 

@@ -1,5 +1,7 @@
 package org.hypergraphdb.peer.log;
 
+import org.hypergraphdb.peer.HGPeerIdentity;
+
 
 /**
  * @author ciprian.costa
@@ -7,7 +9,7 @@ package org.hypergraphdb.peer.log;
  */
 public class Peer
 {
-	private Object peerId;
+	private HGPeerIdentity peerId;
 	private Timestamp timestamp = new Timestamp();
 	private Timestamp lastConfirmedTimestamp =  new Timestamp();
 	private Timestamp lastFrom = new Timestamp();
@@ -16,17 +18,17 @@ public class Peer
 	{
 		
 	}
-	public Peer(Object peerId)
+	public Peer(HGPeerIdentity peerId)
 	{
 		this.peerId = peerId;
 	}
 
-	public Object getPeerId()
+	public HGPeerIdentity getPeerId()
 	{
 		return peerId;
 	}
 
-	public void setPeerId(Object peerId)
+	public void setPeerId(HGPeerIdentity peerId)
 	{
 		this.peerId = peerId;
 	}

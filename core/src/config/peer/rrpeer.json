@@ -4,7 +4,7 @@
  */
 {
 "threadPoolSize"    : 20,
-"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
+"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface2",
 
 "jxta"		:
 {
@@ -13,7 +13,10 @@
 	"jxtaDir"	: "./hgdb/.jxta",
 	"peerName"	: "MainRendezVous",
 	"peerGroup"	: "HGDBNET",
-                   
+    "createGroup" : true,
+    "deleteJxtaDir" : true,
+    "peerGroupId" : "urn:jxta:uuid-AA4861129B334B6EBF919814C05726F002",
+    
 	"mode"		: "RENDEZVOUS_RELAY",
 	"tcp"		:
 	{

@@ -15,7 +15,7 @@
     "password" : "password",
 	"jxtaDir"	: "./hgdb_edge/.jxta1",
 	"peerGroup"	: "HGDBNET",
-
+    "deleteJxtaDir" : true,
 	"mode"		: "EDGE",
 	"tcp"		:
 	{

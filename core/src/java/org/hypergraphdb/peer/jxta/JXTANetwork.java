@@ -6,9 +6,9 @@ import net.jxta.document.Advertisement;
 import net.jxta.peergroup.PeerGroup;
 import net.jxta.pipe.PipeID;
 
-import org.hypergraphdb.peer.PeerNetwork;
+//import org.hypergraphdb.peer.PeerNetwork;
 
-public interface JXTANetwork extends PeerNetwork
+public interface JXTANetwork // extends PeerNetwork
 {
 	PeerGroup getPeerGroup();
 	

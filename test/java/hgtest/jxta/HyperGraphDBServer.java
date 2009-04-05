@@ -1,6 +1,7 @@
 package hgtest.jxta;
 
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 
 import net.jxta.platform.NetworkManager;
 
@@ -32,49 +33,60 @@ public class HyperGraphDBServer {
 		HyperGraphPeer server = new HyperGraphPeer(new File(configFile));
 		
 		
-		if (server.start("user", "pwd"))
-		{		
-			try
-			{
-				Thread.sleep(3000);
-			} catch (InterruptedException e){}
-	
-			System.out.println("List of connected peers:");
-			for(RemotePeer peer : server.getConnectedPeers())
-			{
-				System.out.println("Connected peer: " + peer);
-			}
-			
-			HGPersistentHandle typeHandle = UUIDPersistentHandle.makeHandle("e917bda6-0932-4a66-9aeb-3fc84f04ce57");
-			server.registerType(typeHandle, User.class);
-			System.out.println("Types registered...");
-			/*
-			//server.setAtomInterests(new AtomPartCondition(new String[] {"part"}, "5", ComparisonOperator.LT));
-			server.setAtomInterests(new AnyAtomCondition());
-			
-			//server.setAtomInterests(new AtomPartCondition(new String[] {"part"}, "5", ComparisonOperator.LT));
-			server.updateNetworkProperties();
-			server.setAtomInterests(new AnyAtomCondition());
-			server.catchUp();
-			
-			HyperGraph graph = server.getHGDB();
-			for(int i=0;i<count;i++)
-			{
-				User user = new User(startId + i, "user " + Integer.toString(startId + i));
-				HGHandle handle = graph.add(user);
-				System.out.println("object added");
-				
-				User user1 = new User(startId + i, "new user " + Integer.toString(startId + i));
-				graph.replace(handle, user1);
-				System.out.println("object updated");
-				
-				//graph.remove(handle);
-				//System.out.println("object removed");
-				
-			}*/
-		
-		}else{
-			System.out.println("Can not start peer");
-		}
+		try
+        {
+            if (server.start("user", "pwd").get())
+            {		
+            	try
+            	{
+            		Thread.sleep(3000);
+            	} catch (InterruptedException e){}
+
+//			System.out.println("List of connected peers:");
+//			for(RemotePeer peer : server.getConnectedPeers())
+//			{
+//				System.out.println("Connected peer: " + peer);
+//			}
+            	
+            	HGPersistentHandle typeHandle = UUIDPersistentHandle.makeHandle("e917bda6-0932-4a66-9aeb-3fc84f04ce57");
+//			server.registerType(typeHandle, User.class);
+            	System.out.println("Types registered...");
+            	/*
+            	//server.setAtomInterests(new AtomPartCondition(new String[] {"part"}, "5", ComparisonOperator.LT));
+            	server.setAtomInterests(new AnyAtomCondition());
+            	
+            	//server.setAtomInterests(new AtomPartCondition(new String[] {"part"}, "5", ComparisonOperator.LT));
+            	server.updateNetworkProperties();
+            	server.setAtomInterests(new AnyAtomCondition());
+            	server.catchUp();
+            	
+            	HyperGraph graph = server.getHGDB();
+            	for(int i=0;i<count;i++)
+            	{
+            		User user = new User(startId + i, "user " + Integer.toString(startId + i));
+            		HGHandle handle = graph.add(user);
+            		System.out.println("object added");
+            		
+            		User user1 = new User(startId + i, "new user " + Integer.toString(startId + i));
+            		graph.replace(handle, user1);
+            		System.out.println("object updated");
+            		
+            		//graph.remove(handle);
+            		//System.out.println("object removed");
+            		
+            	}*/
+            
+            }else{
+            	System.out.println("Can not start peer");
+            }
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        catch (ExecutionException e)
+        {
+            e.printStackTrace();
+        }
 	}
 }

@@ -295,50 +295,48 @@ public class HyperGraphPeer
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(HyperGraphPeer.this);
-
-				if (peerInterface.configure(configuration))
-				{
-					status = true;
-					
-                    peerInterface.getPeerNetwork().addPeerPresenceListener(
-                       new NetworkPeerPresenceListener()
+				Map<String, Object> jxtaConfiguration = getPart(configuration, "jxta");
+				if (jxtaConfiguration == null)
+				    throw new RuntimeException("Missing JXTA configuration parameter.");
+				peerInterface.configure(jxtaConfiguration);
+				
+				status = true;
+				
+                peerInterface.addPeerPresenceListener(
+                   new NetworkPeerPresenceListener()
+                   {
+                       public void peerJoined(Object target)
                        {
-                           public void peerJoined(Object target)
-                           {
-                               AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
-                               activityManager.initiateActivity(task);
-                           }
-                           public void peerLeft(Object target) 
-                           { 
-                               unbindNetworkTargetFromIdentity(target); 
-                           }
-                       });					
-                    // Call all bootstrapping operations configured:                    
-                    List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");                 
-                    if (bootstrapOperations != null)
-                        for (Object x : bootstrapOperations)
-                        {
-                            String classname = getPart(x, "class");
-                            if (classname == null)
-                                throw new RuntimeException("No 'class' specified in bootstrap operation.");
-                            Map<String, Object> config = getPart(x, "config");
-                            if (config == null)
-                                config = new HashMap<String, Object>();
-                            BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
-                            boot.bootstrap(HyperGraphPeer.this, config);
-                        }                    
-					// the order of the following 3 statements is important
-	                activityManager.start();
-		            peerInterface.setMessageHandler(activityManager);
-					peerInterface.run(executorService);
-					
-	                //configure services
-	                if (tempGraph != null)	                
-		        		log = new Log(tempGraph, peerInterface);
-	        		//TODO: this should not be an indefinite wait ... 
-//	        		if (graph == null)
-//	                	peerInterface.getPeerNetwork().waitForRemotePipe();						
-				}
+                           AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
+                           activityManager.initiateActivity(task);
+                       }
+                       public void peerLeft(Object target) 
+                       { 
+                           unbindNetworkTargetFromIdentity(target); 
+                       }
+                   });					
+                // Call all bootstrapping operations configured:                    
+                List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");                 
+                if (bootstrapOperations != null)
+                    for (Object x : bootstrapOperations)
+                    {
+                        String classname = getPart(x, "class");
+                        if (classname == null)
+                            throw new RuntimeException("No 'class' specified in bootstrap operation.");
+                        Map<String, Object> config = getPart(x, "config");
+                        if (config == null)
+                            config = new HashMap<String, Object>();
+                        BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
+                        boot.bootstrap(HyperGraphPeer.this, config);
+                    }                    
+				// the order of the following 3 statements is important
+                activityManager.start();
+	            peerInterface.setMessageHandler(activityManager);
+				peerInterface.start();
+				
+                //configure services
+                if (tempGraph != null)	                
+	        		log = new Log(tempGraph, peerInterface);
 			}
 			catch(Exception ex)
 			{
@@ -456,21 +454,6 @@ public class HyperGraphPeer
 		}
 		
 		return peers; */
-	}
-	
-	/**
-	 * Returns a remote peer with the given name (if it is connected at that point - otherwise null).
-	 * 
-	 * If multiple peers are registered with the same name, there is no guarantees as to which will be returned.
-	 * 
-	 * @param peerName
-	 * @return
-	 */
-	public RemotePeer getRemotePeer(String peerName)
-	{
-		RemotePeer peer = peerInterface.getPeerNetwork().getConnectedPeer(peerName);
-		peer.setLocalPeer(this);
-		return peer;
 	}
 
 	public HyperGraph getTempDb()

@@ -42,7 +42,7 @@ public class TestHGAtomRef
 	
 	public static void main(String [] argv)
 	{
-		HyperGraph graph = new HyperGraph("c:/temp/testHG");
+		HyperGraph graph = new HyperGraph("/tmp/testHG");
 		TestHGAtomRef refering = new TestHGAtomRef();
 		CircRefBean ref1 = CircRefBean.make();
 		refering.setRef1(ref1);

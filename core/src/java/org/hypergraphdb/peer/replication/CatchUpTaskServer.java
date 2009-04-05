@@ -54,7 +54,7 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
             System.out.println("Should catch up with: " + entry.getTimestamp());
 
             Object sendToPeer = getPart(msg, Messages.REPLY_TO);
-            entry.setLastTimestamp(getPeerInterface().getPeerNetwork().getPeerId(sendToPeer),
+            entry.setLastTimestamp(getPeerInterface().getThisPeer().getIdentity(sendToPeer),
                                    lastTimestamp);
 
             RememberTaskClient rememberTask = new RememberTaskClient(getThisPeer(),

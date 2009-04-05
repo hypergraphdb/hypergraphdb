@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.hypergraphdb.peer.protocol.Performative;
+
 public class Message implements Map<String, Object>
 {
     private Map<String, Object> map;
@@ -20,9 +22,9 @@ public class Message implements Map<String, Object>
         this.map = map;
     }
 
-    public String getPerformative()
+    public Performative getPerformative()
     {
-        return (String)get(Messages.PERFORMATIVE);
+        return Performative.valueOf((String)get(Messages.PERFORMATIVE));
     }
     
     public UUID getConversationId()

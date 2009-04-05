@@ -24,4 +24,6 @@ public class JXTAConfig
 	public static final Object RENDEZVOUS = "rdvs";
 	
 
+	public static final int DEFAULT_TCP_PORT = 9801;
+	public static final int DEFAULT_HTTP_PORT = 9802;
 }

@@ -11,6 +11,7 @@ import org.hypergraphdb.HyperGraph;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
 import org.hypergraphdb.peer.Message;
@@ -179,7 +180,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		
 		combine(msg, struct(
 				Messages.CONTENT, struct(
-						SLOT_LAST_VERSION, firstEntry.getLastTimestamp(getPeerInterface().getPeerNetwork().getPeerId(target)),
+						SLOT_LAST_VERSION, firstEntry.getLastTimestamp(getPeerInterface().getThisPeer().getIdentity(target)),
 						SLOT_CURRENT_VERSION, lastEntry.getTimestamp()
 					)
 				)
@@ -257,7 +258,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		
 		results = (ArrayList<HGHandle>)getPart(msg, Messages.CONTENT);
 
-		Object peerId = getPeerInterface().getPeerNetwork().getPeerId(getPart(msg, Messages.REPLY_TO));
+		HGPeerIdentity peerId = getPeerInterface().getThisPeer().getIdentity(getPart(msg, Messages.REPLY_TO));
 		log.confirmFromPeer(peerId, entries.get(entries.size() - 1).getTimestamp());
 		
 		if (count.decrementAndGet() == 0) return State.Done;

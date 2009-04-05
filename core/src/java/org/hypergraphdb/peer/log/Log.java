@@ -12,6 +12,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.query.And;
@@ -30,7 +31,7 @@ public class Log
 		HGHandleFactory.makeHandle("136b5d67-7b0c-41f4-a0e0-105f2c42622e");
 
 	private HyperGraph logDb;
-	private HashMap<Object, Peer> peers = new HashMap<Object, Peer>();
+	private HashMap<HGPeerIdentity, Peer> peers = new HashMap<HGPeerIdentity, Peer>();
 	private HashMap<Object, HGHandle> peerHandles = new HashMap<Object, HGHandle>();
 	private PeerInterface peerInterface;
 	private HashMap<Object, HashMap<Timestamp, Timestamp>> peerQueues = new HashMap<Object, HashMap<Timestamp,Timestamp>>();
@@ -94,7 +95,7 @@ public class Log
 			{
 				Object target = targets.next();
 	
-				Object targetId = peerInterface.getPeerNetwork().getPeerId(target);
+				HGPeerIdentity targetId = peerInterface.getThisPeer().getIdentity(target);
 				Peer peer = getPeer(targetId);
 				
 				//make connection with peer
@@ -116,7 +117,7 @@ public class Log
 		
 	}
 	
-	public void confirmFromPeer(Object targetId, Timestamp timestamp)
+	public void confirmFromPeer(HGPeerIdentity targetId, Timestamp timestamp)
 	{
 		// record the peer received the message - this will be used for purging
 		Peer peer = getPeer(targetId);
@@ -133,7 +134,7 @@ public class Log
 		}
 	}
 	
-	private Peer getPeer(Object targetId)
+	private Peer getPeer(HGPeerIdentity targetId)
 	{
 		Peer peer = peers.get(targetId);
 		if (peer == null)
@@ -158,7 +159,7 @@ public class Log
 	
 	public Timestamp getLastFrom(Object peer)
 	{
-		return getPeer(peerInterface.getPeerNetwork().getPeerId(peer)).getLastFrom();
+		return getPeer(peerInterface.getThisPeer().getIdentity(peer)).getLastFrom();
 	}
 	
 	/**
@@ -166,7 +167,7 @@ public class Log
 	 * @param current_version 
 	 * @param last_version 
 	 */
-	public boolean registerRequest(Object peerId, Timestamp last_version, Timestamp current_version)
+	public boolean registerRequest(HGPeerIdentity peerId, Timestamp last_version, Timestamp current_version)
 	{
 		//TODO - add a timeout and return false;
 		
@@ -199,7 +200,7 @@ public class Log
 		return true;
 	}
 	
-	public void finishRequest(Object peerId, Timestamp last_version, Timestamp current_version)
+	public void finishRequest(HGPeerIdentity peerId, Timestamp last_version, Timestamp current_version)
 	{
 		synchronized(timestamp)
 		{

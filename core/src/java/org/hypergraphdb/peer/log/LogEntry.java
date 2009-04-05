@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.StorageGraph;
@@ -17,7 +18,7 @@ public class LogEntry implements Comparable<LogEntry>
 {
 	private StorageGraph data;
 	private HGPersistentHandle logEntryHandle;
-	private HashMap<Object, Timestamp> lastTimestamps = new HashMap<Object, Timestamp>();
+	private HashMap<HGPeerIdentity, Timestamp> lastTimestamps = new HashMap<HGPeerIdentity, Timestamp>();
 	Timestamp timestamp;
 	StorageService.Operation operation;
 	private HGPersistentHandle handle;
@@ -86,11 +87,11 @@ public class LogEntry implements Comparable<LogEntry>
 		return timestamp;
 	}
 	
-	public void setLastTimestamp(Object targetId, Timestamp timestamp)
+	public void setLastTimestamp(HGPeerIdentity targetId, Timestamp timestamp)
 	{
 		lastTimestamps.put(targetId, timestamp);
 	}
-	public Timestamp getLastTimestamp(Object targetId)
+	public Timestamp getLastTimestamp(HGPeerIdentity targetId)
 	{
 		return lastTimestamps.get(targetId);
 	}

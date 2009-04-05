@@ -52,7 +52,7 @@
 	<target name="core-jar" depends="core-compile" description="Create HyperGraphDB Core Jar file.">
 		<jar basedir="${build}" jarfile="${jars}/${jar-name}">
 			<exclude name="**/*.jar" />
-			<exclude name="**/*.bak" />
+			<exclude name="**/*.bak" />			
 			<exclude name="${peer-path}/**"/>
 		</jar>
 	</target>
