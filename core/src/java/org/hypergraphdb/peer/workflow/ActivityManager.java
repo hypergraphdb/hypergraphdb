@@ -505,6 +505,7 @@ public class ActivityManager implements MessageHandler
     {
         final CountDownLatch completionLatch = new CountDownLatch(1);
         final ActivityFuture future = new ActivityFuture(activity, completionLatch);
+        activities.put(activity.getId(), activity);
         activity.future = future;        
         activity.getState().addListener(new StateListener() {
             public void stateChanged(WorkflowState state)

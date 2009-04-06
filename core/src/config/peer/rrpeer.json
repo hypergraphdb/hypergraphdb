@@ -12,11 +12,11 @@
 	"password" : "pwd",
 	"jxtaDir"	: "./hgdb/.jxta",
 	"peerName"	: "MainRendezVous",
-	"peerGroup"	: "HGDBNET",
+	"peerGroup"	: "SecoNet",
     "createGroup" : true,
     "deleteJxtaDir" : true,
     "peerGroupId" : "urn:jxta:uuid-AA4861129B334B6EBF919814C05726F002",
-    
+       
 	"mode"		: "RENDEZVOUS_RELAY",
 	"tcp"		:
 	{

@@ -14,8 +14,8 @@
     "password" : "password",
 	"jxtaDir"	: "./hgdb_edge/.jxta",
 	"peerName"	: "Peer",
-	"peerGroup"	: "HGDBNET",
-	"createGroup" : true,
+	"peerGroup"	: "SecoNet",
+	"createGroup" : false,
 	"deleteJxtaDir" : true,	
 	"mode"		: "EDGE",
 	"peerGroupId" : "urn:jxta:uuid-AA4861129B334B6EBF919814C05726F002",
@@ -25,6 +25,6 @@
 		"port"		: 9801
 	},
     "needsRendezVous" : true,        
-    "rdvs"          : ["tcp://127.0.0.1:9702"]
+    "rdvs"          : ["tcp://192.168.2.101:9702"]
 }
 }

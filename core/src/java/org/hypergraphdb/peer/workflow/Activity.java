@@ -69,7 +69,10 @@ public abstract class Activity
      */
     private WorkflowState state = WorkflowState.makeState();
 
-    protected HyperGraphPeer getThisPeer()
+    /**
+     * <p>Return the <code>HyperGraphPeer</code> where this activity executes.</p>
+     */
+    public HyperGraphPeer getThisPeer()
     {
         return thisPeer;
     }
@@ -108,6 +111,22 @@ public abstract class Activity
         }
     }
 
+    protected Future<Boolean> post(HGPeerIdentity target, Message msg)
+    {
+        Object networkTarget = thisPeer.getNetworkTarget(target);
+        if (networkTarget == null)
+            throw new RuntimeException("Unknown network target for peer " + 
+                                       target + " - perhaps it dropped from the network?");
+        try
+        {
+            return getPeerInterface().send(networkTarget, msg);
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex);
+        }        
+    }
+    
     /**
      * <p>A convenience method to send a message to a target peer.</p>
      * 
@@ -121,6 +140,14 @@ public abstract class Activity
             send((HGPeerIdentity)target, msg);
         else
             getPeerInterface().send(target, msg);
+    }
+    
+    protected Future<Boolean> post(Object target, Message msg)
+    {
+        if (target instanceof HGPeerIdentity)
+            return post((HGPeerIdentity)target, msg);
+        else
+            return getPeerInterface().send(target, msg);
     }
     
     /**

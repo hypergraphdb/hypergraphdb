@@ -25,6 +25,7 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.replication.GetInterestsTask;
 import org.hypergraphdb.peer.serializer.GenericSerializer;
@@ -301,26 +302,17 @@ public class HyperGraphPeer
 				peerInterface.configure(jxtaConfiguration);
 				
 				status = true;
+
+				boolean managePresence = false; // manage presence only if AffirmIdentity activity is bootstrapped
 				
-                peerInterface.addPeerPresenceListener(
-                   new NetworkPeerPresenceListener()
-                   {
-                       public void peerJoined(Object target)
-                       {
-                           AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
-                           activityManager.initiateActivity(task);
-                       }
-                       public void peerLeft(Object target) 
-                       { 
-                           unbindNetworkTargetFromIdentity(target); 
-                       }
-                   });					
                 // Call all bootstrapping operations configured:                    
                 List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");                 
                 if (bootstrapOperations != null)
                     for (Object x : bootstrapOperations)
                     {
                         String classname = getPart(x, "class");
+                        if (AffirmIdentityBootstrap.class.getName().equals(classname))
+                            managePresence = true;
                         if (classname == null)
                             throw new RuntimeException("No 'class' specified in bootstrap operation.");
                         Map<String, Object> config = getPart(x, "config");
@@ -328,7 +320,23 @@ public class HyperGraphPeer
                             config = new HashMap<String, Object>();
                         BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
                         boot.bootstrap(HyperGraphPeer.this, config);
-                    }                    
+                    }       
+                
+                if (managePresence)
+                    peerInterface.addPeerPresenceListener(
+                       new NetworkPeerPresenceListener()
+                       {
+                           public void peerJoined(Object target)
+                           {
+                               AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
+                               activityManager.initiateActivity(task);
+                           }
+                           public void peerLeft(Object target) 
+                           { 
+                               unbindNetworkTargetFromIdentity(target); 
+                           }
+                       });					
+             
 				// the order of the following 3 statements is important
                 activityManager.start();
 	            peerInterface.setMessageHandler(activityManager);

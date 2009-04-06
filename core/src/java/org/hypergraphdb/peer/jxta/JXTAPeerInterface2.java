@@ -119,12 +119,16 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
     private PeerGroup createAndPublishGroup(String name, PeerGroupID gid) throws Exception
     {           
         PeerGroup npg = peerManager.getNetPeerGroup();
-        PeerGroup G = peerManager.getNetPeerGroup().newGroup(gid, 
-                                                             npg.getAllPurposePeerGroupImplAdvertisement(), 
-                                                             name, 
-                                                             "A HyperGraph peer group.");
-        npg.getDiscoveryService().publish(G.getImplAdvertisement());
-        npg.getDiscoveryService().remotePublish(G.getImplAdvertisement(), DiscoveryService.NO_EXPIRATION);
+        PeerGroup G = npg.newGroup(gid, 
+                                   npg.getAllPurposePeerGroupImplAdvertisement(), 
+                                   name, 
+                                   "A HyperGraph peer group.");
+
+        npg.getDiscoveryService().publish(G.getPeerGroupAdvertisement(),
+                                          DiscoveryService.INFINITE_LIFETIME,
+                                          DiscoveryService.NO_EXPIRATION);
+        npg.getDiscoveryService().remotePublish(G.getPeerGroupAdvertisement(), 
+                                                DiscoveryService.NO_EXPIRATION);
         return G;
     }    
     
@@ -141,7 +145,9 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             NetworkConfigurator configurator = peerManager.getConfigurator();
             peerId = IDFactory.newPeerID(groupId, peerName.getBytes());
             configurator.setPeerID(peerId);
+            peerManager.setPeerID(peerId);
             configurator.clearRendezvousSeeds();
+            configurator.clearRelaySeeds();
             if (needsRendezVous)
             {
                 configurator.setUseOnlyRendezvousSeeds(true);
@@ -150,7 +156,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             }
             if (needsRelay)
             {
-                configurator.setUseOnlyRelaySeeds(true);
+//                configurator.setUseOnlyRelaySeeds(true);
                 for (String uri : relaySeeds)
                     configurator.addSeedRelay(URI.create(uri));
             }
@@ -160,12 +166,18 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
                 Number tcpPort = getOptPart(tcpTransport, JXTAConfig.DEFAULT_TCP_PORT, "port");
                 configurator.setTcpPort(tcpPort.intValue());
             }
+            else
+                configurator.setTcpEnabled(false);
             if (httpTransport != null)
             {
                 configurator.setHttpEnabled(getOptPart(httpTransport, true, "enabled"));
                 Number port = getOptPart(httpTransport, JXTAConfig.DEFAULT_HTTP_PORT, "port"); 
                 configurator.setHttpPort(port.intValue());
+                configurator.setHttpIncoming(true);
+                configurator.setHttpOutgoing(true);
             }            
+            else
+                configurator.setHttpEnabled(false);
         }
         catch (Exception e)
         {
@@ -244,18 +256,24 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
         try
         {
             peerManager.startNetwork();
-            peerManager.getNetPeerGroup().getRendezVousService().setAutoStart(false);
+            if (mode == NetworkManager.ConfigMode.EDGE)
+            {
+                peerManager.getNetPeerGroup().getRendezVousService().setAutoStart(false);
+                if (!peerManager.waitForRendezvousConnection(120000))
+                    throw new RuntimeException("Failed to connect to RendezVous");
+            }
             group = findGroup(groupId);
             if (group == null && createGroup)
                 group = createAndPublishGroup(peerGroup, groupId);
             if (group == null)
                 throw new RuntimeException("Unable to join group with ID " + groupId + ", createGroup flag=" + createGroup);
+            group.startApp(null);
             if (mode == NetworkManager.ConfigMode.RENDEZVOUS || mode == NetworkManager.ConfigMode.RENDEZVOUS_RELAY)
                 group.getRendezVousService().startRendezVous();
-            
             incomingPipeId = IDFactory.newPipeID(group.getPeerGroupID());
-            incomingPipe = HGAdvertisementsFactory.newPipeAdvertisement(incomingPipeId, peerName);
             
+            incomingPipe = HGAdvertisementsFactory.newPipeAdvertisement(incomingPipeId, peerName);
+
             jxtaServer = new JXTAServer(this);
             if (jxtaServer.initialize(group, incomingPipe))
                 thisPeer.getExecutorService().execute(jxtaServer);
@@ -354,6 +372,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             {               
                 while (thisThread != null)
                 {
+//                    System.out.println("Publishing pipe " + incomingPipe.getPipeID());
                     discoveryService.publish(incomingPipe, expiration, expiration);
                     discoveryService.remotePublish(incomingPipe, expiration);
                     try
@@ -405,6 +424,10 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             thisThread = Thread.currentThread();
             try
             {
+                Enumeration<Advertisement> localAdvs = 
+                    discoveryService.getLocalAdvertisements(DiscoveryService.ADV, null, null);
+                loadAdvs(localAdvs, "local");
+
                 // Add ourselves as a DiscoveryListener for DiscoveryResponse
                 // events
                 discoveryService.addDiscoveryListener(this);
@@ -468,8 +491,10 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
 
             if (advs != null)
             {
+                int count = 0;
                 while (advs.hasMoreElements())
                 {
+                    count++;
                     adv = advs.nextElement();
                     if (adv instanceof PipeAdvertisement)
                     {
@@ -477,6 +502,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
                         if (!presentPeers.contains(adv))
                         {
                             PipeID pipeId = (PipeID) ((PipeAdvertisement) adv).getPipeID();
+//                            System.out.println("Got pipe " + pipeId);
                             if (!incomingPipeId.equals(pipeId))
                             {
                                 presentPeers.add((PipeAdvertisement)adv);
@@ -487,8 +513,8 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
                         }
                     }
                 }
+//                System.out.println("Examined " + count + " advertisements.");
             }
         }
-    }
-   
+    }   
 }
