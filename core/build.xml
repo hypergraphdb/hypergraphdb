@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." name="HyperGraphDB Core" default="all">
 	<description>HyperGraphDB Core Build File</description>
-    
+    <property name="version" value="0.1"/>
+    <property name="distfilename" value="hypergraphdb-${version}"/>    
     <property name="build" value="build"/>
+    <property name="dist" value="dist"/>
+    <property name="javadoc" value="javadoc"/>    
     <property name="jars" value="."/>
     <property name="debug" value="on"/>
 	
@@ -31,6 +34,8 @@
 	
     <target name="init">
 		<mkdir dir="${build}"/>
+        <mkdir dir="${javadoc}"/>
+        <mkdir dir="${dist}"/>
     </target>
     
 	<target name="core-compile" depends="init" description="Compile the HyperGraphDB Core Sources">
@@ -71,12 +76,46 @@
 			<exclude name="**/*.bak" />
 		</jar>
 	</target>
+
+	<target name="docgen" depends="init" description="Generate JavaDocs for HGDB core, including the P2P module">
+	    <javadoc sourcepath="${core-path}" destdir="${javadoc}" classpathref="core-classpath"/>
+	</target>
 	
-	<target name="all" depends="core-jar, peer-jar, full-jar"/>
+    <target name="dist-common" depends="full-jar, docgen">
+        <delete dir="${distfilename}"/>
+        <mkdir dir="${distfilename}"/>
+        <copydir src="${javadoc}" dest="${distfilename}/javadoc"/>
+        <copydir src="src" dest="${distfilename}/src" excludes="**/.svn"/>
+        <copydir src="jars" dest="${distfilename}/jars" excludes="**/.svn"/>
+        <copydir src="ThirdPartyLicensing" dest="${distfilename}/ThirdPartyLicensing" excludes="**/.svn"/>
+        <copy file="LicensingInformation" todir="${distfilename}"/>
+        <copy file="${jars}/${jar-name}" todir="${distfilename}"/>
+        <copy file="${jars}/${peer-jar-name}" todir="${distfilename}"/>
+        <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
+    </target>
+    
+	<target name="dist-win" depends="dist-common">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/windows" dest="${distfilename}/native"/>
+        <zip destfile="${dist}/${distfilename}.zip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+
+	<target name="dist-lin" depends="dist-common">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/linux" dest="${distfilename}/native"/>
+        <tar destfile="${dist}/${distfilename}.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+
+	<target name="all" depends="core-jar, peer-jar, full-jar, dist-win, dist-lin"/>
 	
-	<target description="clean up" name="clean">
-		<!-- Delete the ${build} and ${dist} directory trees -->
-		<delete dir="${build}" />
+    <target description="clean up" name="clean">
+	    <!-- Delete the ${build} and ${dist} directory trees -->
+	    <delete dir="${build}" />
+        <delete dir="${dist}"/>
+        <delete dir="${distfilename}"/>
+        <delete dir="${javadoc}"/>
         <delete file="${jars}/${jar-name}"/>
 		<delete file="${jars}/${peer-jar-name}"/>
         <delete file="${jars}/${full-jar-name}"/>
