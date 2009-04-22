@@ -73,6 +73,8 @@ public class HGStore
     private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
     private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();
     
+    private ThreadLocal<StorageGraph> overlayGraph = new ThreadLocal<StorageGraph>();
+    
     private TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();;
@@ -377,6 +379,12 @@ public class HGStore
             throw new NullPointerException("HGStore.getLink called with a null handle.");
         try
         {
+            if (overlayGraph.get() != null)
+            {
+                HGPersistentHandle [] result = null;                
+                if ( (result = overlayGraph.get().getLink(handle)) != null)
+                    return result;
+            }            
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
             if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
@@ -501,7 +509,13 @@ public class HGStore
         if (handle == null)
             throw new NullPointerException("HGStore.getData called with a null handle.");
         try
-        {
+        {            
+            if (overlayGraph.get() != null)
+            {
+                byte [] result = null;                
+                if ( (result = overlayGraph.get().getData(handle)) != null)
+                    return result;
+            }
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
             if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
@@ -1054,5 +1068,15 @@ public class HGStore
     			running = false;
     		}
     	}
+    }
+    
+    public void attachOverlayGraph(StorageGraph sgraph)
+    {
+        overlayGraph.set(sgraph);
+    }
+    
+    public void detachOverlayGraph()
+    {
+        overlayGraph.set(null);
     }
 }

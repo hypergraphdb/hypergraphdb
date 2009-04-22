@@ -26,6 +26,30 @@ public class RAMStorageGraph implements StorageGraph
         this.root = root;
     }
     
+    public void translateHandles(Map<HGPersistentHandle, HGPersistentHandle> subst)
+    {
+        Map<HGPersistentHandle, Object> translated = new HashMap<HGPersistentHandle, Object>();
+        for (Map.Entry<HGPersistentHandle, Object> e : map.entrySet())
+        {
+            if (e.getValue() instanceof HGPersistentHandle[])
+            {
+                HGPersistentHandle[] A = (HGPersistentHandle[])e.getValue();
+                for (int i = 0; i < A.length; i++)
+                {
+                    HGPersistentHandle h = subst.get(A[i]);
+                    if (h != null)
+                        A[i] = h;
+                }
+            }
+            HGPersistentHandle h = subst.get(e.getKey());
+            if (h == null)
+                translated.put(e.getKey(), e.getValue());
+            else
+                translated.put(h, e.getValue());
+        }
+        map = translated;
+    }
+    
     public void put(HGPersistentHandle handle, HGPersistentHandle [] linkData)
     {
         map.put(handle, linkData);

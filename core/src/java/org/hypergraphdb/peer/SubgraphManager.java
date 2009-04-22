@@ -22,11 +22,15 @@ import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
+import org.hypergraphdb.storage.RAMStorageGraph;
+import org.hypergraphdb.storage.RefDelegateStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.type.HGAtomType;
+import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.FilterIterator;
 import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.TempLink;
 
 /**
  * @author ciprian.costa
@@ -121,7 +125,7 @@ public class SubgraphManager
     public static HGHandle writeTransferedAtom(final Object atom, final HyperGraph graph)
         throws ClassNotFoundException
     {
-        final StorageGraph subgraph = getPart(atom, "storage-graph");
+        final RAMStorageGraph subgraph = getPart(atom, "storage-graph");
         final Map<String, String>  typeClasses = getPart(atom, "type-classes");
         final Map<HGPersistentHandle, HGPersistentHandle> substituteTypes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
@@ -144,7 +148,8 @@ public class SubgraphManager
                         throw new HGException("Unable to create local type for Java class '" + classname + "'");
                     substituteTypes.put(typeHandle, graph.getPersistentHandle(localType));
             }
-        }
+        }      
+        subgraph.translateHandles(substituteTypes);
         // TODO - here we assume that the types don't differ, but obviously they can
         // and will in many cases. So this is a major "TDB".        
         // If something goes wrong during storing the graph and reading back
@@ -154,7 +159,30 @@ public class SubgraphManager
         {
             public HGHandle call()
             {
-                store(subgraph, graph.getStore(), substituteTypes);
+                HGPersistentHandle [] layout = subgraph.getLink(subgraph.getRoot());                
+                Object object = null;
+                graph.getStore().attachOverlayGraph(subgraph);
+                try
+                {    
+                    HGHandle [] targetSet = new HGHandle[layout.length-2];
+                    System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                                                             
+                    HGAtomType type = graph.get(layout[0]);                    
+                    object = type.make(layout[1], 
+                                       new ReadyRef<HGHandle[]>(targetSet), 
+                                       null);
+                }
+                finally
+                {
+                    graph.getStore().detachOverlayGraph();
+                }
+                HGHandle typeHandle = substituteTypes.get(layout[0]);
+                if (typeHandle == null)
+                    typeHandle = layout[0];
+                graph.define(subgraph.getRoot(), 
+                             layout[0],                                 
+                             object,
+                             (byte)0);
+/*                store(subgraph, graph.getStore(), substituteTypes);
                 
                 //
                 // Update indexes:
@@ -200,7 +228,7 @@ public class SubgraphManager
                     IncidenceSet targetIncidenceSet = graph.getCache().getIncidenceCache().getIfLoaded(target);
                     if (targetIncidenceSet != null)
                         targetIncidenceSet.add(subgraph.getRoot());                    
-                }
+                } */
                 return subgraph.getRoot();
             }
         });        

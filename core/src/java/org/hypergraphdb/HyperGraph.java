@@ -1170,13 +1170,13 @@ public /*final*/ class HyperGraph
     /**
      * <p>
      * Put an existing atom into this HyperGraph instance. This is a rather low-level method
-     * that requires you to explicitely find the type and value handles for the atom and use
+     * that requires you to explicitly find the type and value handles for the atom and use
      * an already existing, yet unknown to this HyperGraph instance, persistent handle. 
      * </p>
      * 
      * <p>
      * One possible use of this is when an application relies on a HyperGraph for storage and it needs
-     * to populate it with some predefined set of atoms with a set of existing, prefabricated handles.
+     * to populate it with some predefined set of atoms with a set of existing, pre-fabricated handles.
      * Using handles in an application instead of some naming scheme and the corresponding <em>name</em>
      * properties is the preferred way of working with HyperGraph.
      * </p>
@@ -1248,29 +1248,48 @@ public /*final*/ class HyperGraph
      */
     public void define(final HGPersistentHandle atomHandle, final Object instance, final byte flags)
     {
-    	getTransactionManager().ensureTransaction(new Callable<Object>() 
-    	{ public Object call() {    	
-	    	HGHandle typeHandle = null;
-	    	if (instance == null)
-	    		typeHandle = HGTypeSystem.NULLTYPE_PERSISTENT_HANDLE;
-	    	else
-	    		typeHandle = typeSystem.getTypeHandle(instance.getClass());
-	    	if (typeHandle == null)
-	    		throw new HGException("Could not find HyperGraph type for object of type " + instance.getClass());
-	    	HGAtomType type = typeSystem.getType(typeHandle);
-	    	HGLink link = null;
-	    	Object payload = instance;
-	    	if (instance instanceof HGLink)
-	    	{
-	    		link = (HGLink)instance;
-	    		if (instance instanceof HGValueLink)
-	    			payload = ((HGValueLink)instance).getValue();
-	    	}
-	    	HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
-	    	define(atomHandle, typeHandle, valueHandle, link, instance);
-	    	HyperGraph.this.atomAdded(atomHandle, instance, flags);
-	    	return null;
-    	}});
+    	HGHandle typeHandle = null;
+    	if (instance == null)
+    		typeHandle = HGTypeSystem.NULLTYPE_PERSISTENT_HANDLE;
+    	else
+    		typeHandle = typeSystem.getTypeHandle(instance.getClass());
+    	if (typeHandle == null)
+    		throw new HGException("Could not find HyperGraph type for object of type " + instance.getClass());
+    	define(atomHandle, typeHandle, instance, flags);
+    }
+
+    /**
+     * <p>
+     * A version of <code>define</code> allowing one to pass a specific type to use when
+     * storing the atom.
+     * </p>
+     * 
+     * @param atomHandle The atom handle.
+     * @param typeHandle The handle of the type to use.
+     * @param instance The atom instance.
+     * @param flags System flags.
+     */
+    public void define(final HGPersistentHandle atomHandle, 
+                       final HGHandle typeHandle, 
+                       final Object instance, 
+                       final byte flags)
+    {
+        getTransactionManager().ensureTransaction(new Callable<Object>() 
+          { public Object call() {        
+              HGAtomType type = typeSystem.getType(typeHandle);
+              HGLink link = null;
+              Object payload = instance;
+              if (instance instanceof HGLink)
+              {
+                  link = (HGLink)instance;
+                  if (instance instanceof HGValueLink)
+                      payload = ((HGValueLink)instance).getValue();
+              }
+              HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
+              define(atomHandle, typeHandle, valueHandle, link, instance);
+              HyperGraph.this.atomAdded(atomHandle, instance, flags);
+              return null;
+          }});        
     }
     
     /**
