@@ -6,7 +6,7 @@
 "bootstrap" : [ {"class" : "org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap", "config" : {}},
                 {"class" : "org.hypergraphdb.peer.bootstrap.CACTBootstrap", "config" : {}}                
               ],
-"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface",
+"interfaceType"	: "org.hypergraphdb.peer.jxta.JXTAPeerInterface2",
 "peerName"	: "Peer2",
 
 "jxta"		:
@@ -14,16 +14,18 @@
     "user" : "bolerio",
     "password" : "password",
 	"jxtaDir"	: "./hgdb_edge/.jxta2",
-	"peerGroup"	: "HGDBNET",
-	"mode"		: "EDGE",
+	"peerName" : "Peer",
+    "peerGroup" : "SecoNet",
+    "createGroup" : false,
+    "deleteJxtaDir" : true, 
+    "mode"      : "EDGE",
+    "peerGroupId" : "urn:jxta:uuid-AA4861129B334B6EBF919814C05726F002",
 	"tcp"		:
 	{
 		"enabled"	: true,
 		"port"		: 9802
 	},
     "needsRendezVous" : true,        
-    "rdvs"          : ["tcp://kobrix.com:9702","http://kobrix.com:9703"],
-    "needsRelay"    : true,        
-    "relays"        : ["tcp://kobrix.com:9702","http://kobrix.com:9703"],
+    "rdvs"          : ["tcp://192.168.2.101:9702"]
 }
 }

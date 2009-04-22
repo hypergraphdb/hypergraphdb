@@ -75,6 +75,10 @@ public class JXTAServer implements Runnable
                     if (thisThread != null) // thread interrupt will cause a SocketException
                         e.printStackTrace();
                 }
+                catch (Throwable t)
+                {
+                    t.printStackTrace(System.err);
+                }
 			}
 			
 			try

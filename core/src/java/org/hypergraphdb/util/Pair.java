@@ -16,9 +16,11 @@ package org.hypergraphdb.util;
  *  
  * @author Borislav Iordanov
  */
-public class Pair<F, S> 
+public class Pair<F, S> implements java.io.Serializable 
 {
-	int hash;
+    private static final long serialVersionUID = 6572245056832188590L;
+    
+    int hash;
 	private F first;
 	private S second;
 	

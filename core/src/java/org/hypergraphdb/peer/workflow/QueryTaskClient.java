@@ -129,7 +129,7 @@ public class QueryTaskClient extends Activity
     {
         count.incrementAndGet();
 
-        Object msg = createMessage(Performative.Request, QUERY, getId());
+        Message msg = createMessage(Performative.Request, QUERY, getId());
         combine(msg, struct(Messages.CONTENT, struct(SLOT_QUERY,
                                             (handle == null) ? cond : handle,
                                             SLOT_GET_OBJECT, getObject)));

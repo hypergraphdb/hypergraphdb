@@ -110,7 +110,7 @@ public class HGStore
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
 	        envConfig.setLogAutoRemove(true);
-	        envConfig.setMaxLockers(200);
+	        envConfig.setMaxLockers(2000);
 	        envConfig.setMaxLockObjects(20000);
 	        envConfig.setMaxLocks(20000);
 	//        envConfig.setRunFatalRecovery(true);	        
@@ -632,7 +632,7 @@ public class HGStore
      * @param newLink The <code>HGPersistentHandle</code> of the new link pointing to that 
      * atom.
      */
-    void addIncidenceLink(HGPersistentHandle handle, HGPersistentHandle newLink)
+    public void addIncidenceLink(HGPersistentHandle handle, HGPersistentHandle newLink)
     {
         Cursor cursor = null;
         try
@@ -674,7 +674,7 @@ public class HGStore
      * @param oldLink The <code>HGPersistentHandle</code> of the old link that no longer
      * points to that atom.
      */
-    void removeIncidenceLink(HGPersistentHandle handle, HGPersistentHandle oldLink)
+    public void removeIncidenceLink(HGPersistentHandle handle, HGPersistentHandle oldLink)
     {
         Cursor cursor = null;
         try
@@ -706,7 +706,7 @@ public class HGStore
      * 
      * @param handle The handle of the atom whose incidence set must be removed.
      */
-    void removeIncidenceSet(HGPersistentHandle handle)
+    public void removeIncidenceSet(HGPersistentHandle handle)
     {
         if (handle == null)
             throw new NullPointerException("HGStore.removeIncidenceSet called with a null handle.");

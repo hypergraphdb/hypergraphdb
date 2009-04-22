@@ -62,7 +62,7 @@ public class GetInterestsTask extends Activity
     private void sendMessage(PeerRelatedActivityFactory activityFactory,
                              Object target)
     {
-        Object msg = createMessage(Performative.Request, ATOM_INTEREST, getId());
+        Message msg = createMessage(Performative.Request, ATOM_INTEREST, getId());
         PeerRelatedActivity activity = (PeerRelatedActivity) activityFactory.createActivity();
         activity.setTarget(target);
         activity.setMessage(msg);

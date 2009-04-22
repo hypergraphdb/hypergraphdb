@@ -111,7 +111,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
      * 
      * @param msg
      */
-    protected void say(Object msg)
+    protected void say(Message msg)
     {
         combine(msg, struct(Messages.CONVERSATION_ID, getId()));
         task.getPeerInterface().send(peer, msg);

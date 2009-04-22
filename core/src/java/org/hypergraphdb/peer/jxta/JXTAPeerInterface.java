@@ -13,6 +13,7 @@ import net.jxta.pipe.PipeID;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.NetworkPeerPresenceListener;
 import org.hypergraphdb.peer.PeerConfig;
@@ -123,7 +124,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		return new JXTASendActivityFactory(jxtaNetwork.getPeerGroup(), pipeAdv);
 	}
 	
-	public Future<Boolean> send(Object target, Object msg)
+	public Future<Boolean> send(Object target, Message msg)
 	{
 	    PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
 	    PeerRelatedActivity act = activityFactory.createActivity(); 
@@ -132,7 +133,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
         return executorService.submit(act);    
 	}
 	
-	public void broadcast(Object msg)
+	public void broadcast(Message msg)
 	{
 	    //
 	    // TODO: we should replace this with a real broadcast. Unfortunately,

@@ -29,6 +29,49 @@ import java.io.*;
  */
 public class SerializableType implements HGAtomType
 {
+    /**
+     * <p>An <code>ObjectInputStream</code> that uses the thread context class loader to
+     * resolve classes.</p>
+     * 
+     * @author Borislav Iordanov
+     *
+     */
+    public static class SerInputStream extends ObjectInputStream
+    {
+        public SerInputStream() throws IOException
+        {
+            super();
+        }
+        
+        public SerInputStream(InputStream in) throws IOException
+        {
+            super(in);
+        }
+      
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc)
+            throws IOException, ClassNotFoundException
+        {
+            // The fact that we first try super.resolveClass may seem weird, but
+            // otherwise we get a and weirder exception that I don't know how to
+            // deal with at the moment.
+            try
+            {
+                return super.resolveClass(desc);
+            }
+            catch (Exception ex)
+            {
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                if (cl != null)
+                    return cl.loadClass(desc.getName());
+                else if (ex instanceof IOException)
+                    throw (IOException)ex;
+                else
+                    throw (ClassNotFoundException)ex;
+            }
+        }
+    }
+    
 	private HyperGraph hg;
 /*	private Class clazz; */
 
@@ -53,7 +96,7 @@ public class SerializableType implements HGAtomType
 		try
 		{
 		    ByteArrayInputStream in = new ByteArrayInputStream(hg.getStore().getData(handle));
-    		ObjectInputStream objectIn = new ObjectInputStream(in);		
+    		ObjectInputStream objectIn = new SerInputStream(in);		
     		return objectIn.readObject();
 		}
 		catch (Exception ex)

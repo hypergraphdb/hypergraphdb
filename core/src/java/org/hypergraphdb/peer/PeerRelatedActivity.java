@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 public abstract class PeerRelatedActivity implements Callable<Boolean>
 {
 	protected Object target;
-	protected Object msg;
+	protected Message msg;
 	
 	public PeerRelatedActivity()
 	{
@@ -29,12 +29,12 @@ public abstract class PeerRelatedActivity implements Callable<Boolean>
 		this.target = target;
 	}
 
-	public Object getMessage()
+	public Message getMessage()
 	{
 		return msg;
 	}
 
-	public void setMessage(Object msg)
+	public void setMessage(Message msg)
 	{
 		this.msg = msg;
 	}	

@@ -76,7 +76,7 @@ public class PublishInterestsTask extends Activity
 	
 	private void sendMessage(PeerRelatedActivityFactory activityFactory, Object target)
 	{
-		Object msg = createMessage(Performative.Inform, ATOM_INTEREST, getId());
+	    Message msg = createMessage(Performative.Inform, ATOM_INTEREST, getId());
 		combine(msg, struct(Messages.CONTENT, pred));
 		
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();

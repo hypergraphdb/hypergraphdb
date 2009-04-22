@@ -173,7 +173,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	{
 		count.incrementAndGet();
 		
-		Object msg = createMessage(Performative.CallForProposal, REMEMBER_ACTION, getTaskId());
+		Message msg = createMessage(Performative.CallForProposal, REMEMBER_ACTION, getTaskId());
 		
 		LogEntry firstEntry = entries.get(0);
 		LogEntry lastEntry = entries.get(entries.size() - 1);
@@ -216,7 +216,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		//decide to accept or not ... for now just accept
 		if (true)
 		{
-			Object reply = getReply(conversation.getMessage());
+		    org.hypergraphdb.peer.Message reply = getReply(conversation.getMessage());
 			
 			ArrayList<Object> contents = new ArrayList<Object>();
 

@@ -5,10 +5,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static org.hypergraphdb.peer.Messages.*;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerInterface;
+import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -148,6 +150,11 @@ public abstract class Activity
             return post((HGPeerIdentity)target, msg);
         else
             return getPeerInterface().send(target, msg);
+    }
+    
+    protected Future<Boolean> reply(Message msg, Performative perf, Object content)
+    {
+        return post(getSender(msg), getReply(msg, perf, content));
     }
     
     /**

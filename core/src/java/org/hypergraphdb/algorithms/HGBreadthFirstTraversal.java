@@ -27,19 +27,28 @@ import org.hypergraphdb.util.Pair;
 public class HGBreadthFirstTraversal implements HGTraversal 
 {
 	private HGHandle startAtom;
+	private int maxDistance; // the maximum reachable distance from the starting node
 	private HGAtomSet visited = new HGAtomSet();
-	private Queue<Pair<HGHandle, HGHandle>> to_explore = new LinkedList<Pair<HGHandle, HGHandle>>();
+	private Queue<Pair<Pair<HGHandle, HGHandle>, Integer>> to_explore = 
+	    new LinkedList<Pair<Pair<HGHandle, HGHandle>, Integer>>();
 	private HGALGenerator adjListGenerator;
 
-	private void advance(HGHandle from)
+	private void advance(HGHandle from, int distance)
 	{
+	    if (distance >= maxDistance)
+	        return;
+	    
 		HGSearchResult<HGHandle> i = adjListGenerator.generate(from);
+		Integer dd = distance + 1;
 		while (i.hasNext())
 		{
 			HGHandle link = adjListGenerator.getCurrentLink();
 			HGHandle h = i.next();
 			if (!visited.contains(h))
-				to_explore.add(new Pair<HGHandle, HGHandle>(link, h));
+			{
+			    Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);
+				to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
+			}
 		}
 		i.close();
 	}
@@ -54,14 +63,19 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		throw new UnsupportedOperationException();
 	}
 
-	public HGBreadthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator)
+	public HGBreadthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator)	
 	{
-		this.startAtom = startAtom;
-		this.adjListGenerator = adjListGenerator;
-		visited.add(startAtom);
-		advance(startAtom);		
+	    this(startAtom, adjListGenerator, Integer.MAX_VALUE);
 	}
 	
+	public HGBreadthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator, int maxDistance)
+	{
+	    this.maxDistance = maxDistance;
+        this.startAtom = startAtom;
+        this.adjListGenerator = adjListGenerator;
+        visited.add(startAtom);
+        advance(startAtom, 0);     	    
+	}
 	public boolean hasNext() 
 	{
 		return !to_explore.isEmpty();
@@ -74,12 +88,13 @@ public class HGBreadthFirstTraversal implements HGTraversal
 
 	public Pair<HGHandle, HGHandle> next() 
 	{
-		Pair<HGHandle, HGHandle> rvalue = null;
+	    Pair<HGHandle, HGHandle> rvalue = null;		
 		if (!to_explore.isEmpty())
 		{
-			rvalue = to_explore.remove();
+		    Pair<Pair<HGHandle, HGHandle>, Integer> x = to_explore.remove();
+			rvalue = x.getFirst();
 			visited.add(rvalue.getSecond());
-			advance(rvalue.getSecond());
+			advance(rvalue.getSecond(), x.getSecond());
 		}
 		return rvalue;
 	}

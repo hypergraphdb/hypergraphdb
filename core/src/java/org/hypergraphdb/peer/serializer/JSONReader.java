@@ -187,7 +187,7 @@ public class JSONReader
         }
         
         if ((ret.size() == 2) && 
-        	(ret.get(0).equals("custom")) && 
+        	ret.get(0) != null && (ret.get(0).equals("custom")) && 
         	(ret.get(1) instanceof Map) && ((Map<Integer, CustomSerializedValue>)ret.get(1)).containsKey("pos"))
 		{
         	Object pos = ((Map<Integer, CustomSerializedValue>)ret.get(1)).get("pos");

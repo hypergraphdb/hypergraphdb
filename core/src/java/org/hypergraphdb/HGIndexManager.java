@@ -337,7 +337,7 @@ public class HGIndexManager
 	 * @param atomHandle
 	 * @param atom
 	 */
-	void maybeIndex(HGPersistentHandle typeHandle, 
+	public void maybeIndex(HGPersistentHandle typeHandle, 
 					HGAtomType type,
 				    HGPersistentHandle atomHandle,
 				    Object atom)
@@ -366,7 +366,7 @@ public class HGIndexManager
 	 * @param atom
 	 * @param atomHandle
 	 */
-	void maybeUnindex(HGPersistentHandle typeHandle, 
+	public void maybeUnindex(HGPersistentHandle typeHandle, 
 					  HGAtomType type,
 	   				  Object atom,
 	   				  HGPersistentHandle atomHandle)

@@ -230,11 +230,11 @@ public class WorkflowState
 
     /**
      * <p>Return <code>true</code> iff this object represents a <em>Started</em>
-     * state.</p>  
+     * state - that is, it is neither in limbo nor finished.</p>  
      */    
     public boolean isStarted()    
     {
-        return name.get() == Started.name.get();
+        return !isInLimbo() && !isFinished();
     }
     
     /**

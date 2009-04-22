@@ -83,7 +83,7 @@ public abstract class TaskActivity<StateType>
 //        thisPeer.getPeerInterface().registerTask(taskId, this);
     }
     
-    protected void sendReply(Object originalMsg, Object reply)
+    protected void sendReply(Object originalMsg, Message reply)
     {
         getPeerInterface().send(getPart(originalMsg, Messages.REPLY_TO), reply);
     }

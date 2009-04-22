@@ -85,7 +85,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
         {
             Pair<HGPersistentHandle, Object> item = iter.next();
             Object value = item.getSecond();
-
+            
             try
             {
                 byte[] byteValue = null;

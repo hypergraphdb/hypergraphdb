@@ -30,6 +30,7 @@ import net.jxta.protocol.DiscoveryResponseMsg;
 import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.NetworkPeerPresenceListener;
 import org.hypergraphdb.peer.PeerFilter;
@@ -148,6 +149,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             peerManager.setPeerID(peerId);
             configurator.clearRendezvousSeeds();
             configurator.clearRelaySeeds();
+            peerManager.setUseDefaultSeeds(false);           
             if (needsRendezVous)
             {
                 configurator.setUseOnlyRendezvousSeeds(true);
@@ -156,7 +158,6 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             }
             if (needsRelay)
             {
-//                configurator.setUseOnlyRelaySeeds(true);
                 for (String uri : relaySeeds)
                     configurator.addSeedRelay(URI.create(uri));
             }
@@ -165,6 +166,10 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
                 configurator.setTcpEnabled(getOptPart(tcpTransport, true, "enabled"));
                 Number tcpPort = getOptPart(tcpTransport, JXTAConfig.DEFAULT_TCP_PORT, "port");
                 configurator.setTcpPort(tcpPort.intValue());
+//                configurator.setTcpStartPort(-1);
+//                configurator.setTcpEndPort(-1);
+                configurator.setTcpIncoming(true);
+                configurator.setTcpOutgoing(true);
             }
             else
                 configurator.setTcpEnabled(false);
@@ -178,6 +183,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
             }            
             else
                 configurator.setHttpEnabled(false);
+            configurator.setUseMulticast(true);
         }
         catch (Exception e)
         {
@@ -288,7 +294,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
         }        
     }    
     
-    public void broadcast(Object msg)
+    public void broadcast(Message msg)
     {
         throw new UnsupportedOperationException();
     }
@@ -314,7 +320,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
         return new JXTASendActivityFactory(group, incomingPipe);
     }
     
-    public Future<Boolean> send(Object networkTarget, Object msg)
+    public Future<Boolean> send(Object networkTarget, Message msg)
     {
         PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
         PeerRelatedActivity act = activityFactory.createActivity(); 

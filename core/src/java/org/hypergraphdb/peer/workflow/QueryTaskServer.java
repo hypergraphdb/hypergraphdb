@@ -38,7 +38,7 @@ public class QueryTaskServer extends Activity
                                               Messages.CONTENT,
                                               SLOT_GET_OBJECT);
         Object query = getPart(msg, Messages.CONTENT, SLOT_QUERY);
-        Object reply = getReply(msg);
+        Message reply = getReply(msg);
 
         if (query instanceof HGHandle)
         {

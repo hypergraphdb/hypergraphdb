@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -70,7 +71,7 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 	{
 		count.incrementAndGet();
 
-		Object msg = createMessage(Performative.Request, CATCHUP, getTaskId());
+		Message msg = createMessage(Performative.Request, CATCHUP, getTaskId());
 		combine(msg, struct(Messages.CONTENT, 
 				struct(SLOT_LAST_VERSION, thisPeer.getLog().getLastFrom(target), 
 						SLOT_INTEREST, Replication.get(thisPeer).getAtomInterests())));

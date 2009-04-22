@@ -63,7 +63,7 @@ public class AffirmIdentity extends FSMActivity
     
     public void initiate()
     {
-        Object inform = combine(createMessage(Inform,
+        Message inform = combine(createMessage(Inform,
                                               this),                                              
                                 struct(Messages.CONTENT, 
                                        makeIdentityStruct(getThisPeer().getIdentity())));

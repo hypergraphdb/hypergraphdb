@@ -2,6 +2,7 @@ package org.hypergraphdb.peer.workflow;
 
 import static org.hypergraphdb.peer.Structs.*;
 
+import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.protocol.Performative;
 
@@ -41,7 +42,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * @param msg
 	 * @return
 	 */
-	public boolean propose(Object msg)
+	public boolean propose(Message msg)
 	{		
 		if (compareAndSetState(State.Started, State.Proposed))
 		{
@@ -58,7 +59,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * called by client task when accepting
 	 * @param msg
 	 */
-	public boolean accept(Object msg)
+	public boolean accept(Message msg)
 	{
 		if (compareAndSetState(State.Proposed, State.Accepted))
 		{
@@ -90,7 +91,7 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * called by server when confirming
 	 * @param msg
 	 */
-	public boolean confirm(Object msg)
+	public boolean confirm(Message msg)
 	{
 		System.out.println("ProposalConversation: confirm");
 		if (compareAndSetState(State.Accepted, State.Confirmed))

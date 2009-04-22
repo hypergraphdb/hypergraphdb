@@ -99,8 +99,12 @@ public class ActivityManager implements MessageHandler
             {
                 try
                 {
-                    Activity a = globalQueue.take();
-                    if (!a.queue.isEmpty() && !a.getState().isFinished())
+                    // Need to 'poll' instead of 'take' so that the scheduler can
+                    // be gracefully stopped.
+                    Activity a = globalQueue.poll(1, TimeUnit.SECONDS);
+                    if (a == null)
+                        continue;
+                    else if (!a.queue.isEmpty() && !a.getState().isFinished())
                     {
                         Runnable r = a.queue.take();
                         thisPeer.getExecutorService().execute(r);
@@ -116,6 +120,7 @@ public class ActivityManager implements MessageHandler
                 }
                 catch (InterruptedException ex) { break; }
             }
+            schedulerRunning = false;
         }
     }
     
@@ -145,10 +150,11 @@ public class ActivityManager implements MessageHandler
     {
         try 
         { 
-            Object reply = combine(Messages.getReply(msg), 
+            Message reply = combine(Messages.getReply(msg), 
                                    struct(PERFORMATIVE, Performative.NotUnderstood,
                                           CONTENT, msg));
             thisPeer.getPeerInterface().send(getSender(msg), reply);
+            System.out.println("Sending not understood on " + msg + " because " + exlanation);
         }
         catch (Throwable t)
         {
@@ -173,7 +179,8 @@ public class ActivityManager implements MessageHandler
                     if (transition == null)
                         return;
                     WorkflowStateConstant result = transition.apply(parentActivity, activity);
-                    parentActivity.getState().assign(result);
+                    if (result != null) // is there a state change?
+                        parentActivity.getState().assign(result);
                 }
                 catch (Throwable t)
                 {
@@ -225,15 +232,11 @@ public class ActivityManager implements MessageHandler
                         System.out.println("Running transition " + transition + " on msg " + msg);
                         WorkflowStateConstant result = transition.apply(activity, msg);
                         System.out.println("Transition finished with " + result);
-                        activity.getState().assign(result);
+                        if (result != null)
+                            activity.getState().assign(result);
                     }
-                }
-                catch (Throwable t)
-                {
-                    handleActivityException(activity, t, msg);
-                }
-                finally
-                {
+                    
+                    // Reschedule only if no exception was propagated up to here.                    
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
                     Activity rootActivity = findRootActivity(activity);
                     try
@@ -244,7 +247,11 @@ public class ActivityManager implements MessageHandler
                     {
                         // nothing really we can do about this
                         handleActivityException(rootActivity, ex, null);
-                    }
+                    }                    
+                }
+                catch (Throwable t)
+                {
+                    handleActivityException(activity, t, msg);
                 }
             }
          };  
@@ -259,13 +266,8 @@ public class ActivityManager implements MessageHandler
                 try 
                 {
                     activity.handleMessage(msg);
-                }
-                catch (Throwable t)
-                {
-                    handleActivityException(activity, t, msg);
-                }
-                finally
-                {
+                    
+                    // Reschedule only if no exception was propagated up to here. 
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
                     Activity rootActivity = findRootActivity(activity);
                     try
@@ -276,8 +278,12 @@ public class ActivityManager implements MessageHandler
                     {
                         // nothing really we can do about this
                         handleActivityException(rootActivity, ex, null);
-                    }
-                }                
+                    }                    
+                }
+                catch (Throwable t)
+                {
+                    handleActivityException(activity, t, msg);
+                }
             }
          };  
     }

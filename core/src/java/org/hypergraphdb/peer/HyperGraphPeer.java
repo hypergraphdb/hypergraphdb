@@ -156,17 +156,9 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
-	/**
-	 * <p>
-	 * Return this peer's identity.
-	 * </p>
-	 */
-	public HGPeerIdentity getIdentity()
+	public static HGPeerIdentity getIdentity(HyperGraph graph, String peerName)
 	{
-	    if (identity != null)
-	        return identity;
-	    if (graph == null)
-	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
+	    HGPeerIdentity identity = null;	    
         java.net.InetAddress localMachine = null;
         try
         {
@@ -179,44 +171,58 @@ public class HyperGraphPeer
         {
             // TODO: how to we deal with this?
             ex.printStackTrace(System.err);             
-        }	    
-        String peerName = (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME);
-	    List<PrivatePeerIdentity> all = hg.getAll(graph, hg.type(PrivatePeerIdentity.class));	    
-	    if (all.isEmpty())
-	    {
-	        // Create new identity.
-	        PrivatePeerIdentity id = new PrivatePeerIdentity();
-	        id.setId(HGHandleFactory.makeHandle());
-	        id.setGraphLocation(graph.getLocation());
+        }       
+        List<PrivatePeerIdentity> all = hg.getAll(graph, hg.type(PrivatePeerIdentity.class));       
+        if (all.isEmpty())
+        {             
+            // Create new identity.
+            PrivatePeerIdentity id = new PrivatePeerIdentity();
+            id.setId(HGHandleFactory.makeHandle());
+            id.setGraphLocation(graph.getLocation());
             id.setHostname(localMachine.getHostName());
             id.setIpAddress(localMachine.getHostAddress());
             id.setName(peerName);
-	        graph.define(id.getId(), id);
-	        return identity = id.makePublicIdentity();
-	    }
-	    else if (all.size() > 1)
-	        throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
-	    else
-	    {
+            graph.define(id.getId(), id);
+            return identity = id.makePublicIdentity();
+        }
+        else if (all.size() > 1)
+            throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
+        else
+        {
             if (!HGUtils.eq(all.get(0).getName(), peerName))
             {
                 all.get(0).setName(peerName);
                 graph.update(all.get(0));
             }
-	        identity = all.get(0).makePublicIdentity();
-	        if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
-	            !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||
-	            !HGUtils.eq(identity.getGraphLocation(), graph.getLocation()))
-	        {
-	            // Need to create a new identity.
-	            graph.remove(identity.getId());
-	            HGPersistentHandle newId = HGHandleFactory.makeHandle();
-	            identity.setId(newId);
-	            all.get(0).setId(newId);
-	            graph.define(newId, all.get(0));
-	        }
+            identity = all.get(0).makePublicIdentity();
+            if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
+                !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||
+                !HGUtils.eq(identity.getGraphLocation(), graph.getLocation()))
+            {
+                // Need to create a new identity.
+                graph.remove(identity.getId());
+                HGPersistentHandle newId = HGHandleFactory.makeHandle();
+                identity.setId(newId);
+                all.get(0).setId(newId);
+                graph.define(newId, all.get(0));
+            }
+            return identity;
+        }
+	    
+	}
+	
+	/**
+	 * <p>
+	 * Return this peer's identity.
+	 * </p>
+	 */
+	public HGPeerIdentity getIdentity()
+	{
+	    if (identity != null)
 	        return identity;
-	    }
+	    if (graph == null)
+	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
+	    return getIdentity(graph, (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME));
 	}
 	
 	private void loadConfig(File configFile)
@@ -287,7 +293,7 @@ public class HyperGraphPeer
 				}
 
 				option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
-				if (!HGUtils.isEmpty(option))
+				if (graph == null && !HGUtils.isEmpty(option))
 				{
 					graph = HGEnvironment.get(option);					
 				}
@@ -296,10 +302,10 @@ public class HyperGraphPeer
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(HyperGraphPeer.this);
-				Map<String, Object> jxtaConfiguration = getPart(configuration, "jxta");
-				if (jxtaConfiguration == null)
-				    throw new RuntimeException("Missing JXTA configuration parameter.");
-				peerInterface.configure(jxtaConfiguration);
+				Map<String, Object> interfaceConfig = getPart(configuration, "interfaceConfig");
+				if (interfaceConfig == null)
+				    throw new RuntimeException("Missing interfaceConfig configuration parameter.");
+				peerInterface.configure(interfaceConfig);
 				
 				status = true;
 
@@ -318,7 +324,7 @@ public class HyperGraphPeer
                         Map<String, Object> config = getPart(x, "config");
                         if (config == null)
                             config = new HashMap<String, Object>();
-                        BootstrapPeer boot = (BootstrapPeer)Class.forName(classname).newInstance();
+                        BootstrapPeer boot = (BootstrapPeer)Thread.currentThread().getContextClassLoader().loadClass(classname).newInstance();
                         boot.bootstrap(HyperGraphPeer.this, config);
                     }       
                 
@@ -508,6 +514,7 @@ public class HyperGraphPeer
             if (oldId != null && oldId.equals(id))
                 return;
             peerIdentities.add(networkTarget, id);
+            graph.define(id.getId(), id);
             for (PeerPresenceListener listener : peerListeners)
                 listener.peerJoined(id);
         }

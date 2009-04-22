@@ -22,6 +22,8 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.handle.WeakHandle;
+import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.serializer.CustomSerializedValue;
 import org.hypergraphdb.query.And;
@@ -297,6 +299,8 @@ public class Structs
 		addMapper(UUIDPersistentHandle.class, new HandleMapper(), "persistent-handle");
 		addMapper(PhantomManagedHandle.class, new HandleMapper(), "live-managed-handle");
 		addMapper(PhantomHandle.class, new HandleMapper(), "live-handle");
+		addMapper(WeakHandle.class, new HandleMapper(), "live-handle");
+		addMapper(WeakManagedHandle.class, new HandleMapper(), "live-handle");
 		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
 //		addMapper(Subgraph.class, new SubGraphMapper(), "storage-graph");
 		

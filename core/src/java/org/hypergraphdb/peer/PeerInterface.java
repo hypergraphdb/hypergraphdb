@@ -22,7 +22,7 @@ public interface PeerInterface
      * </p>
      * @param message
      */
-    void setMessageHandler(MessageHandler message);
+    void setMessageHandler(MessageHandler messageHandler);
     
 	/**
 	 * Because implementors can be of any type, the configuration is an Object, no constraints 
@@ -82,9 +82,9 @@ public interface PeerInterface
 	 * 
 	 * @param msg
 	 */
-	void broadcast(Object msg);
+	void broadcast(Message msg);
 
-	Future<Boolean> send(Object networkTarget, Object msg);
+	Future<Boolean> send(Object networkTarget, Message msg);
 	
     void addPeerPresenceListener(NetworkPeerPresenceListener listener);
     void removePeerPresenceListener(NetworkPeerPresenceListener listener);

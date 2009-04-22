@@ -65,7 +65,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
         ProposalConversation conv = (ProposalConversation)(AbstractActivity<ProposalConversation.State>)conversation;
         last_version = (Timestamp) getPart(conv.getMessage(), Messages.CONTENT, SLOT_LAST_VERSION);
         current_version = (Timestamp) getPart(conv.getMessage(), Messages.CONTENT, SLOT_CURRENT_VERSION);        
-        Object reply = getReply(conv.getMessage());        
+        org.hypergraphdb.peer.Message reply = getReply(conv.getMessage());        
         conv.propose(reply);
         return State.Started;
     }
@@ -129,7 +129,7 @@ public class RememberTaskServer extends TaskActivity<RememberTaskServer.State>
 			getThisPeer().getLog().finishRequest(peerId, last_version, current_version);
 			System.out.println("RememberActivityServer: remembered " + handles);
 			
-			Object reply = getReply(msg);
+			org.hypergraphdb.peer.Message reply = getReply(msg);
 			combine(reply, struct(Messages.CONTENT, handles));
 			conv.confirm(reply);
 		}else{

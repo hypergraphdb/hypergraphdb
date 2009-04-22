@@ -100,10 +100,22 @@ public /*final*/ class HyperGraph
      */
     private static final byte [] INCIDENCE_CACHE_ID = HGHandleFactory.makeHandle("128d0be0-b062-11dd-b416-0002a5d5c51b").toByteArray();
     
-    private static final String TYPES_CONFIG_FILE = "/org/hypergraphdb/types";
-    private static final String TYPES_INDEX_NAME = "HGATOMTYPE";
-    private static final String VALUES_INDEX_NAME = "HGATOMVALUE";
-    private static final String SA_DB_NAME = "HGSYSATTRIBS";
+    /**
+     * The resource name of the default types configuration file.
+     */
+    public static final String TYPES_CONFIG_FILE = "/org/hypergraphdb/types";
+    /**
+     * The name of the main by-type atom index.
+     */
+    public static final String TYPES_INDEX_NAME = "HGATOMTYPE";
+    /**
+     * The name of the main by-value atom index.
+     */
+    public static final String VALUES_INDEX_NAME = "HGATOMVALUE";
+    /**
+     * The name of the atom attributes DB.
+     */
+    public static final String SA_DB_NAME = "HGSYSATTRIBS";
     
     /**
      * The location (full directory path on disk) for this HyperGraph database. 
@@ -435,6 +447,14 @@ public /*final*/ class HyperGraph
     public HGTypeSystem getTypeSystem()
     {
         return typeSystem;
+    }
+    
+    /**
+     * <p>Return the atom cache associated with this HyperGraph instance.</p>
+     */
+    public HGAtomCache getCache()
+    {
+        return cache;
     }
     
     /**

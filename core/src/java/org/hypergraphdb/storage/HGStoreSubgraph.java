@@ -11,7 +11,7 @@ import org.hypergraphdb.util.Pair;
 
 /**
  * <p>
- * A <code>StorageGraph</code> bound to a <code>HGStore</code>.
+ * A {@link StorageGraph} bound to a {@link HGStore}.
  * </p>
  * 
  * @author Borislav Iordanov
@@ -22,6 +22,13 @@ public class HGStoreSubgraph implements StorageGraph
     private HGPersistentHandle root;
     private HGStore store;
     
+    /**
+     * <p>
+     * Construct a new {@link HGStore} based {@link StorageGraph} 
+     * </p>
+     * @param root The root, starting point of the storage graph.
+     * @param store The backing store instance.
+     */
     public HGStoreSubgraph(HGPersistentHandle root, HGStore store)
     {
         this.root = root;

@@ -51,6 +51,7 @@ import org.hypergraphdb.query.impl.PredicateBasedFilter;
 import org.hypergraphdb.query.impl.ProjectionAtomResultSet;
 import org.hypergraphdb.query.impl.ResultMapQuery;
 import org.hypergraphdb.query.impl.SearchableBasedQuery;
+import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.query.impl.UnionQuery;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
@@ -385,11 +386,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 					Iterator<HGQuery> i = L.iterator();
 					IntersectionQuery result = new IntersectionQuery(i.next(), 
 																	 i.next(),
-																	 new ZigZagIntersectionResult());
+																	 new SortedIntersectionResult());
 					while (i.hasNext())
 						result = new IntersectionQuery(i.next(), 
 													   result,
-													   new ZigZagIntersectionResult());
+													   new SortedIntersectionResult());
 					// the following will find all links (unordered) with the given target
 					// set and then filter to insure that the targets are properly ordered.
 					return new PredicateBasedFilter(hg, result, lc);				

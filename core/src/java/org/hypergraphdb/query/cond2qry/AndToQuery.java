@@ -157,13 +157,13 @@ public class AndToQuery implements ConditionToQuery
 			c2 = i.next().cond;
 			result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 										   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
-										   new ZigZagIntersectionResult());
+										   new SortedIntersectionResult());
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
-											   new ZigZagIntersectionResult());
+											   new SortedIntersectionResult());
 			}
 		}
 		else if (ORA.size() == 1)
