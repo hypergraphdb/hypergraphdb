@@ -29,14 +29,15 @@ import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
-public class XMPPPeerInteface implements PeerInterface
+public class XMPPPeerInterface implements PeerInterface
 {
     // Configuration options.
     private String serverName;
     private Number port;
     private String user;
     private String password;
-    
+    private boolean anonymous;
+    private boolean autoRegister;
     private HyperGraphPeer thisPeer;
     private ArrayList<NetworkPeerPresenceListener> presenceListeners = 
         new ArrayList<NetworkPeerPresenceListener>();
@@ -52,6 +53,8 @@ public class XMPPPeerInteface implements PeerInterface
         user = getPart(configuration, "user");
         password = getPart(configuration, "password");        
         config = new ConnectionConfiguration(serverName, port.intValue());
+        config.setRosterLoadedAtLogin(true);
+        config.setReconnectionAllowed(true);
     }    
     
     public void start()
@@ -61,7 +64,33 @@ public class XMPPPeerInteface implements PeerInterface
         try
         {
             connection.connect();
-            connection.login(user, password);
+            if (anonymous)
+                connection.loginAnonymously();
+            else
+            {
+                // maybe auto-register if login fails
+                try
+                {
+                    connection.login(user, password, thisPeer.getIdentity().getId().toString());
+                }
+                catch (XMPPException ex)
+                {
+                    //XMPPError error = ex.getXMPPError();
+                    if (/* error != null && 
+                         error.getCondition().equals(XMPPError.Condition.forbidden.toString()) && */
+                        ex.getMessage().indexOf("authentication failed") > -1 &&
+                        autoRegister &&
+                        connection.getAccountManager().supportsAccountCreation())
+                    {
+                        connection.getAccountManager().createAccount(user, password);
+                        connection.disconnect();
+                        connection.connect();
+                        connection.login(user, password);
+                    }
+                    else
+                        throw ex;
+                }
+            }
             connection.addPacketListener(new PacketListener() {
                 @SuppressWarnings("unchecked")
                 public void processPacket(Packet packet)
@@ -147,8 +176,15 @@ public class XMPPPeerInteface implements PeerInterface
         }
         catch (XMPPException e)
         {    
+            if (connection != null && connection.isConnected())
+                connection.disconnect();
             throw new RuntimeException(e);
         }                  
+    }
+    
+    public boolean isConnected()
+    {
+        return connection != null && connection.isConnected();
     }
     
     public void stop()
@@ -250,5 +286,10 @@ public class XMPPPeerInteface implements PeerInterface
     public void setThisPeer(HyperGraphPeer thisPeer)
     {
         this.thisPeer = thisPeer;
+    }
+    
+    public XMPPConnection getConnection()
+    {
+        return connection;
     }
 }
