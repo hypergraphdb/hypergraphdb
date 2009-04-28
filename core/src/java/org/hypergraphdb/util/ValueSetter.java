@@ -8,7 +8,7 @@ package org.hypergraphdb.util;
  * 
  * @author Borislav Iordanov
  */
-public interface ValueSetter 
+public interface ValueSetter<T>
 {
-	void set(Object value);
+	void set(T value);
 }

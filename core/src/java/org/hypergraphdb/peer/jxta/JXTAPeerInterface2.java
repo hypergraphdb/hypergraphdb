@@ -67,6 +67,7 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
         new ArrayList<NetworkPeerPresenceListener>();
     private MessageHandler messageHandler;
     
+    private boolean connected;
     private NetworkManager peerManager = null;
     private PeerGroupID groupId = null;
     private PeerGroup group = null;
@@ -224,32 +225,44 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
     
     public void stop()
     {
-        if (advPublisher != null)
+        try
         {
-            advPublisher.stop();
-            advPublisher = null;
+            if (advPublisher != null)
+            {
+                advPublisher.stop();
+                advPublisher = null;
+            }
+            if (advSubscriber != null)
+            {
+                advSubscriber.stop();
+                advSubscriber = null;
+            }
+            
+            if (jxtaServer != null)
+                jxtaServer.stop();
+            
+            presentPeers.clear();
+            incomingPipe = null;
+            incomingPipeId = null;
+            
+            if (group != null)
+            {
+                if (group.isRendezvous())
+                    group.getRendezVousService().stopRendezVous();        
+                group.getEndpointService().stopApp();
+                group.stopApp();
+            }
+            peerManager.stopNetwork();
         }
-        if (advSubscriber != null)
+        finally
         {
-            advSubscriber.stop();
-            advSubscriber = null;
+            connected = false;
         }
-        
-        if (jxtaServer != null)
-            jxtaServer.stop();
-        
-        presentPeers.clear();
-        incomingPipe = null;
-        incomingPipeId = null;
-        
-        if (group != null)
-        {
-            if (group.isRendezvous())
-                group.getRendezVousService().stopRendezVous();        
-            group.getEndpointService().stopApp();
-            group.stopApp();
-        }
-        peerManager.stopNetwork();
+    }
+    
+    public boolean isConnected()
+    {
+        return connected;
     }
     
     // Maybe this should be split into two steps: connect and then "run" for the heartbeats etc.
@@ -285,7 +298,8 @@ public class JXTAPeerInterface2 implements PeerInterface, JXTARequestHandler
                 thisPeer.getExecutorService().execute(jxtaServer);
             
             thisPeer.getExecutorService().execute(advPublisher = new AdvPublisher());
-            thisPeer.getExecutorService().execute(advSubscriber = new AdvSubscriber());            
+            thisPeer.getExecutorService().execute(advSubscriber = new AdvSubscriber());
+            connected = true;
         }
         catch (Exception ex)
         {

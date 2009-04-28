@@ -21,7 +21,7 @@ import org.hypergraphdb.HGQuery;
  * 
  * @author Borislav Iordanov
  */
-public abstract class KeyBasedQuery extends HGQuery 
+public abstract class KeyBasedQuery<Key, Value> extends HGQuery<Value> 
 {
 	/**
 	 * <p>Specify the key on which this query operates.</p>
@@ -30,10 +30,10 @@ public abstract class KeyBasedQuery extends HGQuery
 	 * based on the concrete <code>HGQuery</code> instance. Usually it
 	 * should be either a <code>byte []</code> or convertible to one.
 	 */
-	public abstract void setKey(Object key);
+	public abstract void setKey(Key key);
 	
 	/**
 	 * <p>Retrieve the key object used to perform this query.</p>
 	 */
-	public abstract Object getKey();
+	public abstract Key getKey();
 }

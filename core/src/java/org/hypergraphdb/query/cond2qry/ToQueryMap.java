@@ -54,7 +54,7 @@ import org.hypergraphdb.query.impl.SearchableBasedQuery;
 import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.query.impl.UnionQuery;
-import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
+//import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.type.HGAtomType;
 
 @SuppressWarnings("unchecked")

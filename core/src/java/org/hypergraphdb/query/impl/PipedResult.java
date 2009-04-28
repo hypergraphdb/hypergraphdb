@@ -27,13 +27,13 @@ import org.hypergraphdb.HGSearchResult;
  * </p>
  * @author Borislav Iordanov
  */
-public class PipedResult implements HGSearchResult 
+public class PipedResult<Key, Value> implements HGSearchResult<Value> 
 {
-	private HGSearchResult in;
-	private KeyBasedQuery pipe;
-	private HGSearchResult currentPiped = null, 
-						   nextPiped = null, 
-						   previousPiped = null;	
+	private HGSearchResult<Key> in;
+	private KeyBasedQuery<Key, Value> pipe;
+	private HGSearchResult<Value> currentPiped = null, 
+						          nextPiped = null, 
+						          previousPiped = null;	
 	private boolean own_in;
 	
 	/**
@@ -42,7 +42,7 @@ public class PipedResult implements HGSearchResult
 	 * @param pipe The pipe query, can't be <code>null</code>.
 	 * @param own_in Specifies whether to close the input result object when this object is closed.
 	 */
-	public PipedResult(HGSearchResult in, KeyBasedQuery pipe, boolean own_in)
+	public PipedResult(HGSearchResult<Key> in, KeyBasedQuery<Key, Value> pipe, boolean own_in)
 	{
 		this.in = in;
 		this.pipe = pipe;
@@ -55,7 +55,7 @@ public class PipedResult implements HGSearchResult
 		}
 	}
 	
-	public Object current() 
+	public Value current() 
 	{
 		if (currentPiped == null)
 			throw new NoSuchElementException();
@@ -127,7 +127,7 @@ public class PipedResult implements HGSearchResult
 		}
 	}
 
-	public Object prev() 
+	public Value prev() 
 	{
 		if (!hasPrev())
 			throw new NoSuchElementException();
@@ -175,7 +175,7 @@ public class PipedResult implements HGSearchResult
 		}
 	}
 
-	public Object next() 
+	public Value next() 
 	{
 		if (!hasNext())
 			throw new NoSuchElementException();

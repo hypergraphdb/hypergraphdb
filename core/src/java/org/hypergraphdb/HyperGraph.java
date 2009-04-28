@@ -875,8 +875,11 @@ public /*final*/ class HyperGraph
 
     /**
      * <p>Remove an atom from the HyperGraph database. This is equivalent to calling
-     * <code>remove(handle, true)</code> - see that version of <code>remove</code> for
-     * detailed explanation.</p>
+     * <code>remove(handle, false)</code> - see that version of <code>remove</code> for
+     * detailed explanation. Essentially, this means that all links pointing to the
+     * atom will be removed as well. This default behavior is based on the assumption
+     * that most frequently links as ordered tuples that establish a particular 
+     * relationship b/w their targets and therefore make sense only as a whole.</p>
      * 
      * @param handle
      * @return <code>true</code> if the atom was successfully removed and <code>false</code>
@@ -884,7 +887,7 @@ public /*final*/ class HyperGraph
      */
     public boolean remove(final HGHandle handle)
     {
-    	return remove(handle, true);
+    	return remove(handle, false);
     }
     
     /**
@@ -1771,19 +1774,27 @@ public /*final*/ class HyperGraph
      * is done.
      * 
      * @param targetAtom The handle of the atom whose incidence set need modification.
-     * @param incidentLiveLink The <code>LiveHandle</code> of the link to be removed
-     * or <code>null</code> if the live handle is not available.
      * @param incidentLink The <code>HGPersistentHandle</code> of the link to be
      * removed - cannot be <code>null</code>.
      */
     private void removeFromIncidenceSet(HGPersistentHandle targetAtom,
     									HGPersistentHandle incidentLink)
     {       
-        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
-															   TxAttribute.IN_REMOVAL, 
-															   HashSet.class); 
-        if (inRemoval.contains(targetAtom))
-        	return;
+//        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
+//															   TxAttribute.IN_REMOVAL, 
+//															   HashSet.class);
+        // Can't remember why atoms currently being removed should keep there incidence sets
+        // intact, next time a bug shows up related to this, please comment on why the following
+        // check is need.
+        // -Borislav
+        //
+        // However, if the following is uncommented, there's a problem when deleting
+        // types: the HGSubsumes links get removed during the type removal transaction
+        // but they remain in the incidence set (due to the following line) which subsequently
+        // causes an NPE.
+        //
+//        if (inRemoval.contains(targetAtom))
+//        	return;
     	store.removeIncidenceLink(targetAtom, incidentLink);
         IncidenceSet targetIncidenceSet = cache.getIncidenceCache().getIfLoaded(targetAtom);
         if (targetIncidenceSet != null)

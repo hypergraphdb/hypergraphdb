@@ -8,6 +8,7 @@ import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
 
+@SuppressWarnings("unchecked")
 public class EnumType extends HGAtomTypeBase
 {
 	private Class<Enum> enumType;
@@ -30,8 +31,7 @@ public class EnumType extends HGAtomTypeBase
 	{
 		this.enumType = enumType;
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		// ignore target set...

@@ -45,6 +45,12 @@ public interface PeerInterface
 	void start();
 
 	/**
+	 * <p>Return <code>true</code> if we are currently connected to the network
+	 * and <code>false</code> otherwise.</p>
+	 */
+	boolean isConnected();
+	
+	/**
 	 * <p>
 	 * Stop the <code>PeerInterface</code> - no more messages are going to be
 	 * received or sent.

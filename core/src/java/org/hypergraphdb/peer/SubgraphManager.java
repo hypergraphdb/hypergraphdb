@@ -18,19 +18,15 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.RAMStorageGraph;
-import org.hypergraphdb.storage.RefDelegateStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.type.HGAtomType;
-import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.FilterIterator;
 import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Pair;
-import org.hypergraphdb.util.TempLink;
 
 /**
  * @author ciprian.costa

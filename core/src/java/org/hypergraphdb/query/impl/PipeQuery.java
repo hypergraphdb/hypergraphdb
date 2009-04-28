@@ -20,18 +20,19 @@ import org.hypergraphdb.HGSearchResult;
  * </p>
  * @author Borislav Iordanov
  */
-public class PipeQuery extends HGQuery 
+public class PipeQuery<Key, Value> extends HGQuery<Value> 
 {
-	private KeyBasedQuery out;
-	private HGQuery in;
+	private KeyBasedQuery<Key, Value> out;
+	private HGQuery<?> in;
 	
-	public PipeQuery(HGQuery in, KeyBasedQuery out)
+	public PipeQuery(HGQuery<Key> in, KeyBasedQuery<Key, Value> out)
 	{
 		this.in = in;
 		this.out = out;
 	}
 	
-	public HGSearchResult execute() 
+	@SuppressWarnings("unchecked")
+    public HGSearchResult<Value> execute() 
 	{
 		return new PipedResult(in.execute(), out, true);
 	}

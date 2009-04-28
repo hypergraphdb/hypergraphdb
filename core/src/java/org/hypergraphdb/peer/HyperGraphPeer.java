@@ -352,9 +352,9 @@ public class HyperGraphPeer
                 if (tempGraph != null)	                
 	        		log = new Log(tempGraph, peerInterface);
 			}
-			catch(Exception ex)
-			{
-				ex.printStackTrace();				
+			catch (Exception ex)
+			{			    
+			    HGUtils.throwRuntimeException(ex);
 			}
 		}
 		else 

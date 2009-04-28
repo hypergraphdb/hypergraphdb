@@ -41,7 +41,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 	private HyperGraphPeer thisPeer = null;
 	private DefaultJXTANetwork jxtaNetwork = new DefaultJXTANetwork();
 	private MessageHandler messageHandler;
-		
+    private boolean connected = false;
 	private ExecutorService executorService;
 	private JXTAServer jxtaServer = null;
 	
@@ -52,16 +52,28 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		    throw new RuntimeException("Failed to configure JXTA network.");
 	}
 	
+	public boolean isConnected()
+	{
+	    return connected;
+	}
+	
 	public void stop()
 	{
-        if (jxtaServer != null)
-        {
-            jxtaServer.stop();
-        }	    
-		if (jxtaNetwork != null)
-		{
-			jxtaNetwork.stop();
-		}
+	    try
+	    {
+            if (jxtaServer != null)
+            {
+                jxtaServer.stop();
+            }	    
+    		if (jxtaNetwork != null)
+    		{
+    			jxtaNetwork.stop();
+    		}
+	    }
+	    finally
+	    {
+	        connected = false;
+	    }
 	}
 	
 	private void startNetwork(final ExecutorService executorService)
@@ -74,7 +86,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		
 		jxtaNetwork.addOwnPipe(pipeID);
 		jxtaNetwork.publishAdv(pipeAdv);
-		jxtaNetwork.join(executorService);		
+		jxtaNetwork.join(executorService);
 	}
 	
 	public void setMessageHandler(MessageHandler messageHandler)
@@ -91,6 +103,7 @@ public class JXTAPeerInterface implements PeerInterface, JXTARequestHandler
 		{
 			executorService.execute(jxtaServer);
 		}
+        connected = true;		
 	}
 	
 	public void handleRequest(Socket socket)

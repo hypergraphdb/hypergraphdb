@@ -5,13 +5,14 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.util.ValueSetter;
 
-public class DefaultKeyBasedQuery extends KeyBasedQuery 
+public class DefaultKeyBasedQuery<Key, Value> extends KeyBasedQuery<Key, Value> 
 {
 	private HyperGraph graph;
 	private HGQueryCondition cond;
-	private ValueSetter setter;
+	private ValueSetter<Key> setter;
+	private Key currentKey;
 	
-	public DefaultKeyBasedQuery(HyperGraph graph, HGQueryCondition cond, ValueSetter setter)
+	public DefaultKeyBasedQuery(HyperGraph graph, HGQueryCondition cond, ValueSetter<Key> setter)
 	{
 		this.graph = graph;
 		this.cond = cond;
@@ -19,20 +20,23 @@ public class DefaultKeyBasedQuery extends KeyBasedQuery
 	}
 	
 	@Override
-	public Object getKey() 
+	public Key getKey() 
 	{
-		throw new UnsupportedOperationException();
+		return currentKey;
 	}
 
 	@Override
-	public void setKey(Object key) 
+	public void setKey(Key key) 
 	{
+	    this.currentKey = key;
 		setter.set(key);
 	}
 
 	@Override
-	public HGSearchResult<?> execute() 
-	{		
+	public HGSearchResult<Value> execute() 
+	{
+	    if (currentKey == null)
+	        throw new NullPointerException("Key value not set.");
 		return graph.find(cond);
 	}
 }

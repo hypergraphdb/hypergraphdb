@@ -292,4 +292,64 @@ public class XMPPPeerInterface implements PeerInterface
     {
         return connection;
     }
+
+    public String getServerName()
+    {
+        return serverName;
+    }
+
+    public void setServerName(String serverName)
+    {
+        this.serverName = serverName;
+    }
+
+    public Number getPort()
+    {
+        return port;
+    }
+
+    public void setPort(Number port)
+    {
+        this.port = port;
+    }
+
+    public String getUser()
+    {
+        return user;
+    }
+
+    public void setUser(String user)
+    {
+        this.user = user;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
+    public boolean isAnonymous()
+    {
+        return anonymous;
+    }
+
+    public void setAnonymous(boolean anonymous)
+    {
+        this.anonymous = anonymous;
+    }
+
+    public boolean isAutoRegister()
+    {
+        return autoRegister;
+    }
+
+    public void setAutoRegister(boolean autoRegister)
+    {
+        this.autoRegister = autoRegister;
+    }    
 }

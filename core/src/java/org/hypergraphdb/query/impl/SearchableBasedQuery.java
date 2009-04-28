@@ -22,10 +22,10 @@ import org.hypergraphdb.query.ComparisonOperator;
  * 
  * @author Borislav Iordanov
  */
-public class SearchableBasedQuery extends KeyBasedQuery
+public class SearchableBasedQuery<Key, Value> extends KeyBasedQuery<Key, Value>
 {
-    protected HGSearchable searchable;
-    protected Object key;    
+    protected HGSearchable<Key, Value> searchable;
+    protected Key key;    
     private ComparisonOperator operator = ComparisonOperator.EQ;
     
     /**
@@ -41,7 +41,7 @@ public class SearchableBasedQuery extends KeyBasedQuery
      * an order operator like <code>ComparisonOperator.LT</code> and the like requires
      * a <code>HGOrderedSearchable</code> instance.
      */
-    public SearchableBasedQuery(HGSearchable searchable, Object key, ComparisonOperator operator)
+    public SearchableBasedQuery(HGSearchable<Key, Value> searchable, Key key, ComparisonOperator operator)
     {
         this.searchable = searchable;
         this.key = key;
@@ -49,31 +49,31 @@ public class SearchableBasedQuery extends KeyBasedQuery
     }
     
     
-    public HGSearchResult execute()
+    public HGSearchResult<Value> execute()
     {
         switch (operator)
         {
             case EQ:
                 return searchable.find(key);
             case LT:
-                return ((HGOrderedSearchable)searchable).findLT(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findLT(key);
             case GT:
-                return ((HGOrderedSearchable)searchable).findGT(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findGT(key);
             case LTE:
-                return ((HGOrderedSearchable)searchable).findLTE(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findLTE(key);
             case GTE:
-                return ((HGOrderedSearchable)searchable).findGTE(key);   
+                return ((HGOrderedSearchable<Key, Value>)searchable).findGTE(key);   
             default:
                 throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
         }
     }
     
-    public void setKey(Object key)
+    public void setKey(Key key)
     {
     	this.key = key;
     }
     
-    public Object getKey()
+    public Key getKey()
     {
     	return key;
     }
@@ -88,12 +88,12 @@ public class SearchableBasedQuery extends KeyBasedQuery
     	return operator;
     }
     
-    public void setSearchable(HGSearchable searchable)
+    public void setSearchable(HGSearchable<Key, Value> searchable)
     {
     	this.searchable = searchable;
     }
     
-    public HGSearchable getSearchable()
+    public HGSearchable<Key, Value> getSearchable()
     {
     	return searchable;
     }

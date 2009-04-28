@@ -14,18 +14,19 @@ import org.hypergraphdb.HGSearchResult;
  *  
  * @author Borislav Iordanov
  */
-public class IndexScanQuery extends HGQuery 
+public class IndexScanQuery<Key, Value> extends HGQuery<Value> 
 {
-	private HGIndex idx;
+	private HGIndex<Key, Value> idx;
 	private boolean returnKeys = false;
 	
-	public IndexScanQuery(HGIndex idx, boolean returnKeys)
+	public IndexScanQuery(HGIndex<Key, Value> idx, boolean returnKeys)
 	{
 		this.idx = idx;
 		this.returnKeys = returnKeys;
 	}
 	
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
 	public HGSearchResult execute() 
 	{
 		return returnKeys ? idx.scanKeys() : idx.scanValues();
