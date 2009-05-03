@@ -16,6 +16,7 @@ import net.jxta.document.AdvertisementFactory;
 import net.jxta.id.IDFactory;
 import net.jxta.protocol.PipeAdvertisement;
 
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
@@ -301,6 +302,7 @@ public class Structs
 		addMapper(PhantomHandle.class, new HandleMapper(), "live-handle");
 		addMapper(WeakHandle.class, new HandleMapper(), "live-handle");
 		addMapper(WeakManagedHandle.class, new HandleMapper(), "live-handle");
+		addMapper(HGHandle.class, new HandleMapper(), "hg-handle");
 		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
 //		addMapper(Subgraph.class, new SubGraphMapper(), "storage-graph");
 		
@@ -313,10 +315,15 @@ public class Structs
 	 * @param mapper
 	 * @param name
 	 */
-	public static void addMapper(Class<?> clazz, StructsMapper mapper, String name)
+	public static synchronized void addMapper(Class<?> clazz, StructsMapper mapper, String name)
 	{
 		hgMappers.put(clazz, new Pair<StructsMapper, String>(mapper, name));
 		hgInvertedMappers.put(name, mapper);
+	}
+	
+	public static synchronized Pair<StructsMapper, String> getMapper(Class<?> clazz)
+	{
+	    return hgMappers.get(clazz);
 	}
 	
 	public static HGQueryCondition getHGQueryCondition(Object value, Object...args)

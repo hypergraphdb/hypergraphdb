@@ -144,7 +144,7 @@ public class XMPPPeerInterface implements PeerInterface
                 public void presenceChanged(Presence presence) 
                 {
                     String user = presence.getFrom();
-                    
+
                     System.out.println("Presence changed: " + presence.getFrom() + " " + presence);                    
                     Presence bestPresence = roster.getPresence(user);                   
                     if (bestPresence.getType() == Presence.Type.available)

@@ -163,9 +163,9 @@ public class HyperGraphPeer
         try
         {
             localMachine = java.net.InetAddress.getLocalHost();
-            System.out.println("Local machine identified: " + 
-                               localMachine.getHostName() + "/" +
-                               localMachine.getHostAddress());    
+//            System.out.println("Local machine identified: " + 
+//                               localMachine.getHostName() + "/" +
+//                               localMachine.getHostAddress());    
         }
         catch (UnknownHostException ex)
         {
@@ -524,8 +524,10 @@ public class HyperGraphPeer
     {
         synchronized (peerIdentities)
         {        
-            peerIdentities.removeX(networkTarget);
             HGPeerIdentity id = peerIdentities.getY(networkTarget);
+            if (id == null)
+                return;
+            peerIdentities.removeX(networkTarget);
             for (PeerPresenceListener listener : peerListeners)
                 listener.peerLeft(id);            
         }            
@@ -543,6 +545,11 @@ public class HyperGraphPeer
     public Map<String, Object> getObjectContext()
     {
         return context;
+    }
+    
+    public Map<String, Object> getConfiguration()
+    {
+        return  configuration;
     }
     
     public void addPeerPresenceListener(PeerPresenceListener listener)

@@ -22,6 +22,7 @@ public class HGConfiguration
 	private long storeCacheSize = DEFAULT_STORE_CACHE;
 	private boolean skipMaintenance = false;
 	private boolean cancelMaintenance = false;
+	private boolean skipOpenedEvent = false;
 	
 	public HGConfiguration()
 	{
@@ -126,5 +127,38 @@ public class HGConfiguration
 	public void setCancelMaintenance(boolean cancelMaintenance)
 	{
 		this.cancelMaintenance = cancelMaintenance;
-	}	
+	}
+
+	/**
+	 * <p>
+	 * Return <code>true</code> if the startup process should <strong>NOT</strong> 
+	 * fire a <code>HGOpenedEvent</code> so none of the registered listeners will
+	 * be triggered.
+	 * </p> 
+	 */
+    public boolean getSkipOpenedEvent()
+    {
+        return skipOpenedEvent;
+    }
+
+    /**
+     * <p>
+     * Specify whether the startup process should <strong>NOT</strong> 
+     * fire a <code>HGOpenedEvent</code> so none of the registered listeners will
+     * be triggered. This is useful whenever a HyperGraphDB instance should be
+     * opened "merely" for examining/querying data and user-defined bootstrap
+     * operations are to be skipped.
+     * </p> 
+     * 
+     * <p>
+     * Note that setting this flag to <code>true</code> is meaningful only
+     * when you have defined one or more listeners to the <code>HGOpenedEvent</code>.
+     * For example, a brand new HyperGraphDB instance will not have any such
+     * listeners defined.
+     * </p>
+     */
+    public void setSkipOpenedEvent(boolean skipOpenedEvent)
+    {
+        this.skipOpenedEvent = skipOpenedEvent;
+    }	
 }

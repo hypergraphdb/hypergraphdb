@@ -342,7 +342,8 @@ public /*final*/ class HyperGraph
 	        // it all remains an implementation detail.
 	        typeSystem.getJavaTypeFactory().initNonDefaultMappers();
 	        
-	        eventManager.dispatch(this, new HGOpenedEvent());	
+	        if (config == null || !config.getSkipOpenedEvent())
+	            eventManager.dispatch(this, new HGOpenedEvent());	
 	        
 	        if (config != null)
 	        {
