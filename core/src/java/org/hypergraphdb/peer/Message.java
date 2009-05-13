@@ -23,7 +23,7 @@ public class Message implements Map<String, Object>
 
     public Performative getPerformative()
     {
-        return Performative.valueOf((String)get(Messages.PERFORMATIVE));
+        return Performative.toConstant((String)get(Messages.PERFORMATIVE));
     }
     
     public UUID getConversationId()

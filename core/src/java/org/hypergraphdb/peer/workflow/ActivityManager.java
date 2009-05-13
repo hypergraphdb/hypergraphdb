@@ -219,7 +219,7 @@ public class ActivityManager implements MessageHandler
                                                               msg);
                     if (transition == null)
                     {
-                        Performative perf = Performative.valueOf((String)getPart(msg, PERFORMATIVE));
+                        Performative perf = Performative.toConstant((String)getPart(msg, PERFORMATIVE));
                         if (perf == Performative.Failure)
                             activity.onPeerFailure(msg);
                         else if (perf == Performative.NotUnderstood)
