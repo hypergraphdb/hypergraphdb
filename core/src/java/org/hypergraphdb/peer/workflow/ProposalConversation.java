@@ -4,7 +4,7 @@ import static org.hypergraphdb.peer.Structs.*;
 
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.Performative;
 
 /**
  * @author Cipri Costa

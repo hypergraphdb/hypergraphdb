@@ -1,4 +1,4 @@
-package org.hypergraphdb.peer.protocol;
+package org.hypergraphdb.peer;
 
 /**
  * <p>

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.hypergraphdb.peer.protocol.Performative;
 
 public class Message implements Map<String, Object>
 {

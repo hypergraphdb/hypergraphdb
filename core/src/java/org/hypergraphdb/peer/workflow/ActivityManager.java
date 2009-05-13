@@ -23,7 +23,7 @@ import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.util.HGUtils;
 
 

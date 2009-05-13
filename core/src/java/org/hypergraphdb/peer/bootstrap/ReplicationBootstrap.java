@@ -5,7 +5,7 @@ import java.util.Map;
 import org.hypergraphdb.peer.BootstrapPeer;
 import org.hypergraphdb.peer.HGDBOntology;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.replication.CatchUpTaskServer;
 import org.hypergraphdb.peer.replication.GetInterestsTask;
 import org.hypergraphdb.peer.replication.PublishInterestsTask;

@@ -10,7 +10,7 @@ import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.PeerInterface;
-import org.hypergraphdb.peer.protocol.Performative;
+import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.util.HGUtils;
 
 /**

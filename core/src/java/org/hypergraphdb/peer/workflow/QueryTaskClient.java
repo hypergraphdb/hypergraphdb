@@ -19,8 +19,8 @@ import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
+import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
-import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.storage.StorageGraph;
 

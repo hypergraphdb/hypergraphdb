@@ -4,7 +4,6 @@ import static org.hypergraphdb.peer.Structs.*;
 import java.util.Map;
 import java.util.UUID;
 
-import org.hypergraphdb.peer.protocol.Performative;
 import org.hypergraphdb.peer.workflow.Activity;
 
 
