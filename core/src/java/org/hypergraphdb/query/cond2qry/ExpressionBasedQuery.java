@@ -401,7 +401,6 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		return L;
 	}
 	
-	@SuppressWarnings("unchecked")
 	private HGQueryCondition expand(HyperGraph graph, HGQueryCondition cond)
 	{
 		if (cond instanceof TypePlusCondition)

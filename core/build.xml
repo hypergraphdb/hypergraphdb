@@ -81,7 +81,7 @@
 	    <javadoc sourcepath="${core-path}" destdir="${javadoc}" classpathref="core-classpath"/>
 	</target>
 	
-    <target name="dist-common" depends="full-jar, docgen">
+    <target name="dist-common" depends="full-jar, peer-jar, core-jar, docgen" description="Create common files for all platform distributions.">
         <delete dir="${distfilename}"/>
         <mkdir dir="${distfilename}"/>
         <copydir src="${javadoc}" dest="${distfilename}/javadoc"/>
@@ -94,14 +94,14 @@
         <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
     </target>
     
-	<target name="dist-win" depends="dist-common">
+	<target name="dist-win" depends="dist-common" description="Create MS Windows distribution.">
         <delete dir="${distfilename}/native"/>    
         <mkdir dir="${distfilename}/native"/>
         <copydir src="native/windows" dest="${distfilename}/native"/>
         <zip destfile="${dist}/${distfilename}.zip" basedir="." includes="${distfilename}/**"/>
    	</target>
 
-	<target name="dist-lin" depends="dist-common">
+	<target name="dist-lin" depends="dist-common" description="Create Linux distribution">
         <delete dir="${distfilename}/native"/>    
         <mkdir dir="${distfilename}/native"/>
         <copydir src="native/linux" dest="${distfilename}/native"/>

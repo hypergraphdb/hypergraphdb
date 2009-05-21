@@ -51,10 +51,13 @@ public class XMPPPeerInterface implements PeerInterface
         serverName = getPart(configuration, "serverUrl");
         port = getOptPart(configuration, 5222, "port");
         user = getPart(configuration, "user");
-        password = getPart(configuration, "password");        
+        password = getPart(configuration, "password");
+        autoRegister = getOptPart(configuration, false, "autoRegister");
+        anonymous = getOptPart(configuration, false, "anonymous");
         config = new ConnectionConfiguration(serverName, port.intValue());
         config.setRosterLoadedAtLogin(true);
         config.setReconnectionAllowed(true);
+        SmackConfiguration.setPacketReplyTimeout(30000);
     }    
     
     public void start()

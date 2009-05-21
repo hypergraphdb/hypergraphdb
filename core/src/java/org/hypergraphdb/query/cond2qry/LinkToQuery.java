@@ -10,7 +10,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.impl.IntersectionQuery;
-import org.hypergraphdb.query.impl.SortedIntersectionResult;
+//import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 
 @SuppressWarnings("unchecked")
@@ -47,11 +47,11 @@ public class LinkToQuery implements ConditionToQuery
 			Iterator<HGQuery> i = L.iterator();
 			IntersectionQuery result = new IntersectionQuery(i.next(), 
 															 i.next(), 
-															 new SortedIntersectionResult());
+															 new ZigZagIntersectionResult());
 			while (i.hasNext())
 				result = new IntersectionQuery(i.next(), 
 											   result,
-											   new SortedIntersectionResult());
+											   new ZigZagIntersectionResult());
 			return result;
 		}
 	}

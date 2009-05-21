@@ -88,6 +88,7 @@ public class HGTypeSystem
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
 	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;
 	private JavaTypeFactory javaTypes = null;
+	private ClassLoader classLoader;	
 	
 	private HGBidirectionalIndex<String, HGPersistentHandle> getClassToTypeDB()
 	{
@@ -290,7 +291,7 @@ public class HGTypeSystem
 			}
 			try
 			{
-				Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
+				Class<?> clazz = loadClass(classname);
 				HGAtomType type = (HGAtomType)clazz.newInstance();
 				type.setHyperGraph(graph);
 				return (HGLiveHandle)addPredefinedType(pHandle, type, null);
@@ -529,15 +530,16 @@ public class HGTypeSystem
 	Class<?> loadClass(String classname)
 	{
 		Class<?> clazz;
+		ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
 		try
 		{
 			if(classname.startsWith("[L"))
 			{
 				classname = classname.substring(2, classname.length() - 1); //remove ending ";"
-				clazz = Array.newInstance(Thread.currentThread().getContextClassLoader().loadClass(classname), 0).getClass();
+				clazz = Array.newInstance(loader.loadClass(classname), 0).getClass();
 			}
 			else
-			   clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
+			   clazz = loader.loadClass(classname);
 			return clazz;
 		}
 		catch (Throwable t)
@@ -1037,14 +1039,9 @@ public class HGTypeSystem
 			{
 				String classname = rs.next();
 				idx.removeEntry(classname, typeHandle);
-				try
-				{
-					// Remove from class->atom cache if there.
-					Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
-					classToAtomType.remove(clazz);
-				}
-				catch (ClassNotFoundException ex) 
-				{ /* if we couldn't load the class, it's probably in the runtime cache */}
+				// Remove from class->atom cache if there.
+				Class<?> clazz = loadClass(classname);
+				classToAtomType.remove(clazz);
 			}
 		}
 		catch (Throwable t)
@@ -1056,8 +1053,36 @@ public class HGTypeSystem
 			if (rs != null) try { rs.close(); } catch (Throwable _) { }
 		}
 	}
+	
+	/**
+	 * <p>
+	 * Return the user specified {@link ClassLoader} or <code>null</code> if no class loader was
+	 * set.
+	 * </p>
+	 */
+	public ClassLoader getClassLoader()
+    {
+        return classLoader;
+    }
 
-	private class ClassToTypeCache extends LinkedHashMap<Class<?>, HGHandle>
+	/**
+	 * <p>
+	 * Specify a custom {@link ClassLoader} for the <code>HGTypeSystem</code> to use when loading
+	 * Java classes based on the <code>classname<->HGDB type</code> mapping. By default, the 
+	 * type system will use the current thread's context class loader. Setting a custom
+	 * class loader overrides this behavior. 
+	 * </p>
+	 * 
+	 * @param classLoader
+	 */
+    public void setClassLoader(ClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
+    }
+
+
+
+    private class ClassToTypeCache extends LinkedHashMap<Class<?>, HGHandle>
 	{
 		static final long serialVersionUID = -1;
 

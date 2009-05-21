@@ -16,7 +16,7 @@ import org.hypergraphdb.query.impl.DelayedSetLoadPredicate;
 import org.hypergraphdb.query.impl.IntersectionQuery;
 import org.hypergraphdb.query.impl.PredicateBasedFilter;
 import org.hypergraphdb.query.impl.RABasedPredicate;
-import org.hypergraphdb.query.impl.SortedIntersectionResult;
+//import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 
 @SuppressWarnings("unchecked")
@@ -157,13 +157,13 @@ public class AndToQuery implements ConditionToQuery
 			c2 = i.next().cond;
 			result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 										   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
-										   new SortedIntersectionResult());
+										   new ZigZagIntersectionResult());
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
-											   new SortedIntersectionResult());
+											   new ZigZagIntersectionResult());
 			}
 		}
 		else if (ORA.size() == 1)
@@ -183,14 +183,14 @@ public class AndToQuery implements ConditionToQuery
 				c2 = i.next().cond;
 				result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 											   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
-											   new SortedIntersectionResult()); 
+											   new ZigZagIntersectionResult()); 
 			}
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-											   new SortedIntersectionResult());					
+											   new ZigZagIntersectionResult());					
 			}						
 		}
 		else if (O.size() == 1)
@@ -201,7 +201,7 @@ public class AndToQuery implements ConditionToQuery
 			else
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
-											   new SortedIntersectionResult());
+											   new ZigZagIntersectionResult());
 		}
 		
 		if (result == null)
