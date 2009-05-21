@@ -806,19 +806,19 @@ public class HGTypeSystem
 		// No HG type defined specifically for this concrete clazz. First check
 		// the "built in" array case.
 		//
-		if (clazz.isArray())
-		{
-			Class<?> clazz1 = (new Object[0]).getClass();
-			typeHandle = classToAtomType.get(clazz1);
-			if (typeHandle != null)
-				return typeHandle;
-			hgTypeHandle = getClassToTypeDB().findFirst(clazz1.getName());
-			if (hgTypeHandle != null)
-				return hgTypeHandle;
-			 return defineNewJavaType(clazz);
-			//throw new HGException("Could not handle array type for " + clazz.getComponentType().getName() +
-			//		" since there is no HyperGraph neither for this array type, nor for the generic Object[].");
-		}
+//		if (clazz.isArray())
+//		{
+//			Class<?> clazz1 = (new Object[0]).getClass();
+//			typeHandle = classToAtomType.get(clazz1);
+//			if (typeHandle != null)
+//				return typeHandle;
+//			hgTypeHandle = getClassToTypeDB().findFirst(clazz1.getName());
+//			if (hgTypeHandle != null)
+//				return hgTypeHandle;
+//			 return defineNewJavaType(clazz);
+//			//throw new HGException("Could not handle array type for " + clazz.getComponentType().getName() +
+//			//		" since there is no HyperGraph neither for this array type, nor for the generic Object[].");
+//		}
 		return null;
 	}
 	
