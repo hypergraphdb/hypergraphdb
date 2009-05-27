@@ -38,14 +38,22 @@ public class SerializableType implements HGAtomType
      */
     public static class SerInputStream extends ObjectInputStream
     {
+        private HyperGraph graph;
+        
         public SerInputStream() throws IOException
-        {
-            super();
+        {            
         }
         
-        public SerInputStream(InputStream in) throws IOException
+        public SerInputStream(HyperGraph graph) throws IOException
+        {
+            super();
+            this.graph = graph;
+        }
+        
+        public SerInputStream(InputStream in, HyperGraph graph) throws IOException
         {
             super(in);
+            this.graph = graph;
         }
       
         @Override
@@ -61,7 +69,9 @@ public class SerializableType implements HGAtomType
             }
             catch (Exception ex)
             {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                ClassLoader cl = graph == null ? null : graph.getTypeSystem().getClassLoader(); 
+                if (cl == null)
+                    cl = Thread.currentThread().getContextClassLoader();
                 if (cl != null)
                     return cl.loadClass(desc.getName());
                 else if (ex instanceof IOException)
@@ -96,7 +106,7 @@ public class SerializableType implements HGAtomType
 		try
 		{
 		    ByteArrayInputStream in = new ByteArrayInputStream(hg.getStore().getData(handle));
-    		ObjectInputStream objectIn = new SerInputStream(in);		
+    		ObjectInputStream objectIn = new SerInputStream(in, this.hg);		
     		return objectIn.readObject();
 		}
 		catch (Exception ex)

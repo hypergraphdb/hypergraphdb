@@ -269,7 +269,6 @@ public class LLRBTree<E> extends AbstractSet<E>
 			lock.readLock().lock();
 		}
 		
-		@SuppressWarnings("unchecked")
 		public GotoResult goTo(E key, boolean exactMatch)
 		{
 			// Not clear here whether we should be starting from the root really?

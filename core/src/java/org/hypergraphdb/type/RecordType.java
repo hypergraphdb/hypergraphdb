@@ -51,12 +51,13 @@ public class RecordType implements HGCompositeType
     {
     	if (projections != null)
     		return;
-    	projections = new HashMap<String, HGProjection>();
+    	HashMap<String, HGProjection> tmp = new HashMap<String, HGProjection>();
     	for (int i = 0; i < slots.size(); i++)
     	{
     		Slot slot = (Slot)graph.get(slots.get(i));
-    		projections.put(slot.getLabel(), new SlotBasedProjection(slot, new int [] {i}));
+    		tmp.put(slot.getLabel(), new SlotBasedProjection(slot, new int [] {i}));
     	}
+    	projections = tmp;
     }
     
     public RecordType()

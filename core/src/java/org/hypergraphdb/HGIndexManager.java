@@ -338,9 +338,9 @@ public class HGIndexManager
 	 * @param atom
 	 */
 	public void maybeIndex(HGPersistentHandle typeHandle, 
-					HGAtomType type,
-				    HGPersistentHandle atomHandle,
-				    Object atom)
+	                       HGAtomType type,
+	                       HGPersistentHandle atomHandle,
+	                       Object atom)
 	{
 		List<HGIndexer> indList = (List)indexers.get(typeHandle);
 		if (indList == null)
@@ -349,7 +349,8 @@ public class HGIndexManager
 		{
 			HGIndex<Object, Object> idx = getOrCreateIndex(indexer);
 			Object key = indexer.getKey(graph, atom);			
-			Object value = (indexer instanceof HGValueIndexer) ? ((HGValueIndexer)indexer).getValue(graph, atom) 
+			Object value = (indexer instanceof HGValueIndexer) ? 
+			               ((HGValueIndexer)indexer).getValue(graph, atom) 
 						   : atomHandle;
 			idx.addEntry(key, value);
 		}

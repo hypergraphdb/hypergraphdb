@@ -402,6 +402,16 @@ public class ActivityManager implements MessageHandler
     
     /**
      * <p>
+     * Retrieve an {@link Activity} by its UUID.
+     * </p>
+     */
+    public Activity getActivity(UUID id)
+    {
+        return activities.get(id);
+    }
+    
+    /**
+     * <p>
      * A simplified version of <code>registerActivityType</code> in which the
      * type name is taken to be the fully qualified classname of the 
      * <code>activityClass</code> parameter and a <code>DefaultActivityFactory</code>

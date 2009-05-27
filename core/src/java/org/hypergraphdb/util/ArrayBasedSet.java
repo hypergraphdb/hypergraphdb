@@ -1,5 +1,6 @@
 package org.hypergraphdb.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -414,7 +415,21 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 
 	public <T> T[] toArray(T[] a)
 	{
-		return (T[])toArray();
+	    lock.readLock().lock();
+	    try
+	    {
+            if (a.length < size)
+                // Make a new array of a's runtime type, but my contents:
+                return (T[]) Arrays.copyOf(array, size, a.getClass());
+            System.arraycopy(array, 0, a, 0, size);
+            if (a.length > size)
+                a[size] = null;
+            return a;
+	    }
+	    finally
+	    {
+	        lock.readLock().unlock();
+	    }
 	}
 	
 	class ResultSet implements HGRandomAccessResult<E>

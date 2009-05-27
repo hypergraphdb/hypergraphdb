@@ -220,17 +220,17 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 		}
 	}
 
-	public Object[] toArray(Object[] a)
+	public <E> E[] toArray(E[] a)
 	{
 		HGRandomAccessResult<T> rs = getSearchResult();
 		try
 		{
 	        int size = size();
 	        if (a.length < size)
-	            a = (T[])java.lang.reflect.Array
+	            a = (E[])java.lang.reflect.Array
 			.newInstance(a.getClass().getComponentType(), size);
 	        for (int i = 0; i < size; i++)
-	        	a[i] = rs.next();
+	        	a[i] = (E)rs.next();
 	        if (a.length > size)
 	        	a[size] = null;
 	        return a;
