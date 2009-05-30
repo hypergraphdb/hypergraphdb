@@ -1,6 +1,6 @@
 package org.hypergraphdb.util;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -419,8 +419,15 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	    try
 	    {
             if (a.length < size)
-                // Make a new array of a's runtime type, but my contents:
-                return (T[]) Arrays.copyOf(array, size, a.getClass());
+            {
+                Class<? extends T[]> type = (Class<? extends T[]>)a.getClass(); 
+                T[] copy = ((Object)type == (Object)Object[].class)
+                ? (T[]) new Object[size]
+                : (T[]) Array.newInstance(type.getComponentType(), size);
+                System.arraycopy(array, 0, copy, 0,
+                                 Math.min(array.length, size));
+                return copy;                
+            }
             System.arraycopy(array, 0, a, 0, size);
             if (a.length > size)
                 a[size] = null;
