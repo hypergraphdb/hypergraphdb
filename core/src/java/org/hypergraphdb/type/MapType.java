@@ -11,6 +11,7 @@ package org.hypergraphdb.type;
 import java.util.Map;
 import java.util.Iterator;
 
+import org.hypergraphdb.HGEMissingData;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGTypeSystem;
@@ -49,6 +50,8 @@ public class MapType implements HGAtomType
 		TypeUtils.setValueFor(hg, handle, result);
 		HGTypeSystem ts = hg.getTypeSystem();
 		HGPersistentHandle [] layout = hg.getStore().getLink(handle);
+		if (layout == null)
+			throw new HGEMissingData(handle);
 		for (int i = 0; i < layout.length; )
 		{
 			Object key, value;

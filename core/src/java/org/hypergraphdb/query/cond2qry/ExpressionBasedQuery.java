@@ -10,6 +10,7 @@ package org.hypergraphdb.query.cond2qry;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -76,7 +77,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					}
 					return toDNF(result);
 				}				
-				else if (!andSet.contains(sub))
+				else
 					andSet.add(sub);
 			}
 			and = new And();
@@ -177,9 +178,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			HashSet<AtomPartCondition> byPart = new HashSet<AtomPartCondition>();
 			boolean has_ordered = false;
 			boolean has_ra = false;
-			for (int i = 0; i < out.size(); i++)
+			for (Iterator<HGQueryCondition> i = out.iterator(); i.hasNext(); )
 			{
-				HGQueryCondition c = out.get(i);				
+				HGQueryCondition c = i.next();
 				if (c instanceof AtomTypeCondition)
 				{
 					if (byType == null)
@@ -188,12 +189,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if(!checkConsistent(byTypedValue, (AtomTypeCondition)c))
 								return Nothing.Instance;
 							else
-								out.remove(i--);
+								i.remove();
 						else
 							byType = (AtomTypeCondition)c;
 					}
 					else if (checkConsistent(byType, (AtomTypeCondition)c))
-						out.remove(i--);
+						i.remove();
 					else
 						return Nothing.Instance;							
 				}
@@ -205,12 +206,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							if(!checkConsistent(byTypedValue, (AtomValueCondition)c))
 								return Nothing.Instance;
 							else
-								out.remove(i--);
+								i.remove();
 						else
 							byValue = (AtomValueCondition)c;						
 					}
 					else if (byValue.equals((AtomValueCondition)c))
-						out.remove(i--);
+						i.remove();
 					else
 						return Nothing.Instance;
 				}
@@ -219,7 +220,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					if (byTypedValue ==  null)
 						byTypedValue = (TypedValueCondition)byTypedValue;
 					else if (byTypedValue.equals((TypedValueCondition)c))
-						out.remove(i--);
+						i.remove();
 					else
 						return Nothing.Instance;					
 				}
@@ -455,11 +456,19 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				cond = and;
 			}
 		}		
-		else if (cond instanceof List)
+		else if (cond instanceof And)
 		{
-			List<HGQueryCondition> L = (List<HGQueryCondition>)cond;
-			for (int i = 0; i < L.size(); i++)
-				L.set(i, expand(graph, L.get(i)));
+			And result = new And();
+			for (HGQueryCondition sub : (And)cond)
+				result.add(expand(graph, sub));
+			cond = result;
+		}
+		else if (cond instanceof Or)
+		{
+			Or result = new Or();
+			for (HGQueryCondition sub : (Or)cond)
+				result.add(expand(graph, sub));
+			cond = result;			
 		}
 		else if (cond instanceof OrderedLinkCondition)
 		{

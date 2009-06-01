@@ -11,7 +11,6 @@
  *
  */
 package org.hypergraphdb.query;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -71,9 +70,8 @@ public class And extends ArrayList<HGQueryCondition> implements HGQueryCondition
 	
 	public boolean satisfies(HyperGraph hg, HGHandle value)
 	{
-        for (int i = 0; i < size(); i++)
+        for (HGQueryCondition c : this)
         {
-        	HGQueryCondition c = get(i);
         	if (! (c instanceof HGAtomPredicate))
         		throw new Error("Attempt to use And as a predicate where the sub-condition " + c + " is not a predicate.");
             if (!((HGAtomPredicate)c).satisfies(hg, value))

@@ -99,7 +99,7 @@ public class AndToQuery implements ConditionToQuery
 		if (and.size() == 0)
 			return HGQuery.NOP;
 		else if (and.size() == 1)
-			return ToQueryMap.toQuery(graph, and.get(0));
+			return ToQueryMap.toQuery(graph, and.iterator().next());
 		
 		// query conditions are partitionned into the following categories:
 		// - ORA: ordered random access results
