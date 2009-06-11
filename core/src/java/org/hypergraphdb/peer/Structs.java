@@ -19,6 +19,10 @@ import net.jxta.protocol.PipeAdvertisement;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
+import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
+import org.hypergraphdb.algorithms.SimpleALGenerator;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
@@ -52,6 +56,7 @@ import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.TypedValueCondition;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
 import org.hypergraphdb.type.BonesOfBeans;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
 
 
@@ -81,6 +86,7 @@ public class Structs
 		return svalue(x, false, true, null);
 
 	}
+	
 	/**
 	 * <p>Use reflection to create a map of the bean properties of the argument.</p>
 	 */
@@ -138,6 +144,25 @@ public class Structs
 		return new CustomSerializedValue(value);
 	}
 
+	private static Class<?> loadClass(String name)
+	{
+		try
+		{
+			return Class.forName(name);
+		}
+		catch (Exception ex)
+		{
+			try
+			{
+				return Thread.currentThread().getContextClassLoader().loadClass(name);
+			}
+			catch (Exception ex2)
+			{
+				throw new RuntimeException(ex);
+			}
+		}
+	}
+	
 	private static Object svalue(Object x, boolean skipSpecialClasses, boolean addClassName, Class<?> propertyType)
 	{
 		// skipSpecialClasses is set to true when the content of the HGQueryCondition/HGAtomPredicate should be rendered
@@ -305,7 +330,25 @@ public class Structs
 		addMapper(HGHandle.class, new HandleMapper(), "hg-handle");
 		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
 //		addMapper(Subgraph.class, new SubGraphMapper(), "storage-graph");
-		
+
+
+		addMapper(SimpleALGenerator.class, 
+				  new BeanMapper(new String [] {}), 
+				  "simple-al-generator");		
+
+		addMapper(DefaultALGenerator.class, 
+				  new BeanMapper(new String [] {"linkPredicate", "siblingPredicate", 
+						  						"returnPreceeding", "returnSucceeding",
+						  						"reverseOrder", "returnSource"}), 
+				  "default-al-generator");		
+
+		addMapper(HGBreadthFirstTraversal.class, 
+				  new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
+				  "breadth-first-traversal");		
+
+		addMapper(HGDepthFirstTraversal.class, 
+				  new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
+				  "depth-first-traversal");		
 	}
 	
 	/**
@@ -332,6 +375,7 @@ public class Structs
 		if (result instanceof HGQueryCondition) return (HGQueryCondition)result;
 		else return null;
 	}
+	
 	public static HGAtomPredicate getHGAtomPredicate(Object value, Object...args)
 	{
 		Object result = getPart(value, args);
@@ -510,17 +554,7 @@ public class Structs
 		
 		result = hgInvertedClassNames.get(className);
 		if (result == null)
-		{
-			//try to find the class
-			try
-			{
-				result = Class.forName(className);
-			} catch (ClassNotFoundException e)
-			{
-				//do nothing ... maybe not a bean
-			}
-		}
-		
+			result = loadClass(className);
 		return result;
 	}
 	
@@ -581,16 +615,7 @@ public class Structs
 			else if (propertyClass.equals(Class.class))
 			{
 				if (value != null)
-				{
-					try
-					{
-						value = Class.forName(value.toString());
-					} catch (ClassNotFoundException e)
-					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
+					value = loadClass(value.toString());
 			}
 			BonesOfBeans.setProperty(bean, entry.getKey(), value);
 		}
@@ -847,4 +872,67 @@ public class Structs
 		}
 		
 	}
+	
+	public static class BeanMapper implements StructsMapper
+	{
+		String [] props;
+		public BeanMapper() { props = null; }
+		public BeanMapper(String [] props) { this.props = props; }
+		
+		public Object getObject(Object struct)
+		{
+			List<Object> L = (List<Object>)struct;
+			String clName = (String)L.get(0);
+			try
+			{
+				Map<String, Object> m = (Map<String, Object>)L.get(1);
+				Class<?> cl = loadClass(clName);
+				Object bean = cl.newInstance();
+				Structs.loadMapValues(bean, m);
+				return bean;
+			}
+			catch (Throwable ex)
+			{
+				HGUtils.throwRuntimeException(ex);
+			}
+			return null; // unreachable
+		}
+		
+		public Object getStruct(Object value)
+		{
+			List<Object> L = new ArrayList<Object>();
+			L.add(value.getClass().getName());
+			Map<String, Object> m = new HashMap<String, Object>();
+			try
+			{
+				if (props != null)
+					for (String propname : props)
+					{
+						PropertyDescriptor desc = BonesOfBeans.getPropertyDescriptor(value, propname);
+						Object x = svalue(BonesOfBeans.getProperty(value, desc), 
+								  false, 
+								  true, 
+								  desc.getPropertyType());						
+						m.put(propname, x);
+					}
+				else
+					for (PropertyDescriptor desc : BonesOfBeans.getAllPropertyDescriptors(value).values())
+						if (desc.getReadMethod() != null && desc.getWriteMethod() != null)
+						{
+							Object x = svalue(BonesOfBeans.getProperty(value, desc), 
+											  false, 
+											  true, 
+											  desc.getPropertyType());
+							m.put(desc.getName(), x);
+						}
+				L.add(m);
+				return L;
+			}
+			catch (Throwable ex)
+			{
+				HGUtils.throwRuntimeException(ex);
+			}
+			return null; // unreachable			
+		}
+	}	
 }

@@ -32,7 +32,15 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	private Queue<Pair<Pair<HGHandle, HGHandle>, Integer>> to_explore = 
 	    new LinkedList<Pair<Pair<HGHandle, HGHandle>, Integer>>();
 	private HGALGenerator adjListGenerator;
-
+	private boolean initialized = false;
+	
+	private void init()
+	{
+        visited.add(startAtom);
+        advance(startAtom, 0);     	    
+        initialized = true;
+	}
+	
 	private void advance(HGHandle from, int distance)
 	{
 	    if (distance >= maxDistance)
@@ -53,9 +61,24 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		i.close();
 	}
 	
+	public void setStartAtom(HGHandle startAtom)
+	{
+		this.startAtom = startAtom;
+	}
+	
 	public HGHandle getStartAtom()
 	{
 		return startAtom;
+	}
+	
+	public HGALGenerator getAdjListGenerator()
+	{
+		return adjListGenerator;
+	}
+
+	public void setAdjListGenerator(HGALGenerator adjListGenerator)
+	{
+		this.adjListGenerator = adjListGenerator;
 	}
 	
 	public void remove() 
@@ -63,6 +86,10 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		throw new UnsupportedOperationException();
 	}
 
+	public HGBreadthFirstTraversal()
+	{		
+	}
+	
 	public HGBreadthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator)	
 	{
 	    this(startAtom, adjListGenerator, Integer.MAX_VALUE);
@@ -73,11 +100,12 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	    this.maxDistance = maxDistance;
         this.startAtom = startAtom;
         this.adjListGenerator = adjListGenerator;
-        visited.add(startAtom);
-        advance(startAtom, 0);     	    
+        init();
 	}
 	public boolean hasNext() 
 	{
+		if (!initialized)
+			init();
 		return !to_explore.isEmpty();
 	}
 
@@ -88,6 +116,8 @@ public class HGBreadthFirstTraversal implements HGTraversal
 
 	public Pair<HGHandle, HGHandle> next() 
 	{
+		if (!initialized)
+			init();		
 	    Pair<HGHandle, HGHandle> rvalue = null;		
 		if (!to_explore.isEmpty())
 		{
@@ -97,5 +127,12 @@ public class HGBreadthFirstTraversal implements HGTraversal
 			advance(rvalue.getSecond(), x.getSecond());
 		}
 		return rvalue;
+	}
+	
+	public void reset()
+	{
+		visited.clear();
+		to_explore.clear();
+		init();
 	}
 }

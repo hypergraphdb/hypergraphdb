@@ -12,6 +12,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.IncidenceSetRef;
@@ -222,9 +223,18 @@ public class RecordType implements HGCompositeType
 	                HGHandle actualTypeHandle = graph.getTypeSystem().getTypeHandle(value.getClass());
 	                if (actualTypeHandle == null)
 	                	actualTypeHandle = slot.getValueType();
+	                else if (actualTypeHandle.equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
+	                	throw new HGException("Got TOP type for value for Java class " + value.getClass());
 	                HGAtomType type = graph.getTypeSystem().getType(actualTypeHandle);                
 	                layout[2*i] = graph.getPersistentHandle(actualTypeHandle);
-	                layout[2*i + 1] = TypeUtils.storeValue(graph, value, type);
+	                try
+	                {
+	                	layout[2*i + 1] = TypeUtils.storeValue(graph, value, type);
+	                }
+	                catch (HGException ex)
+	                {
+	                	throw ex;
+	                }
 	        	}
 	        	else
 	        	{

@@ -67,7 +67,7 @@ public class HGTypeSystem
 
 	public static final HGPersistentHandle TOP_PERSISTENT_HANDLE =
 		HGHandleFactory.makeHandle("a395bb09-07cd-11da-831d-8d375c1471fe");
-									
+			
 	public static final HGPersistentHandle LINK_PERSISTENT_HANDLE =
 		HGHandleFactory.makeHandle("822fa5aa-a376-11da-9470-a5016df901a7");
 

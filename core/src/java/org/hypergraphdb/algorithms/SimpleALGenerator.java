@@ -26,7 +26,7 @@ import org.hypergraphdb.util.TempLink;
  */
 public class SimpleALGenerator implements HGALGenerator 
 {
-	private HyperGraph hg;
+	private HyperGraph graph;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);	
 	private HGHandle hCurrLink;
 	private AdjIterator currIterator = null;
@@ -53,11 +53,11 @@ public class SimpleALGenerator implements HGALGenerator
 					return;
 				}
 				hCurrLink = linksIterator.next(); 
-				if (hg.isLoaded(hCurrLink))
-					currLink = (HGLink)hg.get(hCurrLink);
+				if (graph.isLoaded(hCurrLink))
+					currLink = (HGLink)graph.get(hCurrLink);
 				else
 				{
-					tempLink.setHandleArray(hg.getStore().getLink(hg.getPersistentHandle(hCurrLink)), 2);
+					tempLink.setHandleArray(graph.getStore().getLink(graph.getPersistentHandle(hCurrLink)), 2);
 					currLink = tempLink;
 				}
 			}
@@ -115,6 +115,16 @@ public class SimpleALGenerator implements HGALGenerator
 		public boolean hasPrev() { throw new UnsupportedOperationException(); }
 		public HGHandle prev() { throw new UnsupportedOperationException(); }				
 	}
+
+	/**
+	 * <p>
+	 * Empty constructor - you will need to set the graph (see {@link setGraph}) before
+	 * the instance becomes usable.
+	 * </p>
+	 */
+	public SimpleALGenerator()
+	{		
+	}
 	
 	/**
 	 * <p>Construct a <code>SimpleALGenerator</code> for the given HyperGraph instance.</p>
@@ -123,7 +133,7 @@ public class SimpleALGenerator implements HGALGenerator
 	 */
 	public SimpleALGenerator(HyperGraph hg)
 	{
-		this.hg = hg;
+		this.graph = hg;
 	}
 	
 	public HGHandle getCurrentLink()
@@ -133,15 +143,15 @@ public class SimpleALGenerator implements HGALGenerator
 	
 	public HGSearchResult<HGHandle> generate(HGHandle h) 
 	{
-		if (hg.isIncidenceSetLoaded(h))
+		if (graph.isIncidenceSetLoaded(h))
 			return new AdjIterator(
 					h, 
-					hg.getIncidenceSet(h).iterator(), 
+					graph.getIncidenceSet(h).iterator(), 
 					false);			
 		else
 			return new AdjIterator(
 					h, 
-					hg.getIncidenceSet(h).getSearchResult(), 
+					graph.getIncidenceSet(h).getSearchResult(), 
 					true);
 	}
 	
@@ -149,5 +159,15 @@ public class SimpleALGenerator implements HGALGenerator
 	{
 		if (currIterator != null && currIterator.closeResultSet)
 			((HGSearchResult<HGHandle>)currIterator.linksIterator).close();
+	}
+	
+	public void setGraph(HyperGraph graph)
+	{
+		this.graph = graph;
+	}
+	
+	public HyperGraph getGraph()
+	{
+		return this.graph;
 	}
 }

@@ -29,6 +29,14 @@ public class HGDepthFirstTraversal implements HGTraversal
 	private HGAtomSet visited = new HGAtomSet();
 	private Stack<Pair<HGHandle, HGHandle>> to_explore = new Stack<Pair<HGHandle, HGHandle>>();
 	private HGALGenerator adjListGenerator;
+	private boolean initialized = false;
+	
+	private void init()
+	{
+        visited.add(startAtom);
+        advance(startAtom);     	    
+        initialized = true;
+	}
 	
 	private void advance(HGHandle from)
 	{
@@ -43,6 +51,10 @@ public class HGDepthFirstTraversal implements HGTraversal
 		i.close();
 	}
 	
+	public HGDepthFirstTraversal()
+	{		
+	}
+	
 	public HGDepthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator)
 	{
 		this.startAtom = startAtom;
@@ -51,18 +63,37 @@ public class HGDepthFirstTraversal implements HGTraversal
 		advance(startAtom);
 	}
 
+	public void setStartAtom(HGHandle startAtom)
+	{
+		this.startAtom = startAtom;
+	}
+	
 	public HGHandle getStartAtom()
 	{
 		return startAtom;
 	}
 	
+	public HGALGenerator getAdjListGenerator()
+	{
+		return adjListGenerator;
+	}
+
+	public void setAdjListGenerator(HGALGenerator adjListGenerator)
+	{
+		this.adjListGenerator = adjListGenerator;
+	}
+
 	public boolean hasNext() 
 	{
+		if (!initialized)
+			init();
 		return !to_explore.isEmpty();
 	}
 
 	public Pair<HGHandle, HGHandle> next() 
 	{
+		if (!initialized)
+			init();
 		Pair<HGHandle, HGHandle> rvalue = null;
 		if (!to_explore.isEmpty())
 		{
@@ -82,4 +113,11 @@ public class HGDepthFirstTraversal implements HGTraversal
 	{
 		throw new UnsupportedOperationException();
 	}
+	
+	public void reset()
+	{
+		visited.clear();
+		to_explore.clear();
+		init();
+	}	
 }
