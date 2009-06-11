@@ -189,7 +189,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                 result = HGSearchResult.EMPTY;
             }                
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Throwable t) { }
@@ -220,7 +220,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                 result = HGSearchResult.EMPTY;
             }                
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Throwable t) { }
@@ -384,7 +384,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                 result = HGSearchResult.EMPTY;
             }
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Throwable t) { }            
@@ -433,7 +433,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                 try { cursor.close(); } catch (Throwable t) { }
                 return (HGRandomAccessResult<ValueType>)HGSearchResult.EMPTY;
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Throwable t) { }            

@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGException;
@@ -41,36 +42,77 @@ public class SubgraphManager
         store(subgraph, store, new HashMap<HGPersistentHandle, HGPersistentHandle>());
     }
     
-    public static void store(StorageGraph subgraph, 
-                             HGStore store, 
-                             Map<HGPersistentHandle, HGPersistentHandle> substitute)
-    {
-        for (Pair<HGPersistentHandle, Object> item : subgraph)
+    /**
+     * <p>
+     * Write the passed in {@link StorageGraph} to the permanent
+     * <code>HGStore</code> in a single transaction. The <code>StorageGraph</code>
+     * must be small enough to fit in a single transaction. How small exactly
+     * that is depends on the underlying storage mechanism, available memory,
+     * available transactional locks etc. 
+     * </p>
+     * 
+     * <p>
+     * You can specify a map from data in the <code>StorageGraph</code> to "local"
+     * <code>HGStore</code> data in the <code>substitute</code> parameter. This map 
+     * states that a given key is to replaced by the given value during storage. Elements
+     * in this map's domain are not written because they have equivalents in the 
+     * <code>HGStore</code> already. Moreover, whenever a link from the <code>StorageGraph</code>
+     * parameter points to one of the elements in map's domain it is replaced by the
+     * corresponding element of the map's range.
+     * </p>
+     * 
+     */
+    public static void store(final StorageGraph subgraph, 
+                             final HGStore store, 
+                             final Map<HGPersistentHandle, HGPersistentHandle> substitute)
+    {        
+    
+        store.getTransactionManager().transact(new Callable<Object>()
         {
-            if (substitute.containsKey(item.getFirst())) // local entry existing, skip...
-                continue;            
-            // TODO should make sure the handle is not already in there?
-            if (item.getSecond() instanceof byte[])
-                store.store(item.getFirst(), (byte[]) item.getSecond());
-            else
-            {
-                HGPersistentHandle [] layout = (HGPersistentHandle[]) item.getSecond();
-                for (int i = 0; i < layout.length; i++)
+           public Object call() 
+           {        
+                for (Pair<HGPersistentHandle, Object> item : subgraph)
                 {
-                    HGPersistentHandle h = substitute.get(layout[i]);
-                    if (h != null)
-                        layout[i] = h;                    
+                    if (substitute.containsKey(item.getFirst())) // local entry existing, skip...
+                        continue;            
+                    // TODO should make sure the handle is not already in there?
+                    if (item.getSecond() instanceof byte[])
+                        store.store(item.getFirst(), (byte[]) item.getSecond());
+                    else
+                    {
+                        HGPersistentHandle [] layout = (HGPersistentHandle[]) item.getSecond();
+                        for (int i = 0; i < layout.length; i++)
+                        {
+                            HGPersistentHandle h = substitute.get(layout[i]);
+                            if (h != null)
+                                layout[i] = h;                    
+                        }
+                        store.store(item.getFirst(), layout);
+                    }
                 }
-                store.store(item.getFirst(), layout);
-            }
-        }
+                return null;
+           }
+        });
     }
 
+    /**
+     * Assuming a single root, write the <code>StorageGraph</code> to (merge it with)
+     * the <code>HyperGraph</code> for the sole purpose of reading back a run-time
+     * atom. Then delete that atom from the graph. 
+     * 
+     * <strong>NOTE: this method assumes that the single atom represented in the StorageGraph
+     * parameter does not exist locally in the HyperGraph.</strong>
+     * 
+     * @param subgraph
+     * @param graph
+     * @return
+     */
     public static Object get(StorageGraph subgraph, HyperGraph graph)
     {
         store(subgraph, graph.getStore());
-        Object result = graph.get(subgraph.getRoot());
-        graph.remove(subgraph.getRoot());
+        HGPersistentHandle theRoot = subgraph.getRoots().iterator().next();
+        Object result = graph.get(theRoot);
+        graph.remove(theRoot);
         return result;
     }
     
@@ -155,7 +197,8 @@ public class SubgraphManager
         {
             public HGHandle call()
             {
-                HGPersistentHandle [] layout = subgraph.getLink(subgraph.getRoot());                
+                HGPersistentHandle theRoot = subgraph.getRoots().iterator().next();
+                HGPersistentHandle [] layout = subgraph.getLink(theRoot);                
                 Object object = null;
                 graph.getStore().attachOverlayGraph(subgraph);
                 try
@@ -174,7 +217,7 @@ public class SubgraphManager
                 HGHandle typeHandle = substituteTypes.get(layout[0]);
                 if (typeHandle == null)
                     typeHandle = layout[0];
-                graph.define(subgraph.getRoot(), 
+                graph.define(theRoot, 
                              layout[0],                                 
                              object,
                              (byte)0);
@@ -225,7 +268,7 @@ public class SubgraphManager
                     if (targetIncidenceSet != null)
                         targetIncidenceSet.add(subgraph.getRoot());                    
                 } */
-                return subgraph.getRoot();
+                return theRoot;
             }
         });        
     }
@@ -238,7 +281,7 @@ public class SubgraphManager
 
         boolean shouldIgnore(HGPersistentHandle handle, HGPersistentHandle [] result)
         {
-            if (handle.equals(wrapped.getRoot()) || result == null || result.length <= 1)
+            if (wrapped.getRoots().contains(handle) || result == null || result.length <= 1)
                 return false;
             HGRandomAccessResult<HGPersistentHandle> rs = indexByValue.find(result[1]);
             try
@@ -273,9 +316,9 @@ public class SubgraphManager
             return shouldIgnore(handle, result) ? null : result;
         }
 
-        public HGPersistentHandle getRoot()
+        public Set<HGPersistentHandle> getRoots()
         {
-            return wrapped.getRoot();
+            return wrapped.getRoots();
         }
 
         public Iterator<Pair<HGPersistentHandle, Object>> iterator()

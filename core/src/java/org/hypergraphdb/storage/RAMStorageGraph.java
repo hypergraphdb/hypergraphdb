@@ -1,8 +1,10 @@
 package org.hypergraphdb.storage;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.util.Pair;
@@ -18,12 +20,18 @@ import org.hypergraphdb.util.Pair;
  */
 public class RAMStorageGraph implements StorageGraph
 {
-    private HGPersistentHandle root;
+    private Set<HGPersistentHandle> roots;
     private Map<HGPersistentHandle, Object> map = new HashMap<HGPersistentHandle, Object>();
     
     public RAMStorageGraph(HGPersistentHandle root)
     {
-        this.root = root;
+        this.roots = new HashSet<HGPersistentHandle>();
+        this.roots.add(root);
+    }
+    
+    public RAMStorageGraph(Set<HGPersistentHandle> roots)
+    {
+        this.roots = roots;
     }
     
     public void translateHandles(Map<HGPersistentHandle, HGPersistentHandle> subst)
@@ -70,9 +78,9 @@ public class RAMStorageGraph implements StorageGraph
         return (HGPersistentHandle[])map.get(handle);
     }
 
-    public HGPersistentHandle getRoot()
+    public Set<HGPersistentHandle> getRoots()
     {
-        return root;
+        return roots;
     }
 
     public Iterator<Pair<HGPersistentHandle, Object>> iterator()

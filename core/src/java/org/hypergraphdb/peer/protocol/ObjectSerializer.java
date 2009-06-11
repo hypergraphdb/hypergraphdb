@@ -1,5 +1,6 @@
 package org.hypergraphdb.peer.protocol;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ObjectSerializer
 	{
 	}
 
-	public void serialize(OutputStream out, Object data) 
+	public void serialize(OutputStream out, Object data) throws IOException
 	{
 		ProtocolUtils.writeSignature(out, DATA_SIGNATURE);
 		JSONWriter writer = new JSONWriter();
@@ -53,7 +54,7 @@ public class ObjectSerializer
 		ProtocolUtils.writeSignature(out, END_SIGNATURE);
 	}
 	
-	public Object deserialize(InputStream in) 
+	public Object deserialize(InputStream in) throws IOException 
 	{
 		Object result = null;
 		

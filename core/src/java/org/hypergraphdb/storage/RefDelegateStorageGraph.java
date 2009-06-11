@@ -2,6 +2,7 @@ package org.hypergraphdb.storage;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.util.Pair;
@@ -32,9 +33,9 @@ public class RefDelegateStorageGraph implements StorageGraph
     }
 
     
-    public HGPersistentHandle getRoot()
+    public Set<HGPersistentHandle> getRoots()
     {
-        return wrapped.getRoot();
+        return wrapped.getRoots();
     }
 
     public Iterator<Pair<HGPersistentHandle, Object>> iterator()

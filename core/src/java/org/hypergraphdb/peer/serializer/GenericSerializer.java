@@ -28,19 +28,11 @@ public class GenericSerializer implements HGSerializer
         GenericSerializer.tempDB = tempDB;
     }
 
-    public Object readData(InputStream in)
+    public Object readData(InputStream in) throws IOException
     {
         StorageGraph result = null;
         int subgraphType = 0;
-        try
-        {
-            subgraphType = in.read();
-        }
-        catch (IOException e)
-        {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        subgraphType = in.read();
 
         if (subgraphType == 2)
         {
@@ -54,58 +46,33 @@ public class GenericSerializer implements HGSerializer
         else
         {
             result = (StorageGraph) serializer.readData(in);
-
             SubgraphManager.store(result, tempDB.getStore());
-
-            Object resultObj = tempDB.get(result.getRoot());
-            tempDB.remove(result.getRoot());
+            HGPersistentHandle theRoot = result.getRoots().iterator().next();
+            Object resultObj = tempDB.get(theRoot);
+            tempDB.remove(theRoot);
             return resultObj;
         }
     }
 
-    public void writeData(OutputStream out, Object data)
+    public void writeData(OutputStream out, Object data) throws IOException
     {
         StorageGraph subGraph;
         HGPersistentHandle tempHandle = null;
 
         if (data == null)
         {
-            try
-            {
-                out.write(2);
-            }
-            catch (IOException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            out.write(2);
         }
         else
         {
             if (data instanceof StorageGraph)
             {
-                try
-                {
-                    out.write(0);
-                }
-                catch (IOException e)
-                {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                out.write(0);
                 subGraph = (StorageGraph) data;
             }
             else
             {
-                try
-                {
-                    out.write(1);
-                }
-                catch (IOException e)
-                {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+                out.write(1);
                 tempHandle = tempDB.getPersistentHandle(tempDB.add(data));
                 subGraph = new HGStoreSubgraph(tempHandle, tempDB.getStore());
             }

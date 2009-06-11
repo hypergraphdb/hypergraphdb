@@ -52,7 +52,7 @@ public class StorageService
 	public HGHandle storeSubgraph(StorageGraph subGraph, HGStore store)
 	{	    
 		SubgraphManager.store(subGraph, store);
-		return subGraph.getRoot();
+		return subGraph.getRoots().iterator().next();
 	}
 	
 	public HGHandle addSubgraph(StorageGraph subgraph)
@@ -87,7 +87,7 @@ public class StorageService
 
 	public HGHandle addOrReplaceSubgraph(StorageGraph subgraph)
 	{
-		HGPersistentHandle handle = (HGPersistentHandle)subgraph.getRoot();
+		HGPersistentHandle handle = (HGPersistentHandle)subgraph.getRoots().iterator().next();
 		
 		if (graph.getStore().containsLink(handle))
 		{

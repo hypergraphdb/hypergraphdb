@@ -3,6 +3,7 @@ package org.hypergraphdb.storage;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Set;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
@@ -19,21 +20,37 @@ import org.hypergraphdb.util.Pair;
  */
 public class HGStoreSubgraph implements StorageGraph
 {
-    private HGPersistentHandle root;
+    private Set<HGPersistentHandle> roots;
     private HGStore store;
     
     /**
      * <p>
      * Construct a new {@link HGStore} based {@link StorageGraph} 
      * </p>
-     * @param root The root, starting point of the storage graph.
+     * @param root A single root, starting point of the storage graph.
      * @param store The backing store instance.
      */
     public HGStoreSubgraph(HGPersistentHandle root, HGStore store)
     {
-        this.root = root;
+        this.roots = new HashSet<HGPersistentHandle>();
+        this.roots.add(root);
         this.store = store;
     }
+    
+    /**
+     * <p>
+     * Construct a new {@link HGStore} based {@link StorageGraph}
+     * with multiple roots. 
+     * </p>
+     * @param root A single root, starting point of the storage graph.
+     * @param store The backing store instance.
+     */
+    public HGStoreSubgraph(Set<HGPersistentHandle> roots, HGStore store)
+    {
+        this.roots = roots;
+        this.store = store;
+    }
+
     
     public byte[] getData(HGPersistentHandle handle)
     {
@@ -45,9 +62,9 @@ public class HGStoreSubgraph implements StorageGraph
         return store.getLink(handle);
     }
 
-    public HGPersistentHandle getRoot()
+    public Set<HGPersistentHandle> getRoots()
     {
-        return root;
+        return roots;
     }
 
     public Iterator<Pair<HGPersistentHandle, Object>> iterator()
@@ -62,7 +79,8 @@ public class HGStoreSubgraph implements StorageGraph
         
         public SubgraphIterator()
         {
-            remaining.addLast(root);
+            for (HGPersistentHandle root : roots)
+                remaining.addLast(root);
             
             //TODO some UUIDs should not be visited?
             visited.add(UUIDPersistentHandle.UUID_NULL_HANDLE);

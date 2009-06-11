@@ -592,8 +592,10 @@ public class HGStore
             else
             	return new SingleKeyResultSet(tx.attachCursor(cursor), key, BAtoHandle.getInstance());            
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
+            if (cursor != null)
+                try { cursor.close(); } catch (Throwable t) { }                        
             throw new HGException("Failed to retrieve incidence set for handle " + handle + 
                                   ": " + ex.toString(), ex);
         }

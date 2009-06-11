@@ -18,7 +18,9 @@ import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
 
 /**
  * <p>
- * Used to store an atom at a target peer.
+ * Used to store an atom at a target peer. The initiating peer sends a Performative.Request
+ * to the target peer with the full storage graph of the atom to define. 
+ * The target peer writes the atom locally and replies with Performative.Agree.
  * </p>
  * 
  * @author Borislav Iordanov
