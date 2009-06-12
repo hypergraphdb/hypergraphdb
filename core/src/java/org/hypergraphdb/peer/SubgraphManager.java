@@ -6,6 +6,7 @@ import static org.hypergraphdb.peer.Structs.struct;
 
 import java.lang.reflect.Array;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
+import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.RAMStorageGraph;
@@ -151,6 +153,25 @@ public class SubgraphManager
             return struct();
     }
     
+    public static Object getTransferGraphRepresentation(HyperGraph graph,
+                                                        HGTraversal traversal)
+    {
+        Set<HGPersistentHandle> roots = new HashSet<HGPersistentHandle>();
+        while (traversal.hasNext())
+            roots.add(graph.getPersistentHandle(traversal.next().getSecond()));        
+        StorageGraph rawGraph = new HGStoreSubgraph(roots, graph.getStore());
+        StorageGraph atomGraph = new AtomFilteringSubgraph(graph, rawGraph);
+        Map<String, String> types = new HashMap<String, String>();
+        for (Pair<HGPersistentHandle, Object> p : rawGraph)
+        {
+            String clname = graph.getTypeSystem().getClassNameForType(p.getFirst());
+            if (clname != null)
+                types.put(p.getFirst().toString(), clname);
+        }      
+        return struct("storage-graph", object(atomGraph),
+                      "type-classes", types);         
+    }
+    
     /**
      * IMPORTANT: Assumes atom does not exist locally! Writes directly to storage and updates relevant indexes
      * based on that assumptions. 
@@ -160,7 +181,7 @@ public class SubgraphManager
      * @return
      * @throws ClassNotFoundException
      */
-    public static HGHandle writeTransferedAtom(final Object atom, final HyperGraph graph)
+    public static Set<HGHandle> writeTransferedGraph(final Object atom, final HyperGraph graph)
         throws ClassNotFoundException
     {
         final RAMStorageGraph subgraph = getPart(atom, "storage-graph");
@@ -193,34 +214,41 @@ public class SubgraphManager
         // If something goes wrong during storing the graph and reading back
         // an atom, the following will just throw an exception and the framework
         // will reply with failure.
-        return graph.getTransactionManager().transact(new Callable<HGHandle>()
+        return graph.getTransactionManager().transact(new Callable<Set<HGHandle>>()
         {
-            public HGHandle call()
+            public Set<HGHandle> call()
             {
-                HGPersistentHandle theRoot = subgraph.getRoots().iterator().next();
-                HGPersistentHandle [] layout = subgraph.getLink(theRoot);                
-                Object object = null;
-                graph.getStore().attachOverlayGraph(subgraph);
-                try
-                {    
-                    HGHandle [] targetSet = new HGHandle[layout.length-2];
-                    System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                                                             
-                    HGAtomType type = graph.get(layout[0]);                    
-                    object = type.make(layout[1], 
-                                       new ReadyRef<HGHandle[]>(targetSet), 
-                                       null);
-                }
-                finally
+                Set<HGHandle> result = new HashSet<HGHandle>();
+                for (HGPersistentHandle theRoot : subgraph.getRoots())
                 {
-                    graph.getStore().detachOverlayGraph();
+                    HGPersistentHandle [] layout = subgraph.getLink(theRoot);                
+                    Object object = null;
+                    graph.getStore().attachOverlayGraph(subgraph);
+                    try
+                    {    
+                        HGHandle [] targetSet = new HGHandle[layout.length-2];
+                        System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                                                             
+                        HGAtomType type = graph.get(layout[0]);                    
+                        object = type.make(layout[1], 
+                                           new ReadyRef<HGHandle[]>(targetSet), 
+                                           null);
+                    }
+                    finally
+                    {
+                        graph.getStore().detachOverlayGraph();
+                    }
+                    HGHandle typeHandle = substituteTypes.get(layout[0]);
+                    if (typeHandle == null)
+                        typeHandle = layout[0];
+                    graph.define(theRoot, 
+                                 layout[0],                                 
+                                 object,
+                                 (byte)0);
+                    result.add(theRoot);
                 }
-                HGHandle typeHandle = substituteTypes.get(layout[0]);
-                if (typeHandle == null)
-                    typeHandle = layout[0];
-                graph.define(theRoot, 
-                             layout[0],                                 
-                             object,
-                             (byte)0);
+                return result;
+                
+                
 /*                store(subgraph, graph.getStore(), substituteTypes);
                 
                 //
@@ -268,11 +296,22 @@ public class SubgraphManager
                     if (targetIncidenceSet != null)
                         targetIncidenceSet.add(subgraph.getRoot());                    
                 } */
-                return theRoot;
             }
         });        
     }
     
+    /**
+     * A StorageGraph that returns atoms only - i.e., getLink will return null
+     * for everything that is NOT an atom and the iterator will return a stream
+     * of atoms only.
+     * 
+     * Something is an atom if it's either part of the "roots" set of the underlying
+     * StorageGraph or if it has a value handle in a standard [type, value, ...] pointing
+     * to it through the HGDB value index.
+     * 
+     * @author Borislav Iordanov
+     *
+     */
     private static class AtomFilteringSubgraph implements StorageGraph
     {
         HyperGraph graph;
