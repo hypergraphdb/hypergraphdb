@@ -57,6 +57,11 @@ public class Performative
             return ((Performative)x).name == name;
     }
     
+    public String toString()
+    {
+        return name;
+    }
+    
     /**
      * The action of accepting a previously submitted proposal to perform an action.
      */

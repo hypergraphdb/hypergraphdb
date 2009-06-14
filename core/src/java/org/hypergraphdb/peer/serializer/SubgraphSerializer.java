@@ -37,7 +37,8 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
 
         byte type = 0;
         
-        int rootCount = in.read();
+        int rootCount = SerializationUtils.deserializeInt(in);
+        
         Set<HGPersistentHandle> roots = new HashSet<HGPersistentHandle>();
         while (rootCount-- > 0)
             roots.add(PersistentHandlerSerializer.deserializePersistentHandle(in));
@@ -55,7 +56,8 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
                 if (type == OBJECT_DATA)
                 {
                     byte[] value = new byte[length];
-                    in.read(value);
+                    for (int i = 0; i < value.length; )
+                        i += in.read(value, i, value.length - i);
                     result.put(handle, value);
                 }
                 else
@@ -78,7 +80,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
         StorageGraph subgraph = (StorageGraph) data;
         Iterator<Pair<HGPersistentHandle, Object>> iter = subgraph.iterator();
 
-        out.write(subgraph.getRoots().size());
+        SerializationUtils.serializeInt(out, subgraph.getRoots().size());
         
         for (HGPersistentHandle root : subgraph.getRoots())
             PersistentHandlerSerializer.serializePersistentHandle(out, root);

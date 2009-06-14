@@ -19,6 +19,7 @@ import net.jxta.protocol.PipeAdvertisement;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
@@ -168,6 +169,8 @@ public class Structs
 		// skipSpecialClasses is set to true when the content of the HGQueryCondition/HGAtomPredicate should be rendered
 		if ((!skipSpecialClasses) && (x instanceof HGQueryCondition || x instanceof HGAtomPredicate))
 			return hgQueryOrPredicate(x);
+		else if (x instanceof Performative)
+		    return x.toString();
 		else if (x instanceof CustomSerializedValue) return x;
 		else if (x == null || 
 			x instanceof Boolean || 
@@ -321,6 +324,8 @@ public class Structs
 			hgInvertedClassNames.put(entry.getValue(), entry.getKey());
 		}
 		
+//		addMapper(PerformativeConstant.class, new PerformativeMapper(), "performative");
+//		addMapper(Performative.class, new PerformativeMapper(), "performative");
 		addMapper(UUID.class, new UUIDStructsMapper(), "uuid");
 		addMapper(UUIDPersistentHandle.class, new HandleMapper(), "persistent-handle");
 		addMapper(PhantomManagedHandle.class, new HandleMapper(), "live-managed-handle");
@@ -348,7 +353,11 @@ public class Structs
 
 		addMapper(HGDepthFirstTraversal.class, 
 				  new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
-				  "depth-first-traversal");		
+				  "depth-first-traversal");
+		
+        addMapper(CopyGraphTraversal.class, 
+                  new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
+                  "copy-graph-traversal");     		
 	}
 	
 	/**
@@ -934,5 +943,18 @@ public class Structs
 			}
 			return null; // unreachable			
 		}
-	}	
+	}
+	
+	public static class PerformativeMapper  implements StructsMapper
+    {
+        public Object getObject(Object struct)
+        {
+            return Performative.toConstant(struct.toString());
+        }
+
+        public Object getStruct(Object value)
+        {
+            return value.toString();
+        }
+    }
 }

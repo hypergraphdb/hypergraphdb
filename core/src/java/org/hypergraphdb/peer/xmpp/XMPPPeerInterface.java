@@ -21,13 +21,17 @@ import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Protocol;
 import org.jivesoftware.smack.*;
-import org.jivesoftware.smack.filter.AndFilter;
-import org.jivesoftware.smack.filter.MessageTypeFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
+import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
+import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferNegotiator;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
+import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
 
 public class XMPPPeerInterface implements PeerInterface
 {
@@ -45,6 +49,7 @@ public class XMPPPeerInterface implements PeerInterface
      
     ConnectionConfiguration config = null;
     XMPPConnection connection;
+    FileTransferManager fileTransfer;
     
     public void configure(Map<String, Object> configuration)
     {
@@ -65,7 +70,7 @@ public class XMPPPeerInterface implements PeerInterface
         assert messageHandler != null : new NullPointerException("MessageHandler not specified.");
         connection = new XMPPConnection(config);
         try
-        {
+        {                             
             connection.connect();
             if (anonymous)
                 connection.loginAnonymously();
@@ -93,17 +98,12 @@ public class XMPPPeerInterface implements PeerInterface
                     else
                         throw ex;
                 }
-            }
+            }            
             connection.addPacketListener(new PacketListener() {
                 @SuppressWarnings("unchecked")
                 public void processPacket(Packet packet)
                 {
                     Message msg = (Message)packet;
-                    Boolean hgprop = (Boolean)msg.getProperty("hypergraph");
-                    if (hgprop == null || !hgprop)
-                    {
-                        System.out.println("Ignoring packet: " + packet);
-                    }
                     //
                     // Encapsulate message deserialization into a transaction because the HGDB might
                     // be accessed during this process.
@@ -127,9 +127,14 @@ public class XMPPPeerInterface implements PeerInterface
                     messageHandler.handleMessage(M);                    
                 }                
                 },
-               new AndFilter(new PacketTypeFilter(Message.class),
-                              new MessageTypeFilter(Message.Type.normal)));
-            final Roster roster = connection.getRoster();
+               new PacketFilter() { public boolean accept(Packet p) {
+                 if (! (p instanceof Message)) return false;
+                 Message msg = (Message)p;
+                 if (!msg.getType().equals(Message.Type.normal)) return false;
+                 Boolean hgprop = (Boolean)msg.getProperty("hypergraphdb");
+                 return hgprop != null && hgprop;                                         
+            }});
+            final Roster roster = connection.getRoster();            
             roster.addRosterListener(new RosterListener() 
             {
                 public void entriesAdded(Collection<String> addresses) 
@@ -162,6 +167,9 @@ public class XMPPPeerInterface implements PeerInterface
                     }                        
                 }
             });
+            fileTransfer = new FileTransferManager(connection);
+            fileTransfer.addFileTransferListener(new BigMessageTransferListener());
+                                    
             for (RosterEntry entry: roster.getEntries()) 
             {
                 Presence presence = roster.getPresence(entry.getUser());
@@ -176,6 +184,7 @@ public class XMPPPeerInterface implements PeerInterface
                 presence.setTo(entry.getUser());
                 connection.sendPacket(presence);
             }
+            
         }
         catch (XMPPException e)
         {    
@@ -205,12 +214,13 @@ public class XMPPPeerInterface implements PeerInterface
                 {
                     public Boolean call() throws Exception
                     {
-                        Message xmpp = new Message((String)getTarget());
+                        
                         org.hypergraphdb.peer.Message msg = getMessage();
                         if (getPart(msg, Messages.REPLY_TO) == null)
                         {
                             combine(msg, struct(Messages.REPLY_TO, connection.getUser()));
-                        }                            
+                        }
+                        
                         Protocol protocol = new Protocol();
                         ByteArrayOutputStream out = new ByteArrayOutputStream();                        
                         //
@@ -220,24 +230,41 @@ public class XMPPPeerInterface implements PeerInterface
                         thisPeer.getGraph().getTransactionManager().beginTransaction();
                         try
                         {
-                            protocol.writeMessage(out, getMessage());
+                            protocol.writeMessage(out, msg);
                         }
                         finally
                         {
                             try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
                             catch (Throwable t) { t.printStackTrace(System.err); }
-                        }                        
-                        try
+                        }  
+                        
+                        byte [] data = out.toByteArray();
+                        if (data.length > 100*1024)
                         {
-                            xmpp.setBody(StringUtils.encodeBase64(out.toByteArray()));
-                            xmpp.setProperty("hypergraphdb", Boolean.TRUE);
-                            connection.sendPacket(xmpp);                            
+                            OutgoingFileTransfer outFile = 
+                                fileTransfer.createOutgoingFileTransfer((String)getTarget());
+                            outFile.sendStream(new ByteArrayInputStream(data), 
+                                               "", 
+                                               data.length, 
+                                               "");
                             return true;
                         }
-                        catch (Throwable t)
+                        else
                         {
-                            t.printStackTrace(System.err);
-                            return false;
+                            try
+                            {
+                                Message xmpp = new Message((String)getTarget());                            
+                                xmpp.setBody(StringUtils.encodeBase64(out.toByteArray()));
+                                System.out.println("Sending body size=" + xmpp.getBody().length());
+                                xmpp.setProperty("hypergraphdb", Boolean.TRUE);
+                                connection.sendPacket(xmpp);                            
+                                return true;
+                            }
+                            catch (Throwable t)
+                            {
+                                t.printStackTrace(System.err);
+                                return false;
+                            }
                         }
                     }                    
                 };
@@ -354,5 +381,47 @@ public class XMPPPeerInterface implements PeerInterface
     public void setAutoRegister(boolean autoRegister)
     {
         this.autoRegister = autoRegister;
-    }    
+    }
+    
+    private class BigMessageTransferListener implements FileTransferListener
+    {
+        @SuppressWarnings("unchecked")
+        @Override
+        public void fileTransferRequest(FileTransferRequest request)
+        {
+            if (thisPeer.getIdentity(request.getRequestor()) != null)
+            {
+                
+                IncomingFileTransfer inFile = request.accept();
+                org.hypergraphdb.peer.Message M = null;
+                java.io.InputStream in = null;
+                thisPeer.getGraph().getTransactionManager().beginTransaction();
+                try
+                {                        
+                    in = inFile.recieveFile();
+                    M = new org.hypergraphdb.peer.Message((Map<String, Object>)
+                                  new Protocol().readMessage(in));                        
+                }
+                catch (Throwable t)
+                {
+                    t.printStackTrace(System.err);
+                    throw new RuntimeException(t);
+                }
+                finally
+                {
+                    try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
+                    catch (Throwable t) { t.printStackTrace(System.err); }
+                    try { if ( in != null) in.close(); } catch (Throwable t) { t.printStackTrace(System.err); }
+                }
+                messageHandler.handleMessage(M);                
+            }
+            else
+                request.reject();
+        }        
+    }
+    
+    static
+    {
+        FileTransferNegotiator.IBB_ONLY = true;        
+    }
 }

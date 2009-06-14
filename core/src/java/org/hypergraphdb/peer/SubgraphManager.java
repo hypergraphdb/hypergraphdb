@@ -4,12 +4,15 @@ import static org.hypergraphdb.peer.Structs.getPart;
 import static org.hypergraphdb.peer.Structs.object;
 import static org.hypergraphdb.peer.Structs.struct;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGException;
@@ -21,6 +24,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
+import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
@@ -39,6 +43,61 @@ import org.hypergraphdb.util.Pair;
  */
 public class SubgraphManager
 {
+    /**
+     * Debugging method: will write the complete StorageGraph in a File where lines
+     * are sorted by the graph's key handles.
+     * 
+     * @param file
+     */
+    public static void dumpGraphToFile(File file, StorageGraph graph, boolean outputByteBuffers)
+    {
+        try
+        {
+            FileWriter out = new FileWriter(file);
+            TreeMap<HGPersistentHandle, Object> sorted = new TreeMap<HGPersistentHandle, Object>();
+            for (Pair<HGPersistentHandle, Object> p : graph)
+                sorted.put(p.getFirst(), p.getSecond());
+            for (HGPersistentHandle h : sorted.keySet())
+            {
+                out.write(h.toString() + "=[");
+                Object x = sorted.get(h);
+                if (x instanceof HGPersistentHandle [])
+                {
+                    HGPersistentHandle [] link = (HGPersistentHandle[])x;
+                    for (int i = 0; i < link.length; i++)
+                    {
+                        out.write(link[i].toString());
+                        if (i < link.length - 1)
+                            out.write(",");
+                    }
+                }
+                else
+                {
+                    byte [] A = (byte[])x;
+                    if (outputByteBuffers)
+                    {
+                        for (int i = 0; i < A.length; i++)
+                        {
+                            out.write(Byte.toString(A[i]));
+                            if (i < A.length - 1)
+                                out.write(",");                            
+                        }
+                    }
+                    else
+                    {
+                        out.write("byte[]");
+                    }
+                }   
+                out.write("]\n");
+            }
+            out.close();
+        }
+        catch (Exception ex)
+        {
+            System.err.println(ex);
+        }
+    }
+    
     public static void store(StorageGraph subgraph, HGStore store)
     {
         store(subgraph, store, new HashMap<HGPersistentHandle, HGPersistentHandle>());
@@ -146,6 +205,7 @@ public class SubgraphManager
                 if (clname != null)
                     types.put(p.getFirst().toString(), clname);
             }      
+            
             return struct("storage-graph", object(atomGraph),
                           "type-classes", types);            
         }
@@ -157,17 +217,23 @@ public class SubgraphManager
                                                         HGTraversal traversal)
     {
         Set<HGPersistentHandle> roots = new HashSet<HGPersistentHandle>();
+        roots.add(graph.getPersistentHandle(((CopyGraphTraversal)traversal).getStartAtom()));
         while (traversal.hasNext())
-            roots.add(graph.getPersistentHandle(traversal.next().getSecond()));        
+        {
+            Pair<HGHandle, HGHandle> link = traversal.next();
+            roots.add(graph.getPersistentHandle(link.getFirst()));
+            roots.add(graph.getPersistentHandle(link.getSecond()));
+        }
         StorageGraph rawGraph = new HGStoreSubgraph(roots, graph.getStore());
-        StorageGraph atomGraph = new AtomFilteringSubgraph(graph, rawGraph);
+        StorageGraph atomGraph = rawGraph; //new AtomFilteringSubgraph(graph, rawGraph);
         Map<String, String> types = new HashMap<String, String>();
         for (Pair<HGPersistentHandle, Object> p : rawGraph)
         {
             String clname = graph.getTypeSystem().getClassNameForType(p.getFirst());
             if (clname != null)
                 types.put(p.getFirst().toString(), clname);
-        }      
+        }
+        SubgraphManager.dumpGraphToFile(new File("/home/borislav/0.graph"), atomGraph, false);
         return struct("storage-graph", object(atomGraph),
                       "type-classes", types);         
     }
@@ -185,6 +251,7 @@ public class SubgraphManager
         throws ClassNotFoundException
     {
         final RAMStorageGraph subgraph = getPart(atom, "storage-graph");
+        SubgraphManager.dumpGraphToFile(new File("/home/borislav/1.graph"), subgraph, false);        
         final Map<String, String>  typeClasses = getPart(atom, "type-classes");
         final Map<HGPersistentHandle, HGPersistentHandle> substituteTypes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();

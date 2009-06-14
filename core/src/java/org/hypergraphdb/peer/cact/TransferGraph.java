@@ -10,6 +10,9 @@ import static org.hypergraphdb.peer.Structs.struct;
 
 import java.util.UUID;
 
+import org.hypergraphdb.algorithms.CopyGraphTraversal;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
@@ -57,8 +60,8 @@ public class TransferGraph extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onQueryRef(Message msg) throws Throwable
     {
-        traversal = getPart(msg, "CONTENT"); 
-        // If we got here, all went well
+        traversal = getPart(msg, CONTENT); 
+        ((DefaultALGenerator)((CopyGraphTraversal)traversal).getAdjListGenerator()).setGraph(getThisPeer().getGraph());
         Message reply = getReply(msg, Performative.InformRef);
         Object subgraph = SubgraphManager.getTransferGraphRepresentation(getThisPeer().getGraph(), traversal);
         combine(reply, struct(CONTENT, subgraph));

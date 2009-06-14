@@ -230,6 +230,7 @@ public class ActivityManager implements MessageHandler
                     else
                     {
                         System.out.println("Running transition " + transition + " on msg " + msg);
+                        Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
                         WorkflowStateConstant result = transition.apply(activity, msg);
                         System.out.println("Transition finished with " + result);
                         if (result != null)

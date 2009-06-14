@@ -6,6 +6,7 @@ import org.hypergraphdb.peer.BootstrapPeer;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.cact.DefineAtom;
 import org.hypergraphdb.peer.cact.GetClassForType;
+import org.hypergraphdb.peer.cact.TransferGraph;
 
 public class CACTBootstrap implements BootstrapPeer
 {
@@ -13,5 +14,6 @@ public class CACTBootstrap implements BootstrapPeer
     {
         peer.getActivityManager().registerActivityType(GetClassForType.TYPENAME, GetClassForType.class);
         peer.getActivityManager().registerActivityType(DefineAtom.TYPENAME, DefineAtom.class);
+        peer.getActivityManager().registerActivityType(TransferGraph.TYPENAME, TransferGraph.class);
     }
 }

@@ -59,7 +59,7 @@ public class DefineAtom extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onRequestDefine(Message msg) throws Throwable
     {
-        SubgraphManager.writeTransferedAtom(getPart(msg, CONTENT), getThisPeer().getGraph());
+        SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), getThisPeer().getGraph());
         // If we got here, all went well
         Message reply = getReply(msg, Performative.Agree);
         send(getSender(msg), reply);

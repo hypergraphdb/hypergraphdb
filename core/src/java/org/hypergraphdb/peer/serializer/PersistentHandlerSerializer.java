@@ -41,7 +41,8 @@ public class PersistentHandlerSerializer implements HGSerializer
 		
 		try
 		{
-			in.read(data);
+		    for (int i = 0; i < data.length; )
+		        i += in.read(data, i, data.length - i);
 		} catch (IOException e)
 		{
 			// TODO Auto-generated catch block

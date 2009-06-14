@@ -531,6 +531,8 @@ public class HGTypeSystem
 	{
 		Class<?> clazz;
 		ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+		if (loader == null)
+		    loader = this.getClass().getClassLoader();
 		try
 		{
 			if(classname.startsWith("[L"))

@@ -8,12 +8,13 @@
  */
 package org.hypergraphdb.algorithms;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.util.Pair;
 
 /**
@@ -28,7 +29,10 @@ public class HGBreadthFirstTraversal implements HGTraversal
 {
 	private HGHandle startAtom;
 	private int maxDistance; // the maximum reachable distance from the starting node
-	private HGAtomSet visited = new HGAtomSet();
+	// The following maps contains all atoms that have been reached: if they have
+	// been actually visited (i.e. returned by the 'next' method), they map to 
+	// Boolean.TRUE, otherwise they map to Boolean.FALSE.
+	private Map<HGHandle, Boolean> examined = new HashMap<HGHandle, Boolean>();
 	private Queue<Pair<Pair<HGHandle, HGHandle>, Integer>> to_explore = 
 	    new LinkedList<Pair<Pair<HGHandle, HGHandle>, Integer>>();
 	private HGALGenerator adjListGenerator;
@@ -36,9 +40,10 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	
 	private void init()
 	{
-        visited.add(startAtom);
+        this.maxDistance = Integer.MAX_VALUE;	    
+        examined.put(startAtom, Boolean.TRUE);
         advance(startAtom, 0);     	    
-        initialized = true;
+        initialized = true;        
 	}
 	
 	private void advance(HGHandle from, int distance)
@@ -52,10 +57,11 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		{
 			HGHandle link = adjListGenerator.getCurrentLink();
 			HGHandle h = i.next();
-			if (!visited.contains(h))
+			if (!examined.containsKey(h))
 			{
 			    Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);
 				to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
+				examined.put(h, Boolean.FALSE);
 			}
 		}
 		i.close();
@@ -111,7 +117,8 @@ public class HGBreadthFirstTraversal implements HGTraversal
 
 	public boolean isVisited(HGHandle handle) 
 	{
-		return visited.contains(handle);
+	    Boolean b = examined.get(handle);
+		return b != null && b;
 	}
 
 	public Pair<HGHandle, HGHandle> next() 
@@ -123,7 +130,7 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		{
 		    Pair<Pair<HGHandle, HGHandle>, Integer> x = to_explore.remove();
 			rvalue = x.getFirst();
-			visited.add(rvalue.getSecond());
+			examined.put(rvalue.getSecond(), Boolean.TRUE);
 			advance(rvalue.getSecond(), x.getSecond());
 		}
 		return rvalue;
@@ -131,7 +138,7 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	
 	public void reset()
 	{
-		visited.clear();
+		examined.clear();
 		to_explore.clear();
 		init();
 	}

@@ -8,11 +8,12 @@
  */
 package org.hypergraphdb.algorithms;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.util.Pair;
 
 /**
@@ -26,14 +27,17 @@ import org.hypergraphdb.util.Pair;
 public class HGDepthFirstTraversal implements HGTraversal 
 {
 	private HGHandle startAtom;
-	private HGAtomSet visited = new HGAtomSet();
+    // The following maps contains all atoms that have been reached: if they have
+    // been actually visited (i.e. returned by the 'next' method), they map to 
+    // Boolean.TRUE, otherwise they map to Boolean.FALSE.
+    private Map<HGHandle, Boolean> examined = new HashMap<HGHandle, Boolean>();
 	private Stack<Pair<HGHandle, HGHandle>> to_explore = new Stack<Pair<HGHandle, HGHandle>>();
 	private HGALGenerator adjListGenerator;
 	private boolean initialized = false;
 	
 	private void init()
 	{
-        visited.add(startAtom);
+	    examined.put(startAtom, Boolean.TRUE);
         advance(startAtom);     	    
         initialized = true;
 	}
@@ -45,8 +49,11 @@ public class HGDepthFirstTraversal implements HGTraversal
 		{
 			HGHandle link = adjListGenerator.getCurrentLink();
 			HGHandle h = i.next();
-			if (!visited.contains(h))
+			if (!examined.containsKey(h))
+			{
 				to_explore.push(new Pair<HGHandle, HGHandle>(link, h));
+				examined.put(h, Boolean.FALSE);
+			}
 		}
 		i.close();
 	}
@@ -59,8 +66,7 @@ public class HGDepthFirstTraversal implements HGTraversal
 	{
 		this.startAtom = startAtom;
 		this.adjListGenerator = adjListGenerator;
-		visited.add(startAtom);
-		advance(startAtom);
+		init();
 	}
 
 	public void setStartAtom(HGHandle startAtom)
@@ -98,7 +104,7 @@ public class HGDepthFirstTraversal implements HGTraversal
 		if (!to_explore.isEmpty())
 		{
 			rvalue = to_explore.pop();
-			visited.add(rvalue.getSecond());
+			examined.put(rvalue.getSecond(), Boolean.TRUE);
 			advance(rvalue.getSecond());
 		}
 		return rvalue;
@@ -106,7 +112,8 @@ public class HGDepthFirstTraversal implements HGTraversal
 
 	public boolean isVisited(HGHandle handle) 
 	{
-		return visited.contains(handle);
+        Boolean b = examined.get(handle);
+        return b != null && b;
 	}
 
 	public void remove() 
@@ -116,7 +123,7 @@ public class HGDepthFirstTraversal implements HGTraversal
 	
 	public void reset()
 	{
-		visited.clear();
+		examined.clear();
 		to_explore.clear();
 		init();
 	}	
