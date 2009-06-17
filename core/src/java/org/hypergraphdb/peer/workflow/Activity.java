@@ -22,7 +22,7 @@ import org.hypergraphdb.util.HGUtils;
  * <p>
  * It is possible to directly extend this class and have complete control over 
  * the implementation of the activity simply by handling incoming messages and
- * taking some action at that point in time. This recommended either for very
+ * taking some action at that point in time. This is recommended either for very
  * simple P2P scenarios where not much state is maintained, or for very 
  * complicated ones that do not fit into the provided framework.  
  * </p>
@@ -31,7 +31,7 @@ import org.hypergraphdb.util.HGUtils;
  * For most cases however, it is probably best to implement the activity as an 
  * FSM (a Finite State Machine) that does from state to state based on incoming
  * messages and/or related sub-activities. In this case, the {@link FSMActivity} class
- * </p>
+ * must be extended instead.</p>
  * 
  * @author Borislav Iordanov
  *
@@ -175,12 +175,30 @@ public abstract class Activity
         queue.put(action);
     }
     
+    /**
+     * <p>
+     * Constructor for brand new activities - a random UUID is generated to
+     * identify the newly constructed activity.
+     * </p>
+     * 
+     * @param thisPeer
+     */
     public Activity(HyperGraphPeer thisPeer)
     {
         this.thisPeer = thisPeer; 
         this.id = UUID.randomUUID();
     }
     
+    /**
+     * <p>
+     * Construct an new <code>Activity</code> from a given UUID. Use this 
+     * constructor for new activities if you have your own means of UUID 
+     * generation or for an existing activity to be instantiated locally.  
+     * </p>
+     * 
+     * @param thisPeer
+     * @param id
+     */
     public Activity(HyperGraphPeer thisPeer, UUID id)
     {
         this.thisPeer = thisPeer; 
@@ -236,6 +254,9 @@ public abstract class Activity
         return this.getClass().getName();
     }
     
+    /**
+     * Return the UUID of this activity.
+     */
     public final UUID getId()
     {
         return id; 

@@ -2,8 +2,8 @@ package org.hypergraphdb.peer;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
-import java.net.URI;
-import java.net.URISyntaxException;
+//import java.net.URI;
+//import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Map.Entry;
 
-import net.jxta.document.AdvertisementFactory;
-import net.jxta.id.IDFactory;
-import net.jxta.protocol.PipeAdvertisement;
+//import net.jxta.document.AdvertisementFactory;
+//import net.jxta.id.IDFactory;
+//import net.jxta.protocol.PipeAdvertisement;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
@@ -210,9 +210,9 @@ public class Structs
 					{
 						l.add(svalue(i, false, addClassName, null));
 					}
-					return list(hgClassNames.get(x.getClass()), l);
+					return list(getClassName(x.getClass()), l);
 				}
-				else return list(hgClassNames.get(x.getClass()), struct(x, true));	
+				else return list(getClassName(x.getClass()), struct(x, true));	
 			}
 		}
 		else if (x.getClass().isArray())
@@ -247,7 +247,7 @@ public class Structs
 		else
 		{
 			if (!addClassName) return struct(x, false);
-			else return list(hgClassNames.get(x.getClass()), struct(x, true));
+			else return list(getClassName(x.getClass()), struct(x, true));
 		}
 			
 	}
@@ -333,7 +333,7 @@ public class Structs
 		addMapper(WeakHandle.class, new HandleMapper(), "live-handle");
 		addMapper(WeakManagedHandle.class, new HandleMapper(), "live-handle");
 		addMapper(HGHandle.class, new HandleMapper(), "hg-handle");
-		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
+//		addMapper(net.jxta.impl.protocol.PipeAdv.class, new PipeAdvStructsMapper(), "pipe");
 //		addMapper(Subgraph.class, new SubGraphMapper(), "storage-graph");
 
 
@@ -358,6 +358,12 @@ public class Structs
         addMapper(CopyGraphTraversal.class, 
                   new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
                   "copy-graph-traversal");     		
+	}
+	
+	public static String getClassName(Class<?> clazz)
+	{
+	    String name = hgClassNames.get(clazz);
+	    return (name == null) ? clazz.getName() : name; 
 	}
 	
 	/**
@@ -704,7 +710,7 @@ public class Structs
 	{
 		if (x == null)
 			return null;
-		String name = hgClassNames.get(x.getClass());
+		String name = getClassName(x.getClass());
 
 		if (name == null)
 			throw new IllegalArgumentException(
@@ -849,7 +855,7 @@ public class Structs
 	 *
 	 * Mapper for pipe advertisements.
 	 */
-	public static class PipeAdvStructsMapper implements StructsMapper
+/*	public static class PipeAdvStructsMapper implements StructsMapper
 	{
 		public Object getObject(Object struct)
 		{
@@ -881,7 +887,8 @@ public class Structs
 		}
 		
 	}
-	
+	*/
+    
 	public static class BeanMapper implements StructsMapper
 	{
 		String [] props;

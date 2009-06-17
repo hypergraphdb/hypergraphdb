@@ -25,6 +25,7 @@ import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.type.HGPrimitiveType;
+import org.hypergraphdb.type.HGRefCountedType;
 /**
  * <p>
  * A generic, base implementation of the primitive Java types.
@@ -56,7 +57,8 @@ import org.hypergraphdb.type.HGPrimitiveType;
  */
 public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<JavaType>, 
 	                                                         HGOrderedSearchable<JavaType, HGPersistentHandle>, 
-	                                                         Comparator<byte[]>
+	                                                         Comparator<byte[]>,
+	                                                         HGRefCountedType
 {
     protected HyperGraph hg = null;
     protected HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;

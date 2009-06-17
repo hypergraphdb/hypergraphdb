@@ -41,7 +41,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		String classname = (String)stringType.make(layout[0], null, null);
 		try
 		{
-			Class<Enum> cl = HGUtils.loadClass(classname);
+			Class<Enum> cl = HGUtils.loadClass(getHyperGraph(), classname);
 			result.setEnumType(cl);
 		}
 		catch (ClassNotFoundException ex)

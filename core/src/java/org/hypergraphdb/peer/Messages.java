@@ -58,6 +58,13 @@ public class Messages
 		    return new Message(s);
 	}
 	
+	/**
+	 * <p>
+	 * Return the network identity of the sender of a given message.
+	 * </p>
+	 * @param msg
+	 * @return
+	 */
 	public static Object getSender(Message msg)
 	{
 	    return getPart(msg, Messages.REPLY_TO);	  

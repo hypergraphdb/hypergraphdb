@@ -32,6 +32,7 @@ import org.hypergraphdb.storage.RAMStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.FilterIterator;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Pair;
 
@@ -233,7 +234,6 @@ public class SubgraphManager
             if (clname != null)
                 types.put(p.getFirst().toString(), clname);
         }
-        SubgraphManager.dumpGraphToFile(new File("/home/borislav/0.graph"), atomGraph, false);
         return struct("storage-graph", object(atomGraph),
                       "type-classes", types);         
     }
@@ -250,8 +250,7 @@ public class SubgraphManager
     public static Set<HGHandle> writeTransferedGraph(final Object atom, final HyperGraph graph)
         throws ClassNotFoundException
     {
-        final RAMStorageGraph subgraph = getPart(atom, "storage-graph");
-        SubgraphManager.dumpGraphToFile(new File("/home/borislav/1.graph"), subgraph, false);        
+        final RAMStorageGraph subgraph = getPart(atom, "storage-graph");        
         final Map<String, String>  typeClasses = getPart(atom, "type-classes");
         final Map<HGPersistentHandle, HGPersistentHandle> substituteTypes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
@@ -265,10 +264,10 @@ public class SubgraphManager
                     if(classname.startsWith("[L"))
                     {
                         classname = classname.substring(2, classname.length() - 1); //remove ending ";"
-                        clazz = Array.newInstance(Thread.currentThread().getContextClassLoader().loadClass(classname), 0).getClass();
+                        clazz = Array.newInstance(HGUtils.loadClass(graph, classname), 0).getClass();
                     }
                     else
-                       clazz = Thread.currentThread().getContextClassLoader().loadClass(classname);
+                       clazz = HGUtils.loadClass(graph, classname);
                     HGHandle localType = graph.getTypeSystem().getTypeHandle(clazz);
                     if (localType == null)
                         throw new HGException("Unable to create local type for Java class '" + classname + "'");

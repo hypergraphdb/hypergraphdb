@@ -27,12 +27,12 @@ public final class HGValueLink extends HGPlainLink
     {        
     }
     
-    public HGValueLink(HGHandle [] targets)
+    public HGValueLink(HGHandle...targets)
     {
         super(targets);
     }
     
-    public HGValueLink(Object value, HGHandle [] targets)
+    public HGValueLink(Object value, HGHandle...targets)
     {
         super(targets);
         this.value = value;

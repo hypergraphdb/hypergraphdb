@@ -17,6 +17,7 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 
 /**
@@ -162,9 +163,20 @@ public class HGUtils
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static <T> Class<T> loadClass(String classname) throws ClassNotFoundException
+	public static <T> Class<T> loadClass(HyperGraph graph, String classname) throws ClassNotFoundException
 	{
-		return (Class<T>)Thread.currentThread().getContextClassLoader().loadClass(classname);		
+	    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+	    try
+	    {
+	        return (Class<T>)loader.loadClass(classname);    
+	    }
+	    catch (Throwable ex)
+	    {
+	        loader = graph.getTypeSystem().getClassLoader();
+	        if (loader == null)
+	            loader = HGUtils.class.getClassLoader();
+	        return (Class<T>)loader.loadClass(classname);
+	    }
 	}
 	
 	public static HGHandle [] toHandleArray(HGLink link)
@@ -201,7 +213,6 @@ public class HGUtils
 	 * @param first A 1-based index of the first element to process.
 	 * @return The total number of elements processed. 
 	 */
-	@SuppressWarnings("unchecked")
 	public static <T> long queryBatchProcess(HGQuery<T> query, 
 											 Mapping<T, Boolean> F, 
 											 int batchSize,

@@ -215,7 +215,6 @@ public final class TypeUtils
 		return getTransactionHandleSet(graph).contains(h);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static void releaseValue(HyperGraph graph, HGPersistentHandle h)
 	{
 		Object instance =  getThreadHandleRefMap(graph).remove(h);
@@ -227,7 +226,9 @@ public final class TypeUtils
 	public static HGPersistentHandle storeValue(HyperGraph graph, Object value, HGAtomType type)
 	{
 		Map<Object, HGPersistentHandle> refMap = getTransactionObjectRefMap(graph);
-		HGPersistentHandle result = refMap.get(value);
+		HGPersistentHandle result = null;
+		if (! (type instanceof HGRefCountedType))
+		    result = refMap.get(value);
 		if (result == null)
 		{
 			result = type.store(value);
@@ -236,10 +237,6 @@ public final class TypeUtils
 		getThreadHandleRefMap(graph).put(result, value);
 		return result;
 	}
-	
-/*	public static void initiateAtomConstruction(HyperGraph graph, HGPersistentHandle h)
-	{
-	} */
 	
 	public static void setValueFor(HyperGraph graph, HGPersistentHandle h, Object value)
 	{
@@ -259,12 +256,6 @@ public final class TypeUtils
 		}
 		return result;
 	}
-	
-/*	public static void atomConstructionComplete(HyperGraph graph, HGPersistentHandle h)
-	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph);
-		refMap.clear();
-	} */
 	
 	public static List<HGHandle> subsumesClosure(HyperGraph graph, HGHandle baseType)
 	{

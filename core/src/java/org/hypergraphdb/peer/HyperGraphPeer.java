@@ -334,6 +334,8 @@ public class HyperGraphPeer
                        {
                            public void peerJoined(Object target)
                            {
+                               if (getIdentity(target) != null) // already known?
+                                   return;
                                AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
                                activityManager.initiateActivity(task);
                            }
