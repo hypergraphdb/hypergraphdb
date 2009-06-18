@@ -215,12 +215,15 @@ public final class TypeUtils
 		return getTransactionHandleSet(graph).contains(h);
 	}
 	
-	public static void releaseValue(HyperGraph graph, HGPersistentHandle h)
+	public static void releaseValue(HyperGraph graph, HGAtomType type, HGPersistentHandle h)
 	{
+	    // If this was previously added in the course of the current transaction,
+	    // remove it from the relevant maps.
 		Object instance =  getThreadHandleRefMap(graph).remove(h);
 		if (instance != null)
 			getTransactionObjectRefMap(graph).remove(instance);
-		getTransactionHandleSet(graph).add(h);
+		if (! (type instanceof HGRefCountedType))
+		    getTransactionHandleSet(graph).add(h);
 	}
 	
 	public static HGPersistentHandle storeValue(HyperGraph graph, Object value, HGAtomType type)

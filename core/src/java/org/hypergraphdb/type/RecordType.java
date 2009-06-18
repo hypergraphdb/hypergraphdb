@@ -276,7 +276,7 @@ public class RecordType implements HGCompositeType
             if (!layout[j].equals(HGHandleFactory.nullHandle()))
             	if (!TypeUtils.isValueReleased(graph, layout[j]))
             	{
-            		TypeUtils.releaseValue(graph, layout[j]);
+            		TypeUtils.releaseValue(graph, type, layout[j]);
             		type.release(layout[j]);
             	}
         }        

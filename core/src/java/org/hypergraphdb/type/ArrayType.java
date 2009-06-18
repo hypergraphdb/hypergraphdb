@@ -10,7 +10,6 @@ package org.hypergraphdb.type;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
@@ -144,11 +143,13 @@ public class ArrayType implements HGAtomType
 		{
 			HGPersistentHandle typeHandle = layout[i];
 			HGPersistentHandle valueHandle = layout[i + 1];
-			if (!TypeUtils.isValueReleased(hg, valueHandle)
-					&& !typeHandle.equals(HGHandleFactory.nullHandle()))
+			if (typeHandle.equals(HGHandleFactory.nullHandle()))
+			    continue;			
+			if (!TypeUtils.isValueReleased(hg, valueHandle))
 			{
-				TypeUtils.releaseValue(hg, valueHandle);
-				hg.getTypeSystem().getType(typeHandle).release(valueHandle);
+			    HGAtomType type = hg.get(typeHandle);
+				TypeUtils.releaseValue(hg, type, valueHandle);
+				type.release(valueHandle);
 			}
 		}
 		hg.getStore().removeLink(handle);

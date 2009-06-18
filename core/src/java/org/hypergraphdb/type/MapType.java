@@ -68,7 +68,8 @@ public class MapType implements HGAtomType
 		return result;
 	}
 
-	public HGPersistentHandle store(Object instance) 
+	@SuppressWarnings("unchecked")
+    public HGPersistentHandle store(Object instance) 
 	{
 		HGPersistentHandle result = TypeUtils.getNewHandleFor(hg, instance);
 		Map map = (Map)instance;
@@ -104,15 +105,17 @@ public class MapType implements HGAtomType
 			HGPersistentHandle hValue = layout[i++];
 			if (!TypeUtils.isValueReleased(hg, hValue))
 			{
-				TypeUtils.releaseValue(hg, hValue);
-				ts.getType(hType).release(hValue);
+			    HGAtomType type = ts.getType(hType); 
+				TypeUtils.releaseValue(hg, type, hValue);
+				type.release(hValue);
 			}
 			hType = layout[i++];
 			hValue = layout[i++];
 			if (!TypeUtils.isValueReleased(hg, hValue))
 			{
-				TypeUtils.releaseValue(hg, hValue);
-				ts.getType(hType).release(hValue);
+			    HGAtomType type = ts.getType(hType);
+				TypeUtils.releaseValue(hg, type, hValue);
+				type.release(hValue);
 			}
 		}
 		hg.getStore().removeLink(handle);
