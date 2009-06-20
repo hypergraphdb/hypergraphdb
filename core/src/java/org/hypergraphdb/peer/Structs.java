@@ -75,6 +75,8 @@ import org.hypergraphdb.util.Pair;
 @SuppressWarnings("unchecked")
 public class Structs
 {	
+	private static final String OBJECT_TOKEN = "hgdb-json-java-object";
+	
 	/**
 	 * <p>Return primitives, lists and maps <code>as-is</code>, transform collections
 	 * to lists and beans to structs (i.e. String->Value maps). Special case: 
@@ -184,14 +186,14 @@ public class Structs
 			{
 				String typeName = getNumberType(x.getClass());
 				if (typeName == null) return x;
-				else return list(getNumberType(x.getClass()), x);
+				else return list(OBJECT_TOKEN, getNumberType(x.getClass()), x);
 			}else return x;
 		}
 		else if (hgMappers.containsKey(x.getClass()))
 		{
 			//certain objects do not expose bean like interfaces but still need to be serialized.
 			Pair<StructsMapper, String> mapper = hgMappers.get(x.getClass());
-			return list(mapper.getSecond(), mapper.getFirst().getStruct(x));
+			return list(OBJECT_TOKEN, mapper.getSecond(), mapper.getFirst().getStruct(x));
 		}
 		else if (hgClassNames.containsKey(x.getClass()))
 		{
@@ -210,9 +212,9 @@ public class Structs
 					{
 						l.add(svalue(i, false, addClassName, null));
 					}
-					return list(getClassName(x.getClass()), l);
+					return list(OBJECT_TOKEN, getClassName(x.getClass()), l);
 				}
-				else return list(getClassName(x.getClass()), struct(x, true));	
+				else return list(OBJECT_TOKEN, getClassName(x.getClass()), struct(x, true));	
 			}
 		}
 		else if (x.getClass().isArray())
@@ -247,7 +249,7 @@ public class Structs
 		else
 		{
 			if (!addClassName) return struct(x, false);
-			else return list(getClassName(x.getClass()), struct(x, true));
+			else return list(OBJECT_TOKEN, getClassName(x.getClass()), struct(x, true));
 		}
 			
 	}
@@ -262,11 +264,14 @@ public class Structs
 	}
 	private static Number getNumber(List<?> list)
 	{
-		String typeName = list.get(0).toString();
+		String typeName = list.get(1).toString();
 		
-		if ("int".equals(typeName)) return ((Long)list.get(1)).intValue();
-		else if ("short".equals(typeName)) return ((Long)list.get(1)).shortValue();
-		else if ("byte".equals(typeName)) return ((Long)list.get(1)).byteValue();
+		if ("int".equals(typeName)) return ((Integer)list.get(2)).intValue();
+		else if ("short".equals(typeName)) return ((Short)list.get(2)).shortValue();
+		else if ("byte".equals(typeName)) return ((Byte)list.get(2)).byteValue();
+		else if ("long".equals(typeName)) return ((Long)list.get(2)).byteValue();
+		else if ("float".equals(typeName)) return ((Float)list.get(2)).byteValue();
+		else if ("double".equals(typeName)) return ((Double)list.get(2)).byteValue();
 		else return null;
 	}
 	private static Map<String, Object> struct(Object bean, boolean addClassName)
@@ -526,14 +531,14 @@ public class Structs
 		{
 			List<Object> data = (List<Object>)source;
 			
-			if ((data.size() == 2) && (data.get(0) instanceof String))
+			if ((data.size() == 3) && OBJECT_TOKEN.equals(data.get(0))) 
 			{
 				//could be an different object
-				String className = (String)data.get(0);
+				String className = (String)data.get(1);
 				
 				if (hgInvertedMappers.containsKey(className))
 				{
-					return hgInvertedMappers.get(className).getObject(data.get(1));
+					return hgInvertedMappers.get(className).getObject(data.get(2));
 				}
 				else 
 				{
@@ -580,25 +585,29 @@ public class Structs
 		{
 			result = clazz.newInstance();
 			//result might be a list or a bean ... 
-			if (data.get(1) instanceof Map)
+			if (data.get(2) instanceof Map)
 			{
 				//load bean properties
-				Map<String, Object> properties = (Map<String, Object>)data.get(1);
+				Map<String, Object> properties = (Map<String, Object>)data.get(2);
 				loadMapValues(result, properties);
-			}else{
+			}
+			else
+			{
 				//load the values
 				if (result instanceof List)
 				{
-					List<Object> values = (List<Object>)data.get(1);
+					List<Object> values = (List<Object>)data.get(2);
 					loadListValues((List<Object>)result, values);
 				}
 			}
 
-		} catch (InstantiationException e)
+		} 
+		catch (InstantiationException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IllegalAccessException e)
+		} 
+		catch (IllegalAccessException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

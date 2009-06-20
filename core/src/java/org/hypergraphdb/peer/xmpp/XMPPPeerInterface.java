@@ -429,7 +429,6 @@ public class XMPPPeerInterface implements PeerInterface
     private class BigMessageTransferListener implements FileTransferListener
     {
         @SuppressWarnings("unchecked")
-        @Override
         public void fileTransferRequest(FileTransferRequest request)
         {
             if (thisPeer.getIdentity(request.getRequestor()) != null)
