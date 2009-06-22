@@ -161,7 +161,8 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
         public static ArityCondition arity(int i) { return new ArityCondition(i); }
-       
+        public static DisconnectedPredicate disconnected() { return new DisconnectedPredicate(); }
+        
         public static AtomValueCondition value(Object value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
         public static AtomValueCondition eq(Object x) { return value(x, ComparisonOperator.EQ); }
         public static AtomValueCondition lt(Object x) { return value(x, ComparisonOperator.GT); }        

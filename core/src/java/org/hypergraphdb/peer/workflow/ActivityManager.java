@@ -229,30 +229,35 @@ public class ActivityManager implements MessageHandler
                     }
                     else
                     {
-                        System.out.println("Running transition " + transition + " on msg " + msg);
+//                        System.out.println("Running transition " + transition + " on msg " + msg);
                         Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
                         WorkflowStateConstant result = transition.apply(activity, msg);
-                        System.out.println("Transition finished with " + result);
+//                        System.out.println("Transition finished with " + result);
                         if (result != null)
                             activity.getState().assign(result);
-                    }
-                    
-                    // Reschedule only if no exception was propagated up to here.                    
+                    }                                        
+                }
+                catch (Throwable t)
+                {                    
+                    handleActivityException(activity, t, msg);                    
+                }
+                finally
+                {
+                    // Reschedule root only if it hasn't failed - in particular when
+                    // a sub-activity fails with an exception in the above, the root
+                    // will be rescheduled.
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
                     Activity rootActivity = findRootActivity(activity);
                     try
                     {
-                        globalQueue.put(rootActivity);
+                        if (!rootActivity.getState().isFinished())
+                            globalQueue.put(rootActivity);
                     }
                     catch (InterruptedException ex)
                     {
                         // nothing really we can do about this
                         handleActivityException(rootActivity, ex, null);
                     }                    
-                }
-                catch (Throwable t)
-                {
-                    handleActivityException(activity, t, msg);
                 }
             }
          };  
@@ -266,24 +271,29 @@ public class ActivityManager implements MessageHandler
             {
                 try 
                 {
-                    activity.handleMessage(msg);
-                    
-                    // Reschedule only if no exception was propagated up to here. 
+                    activity.handleMessage(msg);                   
+                }
+                catch (Throwable t)
+                {
+                    handleActivityException(activity, t, msg);
+                }
+                finally
+                {
+                    // Reschedule root only if it hasn't failed - in particular when
+                    // a sub-activity fails with an exception in the above, the root
+                    // will be rescheduled.
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
                     Activity rootActivity = findRootActivity(activity);
                     try
                     {
-                        globalQueue.put(rootActivity);
+                        if (!rootActivity.getState().isFinished())
+                            globalQueue.put(rootActivity);
                     }
                     catch (InterruptedException ex)
                     {
                         // nothing really we can do about this
                         handleActivityException(rootActivity, ex, null);
-                    }                    
-                }
-                catch (Throwable t)
-                {
-                    handleActivityException(activity, t, msg);
+                    }                     
                 }
             }
          };  
@@ -348,7 +358,12 @@ public class ActivityManager implements MessageHandler
     
     public void start()
     {
-        schedulerThread = new ActivitySchedulingThread();        
+        schedulerThread = new ActivitySchedulingThread();
+        // TODO - is this the right thing to do, using the class loader defined in the
+        // HyperGraph instance? Classes are loaded either by the type systems within
+        // the core of HGDB, or in the P2P Structs classes that does serialization/deserialization
+        // of beans.
+        schedulerThread.setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
         schedulerThread.start();
     }
 
@@ -527,10 +542,10 @@ public class ActivityManager implements MessageHandler
         activity.getState().addListener(new StateListener() {
             public void stateChanged(WorkflowState state)
             {
-                System.out.println("Activity state change " + activity + " to " + state.toString());
+//                System.out.println("Activity state change " + activity + " to " + state.toString());
                 if (state.isFinished())
                 {
-                    System.out.println("Activity " + activity + " is finished.");
+//                    System.out.println("Activity " + activity + " is finished.");
                     completionLatch.countDown();
                     if (listener != null)
                         try { listener.activityFinished(future.get()); }
@@ -580,7 +595,7 @@ public class ActivityManager implements MessageHandler
     
     public void handleMessage(final Message msg)
     {        
-        System.out.println("Received message " + msg);
+//        System.out.println("Received message " + msg);
         UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
         if (activityId == null)
         {
@@ -617,7 +632,7 @@ public class ActivityManager implements MessageHandler
             } 
             activity = type.getFactory().make(thisPeer, activityId, msg);
             insertNewActivity(activity, parentActivity, null);
-            System.out.println("inserted new activity in queue ");
+//            System.out.println("inserted new activity in queue ");
             activity.getState().compareAndAssign(Limbo, Started);            
         }
         else
@@ -628,7 +643,7 @@ public class ActivityManager implements MessageHandler
                 activity.queue.put(makeTransitionAction(type, (FSMActivity)activity, msg));
             else
                 activity.queue.put(makeMessageHandleAction(activity, msg));
-            System.out.println("Added transition action to " + activity + " on msg  "+ msg);
+//            System.out.println("Added transition action to " + activity + " on msg  "+ msg);
         }
         catch (InterruptedException ex)
         {

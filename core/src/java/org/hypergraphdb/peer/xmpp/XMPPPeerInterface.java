@@ -285,6 +285,7 @@ public class XMPPPeerInterface implements PeerInterface
                         byte [] data = out.toByteArray();
                         if (data.length > 100*1024) // anything above 100k is send as a file!
                         {
+//                            System.out.println("Sending " + data.length + " byte of data as a file.");
                             OutgoingFileTransfer outFile = 
                                 fileTransfer.createOutgoingFileTransfer((String)getTarget());
                             outFile.sendStream(new ByteArrayInputStream(data), 
@@ -439,8 +440,19 @@ public class XMPPPeerInterface implements PeerInterface
                 java.io.InputStream in = null;
                 thisPeer.getGraph().getTransactionManager().beginTransaction();
                 try
-                {                        
+                {
                     in = inFile.recieveFile();
+                    // TODO - sometime in the presence of a firewall (happened in VISTA)
+                    // the file is silently truncated. Here we can read the whole thing
+                    // into a byte[] and compare the size to inFile.getFileSize() to
+                    // make sure that we got everything. If the file is truncated, the 
+                    // parsing of the message will fail for no apparent reason.
+                    if (inFile.getFileSize() > Integer.MAX_VALUE)
+                        throw new Exception("Message from " + request.getRequestor() + 
+                                            " to long with " + inFile.getFileSize() + " bytes.");
+                    byte [] B = new byte[(int)inFile.getFileSize()];
+                    for (int count = 0; count < inFile.getFileSize(); )
+                        count += in.read(B, count, (int)inFile.getFileSize() - count);
                     M = new org.hypergraphdb.peer.Message((Map<String, Object>)
                                   new Protocol().readMessage(in));                        
                 }
@@ -466,6 +478,6 @@ public class XMPPPeerInterface implements PeerInterface
     {
         // Force going through the XMPP server for every file transfer. This is rather
         // slowish, but otherwise it breaks especially for peers behind firewalls/NATs.
-        FileTransferNegotiator.IBB_ONLY = true;        
+//        FileTransferNegotiator.IBB_ONLY = true;        
     }
 }

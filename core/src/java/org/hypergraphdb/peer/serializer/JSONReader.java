@@ -44,6 +44,9 @@ public class JSONReader
 
     private char next() 
     {
+        if (it.getIndex() == it.getEndIndex())
+            throw new RuntimeException("Reached end of input at the " + 
+                                       it.getIndex() + "th character.");
         c = it.next();
         return c;
     }
@@ -238,25 +241,33 @@ public class JSONReader
         return ret;
     }
 
-    private Object string() {
+    private Object string() 
+    {
         buf.setLength(0);
-        while (c != '"') {
-            if (c == '\\') {
+        while (c != '"') 
+        {
+            if (c == '\\') 
+            {
                 next();
-                if (c == 'u') {
+                if (c == 'u') 
+                {
                     add(unicode());
-                } else {
+                } 
+                else 
+                {
                     Object value = escapes.get(new Character(c));
-                    if (value != null) {
+                    if (value != null) 
+                    {
                         add(((Character) value).charValue());
                     }
                 }
-            } else {
+            } 
+            else 
+            {
                 add();
             }
         }
         next();
-
         return buf.toString();
     }
 
