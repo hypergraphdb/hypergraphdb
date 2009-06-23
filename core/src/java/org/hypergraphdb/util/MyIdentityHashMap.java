@@ -384,7 +384,7 @@ void resize(int newCapacity) {
 /** 
  * Transfer all entries from current table to newTable.
  */
-void transfer(Entry[] newTable) {
+void transfer(Entry<K,V>[] newTable) {
     Entry[] src = table;
     int newCapacity = newTable.length;
     for (int j = 0; j < src.length; j++) {
