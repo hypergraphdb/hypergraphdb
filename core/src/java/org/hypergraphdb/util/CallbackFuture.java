@@ -46,6 +46,10 @@ public class CallbackFuture<T> implements Future<T>
 	private Mapping<CallbackFuture<T>, T> listener;
 	protected volatile boolean canceled = false;
 	
+	public CallbackFuture()
+	{
+		latch = new CountDownLatch(1);
+	}	
 	public synchronized void setCompletionListener(Mapping<CallbackFuture<T>, T> listener)
 	{
 		this.listener = listener;
