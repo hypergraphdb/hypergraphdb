@@ -31,8 +31,7 @@ public class PersistentHandlerSerializer implements HGSerializer
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-	
+		}	
 	}
 
 	public static HGPersistentHandle deserializePersistentHandle(InputStream in)

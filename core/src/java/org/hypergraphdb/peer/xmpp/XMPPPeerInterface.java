@@ -5,7 +5,6 @@ import static org.hypergraphdb.peer.Structs.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -454,7 +453,7 @@ public class XMPPPeerInterface implements PeerInterface
                     for (int count = 0; count < inFile.getFileSize(); )
                         count += in.read(B, count, (int)inFile.getFileSize() - count);
                     M = new org.hypergraphdb.peer.Message((Map<String, Object>)
-                                  new Protocol().readMessage(in));                        
+                                  new Protocol().readMessage(new ByteArrayInputStream(B)));                        
                 }
                 catch (Throwable t)
                 {

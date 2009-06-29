@@ -47,7 +47,6 @@ public class ObjectSerializer
 			{
 				serializer.writeData(out, value.get());
 			}
-
 		}
 
 		//serializer.writeData(out, data);
