@@ -238,6 +238,76 @@ public class SubgraphManager
                       "type-classes", types);         
     }
     
+    private static void translateBatch(HyperGraph graph, 
+                                       Set<HGPersistentHandle> batch, 
+                                       RAMStorageGraph subgraph,
+                                       Map<HGPersistentHandle, Object> objects,
+                                       Mapping<Object, HGPersistentHandle> atomFinder,
+                                       Map<HGPersistentHandle, HGPersistentHandle> substitutes)
+    {
+        for (HGPersistentHandle atom : batch)
+        {
+            HGPersistentHandle [] layout = subgraph.getLink(atom);                
+            Object object = null;
+            graph.getStore().attachOverlayGraph(subgraph);
+            try
+            {    
+                HGHandle [] targetSet = new HGHandle[layout.length-2];
+                System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                                                             
+                HGAtomType type = graph.get(layout[0]);                    
+                object = type.make(layout[1], 
+                                   new ReadyRef<HGHandle[]>(targetSet), 
+                                   null);                
+            }
+            finally
+            {
+                graph.getStore().detachOverlayGraph();
+            }            
+            HGPersistentHandle existing = atomFinder == null ? null : atomFinder.eval(object);
+            if (existing != null)
+                substitutes.put(atom, existing);
+            else 
+                objects.put(atom, object);                    
+        }        
+    }
+    private static Set<HGPersistentHandle> translateAtoms(final HyperGraph graph, 
+                                                          final RAMStorageGraph subgraph,
+                                                          final Map<HGPersistentHandle, Object> objects,
+                                                          final Mapping<Object, HGPersistentHandle> atomFinder)
+    {
+        final Map<HGPersistentHandle, HGPersistentHandle> substitutes = 
+            new HashMap<HGPersistentHandle, HGPersistentHandle>();
+        final Set<HGPersistentHandle> batch = new HashSet<HGPersistentHandle>();
+        for (HGPersistentHandle theRoot : subgraph.getRoots())
+        {
+            batch.add(theRoot);            
+            if (batch.size() < 200)
+            {
+                continue;
+            }
+            else 
+            {
+                graph.getTransactionManager().transact(new Callable<Object>() {
+                public Object call()
+                {
+                   translateBatch(graph, batch, subgraph, objects, atomFinder, substitutes);
+                   batch.clear();
+                   return null; 
+                }
+                });
+            }
+        }
+        graph.getTransactionManager().transact(new Callable<Object>() {
+            public Object call()
+            {
+                translateBatch(graph, batch, subgraph, objects, atomFinder, substitutes);
+                return null; 
+            }
+            });        
+        subgraph.translateHandles(substitutes);
+        return substitutes.keySet();
+    }
+
     /**
      * IMPORTANT: Assumes atom does not exist locally! Writes directly to storage and updates relevant indexes
      * based on that assumptions. 
@@ -247,9 +317,35 @@ public class SubgraphManager
      * @return
      * @throws ClassNotFoundException
      */
-    public static Set<HGHandle> writeTransferedGraph(final Object atom, final HyperGraph graph)
+    public static Set<HGHandle> writeTransferedGraph(final Object atom, 
+                                                     final HyperGraph graph)
         throws ClassNotFoundException
     {
+        return writeTransferedGraph(atom, graph, null);
+    }
+    
+    /**
+     * @param atom A Structs representation of a transfered graph.
+     * @param graph The HyperGraph instance to be written to.
+     * @param atomFinder Return handles of existing atoms so that they are not stored
+     * again or under a different handle. This parameter can be null in which
+     * case existing atoms (with the same handle) are overwritten and equivalents
+     * (same "information import", but different handle) are ignored.
+     * 
+     * @return The set of atoms that where stored.
+     * @throws ClassNotFoundException
+     */
+    public static Set<HGHandle> writeTransferedGraph(final Object atom, 
+                                                     final HyperGraph graph,
+                                                     final Mapping<Object, HGPersistentHandle> atomFinder)
+        throws ClassNotFoundException
+    {
+        // TODO - here we assume that the types don't differ, but obviously they can
+        // and will in many cases. So this is a major "TDB".        
+        // If something goes wrong during storing the graph and reading back
+        // an atom, the following will just throw an exception and the framework
+        // will reply with failure.
+        
         final RAMStorageGraph subgraph = getPart(atom, "storage-graph");        
         final Map<String, String>  typeClasses = getPart(atom, "type-classes");
         final Map<HGPersistentHandle, HGPersistentHandle> substituteTypes = 
@@ -274,96 +370,61 @@ public class SubgraphManager
                     substituteTypes.put(typeHandle, graph.getPersistentHandle(localType));
             }
         }      
-        subgraph.translateHandles(substituteTypes);
-        // TODO - here we assume that the types don't differ, but obviously they can
-        // and will in many cases. So this is a major "TDB".        
-        // If something goes wrong during storing the graph and reading back
-        // an atom, the following will just throw an exception and the framework
-        // will reply with failure.
-        return graph.getTransactionManager().transact(new Callable<Set<HGHandle>>()
+        subgraph.translateHandles(substituteTypes);        
+         
+        Map<HGPersistentHandle, Object> objects = new HashMap<HGPersistentHandle, Object>();
+        Set<HGPersistentHandle> ignoreAtoms =  translateAtoms(graph, subgraph, objects, atomFinder);
+                       
+        return storeObjectsTransaction(graph, subgraph, objects, ignoreAtoms);        
+    }
+    
+    private static Set<HGHandle> storeObjectsTransaction(final HyperGraph graph,
+                                                         final RAMStorageGraph subgraph,
+                                                         final Map<HGPersistentHandle, Object> objects,
+                                                         final Set<HGPersistentHandle> ignoreAtoms)
+    {
+        Set<HGHandle> result = new HashSet<HGHandle>();
+        final Set<HGPersistentHandle> batch = new HashSet<HGPersistentHandle>();
+        for (HGPersistentHandle theRoot : subgraph.getRoots())
         {
-            public Set<HGHandle> call()
+            if (ignoreAtoms.contains(theRoot))
+                continue;
+            else
+                batch.add(theRoot);
+            if (batch.size() == 200)
             {
-                Set<HGHandle> result = new HashSet<HGHandle>();
-                for (HGPersistentHandle theRoot : subgraph.getRoots())
+                graph.getTransactionManager().transact(new Callable<Object>() {
+                public Object call()
                 {
-                    HGPersistentHandle [] layout = subgraph.getLink(theRoot);                
-                    Object object = null;
-                    graph.getStore().attachOverlayGraph(subgraph);
-                    try
-                    {    
-                        HGHandle [] targetSet = new HGHandle[layout.length-2];
-                        System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                                                             
-                        HGAtomType type = graph.get(layout[0]);                    
-                        object = type.make(layout[1], 
-                                           new ReadyRef<HGHandle[]>(targetSet), 
-                                           null);
-                    }
-                    finally
+                    for (HGPersistentHandle atom : batch)
                     {
-                        graph.getStore().detachOverlayGraph();
+                        HGPersistentHandle [] layout = subgraph.getLink(atom);
+                        graph.define(atom, 
+                                     layout[0],                                 
+                                     objects.get(atom),
+                                     (byte)0);
                     }
-                    HGHandle typeHandle = substituteTypes.get(layout[0]);
-                    if (typeHandle == null)
-                        typeHandle = layout[0];
-                    graph.define(theRoot, 
-                                 layout[0],                                 
-                                 object,
-                                 (byte)0);
-                    result.add(theRoot);
-                }
-                return result;
-                
-                
-/*                store(subgraph, graph.getStore(), substituteTypes);
-                
-                //
-                // Update indexes:
-                //
-                HGIndex<HGPersistentHandle, HGPersistentHandle> indexByType = 
-                                      graph.getStore().getIndex(HyperGraph.TYPES_INDEX_NAME, 
-                                                                BAtoHandle.getInstance(), 
-                                                                BAtoHandle.getInstance(), 
-                                                                null);
-                
-                HGIndex<HGPersistentHandle, HGPersistentHandle> indexByValue = 
-                    graph.getStore().getIndex(HyperGraph.VALUES_INDEX_NAME, 
-                                              BAtoHandle.getInstance(), 
-                                              BAtoHandle.getInstance(), 
-                                              null);
-                HGPersistentHandle [] layout = subgraph.getLink(subgraph.getRoot());
-                HGPersistentHandle [] targetSet = new HGPersistentHandle[layout.length-2];
-                System.arraycopy(layout, 2, targetSet, 0, layout.length-2);                
-                indexByType.addEntry(layout[0], subgraph.getRoot());
-                indexByValue.addEntry(layout[1], subgraph.getRoot());
-                HGAtomType type = graph.get(layout[0]);
-                //
-                // We don't know the incidence set here, is that a problem?
-                // When we are transferring larger graphs with many atoms inter-linked
-                // we should make the incidences sets available. In any case, at the
-                // time of this "code" writing, no types actually make use of the incidence
-                // sets to create the atom values.
-                Object object = type.make(layout[1], 
-                                          new ReadyRef<HGHandle[]>(targetSet), 
-                                          null);                
-                graph.getIndexManager().maybeIndex(layout[0], 
-                                                   type, 
-                                                   subgraph.getRoot(), 
-                                                   object);      
-                                                    
-                // TODO: read back the atom and refresh in cache if already cached!
-                System.out.println("Stored object " +  object + " with handle " + subgraph.getRoot());
-                // Add to incidence sets 
-                for (HGPersistentHandle target : targetSet)
-                {
-                    System.out.println("Adding to incidence set of target " + target);
-                    graph.getStore().addIncidenceLink(target, subgraph.getRoot());
-                    IncidenceSet targetIncidenceSet = graph.getCache().getIncidenceCache().getIfLoaded(target);
-                    if (targetIncidenceSet != null)
-                        targetIncidenceSet.add(subgraph.getRoot());                    
-                } */
+                    return null;                
+                }});
+                result.addAll(batch);
+                batch.clear();
             }
-        });        
+        }
+        graph.getTransactionManager().transact(new Callable<Object>() {
+            public Object call()
+            {
+                for (HGPersistentHandle atom : batch)
+                {
+                    HGPersistentHandle [] layout = subgraph.getLink(atom);                        
+                    graph.define(atom, 
+                                 layout[0],                                 
+                                 objects.get(atom),
+                                 (byte)0);
+                }
+                return null;                
+            }});
+        result.addAll(batch);        
+        return result;
     }
     
     /**

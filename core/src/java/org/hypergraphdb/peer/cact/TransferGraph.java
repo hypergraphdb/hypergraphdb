@@ -10,6 +10,7 @@ import static org.hypergraphdb.peer.Structs.struct;
 
 import java.util.UUID;
 
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
@@ -24,6 +25,7 @@ import org.hypergraphdb.peer.workflow.OnMessage;
 import org.hypergraphdb.peer.workflow.PossibleOutcome;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
+import org.hypergraphdb.util.Mapping;
 
 public class TransferGraph extends FSMActivity
 {
@@ -31,6 +33,7 @@ public class TransferGraph extends FSMActivity
     
     private HGPeerIdentity target;
     private HGTraversal traversal;
+    private Mapping<Object, HGPersistentHandle> atomFinder = null;
     
     public TransferGraph(HyperGraphPeer thisPeer, UUID id)
     {
@@ -44,6 +47,15 @@ public class TransferGraph extends FSMActivity
         super(thisPeer);
         this.traversal = traversal;
         this.target = target;
+    }
+    
+    public TransferGraph(HyperGraphPeer thisPeer, 
+                         HGTraversal traversal, 
+                         HGPeerIdentity target,
+                         Mapping<Object, HGPersistentHandle> atomFinder)
+    {
+        this(thisPeer, traversal, target);
+        this.atomFinder = atomFinder;
     }
     
     @Override
@@ -73,7 +85,9 @@ public class TransferGraph extends FSMActivity
     @PossibleOutcome("Completed")        
     public WorkflowStateConstant onInformRef(Message msg) throws ClassNotFoundException
     {
-        SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), getThisPeer().getGraph());
+        SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), 
+                                             getThisPeer().getGraph(),
+                                             atomFinder);
         return WorkflowState.Completed;
     }
     
