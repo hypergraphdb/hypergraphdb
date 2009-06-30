@@ -169,6 +169,7 @@ public class ActivityManager implements MessageHandler
         return new Runnable() {
             public void run()
             {
+                Activity rootActivity = findRootActivity(parentActivity);                
                 try 
                 {
                     Transition transition = 
@@ -177,7 +178,7 @@ public class ActivityManager implements MessageHandler
                                                               activity.getState().getConst());
                     
                     if (transition == null)
-                        return;
+                        return;                    
                     WorkflowStateConstant result = transition.apply(parentActivity, activity);
                     if (result != null) // is there a state change?
                         parentActivity.getState().assign(result);
@@ -188,8 +189,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
-                    parentActivity.lastActionTimestamp = System.currentTimeMillis();
-                    Activity rootActivity = findRootActivity(parentActivity);
+                    parentActivity.lastActionTimestamp = System.currentTimeMillis();                    
                     try
                     {
                         globalQueue.put(rootActivity);
@@ -212,6 +212,7 @@ public class ActivityManager implements MessageHandler
         return new Runnable() {
             public void run()
             {
+                Activity rootActivity = findRootActivity(activity);                
                 try 
                 {
                     Transition transition = 
@@ -247,7 +248,6 @@ public class ActivityManager implements MessageHandler
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
-                    Activity rootActivity = findRootActivity(activity);
                     try
                     {
                         if (!rootActivity.getState().isFinished())
@@ -269,6 +269,7 @@ public class ActivityManager implements MessageHandler
         return new Runnable() {
             public void run()
             {
+                Activity rootActivity = findRootActivity(activity);                
                 try 
                 {
                     activity.handleMessage(msg);                   
@@ -283,7 +284,6 @@ public class ActivityManager implements MessageHandler
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
                     activity.lastActionTimestamp = System.currentTimeMillis();                    
-                    Activity rootActivity = findRootActivity(activity);
                     try
                     {
                         if (!rootActivity.getState().isFinished())
@@ -517,14 +517,6 @@ public class ActivityManager implements MessageHandler
                                                    final Activity parentActivity,
                                                    final ActivityListener listener)
     {
-        synchronized (activities)
-        {
-            if (activities.containsKey(activity.getId()))
-                throw new RuntimeException("Activity " + activity + 
-                                           " with ID " + activity.getId() + " has already been initiated.");
-
-            activities.put(activity.getId(), activity);
-        }
         ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
         activity.getState().compareAndAssign(Limbo, Started);        
         activity.initiate();                       
@@ -535,9 +527,16 @@ public class ActivityManager implements MessageHandler
                                              final Activity parentActivity,
                                              final ActivityListener listener)
     {
+        synchronized (activities)
+        {
+            if (activities.containsKey(activity.getId()))
+                throw new RuntimeException("Activity " + activity + 
+                                           " with ID " + activity.getId() + " has already been initiated.");
+
+            activities.put(activity.getId(), activity);
+        }
         final CountDownLatch completionLatch = new CountDownLatch(1);
-        final ActivityFuture future = new ActivityFuture(activity, completionLatch);
-        activities.put(activity.getId(), activity);
+        final ActivityFuture future = new ActivityFuture(activity, completionLatch);        
         activity.future = future;        
         activity.getState().addListener(new StateListener() {
             public void stateChanged(WorkflowState state)
@@ -564,6 +563,7 @@ public class ActivityManager implements MessageHandler
                     // is being executed.
                     globalQueue.remove(activity);
                     activities.remove(activity.getId());
+                    parents.remove(activity);
                 }
             }
         });
@@ -572,16 +572,16 @@ public class ActivityManager implements MessageHandler
             // Serialize actions of all children within parent action queue so that states
             // changes are serialized and handled in order.
             activity.queue = parentActivity.queue; 
+            parents.put(activity, parentActivity);
             activity.getState().addListener(new StateListener() { 
                 public void stateChanged(WorkflowState state)
                 {
-                    ActivityType pt = activityTypes.get(parentActivity.getType());
+                    ActivityType pt = activityTypes.get(parentActivity.getType()); 
                     parentActivity.queue.add(makeTransitionAction(pt, parentActivity, activity));
-                }            
+                }
             });
         }
-        else
-        try
+        else try
         {
             globalQueue.put(activity);
         }
