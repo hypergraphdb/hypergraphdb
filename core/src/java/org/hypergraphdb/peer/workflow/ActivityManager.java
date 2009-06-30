@@ -142,7 +142,8 @@ public class ActivityManager implements MessageHandler
     private Activity findRootActivity(Activity a)
     {
         Activity root = a; 
-        for (Activity tmp = parents.get(root); tmp != null; root = tmp);
+        for (Activity tmp = parents.get(root); tmp != null; tmp = parents.get(root))
+            root = tmp;
         return root;
     }
     
