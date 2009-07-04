@@ -14,6 +14,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
+import org.hypergraphdb.algorithms.HyperTraversal;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
@@ -72,7 +73,17 @@ public class TransferGraph extends FSMActivity
     public WorkflowStateConstant onQueryRef(Message msg) throws Throwable
     {
         traversal = getPart(msg, CONTENT); 
-        ((DefaultALGenerator)((CopyGraphTraversal)traversal).getAdjListGenerator()).setGraph(getThisPeer().getGraph());
+        CopyGraphTraversal copyTraversal = null;
+        if (traversal instanceof CopyGraphTraversal)
+            copyTraversal = (CopyGraphTraversal)traversal;
+        else if (traversal instanceof HyperTraversal)
+        {
+            ((HyperTraversal)traversal).setHyperGraph(getThisPeer().getGraph());
+            copyTraversal = (CopyGraphTraversal)((HyperTraversal)traversal).getFlatTraversal();
+        }
+        else
+            throw new Exception("Expecting a CopyGraphTraversal or a HyperTraversal.");
+        ((DefaultALGenerator)copyTraversal.getAdjListGenerator()).setGraph(getThisPeer().getGraph());
         Message reply = getReply(msg, Performative.InformRef);
         Object subgraph = SubgraphManager.getTransferGraphRepresentation(getThisPeer().getGraph(), traversal);
         combine(reply, struct(CONTENT, subgraph));

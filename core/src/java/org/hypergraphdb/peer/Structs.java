@@ -23,6 +23,7 @@ import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
+import org.hypergraphdb.algorithms.HyperTraversal;
 import org.hypergraphdb.algorithms.SimpleALGenerator;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
@@ -362,7 +363,11 @@ public class Structs
 		
         addMapper(CopyGraphTraversal.class, 
                   new BeanMapper(new String [] {"startAtom", "adjListGenerator"}), 
-                  "copy-graph-traversal");     		
+                  "copy-graph-traversal");
+        
+        addMapper(HyperTraversal.class, 
+                  new BeanMapper(new String [] {"flatTraversal", "linkPredicate"}), 
+                  "hyper-traversal");                  
 	}
 	
 	public static String getClassName(Class<?> clazz)

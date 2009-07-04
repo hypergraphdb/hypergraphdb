@@ -9,10 +9,10 @@ import org.hypergraphdb.HGRandomAccessResult;
  * <p>
  * A variation of the standard <code>SortedSet</code> interface that offers a
  * <code>HGRandomAccessResult</code> of its elements in addition to an 
- * <code>Iterator</code>. Also, implementations of this interface are guarantueed
+ * <code>Iterator</code>. Also, implementations of this interface are guaranteed
  * to be thread-safe. This guarantee has a little twist: if you call <code>iterator</code>,
  * the <code>Iterator</code> returned is not going to be thread-safe and concurrency issues
- * may arise if the set if being modified while the iterator is still in use. However,
+ * may arise if the set is being modified while the iterator is still in use. However,
  * if you call <code>getSearchResult</code> (note that <code>HGRandomAccessResult</code>
  * extends the <code>Iterator</code> interface), the resulting object will hold
  * a read lock on the set until its <code>close</code> is invoked. This means that any

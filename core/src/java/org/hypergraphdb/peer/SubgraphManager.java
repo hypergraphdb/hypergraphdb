@@ -19,6 +19,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
@@ -26,6 +27,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
+import org.hypergraphdb.algorithms.HyperTraversal;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.RAMStorageGraph;
@@ -218,9 +220,16 @@ public class SubgraphManager
                                                         HGTraversal traversal)
     {
         Set<HGPersistentHandle> roots = new HashSet<HGPersistentHandle>();
-        roots.add(graph.getPersistentHandle(((CopyGraphTraversal)traversal).getStartAtom()));
+        CopyGraphTraversal copyTraversal = null;
+        if (traversal instanceof CopyGraphTraversal)
+            copyTraversal = (CopyGraphTraversal)traversal;
+        else if (traversal instanceof HyperTraversal)
+            copyTraversal = (CopyGraphTraversal)((HyperTraversal)traversal).getFlatTraversal();
+        else
+            throw new RuntimeException("Expecting a CopyGraphTraversal or a HyperTraversal.");        
+        roots.add(graph.getPersistentHandle(copyTraversal.getStartAtom()));
         while (traversal.hasNext())
-        {
+        {            
             Pair<HGHandle, HGHandle> link = traversal.next();
             roots.add(graph.getPersistentHandle(link.getFirst()));
             roots.add(graph.getPersistentHandle(link.getSecond()));
@@ -399,9 +408,13 @@ public class SubgraphManager
                     for (HGPersistentHandle atom : batch)
                     {
                         HGPersistentHandle [] layout = subgraph.getLink(atom);
+                        Object x = objects.get(atom);
+                        if (layout.length > 2) // it's a link, need to port local handle translation to the object
+                            for (int i = 2; i < layout.length; i++)
+                                ((HGLink)x).notifyTargetHandleUpdate(i-2, layout[i]);
                         graph.define(atom, 
                                      layout[0],                                 
-                                     objects.get(atom),
+                                     x,
                                      (byte)0);
                     }
                     return null;                
@@ -415,10 +428,14 @@ public class SubgraphManager
             {
                 for (HGPersistentHandle atom : batch)
                 {
-                    HGPersistentHandle [] layout = subgraph.getLink(atom);                        
+                    HGPersistentHandle [] layout = subgraph.getLink(atom);
+                    Object x = objects.get(atom);
+                    if (layout.length > 2) // it's a link, need to port local handle translation to the object
+                        for (int i = 2; i < layout.length; i++)
+                            ((HGLink)x).notifyTargetHandleUpdate(i-2, layout[i]);                    
                     graph.define(atom, 
                                  layout[0],                                 
-                                 objects.get(atom),
+                                 x,
                                  (byte)0);
                 }
                 return null;                
