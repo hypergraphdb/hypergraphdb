@@ -187,7 +187,7 @@ public class Structs
 			{
 				String typeName = getNumberType(x.getClass());
 				if (typeName == null) return x;
-				else return list(OBJECT_TOKEN, getNumberType(x.getClass()), x);
+				else return list(OBJECT_TOKEN, typeName, x);
 			}else return x;
 		}
 		else if (hgMappers.containsKey(x.getClass()))
@@ -260,19 +260,24 @@ public class Structs
 		if (numberClass.equals(int.class) || numberClass.equals(Integer.class)) return "int";
 		else if (numberClass.equals(short.class) || numberClass.equals(Short.class)) return "short";
 		else if (numberClass.equals(byte.class) || numberClass.equals(Byte.class)) return "byte";
-
+		else if (numberClass.equals(long.class) || numberClass.equals(Long.class)) return "long";
+		else if (numberClass.equals(float.class) || numberClass.equals(Float.class)) return "float";
+		else if (numberClass.equals(double.class) || numberClass.equals(Double.class)) return "double";
 		return null;
 	}
 	private static Number getNumber(List<?> list)
 	{
-		String typeName = list.get(1).toString();
+		if (list.size() < 3 || ! (list.get(2) instanceof Number))
+			return null;
 		
-		if ("int".equals(typeName)) return ((Integer)list.get(2)).intValue();
-		else if ("short".equals(typeName)) return ((Short)list.get(2)).shortValue();
-		else if ("byte".equals(typeName)) return ((Byte)list.get(2)).byteValue();
-		else if ("long".equals(typeName)) return ((Long)list.get(2)).byteValue();
-		else if ("float".equals(typeName)) return ((Float)list.get(2)).byteValue();
-		else if ("double".equals(typeName)) return ((Double)list.get(2)).byteValue();
+		String typeName = list.get(1).toString();		
+		Number n = (Number)list.get(2);		
+		if ("int".equals(typeName)) return n.intValue();
+		else if ("short".equals(typeName)) return n.shortValue();
+		else if ("byte".equals(typeName)) return n.byteValue();
+		else if ("long".equals(typeName)) return n.longValue();
+		else if ("float".equals(typeName)) return n.floatValue();
+		else if ("double".equals(typeName)) return n.doubleValue();
 		else return null;
 	}
 	private static Map<String, Object> struct(Object bean, boolean addClassName)

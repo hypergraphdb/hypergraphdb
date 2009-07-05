@@ -512,14 +512,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	
 	public HGSearchResult<HGHandle> generate(HGHandle h) 
 	{		
-		if (hg.isIncidenceSetLoaded(h))
-			return new AdjIterator(h, 
-								   hg.getIncidenceSet(h).iterator(), 
-								   false);			
-		else
-			return new AdjIterator(h, 
-								   hg.getIncidenceSet(h).getSearchResult(), 
-								   true);
+		return new AdjIterator(h, 
+							   hg.getIncidenceSet(h).getSearchResult(), 
+							   true);
 	}
 	
 	public void close()

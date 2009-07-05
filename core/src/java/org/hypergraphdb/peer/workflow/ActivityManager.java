@@ -596,7 +596,7 @@ public class ActivityManager implements MessageHandler
     
     public void handleMessage(final Message msg)
     {        
-//        System.out.println("Received message " + msg);
+        System.out.println("Received message " + msg);
         UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
         if (activityId == null)
         {

@@ -45,19 +45,25 @@ public class CopyGraphTraversal implements HGTraversal
             return;
         
         HGSearchResult<HGHandle> i = adjListGenerator.generate(from);
-        Integer dd = distance + 1;
-        while (i.hasNext())
+        try
         {
-            HGHandle link = adjListGenerator.getCurrentLink();
-            HGHandle h = i.next();
-            Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);            
-            if (!examined.containsKey(p))
-            {                
-                to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
-                examined.put(p, Boolean.FALSE);
-            }
+	        Integer dd = distance + 1;
+	        while (i.hasNext())
+	        {
+	            HGHandle link = adjListGenerator.getCurrentLink();
+	            HGHandle h = i.next();
+	            Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);            
+	            if (!examined.containsKey(p))
+	            {                
+	                to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
+	                examined.put(p, Boolean.FALSE);
+	            }
+	        }
         }
-        i.close();
+        finally
+        {
+        	i.close();
+        }
     }
     
     public void setStartAtom(HGHandle startAtom)

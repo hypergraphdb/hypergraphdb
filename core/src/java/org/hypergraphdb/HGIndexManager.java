@@ -170,8 +170,8 @@ public class HGIndexManager
 										    	   hg.eq("HIndexer", hIndexer)));
 		if (maintenanceOp != null)
 			graph.remove(maintenanceOp);
-		graph.remove(hIndexer);
-		deleteIndex(forType.get(i));		
+		deleteIndex(forType.get(i));	
+		graph.remove(hIndexer);		
 		forType.remove(i);		 
 		return true;
 	}

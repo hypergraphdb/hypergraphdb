@@ -49,6 +49,7 @@ public class XMPPPeerInterface implements PeerInterface
     private String password;
     private boolean anonymous;
     private boolean autoRegister;
+    private int fileTransferThreshold;
     private HyperGraphPeer thisPeer;
     private ArrayList<NetworkPeerPresenceListener> presenceListeners = 
         new ArrayList<NetworkPeerPresenceListener>();
@@ -66,6 +67,7 @@ public class XMPPPeerInterface implements PeerInterface
         password = getPart(configuration, "password");
         autoRegister = getOptPart(configuration, false, "autoRegister");
         anonymous = getOptPart(configuration, false, "anonymous");
+        fileTransferThreshold = getOptPart(configuration, 100*1024, "fileTransferThreshold");
         config = new ConnectionConfiguration(serverName, port.intValue());
         config.setRosterLoadedAtLogin(true);
         config.setReconnectionAllowed(true);
@@ -268,22 +270,35 @@ public class XMPPPeerInterface implements PeerInterface
                         //
                         // Encapsulate message serialization into a transaction because the HGDB might
                         // be accessed during this process.
-                        //                         
-                        thisPeer.getGraph().getTransactionManager().beginTransaction();
-                        try
-                        {
+                        //                   
+                        // NOTE: this breaks when a large sub-graph is being serialized because
+                        // there aren't enough BDB locks to cover every page being accessed. There are
+                        // several possible solution to this problem until BDB implements an unlimited
+                        // locks feature (which would be pretty nice): either track and break down
+                        // such large messages into smaller pieces (that's a heavy burden on P2P
+                        // activities, but it's the cleanest solution) or implement a facility to grab
+                        // a global lock on the whole DB environment which again requires a BDB feature.
+                        // So we disable the message serialization transaction for now.
+//                        thisPeer.getGraph().getTransactionManager().beginTransaction();
+//                        try
+//                        {
                             protocol.writeMessage(out, msg);
-                        }
-                        finally
-                        {
-                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
-                            catch (Throwable t) { t.printStackTrace(System.err); }
-                        }  
+//                        }
+//                        catch (Throwable t)
+//                        {
+//                        	System.err.println("Failed to serialize message " + msg);
+//                        	t.printStackTrace(System.err);
+//                        }
+//                        finally
+//                        {
+//                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
+//                            catch (Throwable t) { t.printStackTrace(System.err); }
+//                        }  
                         
                         byte [] data = out.toByteArray();
-                        if (data.length > 100*1024) // anything above 100k is send as a file!
+                        if (data.length > fileTransferThreshold)
                         {
-//                            System.out.println("Sending " + data.length + " byte of data as a file.");
+                            System.out.println("Sending " + data.length + " byte of data as a file.");
                             OutgoingFileTransfer outFile = 
                                 fileTransfer.createOutgoingFileTransfer((String)getTarget());
                             outFile.sendStream(new ByteArrayInputStream(data), 
@@ -424,7 +439,17 @@ public class XMPPPeerInterface implements PeerInterface
     {
         this.autoRegister = autoRegister;
     }
-    
+
+	public int getFileTransferThreshold()
+	{
+		return fileTransferThreshold;
+	}
+
+	public void setFileTransferThreshold(int fileTransferThreshold)
+	{
+		this.fileTransferThreshold = fileTransferThreshold;
+	}    
+	
     private class BigMessageTransferListener implements FileTransferListener
     {
         @SuppressWarnings("unchecked")

@@ -156,7 +156,7 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
-	public static HGPeerIdentity getIdentity(HyperGraph graph, String peerName)
+	public static HGPeerIdentity getIdentity(final HyperGraph graph, String peerName)
 	{
 	    HGPeerIdentity identity = null;	    
         java.net.InetAddress localMachine = null;
@@ -189,22 +189,31 @@ public class HyperGraphPeer
             throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
         else
         {
-            if (!HGUtils.eq(all.get(0).getName(), peerName))
+        	final PrivatePeerIdentity pid = all.get(0);
+            if (!HGUtils.eq(pid.getName(), peerName))
             {
-                all.get(0).setName(peerName);
-                graph.update(all.get(0));
+                pid.setName(peerName);
+                graph.update(pid);
             }
-            identity = all.get(0).makePublicIdentity();
+            identity = pid.makePublicIdentity();
             if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
                 !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||
                 !HGUtils.eq(identity.getGraphLocation(), graph.getLocation()))
             {
                 // Need to create a new identity.
-                graph.remove(identity.getId());
-                HGPersistentHandle newId = HGHandleFactory.makeHandle();
-                identity.setId(newId);
-                all.get(0).setId(newId);
-                graph.define(newId, all.get(0));
+            	final java.net.InetAddress machine = localMachine;
+            	identity = graph.getTransactionManager().transact(new Callable<HGPeerIdentity>() {
+            	public HGPeerIdentity call()
+            	{
+	                graph.remove(pid.getId());
+	                HGPersistentHandle newId = HGHandleFactory.makeHandle();
+	                pid.setId(newId);
+	                pid.setGraphLocation(graph.getLocation());
+	                pid.setHostname(machine.getHostName());
+	                pid.setIpAddress(machine.getHostAddress());
+	                graph.define(newId, pid);
+	                return pid.makePublicIdentity();
+            	}});
             }
             return identity;
         }

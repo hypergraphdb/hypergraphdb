@@ -143,16 +143,10 @@ public class SimpleALGenerator implements HGALGenerator
 	
 	public HGSearchResult<HGHandle> generate(HGHandle h) 
 	{
-		if (graph.isIncidenceSetLoaded(h))
-			return new AdjIterator(
-					h, 
-					graph.getIncidenceSet(h).iterator(), 
-					false);			
-		else
-			return new AdjIterator(
-					h, 
-					graph.getIncidenceSet(h).getSearchResult(), 
-					true);
+		return new AdjIterator(
+				h, 
+				graph.getIncidenceSet(h).getSearchResult(), 
+				true);
 	}
 	
 	public void close()
