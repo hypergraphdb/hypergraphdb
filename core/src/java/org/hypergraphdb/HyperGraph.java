@@ -1025,12 +1025,12 @@ public /*final*/ class HyperGraph
 	        	if (incidenceSet != null)
 	        	{
 		        	HGSearchResult<HGHandle> rsInc = incidenceSet.getSearchResult();
-		        	try { while (rsInc.hasNext()) removeTransaction(rsInc.next(), true); }
+		        	try { while (rsInc.hasNext()) removeTransaction(rsInc.next(), false); }
 		            finally { rsInc.close(); }		        	
 	        	}
 	        	else
 	        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
-	        			removeTransaction(h, true);
+	        			removeTransaction(h, false);
 	        }
 	        store.removeIncidenceSet(pHandle);   
 	        cache.getIncidenceCache().remove(pHandle);

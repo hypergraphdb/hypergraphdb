@@ -88,7 +88,6 @@ public class Structs
 	public static Object svalue(Object x)
 	{
 		return svalue(x, false, true, null);
-
 	}
 	
 	/**
@@ -373,6 +372,16 @@ public class Structs
         addMapper(HyperTraversal.class, 
                   new BeanMapper(new String [] {"flatTraversal", "linkPredicate"}), 
                   "hyper-traversal");                  
+        
+        addMapper(java.util.Date.class, 
+        		  new BeanMapper(new String [] {"time"}),
+        		  "java-date");
+        addMapper(java.sql.Timestamp.class, 
+      		  new StructsMapper() {
+				public Object getObject(Object struct) { return new java.sql.Timestamp(Long.parseLong(struct.toString())); }
+				public Object getStruct(Object value) {	return Long.toString(((java.sql.Timestamp)value).getTime());}
+        	
+        }, "java-sql-date");        
 	}
 	
 	public static String getClassName(Class<?> clazz)
@@ -612,17 +621,10 @@ public class Structs
 			}
 
 		} 
-		catch (InstantiationException e)
+		catch (Throwable e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			HGUtils.throwRuntimeException(e);
 		} 
-		catch (IllegalAccessException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		return result;
 	}
 
