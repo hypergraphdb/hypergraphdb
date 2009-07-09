@@ -259,7 +259,7 @@ public class SubgraphManager
                                        Set<HGPersistentHandle> batch, 
                                        RAMStorageGraph subgraph,
                                        Map<HGPersistentHandle, Object> objects,
-                                       Mapping<Object, HGPersistentHandle> atomFinder,
+                                       Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder,
                                        Map<HGPersistentHandle, HGPersistentHandle> substitutes)
     {
         for (HGPersistentHandle atom : batch)
@@ -280,17 +280,20 @@ public class SubgraphManager
             {
                 graph.getStore().detachOverlayGraph();
             }            
-            HGPersistentHandle existing = atomFinder == null ? null : atomFinder.eval(object);
+            HGPersistentHandle existing = atomFinder == null ? null : 
+                atomFinder.eval(new Pair<HGPersistentHandle, Object>(atom, object));
             if (existing != null)
                 substitutes.put(atom, existing);
             else 
                 objects.put(atom, object);                    
         }        
     }
+    
     private static Set<HGPersistentHandle> translateAtoms(final HyperGraph graph, 
                                                           final RAMStorageGraph subgraph,
                                                           final Map<HGPersistentHandle, Object> objects,
-                                                          final Mapping<Object, HGPersistentHandle> atomFinder)
+                                                          final Mapping<Pair<HGPersistentHandle, Object>, 
+                                                                       HGPersistentHandle> atomFinder)
     {
         final Map<HGPersistentHandle, HGPersistentHandle> substitutes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
@@ -354,7 +357,7 @@ public class SubgraphManager
      */
     public static Set<HGHandle> writeTransferedGraph(final Object atom, 
                                                      final HyperGraph graph,
-                                                     final Mapping<Object, HGPersistentHandle> atomFinder)
+                                                     final Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder)
         throws ClassNotFoundException
     {
         // TODO - here we assume that the types don't differ, but obviously they can

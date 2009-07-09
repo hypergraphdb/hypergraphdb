@@ -27,6 +27,7 @@ import org.hypergraphdb.peer.workflow.PossibleOutcome;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
 import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.Pair;
 
 public class TransferGraph extends FSMActivity
 {
@@ -34,7 +35,7 @@ public class TransferGraph extends FSMActivity
     
     private HGPeerIdentity target;
     private HGTraversal traversal;
-    private Mapping<Object, HGPersistentHandle> atomFinder = null;
+    private Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder = null;
     
     public TransferGraph(HyperGraphPeer thisPeer, UUID id)
     {
@@ -53,7 +54,7 @@ public class TransferGraph extends FSMActivity
     public TransferGraph(HyperGraphPeer thisPeer, 
                          HGTraversal traversal, 
                          HGPeerIdentity target,
-                         Mapping<Object, HGPersistentHandle> atomFinder)
+                         Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder)
     {
         this(thisPeer, traversal, target);
         this.atomFinder = atomFinder;
