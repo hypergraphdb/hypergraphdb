@@ -95,6 +95,7 @@ public class ActivityManager implements MessageHandler
         public ActivitySchedulingThread() { super("HGDB Peer Scheduler"); }
         public void run()
         {
+        	int reportEmpty = 0;
             for (schedulerRunning = true; schedulerRunning; )
             {
                 try
@@ -103,7 +104,15 @@ public class ActivityManager implements MessageHandler
                     // be gracefully stopped.
                     Activity a = globalQueue.poll(1, TimeUnit.SECONDS);
                     if (a == null)
+                    {
+                    	if (reportEmpty >= 50)
+                    	{
+                    		System.out.println("ActivityManager Global Queue is empty");
+                    		reportEmpty = 0;
+                    	}
+                    	reportEmpty++;                    	
                         continue;
+                    }
                     else if (!a.queue.isEmpty() && !a.getState().isFinished())
                     {
                         Runnable r = a.queue.take();
@@ -111,8 +120,10 @@ public class ActivityManager implements MessageHandler
                     }
                     else 
                     {
-                        if (globalQueue.isEmpty())                    
+                        if (globalQueue.isEmpty()) 
+                        {
                             Thread.sleep(100); // really? sleep here? that much?
+                        }
                         a.lastActionTimestamp = System.currentTimeMillis();
                         if (!a.getState().isFinished())
                             globalQueue.put(a);
@@ -231,7 +242,7 @@ public class ActivityManager implements MessageHandler
                     }
                     else
                     {
-//                        System.out.println("Running transition " + transition + " on msg " + msg);
+                        System.out.println("Running transition " + transition + " on msg " + msg);
                         Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
                         WorkflowStateConstant result = transition.apply(activity, msg);
 //                        System.out.println("Transition finished with " + result);
@@ -595,19 +606,18 @@ public class ActivityManager implements MessageHandler
     }
     
     public void handleMessage(final Message msg)
-    {        
-        System.out.println("Received message " + msg);
+    {
+        System.out.println("Received message " + msg);    	
         UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
         if (activityId == null)
         {
             notUnderstood(msg, " missing conversation-id in message");
             return;            
         }
-        
+        Activity activity = activities.get(activityId);
+        ActivityType type = null;        
         // TODO: how is this synchronized in case several peers send something
         // about this same activity?
-        Activity activity = activities.get(activityId);
-        ActivityType type = null;
         if (activity == null)
         {
             Activity parentActivity = null;            
@@ -633,18 +643,21 @@ public class ActivityManager implements MessageHandler
             } 
             activity = type.getFactory().make(thisPeer, activityId, msg);
             insertNewActivity(activity, parentActivity, null);
-//            System.out.println("inserted new activity in queue ");
+            System.out.println("inserted new activity in queue " + activity.getId());            
             activity.getState().compareAndAssign(Limbo, Started);            
         }
         else
+        {
+            System.out.println("Msg for existing activity " + activity.getId() + " at state " + activity.getState());        	
             type = activityTypes.get(activity.getType());
+        }
         try
         {
+            System.out.println("Adding transition action to " + activity.queue.size() + " others in " + activity + " on msg  "+ msg);        	
             if (activity instanceof FSMActivity)
                 activity.queue.put(makeTransitionAction(type, (FSMActivity)activity, msg));
             else
                 activity.queue.put(makeMessageHandleAction(activity, msg));
-//            System.out.println("Added transition action to " + activity + " on msg  "+ msg);
         }
         catch (InterruptedException ex)
         {

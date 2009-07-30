@@ -298,33 +298,40 @@ public class SubgraphManager
         final Map<HGPersistentHandle, HGPersistentHandle> substitutes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
         final Set<HGPersistentHandle> batch = new HashSet<HGPersistentHandle>();
-        for (HGPersistentHandle theRoot : subgraph.getRoots())
+        final Map<HGPersistentHandle, HGPersistentHandle> currentChanges = 
+            new HashMap<HGPersistentHandle, HGPersistentHandle>();
+        do
         {
-            batch.add(theRoot);            
-            if (batch.size() < 200)
-            {
-                continue;
-            }
-            else 
-            {
-                graph.getTransactionManager().transact(new Callable<Object>() {
-                public Object call()
-                {
-                   translateBatch(graph, batch, subgraph, objects, atomFinder, substitutes);
-                   batch.clear();
-                   return null; 
-                }
-                });
-            }
-        }
-        graph.getTransactionManager().transact(new Callable<Object>() {
-            public Object call()
-            {
-                translateBatch(graph, batch, subgraph, objects, atomFinder, substitutes);
-                return null; 
-            }
-            });        
-        subgraph.translateHandles(substitutes);
+        	currentChanges.clear();
+	        for (HGPersistentHandle theRoot : subgraph.getRoots())
+	        {
+	            batch.add(theRoot);            
+	            if (batch.size() < 200)
+	            {
+	                continue;
+	            }
+	            else 
+	            {
+	                graph.getTransactionManager().transact(new Callable<Object>() {
+	                public Object call()
+	                {
+	                   translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
+	                   batch.clear();
+	                   return null; 
+	                }
+	                });
+	            }
+	        }
+	        graph.getTransactionManager().transact(new Callable<Object>() {
+	            public Object call()
+	            {
+	                translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
+	                return null; 
+	            }
+	            });        
+	        subgraph.translateHandles(currentChanges);
+	        substitutes.putAll(currentChanges);
+        } while (!currentChanges.isEmpty());
         return substitutes.keySet();
     }
 

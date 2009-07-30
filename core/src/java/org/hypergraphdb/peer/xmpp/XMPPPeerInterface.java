@@ -74,6 +74,14 @@ public class XMPPPeerInterface implements PeerInterface
         SmackConfiguration.setPacketReplyTimeout(30000);
     }    
     
+    
+    private void reconnect()
+    {
+    	if (connection != null && connection.isConnected())
+    		stop();
+    	start();
+    }
+    
     public void start()
     {
         assert messageHandler != null : new NullPointerException("MessageHandler not specified.");
@@ -81,6 +89,7 @@ public class XMPPPeerInterface implements PeerInterface
         try
         {                             
             connection.connect();
+            connection.addConnectionListener(new MyConnectionListener());
             connection.addPacketListener(new PacketListener() 
             {
                 private void handlePresence(Presence presence)
@@ -245,6 +254,15 @@ public class XMPPPeerInterface implements PeerInterface
     
     public void stop()
     {
+    	try
+    	{
+    		throw new Exception("closing connection");
+    	}
+    	catch (Throwable t)
+    	{
+    		t.printStackTrace(System.err);
+    	}
+    	
         if (connection != null)
             try { connection.disconnect(); } catch (Throwable t) { }
     }
@@ -495,6 +513,51 @@ public class XMPPPeerInterface implements PeerInterface
             else
                 request.reject();
         }        
+    }
+ 
+    private class MyConnectionListener implements ConnectionListener
+    {
+
+		public void connectionClosed()
+		{
+			System.out.println("XMPP connection " + user + "@" + 
+					serverName + ":" + port + " closed gracefully.");
+	    	try
+	    	{
+	    		throw new Exception("closing connection");
+	    	}
+	    	catch (Throwable t)
+	    	{
+	    		t.printStackTrace(System.err);
+	    	}
+			reconnect();
+		}
+
+		public void connectionClosedOnError(Exception ex)
+		{
+			System.out.println("XMPP connection " + user + "@" + 
+					serverName + ":" + port + " closed exceptionally.");
+			ex.printStackTrace(System.err);
+			reconnect();
+		}
+
+		public void reconnectingIn(int arg0)
+		{
+			System.out.println("Auto-reconnecting in " + arg0 + "...");
+		}
+
+		public void reconnectionFailed(Exception ex)
+		{
+			System.out.println("XMPP auto-re-connection " + 
+					serverName + ":" + port + " failed.");
+			ex.printStackTrace(System.err);
+			reconnect();
+		}
+
+		public void reconnectionSuccessful()
+		{
+			System.out.println("Auto-reconnection successful");
+		}    	
     }
     
     static

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * 
  * <p>
- * An <code>CallbackFuture</code> offers the possibility to callback a registered
+ * An <code>CallbackFuture</code> offers the possibility to call back a registered
  * listener when it is completed. To avoid taking up a thread and waiting for
  * completion, this is accomplished by required the creator of the future
  * to invoke the <code>completed</code> method when the result this 
@@ -17,22 +17,22 @@ import java.util.concurrent.TimeoutException;
  * </p>
  *
  * <p>
- * Only one listener can be registered for callback and it is of type
+ * Only one listener can be registered for call back and it is of type
  * Mapping<CallbackFuture<T>, T>. That is, a mapping that will receive
  * the <code>CallbackFuture</code> itself as an argument and must return
  * the result of the <code>Future</code>. Typically the mapping will
- * just returned the <code>CallbackFuture</code>'s own result by
+ * just return the <code>CallbackFuture</code>'s own result by
  * calling the <code>getResult</code>, but it may choose to assign a different 
  * result. Note that blocking calls to <code>get</code> will not return
- * until the registered listener (if any) returns so the listener
+ * until the registered listener (if any) returns, so the listener
  * must rely on the provided <code>getResult</code> to obtain the 
  * <code>Future</code>'s result value. 
  * </p>
  *
  * <p>
- * This class may be extended to provide semantics for cancelation. In this
- * case the <code>cancel</code> method must be overriden and the 
- * <code>canceled</code> flag must be set to <code>true</code> if cancelation
+ * This class may be extended to provide semantics for cancellation. In this
+ * case the <code>cancel</code> method must be overridden and the 
+ * <code>canceled</code> flag must be set to <code>true</code> if cancellation
  * was successful. 
  * </p>
  * 

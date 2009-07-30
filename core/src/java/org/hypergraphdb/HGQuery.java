@@ -114,18 +114,33 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
      */
     public static final class hg
     {
-        public static HGHandle addUnique(HyperGraph graph, Object instance, HGQueryCondition condition)
+        public static HGHandle addUnique(final HyperGraph graph, 
+        								 final Object instance, 
+        								 final HGQueryCondition condition)
         {
-            HGHandle h = findOne(graph, condition);
-            if (h != null)
-                System.out.println("skip existing...");
-            return h == null ?  graph.add(instance) : h;
+        	return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+        		public HGHandle call()
+        		{
+                    HGHandle h = findOne(graph, condition);
+                    if (h != null)
+                        System.out.println("skip existing...");
+                    return h == null ?  graph.add(instance) : h;        			
+        		}
+        	});
         }
         
-        public static HGHandle addUnique(HyperGraph graph, Object instance, HGHandle typeHandle, HGQueryCondition condition)
-        {            
-            HGHandle h = findOne(graph, and(type(typeHandle), condition));
-            return h == null ?  graph.add(instance, typeHandle) : h;
+        public static HGHandle addUnique(final HyperGraph graph, 
+        								 final Object instance, 
+        								 final HGHandle typeHandle, 
+        								 final HGQueryCondition condition)
+        {
+        	return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+        		public HGHandle call()
+        		{		        	
+		            HGHandle h = findOne(graph, and(type(typeHandle), condition));
+		            return h == null ?  graph.add(instance, typeHandle) : h;
+        		}
+        	});		            
         }
         
         public static HGHandle addUnique(HyperGraph graph, Object instance, Class javaClass, HGQueryCondition condition)
