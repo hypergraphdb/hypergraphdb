@@ -255,13 +255,21 @@ public class SubgraphManager
                       "type-classes", types);         
     }
     
-    private static void translateBatch(HyperGraph graph, 
-                                       Set<HGPersistentHandle> batch, 
-                                       RAMStorageGraph subgraph,
-                                       Map<HGPersistentHandle, Object> objects,
-                                       Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder,
-                                       Map<HGPersistentHandle, HGPersistentHandle> substitutes)
+    /**
+     * Returns the number of new replacements to be made, i.e. the number of
+     * new atom equivalents found. On the other hand, the substitutes parameter
+     * may contain identity mapping for atoms that are both in the RAMStorageGraph
+     * and in the HyperGraph - we only want to track those in order to ignore them
+     * when the RAMStorageGraph is finally written locally. 
+     */
+    private static int translateBatch(HyperGraph graph, 
+                                      Set<HGPersistentHandle> batch, 
+                                      RAMStorageGraph subgraph,
+                                      Map<HGPersistentHandle, Object> objects,
+                                      Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder,
+                                      Map<HGPersistentHandle, HGPersistentHandle> substitutes)
     {
+    	int replacements = 0;
         for (HGPersistentHandle atom : batch)
         {
             HGPersistentHandle [] layout = subgraph.getLink(atom);                
@@ -283,10 +291,15 @@ public class SubgraphManager
             HGPersistentHandle existing = atomFinder == null ? null : 
                 atomFinder.eval(new Pair<HGPersistentHandle, Object>(atom, object));
             if (existing != null)
+            {
                 substitutes.put(atom, existing);
+                if (!existing.equals(atom))
+                	replacements++;
+            }
             else 
                 objects.put(atom, object);                    
         }        
+        return replacements;
     }
     
     private static Set<HGPersistentHandle> translateAtoms(final HyperGraph graph, 
@@ -295,17 +308,36 @@ public class SubgraphManager
                                                           final Mapping<Pair<HGPersistentHandle, Object>, 
                                                                        HGPersistentHandle> atomFinder)
     {
+    	//
+    	// This algo must find all local equivalents of the transferred atoms. The basic operation
+    	// that does this is the 'translateBatch' method - to keep the locking system usage
+    	// low, the whole thing is done in batches of 200 atoms. The atoms are the "roots" of the storage 
+    	// graph that we translating. The idea is the construct a runtime instance of each root atom
+    	// and try to find a local equivalent using the 'atomFinder' parameter (if not null). When
+    	// a local equivalent is found, its handle replaces all occurrences of the root handle from
+    	// the 'subgraph'. Because that replacement process may change the content of links that 
+    	// the atomFinder couldn't initially map to local versions, but that it could potentially 
+    	// map, we repeat the whole process again until no more subgraph are made.     
+    	//
+    	// Perhaps this could be coded in a more efficient way, but the goal for now is to get it to
+    	// work first.
+    	//
+    	// Boris
+    	//
         final Map<HGPersistentHandle, HGPersistentHandle> substitutes = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
         final Set<HGPersistentHandle> batch = new HashSet<HGPersistentHandle>();
         final Map<HGPersistentHandle, HGPersistentHandle> currentChanges = 
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
+    	final int [] replacements = new int[1];;        
         do
         {
+        	replacements[0] = 0;
         	currentChanges.clear();
 	        for (HGPersistentHandle theRoot : subgraph.getRoots())
 	        {
-	            batch.add(theRoot);            
+	        	if (!substitutes.containsKey(theRoot))
+	        		batch.add(theRoot);            
 	            if (batch.size() < 200)
 	            {
 	                continue;
@@ -315,7 +347,7 @@ public class SubgraphManager
 	                graph.getTransactionManager().transact(new Callable<Object>() {
 	                public Object call()
 	                {
-	                   translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
+	                   replacements[0] += translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
 	                   batch.clear();
 	                   return null; 
 	                }
@@ -325,13 +357,13 @@ public class SubgraphManager
 	        graph.getTransactionManager().transact(new Callable<Object>() {
 	            public Object call()
 	            {
-	                translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
+	            	replacements[0] += translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
 	                return null; 
 	            }
 	            });        
 	        subgraph.translateHandles(currentChanges);
-	        substitutes.putAll(currentChanges);
-        } while (!currentChanges.isEmpty());
+	        substitutes.putAll(currentChanges);	        
+        } while (replacements[0] > 0);
         return substitutes.keySet();
     }
 

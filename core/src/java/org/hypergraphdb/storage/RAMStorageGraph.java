@@ -49,11 +49,10 @@ public class RAMStorageGraph implements StorageGraph
                         A[i] = h;
                 }
             }
-            HGPersistentHandle h = subst.get(e.getKey());
-            if (h == null)
-                translated.put(e.getKey(), e.getValue());
-            else
-                translated.put(h, e.getValue());
+            HGPersistentHandle h = subst.get(e.getKey());            
+            if (h == null)            	
+            	h = e.getKey();
+            translated.put(h, e.getValue());
         }
         map = translated;
     }
