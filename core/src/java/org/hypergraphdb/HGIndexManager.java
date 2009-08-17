@@ -16,6 +16,7 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.*;
 import org.hypergraphdb.maintenance.ApplyNewIndexer;
+import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
 
@@ -97,6 +98,22 @@ public class HGIndexManager
 		return result;
 	}
 		
+	private void removeFromSubtypes(HGIndexer indexer)
+	{
+	    for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
+        {
+	        if (currentType.equals(indexer.getType()))
+	            continue;
+            List<HGIndexer> forType = indexers.get(currentType);
+            if (forType != null)
+            {
+                forType.remove(indexer);
+                if (forType.isEmpty())
+                    indexers.remove(currentType);
+            }
+        }
+	}
+	
 	public void deleteIndex(HGIndexer indexer)
 	{
 		indexer = toAtomIndexer(indexer);
@@ -119,16 +136,21 @@ public class HGIndexManager
 		List<HGHandle> indexerTypes = hg.findAll(graph, hg.subsumed(indexerBaseType));
 		for (HGHandle indexerType : indexerTypes)
 		{
-			List<HGIndexer> indexerAtoms = hg.findAll(graph, hg.apply(hg.deref(graph), hg.type(indexerType)));
+			List<HGIndexer> indexerAtoms = hg.getAll(graph, hg.type(indexerType));
 			for (HGIndexer indexer : indexerAtoms)
 			{
-				List<HGIndexer> forType = indexers.get(indexer.getType());
-				if (forType == null)
-				{
-					forType = new ArrayList<HGIndexer>();
-					indexers.put(indexer.getType(), forType);
-				}
-				forType.add(indexer);
+			    // While an indexer is defined for a specific type T, we have
+			    // to also index all atoms with a subtype of T. 
+			    for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
+			    {
+    				List<HGIndexer> forType = indexers.get(currentType);
+    				if (forType == null)
+    				{
+    					forType = new ArrayList<HGIndexer>();
+    					indexers.put(currentType, forType);
+    				}
+    				forType.add(indexer);
+			    }
 			}
 		}
 	}
@@ -155,6 +177,7 @@ public class HGIndexManager
 	 */
 	public boolean unregister(HGIndexer indexer)
 	{
+	    removeFromSubtypes(indexer);
 		List<HGIndexer> forType = indexers.get(indexer.getType());
 		if (forType == null)
 			return false;
@@ -172,7 +195,9 @@ public class HGIndexManager
 			graph.remove(maintenanceOp);
 		deleteIndex(forType.get(i));	
 		graph.remove(hIndexer);		
-		forType.remove(i);		 
+		forType.remove(i);		
+        if (forType.isEmpty())
+            indexers.remove(indexer.getType());     		
 		return true;
 	}
 	
@@ -192,10 +217,13 @@ public class HGIndexManager
 			for (Iterator<HGIndexer> i = forType.iterator(); i.hasNext(); )
 			{
 				HGIndexer indexer = i.next();
+		        removeFromSubtypes(indexer);
 				deleteIndex(indexer);
 				graph.remove(graph.getHandle(indexer));				
 				i.remove();
 			}
+		if (forType.isEmpty())
+		    indexers.remove(typeHandle);
 	}
 	
 	/**
@@ -224,40 +252,29 @@ public class HGIndexManager
 	 */
 	public <KeyType, ValueType> HGIndex<KeyType, ValueType> register(HGIndexer indexer)
 	{
-		List<HGIndexer> forType = indexers.get(indexer.getType());
-		
-		if (forType == null)
-		{
-			forType = new ArrayList<HGIndexer>();
-			indexers.put(indexer.getType(), forType);
-		}
-		
-		if (!forType.contains(indexer))
+	    boolean createNewIndex = false;
+	    
+        for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
+        {
+            List<HGIndexer> forType = indexers.get(currentType);
+            if (forType == null)
+            {
+                forType = new ArrayList<HGIndexer>();
+                indexers.put(currentType, forType);
+            }
+            if (!forType.contains(indexer))
+            {
+                if (currentType.equals(indexer.getType()))
+                    createNewIndex = true;
+                forType.add(indexer);
+            }
+        }
+	    
+		if (createNewIndex)
 		{
 			HGHandle hIndexer = graph.add(indexer);			
-			forType.add(indexer);
 			HGIndex<KeyType, ValueType> idx = getOrCreateIndex(indexer);
 			graph.add(new ApplyNewIndexer(hIndexer));
-/*			HGSearchResult<HGPersistentHandle> rs = null;
-			try
-			{
-				HGValueIndexer vindexer = null;
-				if (indexer instanceof HGValueIndexer)
-					vindexer = (HGValueIndexer)indexer;
-				rs = graph.find(hg.type(indexer.getType()));
-				while (rs.hasNext())
-				{
-					Object atom = graph.get(rs.next());
-					if (vindexer != null)
-						idx.addEntry((KeyType)indexer.getKey(graph, atom), (ValueType)vindexer.getValue(graph, atom)); 
-					else
-						idx.addEntry((KeyType)indexer.getKey(graph, atom), (ValueType)rs.current());
-				}
-			}
-			finally
-			{
-				rs.close();
-			} */
 			return idx;
 		}
 		else
@@ -266,6 +283,36 @@ public class HGIndexManager
 		}
 	}
 
+	/**
+	 * <p>
+	 * Register a newly created sub-type for indexing along with a super-type. All indexers
+	 * of the parent type will also apply to the sub-type. This binding of indexers to 
+	 * the sub-types of a type for which they were originally defined is normally done at
+	 * startup time. However, when a sub-type is created, of a type that is already somehow
+	 * indexed, one needs to explicitly bind the indexers at least until the next startup time.  
+	 * </p>
+	 * 
+	 * @param superType The handle of the base type.
+	 * @param subType The handle of the sub-type.
+	 */
+	void registerSubtype(HGHandle superType, HGHandle subType)
+	{
+	    List<HGIndexer> forSuperType = indexers.get(superType);
+	    if (forSuperType == null)
+	        return;
+	    else if (forSuperType.isEmpty())
+	        indexers.remove(forSuperType);
+	    List<HGIndexer> forSubType = indexers.get(subType);
+	    if (forSubType == null)
+	    {
+	        forSubType = new ArrayList<HGIndexer>();
+            indexers.put(subType, forSubType);	        
+	    }
+	    for (HGIndexer idx : forSuperType)
+	        if (!forSubType.contains(idx))
+	            forSubType.add(idx);
+	}
+	
 	/**
 	 * <p>
 	 * Retrieve the storage <code>HGIndex</code> associated to the passed-in

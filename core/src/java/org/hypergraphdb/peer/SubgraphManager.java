@@ -204,6 +204,8 @@ public class SubgraphManager
             Map<String, String> types = new HashMap<String, String>();
             for (Pair<HGPersistentHandle, Object> p : rawGraph)
             {
+                if (p == null)
+                    continue;
                 String clname = graph.getTypeSystem().getClassNameForType(p.getFirst());
                 if (clname != null)
                     types.put(p.getFirst().toString(), clname);
@@ -239,6 +241,8 @@ public class SubgraphManager
         Map<String, String> types = new HashMap<String, String>();
         for (Pair<HGPersistentHandle, Object> p : rawGraph)
         {
+            if (p == null)
+                continue;
 /*        	if (graph == null)
         		throw new NullPointerException("graph is null");
         	else if (graph.getTypeSystem() == null)

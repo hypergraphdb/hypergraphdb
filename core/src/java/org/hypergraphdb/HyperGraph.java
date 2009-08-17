@@ -1454,8 +1454,7 @@ public /*final*/ class HyperGraph
 	        indexByValue.addEntry(valueHandle, lHandle.getPersistentHandle());
 	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistentHandle(), payload);	        
 	        return lHandle;    
-    	} });
-    	
+    	} });    	
     }
     
     /**

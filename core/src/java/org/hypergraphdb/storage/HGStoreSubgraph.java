@@ -111,17 +111,21 @@ public class HGStoreSubgraph implements StorageGraph
            {
                visited.add(h);
                for (HGPersistentHandle x : link)
-                   if (!visited.contains(x)) remaining.addLast(x);
+               {                   
+                   // do we want to prevent null from being returned...it's legit for some 
+                   if (!visited.contains(x) /* && (store.getData(x) != null || store.getLink(x) != null) */ ) 
+                       remaining.addLast(x);
+               }
 
                result = new Pair<HGPersistentHandle, Object>(h, link);
            }
 
-            return result;
-        }
+           return result;
+       }
 
-        public void remove()
-        {
-            throw new UnsupportedOperationException();
-        }
+       public void remove()
+       {
+           throw new UnsupportedOperationException();
+       }
     }    
 }

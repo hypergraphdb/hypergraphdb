@@ -457,7 +457,10 @@ public class HGTypeSystem
 				throw new HGException("Unable to infer HG type for interface " +
 				                       interfaces[i].getName());
 			else
+			{
 				graph.add(new HGSubsumes(interfaceHandle, newHandle));
+                graph.getIndexManager().registerSubtype(interfaceHandle, newHandle);				
+			}
 		}
 		//
 		// Next, navigate to the superclass.
@@ -473,7 +476,10 @@ public class HGTypeSystem
 				                      " the superclass of " + clazz.getName());
 			}
 			else
+			{
 				graph.add(new HGSubsumes(superHandle, newHandle));
+                graph.getIndexManager().registerSubtype(superHandle, newHandle);				
+			}
 		}
 		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitely
 		else if (clazz.isInterface())
