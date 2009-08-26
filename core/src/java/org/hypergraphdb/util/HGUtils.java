@@ -219,7 +219,7 @@ public class HGUtils
 											 T startAfter,
 											 long first)
 	{
-		HGRandomAccessResult<T> rs = null;
+		HGSearchResult<T> rs = null;
 		T lastProcessed = startAfter;
 		long totalProcessed = 0;
 		while (true)
@@ -227,7 +227,7 @@ public class HGUtils
 			query.getHyperGraph().getTransactionManager().beginTransaction();			
 			try
 			{
-				rs = (HGRandomAccessResult<T>)query.execute();
+				rs = query.execute();
 				if (lastProcessed == null)
 				{
 					while (first > 0)
@@ -244,7 +244,14 @@ public class HGUtils
 				}
 				else
 				{
-					GotoResult gt = rs.goTo(lastProcessed, false);
+					GotoResult gt = null;
+					if (rs instanceof HGRandomAccessResult)
+					{
+						HGRandomAccessResult<T> rars = (HGRandomAccessResult<T>)rs;
+						gt = rars.goTo(lastProcessed, false);
+					}
+					else
+						throw new HGException("Batch processing starting at a specific element is only supported for HGRandomAccessResult.");
 					if (gt == GotoResult.nothing) // last processed was actually last element in result set
 					{
 						query.getHyperGraph().getTransactionManager().endTransaction(false);
@@ -261,8 +268,11 @@ public class HGUtils
 							rs.next();
 					} // else we are already positioned after the last processed, which is not present for god know why?
 				}				
-				double start = System.currentTimeMillis();
-				for (int i = 0; i < batchSize; i++)
+//				double start = System.currentTimeMillis();
+				if (! (rs instanceof HGRandomAccessResult))
+					batchSize = Integer.MAX_VALUE;
+				int i;
+				for (i = 0; i < batchSize; i++)
 				{
 					T x = rs.current();
 					if (!F.eval(x))
@@ -282,9 +292,11 @@ public class HGUtils
 				rs.close();
 				rs = null;
 				query.getHyperGraph().getTransactionManager().endTransaction(true);
-				double end = System.currentTimeMillis();
-				System.out.println("Batch time " + (end - start) / 1000.0 + "s");
-				System.out.println("Total processed " + totalProcessed);
+//				double end = System.currentTimeMillis();
+				if (i < batchSize)
+					return totalProcessed;
+//				System.out.println("Batch time " + (end - start) / 1000.0 + "s");
+//				System.out.println("Total processed " + totalProcessed);
 			}
 			catch (Throwable t)
 			{

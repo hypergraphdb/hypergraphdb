@@ -10,6 +10,11 @@ package org.hypergraphdb.util;
 
 public class HGLogger 
 {
+	public void trace(String msg)
+	{
+		System.out.println(msg);
+	}
+	
 	public void warning(String msg)
 	{
 		System.err.println("[HGWARN] - " + msg);

@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -242,7 +243,7 @@ public class ActivityManager implements MessageHandler
                     }
                     else
                     {
-                        System.out.println("Running transition " + transition + " on msg " + msg);
+                        //System.out.println("Running transition " + transition + " on msg " + msg);
                         Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
                         WorkflowStateConstant result = transition.apply(activity, msg);
 //                        System.out.println("Transition finished with " + result);
@@ -607,7 +608,7 @@ public class ActivityManager implements MessageHandler
     
     public void handleMessage(final Message msg)
     {
-        System.out.println("Received message " + msg);    	
+        //System.out.println("Received message " + msg);    	
         UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
         if (activityId == null)
         {
@@ -648,12 +649,12 @@ public class ActivityManager implements MessageHandler
         }
         else
         {
-            System.out.println("Msg for existing activity " + activity.getId() + " at state " + activity.getState());        	
+            //System.out.println("Msg for existing activity " + activity.getId() + " at state " + activity.getState());        	
             type = activityTypes.get(activity.getType());
         }
         try
         {
-            System.out.println("Adding transition action to " + activity.queue.size() + " others in " + activity + " on msg  "+ msg);        	
+            //System.out.println("Adding transition action to " + activity.queue.size() + " others in " + activity + " on msg  "+ msg);        	
             if (activity instanceof FSMActivity)
                 activity.queue.put(makeTransitionAction(type, (FSMActivity)activity, msg));
             else

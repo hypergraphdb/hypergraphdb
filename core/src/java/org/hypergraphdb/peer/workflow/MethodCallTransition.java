@@ -28,6 +28,9 @@ public class MethodCallTransition implements Transition
         } 
         catch (Exception e)
         {
+        	System.err.println("Action on transition in activity " + activity + " args:" + args);
+        	for (Object x : args) System.err.println(x);
+        	e.printStackTrace(System.err);
             throw new RuntimeException(e);
         } 
     }

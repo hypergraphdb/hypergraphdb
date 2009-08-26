@@ -36,6 +36,7 @@ public class TransferGraph extends FSMActivity
     private HGPeerIdentity target;
     private HGTraversal traversal;
     private Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder = null;
+    private boolean trace = true;
     
     public TransferGraph(HyperGraphPeer thisPeer, UUID id)
     {
@@ -62,10 +63,12 @@ public class TransferGraph extends FSMActivity
     
     @Override
     public void initiate()
-    {
+    { 
         Message msg = createMessage(Performative.QueryRef, this);
         combine(msg, struct(CONTENT, traversal)); 
-        send(target, msg);        
+        send(target, msg);
+        if (trace)
+        	getThisPeer().getGraph().getLogger().trace("Query graph transfer for : " + traversal);
     }
 
     @FromState("Started")
@@ -84,11 +87,15 @@ public class TransferGraph extends FSMActivity
         }
         else
             throw new Exception("Expecting a CopyGraphTraversal or a HyperTraversal.");
+        if (trace)
+        	getThisPeer().getGraph().getLogger().trace("Recevied request for traversal : " + copyTraversal);
         ((DefaultALGenerator)copyTraversal.getAdjListGenerator()).setGraph(getThisPeer().getGraph());
         Message reply = getReply(msg, Performative.InformRef);
         Object subgraph = SubgraphManager.getTransferGraphRepresentation(getThisPeer().getGraph(), traversal);
         combine(reply, struct(CONTENT, subgraph));
         send(getSender(msg), reply);
+        if (trace)
+        	getThisPeer().getGraph().getLogger().trace("Sent response to traversal : " + copyTraversal);
         return WorkflowState.Completed;
     }
     
@@ -97,9 +104,13 @@ public class TransferGraph extends FSMActivity
     @PossibleOutcome("Completed")        
     public WorkflowStateConstant onInformRef(Message msg) throws ClassNotFoundException
     {
+    	if (trace)
+    		getThisPeer().getGraph().getLogger().trace("Received response for traversal : " + traversal);
         SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), 
                                              getThisPeer().getGraph(),
                                              atomFinder);
+        if (trace)
+        	getThisPeer().getGraph().getLogger().trace("Successfully stored graph for : " + traversal);
         return WorkflowState.Completed;
     }
     

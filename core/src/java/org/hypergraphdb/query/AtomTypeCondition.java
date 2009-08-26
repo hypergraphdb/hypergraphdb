@@ -12,6 +12,7 @@
  */
 package org.hypergraphdb.query;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
@@ -82,7 +83,10 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
         HGHandle h = handle;
         if (h == null)
             h = hg.getTypeSystem().getTypeHandle(c);
-		return hg.getType(value).equals(h);
+        HGHandle typeOfValue = hg.getType(value);
+        if (typeOfValue == null)
+        	throw new HGException("Could not get type of atom " + value);
+		return typeOfValue.equals(h);
 	}
 	
 	public int hashCode() 

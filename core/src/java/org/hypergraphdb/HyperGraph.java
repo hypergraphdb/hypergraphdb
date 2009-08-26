@@ -245,6 +245,14 @@ public /*final*/ class HyperGraph
 	}
 
 	/**
+	 * <p>Return the {@link HGLogger} associated with this graph.</p>
+	 */
+	public HGLogger getLogger()
+	{
+		return logger;
+	}
+	
+	/**
 	 * <p>Execute all currently scheduled maintenance operations. Note that calling this
 	 * method can potentially take a long time. Also, it is imperative that no other
 	 * thread accesses this HyperGraphDB instance while the maintenance operations are
