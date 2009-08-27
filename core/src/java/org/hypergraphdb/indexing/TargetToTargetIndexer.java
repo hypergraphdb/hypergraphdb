@@ -9,6 +9,17 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
 
+/**
+ * 
+ * <p>
+ * A {@link HGValueIndexer} for hypergraph links where the key in the index
+ * is one of the targets within a link and the value is another one
+ * of the targets. 
+ * </p>
+ *
+ * @author Borislav Iordanov
+ *
+ */
 public class TargetToTargetIndexer extends HGValueIndexer
 {
 	private int fromTarget, toTarget;
