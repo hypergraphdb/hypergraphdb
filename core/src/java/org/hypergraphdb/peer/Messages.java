@@ -74,6 +74,7 @@ public class Messages
     public static final String IN_REPLY_TO = "in-reply-to";
     public static final String REPLY_WITH = "reply-with";
     public static final String CONTENT = "content";
+    public static final String LANGUAGE = "language";
     public static final String OPERATION = "operation";
     public static final String REPLY_TO = "reply-to";
     public static final String CONVERSATION_ID = "conversation-id";

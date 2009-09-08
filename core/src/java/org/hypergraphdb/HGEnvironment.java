@@ -46,10 +46,20 @@ public class HGEnvironment
 	
 	static String normalize(String location)
 	{
-		char last = location.charAt(location.length() - 1); 
-		if (last == '/' || last == '\\')
-			location = location.substring(0, location.length() - 1);
-		return location;
+	    File f = new File(location);
+	    try
+	    {
+	        return f.getCanonicalPath();
+	    }
+	    catch (java.io.IOException ex)
+	    {
+	        ex.printStackTrace(System.err);
+	        return f.getAbsolutePath();
+	    }
+//		char last = location.charAt(location.length() - 1); 
+//		if (last == '/' || last == '\\')
+//			location = location.substring(0, location.length() - 1);
+//		return location;
 	}
 	
 	/**
