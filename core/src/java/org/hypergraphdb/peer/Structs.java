@@ -7,8 +7,10 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Map.Entry;
 
@@ -279,6 +281,7 @@ public class Structs
 		else if ("double".equals(typeName)) return n.doubleValue();
 		else return null;
 	}
+	
 	private static Map<String, Object> struct(Object bean, boolean addClassName)
 	{
 		if (bean == null)
@@ -287,7 +290,14 @@ public class Structs
 		for (PropertyDescriptor desc : BonesOfBeans.getAllPropertyDescriptors(bean.getClass()).values())
 		{
 			if (desc.getReadMethod() != null && desc.getWriteMethod() != null)
-				m.put(desc.getName(), svalue(BonesOfBeans.getProperty(bean, desc), false, addClassName, desc.getPropertyType()));
+			{
+			    Object propvalue = BonesOfBeans.getProperty(bean, desc);
+				m.put(desc.getName(), 
+				      svalue(propvalue, 
+				             false, 
+				             addClassName, 
+				             desc.getPropertyType()));
+			}
 		}
 		return m;
 	}	
@@ -643,7 +653,8 @@ public class Structs
 			Class propertyClass = descriptor.getPropertyType();
 
 			Object value = createObject(entry.getValue());
-			if (value instanceof Long) value = getValueForProperty(propertyClass, (Long)value);
+			if (value instanceof Long) 
+			    value = getValueForProperty(propertyClass, (Long)value);
 			else if ((value instanceof ArrayList) && (!propertyClass.isAssignableFrom(value.getClass())))
 					value = getValueForProperty(propertyClass, (ArrayList)value);
 			else if (propertyClass.isEnum())
@@ -691,7 +702,8 @@ public class Structs
 	 */
 	private static Object getValueForProperty(Class<?> propertyClass, ArrayList list)
 	{
-		if(propertyClass.isArray()){
+		if(propertyClass.isArray())
+		{
 			Object array = Array.newInstance(propertyClass.getComponentType(), list.size());
 			for(int i =0;i<list.size();i++)
 			{
@@ -699,9 +711,17 @@ public class Structs
 				Array.set(array, i, elem);
 			}
 			return array;
-		}else if (Collection.class.isAssignableFrom(propertyClass)){
-			if (propertyClass.isAssignableFrom(ArrayList.class)) return list;
-			else
+		}
+		else if (Collection.class.isAssignableFrom(propertyClass))
+		{
+			if (propertyClass.isAssignableFrom(List.class)) return list;
+			else if (propertyClass.isAssignableFrom(Set.class))
+			{
+			    HashSet set = new HashSet();
+			    for (Object x:list) set.add(createObject(x));
+			    return set;
+			}
+			else // asume it's a concrete class that we can instantiate
 			{
 				Collection col = null;
 				try
