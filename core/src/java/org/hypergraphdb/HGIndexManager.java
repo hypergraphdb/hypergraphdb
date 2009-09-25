@@ -214,6 +214,7 @@ public class HGIndexManager
 	{
 		List<HGIndexer> forType = indexers.get(typeHandle);
 		if (forType != null)
+		{
 			for (Iterator<HGIndexer> i = forType.iterator(); i.hasNext(); )
 			{
 				HGIndexer indexer = i.next();
@@ -222,8 +223,9 @@ public class HGIndexManager
 				graph.remove(graph.getHandle(indexer));				
 				i.remove();
 			}
-		if (forType.isEmpty())
-		    indexers.remove(typeHandle);
+			if (forType.isEmpty())
+				indexers.remove(typeHandle);
+		}
 	}
 	
 	/**
