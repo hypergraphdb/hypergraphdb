@@ -224,7 +224,7 @@ public class HGIndexManager
 				i.remove();
 			}
 			if (forType.isEmpty())
-				indexers.remove(typeHandle);
+			    indexers.remove(typeHandle);
 		}
 	}
 	

@@ -38,7 +38,7 @@ public class EnumType extends HGAtomTypeBase
 		HGPersistentHandle [] layout = graph.getStore().getLink(handle);
 		if (layout == null || layout.length != 1)
 			throw new HGException("EnumType.make: wrong or inexisting layout for handle " + 
-			                      handle);
+			                     handle);
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		String symbol = (String)stringType.make(layout[0], null, null);
 		return Enum.valueOf((Class<Enum>)enumType, symbol);
@@ -60,7 +60,7 @@ public class EnumType extends HGAtomTypeBase
 	{
 		HGPersistentHandle [] layout = graph.getStore().getLink(handle);
 		if (layout == null || layout.length != 1)
-			throw new HGException("EnumType.release: wrong or inexisting layout for handle " + handle);		
+			throw new HGException("EnumType.release: wrong or inexisting layout for handle " + handle);
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		stringType.release(layout[0]);
 		graph.getStore().removeLink(handle);

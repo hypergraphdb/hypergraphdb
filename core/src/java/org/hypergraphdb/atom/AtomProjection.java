@@ -43,7 +43,8 @@ public class AtomProjection extends HGPlainLink
 	 * </p>
 	 * 
 	 * @param type The handle to a <code>HGCompositeType</code>.
-	 * @param projection The handle to the atom projection. 
+	 * @param name The name of the projection.
+	 * @param valueType The type of the projection's value. 
 	 * @param mode The mode of the atom reference to be used when managing atoms
 	 * of the composite type.
 	 */
