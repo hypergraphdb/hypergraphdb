@@ -1,7 +1,6 @@
 package org.hypergraphdb.type;
 
 import java.lang.reflect.Constructor;
-import java.util.Map;
 import java.util.Stack;
 
 import org.hypergraphdb.HGException;
@@ -90,9 +89,8 @@ public class JavaObjectBinding extends JavaAbstractBinding
     }
 
     public HGPersistentHandle store(final Object instance)
-    {
-		Map<Object, HGPersistentHandle> refMap = TypeUtils.getTransactionObjectRefMap(graph);    	
-		HGPersistentHandle result = refMap.get(instance);
+    {     	
+		HGPersistentHandle result = TypeUtils.getHandleFor(graph, instance);
 		if (result == null)
 		{
             JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();

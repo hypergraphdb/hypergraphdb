@@ -155,109 +155,211 @@ public final class TypeUtils
 	//
 	// [Borislav Iordanov]
 	//
+	// Addendum 10/24/2009 - Switched to using thread locals instead of transaction attributes
+	// for those because of the need to save separate copies of values for different atoms. 
+	// Suppose we need to save atoms A and B both of which hold the same Java reference 'x'.
+	// If A and B are saved in a single transaction, the value of 'x' will be stored only
+	// once and shared b/w A and B. However, when one of A and B is subsequently deleted, the
+	// other will be left with a dangling UUID pointing to a removed 'x'. Another solution to
+	// this problem would have been reference counting across the board for everything in
+	// the HGStore, but that opens its own can of worms. Using thread locals is ok given the
+	// HGDB transactions API that encourages single-threaded transactions. 
+	//
+		
+	private static ThreadLocal<Map<HGPersistentHandle, Object>> HANDLE_REF_MAP = 
+		new ThreadLocal<Map<HGPersistentHandle, Object>>();
+
+    private static ThreadLocal<Map<Object, HGPersistentHandle>> JAVA_REF_MAP = 
+        new ThreadLocal<Map<Object, HGPersistentHandle>>();//hg.getTransactionManager().getContext().getCurrent().getAttribute(JAVA_REF_MAP);
 	
-	private static final String JAVA_REF_MAP = "JAVA_REF_VALUE_MAP".intern();
-	private static final String HANDLE_REF_SET = "HANDLE_REF_SET".intern();
-	private static final String HANDLE_REF_MAP = "HANDLE_REF_MAP".intern();
-/*	private static ThreadLocal<Map<HGPersistentHandle, Object>> HANDLE_REF_MAP = 
-		new ThreadLocal<Map<HGPersistentHandle, Object>>(); */
-	
+    private static ThreadLocal<Set<HGPersistentHandle>> HANDLE_REF_SET =
+        new ThreadLocal<Set<HGPersistentHandle>>();
+    
 	public interface WrappedRuntimeInstance { Object getRealInstance(); }
 	
-	public static Map<Object, HGPersistentHandle> getTransactionObjectRefMap(HyperGraph hg)
+//  private static final String JAVA_REF_MAP = "JAVA_REF_VALUE_MAP".intern();
+//  private static final String HANDLE_REF_SET = "HANDLE_REF_SET".intern();
+//  private static final String HANDLE_REF_MAP = "HANDLE_REF_MAP".intern();
+	
+//	public static Map<Object, HGPersistentHandle> getTransactionObjectRefMap(HyperGraph hg)
+//	{
+//		ThreadLocal<Map<Object, HGPersistentHandle>> refMap = 
+//			(ThreadLocal<Map<Object, HGPersistentHandle>>)hg.getTransactionManager().getContext().getCurrent().getAttribute(JAVA_REF_MAP);
+//		if (refMap == null)
+//		{
+//			refMap = new ThreadLocal<Map<Object, HGPersistentHandle>>();
+//			hg.getTransactionManager().getContext().getCurrent().setAttribute(JAVA_REF_MAP, refMap);
+//		}
+//		if (refMap.get() == null)
+//		    refMap.set(new IdentityHashMap<Object, HGPersistentHandle>());
+//		return refMap.get();
+//	}
+	
+//	public static Map<HGPersistentHandle, Object> getThreadHandleRefMap(HyperGraph graph)
+//	{
+//		Map<HGPersistentHandle, Object> refMap =  
+//			(Map<HGPersistentHandle, Object>)graph.getTransactionManager().getContext().getCurrent().getAttribute(HANDLE_REF_MAP);
+//			// HANDLE_REF_MAP.get(); 
+//		if (refMap == null)
+//		{
+//			refMap = new HashMap<HGPersistentHandle, Object>();
+//			graph.getTransactionManager().getContext().getCurrent().setAttribute(HANDLE_REF_MAP, refMap);			
+//		}
+//		return refMap;
+//	}
+	
+//	public static Set<HGPersistentHandle> getTransactionHandleSet(HyperGraph hg)
+//	{
+//		Set<HGPersistentHandle> set =
+//			(Set<HGPersistentHandle>)hg.getTransactionManager().getContext().getCurrent().getAttribute(HANDLE_REF_SET);
+//		if (set == null)
+//		{
+//			set = new HashSet<HGPersistentHandle>();
+//			hg.getTransactionManager().getContext().getCurrent().setAttribute(HANDLE_REF_SET, set);
+//		}
+//		return set;
+//	}
+	
+	private static boolean initThreadLocals()
 	{
-		Map<Object, HGPersistentHandle> refMap = 
-			(Map<Object, HGPersistentHandle>)hg.getTransactionManager().getContext().getCurrent().getAttribute(JAVA_REF_MAP);
-		if (refMap == null)
-		{
-			refMap = new IdentityHashMap<Object, HGPersistentHandle>();
-			hg.getTransactionManager().getContext().getCurrent().setAttribute(JAVA_REF_MAP, refMap);
-		}
-		return refMap;
+        if (JAVA_REF_MAP.get() == null)
+        {
+            JAVA_REF_MAP.set(new IdentityHashMap<Object, HGPersistentHandle>());
+            HANDLE_REF_MAP.set(new HashMap<HGPersistentHandle, Object>());
+            HANDLE_REF_SET.set(new HashSet<HGPersistentHandle>());            
+            return true;
+        }
+        else
+            return false;
 	}
 	
-	public static Map<HGPersistentHandle, Object> getThreadHandleRefMap(HyperGraph graph)
+	private static void releaseThreadLocals(boolean topCall)
 	{
-		Map<HGPersistentHandle, Object> refMap =  
-			(Map<HGPersistentHandle, Object>)graph.getTransactionManager().getContext().getCurrent().getAttribute(HANDLE_REF_MAP);
-			// HANDLE_REF_MAP.get(); 
-		if (refMap == null)
-		{
-			refMap = new HashMap<HGPersistentHandle, Object>();
-			graph.getTransactionManager().getContext().getCurrent().setAttribute(HANDLE_REF_MAP, refMap);			
-		}
-		return refMap;
-	}
-	
-	public static Set<HGPersistentHandle> getTransactionHandleSet(HyperGraph hg)
-	{
-		Set<HGPersistentHandle> set =
-			(Set<HGPersistentHandle>)hg.getTransactionManager().getContext().getCurrent().getAttribute(HANDLE_REF_SET);
-		if (set == null)
-		{
-			set = new HashSet<HGPersistentHandle>();
-			hg.getTransactionManager().getContext().getCurrent().setAttribute(HANDLE_REF_SET, set);
-		}
-		return set;
+	    if (topCall)
+	    {
+	        JAVA_REF_MAP.set(null);
+	        HANDLE_REF_MAP.set(null);
+	        HANDLE_REF_SET.set(null);
+	    }
 	}
 	
 	public static HGPersistentHandle getNewHandleFor(HyperGraph hg, Object value)
 	{
-		HGPersistentHandle result = HGHandleFactory.makeHandle();
-		if (value instanceof WrappedRuntimeInstance) 
-			value = ((WrappedRuntimeInstance)value).getRealInstance();
-		getTransactionObjectRefMap(hg).put(value, result);
-		return result;
+	    boolean topCall = initThreadLocals();
+	    try
+	    {
+    		HGPersistentHandle result = HGHandleFactory.makeHandle();
+    		if (value instanceof WrappedRuntimeInstance) 
+    			value = ((WrappedRuntimeInstance)value).getRealInstance();
+    		JAVA_REF_MAP.get().put(value, result);
+    		return result;
+	    }
+	    finally
+	    {
+	        releaseThreadLocals(topCall);
+	    }
 	}
 	
 	public static boolean isValueReleased(HyperGraph graph, HGPersistentHandle h)
 	{
-		return getTransactionHandleSet(graph).contains(h);
+	    boolean topCall = initThreadLocals();
+	    try
+	    {
+	        return HANDLE_REF_SET.get().contains(h);
+	    }
+	    finally
+	    {
+	        releaseThreadLocals(topCall);
+	    }
 	}
 	
 	public static void releaseValue(HyperGraph graph, HGAtomType type, HGPersistentHandle h)
 	{
-	    // If this was previously added in the course of the current transaction,
-	    // remove it from the relevant maps.
-		Object instance =  getThreadHandleRefMap(graph).remove(h);
-		if (instance != null)
-			getTransactionObjectRefMap(graph).remove(instance);
-		if (! (type instanceof HGRefCountedType))
-		    getTransactionHandleSet(graph).add(h);
+	    boolean topCall = initThreadLocals();
+	    try
+	    {
+    	    // If this was previously added in the course of the current transaction,
+    	    // remove it from the relevant maps.
+    		Object instance =  HANDLE_REF_MAP.get().remove(h);
+    		if (instance != null)
+    			JAVA_REF_MAP.get().remove(instance);
+    		if (! (type instanceof HGRefCountedType))
+    		    HANDLE_REF_SET.get().add(h);
+	    }
+	    finally
+	    {
+	        releaseThreadLocals(topCall);
+	    }
 	}
 	
 	public static HGPersistentHandle storeValue(HyperGraph graph, Object value, HGAtomType type)
 	{
-		Map<Object, HGPersistentHandle> refMap = getTransactionObjectRefMap(graph);
-		HGPersistentHandle result = null;
-		if (! (type instanceof HGRefCountedType))
-		    result = refMap.get(value);
-		if (result == null)
+	    boolean topCall = initThreadLocals();
+		try
 		{
-			result = type.store(value);
-			refMap.put(value, result);
+    		HGPersistentHandle result = null;
+    		if (! (type instanceof HGRefCountedType))
+    		    result = JAVA_REF_MAP.get().get(value);
+    		if (result == null)
+    		{
+    			result = type.store(value);
+    			JAVA_REF_MAP.get().put(value, result);
+    		}
+    		HANDLE_REF_MAP.get().put(result, value);
+    		return result;
 		}
-		getThreadHandleRefMap(graph).put(result, value);
-		return result;
+		finally
+		{
+		    releaseThreadLocals(topCall);
+		}
+	}
+	
+	public static HGPersistentHandle getHandleFor(HyperGraph graph, Object value)
+	{
+        boolean topCall = initThreadLocals();
+        try
+        {
+            return JAVA_REF_MAP.get().get(value);
+        }
+        finally
+        {
+            releaseThreadLocals(topCall);
+        }	    
 	}
 	
 	public static void setValueFor(HyperGraph graph, HGPersistentHandle h, Object value)
 	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph);
-		if (!refMap.containsKey(h))
-			refMap.put(h, value);
+        boolean topCall = initThreadLocals();
+        try
+        {    	    
+    		Map<HGPersistentHandle, Object> refMap = HANDLE_REF_MAP.get();
+    		if (!refMap.containsKey(h))
+    			refMap.put(h, value);
+        }
+        finally
+        {
+            releaseThreadLocals(topCall);
+        }
 	}
 	
 	public static Object makeValue(HyperGraph graph, HGPersistentHandle h, HGAtomType type)
 	{
-		Map<HGPersistentHandle, Object> refMap = getThreadHandleRefMap(graph); 
-		Object result = refMap.get(h);
-		if (result == null)
-		{
-			result = type.make(h, null, null);
-			refMap.put(h, result);
-		}
-		return result;
+        boolean topCall = initThreadLocals();
+        try
+        {	    
+    		Map<HGPersistentHandle, Object> refMap = HANDLE_REF_MAP.get(); 
+    		Object result = refMap.get(h);
+    		if (result == null)
+    		{
+    			result = type.make(h, null, null);
+    			refMap.put(h, result);
+    		}
+    		return result;
+        }
+        finally        
+        {
+            releaseThreadLocals(topCall);
+        }
 	}
 	
 	public static List<HGHandle> subsumesClosure(HyperGraph graph, HGHandle baseType)

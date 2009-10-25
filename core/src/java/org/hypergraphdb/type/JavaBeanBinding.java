@@ -8,7 +8,6 @@
  */
 package org.hypergraphdb.type;
 
-import java.util.Map;
 import java.lang.reflect.Constructor;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
@@ -91,9 +90,8 @@ public class JavaBeanBinding extends JavaAbstractBinding
     }
 
     public HGPersistentHandle store(final Object instance)
-    {
-		Map<Object, HGPersistentHandle> refMap = TypeUtils.getTransactionObjectRefMap(graph);    	
-		HGPersistentHandle result = refMap.get(instance);
+    {    	
+		HGPersistentHandle result = TypeUtils.getHandleFor(graph, instance);
 		if (result == null)
 		{
 	        final Record record = new BeanRecord(typeHandle, instance);
