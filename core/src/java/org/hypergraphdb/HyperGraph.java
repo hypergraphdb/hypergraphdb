@@ -1571,39 +1571,45 @@ public /*final*/ class HyperGraph
 	        IncidenceSetRef isref = new IncidenceSetRef(persistentHandle, HyperGraph.this);
 	        
 	        HGAtomType type = typeSystem.getType(typeHandle);
-//	        TypeUtils.initiateAtomConstruction(HyperGraph.this, valueHandle);
-	        if (type == null)
-	            throw new HGException("Unable to find type with handle " + typeHandle + " in database.");
-	        if (link.length == 2)	        	
-	            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
-	        else
+	        boolean topCall = TypeUtils.initThreadLocals();
+	        try
 	        {
-	            //
-	            // If the atom is a link, update all targets with available
-	            // live handles.
-	            //
-	            HGHandle [] targets = new HGHandle[link.length - 2];
-	            for (int i = 2; i < link.length; i++)
-	            {
-	                HGPersistentHandle pHandle = link[i];
-	                HGLiveHandle lHandle = (HGLiveHandle)cache.get(pHandle);
-	                if (lHandle != null)
-	                    targets[i-2] = lHandle;
-	                else
-	                    targets[i-2] = pHandle;
-	            }
-	            instance = type.make(valueHandle, 
-	            					 new ReadyRef<HGHandle[]>(targets), 
-	            					 isref);
-	            
-	            //
-	            // If the concrete result instance is not a link, then it has
-	            // been embedded into a value link.
-	            //
-	            if (! (instance instanceof HGLink))
-	                instance = new HGValueLink(instance, targets);
+		        if (type == null)
+		            throw new HGException("Unable to find type with handle " + typeHandle + " in database.");
+		        if (link.length == 2)	        	
+		            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
+		        else
+		        {
+		            //
+		            // If the atom is a link, update all targets with available
+		            // live handles.
+		            //
+		            HGHandle [] targets = new HGHandle[link.length - 2];
+		            for (int i = 2; i < link.length; i++)
+		            {
+		                HGPersistentHandle pHandle = link[i];
+		                HGLiveHandle lHandle = (HGLiveHandle)cache.get(pHandle);
+		                if (lHandle != null)
+		                    targets[i-2] = lHandle;
+		                else
+		                    targets[i-2] = pHandle;
+		            }
+		            instance = type.make(valueHandle, 
+		            					 new ReadyRef<HGHandle[]>(targets), 
+		            					 isref);
+		            
+		            //
+		            // If the concrete result instance is not a link, then it has
+		            // been embedded into a value link.
+		            //
+		            if (! (instance instanceof HGLink))
+		                instance = new HGValueLink(instance, targets);
+		        }
 	        }
-//	        TypeUtils.atomConstructionComplete(HyperGraph.this, valueHandle);
+	        finally
+	        {
+	        	TypeUtils.releaseThreadLocals(topCall);
+	        }
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {

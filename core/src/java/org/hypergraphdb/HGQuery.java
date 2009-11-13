@@ -115,6 +115,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
      */
     public static final class hg
     {
+    	/**
+    	 * <p>
+    	 * Add the given instance as an atom in the graph iff no atoms
+    	 * match the passed in {@link HGQueryCondition}
+    	 * </p>
+    	 */
         public static HGHandle addUnique(final HyperGraph graph, 
         								 final Object instance, 
         								 final HGQueryCondition condition)
@@ -144,7 +150,10 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	});		            
         }
         
-        public static HGHandle addUnique(HyperGraph graph, Object instance, Class javaClass, HGQueryCondition condition)
+        public static HGHandle addUnique(HyperGraph graph, 
+        								 Object instance, 
+        								 Class javaClass, 
+        								 HGQueryCondition condition)
         {            
             return addUnique(graph, instance, graph.getTypeSystem().getTypeHandle(javaClass), condition);
         }        

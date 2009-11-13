@@ -139,6 +139,12 @@ public class HGEnvironment
 			if (exists(location))
 				hg = new HyperGraph(location);
 		}
+		else if (!hg.isOpen())
+		{
+			if (configs.containsKey(location))
+				hg.setConfig(configs.get(location));
+			hg.open(location);
+		}		
 		return hg;
 	}
 	

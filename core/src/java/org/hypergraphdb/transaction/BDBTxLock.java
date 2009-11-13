@@ -31,7 +31,7 @@ public class BDBTxLock implements ReadWriteLock
 	private HyperGraph graph;
 	private DatabaseEntry objectId;
 	private BDBReadLock readLock = new BDBReadLock();
-	private BDBWriteLock writeLock = new BDBWriteLock();
+	private BDBWriteLock writeLock = new BDBWriteLock();	
 	
 	private int getLockerId()
 	{
@@ -53,17 +53,21 @@ public class BDBTxLock implements ReadWriteLock
 	private class BDBReadLock implements Lock
 	{
 		com.sleepycat.db.Lock lock = null;
+		ThreadLocal<Integer> readCount = new ThreadLocal<Integer>() {
+		    protected Integer initialValue() { return 0; }
+		};
 		
 		BDBReadLock()
-		{
+		{								
 		}
 		
 		public synchronized void lock()
 		{
 			try
 			{
-				if (lock == null)
-					lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.READ);
+				if (readCount.get() == 0)
+					lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.READ);				
+				readCount.set(readCount.get() + 1);				
 			}
 			catch (DatabaseException ex)
 			{
@@ -85,9 +89,15 @@ public class BDBTxLock implements ReadWriteLock
 		{
 			try
 			{
-				if (lock == null)
+				if (readCount.get() == 0)
 					lock = getEnv().getLock(getLockerId(), true, objectId, LockRequestMode.READ);
-				return lock != null;
+				if (lock != null)
+				{
+					readCount.set(readCount.get() + 1);
+					return true;
+				}
+				else
+					return false;
 			}
 			catch (LockNotGrantedException le)
 			{
@@ -110,8 +120,15 @@ public class BDBTxLock implements ReadWriteLock
 			{
 				if (lock != null)
 				{
-					getEnv().putLock(lock);
-					lock = null;
+					int newcnt = readCount.get() - 1;
+					if (newcnt < 0)
+						throw new IllegalStateException("Lock already released.");
+					else if (newcnt == 0)
+					{
+						getEnv().putLock(lock);					
+						lock = null;
+					}					
+					readCount.set(newcnt);					
 				}
 			}
 			catch (DatabaseException ex)
@@ -124,16 +141,22 @@ public class BDBTxLock implements ReadWriteLock
 	private class BDBWriteLock implements Lock
 	{
 		com.sleepycat.db.Lock lock;
+		ThreadLocal<Integer> writeCount = new ThreadLocal<Integer>() {
+		    protected Integer initialValue() { return 0; }
+		};
 		
 		BDBWriteLock()
 		{
+			writeCount.set(new Integer(0));				
 		}
 		
 		public void lock()
 		{
 			try
 			{				
-				lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.WRITE);
+				if (writeCount.get() == 0)
+					lock = getEnv().getLock(getLockerId(), false, objectId, LockRequestMode.WRITE);
+				writeCount.set(writeCount.get() + 1);
 			}
 			catch (DatabaseException ex)
 			{
@@ -155,8 +178,15 @@ public class BDBTxLock implements ReadWriteLock
 		{
 			try
 			{
-				lock = getEnv().getLock(getLockerId(), true, objectId, LockRequestMode.WRITE);
-				return true;
+				if (writeCount.get() == 0)
+					lock = getEnv().getLock(getLockerId(), true, objectId, LockRequestMode.WRITE);
+				if (lock != null)
+				{					
+					writeCount.set(writeCount.get() + 1);
+					return true;
+				}
+				else
+					return false;
 			}
 			catch (LockNotGrantedException le)
 			{
@@ -177,7 +207,15 @@ public class BDBTxLock implements ReadWriteLock
 		{
 			try
 			{
-				getEnv().putLock(lock);
+				int newcnt = writeCount.get() - 1;
+				if (newcnt < 0)
+					throw new IllegalStateException("Lock already released.");
+				else if (newcnt == 0)
+				{
+					getEnv().putLock(lock);
+					lock = null;
+				}
+				writeCount.set(newcnt);
 			}
 			catch (DatabaseException ex)
 			{

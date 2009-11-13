@@ -38,7 +38,6 @@ import org.hypergraphdb.util.HGUtils;
  * 
  * @author Borislav Iordanov
  */
-@SuppressWarnings("unchecked")
 public final class TypeUtils 
 {
 	/**
@@ -220,7 +219,10 @@ public final class TypeUtils
 //		return set;
 //	}
 	
-	private static boolean initThreadLocals()
+	/**
+	 * <b>Internal method - do not call.</b>
+	 */
+	public static boolean initThreadLocals()
 	{
         if (JAVA_REF_MAP.get() == null)
         {
@@ -232,8 +234,11 @@ public final class TypeUtils
         else
             return false;
 	}
-	
-	private static void releaseThreadLocals(boolean topCall)
+
+	/**
+	 * <b>Internal method - do not call.</b>
+	 */	
+	public static void releaseThreadLocals(boolean topCall)
 	{
 	    if (topCall)
 	    {
