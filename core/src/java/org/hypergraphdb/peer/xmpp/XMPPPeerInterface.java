@@ -254,15 +254,6 @@ public class XMPPPeerInterface implements PeerInterface
     
     public void stop()
     {
-    	try
-    	{
-    		throw new Exception("closing connection");
-    	}
-    	catch (Throwable t)
-    	{
-    		t.printStackTrace(System.err);
-    	}
-    	
         if (connection != null)
             try { connection.disconnect(); } catch (Throwable t) { }
     }
@@ -522,15 +513,7 @@ public class XMPPPeerInterface implements PeerInterface
 		{
 			System.out.println("XMPP connection " + user + "@" + 
 					serverName + ":" + port + " closed gracefully.");
-	    	try
-	    	{
-	    		throw new Exception("closing connection");
-	    	}
-	    	catch (Throwable t)
-	    	{
-	    		t.printStackTrace(System.err);
-	    	}
-			reconnect();
+//			reconnect();
 		}
 
 		public void connectionClosedOnError(Exception ex)

@@ -122,7 +122,6 @@ public class HyperGraphPeer
 	public HyperGraphPeer(Map<String, Object> configuration)
 	{
 		this.configuration = configuration;
-		init();
 	}
 	
 	/**
@@ -142,7 +141,6 @@ public class HyperGraphPeer
 	public HyperGraphPeer(File configFile)
 	{
 		loadConfig(configFile);
-		init();
 	}
 	
 	/**
@@ -282,6 +280,7 @@ public class HyperGraphPeer
 	 */
 	public Future<Boolean> start(String user, String passwd)
 	{
+	    init();
 	    return executorService.submit(new Callable<Boolean>() 
 	    {
 	    public Boolean call() {    
