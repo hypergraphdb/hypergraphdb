@@ -5,6 +5,7 @@ import static org.hypergraphdb.peer.Structs.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -182,19 +183,29 @@ public class XMPPPeerInterface implements PeerInterface
                 }
             }            
             final Roster roster = connection.getRoster();            
-/*            roster.addRosterListener(new RosterListener() 
+            roster.addRosterListener(new RosterListener() 
             {
                 public void entriesAdded(Collection<String> addresses) 
                 {
-                    System.out.println("New friends");
+                    System.out.println("New friends: " + addresses);
+                    for(String user: addresses)
+                    {
+                        Presence bestPresence = roster.getPresence(user);                   
+                        if (bestPresence.getType() == Presence.Type.available)
+                        for (NetworkPeerPresenceListener listener : presenceListeners)
+                           listener.peerJoined(user);
+                    }
                 }
                 public void entriesDeleted(Collection<String> addresses) 
                 {
-                    System.out.println("Friends left");
+                    System.out.println("Friends left: " + addresses);
+                    for(String user: addresses)
+                        for (NetworkPeerPresenceListener listener : presenceListeners)
+                             listener.peerLeft(user);
                 }
                 public void entriesUpdated(Collection<String> addresses) 
                 {
-                    System.out.println("friends changed");
+                    //System.out.println("friends changed: " + addresses);
                 }
                 public void presenceChanged(Presence presence) 
                 {
@@ -213,7 +224,7 @@ public class XMPPPeerInterface implements PeerInterface
                             listener.peerLeft(user);                        
                     }                        
                 }
-            }); */
+            }); 
             fileTransfer = new FileTransferManager(connection);
             fileTransfer.addFileTransferListener(new BigMessageTransferListener());
                                     
