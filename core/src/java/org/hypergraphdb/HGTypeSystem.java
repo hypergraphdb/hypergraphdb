@@ -533,7 +533,18 @@ public class HGTypeSystem
 		return top;
 	}
 
-	Class<?> loadClass(String classname)
+	/**
+	 * <p>
+	 * Load a class with the given name the way the <code>HGTypeSystem</code> would try 
+	 * to load it. First try a user-defined class loader with this instance, then try
+	 * the Thread content class loader, finally try <code>this.getClass().getClassLoader()</code>
+	 * which is usually the system class loader.
+	 * </p>
+	 * 
+	 * @param classname
+	 * @return
+	 */
+	public Class<?> loadClass(String classname)
 	{
 		Class<?> clazz;
 		ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
