@@ -345,8 +345,6 @@ public class HyperGraphPeer
                                    return;
                                AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
                                activityManager.initiateActivity(task);
-                               //TODO: ???here we should do something similiar
-                               //bindIdentityToNetworkTarget(task.getId(), target);
                            }
                            public void peerLeft(Object target) 
                            { 
