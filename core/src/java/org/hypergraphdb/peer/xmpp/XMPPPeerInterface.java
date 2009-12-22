@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.MessageHandler;
@@ -96,6 +97,16 @@ public class XMPPPeerInterface implements PeerInterface
                 private void handlePresence(Presence presence)
                 {
                     String user = presence.getFrom();
+                    Roster roster = connection.getRoster();
+                    String n = makeRosterName(user);
+                    //me - don't fire
+                    if(connection.getUser().equals(n)) return;
+                    //if user is not in the roaster don't fire to listeners
+                    //the only exception is when presence is unavailable
+                    //because this could be fired after the user was removed from the roaster
+                    //so we couldn't check this 
+                    if(roster.getEntry(n) == null
+                             && presence.getType() != Presence.Type.unavailable) return;
                     if (presence.getType() == Presence.Type.subscribe)
                     {
                         Presence reply = new Presence(Presence.Type.subscribed);
@@ -111,6 +122,27 @@ public class XMPPPeerInterface implements PeerInterface
                     {
                         for (NetworkPeerPresenceListener listener : presenceListeners)
                             listener.peerLeft(user);                        
+                    }
+                }
+                
+                private String makeRosterName(String name)
+                {
+                    //input could be in following form
+                    //bizi@kobrix.syspark.net/67ae7b71-2f50-4aaf-85af-b13fe2236acb
+                    //test@conference.kobrix.syspark.net/bizi
+                    //bizi@kobrix.syspark.net
+                    //output should be:  
+                    //bizi@kobrix.syspark.net
+                    if(name.indexOf('/') < 0) return name;
+                    String first = name.substring(0, name.indexOf('/'));
+                    String second = name.substring(name.indexOf('/') + 1);
+                    if(second.length() != 36) return second + "@" + connection.getServiceName();
+                    try{
+                       HGHandleFactory.makeHandle(second);
+                       return first;
+                    }catch(NumberFormatException ex)
+                    {
+                        return second;
                     }
                 }
                 
@@ -183,48 +215,48 @@ public class XMPPPeerInterface implements PeerInterface
                 }
             }            
             final Roster roster = connection.getRoster();            
-            roster.addRosterListener(new RosterListener() 
-            {
-                public void entriesAdded(Collection<String> addresses) 
-                {
-                    System.out.println("New friends: " + addresses);
-                    for(String user: addresses)
-                    {
-                        Presence bestPresence = roster.getPresence(user);                   
-                        if (bestPresence.getType() == Presence.Type.available)
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                           listener.peerJoined(user);
-                    }
-                }
-                public void entriesDeleted(Collection<String> addresses) 
-                {
-                    System.out.println("Friends left: " + addresses);
-                    for(String user: addresses)
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                             listener.peerLeft(user);
-                }
-                public void entriesUpdated(Collection<String> addresses) 
-                {
-                    //System.out.println("friends changed: " + addresses);
-                }
-                public void presenceChanged(Presence presence) 
-                {
-                    String user = presence.getFrom();
-
-                    System.out.println("Presence changed: " + presence.getFrom() + " " + presence);                    
-                    Presence bestPresence = roster.getPresence(user);                   
-                    if (bestPresence.getType() == Presence.Type.available)
-                    {
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                            listener.peerJoined(user);
-                    }
-                    else if (bestPresence.getType() == Presence.Type.unavailable)
-                    {
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                            listener.peerLeft(user);                        
-                    }                        
-                }
-            }); 
+//            roster.addRosterListener(new RosterListener() 
+//            {
+//                public void entriesAdded(Collection<String> addresses) 
+//                {
+//                    System.out.println("New friends: " + addresses);
+//                    for(String user: addresses)
+//                    {
+//                        Presence bestPresence = roster.getPresence(user);                   
+//                        if (bestPresence.getType() == Presence.Type.available)
+//                        for (NetworkPeerPresenceListener listener : presenceListeners)
+//                           listener.peerJoined(user);
+//                    }
+//                }
+//                public void entriesDeleted(Collection<String> addresses) 
+//                {
+//                    System.out.println("Friends left: " + addresses);
+//                    for(String user: addresses)
+//                        for (NetworkPeerPresenceListener listener : presenceListeners)
+//                             listener.peerLeft(user);
+//                }
+//                public void entriesUpdated(Collection<String> addresses) 
+//                {
+//                    //System.out.println("friends changed: " + addresses);
+//                }
+//                public void presenceChanged(Presence presence) 
+//                {
+//                    String user = presence.getFrom();
+//
+//                    System.out.println("Presence changed: " + presence.getFrom() + " " + presence);                    
+//                    Presence bestPresence = roster.getPresence(user);                   
+//                    if (bestPresence.getType() == Presence.Type.available)
+//                    {
+//                        for (NetworkPeerPresenceListener listener : presenceListeners)
+//                            listener.peerJoined(user);
+//                    }
+//                    else if (bestPresence.getType() == Presence.Type.unavailable)
+//                    {
+//                        for (NetworkPeerPresenceListener listener : presenceListeners)
+//                            listener.peerLeft(user);                        
+//                    }                        
+//                }
+//            }); 
             fileTransfer = new FileTransferManager(connection);
             fileTransfer.addFileTransferListener(new BigMessageTransferListener());
                                     
