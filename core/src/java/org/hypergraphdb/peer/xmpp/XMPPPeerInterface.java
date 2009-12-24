@@ -509,7 +509,6 @@ public class XMPPPeerInterface implements PeerInterface
         {
             if (thisPeer.getIdentity(request.getRequestor()) != null)
             {
-                
                 IncomingFileTransfer inFile = request.accept();
                 org.hypergraphdb.peer.Message M = null;
                 java.io.InputStream in = null;
