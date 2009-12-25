@@ -59,6 +59,11 @@ public class HGConfiguration
 	 * backed up beforehand, database.
 	 * </p>
 	 * 
+	 * <p>
+	 * Note that being <em>transactional</em> is not a property of the database instance, but
+	 * rather of the current interaction session.  
+	 * </p>
+	 * 
 	 * @param transactional
 	 */
 	public void setTransactional(boolean transactional)

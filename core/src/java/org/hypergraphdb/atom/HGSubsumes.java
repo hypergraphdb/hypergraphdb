@@ -17,7 +17,7 @@ import org.hypergraphdb.HGPlainLink;
  * The <code>HGSubsumes</code> link represents a <em>subsumes</em> relationship between
  * two atoms, either declared, or inferred by HyperGraph. Generally, such a relationship
  * will exist between type atoms (i.e. instance of <code>HGAtomType</code>). One can
- * explicitely create such a link, for instance to declare a subtyping relationship
+ * explicitly create such a link, for instance to declare a subtyping relationship
  * between types. HyperGraph is also allowed to create such links as part of query
  * processing or other activities.
  * </p>

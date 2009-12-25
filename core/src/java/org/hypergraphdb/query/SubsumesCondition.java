@@ -28,46 +28,46 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 	
 	private final class AtomBased implements HGAtomPredicate
 	{
-		public boolean satisfies(HyperGraph hg, HGHandle general)
+		public boolean satisfies(HyperGraph graph, HGHandle general)
 		{
-			HGHandle generalType = hg.getType(general);
+			HGHandle generalType = graph.getType(general);
 			
 			if (specificValue == null)
 			{
-				return ((HGAtomType)hg.get(hg.getType(general))).subsumes(hg.get(general), null);
+				return ((HGAtomType)graph.get(graph.getType(general))).subsumes(graph.get(general), null);
 			}
 			else
 			{
-				HGHandle h = hg.getHandle(specificValue);
+				HGHandle h = graph.getHandle(specificValue);
 				HGHandle specificType;
 				if (h == null)
-					 specificType = hg.getTypeSystem().getTypeHandle(specificValue.getClass());
+					 specificType = graph.getTypeSystem().getTypeHandle(specificValue.getClass());
 				else
 				{
-					specificType = hg.getType(h);
-					if (declaredSubsumption(hg, general, h))
+					specificType = graph.getType(h);
+					if (declaredSubsumption(graph, general, h))
 						return true;
 				}
 				if (!specificType.equals(generalType))
 					return false;
 				else
-					return ((HGAtomType)hg.get(hg.getType(general))).subsumes(hg.get(general), specificValue);
+					return ((HGAtomType)graph.get(graph.getType(general))).subsumes(graph.get(general), specificValue);
 			}
 		}
 	}
 	
 	private final class HandleBased implements HGAtomPredicate
 	{
-		public boolean satisfies(HyperGraph hg, HGHandle general)
+		public boolean satisfies(HyperGraph graph, HGHandle general)
 		{
-			if (declaredSubsumption(hg, general, specific))
+			if (declaredSubsumption(graph, general, specific))
 				return true;
-			HGHandle specificType = hg.getType(specific);
-			HGHandle generalType = hg.getType(general);
+			HGHandle specificType = graph.getType(specific);
+			HGHandle generalType = graph.getType(general);
 			if (!generalType.equals(specificType))
 				return false;
 			else
-				return ((HGAtomType)hg.get(generalType)).subsumes(hg.get(general), hg.get(specific));
+				return ((HGAtomType)graph.get(generalType)).subsumes(graph.get(general), graph.get(specific));
 		}
 	}
 	

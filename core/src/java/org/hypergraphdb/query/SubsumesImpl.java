@@ -15,35 +15,41 @@ import org.hypergraphdb.atom.HGSubsumes;
 
 class SubsumesImpl 
 {
-	protected final HGHandle getTypeFor(HyperGraph hg, HGHandle h)
+	protected final HGHandle getTypeFor(HyperGraph graph, HGHandle h)
 	{
 		if (h == null)
 			return null;
 		else
-			return hg.getType(h);
+			return graph.getType(h);
 	}
 	
-	protected final HGHandle getTypeFor(HyperGraph hg, Object atom)
+	protected final HGHandle getTypeFor(HyperGraph graph, Object atom)
 	{
 		if (atom == null)
 			return null;
-		HGHandle h = hg.getHandle(atom);
+		HGHandle h = graph.getHandle(atom);
 		if (h == null)
-			return hg.getTypeSystem().getTypeHandle(atom.getClass());
+			return graph.getTypeSystem().getTypeHandle(atom.getClass());
 		else
-			return hg.getType(h);
+			return graph.getType(h);
 	}
 	
-	protected final boolean declaredSubsumption(HyperGraph hg, HGHandle general, HGHandle specific)
+	protected final boolean declaredSubsumption(HyperGraph graph, HGHandle general, HGHandle specific)
 	{
 		And subsumesCondition = new And(
-		        new AtomTypeCondition(hg.getTypeSystem().getTypeHandle(HGSubsumes.class)),
+		        new AtomTypeCondition(graph.getTypeSystem().getTypeHandle(HGSubsumes.class)),
 		        new OrderedLinkCondition(new HGHandle[] { general, specific} )
 			); 
 			
-		HGSearchResult<HGHandle> rs = hg.find(subsumesCondition);
-		boolean result = rs.hasNext();
-		rs.close();
-		return result;
+		HGSearchResult<HGHandle> rs = null;
+		try
+		{
+		    rs = graph.find(subsumesCondition);
+		    return rs.hasNext();
+		}
+		finally
+		{
+		    if (rs != null) rs.close();
+		}
 	}
 }
