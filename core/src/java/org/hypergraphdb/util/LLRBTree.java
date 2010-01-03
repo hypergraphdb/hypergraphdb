@@ -26,7 +26,7 @@ import org.hypergraphdb.HGSearchResult;
  * @author Borislav Iordanov
  *
  * @param <E> The type of elements this set stores. It must implement the <code>Comparable</code>
- * interface.
+ * interface or a <code>Comparator</code> has to be provided at construction time.
  */
 public class LLRBTree<E> extends AbstractSet<E>
 						 implements HGSortedSet<E>, Cloneable, java.io.Serializable
@@ -182,9 +182,13 @@ public class LLRBTree<E> extends AbstractSet<E>
 	
 	final class ResultSet implements HGRandomAccessResult<E>
 	{
+	    boolean locked = false;
 		int lookahead = 0;
 		Node<E> next = UNKNOWN, current = UNKNOWN, prev = UNKNOWN;
-		NodeStack stack = new NodeStack();
+		
+		// Keeps track of parents of current node because Node itself doesn't have
+		// a parent field.
+		NodeStack stack = new NodeStack();  
 		
 		// min, max, advance, back all work on the current position as 
 		// stored in the 'stack' of parents.
@@ -264,9 +268,11 @@ public class LLRBTree<E> extends AbstractSet<E>
 			}
 		}
 		
-		ResultSet()
+		ResultSet(boolean acquireLock)
 		{
-			lock.readLock().lock();
+		    if (acquireLock)
+		        lock.readLock().lock();
+		    locked = acquireLock;
 		}
 		
 		public GotoResult goTo(E key, boolean exactMatch)
@@ -283,10 +289,11 @@ public class LLRBTree<E> extends AbstractSet<E>
 			stack.clear();
 			Node<E> current = root; 
 			GotoResult result = GotoResult.nothing;
+			Comparable<E> ckey = providedComparator == null ? (Comparable<E>)key : null; // make typecast out of loop, expensive!
 			while (current != null)
 			{
 				stack.push(current);
-				int cmp = comparator.compare(key, current.key);
+				int cmp = ckey == null ? providedComparator.compare(key, current.key) : ckey.compareTo(current.key);
 				if (cmp == 0)
 				{
 					result = GotoResult.found;
@@ -332,7 +339,8 @@ public class LLRBTree<E> extends AbstractSet<E>
 
 		public void close()
 		{
-			lock.readLock().unlock();
+		    if (locked)
+		        lock.readLock().unlock();
 		}
 
 		public E current()
@@ -387,7 +395,26 @@ public class LLRBTree<E> extends AbstractSet<E>
 
 		public void remove()
 		{			
-			throw new UnsupportedOperationException("...because of lazy implementor: this is a TODO.");
+            if (current == UNKNOWN)
+                throw new NoSuchElementException();
+	        // Because of lack of parent pointers in Node, we can't really
+	        // take advantage of the fact that we are already positioned 
+	        // at the node we want to delete. In the current iteration context,
+	        // we could make use of the parent stack to some advantage, but this
+	        // would require a completely new version of the delete algo which
+	        // is too big of a price to pay.
+	        //
+	        // So we just do a normal remove and reset the iterator to its 'prev' state.
+            LLRBTree.this.remove(current.key);
+            if (prev != null)
+                if (goTo(prev.key, true) == GotoResult.nothing)
+                    throw new Error("LLRBTree.ResultSet.remove buggy.");
+            else
+            {
+                current = prev = next = UNKNOWN;
+                lookahead = 0;
+                stack.clear();
+            }
 		}
 
 		public boolean hasPrev()
@@ -427,7 +454,7 @@ public class LLRBTree<E> extends AbstractSet<E>
 	private Node<E> root = null;
 	private int size = 0;
 	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private Comparator<E> comparator = null;
+	private Comparator<E> providedComparator = null;
 	
 	private static boolean isRed(Node<?> x)
 	{
@@ -457,7 +484,9 @@ public class LLRBTree<E> extends AbstractSet<E>
 		if (isRed(h.left) && isRed(h.right))
 			h.colorFlip();		
 		
-		int cmp = comparator.compare(key, h.key);
+		int cmp = providedComparator != null ? providedComparator.compare(key, h.key)
+		                                     : ((Comparable<E>)key).compareTo(h.key);
+		          
 		if (cmp < 0)
 			h.left = insert(h.left, key);
 		else if (cmp > 0)
@@ -550,7 +579,8 @@ public class LLRBTree<E> extends AbstractSet<E>
 	
 	private Node<E> delete(Node<E> h, E key)
 	{
-		int cmp = comparator.compare(key, h.key);
+		int cmp = providedComparator != null ? providedComparator.compare(key, h.key)
+                                             : ((Comparable<E>)key).compareTo(h.key); 
 		if (cmp < 0) 
 		{
 			if (!isRed(h.left) && !isRed(h.left.left))
@@ -590,19 +620,11 @@ public class LLRBTree<E> extends AbstractSet<E>
 
 	public LLRBTree()
 	{
-		comparator = new Comparator<E>()
-		{
-			@SuppressWarnings("unchecked")
-			public int compare(E x, E y)
-			{
-				return ((Comparable)x).compareTo((Comparable)y);
-			}
-		};
 	}
 	
 	public LLRBTree(Comparator<E> comparator)
 	{
-		this.comparator = comparator;
+		this.providedComparator = comparator;
 	}
 	
 	public void removeMax()
@@ -645,7 +667,7 @@ public class LLRBTree<E> extends AbstractSet<E>
 	
 	public int size() { return size; }
 	public boolean isEmtpy() { return size == 0; }
-	public Comparator<E> comparator() { return comparator; }
+	public Comparator<E> comparator() { return providedComparator; }
 	
 	public void clear()
 	{
@@ -661,10 +683,11 @@ public class LLRBTree<E> extends AbstractSet<E>
 		lock.readLock().lock();
 		try
 		{
-			Node<E> current = root; 
+			Node<E> current = root;
+			Comparable<E> ckey = providedComparator == null ? (Comparable<E>)key : null; 
 			while (current != null)
 			{
-				int cmp = comparator.compare((E)key, current.key);
+				int cmp = ckey != null ? ckey.compareTo(current.key) : providedComparator.compare((E)key, current.key);
 				if (cmp == 0)
 					return true;
 				else if (cmp < 0)
@@ -768,12 +791,12 @@ public class LLRBTree<E> extends AbstractSet<E>
 		if (isEmpty())
 			return (Iterator<E>)HGSearchResult.EMPTY; // avoid checking for root == null in ResultSet impl.
 		else
-			return new ResultSet();
+			return new ResultSet(false);
 	}
 
 	public HGRandomAccessResult<E> getSearchResult()
 	{
-		return new ResultSet();
+		return new ResultSet(true);
 	}
 	
 	@Override
@@ -827,9 +850,12 @@ public class LLRBTree<E> extends AbstractSet<E>
     private boolean isBST(Node<E> x, E min, E max)
     {  // Are all the values in the BST rooted at x between min and max,
       // and does the same property hold for both subtrees?
-    	if (x == null) return true;    	
-    	if (comparator.compare(x.key, min) < 0 || 
-    		comparator.compare(max, x.key) < 0) return false;
+    	if (x == null) return true;
+    	int c1 = providedComparator != null ? providedComparator.compare(x.key, min)
+                                            : ((Comparable<E>)x.key).compareTo(min);
+    	int c2 = providedComparator != null ? providedComparator.compare(max, x.key)
+                                            : ((Comparable<E>)max).compareTo(x.key);
+    	if (c1 < 0 || c2 < 0) return false;
     	return isBST(x.left, min, x.key) && isBST(x.right, x.key, max);
     } 
 

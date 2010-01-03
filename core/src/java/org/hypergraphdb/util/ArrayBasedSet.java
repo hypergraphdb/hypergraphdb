@@ -55,11 +55,12 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 		int low = 0;
 		int high = size-1;
 
+		Comparable<E> ckey = comparator == null ? (Comparable<E>)key : null;
 		while (low <= high) 
 		{
 			int mid = (low + high) >> 1;
 	    	E midVal = array[mid];
-	    	int cmp = comparator.compare(midVal, key);
+	    	int cmp = ckey == null ? comparator.compare(midVal, key) : -ckey.compareTo(midVal);
 	    	if (cmp < 0)
 	    		low = mid + 1;
 	    	else if (cmp > 0)
@@ -69,18 +70,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 		}
 		return -(low + 1);  // key not found.		
 	}
-		
-	static <E> Comparator<E> makeComparator()
-	{
-		return new Comparator<E>()
-		{
-			public int compare(E x, E y)
-			{
-				return ((Comparable)x).compareTo(y);
-			}
-		};		
-	}
-	
+			
 	/**
 	 * <p>
 	 * Initialize from the given array.
@@ -91,7 +81,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	 */
 	public ArrayBasedSet(E [] A)
 	{
-		this(A, (Comparator<E>)makeComparator());
+		this(A, null);
 	}
 
 	/**
@@ -105,7 +95,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 	 */
 	public ArrayBasedSet(E [] A, int capacity)
 	{
-		this(A, capacity, (Comparator<E>)makeComparator());
+		this(A, capacity, null);
 	}
 	
 	/**
