@@ -41,7 +41,8 @@ public class HGAtomSet implements HGSortedSet<HGHandle>
 
 	public HGAtomSet()
 	{
-		this.impl = new ArrayBasedSet<HGPersistentHandle>(new HGPersistentHandle[0]); //new LLRBTree<HGPersistentHandle>();
+		this.impl = new ArrayBasedSet<HGPersistentHandle>(new HGPersistentHandle[0]); 
+//		this.impl = new LLRBTree<HGPersistentHandle>();
 	}
 	
 	public HGAtomSet(HGSortedSet implementation)
