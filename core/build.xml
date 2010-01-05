@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." name="HyperGraphDB Core" default="all">
 	<description>HyperGraphDB Core Build File</description>
-    <property name="version" value="0.1"/>
+    <property name="version" value="1.0"/>
     <property name="distfilename" value="hypergraphdb-${version}"/>    
     <property name="build" value="build"/>
     <property name="dist" value="dist"/>
@@ -89,6 +89,7 @@
         <copydir src="jars" dest="${distfilename}/jars" excludes="**/.svn"/>
         <copydir src="ThirdPartyLicensing" dest="${distfilename}/ThirdPartyLicensing" excludes="**/.svn"/>
         <copy file="LicensingInformation" todir="${distfilename}"/>
+        <copy file="readme.html" todir="${distfilename}"/>
         <copy file="${jars}/${jar-name}" todir="${distfilename}"/>
         <copy file="${jars}/${peer-jar-name}" todir="${distfilename}"/>
         <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
