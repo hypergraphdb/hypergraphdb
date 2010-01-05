@@ -22,9 +22,7 @@ public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe
     /**
      * <p>Returns the current element in the result set. If there is no current element,
      * <code>java.util.NoSuchElementException</code> is thrown. There
-     * is no current element in one of two cases: either the
-     * result set is empty or the <code>next</code> method was never 
-     * invoked.
+     * is no current element if the <code>next</code> method was never invoked.
      * </p>
      * 
      * @return The current element in a <code>HGSearchResult</code>.

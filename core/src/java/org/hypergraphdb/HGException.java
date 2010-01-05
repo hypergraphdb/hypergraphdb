@@ -3,8 +3,7 @@
  * software. For permitted uses, licensing options and redistribution, please see 
  * the LicensingInformation file at the root level of the distribution. 
  *
- * Copyright (c) 2005-2006
- *  Kobrix Software, Inc.  All rights reserved.
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
  */
 package org.hypergraphdb;
 
