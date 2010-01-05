@@ -1,16 +1,9 @@
-/*
- * This file is part of the HyperGraphDB source distribution. This is copyrighted
- * software. For permitted uses, licensing options and redistribution, please see 
- * the LicensingInformation file at the root level of the distribution. 
- *
- * Copyright (c) 2005-2006
- *  Kobrix Software, Inc.  All rights reserved.
- */
-/*
- * Created on Oct 13, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
+/* 
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted 
+ * software. For permitted uses, licensing options and redistribution, please see  
+ * the LicensingInformation file at the root level of the distribution.  
+ * 
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.type;
 
