@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.event.HGTransactionEndEvent;
+
 
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseException;
@@ -21,18 +24,25 @@ import com.sleepycat.db.Transaction;
 
 public class TransactionBDBImpl implements HGTransaction
 {
+    private HGTransactionContext context;
 	private Environment env;
 	private Transaction t;
 	private HashMap<String, Object> attributes = new HashMap<String, Object>();
 	private Set<BDBTxCursor> bdbCursors = new HashSet<BDBTxCursor>();
 	private boolean aborting = false;
 	
-	public static final TransactionBDBImpl nullTransaction() { return new TransactionBDBImpl(null, null); }
+	public static final TransactionBDBImpl nullTransaction() { return new TransactionBDBImpl(null, null, null); }
 	
-	public TransactionBDBImpl(Transaction t, Environment env)
+	public TransactionBDBImpl(HGTransactionContext context, Transaction t, Environment env)
 	{
 		this.t = t;
 		this.env = env;
+		this.context = context;
+	}
+	
+	public HGTransactionContext getContext()
+	{
+	    return context;
 	}
 	
 	public Environment getBDBEnvironment()
@@ -53,6 +63,8 @@ public class TransactionBDBImpl implements HGTransaction
 				c.close();
 			if (t != null)
 				t.commit();
+			HyperGraph graph = context.getManager().getHyperGraph();
+			graph.getEventManager().dispatch(graph, new HGTransactionEndEvent(this, true));
 		}
 		catch (DatabaseException ex)
 		{
@@ -70,6 +82,8 @@ public class TransactionBDBImpl implements HGTransaction
 				catch (Throwable t) { System.err.println(t); }
 			if (t != null)
 				t.abort();
+            HyperGraph graph = context.getManager().getHyperGraph();
+            graph.getEventManager().dispatch(graph, new HGTransactionEndEvent(this, false));			
 		}
 		catch (DatabaseException ex)
 		{

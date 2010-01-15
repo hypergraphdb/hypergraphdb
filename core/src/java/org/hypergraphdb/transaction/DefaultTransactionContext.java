@@ -21,6 +21,11 @@ class DefaultTransactionContext implements HGTransactionContext
 		this.manager = manager;
 	}
 	
+	public HGTransactionManager getManager()
+	{
+	    return manager;
+	}
+	
 	/**
 	 * <p>Return the currently active transaction or <code>null</code> if there is 
 	 * no such transaction.</p>

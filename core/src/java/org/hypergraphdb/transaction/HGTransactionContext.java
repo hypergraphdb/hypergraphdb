@@ -28,6 +28,7 @@ package org.hypergraphdb.transaction;
  */
 public interface HGTransactionContext
 {
+    HGTransactionManager getManager();    
 	HGTransaction getCurrent();
 	void beginTransaction();
 	void endTransaction(boolean success) throws HGTransactionException;

@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.io.File;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.*;
+import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -172,16 +173,20 @@ public class HGStore
     {
     	return new HGTransactionFactory()
     	{
-    		public HGTransaction createTransaction(HGTransaction parent)
+    		public HGTransaction createTransaction(HGTransactionContext context, HGTransaction parent)
     		{   		
     			try
     			{
 	    			TransactionConfig tconfig = new TransactionConfig();
 //	    			tconfig.setNoSync(true);
 	    			if (parent != null)
-	    				return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent).getBDBTransaction(), tconfig), env);
+	    				return new TransactionBDBImpl(context,
+	    				                              env.beginTransaction(((TransactionBDBImpl)parent).getBDBTransaction(), tconfig), 
+	    				                              env);
 	    			else
-	    				return new TransactionBDBImpl(env.beginTransaction(null, tconfig), env); 
+	    				return new TransactionBDBImpl(context,
+	    				                              env.beginTransaction(null, tconfig), 
+	    				                              env); 
     			}
     			catch (DatabaseException ex)
     			{

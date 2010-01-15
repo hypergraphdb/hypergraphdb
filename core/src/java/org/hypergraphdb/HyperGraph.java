@@ -294,6 +294,7 @@ public /*final*/ class HyperGraph
     	{
     		eventManager = new HGEventManager();
 	        store = new HGStore(location, config);
+	        store.getTransactionManager().setHyperGraph(this);
 	        cache = new WeakRefAtomCache();
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 

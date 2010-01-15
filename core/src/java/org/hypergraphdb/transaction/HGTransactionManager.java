@@ -10,6 +10,7 @@ package org.hypergraphdb.transaction;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HyperGraph;
 
 import com.sleepycat.db.DeadlockException;
 
@@ -26,6 +27,7 @@ import com.sleepycat.db.DeadlockException;
  */
 public class HGTransactionManager
 {
+    private HyperGraph graph;    
 	private HGTransactionFactory factory;	
 	private ThreadLocal<HGTransactionContext> tcontext =  new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
@@ -94,6 +96,28 @@ public class HGTransactionManager
 		this.factory = factory;
 	}
 
+    /**
+     * <p>
+     * Set the {@link HyperGraph} instance associated with this
+     * <code>HGTransactionManager</code>. 
+     * <strong>Do not call - used internally during initialization.
+     * </p>
+     */
+    public void setHyperGraph(HyperGraph graph)
+    {
+        this.graph = graph;         
+    }
+    
+    /**
+     * <p>Return the {@link HyperGraph} instance associated with this
+     * <code>HGTransactionManager</code>.
+     * </p> 
+     */
+    public HyperGraph getHyperGraph()
+    {
+        return graph;
+    }
+    
 	/**
 	 * <p>
 	 * Attach the given transaction context to the current thread. This
@@ -153,7 +177,7 @@ public class HGTransactionManager
 	{		 
 		if (enabled)
 		{
-			HGTransaction result = factory.createTransaction(parent);
+			HGTransaction result = factory.createTransaction(getContext(), parent);
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);
 			return result;

@@ -25,22 +25,6 @@ public class ReplicationBootstrap implements BootstrapPeer
 	public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
 	{
         peer.getActivityManager().registerActivityType(PublishInterestsTask.class);	    
-/*		peer.getPeerInterface().registerTaskFactory(Performative.CallForProposal, 
-												    HGDBOntology.REMEMBER_ACTION, 
-												    new RememberTaskServer.RememberTaskServerFactory());
-		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
-												    HGDBOntology.ATOM_INTEREST, 
-												    new PublishInterestsTask.PublishInterestsFactory());
-		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
-													HGDBOntology.QUERY, 
-													new QueryTaskServer.QueryTaskFactory());
-		peer.getPeerInterface().registerTaskFactory(Performative.Request, 
-													HGDBOntology.CATCHUP, 
-													new CatchUpTaskServer.CatchUpTaskServerFactory());
-		peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
-													HGDBOntology.ATOM_INTEREST, 
-													new GetInterestsTask.GetInterestsFactory()); */
-
 	    Replication replication = new Replication(peer);
 	    peer.getObjectContext().put(Replication.class.getName(), replication);
 	    // TODO: read atom interests from configuration....	   
