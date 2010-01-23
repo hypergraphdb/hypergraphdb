@@ -182,6 +182,8 @@ public class Structs
 			return hgQueryOrPredicate(x);
 		else if (x instanceof Performative)
 		    return x.toString();
+		else if (x instanceof byte[])
+			return new CustomSerializedValue(x);
 		else if (x instanceof CustomSerializedValue) return x;
 		else if (x == null || 
 			x instanceof Boolean || 

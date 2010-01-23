@@ -19,8 +19,13 @@ public class ProtocolUtils {
 		byte[] streamData = new byte[signature.length];		
 		try
 		{
-			if (in.read(streamData) == signature.length)
-				return Arrays.equals(streamData, signature);
+			int count = 0;
+			for (int read = 0; read > -1 && count < streamData.length; )
+			{
+				count += read;
+				read = in.read(streamData, count, streamData.length - count);
+			}
+			return count == streamData.length && Arrays.equals(streamData, signature);
 		}
 		catch(IOException ex)
 		{

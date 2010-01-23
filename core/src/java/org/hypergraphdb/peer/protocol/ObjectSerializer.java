@@ -75,20 +75,19 @@ public class ObjectSerializer
 			{
 				HashMap<Integer, CustomSerializedValue> customValues = reader.getCustomValues();
 				GenericSerializer serializer = new GenericSerializer();
-
+				
 				for(Integer i=0;i<size;i++)
 				{
 					Object value = serializer.readData(in);
 					if (customValues.containsKey(i))
 						customValues.get(i).setValue(value);
 				}
-			}
-			
+			}			
 			if (!ProtocolUtils.verifySignature(in, END_SIGNATURE))
-			{
-				result = null;
-			}
+				throw new RuntimeException("Message ending signature doesn't match.");				
 		}
+		else
+			throw new RuntimeException("Message starting signature doesn't match.");
 
 		return result;
 	}

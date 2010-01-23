@@ -12,7 +12,6 @@ import static org.hypergraphdb.peer.Structs.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
 
@@ -28,6 +27,7 @@ import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.protocol.Protocol;
+import org.hypergraphdb.util.CompletedFuture;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
@@ -39,11 +39,20 @@ import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
 import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 import org.jivesoftware.smackx.filetransfer.OutgoingFileTransfer;
+import org.jivesoftware.smackx.muc.DefaultParticipantStatusListener;
+import org.jivesoftware.smackx.muc.MultiUserChat;
 
 /**
  * <p>
  * A peer interface implementation based upon the Smack library 
  * (see http://www.igniterealtime.org for more info). 
+ * </p>
+ * 
+ * <p>
+ * The connection is configured as a regular chat connection with
+ * a server name, port, username and a password. Then peers are either
+ * simply all users in this user's roster or all member of a chat room
+ * or the union of both.  
  * </p>
  * 
  * @author Borislav Iordanov
@@ -56,6 +65,8 @@ public class XMPPPeerInterface implements PeerInterface
     private Number port;
     private String user;
     private String password;
+    private String roomId;
+    private boolean ignoreRoster = false;
     private boolean anonymous;
     private boolean autoRegister;
     private int fileTransferThreshold;
@@ -66,6 +77,7 @@ public class XMPPPeerInterface implements PeerInterface
      
     ConnectionConfiguration config = null;
     XMPPConnection connection;
+    MultiUserChat room = null;
     FileTransferManager fileTransfer;
     
     public void configure(Map<String, Object> configuration)
@@ -74,6 +86,8 @@ public class XMPPPeerInterface implements PeerInterface
         port = getOptPart(configuration, 5222, "port");
         user = getPart(configuration, "user");
         password = getPart(configuration, "password");
+        roomId = getOptPart(configuration, null, "room");
+        ignoreRoster = getOptPart(configuration, false, "ignoreRoster");
         autoRegister = getOptPart(configuration, false, "autoRegister");
         anonymous = getOptPart(configuration, false, "anonymous");
         fileTransferThreshold = getOptPart(configuration, 100*1024, "fileTransferThreshold");
@@ -82,13 +96,188 @@ public class XMPPPeerInterface implements PeerInterface
         config.setReconnectionAllowed(true);
         SmackConfiguration.setPacketReplyTimeout(30000);
     }    
-    
-    
+        
     private void reconnect()
     {
     	if (connection != null && connection.isConnected())
     		stop();
     	start();
+    }
+
+    private void processPeerJoin(String name)
+    {
+//    	System.out.println("peer joined: " + name);
+        for (NetworkPeerPresenceListener listener : presenceListeners)
+            listener.peerJoined(user);    	
+    }
+    
+    private void processPeerLeft(String name)
+    {
+//    	System.out.println("peer left: " + name);
+        for (NetworkPeerPresenceListener listener : presenceListeners)
+            listener.peerLeft(user);    	
+    }
+    
+    private void processMessage(Message msg)
+    {
+        //
+        // Encapsulate message deserialization into a transaction because the HGDB might
+        // be accessed during this process.
+        // 
+        org.hypergraphdb.peer.Message M = null;
+        if (thisPeer != null)
+        	thisPeer.getGraph().getTransactionManager().beginTransaction();
+        try
+        {
+            ByteArrayInputStream in = new ByteArrayInputStream(StringUtils.decodeBase64(msg.getBody()));                        
+            M = new org.hypergraphdb.peer.Message((Map<String, Object>)new Protocol().readMessage(in));                        
+        }
+        catch (Exception t)
+        {
+            throw new RuntimeException(t);
+        }
+        finally
+        {
+            try { if (thisPeer != null) 
+            	thisPeer.getGraph().getTransactionManager().endTransaction(false); }
+            catch (Throwable t) { t.printStackTrace(System.err); }
+        }
+        messageHandler.handleMessage(M);                    
+    	
+    }
+    
+    private void initPacketListener()
+    {
+        connection.addPacketListener(new PacketListener() 
+        {
+            private void handlePresence(Presence presence)
+            {
+                String user = presence.getFrom();
+                Roster roster = connection.getRoster();
+                String n = makeRosterName(user);
+                //me - don't fire
+                if(connection.getUser().equals(n)) return;
+                //if user is not in the roster don't fire to listeners
+                //the only exception is when presence is unavailable
+                //because this could be fired after the user was removed from the roster
+                //so we couldn't check this 
+                if(roster.getEntry(n) == null && 
+                   presence.getType() != Presence.Type.unavailable) return;
+                if (presence.getType() == Presence.Type.subscribe)
+                {
+                    Presence reply = new Presence(Presence.Type.subscribed);
+                    reply.setTo(presence.getFrom());
+                    connection.sendPacket(reply);
+                }
+                else if (presence.getType() == Presence.Type.available)
+                	processPeerJoin(user);
+                else if (presence.getType() == Presence.Type.unavailable)
+                	processPeerLeft(user);
+            }
+            
+            private String makeRosterName(String name)
+            {
+                //input could be in following form
+                //bizi@kobrix.syspark.net/67ae7b71-2f50-4aaf-85af-b13fe2236acb
+                //test@conference.kobrix.syspark.net/bizi
+                //bizi@kobrix.syspark.net
+                //output should be:  
+                //bizi@kobrix.syspark.net
+                if(name.indexOf('/') < 0) return name;
+                String first = name.substring(0, name.indexOf('/'));
+                String second = name.substring(name.indexOf('/') + 1);
+                if(second.length() != 36) return second + "@" + connection.getServiceName();
+                try{
+                   HGHandleFactory.makeHandle(second);
+                   return first;
+                }catch(NumberFormatException ex)
+                {
+                    return second;
+                }
+            }
+            
+            public void processPacket(Packet packet)
+            {
+                if (packet instanceof Presence)
+                {
+                	if (!ignoreRoster)
+                		handlePresence((Presence)packet);
+                    return;
+                }
+                processMessage((Message)packet);
+            }                
+            },
+           new PacketFilter() { public boolean accept(Packet p)               
+           {
+             if (p instanceof Presence) return true;
+             if (! (p instanceof Message)) return false;
+             Message msg = (Message)p;
+             if (!msg.getType().equals(Message.Type.normal)) return false;
+             Boolean hgprop = (Boolean)msg.getProperty("hypergraphdb");
+             return hgprop != null && hgprop;                                         
+        }});                	
+    }
+
+    private String roomJidToUser(String jid)
+    {
+    	String [] A = jid.split("/");
+    	return A[1] + "@" + connection.getServiceName();
+    }
+    
+    private void initRoomConnectivity()
+    {
+    	room = new MultiUserChat(getConnection(), roomId);
+    	room.addParticipantStatusListener(new DefaultParticipantStatusListener() 
+    	{	
+            @Override
+            public void joined(String participant)
+            {
+            	processPeerJoin(roomJidToUser(participant));
+            }
+	
+            public void kicked(String participant, String actor, String reason)
+            {
+            	processPeerLeft(roomJidToUser(participant));
+            }
+	
+            public void left(String participant)
+            {
+            	processPeerLeft(roomJidToUser(participant));
+            }
+        });    	
+    }
+    
+    private void login() throws XMPPException
+    {
+        if (anonymous)
+            connection.loginAnonymously();
+        else
+        {
+            // maybe auto-register if login fails
+            try
+            {
+                connection.login(user, 
+                			     password, 
+                			     thisPeer != null ? thisPeer.getIdentity().getId().toString() : null);
+            }
+            catch (XMPPException ex)
+            {
+                //XMPPError error = ex.getXMPPError();
+                if (/* error != null && 
+                     error.getCondition().equals(XMPPError.Condition.forbidden.toString()) && */
+                    ex.getMessage().indexOf("authentication failed") > -1 &&
+                    autoRegister &&
+                    connection.getAccountManager().supportsAccountCreation())
+                {
+                    connection.getAccountManager().createAccount(user, password);
+                    connection.disconnect();
+                    connection.connect();
+                    connection.login(user, password);
+                }
+                else
+                    throw ex;
+            }
+        }                	
     }
     
     public void start()
@@ -99,195 +288,32 @@ public class XMPPPeerInterface implements PeerInterface
         {                             
             connection.connect();
             connection.addConnectionListener(new MyConnectionListener());
-            connection.addPacketListener(new PacketListener() 
-            {
-                private void handlePresence(Presence presence)
-                {
-                    String user = presence.getFrom();
-                    Roster roster = connection.getRoster();
-                    String n = makeRosterName(user);
-                    //me - don't fire
-                    if(connection.getUser().equals(n)) return;
-                    //if user is not in the roaster don't fire to listeners
-                    //the only exception is when presence is unavailable
-                    //because this could be fired after the user was removed from the roaster
-                    //so we couldn't check this 
-                    if(roster.getEntry(n) == null
-                             && presence.getType() != Presence.Type.unavailable) return;
-                    if (presence.getType() == Presence.Type.subscribe)
-                    {
-                        Presence reply = new Presence(Presence.Type.subscribed);
-                        reply.setTo(presence.getFrom());
-                        connection.sendPacket(reply);
-                    }
-                    else if (presence.getType() == Presence.Type.available)
-                    {
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                            listener.peerJoined(user);
-                    }
-                    else if (presence.getType() == Presence.Type.unavailable)
-                    {
-                        for (NetworkPeerPresenceListener listener : presenceListeners)
-                            listener.peerLeft(user);                        
-                    }
-                }
-                
-                private String makeRosterName(String name)
-                {
-                    //input could be in following form
-                    //bizi@kobrix.syspark.net/67ae7b71-2f50-4aaf-85af-b13fe2236acb
-                    //test@conference.kobrix.syspark.net/bizi
-                    //bizi@kobrix.syspark.net
-                    //output should be:  
-                    //bizi@kobrix.syspark.net
-                    if(name.indexOf('/') < 0) return name;
-                    String first = name.substring(0, name.indexOf('/'));
-                    String second = name.substring(name.indexOf('/') + 1);
-                    if(second.length() != 36) return second + "@" + connection.getServiceName();
-                    try{
-                       HGHandleFactory.makeHandle(second);
-                       return first;
-                    }catch(NumberFormatException ex)
-                    {
-                        return second;
-                    }
-                }
-                
-                @SuppressWarnings("unchecked")
-                public void processPacket(Packet packet)
-                {
-                    if (packet instanceof Presence)
-                    {
-                        handlePresence((Presence)packet);
-                        return;
-                    }
-                    Message msg = (Message)packet;
-                    //
-                    // Encapsulate message deserialization into a transaction because the HGDB might
-                    // be accessed during this process.
-                    // 
-                    org.hypergraphdb.peer.Message M = null;
-                    thisPeer.getGraph().getTransactionManager().beginTransaction();
-                    try
-                    {
-                        ByteArrayInputStream in = new ByteArrayInputStream(StringUtils.decodeBase64(msg.getBody()));                        
-                        M = new org.hypergraphdb.peer.Message((Map<String, Object>)new Protocol().readMessage(in));                        
-                    }
-                    catch (Exception t)
-                    {
-                        throw new RuntimeException(t);
-                    }
-                    finally
-                    {
-                        try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
-                        catch (Throwable t) { t.printStackTrace(System.err); }
-                    }
-                    messageHandler.handleMessage(M);                    
-                }                
-                },
-               new PacketFilter() { public boolean accept(Packet p)               
-               {
-                 if (p instanceof Presence) return true;
-                 if (! (p instanceof Message)) return false;
-                 Message msg = (Message)p;
-                 if (!msg.getType().equals(Message.Type.normal)) return false;
-                 Boolean hgprop = (Boolean)msg.getProperty("hypergraphdb");
-                 return hgprop != null && hgprop;                                         
-            }});            
-            if (anonymous)
-                connection.loginAnonymously();
-            else
-            {
-                // maybe auto-register if login fails
-                try
-                {
-                    connection.login(user, password, thisPeer.getIdentity().getId().toString());
-                }
-                catch (XMPPException ex)
-                {
-                    //XMPPError error = ex.getXMPPError();
-                    if (/* error != null && 
-                         error.getCondition().equals(XMPPError.Condition.forbidden.toString()) && */
-                        ex.getMessage().indexOf("authentication failed") > -1 &&
-                        autoRegister &&
-                        connection.getAccountManager().supportsAccountCreation())
-                    {
-                        connection.getAccountManager().createAccount(user, password);
-                        connection.disconnect();
-                        connection.connect();
-                        connection.login(user, password);
-                    }
-                    else
-                        throw ex;
-                }
-            }            
-            final Roster roster = connection.getRoster();            
-//            roster.addRosterListener(new RosterListener() 
-//            {
-//                public void entriesAdded(Collection<String> addresses) 
-//                {
-//                    System.out.println("New friends: " + addresses);
-//                    for(String user: addresses)
-//                    {
-//                        Presence bestPresence = roster.getPresence(user);                   
-//                        if (bestPresence.getType() == Presence.Type.available)
-//                        for (NetworkPeerPresenceListener listener : presenceListeners)
-//                           listener.peerJoined(user);
-//                    }
-//                }
-//                public void entriesDeleted(Collection<String> addresses) 
-//                {
-//                    System.out.println("Friends left: " + addresses);
-//                    for(String user: addresses)
-//                        for (NetworkPeerPresenceListener listener : presenceListeners)
-//                             listener.peerLeft(user);
-//                }
-//                public void entriesUpdated(Collection<String> addresses) 
-//                {
-//                    //System.out.println("friends changed: " + addresses);
-//                }
-//                public void presenceChanged(Presence presence) 
-//                {
-//                    String user = presence.getFrom();
-//
-//                    System.out.println("Presence changed: " + presence.getFrom() + " " + presence);                    
-//                    Presence bestPresence = roster.getPresence(user);                   
-//                    if (bestPresence.getType() == Presence.Type.available)
-//                    {
-//                        for (NetworkPeerPresenceListener listener : presenceListeners)
-//                            listener.peerJoined(user);
-//                    }
-//                    else if (bestPresence.getType() == Presence.Type.unavailable)
-//                    {
-//                        for (NetworkPeerPresenceListener listener : presenceListeners)
-//                            listener.peerLeft(user);                        
-//                    }                        
-//                }
-//            }); 
             fileTransfer = new FileTransferManager(connection);
             fileTransfer.addFileTransferListener(new BigMessageTransferListener());
-                                    
-//            for (RosterEntry entry: roster.getEntries()) 
-//            {
-//                Presence presence = roster.getPresence(entry.getUser());
-//                if (presence.getType() == Presence.Type.available)
-//                    for (NetworkPeerPresenceListener listener : presenceListeners)
-//                        listener.peerJoined(presence.getFrom());
-//            }
-//            Presence presence = new Presence(Presence.Type.available);
-//            presence.setMode(Presence.Mode.available);
-//            for (RosterEntry entry : roster.getEntries())
-//            {
-//                presence.setTo(entry.getUser());
-//                connection.sendPacket(presence);
-//            }
             
-            Presence presence = new Presence(Presence.Type.subscribe);
-            for (RosterEntry entry : roster.getEntries())
+            // Before we login, we add all relevant listeners so that we don't miss
+            // any messages.
+           	initPacketListener();
+           	
+            login();
+            
+            // Now join the room (if any) and explicitly send a presence message
+            // to all peer in the roster cause otherwise presence seems
+            // to go unnoticed.
+            if (roomId != null && roomId.trim().length() > 0)
+            	initRoomConnectivity();                        
+            if (room != null)
+            	room.join(user);
+            if (!ignoreRoster)
             {
-                presence.setTo(entry.getUser());
-                connection.sendPacket(presence);
-            }            
+	            final Roster roster = connection.getRoster();                                                
+	            Presence presence = new Presence(Presence.Type.subscribe);
+	            for (RosterEntry entry : roster.getEntries())
+	            {
+	                presence.setTo(entry.getUser());
+	                connection.sendPacket(presence);
+	            }
+            }
         }
         catch (XMPPException e)
         {    
@@ -357,7 +383,7 @@ public class XMPPPeerInterface implements PeerInterface
                         byte [] data = out.toByteArray();
                         if (data.length > fileTransferThreshold)
                         {
-                            System.out.println("Sending " + data.length + " byte of data as a file.");
+//                            System.out.println("Sending " + data.length + " byte of data as a file.");
                             OutgoingFileTransfer outFile = 
                                 fileTransfer.createOutgoingFileTransfer((String)getTarget());
                             outFile.sendStream(new ByteArrayInputStream(data), 
@@ -394,7 +420,19 @@ public class XMPPPeerInterface implements PeerInterface
         PeerRelatedActivity act = activityFactory.createActivity(); 
         act.setTarget(networkTarget);
         act.setMessage(msg);
-        return thisPeer.getExecutorService().submit(act); 
+        if (thisPeer != null)
+        	return thisPeer.getExecutorService().submit(act);
+        else
+        {
+        	try
+			{
+				return new CompletedFuture<Boolean>(act.call());
+			} 
+        	catch (Exception e)
+			{
+        		throw new RuntimeException(e);
+			}
+        }
     }
     
     public void broadcast(org.hypergraphdb.peer.Message msg)
@@ -511,7 +549,7 @@ public class XMPPPeerInterface implements PeerInterface
 	
     private class BigMessageTransferListener implements FileTransferListener
     {
-        @SuppressWarnings("unchecked")
+//        @SuppressWarnings("unchecked")
         public void fileTransferRequest(FileTransferRequest request)
         {
             if (thisPeer.getIdentity(request.getRequestor()) != null)
@@ -560,35 +598,35 @@ public class XMPPPeerInterface implements PeerInterface
 
 		public void connectionClosed()
 		{
-			System.out.println("XMPP connection " + user + "@" + 
-					serverName + ":" + port + " closed gracefully.");
+//			System.out.println("XMPP connection " + user + "@" + 
+//					serverName + ":" + port + " closed gracefully.");
 //			reconnect();
 		}
 
 		public void connectionClosedOnError(Exception ex)
 		{
-			System.out.println("XMPP connection " + user + "@" + 
-					serverName + ":" + port + " closed exceptionally.");
+//			System.out.println("XMPP connection " + user + "@" + 
+//					serverName + ":" + port + " closed exceptionally.");
 			ex.printStackTrace(System.err);
 			reconnect();
 		}
 
 		public void reconnectingIn(int arg0)
 		{
-			System.out.println("Auto-reconnecting in " + arg0 + "...");
+//			System.out.println("Auto-reconnecting in " + arg0 + "...");
 		}
 
 		public void reconnectionFailed(Exception ex)
 		{
-			System.out.println("XMPP auto-re-connection " + 
-					serverName + ":" + port + " failed.");
+//			System.out.println("XMPP auto-re-connection " + 
+//					serverName + ":" + port + " failed.");
 			ex.printStackTrace(System.err);
 			reconnect();
 		}
 
 		public void reconnectionSuccessful()
 		{
-			System.out.println("Auto-reconnection successful");
+//			System.out.println("Auto-reconnection successful");
 		}    	
     }
     

@@ -10,6 +10,9 @@ package org.hypergraphdb.peer.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+
+import org.hypergraphdb.peer.Message;
 
 /**
  * @author Cipri Costa Simple class for now that serializes messages. Will
@@ -17,74 +20,56 @@ import java.io.OutputStream;
  */
 public class Protocol
 {
-    private final static byte[] SIGNATURE = "HGBD".getBytes();
+	private final static byte[] SIGNATURE = "HGBD".getBytes();
 
-    // private static MessageFactory messageFactory = new MessageFactory();
+	// private static MessageFactory messageFactory = new MessageFactory();
 
-    public Protocol()
-    {
-    }
+	public Protocol()
+	{
+	}
 
-    /**
-     * @param in
-     * @param session
-     * @return
-     * @throws IOException
-     */
-    public Object readMessage(InputStream in) throws IOException
-    {
-        Object result = null;
+	/**
+	 * @param in
+	 * @param session
+	 * @return
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unchecked")
+	public Message readMessage(InputStream in) throws IOException
+	{
+		Object content = null;
 
-        // get & verify signature
-        if (ProtocolUtils.verifySignature(in, SIGNATURE))
-        {
-            ObjectSerializer serializer = new ObjectSerializer();
-            result = serializer.deserialize(in);
-        }
-        else
-        {
-            System.out.println("ERROR: Signature does not match");
-        }
+		// get & verify signature
+		if (ProtocolUtils.verifySignature(in, SIGNATURE))
+		{
+			ObjectSerializer serializer = new ObjectSerializer();
+			content = serializer.deserialize(in);
+		} 
+		else
+			throw new RuntimeException("ERROR: Signature does not match");
 
-        // TODO for now just returning the last response
-        return result;
-    }
+		if (content instanceof Map)
+			return new Message((Map<String, Object>) content);
+		else
+			throw new RuntimeException(
+					"Message content is null or not a map (i.e. a record-like object).");
+	}
 
-    public Object handleResponse(InputStream in) throws IOException
-    {
-        Object result = null;
-        if (ProtocolUtils.verifySignature(in, SIGNATURE))
-            result = new ObjectSerializer().deserialize(in);
-        return result;
-    }
+	public void writeMessage(OutputStream out, Message msg) throws IOException
+	{
+		writeSignature(out);
 
-    // TODO can send multiple messages?
-    public void writeMessage(OutputStream out, Object msg) throws IOException
-    {
-        writeSignature(out);
+		// TODO serialization type should be configurable
+		ObjectSerializer serializer = new ObjectSerializer();
+		serializer.serialize(out, msg);
 
-        // TODO serialization type should be configurable
-        ObjectSerializer serializer = new ObjectSerializer();
-        serializer.serialize(out, msg);
+		// TODO no longer needed
+		// session.setSerializer(serializer);
+	}
 
-        // TODO no longer needed
-        // session.setSerializer(serializer);
-    }
+	private void writeSignature(OutputStream out) throws IOException
+	{
+		out.write(SIGNATURE);
 
-    public void createResponse(OutputStream out, Object response)
-            throws IOException
-    {
-        writeSignature(out);
-
-        new ObjectSerializer().serialize(out, response);
-        // write response
-
-    }
-
-    private void writeSignature(OutputStream out) throws IOException
-    {
-        out.write(SIGNATURE);
-
-    }
-
+	}
 }
