@@ -1,8 +1,14 @@
 package hgtest;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.util.HGUtils;
 
 @SuppressWarnings("unchecked")
 public class T
@@ -111,5 +117,31 @@ public class T
 			}
 				
 		}
-	}	
+	}
+	
+	public static String getResourceContents(String resource)
+	{		
+		StringBuilder contents = new StringBuilder();	
+		InputStream in = HGUtils.class.getResourceAsStream(resource);
+		BufferedReader input =  new BufferedReader(new InputStreamReader(in));
+		try 
+		{
+			String line = null; 
+			while (( line = input.readLine()) != null)
+			{
+				contents.append(line);
+				contents.append(System.getProperty("line.separator"));
+			}
+		}
+		catch (IOException ex)
+		{
+			throw new RuntimeException(ex);
+		}
+	    finally 
+	    {
+	    	try { in.close(); }
+	    	catch (Throwable t) { }
+	    }
+	    return contents.toString();
+	}    	
 }
