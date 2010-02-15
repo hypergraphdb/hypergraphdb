@@ -28,7 +28,7 @@ public class TxMonitor
 		try
 		{
 			Info txInfo = new Info();
-			txInfo.id = ((TransactionBDBImpl)tx).getBDBTransaction().getId();
+			txInfo.id = ((TransactionBDBImpl)tx.getStorageTransaction()).getBDBTransaction().getId();
 			txInfo.threadName = Thread.currentThread().getName();
 			StringBuffer b = new StringBuffer();
 			for (StackTraceElement el : Thread.currentThread().getStackTrace())
@@ -44,7 +44,7 @@ public class TxMonitor
 		try
 		{
 			int id;
-			id = ((TransactionBDBImpl)tx).getBDBTransaction().getId();
+			id = ((TransactionBDBImpl)tx.getStorageTransaction()).getBDBTransaction().getId();
 			txMap.remove(id);
 			if ( 1 == 1) return;
 			Info txInfo = txMap.get(id);

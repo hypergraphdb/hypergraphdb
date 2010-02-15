@@ -8,6 +8,7 @@
 package org.hypergraphdb.util;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ import org.hypergraphdb.HGRandomAccessResult;
  * @param <E>
  */
 @SuppressWarnings("unchecked")
-public class ArrayBasedSet<E> implements HGSortedSet<E>
+public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 {
 	Class<E> type;
 	E [] array;
@@ -410,6 +411,21 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>
 		}
 	}
 
+	public ArrayBasedSet<E> clone()
+	{
+	    try
+	    {
+    	    ArrayBasedSet<E> S = (ArrayBasedSet<E>)super.clone();
+    	    S.array = Arrays.copyOf(array, size);
+    	    return S;
+	    } 
+	    catch (CloneNotSupportedException e) 
+	    {
+	        // this shouldn't happen, since we are Cloneable
+	        throw new InternalError();
+	    }    	    
+	}
+	
 	public <T> T[] toArray(T[] a)
 	{
 	    lock.readLock().lock();

@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.io.File;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.*;
+import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.HGTransaction;
@@ -78,10 +79,10 @@ public class HGStore
     private TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();;
-    	if (tx == null || tx instanceof VanillaTransaction)
+    	if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
     		return TransactionBDBImpl.nullTransaction();
     	else
-    		return (TransactionBDBImpl)tx;
+    		return (TransactionBDBImpl)tx.getStorageTransaction();
     }    
     
     /**
@@ -107,7 +108,10 @@ public class HGStore
 	        envConfig.setInitializeLocking(true);
 	        envConfig.setInitializeLogging(true);
 	        envConfig.setTransactional(true);
+	        envConfig.setMultiversion(true);
+	        envConfig.setTxnSnapshot(true);
 	        envConfig.setTxnWriteNoSync(true);
+	        envConfig.setTxnMaxActive(5000);
 	        envConfig.setLockDetectMode(LockDetectMode.RANDOM);
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
@@ -145,7 +149,6 @@ public class HGStore
 	        	transactionManager.disable();
 	        else
 	        {
-	        	final Environment fenv = env;
 		        checkPointThread = new CheckPointThread();
 	        	checkPointThread.start();
 	        }
@@ -173,19 +176,17 @@ public class HGStore
     {
     	return new HGTransactionFactory()
     	{
-    		public HGTransaction createTransaction(HGTransactionContext context, HGTransaction parent)
+    		public HGStorageTransaction createTransaction(HGTransactionContext context, HGTransaction parent)
     		{   		
     			try
     			{
 	    			TransactionConfig tconfig = new TransactionConfig();
 //	    			tconfig.setNoSync(true);
 	    			if (parent != null)
-	    				return new TransactionBDBImpl(context,
-	    				                              env.beginTransaction(((TransactionBDBImpl)parent).getBDBTransaction(), tconfig), 
+	    				return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig), 
 	    				                              env);
 	    			else
-	    				return new TransactionBDBImpl(context,
-	    				                              env.beginTransaction(null, tconfig), 
+	    				return new TransactionBDBImpl(env.beginTransaction(null, tconfig), 
 	    				                              env); 
     			}
     			catch (DatabaseException ex)
@@ -988,8 +989,7 @@ public class HGStore
     		indicesLock.writeLock().unlock();
     	}
     }
-    
-    @SuppressWarnings("unchecked")    
+        
     public void close()
     {
         if (env != null)

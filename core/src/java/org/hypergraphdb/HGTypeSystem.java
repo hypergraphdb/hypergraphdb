@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +27,7 @@ import org.hypergraphdb.event.HGLoadPredefinedTypeEvent;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
+import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.type.BonesOfBeans;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.JavaTypeFactory;
@@ -82,7 +82,7 @@ public class HGTypeSystem
 	public static final HGAtomType top = Top.getInstance();
 
 	private HyperGraph graph = null;
-	private Map<Class<?>, HGHandle> classToAtomType = Collections.synchronizedMap(new ClassToTypeCache());
+	private Map<Class<?>, HGHandle> classToAtomType = null;
 	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
 	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;
@@ -345,19 +345,11 @@ public class HGTypeSystem
 
 	HGHandle defineNewJavaType(final Class<?> clazz)
 	{
-		try
-		{
-			if (graph.getTransactionManager().getContext().getCurrent() != null)
-				return makeNewJavaType(clazz);
-			else
-				return graph.getTransactionManager().transact(new Callable<HGHandle>()
-						{ public HGHandle call() { return makeNewJavaType(clazz); } });
-		}
-		catch (RuntimeException t)
-		{
-			classToAtomType.remove(clazz);
-			throw t;
-		}
+		if (graph.getTransactionManager().getContext().getCurrent() != null)
+			return makeNewJavaType(clazz);
+		else
+			return graph.getTransactionManager().transact(new Callable<HGHandle>()
+					{ public HGHandle call() { return makeNewJavaType(clazz); } });
 	}
 
 	HGHandle makeNewJavaType(Class<?> clazz)
@@ -495,9 +487,11 @@ public class HGTypeSystem
 	 *
 	 * @param hg The <code>HyperGraph</code> which the type system is bound.
 	 */
-	public HGTypeSystem(HyperGraph hg)
+	@SuppressWarnings("unchecked")
+    public HGTypeSystem(HyperGraph graph)
 	{
-		this.graph = hg;
+		this.graph = graph;
+		this.classToAtomType = new TxMap(graph.getTransactionManager(), new ClassToTypeCache());
 		//
 		// Initialize databases to avoid heaving to synchronize later.
 		//
@@ -505,7 +499,7 @@ public class HGTypeSystem
 		this.getClassToTypeDB();
 		this.getPredefinedTypesDB();
 		this.javaTypes = new JavaTypeFactory();
-		javaTypes.setHyperGraph(hg);
+		javaTypes.setHyperGraph(graph);
 	}
 
 	/**

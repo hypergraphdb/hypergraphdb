@@ -11,7 +11,7 @@ import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.IdentityHashMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReadWriteLock;
 
 import org.hypergraphdb.HGAtomCache;
 import org.hypergraphdb.HGPersistentHandle;
@@ -22,7 +22,10 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
+import org.hypergraphdb.transaction.TxMap;
+import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.util.CloseMe;
+import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.WeakIdentityHashMap;
 
 /**
@@ -51,19 +54,17 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = null; // to be configured by the HyperGraph instance
 	
-    private final Map<HGPersistentHandle, WeakHandle> 
-    	liveHandles = new HashMap<HGPersistentHandle, WeakHandle>();
+    private Map<HGPersistentHandle, WeakHandle> liveHandles = null; 
 		
-	private Map<Object, HGLiveHandle> atoms = 
-		new WeakIdentityHashMap<Object, HGLiveHandle>();
+	private Map<Object, HGLiveHandle> atoms = null;
 	
-	private Map<HGLiveHandle, Object> frozenAtoms =	new IdentityHashMap<HGLiveHandle, Object>();
+	private Map<HGLiveHandle, Object> frozenAtoms =	null;
 	
 	private ColdAtoms coldAtoms = new ColdAtoms();
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+	private ReadWriteLock lock = new DummyReadWriteLock(); // new ReentrantReadWriteLock();
     private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup cleanupThread = new PhantomCleanup();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
@@ -73,7 +74,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	// This handle class is used to read atoms during closing of the cache. Because
 	// closing the HyperGraph may involve a lot of cleanup activity where it's necessary
 	// to read atoms (mostly types) into main memory just temporarily, we need some
-	// way to enact this temporarity. 
+	// way to enact this temporarily. 
 	//
 	private static class TempLiveHandle extends DefaultManagedLiveHandle
 	{
@@ -142,8 +143,20 @@ public class WeakRefAtomCache implements HGAtomCache
 	    }
 	}
 	
-	public WeakRefAtomCache()
+	public WeakRefAtomCache(HyperGraph graph)
 	{
+	    if (graph.getConfig().isTransactional())
+	    {
+	        atoms = new TxMap<Object, HGLiveHandle>(graph.getTransactionManager(), new WeakIdentityHashMap<Object, VBox<HGLiveHandle>>());
+	        liveHandles = new TxMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), new HashMap<HGPersistentHandle, VBox<WeakHandle>>());
+	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), new IdentityHashMap<HGLiveHandle, VBox<Object>>());	        
+	    }
+	    else
+	    {
+	        atoms = new WeakIdentityHashMap<Object, HGLiveHandle>();
+	        liveHandles = new HashMap<HGPersistentHandle, WeakHandle>();
+	        frozenAtoms = new IdentityHashMap<HGLiveHandle, Object>();
+	    }
 		cleanupThread.setPriority(Thread.MAX_PRIORITY);
 		cleanupThread.setDaemon(true);		
 		cleanupThread.start();

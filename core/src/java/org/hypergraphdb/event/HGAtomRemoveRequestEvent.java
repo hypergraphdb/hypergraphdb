@@ -12,7 +12,7 @@ import org.hypergraphdb.HGHandle;
 /**
  * <p>
  * A <code>HGAtomRemoveRequestEvent</event> is triggered when an attempt is made to remove
- * an from HyperGraph, but before the removal process proceeds. This event gives chance to 
+ * an from HyperGraph, but before the removal process proceeds. This event gives a chance to 
  * an application to cancel the removal of an atom. A listener to this event may return
  * the <code>HGListener.Result.cancel</code> code which will prevent the removal from happening.
  * On the other hand, if an application needs to perform some action as a result to an already 

@@ -38,7 +38,7 @@ public class HGLock implements ReadWriteLock
 	ReadWriteLock getApplicableLock()
 	{
 		HGTransaction tx = txLock.getGraph().getTransactionManager().getContext().getCurrent(); 
-		if (tx == null || ! (tx instanceof TransactionBDBImpl))
+		if (tx == null || ! (tx.getStorageTransaction() instanceof TransactionBDBImpl))
 		{
 			if (defaultLock == null)
 				defaultLock = new ReentrantReadWriteLock();

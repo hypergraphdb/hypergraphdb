@@ -13,7 +13,8 @@ package org.hypergraphdb;
  * The interface is for atoms that need to hold a reference to the
  * <code>HyperGraph</code> to which they belong. If an object implements
  * this interface, its <code>setHyperGraph</code> method will be called
- * every time it is read from permanent storage.
+ * every time it is read from permanent storage, and also the first it is
+ * added to permanent storage.
  * </p>
  *
  * @author Borislav Iordanov

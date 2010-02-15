@@ -76,7 +76,7 @@ public interface HGLink
      * <p>
      * An implementation may throw an <code>IllegalArgumentException</code> if the target
      * cannot be removed from the link because it would somehow break the semantics of the
-     * application or lead in otherwise inconsistent state. Throwing such an exception would
+     * application or lead to an otherwise inconsistent state. Throwing such an exception would
      * indicate a fatal error and a very likely bug in the application.
      * </p>
      * 

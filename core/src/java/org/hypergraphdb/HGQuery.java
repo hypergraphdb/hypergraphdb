@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -114,6 +115,105 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
      */
     public static final class hg
     {
+        /**
+         * <p>
+         * Return <code>assertAtom(graph, instance, false)</code>.
+         * </p>    
+         */                
+        public static HGHandle assertAtom(final HyperGraph graph, final Object instance)
+        {
+            return assertAtom(graph, instance, false);
+        }
+        
+        /**
+         * <p>
+         * Return the atom handle if <code>instance</code> is already a loaded atom in the cache.
+         * Otherwise, get the default type corresponding to <code>instance.getClass</code> and
+         * return <code>assertAtom(graph, instance, type, ignoreValue)</code>.
+         * </p>
+         */        
+        public static HGHandle assertAtom(final HyperGraph graph, final Object instance, boolean ignoreValue)
+        {
+            if (instance == null)
+                throw new NullPointerException("Can't assert a null atom without specifying a type for it.");
+            HGHandle existing = graph.getHandle(instance);
+            if (existing != null)
+                return existing;
+            HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(instance.getClass());
+            return assertAtomImpl(graph, instance, typeHandle, ignoreValue);            
+        }
+        
+        /**
+         * <p>
+         * Return <code>assertAtom(graph, instance, type, false)</code>.
+         * </p>    
+         */        
+        public static HGHandle assertAtom(final HyperGraph graph, final Object instance, final HGHandle type)
+        {
+            return assertAtom(graph, instance, type, false);
+        }
+        
+        /**
+         * <p>
+         * Add a new atom to the specified graph only if it is not already there. An object
+         * is considered in the graph if:
+         * 
+         * <ul>
+         * <li>It is associated with a {@link HGHandle} in the graph's cache; or</li>
+         * <li>A lookup for an
+         * atom with the specified type, value and target set returns
+         * a non-empty set. In this case the first atom from the query result is returned.</li>
+         * </ul>
+         * </p>
+         * 
+         * @param graph The {@link HyperGraph} database instance.
+         * @param instance The object to be <em>asserted</em> as an atom.
+         * @param type The type of the atom.
+         * @param ignoreValue Whether to ignore the atom value while performing the lookup. The value 
+         * of the atom is compared with <code>Object.equals</code> 
+         * so it is important that that method be implemented properly for your Java object. The default 
+         * implementation in the standard <code>Object</code> class won't work. If the object class
+         * doesn't implement this method and there are no other way to uniquely identify the atom's
+         * value known to HyperGraph, then please use the {@link addUnique} method to specify a condition
+         * for lookup. If the value is not important, which is frequently the case with Java-type links,
+         * then set this parameter to <code>true</code>. 
+         * @return The {@link HGHandle} of the asserted atom (either existing or newly added).
+         */         
+        public static HGHandle assertAtom(final HyperGraph graph, 
+                                          final Object instance, 
+                                          final HGHandle type, 
+                                          final boolean ignoreValue)
+        {
+            if (instance != null)
+            {
+                HGHandle existing = graph.getHandle(instance);
+                if (existing != null)
+                {
+                    if (graph.getType(existing).equals(type))
+                        return existing;
+                }                
+            }
+            return assertAtomImpl(graph, instance, type, ignoreValue);
+        }
+        
+        
+        private static HGHandle assertAtomImpl(final HyperGraph graph, final Object instance, final HGHandle type, final boolean ignoreValue)
+        {
+            return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+                public HGHandle call()
+                {
+                    And and = new And();
+                    and.add(type(type));
+                    if (!ignoreValue)
+                        and.add(eq(instance));
+                    if (instance instanceof HGLink)
+                        and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
+                    HGHandle h = findOne(graph, and);
+                    return h == null ?  graph.add(instance) : h;                    
+                }
+            });            
+        }
+        
     	/**
     	 * <p>
     	 * Add the given instance as an atom in the graph iff no atoms
@@ -128,8 +228,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         		public HGHandle call()
         		{
                     HGHandle h = findOne(graph, condition);
-                    if (h != null)
-                        System.out.println("skip existing...");
                     return h == null ?  graph.add(instance) : h;        			
         		}
         	});
@@ -183,7 +281,9 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static TargetCondition target(HGHandle h) { return new TargetCondition(h); }
         public static IncidentCondition incident(HGHandle h) { return new IncidentCondition(h); }
         public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
+        public static LinkCondition link(Collection<HGHandle> C) { return new LinkCondition(C); }
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
+        public static OrderedLinkCondition orderedLink(List<HGHandle> L) { return new OrderedLinkCondition(L); }
         public static ArityCondition arity(int i) { return new ArityCondition(i); }
         public static DisconnectedPredicate disconnected() { return new DisconnectedPredicate(); }
         

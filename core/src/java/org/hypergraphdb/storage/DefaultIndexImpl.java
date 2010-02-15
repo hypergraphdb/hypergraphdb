@@ -68,10 +68,10 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     protected TransactionBDBImpl txn()
     {
     	HGTransaction tx = transactionManager.getContext().getCurrent();
-    	if (tx == null || tx instanceof VanillaTransaction)
+    	if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
     		return TransactionBDBImpl.nullTransaction();
     	else
-    		return (TransactionBDBImpl)tx;
+    		return (TransactionBDBImpl)tx.getStorageTransaction();
     }
 
     public DefaultIndexImpl(Environment env,

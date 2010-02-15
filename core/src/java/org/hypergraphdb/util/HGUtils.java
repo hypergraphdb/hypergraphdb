@@ -10,6 +10,7 @@ package org.hypergraphdb.util;
 import java.io.File;
 import java.io.PrintStream;
 
+import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
@@ -161,6 +162,20 @@ public class HGUtils
 			throw new HGException(t);
 	}
 	
+	/**
+	 * <p>
+	 * Contextually load a class the same way the {@link HGTypeSystem} would: 
+	 * try the thread-bound class loader and if that fails, try the user-specified
+	 * ClassLoader in the type system of the passed in graph; finally, try the ClassLoader
+	 * of this (<code>HGUtils</code>) class.
+	 * </p>
+	 * 
+	 * @param <T>
+	 * @param graph
+	 * @param classname
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<T> loadClass(HyperGraph graph, String classname) throws ClassNotFoundException
 	{
@@ -324,4 +339,29 @@ public class HGUtils
             mapping.eval(top);
         }        
     }	
+    
+    /**
+     * <p>
+     * Delete a {@link HyperGraph} by removing the filesystem directory that holds it.
+     * This method will first make sure to close the HyperGraph if it's currently open.   
+     * </p>
+     * 
+     * @param location The location of the graph instance.
+     */
+    public static void dropHyperGraphInstance(String location)
+    {
+        if (HGEnvironment.isOpen(location))
+        {
+            HGEnvironment.get(location).close();
+        }
+        directoryRecurse(new File(location), 
+                         new Mapping<File, Boolean>()
+                         {
+                            public Boolean eval(File f)
+                            {
+                                return f.delete();
+                            }
+                         }
+        );
+    }
 }

@@ -295,7 +295,7 @@ public /*final*/ class HyperGraph
     		eventManager = new HGEventManager();
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
-	        cache = new WeakRefAtomCache();
+	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
 	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
@@ -664,10 +664,14 @@ public /*final*/ class HyperGraph
      * been previously registered with the type system. 
      * @param flags A combination of system-level bit flags. Available flags that can 
      * be <em>or-ed</em> together are listed in the <code>HGSystemFlags</code> interface.   
-     * @return The HyperGraph handle of the newly added atom.
+     * @return The HyperGraph handle of the newly added atom or <code>null</code> if
+     * the addition was refused by a listener to the {@HGAtomProposedEvent}.
      */
     public HGHandle add(Object atom, HGHandle type, int flags)
     {
+        if (eventManager.dispatch(this, 
+               new HGAtomProposeEvent(atom, type, flags)) == HGListener.Result.cancel)
+            return null;
     	HGHandle result;
         if (atom instanceof HGLink)
         {
@@ -679,6 +683,8 @@ public /*final*/ class HyperGraph
         }
         else
             result = addNode(atom, type, (byte)flags);
+        if (result instanceof HGGraphHolder)
+            ((HGGraphHolder)result).setHyperGraph(this);
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
     }
@@ -1060,13 +1066,13 @@ public /*final*/ class HyperGraph
      * 
      * @param atom
      */
-    public void update(Object atom)
+    public boolean  update(Object atom)
     {
     	HGHandle h = getHandle(atom);
     	if (h == null)
     		throw new HGException("Could not find HyperGraph handle for atom " + atom);
     	else
-    		replace(h, atom);
+    		return replace(h, atom);
     }
     
     /**
@@ -1103,7 +1109,7 @@ public /*final*/ class HyperGraph
      * @param atom An arbitrary Java <code>Object</code> representing the new atom. The
      * type of the atom will be inferred using the Java instrospection mechanism.
      */
-    public void replace(HGHandle handle, Object atom)
+    public boolean replace(HGHandle handle, Object atom)
     {
     	HGHandle atomType;
     	if (atom instanceof HGValueLink)    		
@@ -1120,8 +1126,7 @@ public /*final*/ class HyperGraph
             if (atomType == null)
             	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());    		
     	}
-        replace(handle, atom, atomType);
-        eventManager.dispatch(this, new HGAtomReplacedEvent(handle));        
+        return replace(handle, atom, atomType);        
     }
     
     /**
@@ -1158,8 +1163,11 @@ public /*final*/ class HyperGraph
      * @param atom An arbitrary Java <code>Object</code> representing the new atom.
      * @param type The type of the new atom value. 
      */
-    public void replace(HGHandle handle, Object atom, HGHandle type)
+    public boolean replace(HGHandle handle, Object atom, HGHandle type)
     {
+        if (eventManager.dispatch(this, 
+                   new HGAtomReplaceRequestEvent(handle, type, atom)) == HGListener.Result.cancel)
+            return false;
         HGPersistentHandle pHandle = null;
         HGLiveHandle lHandle = null;
         if (handle instanceof HGPersistentHandle)
@@ -1174,7 +1182,8 @@ public /*final*/ class HyperGraph
         }
         
         replaceInternal(lHandle, pHandle, atom, type);
-        eventManager.dispatch(this, new HGAtomReplacedEvent(lHandle));        
+        eventManager.dispatch(this, new HGAtomReplacedEvent(lHandle));   
+        return true;
     }
     
     /**

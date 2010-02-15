@@ -8,6 +8,7 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
@@ -32,7 +33,10 @@ public class HGTransactionManager
 	private ThreadLocal<HGTransactionContext> tcontext =  new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
 	
-	public TxMonitor txMonitor = null;
+    volatile ActiveTransactionsRecord mostRecentRecord = new ActiveTransactionsRecord(0, null);
+    final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
+        
+	TxMonitor txMonitor = null;
 	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>
@@ -177,13 +181,17 @@ public class HGTransactionManager
 	{		 
 		if (enabled)
 		{
-			HGTransaction result = factory.createTransaction(getContext(), parent);
+		    ActiveTransactionsRecord activeRecord = mostRecentRecord.getRecordForNewTransaction();
+			HGTransaction result = new HGTransaction(getContext(),
+			                                         parent,
+			                                         activeRecord,
+			                                         factory.createTransaction(getContext(), parent));
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);
 			return result;
 		}
 		else
-			return new VanillaTransaction();
+			return new HGTransaction(getContext(), parent, null, new VanillaTransaction());
 	}
 	
 	/**
@@ -318,15 +326,16 @@ public class HGTransactionManager
 				
 				// If there is a DeadlockException at the root of this, we have to simply abort
 				// the transaction and try again.				
-		    	boolean is_deadlock = false;
+		    	boolean retry = false;
 				for (Throwable cause = t.getCause(); cause != null; cause = cause.getCause())					
-					if (cause instanceof DeadlockException)
+					if (cause instanceof DeadlockException || 
+					    cause instanceof TransactionConflictException)
 					{
-						is_deadlock = true;
+						retry = true;
 						break;
 					}
 				
-				if (!is_deadlock)
+				if (!retry)
 				{
 					if (t instanceof RuntimeException)
 						throw (RuntimeException)t;

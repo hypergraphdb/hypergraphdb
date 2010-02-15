@@ -44,7 +44,7 @@ public class BDBTxLock implements ReadWriteLock
 	{
 		try
 		{
-			return ((TransactionBDBImpl)graph.getTransactionManager().getContext().getCurrent()).getBDBTransaction().getId();
+			return ((TransactionBDBImpl)graph.getTransactionManager().getContext().getCurrent().getStorageTransaction()).getBDBTransaction().getId();
 		}
 		catch (DatabaseException ex)
 		{
@@ -54,7 +54,7 @@ public class BDBTxLock implements ReadWriteLock
 
 	private Environment getEnv()
 	{
-		return ((TransactionBDBImpl)graph.getTransactionManager().getContext().getCurrent()).getBDBEnvironment();		
+		return ((TransactionBDBImpl)graph.getTransactionManager().getContext().getCurrent().getStorageTransaction()).getBDBEnvironment();		
 	}
 	
 	private class BDBReadLock implements Lock

@@ -13,6 +13,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGLink;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -33,13 +34,22 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 	{
 		
 	}
+	
 	public LinkCondition(HGHandle [] targets)
 	{
-		this.targetSet = new HashSet<HGHandle>();
-		if (targetSet == null)
-			throw new HGException("OrderedLinkCondition instantiated with a null target set.");
-		else for (int i = 0; i < targets.length; i++)
+		if (targets == null)
+			throw new HGException("LinkCondition instantiated with a null target set.");
+        this.targetSet = new HashSet<HGHandle>();
+        for (int i = 0; i < targets.length; i++)
 			targetSet.add(targets[i]);
+	}
+	
+	public LinkCondition(Collection<HGHandle> targets)
+	{
+        if (targets == null)
+            throw new HGException("LinkCondition instantiated with a null target set.");
+        this.targetSet = new HashSet<HGHandle>();
+        targetSet.addAll(targets);
 	}
 	
 	public HashSet<HGHandle> targets()

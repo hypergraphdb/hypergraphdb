@@ -20,9 +20,8 @@ import java.util.Iterator;
  * @author Borislav Iordanov
  *
  */
-public class VanillaTransaction implements HGTransaction
+public class VanillaTransaction implements HGStorageTransaction
 {
-	private HashMap<String, Object> attributes = new HashMap<String, Object>();
 	
 	public void abort() throws HGTransactionException
 	{
@@ -31,25 +30,4 @@ public class VanillaTransaction implements HGTransaction
 	public void commit() throws HGTransactionException
 	{
 	}
-
-	public Object getAttribute(String name) 
-	{
-		return attributes.get(name);
-	}
-
-	public Iterator<String> getAttributeNames() 
-	{
-		return attributes.keySet().iterator();
-	}
-
-	public void removeAttribute(String name) 
-	{
-		attributes.remove(name);
-	}
-
-	public void setAttribute(String name, Object value) 
-	{
-		attributes.put(name, value);
-	}
-
 }

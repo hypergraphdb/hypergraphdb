@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb.query;
 
+import java.util.List;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGLink;
@@ -54,12 +56,24 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 	{
 		
 	}
+	
 	public OrderedLinkCondition(HGHandle [] targetSet)
 	{
-		this.targetSet = targetSet;
 		if (targetSet == null)
 			throw new HGException("OrderedLinkCondition instantiated with a null target set.");
+        this.targetSet = new HGHandle[targetSet.length];		
+        System.arraycopy(targetSet, 0, this.targetSet, 0, targetSet.length);
 	}
+
+    public OrderedLinkCondition(List<HGHandle> targetSet)
+    {
+        if (targetSet == null)
+            throw new HGException("OrderedLinkCondition instantiated with a null target set.");
+        this.targetSet = new HGHandle[this.targetSet.length];
+        int i = 0;
+        for (HGHandle h : targetSet)
+            this.targetSet[i++] = h; 
+    }
 	
 	public HGHandle [] targets()
 	{
