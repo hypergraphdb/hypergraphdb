@@ -3,12 +3,13 @@ package hgtest.jxta;
 import java.beans.IntrospectionException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.protocol.ObjectSerializer;
 
 public class SerializationTest {
-	public static void main(String[] args) throws IntrospectionException{
+	public static void main(String[] args) throws IntrospectionException, IOException{
 				
 		testObject(null);
 			
@@ -28,19 +29,19 @@ public class SerializationTest {
 		testSomeOtherJavaObjects();
 	}
 
-	private static void testSomeOtherJavaObjects()
+	private static void testSomeOtherJavaObjects() throws IOException
 	{
 		testObject(SimpleBean.class);
 		
 	}
 
-	private static void testHGTypes()
+	private static void testHGTypes() throws IOException
 	{
 		testObject(UUIDPersistentHandle.makeHandle());
 		
 	}
 
-	private static void testArrays()
+	private static void testArrays() throws IOException
 	{
 		testObject(new String[]{});
 		
@@ -61,7 +62,7 @@ public class SerializationTest {
 		testObject(new Object[]{0, new SimpleBean("test"), new String[]{"string 1", "string 2"}});
 	}
 
-	private static void testVariousTees() {
+	private static void testVariousTees() throws IOException {
 
 		TreeNode head = null;
 		head = new TreeNode("0", null, null);
@@ -86,7 +87,7 @@ public class SerializationTest {
 		
 	}
 		
-	public static void testObject(Object value){
+	public static void testObject(Object value) throws IOException{
 		ObjectSerializer serializer = new ObjectSerializer();
 
 		System.out.println("  Serialized: " + formatObject(value));

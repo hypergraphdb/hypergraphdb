@@ -137,7 +137,7 @@ public class JSONTest
 		}
 		
 	}
-	private static void testCustomObjects()
+	private static void testCustomObjects() throws IOException
 	{
 		doSerialize(struct("custom", object("test"), "standard", hg.arity(100)));
 		doSerialize(struct("test", list(object("test1"),object("test2"),object("test3"))));
@@ -145,7 +145,7 @@ public class JSONTest
 	}
 	
 	
-	private static void testMessages()
+	private static void testMessages() throws IOException
 	{
 		Object result;
 		result = doSerialize(
@@ -160,7 +160,7 @@ public class JSONTest
 		System.out.println(getPart(result, 1, "predicate", 1, "javaClass"));
 	}
 	
-	public static Object doSerialize(Object value)
+	public static Object doSerialize(Object value) throws IOException
 	{
 		System.out.println("  Serialized: " + value);
 

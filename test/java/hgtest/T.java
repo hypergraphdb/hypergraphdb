@@ -13,6 +13,11 @@ import org.hypergraphdb.util.HGUtils;
 @SuppressWarnings("unchecked")
 public class T
 {
+    public static String getTmpDirectory()
+    {
+        return System.getProperty("java.io.tmpdir");    
+    }
+    
 	/**
 	 * Return a random integer between 0 (inclusive) and i (exclusive).
 	 *  
