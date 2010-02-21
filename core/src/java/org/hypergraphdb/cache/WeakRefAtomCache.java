@@ -147,9 +147,12 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 	    if (graph.getConfig().isTransactional())
 	    {
-	        atoms = new TxMap<Object, HGLiveHandle>(graph.getTransactionManager(), new WeakIdentityHashMap<Object, VBox<HGLiveHandle>>());
-	        liveHandles = new TxMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), new HashMap<HGPersistentHandle, VBox<WeakHandle>>());
-	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), new IdentityHashMap<HGLiveHandle, VBox<Object>>());	        
+	        atoms = new TxMap<Object, HGLiveHandle>(graph.getTransactionManager(), 
+	                                                new WeakIdentityHashMap<Object, VBox<HGLiveHandle>>());
+	        liveHandles = new TxMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), 
+	                                                                new HashMap<HGPersistentHandle, VBox<WeakHandle>>());
+	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), 
+	                                                      new IdentityHashMap<HGLiveHandle, VBox<Object>>());	        
 	    }
 	    else
 	    {

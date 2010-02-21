@@ -28,7 +28,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
-import org.hypergraphdb.util.HGLock;
+import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.HGLogger;
 import org.hypergraphdb.util.Pair;
 
@@ -300,7 +300,8 @@ public /*final*/ class HyperGraph
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
 	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
 	        ((MRUCache<HGPersistentHandle, IncidenceSet>)incidenceCache).setLockImplementation(
-	        		new HGLock(this, INCIDENCE_CACHE_ID));
+                    new DummyReadWriteLock()	                                                                                           
+	        		/* new HGLock(this, INCIDENCE_CACHE_ID) */);
 	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();
 	        incidenceCache.setResolver(new ISRefResolver(this));
 	        cache.setIncidenceCache(incidenceCache);
@@ -310,10 +311,10 @@ public /*final*/ class HyperGraph
 	        //
 	        // Make sure system indices are created.
 	        //
-	        indexByType = store.getIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-	        						     
+	        indexByType = store.getIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        						     
 	        if (indexByType == null)
 	            indexByType = store.createIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
+	        
 	        indexByValue = store.getIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
 	        if (indexByValue == null)
 	        	indexByValue = store.createIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);

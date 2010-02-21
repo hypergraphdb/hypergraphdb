@@ -116,13 +116,13 @@ public class TxSet<E> implements HGSortedSet<E>
     public TxSet(final HGTransactionManager txManager, final HGSortedSet<E> backingSet)
     {
         this.txManager = txManager;
-        this.S = new VBox<HGSortedSet<E>>(txManager.getContext(), backingSet)
+        this.S = new VBox<HGSortedSet<E>>(txManager, backingSet)
         {
             @SuppressWarnings("unchecked")
             @Override
             public  <T> VBoxBody<T> commit(T newvalue, long txNumber)
             {
-                HGTransaction tx = txContext.getCurrent();                
+                HGTransaction tx = txManager.getContext().getCurrent();                
                 if (tx != null)
                 {                                    
                     HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;

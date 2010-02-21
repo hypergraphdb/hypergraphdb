@@ -291,6 +291,28 @@ public class HGTransactionManager
 			return transact(transaction);
 	}
 	
+	private void handleTxException(Throwable t)
+	{
+        // If there is a DeadlockException at the root of this, we have to simply abort
+        // the transaction and try again.               
+        boolean retry = false;
+        for (Throwable cause = t.getCause(); cause != null; cause = cause.getCause())                   
+            if (cause instanceof DeadlockException || 
+                cause instanceof TransactionConflictException)
+            {
+                retry = true;
+                break;
+            }
+        
+        if (!retry)
+        {
+            if (t instanceof RuntimeException)
+                throw (RuntimeException)t;
+            else
+                throw new HGException(t);
+        }       	    
+	}
+	
 	/**
 	 * <p>
 	 * Perform a unit of work encapsulated as a transaction and return the result. This method
@@ -313,35 +335,26 @@ public class HGTransactionManager
 		while (true)
 		{
 			beginTransaction();
+			V result = null;
 			try
 			{
-				V result = transaction.call();
+				result = transaction.call();
+			}
+			catch (Throwable t)
+			{
+                try { endTransaction(false); }
+                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }                			    
+			    handleTxException(t); // will re-throw if we can't retry the transaction
+			    continue;
+			}
+			try
+			{
 				endTransaction(true);
 				return result;
 			}  
 			catch (Throwable t)
 			{
-				try { endTransaction(false); }
-		    	catch (HGTransactionException tex) { tex.printStackTrace(System.err); }			    	
-				
-				// If there is a DeadlockException at the root of this, we have to simply abort
-				// the transaction and try again.				
-		    	boolean retry = false;
-				for (Throwable cause = t.getCause(); cause != null; cause = cause.getCause())					
-					if (cause instanceof DeadlockException || 
-					    cause instanceof TransactionConflictException)
-					{
-						retry = true;
-						break;
-					}
-				
-				if (!retry)
-				{
-					if (t instanceof RuntimeException)
-						throw (RuntimeException)t;
-					else
-						throw new HGException(t);
-				}		
+                handleTxException(t); // will re-throw if we can't retry the transaction				
 			}
 		}
 	}

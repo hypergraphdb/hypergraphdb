@@ -53,6 +53,8 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         {
             SecondaryConfig dbConfig = new SecondaryConfig();
             dbConfig.setAllowCreate(true);
+            if (env.getConfig().getMultiversion())                    
+                dbConfig.setMultiversion(true);
             if (env.getConfig().getTransactional())      
             	dbConfig.setTransactional(true); 
             dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
@@ -142,7 +144,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         try
         {
         	TransactionBDBImpl tx = txn();
-            cursor = secondaryDb.openSecondaryCursor(tx.getBDBTransaction(), null);
+            cursor = secondaryDb.openSecondaryCursor(tx.getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS && cursor.count() > 0)
                 result = new SingleValueResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
@@ -178,7 +180,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         SecondaryCursor cursor = null;
         try
         {        	
-            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), null);
+            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 result = keyConverter.fromByteArray(valueEntry.getData());
@@ -204,7 +206,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         SecondaryCursor cursor = null;
         try
         {
-            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), null);
+            cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             	return cursor.count();

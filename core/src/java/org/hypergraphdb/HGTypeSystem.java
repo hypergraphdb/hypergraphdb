@@ -744,9 +744,10 @@ public class HGTypeSystem
 	 * </p>
 	 *
 	 */
-	public HGAtomType getAtomType(Class<?> clazz)
+	@SuppressWarnings("unchecked")
+    public <T extends HGAtomType> T getAtomType(Class<?> clazz)
 	{
-		return (HGAtomType)graph.get(getTypeHandle(clazz));
+		return (T)graph.get(getTypeHandle(clazz));
 	}
 
 	/**

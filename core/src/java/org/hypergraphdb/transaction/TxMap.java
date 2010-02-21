@@ -3,15 +3,19 @@ package org.hypergraphdb.transaction;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+
+import org.hypergraphdb.util.RefResolver;
 
 public class TxMap<K, V> implements Map<K, V>
 {
     //private ConcurrentMap<K, VBox<V>> M = new ConcurrentHashMap<K, VBox<V>>();
     private Map<K, VBox<V>> M = null;
     private HGTransactionManager txManager;
+    private RefResolver<Object, VBox<V>> boxGetter = null;
     
     @SuppressWarnings("unchecked")
-    private VBox<V> getBox(Object key)
+    private synchronized VBox<V> getBox(Object key)
     {
         VBox<V> box = M.get(key);
         // Assume calls to this map are synchronized otherwise. If not, a ConcurrentMap needs to be 
@@ -19,7 +23,7 @@ public class TxMap<K, V> implements Map<K, V>
         // WeakRef maps to be lock free.
         if (box == null)
         {
-            box = new VBox<V>(txManager.getContext());
+            box = new VBox<V>(txManager);
             M.put((K)key, box);
         }
         return box;
@@ -27,10 +31,29 @@ public class TxMap<K, V> implements Map<K, V>
         // return (box == null) ? M.putIfAbsent((K)key, new VBox<V>(txManager.getContext())) : box;
     }
     
-    public TxMap(HGTransactionManager txManager, Map<K, VBox<V>> backingMap)
+    public TxMap(HGTransactionManager tManager, Map<K, VBox<V>> backingMap)
     {
-        this.txManager = txManager;
+        this.txManager = tManager;
         this.M = backingMap;
+        if (backingMap instanceof ConcurrentMap)            
+            boxGetter = new RefResolver<Object,VBox<V>>() 
+        {
+            private ConcurrentMap<K, VBox<V>> cm = (ConcurrentMap<K, VBox<V>>)M;
+            @SuppressWarnings("unchecked")
+            public VBox<V> resolve(Object k) 
+            { 
+                VBox<V> box = cm.get(k);
+                return (box == null) ? cm.putIfAbsent((K)k, new VBox<V>(txManager)) : box;
+            }            
+        };
+        else
+            boxGetter = new RefResolver<Object,VBox<V>>() 
+            {
+                public VBox<V> resolve(Object k) 
+                {
+                    return getBox(k);
+                }            
+            };
     }
     
     public boolean containsKey(Object key)
@@ -40,12 +63,12 @@ public class TxMap<K, V> implements Map<K, V>
     
     public V get(Object key)
     {
-        return getBox(key).get();
+        return boxGetter.resolve(key).get();
     }
 
     public V put(K key, V value)
     {
-        VBox<V> box = getBox(key);
+        VBox<V> box = boxGetter.resolve(key);
         V old = box.get();
         box.put(value);
         return old;
@@ -56,6 +79,7 @@ public class TxMap<K, V> implements Map<K, V>
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unchecked")
     public V remove(Object key)
     {
         return put((K)key, null);

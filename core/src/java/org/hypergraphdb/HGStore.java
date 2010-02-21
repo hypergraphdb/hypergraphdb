@@ -54,8 +54,8 @@ public class HGStore
 //			System.loadLibrary("msvcm90");
 //			System.loadLibrary("msvcr90");
 //			System.loadLibrary("msvcp90");			
-			System.loadLibrary("libdb47");
-			System.loadLibrary("libdb_java47");	
+//			System.loadLibrary("libdb47");
+//			System.loadLibrary("libdb_java47");	
 		}
 	}
 	
@@ -65,6 +65,7 @@ public class HGStore
     
     private String databaseLocation;
     
+    private CursorConfig cursorConfig = new CursorConfig();
     private Environment env = null;
     private Database data_db = null;
     private Database primitive_db = null;
@@ -98,27 +99,37 @@ public class HGStore
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);
         envConfig.setInitializeCache(true);  
-        //envConfig.setCacheSize(config.getStoreCacheSize());
-//        envConfig.setCacheSize(20*1014*1024); // 20MB
-//        envConfig.setCacheCount(50); // x 50 blocks
+        envConfig.setCacheSize(config.getStoreCacheSize());
+        envConfig.setCacheCount(config.getNumberOfStoreCaches());
         envConfig.setErrorPrefix("BERKELEYDB");
         envConfig.setErrorStream(System.out);        
         if (config.isTransactional())
         {
-	        envConfig.setInitializeLocking(true);
+            if (!config.isStorageMVCC())
+                envConfig.setInitializeLocking(true);
 	        envConfig.setInitializeLogging(true);
 	        envConfig.setTransactional(true);
-	        envConfig.setMultiversion(true);
-	        envConfig.setTxnSnapshot(true);
+	        if (config.isStorageMVCC())
+	        {
+    	        envConfig.setMultiversion(true);
+    	        envConfig.setTxnSnapshot(true);
+	        }
 	        envConfig.setTxnWriteNoSync(true);
-	        envConfig.setTxnMaxActive(5000);
+//	        envConfig.setTxnNoSync(true);
+	        envConfig.setCachePageSize(4*1024);
+	        long maxActive = envConfig.getCacheSize() / envConfig.getCachePageSize();
+	        envConfig.setTxnMaxActive((int)maxActive*10);
 	        envConfig.setLockDetectMode(LockDetectMode.RANDOM);
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
 	        envConfig.setLogAutoRemove(true);
-	        envConfig.setMaxLockers(2000);
-	        envConfig.setMaxLockObjects(20000);
-	        envConfig.setMaxLocks(20000);
+//	        envConfig.setMaxMutexes(10000);
+	        if (!config.isStorageMVCC())
+	        {
+    	        envConfig.setMaxLockers(2000);
+    	        envConfig.setMaxLockObjects(20000);
+    	        envConfig.setMaxLocks(20000);
+	        }
 	//        envConfig.setRunFatalRecovery(true);	        
         }
         
@@ -127,9 +138,10 @@ public class HGStore
         try
         {
             env = new Environment(envDir, envConfig);
-
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
+            if (config.isStorageMVCC())
+                dbConfig.setMultiversion(true);
             if (env.getConfig().getTransactional())
             	dbConfig.setTransactional(true);
             dbConfig.setType(DatabaseType.BTREE);
@@ -138,6 +150,8 @@ public class HGStore
             
             dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
+            if (config.isStorageMVCC())
+                dbConfig.setMultiversion(true);
             if (env.getConfig().getTransactional())
             	dbConfig.setTransactional(true);
             dbConfig.setSortedDuplicates(true);
@@ -181,6 +195,9 @@ public class HGStore
     			try
     			{
 	    			TransactionConfig tconfig = new TransactionConfig();
+	                if (env.getConfig().getMultiversion())                    
+	                    tconfig.setSnapshot(true);
+	    			tconfig.setWriteNoSync(true);
 //	    			tconfig.setNoSync(true);
 	    			if (parent != null)
 	    				return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig), 
@@ -191,9 +208,9 @@ public class HGStore
     			}
     			catch (DatabaseException ex)
     			{
-    			    System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
+//    			    System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
     			    ex.printStackTrace(System.err);
-    			    System.exit(-1);
+//    			    System.exit(-1);
     				throw new HGException("Failed to create BerkeleyDB transaction object.", ex);
     			}
     		}
@@ -544,7 +561,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();            
-            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
                 return new HGPersistentHandle[0];
@@ -587,7 +604,7 @@ public class HGStore
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
             TransactionBDBImpl tx = txn();
-            cursor = incidence_db.openCursor(tx.getBDBTransaction(), null);            
+            cursor = incidence_db.openCursor(tx.getBDBTransaction(), cursorConfig);            
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             {
@@ -620,7 +637,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();            
-            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             	return 0;
@@ -660,7 +677,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry(newLink.toByteArray());
-            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             {
@@ -702,7 +719,7 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry(oldLink.toByteArray());
-            cursor = incidence_db.openCursor(txn().getBDBTransaction(), null);
+            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             {
@@ -1052,7 +1069,7 @@ public class HGStore
     			running = true;
     			while (!stop)
     			{
-    				Thread.sleep(30000);
+    				Thread.sleep(60000);
     				if (!stop)
     					try { env.checkpoint(null); }
     					catch (DatabaseException ex) { throw new Error(ex); }

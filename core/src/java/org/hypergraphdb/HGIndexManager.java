@@ -15,7 +15,6 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.*;
 import org.hypergraphdb.maintenance.ApplyNewIndexer;
-import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
 

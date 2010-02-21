@@ -27,24 +27,24 @@ package org.hypergraphdb.transaction;
 
 public class VBox<E>
 {
-    protected HGTransactionContext txContext;
+    protected HGTransactionManager txManager;
     
     VBoxBody<E> body = makeNewBody(null, 0, null); // is this right?
 
-    public VBox(HGTransactionContext txContext)
+    public VBox(HGTransactionManager txManager)
     {
-        this(txContext, (E) null);
+        this(txManager, (E) null);
     }
 
-    public VBox(HGTransactionContext txContext, E initial)
+    public VBox(HGTransactionManager txManager, E initial)
     {
-        this.txContext = txContext;
+        this.txManager = txManager;
         put(initial);        
     }
     
     public E get()
     {
-        HGTransaction tx = txContext.getCurrent();
+        HGTransaction tx = txManager.getContext().getCurrent();
         if (tx == null)
         {
             // Outside a transaction just return the latest value.
@@ -58,12 +58,14 @@ public class VBox<E>
 
     public void put(E newE)
     {
-        HGTransaction tx = txContext.getCurrent();
+        HGTransaction tx = txManager.getContext().getCurrent();
         if (tx == null)
         {
             // Outside a transaction, just write the latest value: responsibility of the caller
             // that they know what they're doing here.
-            commit(newE, txContext.getManager().mostRecentRecord.transactionNumber);
+            txManager.COMMIT_LOCK.lock();
+            commit(newE, txManager.mostRecentRecord.transactionNumber);
+            txManager.COMMIT_LOCK.unlock();
         }        
         else
         {

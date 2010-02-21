@@ -24,12 +24,15 @@ public class HGConfiguration
 	 * The default size in bytes of the storage (i.e. BerkeleyDB) cache = 20MB.
 	 */
 	public static final long DEFAULT_STORE_CACHE = 20*1024*1024; // 20MB
+	public static final int  DEFAULT_NUMBER_OF_STORAGE_CACHES = 1;
 	
 	private boolean transactional;
 	private long storeCacheSize = DEFAULT_STORE_CACHE;
+	private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;
 	private boolean skipMaintenance = false;
 	private boolean cancelMaintenance = false;
 	private boolean skipOpenedEvent = false;
+	private boolean storageMVCC = true;
 	
 	public HGConfiguration()
 	{
@@ -106,7 +109,29 @@ public class HGConfiguration
 		this.storeCacheSize = storeCacheSize;
 	}
 
-	/** 
+	/**
+	 * <p>Return the number of cache regions of the storage layers. This defaults to 1,
+	 * but it may be useful to increase it when the operating system is unable to 
+	 * allocate a contiguous memory cache as large as the application needs.
+	 * </p> 
+	 */
+    public int getNumberOfStoreCaches()
+    {
+        return numberOfStoreCaches;
+    }
+
+    /**
+     * <p>Specify the number of cache regions of the storage layers. This defaults to 1,
+     * but it may be useful to increase it when the operating system is unable to 
+     * allocate a contiguous memory cache as large as the application needs.
+     * </p> 
+     */
+    public void setNumberOfStoreCaches(int numberOfStoreCaches)
+    {
+        this.numberOfStoreCaches = numberOfStoreCaches;
+    }
+
+    /** 
 	 * <p>Return true if HyperGraph should skip scheduled maintenance operations when
 	 * it is open. Return false otherwise.</p> 
 	 */
@@ -172,5 +197,25 @@ public class HGConfiguration
     public void setSkipOpenedEvent(boolean skipOpenedEvent)
     {
         this.skipOpenedEvent = skipOpenedEvent;
-    }	
+    }
+
+    /**
+     * <p>Return whether MVCC (snapshot) transaction isolation is used by the
+     * storage layer. Defaults to <code>true</code> which means less lock contention,
+     * higher transaction throughput, but more memory will be used.
+     */
+    public boolean isStorageMVCC()
+    {
+        return storageMVCC;
+    }
+
+    /**
+     * <p>Specify whether MVCC (snapshot) transaction isolation is used by the
+     * storage layer. Defaults to <code>true</code> which means less lock contention,
+     * higher transaction throughput, but more memory will be used.
+     */    
+    public void setStorageMVCC(boolean storageMVCC)
+    {
+        this.storageMVCC = storageMVCC;
+    }    
 }

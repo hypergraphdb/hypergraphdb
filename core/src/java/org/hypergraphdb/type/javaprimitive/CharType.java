@@ -24,19 +24,17 @@ public class CharType extends NumericTypeBase<Character>
     
     protected byte [] writeBytes(Character value)
     {
-        byte [] data = new byte[2];
-        int v = value.charValue();
-        data[0] = (byte) ((v >>> 8) & 0xFF); 
-        data[1] = (byte) ((v >>> 0) & 0xFF);
+        char v = value.charValue();
+        byte [] data = new byte[2];        
+        data[1] = (byte) (v >>> 0);
+        data[0] = (byte) (v >>> 8);      
+        
         return data;
     }
     
     protected Character readBytes(byte [] bytes, int offset)
     {
-        int ch1 = bytes[offset];
-        int ch2 = bytes[offset + 1];
-        int tot = (ch1 << 8) + (ch2 << 0);
-        return new Character((char) tot);     
+        return new Character((char) (((bytes[offset+ 1] & 0xFF) << 0) + 
+                ((bytes[offset]) << 8)));
     }
-
  }
