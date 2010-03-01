@@ -55,10 +55,6 @@ public class HGEnvironment
 	        ex.printStackTrace(System.err);
 	        return f.getAbsolutePath();
 	    }
-//		char last = location.charAt(location.length() - 1); 
-//		if (last == '/' || last == '\\')
-//			location = location.substring(0, location.length() - 1);
-//		return location;
 	}
 	
 	/**
@@ -72,7 +68,7 @@ public class HGEnvironment
 		if (memWarning == null)
 		{
 			memWarning = new MemoryWarningSystem();
-			memWarning.setPercentageUsageThreshold(0.9);
+			memWarning.setPercentageUsageThreshold(0.7);
 		}
 		return memWarning;
 	}

@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import com.sleepycat.db.*;
+
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -677,14 +678,18 @@ public class HGStore
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry(newLink.toByteArray());
-            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
-            OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
-            if (status == OperationStatus.NOTFOUND)
-            {
-                OperationStatus result = incidence_db.put(txn().getBDBTransaction(), key, value);
-                if (result != OperationStatus.SUCCESS)
-                    throw new Exception("OperationStatus: " + result);
-            }
+            OperationStatus result = incidence_db.putNoDupData(txn().getBDBTransaction(), key, value);
+            if (result != OperationStatus.SUCCESS && result != OperationStatus.KEYEXIST)
+                throw new Exception("OperationStatus: " + result);            
+            
+//            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
+//            OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
+//            if (status == OperationStatus.NOTFOUND)
+//            {
+//                OperationStatus result = incidence_db.put(txn().getBDBTransaction(), key, value);
+//                if (result != OperationStatus.SUCCESS)
+//                    throw new Exception("OperationStatus: " + result);
+//            }
         }
         catch (Exception ex)
         {

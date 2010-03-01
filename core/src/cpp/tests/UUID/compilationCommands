@@ -1,0 +1,5 @@
+#for boost
+g++ -Wall -g -ggdb -I ../../includes/ boostUUIDTest.cpp ../../classes/UUID.cpp -o boostUUID
+
+#for ssl based
+g++ -lssl UUIDGeneratorTest.cpp ../../classes/SSLRandomGenerator.cpp ../../classes/UUIDGenerator.cpp -I ../../includes/ -o sslBasedUUID

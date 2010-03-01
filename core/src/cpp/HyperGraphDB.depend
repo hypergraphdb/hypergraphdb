@@ -1,0 +1,40 @@
+# depslib dependency file v1.0
+1266250708 source:/home/borislav/hypergraphdb/core/src/cpp/classes/RandomGenerator.cpp
+	"RandomGenerator.h"
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/RandomGenerator.h
+	<cstdlib>
+	<cstring>
+	<iostream>
+	<ctime>
+	"AbsRandomGenerator.h"
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/AbsRandomGenerator.h
+	"common.h"
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/common.h
+
+1266250708 source:/home/borislav/hypergraphdb/core/src/cpp/classes/SSLRandomGenerator.cpp
+	<openssl/rand.h>
+	"SSLRandomGenerator.h"
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/SSLRandomGenerator.h
+	"AbsRandomGenerator.h"
+
+1266250708 source:/home/borislav/hypergraphdb/core/src/cpp/classes/UUIDGenerator.cpp
+	"UUIDGenerator.h"
+	<iomanip>
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/UUIDGenerator.h
+	<cstdlib>
+	<cstring>
+	<sstream>
+	<iostream>
+	<ctime>
+	"AbsUUID.h"
+	"AbsRandomGenerator.h"
+
+1266250708 /home/borislav/hypergraphdb/core/src/cpp/includes/AbsUUID.h
+	"common.h"
+	<cstring>
+
