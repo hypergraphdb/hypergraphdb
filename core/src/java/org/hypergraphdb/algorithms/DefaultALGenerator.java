@@ -338,10 +338,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		public HGHandle next()
 		{
 			current = tsIter.next();
-			
+			hCurrLink = hg.getHandle(currLink);
 			if (!tsIter.hasNext())
-				getNextLink();
-			
+				getNextLink();			
 			return current;
 		}
 		

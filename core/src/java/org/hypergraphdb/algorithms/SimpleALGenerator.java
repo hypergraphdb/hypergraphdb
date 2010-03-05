@@ -84,7 +84,7 @@ public class SimpleALGenerator implements HGALGenerator
 		public HGHandle next()
 		{
 			current = currLink.getTargetAt(currLinkPos);
-			
+	        hCurrLink = graph.getHandle(currLink);
 			// advance within link, then check whether we're pointing to 'src' and, if so, advance again
 			if (++currLinkPos == currLink.getArity())
 				getNextLink();
