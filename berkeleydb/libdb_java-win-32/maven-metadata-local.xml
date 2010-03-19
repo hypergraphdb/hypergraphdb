@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>berkeleydb</groupId>
+  <artifactId>libdb_java-win-32</artifactId>
+  <version>4.7.25</version>
+  <versioning>
+    <versions>
+      <version>4.7.25</version>
+    </versions>
+    <lastUpdated>20100319003901</lastUpdated>
+  </versioning>
+</metadata>
