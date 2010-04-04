@@ -60,7 +60,11 @@ public class VBoxBody<E>
 
     public VBoxBody<E> getBody(long maxVersion)
     {
-        return ((version > maxVersion) ? next.getBody(maxVersion) : this);
+        VBoxBody<E> b = this;
+        while (b.version > maxVersion)
+            b = b.next;
+        return b;
+        // return ((version > maxVersion) ? next.getBody(maxVersion) : this);
     }
 
     public void clearPrevious()

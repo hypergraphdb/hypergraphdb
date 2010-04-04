@@ -11,6 +11,7 @@ import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.IdentityHashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import org.hypergraphdb.HGAtomCache;
@@ -89,6 +90,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}	
 	
+	int removalCount = 0;
 	private void processRefQueue() throws InterruptedException
 	{
 		WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
@@ -96,15 +98,28 @@ public class WeakRefAtomCache implements HGAtomCache
 		{
 //			graph.getEventManager().dispatch(graph, 
 //					 new HGAtomEvictEvent(ref, ref.fetchRef()));
-			lock.writeLock().lock();
-			try
-			{
-				liveHandles.remove(ref.getPersistentHandle());
-			}
-			finally
-			{
-				lock.writeLock().unlock();
-			}
+//		    System.out.println("Weak remove of " + ref);
+//			lock.writeLock().lock();
+		    final WeakHandle ref1 = ref;
+		    graph.getTransactionManager().ensureTransaction(new Callable<Object>() {
+		        public Object call()
+		        {
+//		            System.out.println("Removing live handle " + liveHandles.size() + ", " + ((TxMap)liveHandles).mapSize() +
+//		                               ", " + atoms.size() + "," + incidenceCache.size() + ", " + removalCount);
+		                               
+		            liveHandles.remove(ref1.getPersistentHandle());
+		            removalCount++;
+		            return null;
+		        }
+		    });
+//			try
+//			{
+//				liveHandles.remove(ref.getPersistentHandle());
+//			}
+//			finally
+//			{
+////				lock.writeLock().unlock();
+//			}
 			ref.clear();
 			synchronized (ref) { ref.notifyAll(); }			
 			ref = (WeakHandle)refQueue.poll();

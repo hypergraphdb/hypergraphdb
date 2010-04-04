@@ -64,8 +64,19 @@ public class VBox<E>
             // Outside a transaction, just write the latest value: responsibility of the caller
             // that they know what they're doing here.
             txManager.COMMIT_LOCK.lock();
-            commit(newE, txManager.mostRecentRecord.transactionNumber);
-            txManager.COMMIT_LOCK.unlock();
+//            try
+//            {
+                commit(newE, txManager.mostRecentRecord.transactionNumber);
+//            }
+//            catch (Throwable t)
+//            {
+//                System.err.println("OOOPS, exception ehere");
+//                System.exit(-1);
+//            }
+//            finally
+//            {
+                txManager.COMMIT_LOCK.unlock();
+//            }
         }        
         else
         {
@@ -73,20 +84,19 @@ public class VBox<E>
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> VBoxBody<T> commit(T newValue, long txNumber)
+    public VBoxBody<E> commit(E newValue, long txNumber)
     {
-        VBoxBody<T> newBody = makeNewBody(newValue, txNumber, (VBoxBody<T>)this.body);
+        VBoxBody<E> newBody = makeNewBody(newValue, txNumber, this.body);
         this.body = (VBoxBody<E>)newBody;
         return newBody;
     }
 
-    // in the future, if more than one subclass of body exists, we may
-    // need a factory here but, for now, it's simpler to have it like
-    // this
-    public static <T> VBoxBody<T> makeNewBody(T value, long version,
-                                              VBoxBody<T> next)
+    public VBoxBody<E> makeNewBody(E value, long version, VBoxBody<E> next)
     {
-        return new VBoxBody<T>(value, version, next);
+        return new VBoxBody<E>(value, version, next);
+    }
+    
+    public void finish()
+    {        
     }
 }

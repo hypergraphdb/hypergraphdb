@@ -1,5 +1,6 @@
 package org.hypergraphdb.transaction;
 
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -13,28 +14,76 @@ public class TxMap<K, V> implements Map<K, V>
     private Map<K, VBox<V>> M = null;
     private HGTransactionManager txManager;
     private RefResolver<Object, VBox<V>> boxGetter = null;
+    private VBox<Integer> sizebox = null;
     
-    @SuppressWarnings("unchecked")
-    private synchronized VBox<V> getBox(Object key)
+    private class Box extends VBox<V>
     {
-        VBox<V> box = M.get(key);
-        // Assume calls to this map are synchronized otherwise. If not, a ConcurrentMap needs to be 
-        // used if we want lock free behavior. So the caching needs yet another rework for the
-        // WeakRef maps to be lock free.
-        if (box == null)
+        WeakReference<K> key;
+        
+        public Box(HGTransactionManager txManager, K key)
         {
-            box = new VBox<V>(txManager);
-            M.put((K)key, box);
+            super(txManager);
+            this.key = new WeakReference<K>(key);
         }
-        return box;
-        // Use this with a ConcurrentMap:
-        // return (box == null) ? M.putIfAbsent((K)key, new VBox<V>(txManager.getContext())) : box;
+        
+        public VBoxBody<V> makeNewBody(V value, long version, VBoxBody<V> next)
+        {
+            return new BoxBody(value, version, next);
+        }
+
+        private class BoxBody extends VBoxBody<V>
+        {            
+            public BoxBody(V value, long version, VBoxBody<V> next)
+            {
+                super(value, version, next);
+            }
+            
+            public void clearPrevious()
+            {
+                super.clearPrevious();
+                if (value == null && body == this)
+                {
+                    synchronized (M)
+                    {                       
+                        M.remove(key.get());
+                    }
+                }
+            }
+        }
+        
+        public void finish()
+        {
+            if (body.version == 0)
+                synchronized (M) { M.remove(key.get()); }
+        }
+    }
+        
+    @SuppressWarnings("unchecked")
+    private VBox<V> getBox(Object key)
+    {
+        synchronized (M)
+        {
+            VBox<V> box = M.get(key);
+            // Assume calls to this map are synchronized otherwise. If not, a ConcurrentMap needs to be 
+            // used if we want lock free behavior. So the caching needs yet another rework for the
+            // WeakRef maps to be lock free.
+            if (box == null)
+            {
+                box = new Box(txManager, (K)key);
+                M.put((K)key, box);
+            }
+            return box;
+            // Use this with a ConcurrentMap:
+            // return (box == null) ? M.putIfAbsent((K)key, new VBox<V>(txManager.getContext())) : box;
+        }
     }
     
     public TxMap(HGTransactionManager tManager, Map<K, VBox<V>> backingMap)
     {
         this.txManager = tManager;
         this.M = backingMap;
+        this.sizebox = new VBox<Integer>(txManager);
+        this.sizebox.put(0);
         if (backingMap instanceof ConcurrentMap)            
             boxGetter = new RefResolver<Object,VBox<V>>() 
         {
@@ -70,7 +119,18 @@ public class TxMap<K, V> implements Map<K, V>
     {
         VBox<V> box = boxGetter.resolve(key);
         V old = box.get();
-        box.put(value);
+        if (old == null)
+        {
+            box.put(value);
+            if (value != null)
+                sizebox.put(sizebox.get() + 1);
+        }
+        else if (old != value)
+        {
+            box.put(value);
+            if (value == null)
+                sizebox.put(sizebox.get() - 1);
+        }
         return old;
     }
 
@@ -90,9 +150,14 @@ public class TxMap<K, V> implements Map<K, V>
         return size() == 0;
     }
 
-    public int size()
+    public int mapSize()
     {
         return M.size();
+    }
+    
+    public int size()
+    {
+        return sizebox.get();
     }
 
     public Set<K> keySet()

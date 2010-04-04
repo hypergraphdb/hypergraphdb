@@ -60,15 +60,17 @@ public class ApplyNewIndexer implements MaintenanceOperation
         HGRandomAccessResult<HGPersistentHandle> rs = null;
         while (true)
         {
+            HGPersistentHandle txLastProcessed = lastProcessed;
             graph.getTransactionManager().beginTransaction();           
             try
             {
                 rs = (HGRandomAccessResult<HGPersistentHandle>)(HGRandomAccessResult)
                         graph.find(hg.type(typeHandle));
-                if (lastProcessed == null)
+                if (txLastProcessed == null)
                 {
                     if (!rs.hasNext()) 
                     {
+                        rs.close();
                         graph.getTransactionManager().endTransaction(false);
                         return; 
                     }
@@ -76,9 +78,10 @@ public class ApplyNewIndexer implements MaintenanceOperation
                 }
                 else
                 {
-                    GotoResult gt = rs.goTo(lastProcessed, false);
+                    GotoResult gt = rs.goTo(txLastProcessed, false);
                     if (gt == GotoResult.nothing) // last processed was actually last element in result set
                     {
+                        rs.close();
                         graph.getTransactionManager().endTransaction(false);                        
                         return;
                     }
@@ -86,6 +89,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
                     {
                         if (!rs.hasNext())
                         {
+                            rs.close();
                             graph.getTransactionManager().endTransaction(false);                            
                             return;
                         }
@@ -100,7 +104,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
                         idx.addEntry(indexer.getKey(graph, atom), ((HGValueIndexer)indexer).getValue(graph, atom)); 
                     else
                         idx.addEntry(indexer.getKey(graph, atom), rs.current());
-                    lastProcessed = rs.current();                   
+                    txLastProcessed = rs.current();                   
                     if (!rs.hasNext())
                         break;
                     else
@@ -110,6 +114,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
                 rs = null;
                 graph.update(this);
                 graph.getTransactionManager().endTransaction(true);
+                lastProcessed = txLastProcessed;
             }
             catch (Throwable t)
             {

@@ -18,12 +18,11 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
     private byte flags;
 
     public WeakHandle(Object ref,
-                         HGPersistentHandle persistentHandle,
-                         byte flags,
-                         ReferenceQueue<Object> refQueue)
+                      HGPersistentHandle persistentHandle,
+                      byte flags,
+                      ReferenceQueue<Object> refQueue)
     {
         super(ref, refQueue);
-
         this.persistentHandle = persistentHandle;
         this.flags = flags;
     }

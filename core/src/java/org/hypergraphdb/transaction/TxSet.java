@@ -118,9 +118,8 @@ public class TxSet<E> implements HGSortedSet<E>
         this.txManager = txManager;
         this.S = new VBox<HGSortedSet<E>>(txManager, backingSet)
         {
-            @SuppressWarnings("unchecked")
             @Override
-            public  <T> VBoxBody<T> commit(T newvalue, long txNumber)
+            public VBoxBody<HGSortedSet<E>> commit(HGSortedSet<E> newvalue, long txNumber)
             {
                 HGTransaction tx = txManager.getContext().getCurrent();                
                 if (tx != null)
@@ -132,7 +131,7 @@ public class TxSet<E> implements HGSortedSet<E>
                         lastCommitted = cloneSet(lastCommitted);
                         applyLog(log, lastCommitted);
                     }
-                    return (VBoxBody<T>)super.commit(lastCommitted, txNumber);
+                    return super.commit(lastCommitted, txNumber);
                 }
                 else
                     return super.commit(newvalue, txNumber);

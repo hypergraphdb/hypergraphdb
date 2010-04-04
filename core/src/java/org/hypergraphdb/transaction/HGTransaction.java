@@ -111,7 +111,7 @@ public final class HGTransaction implements HGStorageTransaction
 
         for (Map.Entry<VBox<?>, Object> entry : boxesWritten.entrySet())
         {
-            VBox<?> vbox = entry.getKey();
+            VBox<Object> vbox = (VBox<Object>)entry.getKey();
             Object newValue = entry.getValue();
 
             VBoxBody<?> newBody = vbox.commit((newValue == NULL_VALUE) ? null
@@ -124,6 +124,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     void finish() 
     {
+        for (Map.Entry<VBox<?>, Object> entry : boxesWritten.entrySet())
+            entry.getKey().finish();
         bodiesRead = null;
         boxesWritten = null;        
         activeTxRecord.decrementRunning();
@@ -192,6 +194,8 @@ public final class HGTransaction implements HGStorageTransaction
                 }
                 else
                 {
+//                    System.out.println("Transaction conflict.");
+                    privateAbort();
                     throw new TransactionConflictException();
                 }
             }
@@ -206,12 +210,18 @@ public final class HGTransaction implements HGStorageTransaction
         HyperGraph graph = context.getManager().getHyperGraph();
         graph.getEventManager().dispatch(graph,
                                          new HGTransactionEndEvent(this, true));
+//        System.out.println("Transaction succeeded.");
     }
 
-    public void abort() throws HGTransactionException
+    private void privateAbort() throws HGTransactionException
     {
         finish();
-        stran.abort();
+        stran.abort();        
+    }
+    
+    public void abort() throws HGTransactionException
+    {
+        privateAbort();
         HyperGraph graph = context.getManager().getHyperGraph();
         graph.getEventManager().dispatch(graph, 
                                          new HGTransactionEndEvent(this, false));

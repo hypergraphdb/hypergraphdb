@@ -53,10 +53,12 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         {
             SecondaryConfig dbConfig = new SecondaryConfig();
             dbConfig.setAllowCreate(true);
-            if (env.getConfig().getMultiversion())                    
-                dbConfig.setMultiversion(true);
-            if (env.getConfig().getTransactional())      
-            	dbConfig.setTransactional(true); 
+            if (env.getConfig().getTransactional())
+            {
+                dbConfig.setTransactional(true);                
+                if (env.getConfig().getMultiversion())                    
+                    dbConfig.setMultiversion(true);
+            }
             dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
             dbConfig.setSortedDuplicates(true);
             dbConfig.setType(DatabaseType.BTREE);    

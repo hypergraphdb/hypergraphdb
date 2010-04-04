@@ -377,4 +377,9 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	{
 		HGEnvironment.getMemoryWarningSystem().removeListener(memListener);		
 	}
+	
+	public int size()
+	{
+	    return map.size();
+	}
 }

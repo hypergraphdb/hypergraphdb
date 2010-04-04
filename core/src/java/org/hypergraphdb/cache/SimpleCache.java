@@ -79,4 +79,8 @@ public class SimpleCache<Key, Value> implements HGCache<Key, Value>
 		lock.writeLock().unlock();
 	}
 
+	public int size()
+	{
+	    return map.size();
+	}	
 }

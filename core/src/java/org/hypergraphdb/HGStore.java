@@ -103,34 +103,33 @@ public class HGStore
         envConfig.setCacheSize(config.getStoreCacheSize());
         envConfig.setCacheCount(config.getNumberOfStoreCaches());
         envConfig.setErrorPrefix("BERKELEYDB");
-        envConfig.setErrorStream(System.out);        
+        envConfig.setErrorStream(System.out);     
+//        config.setStorageMVCC(false);
         if (config.isTransactional())
         {
+            envConfig.setInitializeLogging(true);
+            envConfig.setTransactional(true);            
             if (!config.isStorageMVCC())
+            {
                 envConfig.setInitializeLocking(true);
-	        envConfig.setInitializeLogging(true);
-	        envConfig.setTransactional(true);
-	        if (config.isStorageMVCC())
+                envConfig.setLockDetectMode(LockDetectMode.RANDOM);
+                envConfig.setMaxLockers(2000);
+                envConfig.setMaxLockObjects(20000);
+                envConfig.setMaxLocks(20000);                
+            }
+            else
 	        {
     	        envConfig.setMultiversion(true);
     	        envConfig.setTxnSnapshot(true);
 	        }
 	        envConfig.setTxnWriteNoSync(true);
-//	        envConfig.setTxnNoSync(true);
 	        envConfig.setCachePageSize(4*1024);
 	        long maxActive = envConfig.getCacheSize() / envConfig.getCachePageSize();
-	        envConfig.setTxnMaxActive((int)maxActive*10);
-	        envConfig.setLockDetectMode(LockDetectMode.RANDOM);
+	        envConfig.setTxnMaxActive((int)maxActive*10);        	        
 	        envConfig.setRunRecovery(true);
 	        envConfig.setRegister(true);
 	        envConfig.setLogAutoRemove(true);
 //	        envConfig.setMaxMutexes(10000);
-	        if (!config.isStorageMVCC())
-	        {
-    	        envConfig.setMaxLockers(2000);
-    	        envConfig.setMaxLockObjects(20000);
-    	        envConfig.setMaxLocks(20000);
-	        }
 	//        envConfig.setRunFatalRecovery(true);	        
         }
         
@@ -141,20 +140,24 @@ public class HGStore
             env = new Environment(envDir, envConfig);
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            if (config.isStorageMVCC())
-                dbConfig.setMultiversion(true);
             if (env.getConfig().getTransactional())
-            	dbConfig.setTransactional(true);
+            {
+                dbConfig.setTransactional(true);            
+                if (config.isStorageMVCC())
+                    dbConfig.setMultiversion(true);
+            }
             dbConfig.setType(DatabaseType.BTREE);
             data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);    
             primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, dbConfig);
             
             dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            if (config.isStorageMVCC())
-                dbConfig.setMultiversion(true);
             if (env.getConfig().getTransactional())
+            {
             	dbConfig.setTransactional(true);
+                if (config.isStorageMVCC())
+                    dbConfig.setMultiversion(true);   
+            }
             dbConfig.setSortedDuplicates(true);
             dbConfig.setType(DatabaseType.BTREE);
             incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, dbConfig);
@@ -174,6 +177,72 @@ public class HGStore
         }
     }
 
+//    public HGStore(String database, HGConfiguration config)
+//    {
+//        databaseLocation = database;
+//        
+//        EnvironmentConfig envConfig = new EnvironmentConfig();
+//        envConfig.setAllowCreate(true);
+//        envConfig.setInitializeCache(true);  
+//        envConfig.setCacheSize(config.getStoreCacheSize());
+////        envConfig.setCacheSize(20*1014*1024); // 20MB
+////        envConfig.setCacheCount(50); // x 50 blocks
+//        envConfig.setErrorPrefix("BERKELEYDB");
+//        envConfig.setErrorStream(System.out);        
+//        if (config.isTransactional())
+//        {
+//            envConfig.setInitializeLocking(true);
+//            envConfig.setInitializeLogging(true);
+//            envConfig.setTransactional(true);
+//            envConfig.setTxnWriteNoSync(true);
+//            envConfig.setLockDetectMode(LockDetectMode.RANDOM);
+//            envConfig.setRunRecovery(true);
+//            envConfig.setRegister(true);
+//            envConfig.setLogAutoRemove(true);
+//            envConfig.setMaxLockers(2000);
+//            envConfig.setMaxLockObjects(20000);
+//            envConfig.setMaxLocks(20000);
+//    //        envConfig.setRunFatalRecovery(true);          
+//        }
+//        
+//        File envDir = new File(databaseLocation);
+//        envDir.mkdirs();
+//        try
+//        {
+//            env = new Environment(envDir, envConfig);
+//
+//            DatabaseConfig dbConfig = new DatabaseConfig();
+//            dbConfig.setAllowCreate(true);
+//            if (env.getConfig().getTransactional())
+//                dbConfig.setTransactional(true);
+//            dbConfig.setType(DatabaseType.BTREE);
+//            data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);    
+//            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, dbConfig);
+//            
+//            dbConfig = new DatabaseConfig();
+//            dbConfig.setAllowCreate(true);
+//            if (env.getConfig().getTransactional())
+//                dbConfig.setTransactional(true);
+//            dbConfig.setSortedDuplicates(true);
+//            dbConfig.setType(DatabaseType.BTREE);
+//            incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, dbConfig);
+//            
+//            transactionManager = new HGTransactionManager(getTransactionFactory());
+//            if (!env.getConfig().getTransactional())
+//                transactionManager.disable();
+//            else
+//            {
+//                final Environment fenv = env;
+//                checkPointThread = new CheckPointThread();
+//                checkPointThread.start();
+//            }
+//        }
+//        catch (Exception ex)
+//        {
+//            throw new HGException("Failed to initialize HyperGraph data store: " + ex.toString(), ex);
+//        }
+//    }
+    
     DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle> getIncidenceDbAsIndex()
     {
     	return new DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle>(
@@ -184,6 +253,7 @@ public class HGStore
 				BAtoHandle.getInstance(),
 				null);
     }
+    
     /**
      * <p>Create and return a transaction factory for this <code>HGStore</code>.</p>
      */

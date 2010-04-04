@@ -89,5 +89,10 @@ public interface HGCache<Key, Value>
 	 * <p>Clear (i.e. force removal of) all elements from the cache.</p>
 	 */
 	void clear();
+	
+	/**
+	 * <p>Return the number of elements currently in the cache.</p>
+	 */
+	int size();
 }
  

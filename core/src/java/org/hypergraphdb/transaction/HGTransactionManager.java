@@ -74,7 +74,7 @@ public class HGTransactionManager
 	 * <p>Return the <code>HGTransactionContext</code> instance associated with the current
 	 * thread.</p>
 	 */
-    public HGTransactionContext getContext()
+    public synchronized HGTransactionContext getContext()
     {
     	HGTransactionContext ctx = tcontext.get();
     	if (ctx == null)
@@ -296,7 +296,7 @@ public class HGTransactionManager
         // If there is a DeadlockException at the root of this, we have to simply abort
         // the transaction and try again.               
         boolean retry = false;
-        for (Throwable cause = t.getCause(); cause != null; cause = cause.getCause())                   
+        for (Throwable cause = t; cause != null; cause = cause.getCause())                   
             if (cause instanceof DeadlockException || 
                 cause instanceof TransactionConflictException)
             {
@@ -345,6 +345,7 @@ public class HGTransactionManager
                 try { endTransaction(false); }
                 catch (HGTransactionException tex) { tex.printStackTrace(System.err); }                			    
 			    handleTxException(t); // will re-throw if we can't retry the transaction
+//			    System.out.println("Retrying transaction");
 			    continue;
 			}
 			try
@@ -354,7 +355,8 @@ public class HGTransactionManager
 			}  
 			catch (Throwable t)
 			{
-                handleTxException(t); // will re-throw if we can't retry the transaction				
+                handleTxException(t); // will re-throw if we can't retry the transaction
+//                System.out.println("Retrying transaction");
 			}
 		}
 	}

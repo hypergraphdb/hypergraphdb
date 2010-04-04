@@ -19,6 +19,9 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGRandomAccessResult.GotoResult;
+import org.hypergraphdb.transaction.TransactionConflictException;
+
+import com.sleepycat.db.DeadlockException;
 
 /**
  * 
@@ -238,16 +241,19 @@ public class HGUtils
 		long totalProcessed = 0;
 		while (true)
 		{			
+		    T txLastProcessed = lastProcessed;
 			query.getHyperGraph().getTransactionManager().beginTransaction();			
 			try
 			{
 				rs = query.execute();
-				if (lastProcessed == null)
+				if (txLastProcessed == null)
 				{
 					while (first > 0)
 					{
 						if (!rs.hasNext())
 						{
+						    rs.close();
+						    rs = null;
 							query.getHyperGraph().getTransactionManager().endTransaction(false);
 							return totalProcessed;
 						}
@@ -262,12 +268,18 @@ public class HGUtils
 					if (rs instanceof HGRandomAccessResult)
 					{
 						HGRandomAccessResult<T> rars = (HGRandomAccessResult<T>)rs;
-						gt = rars.goTo(lastProcessed, false);
+						gt = rars.goTo(txLastProcessed, false);
 					}
 					else
+					{
+					    rs.close();
+					    rs = null;
 						throw new HGException("Batch processing starting at a specific element is only supported for HGRandomAccessResult.");
+					}
 					if (gt == GotoResult.nothing) // last processed was actually last element in result set
 					{
+					    rs.close();
+					    rs = null;
 						query.getHyperGraph().getTransactionManager().endTransaction(false);
 						return totalProcessed;
 					}
@@ -275,6 +287,8 @@ public class HGUtils
 					{
 						if (!rs.hasNext())
 						{
+						    rs.close();
+						    rs = null;
 							query.getHyperGraph().getTransactionManager().endTransaction(false);
 							return totalProcessed;
 						}
@@ -296,7 +310,7 @@ public class HGUtils
 						query.getHyperGraph().getTransactionManager().endTransaction(true);
 						return totalProcessed;
 					}
-					lastProcessed = x;	
+					txLastProcessed = x;	
 					totalProcessed++;
 					if (!rs.hasNext())
 						break;
@@ -306,6 +320,7 @@ public class HGUtils
 				rs.close();
 				rs = null;
 				query.getHyperGraph().getTransactionManager().endTransaction(true);
+				lastProcessed = txLastProcessed;
 //				double end = System.currentTimeMillis();
 				if (i < batchSize)
 					return totalProcessed;
@@ -314,6 +329,9 @@ public class HGUtils
 			}
 			catch (Throwable t)
 			{
+			    Throwable cause = getRootCause(t);
+			    if (cause instanceof TransactionConflictException || cause instanceof DeadlockException)
+			        continue;
 				try { query.getHyperGraph().getTransactionManager().endTransaction(false); }
 				catch (Throwable tt) { tt.printStackTrace(System.err); }
 				throw new RuntimeException(t);
