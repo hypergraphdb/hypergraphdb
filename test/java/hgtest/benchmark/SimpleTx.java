@@ -1,24 +1,33 @@
 package hgtest.benchmark;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Executor;
+import static org.testng.Assert.*;
+import hgtest.HGTestBase;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import hgtest.HGTestBase;
-import hgtest.PrivateConstructible;
-
-import org.hypergraphdb.*;
+import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.util.HGUtils;
-import org.hypergraphdb.util.Mapping;
 import org.testng.annotations.Test;
 
 public class SimpleTx extends HGTestBase
 {
+    private int count = 20000;
+    private int poolSize = 10;
+    
+    public void checkRange(int start, int end)
+    {
+        for (int i = start; i < end; i++)
+        {
+            
+            String current = "currrent" + i;
+            HGHandle h = hg.findOne(graph, hg.eq(current));
+            assertNotNull(h);
+            assertNotNull(hg.and(hg.eq("rel"), hg.incident(h), hg.arity(0)));
+        }
+    }
     
     public void doRange(int start, int end)
     {
@@ -52,7 +61,7 @@ public class SimpleTx extends HGTestBase
     {
         long start = System.currentTimeMillis();
 //        graph.getTransactionManager().beginTransaction();
-        for (int i = 0; i < 2*200000; i++)
+        for (int i = 0; i < count; i++)
         {
             
             String current = "currrent" + i;
@@ -76,8 +85,9 @@ public class SimpleTx extends HGTestBase
     public void parallelBulkAdd()
     {
         ExecutorService pool = Executors.newFixedThreadPool(10);
-        final int batchSize = 200000;
-        for (int i = 0; i < 10; i++)
+        assertEquals(count % poolSize, 0);
+        final int batchSize = count / poolSize;
+        for (int i = 0; i < poolSize; i++)
         {
             final int j = i; 
             pool.execute(new Runnable() {
@@ -89,6 +99,7 @@ public class SimpleTx extends HGTestBase
         }
         try
         {
+            pool.shutdown();
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
         }
         catch (InterruptedException ex) 
@@ -104,8 +115,13 @@ public class SimpleTx extends HGTestBase
         test.setUp();        
         try
         {
-            //test.oneAtomOneLink();
+//            test.oneAtomOneLink();
+            test.graph.getTransactionManager().conflicted.set(0);
+            test.graph.getTransactionManager().successful.set(0);
             test.parallelBulkAdd();
+            test.checkRange(0, 200);
+            System.out.println("Done, CONFLICTS=" + test.graph.getTransactionManager().conflicted.get() +
+                               ", SUCCESSFUL=" + test.graph.getTransactionManager().successful.get());
         }
         finally
         {

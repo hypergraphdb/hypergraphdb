@@ -16,7 +16,7 @@ import hgtest.HGTestBase;
 
 public class TestTxMap extends HGTestBase
 {
-    //@Test
+    @Test
     public void testWeakIdentityMap()
     {
         WeakIdentityHashMap<Integer, Boolean> map = new WeakIdentityHashMap<Integer, Boolean>();
@@ -121,5 +121,40 @@ public class TestTxMap extends HGTestBase
         
         assertEquals(txMap.size(), 0);
         assertEquals(txMap.mapSize(), 0);             
+    }
+    
+    @Test
+    public void testTxMapAbort()
+    {
+        //
+        // This test commits max / 2 entries in the map and aborts another max / 2. The end result
+        // is that the map size should be max / 2, and the map.mapSize (its internal map size) should
+        // also be max / 2, making sure that aborted transaction don't leave entries erronously hanging
+        // in the map.
+        //
+        
+        final int max = 1000*100;
+        
+        final TxMap<Integer, Integer> txMap = new TxMap<Integer, Integer>(graph.getTransactionManager(),
+                                                    new HashMap<Integer, VBox<Integer>>());
+        try
+        {
+            for (int i = 0; i < max; i++)
+            {
+                graph.getTransactionManager().beginTransaction();
+                txMap.put(i, i);
+                if (i % 2 == 0)
+                    graph.getTransactionManager().commit();
+                else
+                    graph.getTransactionManager().abort();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new RuntimeException(ex);
+        }
+        
+        assertEquals(txMap.size(), max / 2);
+        assertEquals(txMap.mapSize(), txMap.size());
     }
 }

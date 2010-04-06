@@ -4,7 +4,6 @@ import java.io.File;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -22,6 +21,11 @@ public class HGTestBase
     public String getGraphLocation()
     {
         return /* T.getTmpDirectory() */ "/home/borislav/data" + File.separator + "hgtest"; 
+    }
+    
+    public HyperGraph getGraph()
+    {
+        return graph;
     }
     
     @BeforeClass
