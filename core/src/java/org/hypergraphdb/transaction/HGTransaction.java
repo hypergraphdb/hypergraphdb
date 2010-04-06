@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
@@ -47,7 +48,7 @@ public final class HGTransaction implements HGStorageTransaction
     private Map<VBox<?>, Object> boxesWritten = new HashMap<VBox<?>, Object>();
     private long number;
     private ActiveTransactionsRecord activeTxRecord;
-
+    
     <T> T getLocalValue(VBox<T> vbox)
     {
         T value = null;
@@ -190,7 +191,7 @@ public final class HGTransaction implements HGStorageTransaction
                     this.activeTxRecord.decrementRunning();
                     
                     // This assignment is need to decrementRunning in the finish method below.                    
-                    this.activeTxRecord = newRecord; 
+                    this.activeTxRecord = newRecord;
                 }
                 else
                 {

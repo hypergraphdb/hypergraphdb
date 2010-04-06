@@ -8,6 +8,7 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.hypergraphdb.HGException;
@@ -37,6 +38,8 @@ public class HGTransactionManager
     final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
         
 	TxMonitor txMonitor = null;
+    public AtomicInteger conflicted = new AtomicInteger(0);
+    public AtomicInteger successful = new AtomicInteger(0);
 	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>
@@ -345,17 +348,20 @@ public class HGTransactionManager
                 try { endTransaction(false); }
                 catch (HGTransactionException tex) { tex.printStackTrace(System.err); }                			    
 			    handleTxException(t); // will re-throw if we can't retry the transaction
+			    conflicted.incrementAndGet();
 //			    System.out.println("Retrying transaction");
 			    continue;
 			}
 			try
 			{
 				endTransaction(true);
+                successful.incrementAndGet();				
 				return result;
 			}  
 			catch (Throwable t)
 			{
                 handleTxException(t); // will re-throw if we can't retry the transaction
+                conflicted.incrementAndGet();
 //                System.out.println("Retrying transaction");
 			}
 		}
