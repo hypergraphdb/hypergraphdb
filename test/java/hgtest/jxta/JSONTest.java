@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import net.jxta.platform.NetworkManager;
+//import net.jxta.platform.NetworkManager;
 
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
@@ -61,17 +61,17 @@ public class JSONTest
 	}
 	private static void testJXTAConfig()
 	{
-		Object jxtaConf = Structs.struct("peerName", "nameOfPeer", 
-				"peerGroup", "nameOfGroup", 
-				"jxta", Structs.struct(
-					"advTimeToLive", 1*10*1000,
-					"needsRendezVous", false,
-					"needsRelay", false,
-					"mode", NetworkManager.ConfigMode.ADHOC
-				));
-
-		doValue(jxtaConf);
-		
+//		Object jxtaConf = Structs.struct("peerName", "nameOfPeer", 
+//				"peerGroup", "nameOfGroup", 
+//				"jxta", Structs.struct(
+//					"advTimeToLive", 1*10*1000,
+//					"needsRendezVous", false,
+//					"needsRelay", false,
+//					"mode", NetworkManager.ConfigMode.ADHOC
+//				));
+//
+//		doValue(jxtaConf);
+//		
 		String jxtaConfString = getContents("./jxtaConfig");
 		System.out.println(jxtaConfString);
 		

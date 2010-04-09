@@ -3,7 +3,7 @@ package hgtest.jxta;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 
-import net.jxta.platform.NetworkManager;
+//import net.jxta.platform.NetworkManager;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
