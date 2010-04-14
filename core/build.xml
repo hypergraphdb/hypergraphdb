@@ -90,6 +90,7 @@
         <copydir src="ThirdPartyLicensing" dest="${distfilename}/ThirdPartyLicensing" excludes="**/.svn"/>
         <copy file="LicensingInformation" todir="${distfilename}"/>
         <copy file="readme.html" todir="${distfilename}"/>
+        <copy file="build.xml" todir="${distfilename}"/>        
         <copy file="${jars}/${jar-name}" todir="${distfilename}"/>
         <copy file="${jars}/${peer-jar-name}" todir="${distfilename}"/>
         <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
