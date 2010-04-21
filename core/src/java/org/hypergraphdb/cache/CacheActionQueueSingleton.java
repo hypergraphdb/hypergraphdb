@@ -13,7 +13,7 @@ import org.hypergraphdb.util.ActionQueueThread;
  * 
  * <p>
  * Wrap a single instance of {@link ActionQueueThread} for use by all caches in a 
- * HyperGraphDB instance. 
+ * JVM instance. 
  * </p>
  *
  * @author Borislav Iordanov

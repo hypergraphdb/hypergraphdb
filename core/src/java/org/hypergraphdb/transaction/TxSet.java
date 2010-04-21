@@ -19,8 +19,14 @@ import org.hypergraphdb.util.HGSortedSet;
  * attempts to modify the set, it is cloned into a local copy and that copy receives all
  * the writes. In addition, each write operation is recorded in a write log. At commit time, 
  * if there's no conflict, the write log is replayed on the latest committed version of the 
- * set (which may be different from the copy the transaction started from). Therefore, 
- * assuming the underlying set implementation is only accessed in the context of HGDB 
+ * set (which may be different from the copy the transaction started from). This may sound
+ * a bit counter-intuitive: if the set is only being written to during a transaction, there won't
+ * be a conflict, even if another transaction modified and committed in the meantime. A conflict 
+ * will occur only if the set has been read, but somebody else in the meantime modified it.
+ * </p>
+ * 
+ * <p>
+ * Assuming the underlying set implementation is only accessed in the context of HGDB 
  * transactions, it doesn't need to be thread-safe, it doesn't need any locks.
  * </p>
  * 
@@ -98,15 +104,16 @@ public class TxSet<E> implements HGSortedSet<E>
     
     HGSortedSet<E> read()
     {
-        return S.get();
+        HGSortedSet<E> x = S.get();
+        return x;
     }
     
     HGSortedSet<E> write()
     {
         List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(this);
-        if (log == null)
+        if (log == null) // should we copy-on-write?
         {
-            HGSortedSet<E> readOnly = S.get();
+            HGSortedSet<E> readOnly = S.get(); // S.getForWrite();
             HGSortedSet<E> writeable = cloneSet(readOnly);
             S.put(writeable);
         }
@@ -119,25 +126,30 @@ public class TxSet<E> implements HGSortedSet<E>
         this.S = new VBox<HGSortedSet<E>>(txManager, backingSet)
         {
             @Override
-            public VBoxBody<HGSortedSet<E>> commit(HGSortedSet<E> newvalue, long txNumber)
+            public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
             {
-                HGTransaction tx = txManager.getContext().getCurrent();                
                 if (tx != null)
                 {                                    
                     HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;
-                    List<LogEntry> log = tx.getAttribute(this);
-                    if (lastCommitted != null && log != null)
+                    if (lastCommitted == null) // is this the very first commit?
+                        return super.commit(tx, newvalue, txNumber);
+                    List<LogEntry> log = tx.getAttribute(TxSet.this);
+                    if (log != null) // did we do any modifications to the set?
                     {
                         lastCommitted = cloneSet(lastCommitted);
                         applyLog(log, lastCommitted);
+                        return super.commit(tx, lastCommitted, txNumber);
                     }
-                    return super.commit(lastCommitted, txNumber);
+                    else
+                        return body; // nothing to do, we've just been reading
                 }
                 else
-                    return super.commit(newvalue, txNumber);
+                {
+                    return super.commit(tx, newvalue, txNumber); // hope caller knows what they are doing
+                }            
             }              
         };
-    }
+    }    
     
     public HGRandomAccessResult<E> getSearchResult()
     {

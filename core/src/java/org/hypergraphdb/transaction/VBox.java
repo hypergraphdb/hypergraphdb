@@ -25,6 +25,8 @@
  */
 package org.hypergraphdb.transaction;
 
+import org.hypergraphdb.util.Pair;
+
 public class VBox<E>
 {
     protected HGTransactionManager txManager;
@@ -39,23 +41,29 @@ public class VBox<E>
     public VBox(HGTransactionManager txManager, E initial)
     {
         this.txManager = txManager;
-        put(initial);        
+//        put(initial);
+        commit(null, initial, 0);
     }
     
     public E get()
     {
         HGTransaction tx = txManager.getContext().getCurrent();
-        if (tx == null)
-        {
-            // Outside a transaction just return the latest value.
-            return body.value;
-        }
-        else
-        {
-            return tx.getBoxValue(this);
-        }
+        return  (tx == null) ? body.value : tx.getBoxValue(this);
     }
 
+    public E getForWrite()
+    {
+        HGTransaction tx = txManager.getContext().getCurrent();
+        if (tx == null) 
+            return body.value;
+        {
+            E value = tx.getLocalValue(this);
+            if  (value == null)
+                value = body.getBody(tx.getNumber()).value; 
+            return (value == HGTransaction.NULL_VALUE) ? null : value;            
+        }
+    }
+    
     public void put(E newE)
     {
         HGTransaction tx = txManager.getContext().getCurrent();
@@ -66,7 +74,7 @@ public class VBox<E>
             txManager.COMMIT_LOCK.lock();
 //            try
 //            {
-                commit(newE, txManager.mostRecentRecord.transactionNumber);
+                commit(tx, newE, txManager.mostRecentRecord.transactionNumber);
 //            }
 //            catch (Throwable t)
 //            {
@@ -84,7 +92,7 @@ public class VBox<E>
         }
     }
 
-    public VBoxBody<E> commit(E newValue, long txNumber)
+    public VBoxBody<E> commit(HGTransaction tx, E newValue, long txNumber)
     {
         VBoxBody<E> newBody = makeNewBody(newValue, txNumber, this.body);
         this.body = (VBoxBody<E>)newBody;

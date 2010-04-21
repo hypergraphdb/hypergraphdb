@@ -13,7 +13,7 @@ import org.hypergraphdb.storage.IndexResultSet;
 import org.hypergraphdb.transaction.TxSet;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.DummyReadWriteLock;
-import org.hypergraphdb.util.HGLock;
+//import org.hypergraphdb.util.HGLock;
 import org.hypergraphdb.util.RefResolver;
 
 /**
@@ -30,7 +30,7 @@ import org.hypergraphdb.util.RefResolver;
 class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
-	int keepInMemoryThreshold = 100000;
+	int keepInMemoryThreshold = 10000;
 	
 	ISRefResolver(HyperGraph graph)
 	{

@@ -8,12 +8,11 @@
 package org.hypergraphdb.transaction;
 
 import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
 import org.hypergraphdb.util.Cons;
@@ -38,7 +37,7 @@ import org.hypergraphdb.util.Pair;
 @SuppressWarnings("unchecked")
 public final class HGTransaction implements HGStorageTransaction
 {
-    private static final Object NULL_VALUE = new Object();
+    static final Object NULL_VALUE = new Object();
 
     private HGTransaction parent;
     private HGTransactionContext context;
@@ -49,14 +48,19 @@ public final class HGTransaction implements HGStorageTransaction
     private long number;
     private ActiveTransactionsRecord activeTxRecord;
     
+    long getNumber()
+    {
+        return number;
+    }
+    
     <T> T getLocalValue(VBox<T> vbox)
     {
         T value = null;
-        value = (T) boxesWritten.get(vbox);        
-        if ((value == null) && (parent != null))
+        HGTransaction tx = this;
+        do
         {
-            value = parent.getLocalValue(vbox);
-        }
+            value = (T) tx.boxesWritten.get(vbox);
+        } while (value == null && (tx = tx.parent) != null);
         return value;
     }
 
@@ -115,7 +119,7 @@ public final class HGTransaction implements HGStorageTransaction
             VBox<Object> vbox = (VBox<Object>)entry.getKey();
             Object newValue = entry.getValue();
 
-            VBoxBody<?> newBody = vbox.commit((newValue == NULL_VALUE) ? null
+            VBoxBody<?> newBody = vbox.commit(this, (newValue == NULL_VALUE) ? null
                                     : newValue, number);
             newBodies = newBodies.cons(newBody);
         }

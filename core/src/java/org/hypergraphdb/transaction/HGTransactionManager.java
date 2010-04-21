@@ -319,10 +319,22 @@ public class HGTransactionManager
 	/**
 	 * <p>
 	 * Perform a unit of work encapsulated as a transaction and return the result. This method
-	 * explicitly allows deadlock to occur and it will reattempt the transaction in such a 
+	 * explicitly allows deadlock (or write conflicts) to occur and it will re-attempt the transaction in such a 
 	 * case indefinitely. In order for the transaction to eventually complete, the underlying
 	 * transactional system must be configured to be fair or to prioritize transaction randomly
 	 * (which is the default behavior).
+	 * </p>
+	 * 
+	 * <p>
+	 * If the <code>transaction.call()</code> returns without an exception, but the underlying
+	 * database transaction has already been committed or aborted, this method return without
+	 * doing anything further. Otherwise, upon a normal return from <code>transaction.call()</code>
+	 * it will try to commit and re-try indefinitely if the commit fails.
+	 * </p>
+	 * 
+	 * <p>
+	 * It is important that the <code>transaction.call()</code> doesn't leave any open nested transactions
+	 * on the transaction stack.
 	 * </p>
 	 * 
 	 * @param <V> The type of the return value.
@@ -338,6 +350,7 @@ public class HGTransactionManager
 		while (true)
 		{
 			beginTransaction();
+			HGTransaction tx = getContext().getCurrent();
 			V result = null;
 			try
 			{
@@ -354,8 +367,9 @@ public class HGTransactionManager
 			}
 			try
 			{
-				endTransaction(true);
-                successful.incrementAndGet();				
+			    if (tx == getContext().getCurrent())
+			        endTransaction(true);
+                successful.incrementAndGet(); // "successful" means not conflicting with other transactions				
 				return result;
 			}  
 			catch (Throwable t)

@@ -521,4 +521,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
     {
     	return condition;
     }
+    
+    public HGQuery getCompiledQuery()
+    {
+        return query;
+    }
 }

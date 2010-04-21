@@ -69,8 +69,8 @@ public class ColdAtoms
 	
 	public void add(Object atom)
 	{
-	    if (1 == 1)
-	        return;
+//	    if (1 == 1)
+//	        return;
 		synchronized (buckets)
 		{
 			if (pos >= bucket_size)

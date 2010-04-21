@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,7 +96,7 @@ public /*final*/ class HyperGraph
     /**
      * An object ID for locking the incidence set cache within a DB transaction.
      */
-    private static final byte [] INCIDENCE_CACHE_ID = HGHandleFactory.makeHandle("128d0be0-b062-11dd-b416-0002a5d5c51b").toByteArray();
+    //private static final byte [] INCIDENCE_CACHE_ID = HGHandleFactory.makeHandle("128d0be0-b062-11dd-b416-0002a5d5c51b").toByteArray();
     
     /**
      * The resource name of the default types configuration file.

@@ -13,7 +13,7 @@ package org.hypergraphdb;
  * A <code>HGRandomAccessResult</code> is a search result that is based on some
  * kind of cursor that allows immediate positioning on some result value, if it
  * exists. This is particularly useful for index-based search results where the whole
- * result set is ordered and provides quick lookup to being with. A query execution
+ * result set is ordered and provides quick lookup to begin with. A query execution
  * plan may take advantage of this capability.
  * </p>
  * 
