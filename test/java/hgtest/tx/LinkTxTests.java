@@ -1,5 +1,6 @@
 package hgtest.tx;
 
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,9 +17,11 @@ import hgtest.HGTestBase;
 
 public class LinkTxTests extends HGTestBase
 {
-    private int atomsCount = 100;
-    private int linksCount = 1000;
+    private int atomsCount = 50; // must be an even number
+    private int linksCount = 50; // must be an even number
     private int threadCount = 10;
+    
+    private ArrayList<Throwable> errors = new ArrayList<Throwable>();
     
     public static class LinkType extends HGPlainLink
     {
@@ -63,24 +66,40 @@ public class LinkTxTests extends HGTestBase
         return "linkAtom" + i;
     }
     
+    private void checkLinks(final HGHandle h1, HGHandle h2)
+    {
+        int j = 0;
+        do
+        {
+            LinkType x = hg.getOne(graph, hg.and(hg.type(LinkType.class), 
+                                                 hg.eq("idx", j), 
+                                                 hg.incident(h1),
+                                                 hg.incident(h2)));
+            assertNotNull(x);
+            ++j;
+            LinkType y = hg.getOne(graph, hg.and(hg.type(LinkType.class), 
+                                                 hg.eq("idx", j), 
+                                                 hg.incident(h1),
+                                                 hg.incident(h2)));
+            assertNotNull(y);
+            assertEquals(x.getThreadId(), y.getThreadId());
+            ++j;
+        } while (j < linksCount);        
+    }
+    
     public void verifyData()
     {
         for (int i = 0; i < atomsCount; i++)
         {
-            HGHandle h = hg.findOne(graph, hg.eq(makeAtom(i)));
-            assertNotNull(h);
-            assertEquals(graph.getIncidenceSet(h).size(), linksCount);
-            int j = 0;
-            do
+            HGHandle h1 = hg.findOne(graph, hg.eq(makeAtom(i)));
+            assertNotNull(h1);
+            assertEquals(graph.getIncidenceSet(h1).size(), linksCount*(atomsCount - 1));
+            for (int j = i + 1; j < atomsCount; j++)
             {
-                LinkType x = hg.getOne(graph, hg.and(hg.type(LinkType.class), hg.eq("idx", j), hg.incident(h)));
-                assertNotNull(x);
-                ++j;
-                LinkType y = hg.getOne(graph, hg.and(hg.type(LinkType.class), hg.eq("idx", j), hg.incident(h)));
-                assertNotNull(y);
-                assertEquals(x.getThreadId(), y.getThreadId());
-                ++j;
-            } while (j < linksCount);
+                HGHandle h2 = hg.findOne(graph, hg.eq(makeAtom(j)));
+                assertNotNull(h2);                
+                checkLinks(h1, h2);
+            }
         }
     }
     
@@ -129,13 +148,21 @@ public class LinkTxTests extends HGTestBase
             for (int j = i + 1; j < atomsCount; j++)
             {
                 HGHandle hj = hg.findOne(graph, hg.eq(makeAtom(j)));
-                assertNotNull(hj);                
+                assertNotNull(hj);
+                System.out.println("Linking " + i + " <-> " + j);
                 linkThem(threadId, hi, hj);
             }
         }        
     }
     
-    private int fact(int n) { return n == 0 ? 1 : n*fact(n-1); }
+    private long fact(long n) { return n == 0 ? 1 : n*fact(n-1); };
+    private long binomial(long n, long m) 
+    { 
+        long top = 1;
+        for (long i = n; i > (n - m); i--)
+            top *= i;
+        return top/fact(m);
+    }
     
     @Test
     public void testConcurrentLinkCreation()
@@ -149,7 +176,15 @@ public class LinkTxTests extends HGTestBase
             pool.execute(new Runnable() {
                 public void run()
                 {
-                    populateLinks(j);
+                    try
+                    {
+                        populateLinks(j);
+                    }
+                    catch (Throwable t)
+                    {
+                        t.printStackTrace(System.err);
+                        errors.add(t);
+                    }
                 }
             });
         }
@@ -163,9 +198,9 @@ public class LinkTxTests extends HGTestBase
             System.out.println("testTxMap interrupted.");
             return;
         }        
-        
-        assertEquals(hg.count(graph, hg.type(LinkType.class)), 
-                     linksCount*fact(atomsCount)/fact(2)/fact(atomsCount-2));
+        assertEquals(errors.size(), 0);
+        assertEquals(linksCount*binomial(atomsCount, 2),
+                     hg.count(graph, hg.type(LinkType.class)));
         
         verifyData();
     }

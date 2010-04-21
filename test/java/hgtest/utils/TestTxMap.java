@@ -123,6 +123,7 @@ public class TestTxMap extends HGTestBase
         assertEquals(txMap.mapSize(), 0);             
     }
     
+    
     @Test
     public void testTxMapAbort()
     {
@@ -157,4 +158,5 @@ public class TestTxMap extends HGTestBase
         assertEquals(txMap.size(), max / 2);
         assertEquals(txMap.mapSize(), txMap.size());
     }
+    
 }

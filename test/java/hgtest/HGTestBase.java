@@ -38,6 +38,7 @@ public class HGTestBase
     @AfterClass    
     public void tearDown()
     {
+        graph.close();
         dropHyperGraphInstance(getGraphLocation());        
     }
     
