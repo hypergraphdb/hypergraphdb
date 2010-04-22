@@ -90,8 +90,8 @@ public class HGTransactionManager
     
     /**
      * <p>
-     * Construct a new transaction manager with the given transaction factory. This
-     * method is normally called only internally. To obtain the transactio manager
+     * Construct a new transaction manager with the given storage transaction factory. This
+     * method is normally called only internally. To obtain the transaction manager
      * bound to a HyperGraph, use <code>HyperGraph.getTransactionManager</code>.
      * </p>
      * 
@@ -180,7 +180,7 @@ public class HGTransactionManager
 	 * transaction object is returned.
 	 * @return The newly created transaction.
 	 */
-	public HGTransaction createTransaction(HGTransaction parent)
+	HGTransaction createTransaction(HGTransaction parent, HGTransactionConfig config)
 	{		 
 		if (enabled)
 		{
@@ -188,7 +188,8 @@ public class HGTransactionManager
 			HGTransaction result = new HGTransaction(getContext(),
 			                                         parent,
 			                                         activeRecord,
-			                                         factory.createTransaction(getContext(), parent));
+			                                         config.isNoStorage() ? null
+			                                             : factory.createTransaction(getContext(), parent));
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);
 			return result;
@@ -205,8 +206,22 @@ public class HGTransactionManager
 	 */
 	public void beginTransaction()
 	{
-		getContext().beginTransaction();
+		beginTransaction(HGTransactionConfig.DEFAULT);
 	}
+
+    /**
+     * <p>
+     * Begin a new transaction in the current transaction context. If there's
+     * no transaction context bound to the active thread, one will be created.
+     * </p>
+     * 
+     * @param config A {@link HGTransactionConfig} instance holding configuration
+     * parameters for the newly created transaction.
+     */
+    public void beginTransaction(HGTransactionConfig config)
+    {
+        getContext().beginTransaction(config);
+    }
 	
 	/**
 	 * <p>
@@ -291,7 +306,7 @@ public class HGTransactionManager
 				throw new RuntimeException(ex);
 			}
 		else
-			return transact(transaction);
+			return transact(transaction, HGTransactionConfig.DEFAULT);
 	}
 	
 	private void handleTxException(Throwable t)
@@ -318,6 +333,16 @@ public class HGTransactionManager
 	
 	/**
 	 * <p>
+	 * Equivalent to <code>transact(transaction, HGTransactionConfig.DEFAULT)</code>. 
+	 * </p>
+	 */
+	public <V> V transact(Callable<V> transaction)
+	{
+	    return transact(transaction, HGTransactionConfig.DEFAULT);
+	}
+	
+	/**
+	 * <p>
 	 * Perform a unit of work encapsulated as a transaction and return the result. This method
 	 * explicitly allows deadlock (or write conflicts) to occur and it will re-attempt the transaction in such a 
 	 * case indefinitely. In order for the transaction to eventually complete, the underlying
@@ -339,17 +364,18 @@ public class HGTransactionManager
 	 * 
 	 * @param <V> The type of the return value.
 	 * @param transaction The transaction process encapsulated as a <code>Callable</code> instance.
+	 * @param config The transaction configuration parameters.
 	 * @return The result of <code>transaction.call()</code>.
 	 * @throws The method will (re)throw any exception that does not result from a deadlock.
 	 */
-	public <V> V transact(Callable<V> transaction)
+	public <V> V transact(Callable<V> transaction, HGTransactionConfig config)
 	{
 		// We retry for as long as it takes. There's no reason
 		// why a transaction shouldn't eventually be able to acquire
 		// the locks it needs.
 		while (true)
 		{
-			beginTransaction();
+			beginTransaction(config);
 			HGTransaction tx = getContext().getCurrent();
 			V result = null;
 			try

@@ -8,6 +8,7 @@
 package org.hypergraphdb.peer;
 
 import static org.hypergraphdb.peer.Structs.getPart;
+
 import static org.hypergraphdb.peer.Structs.object;
 import static org.hypergraphdb.peer.Structs.struct;
 
@@ -39,6 +40,7 @@ import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.RAMStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.FilterIterator;
 import org.hypergraphdb.util.HGUtils;
@@ -163,7 +165,8 @@ public class SubgraphManager
                 }
                 return null;
            }
-        });
+        },
+        HGTransactionConfig.DEFAULT);
     }
 
     /**
@@ -362,7 +365,8 @@ public class SubgraphManager
 	                   batch.clear();
 	                   return null; 
 	                }
-	                });
+	                },
+	                HGTransactionConfig.DEFAULT);
 	            }
 	        }
 	        graph.getTransactionManager().transact(new Callable<Object>() {
@@ -371,7 +375,8 @@ public class SubgraphManager
 	            	replacements[0] += translateBatch(graph, batch, subgraph, objects, atomFinder, currentChanges);
 	                return null; 
 	            }
-	            });        
+	            },
+	            HGTransactionConfig.DEFAULT);        
 	        subgraph.translateHandles(currentChanges);
 	        substitutes.putAll(currentChanges);	        
         } while (replacements[0] > 0);
@@ -479,7 +484,8 @@ public class SubgraphManager
                                      (byte)0);
                     }
                     return null;                
-                }});
+                }},
+                HGTransactionConfig.DEFAULT);
                 result.addAll(batch);
                 batch.clear();
             }
@@ -500,7 +506,8 @@ public class SubgraphManager
                                  (byte)0);
                 }
                 return null;                
-            }});
+            }},
+            HGTransactionConfig.DEFAULT);
         result.addAll(batch);        
         return result;
     }
@@ -519,7 +526,6 @@ public class SubgraphManager
      */
     private static class AtomFilteringSubgraph implements StorageGraph
     {
-        HyperGraph graph;
         StorageGraph wrapped;
         HGIndex<HGPersistentHandle, HGPersistentHandle> indexByValue;
 

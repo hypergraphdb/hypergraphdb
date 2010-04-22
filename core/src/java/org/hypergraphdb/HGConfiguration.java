@@ -33,6 +33,7 @@ public class HGConfiguration
 	private boolean cancelMaintenance = false;
 	private boolean skipOpenedEvent = false;
 	private boolean storageMVCC = true;
+	private int maxCachedIncidenceSetSize = 10000; 
 	
 	public HGConfiguration()
 	{
@@ -217,5 +218,29 @@ public class HGConfiguration
     public void setStorageMVCC(boolean storageMVCC)
     {
         this.storageMVCC = storageMVCC;
+    }
+
+    /**
+     * <p>Return the configured maximum size of atom incidence sets that are kept in 
+     * RAM. Small incidence sets are kept in a (usually MRU) cache, which significantly speeds up 
+     * querying. This configuration options defines how small is "small". The default is 10000 - 
+     * that is, incidence sets of 10000 or fewer elements are cached in RAM the first time they are
+     * accessed.</p>  
+     */
+    public int getMaxCachedIncidenceSetSize()
+    {
+        return maxCachedIncidenceSetSize;
+    }
+
+    /**
+     * <p>Set the configured maximum size of atom incidence sets that are kept in 
+     * RAM. Small incidence sets are kept in a (usually MRU) cache, which significantly speeds up 
+     * querying. This configuration options defines how small is "small". The default is 10000 - 
+     * that is, incidence sets of 10000 or fewer elements are cached in RAM the first time they are
+     * accessed.</p>  
+     */
+    public void setMaxCachedIncidenceSetSize(int maxCachedIncidenceSetSize)
+    {
+        this.maxCachedIncidenceSetSize = maxCachedIncidenceSetSize;
     }    
 }

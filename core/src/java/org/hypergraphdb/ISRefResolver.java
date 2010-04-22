@@ -30,11 +30,12 @@ import org.hypergraphdb.util.RefResolver;
 class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
-	int keepInMemoryThreshold = 10000;
+	int keepInMemoryThreshold;
 	
 	ISRefResolver(HyperGraph graph)
 	{
 		this.graph = graph;
+		this.keepInMemoryThreshold = graph.getConfig().getMaxCachedIncidenceSetSize();
 	}
 
 	public IncidenceSet resolve(HGPersistentHandle key)

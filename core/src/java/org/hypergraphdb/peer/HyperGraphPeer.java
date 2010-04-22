@@ -41,6 +41,7 @@ import org.hypergraphdb.peer.workflow.ActivityResult;
 import org.hypergraphdb.peer.workflow.AffirmIdentity;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.StorageGraph;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.TwoWayMap;
 
@@ -217,7 +218,8 @@ public class HyperGraphPeer
 	                pid.setIpAddress(machine.getHostAddress());
 	                graph.define(newId, pid);
 	                return pid.makePublicIdentity();
-            	}});
+            	}}, 
+            	HGTransactionConfig.DEFAULT);
             }
             return identity;
         }

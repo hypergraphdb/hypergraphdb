@@ -30,7 +30,7 @@ public interface HGTransactionContext
 {
     HGTransactionManager getManager();    
 	HGTransaction getCurrent();
-	void beginTransaction();
+	void beginTransaction(HGTransactionConfig config);
 	void endTransaction(boolean success) throws HGTransactionException;
 	void endAll(boolean success) throws HGTransactionException;
 }

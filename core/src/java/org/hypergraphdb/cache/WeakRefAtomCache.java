@@ -23,6 +23,7 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.util.CloseMe;
@@ -68,6 +69,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	private ReadWriteLock lock = new DummyReadWriteLock(); // new ReentrantReadWriteLock();
     private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup cleanupThread = new PhantomCleanup();
+	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
 	
@@ -101,7 +103,7 @@ public class WeakRefAtomCache implements HGAtomCache
 //		    System.out.println("Weak remove of " + ref);
 //			lock.writeLock().lock();
 		    final WeakHandle ref1 = ref;
-		    graph.getTransactionManager().ensureTransaction(new Callable<Object>() {
+		    graph.getTransactionManager().transact(new Callable<Object>() {
 		        public Object call()
 		        {
 //		            System.out.println("Removing live handle " + liveHandles.size() + ", " + ((TxMap)liveHandles).mapSize() +
@@ -111,7 +113,8 @@ public class WeakRefAtomCache implements HGAtomCache
 		            removalCount++;
 		            return null;
 		        }
-		    });
+		    },
+		    cleanupTxConfig);
 //			try
 //			{
 //				liveHandles.remove(ref.getPersistentHandle());
@@ -133,6 +136,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	    public void run() 
 	    {
 //			WeakHandle.returnEnqueued.set(Boolean.TRUE);
+	        cleanupTxConfig.setNoStorage(true);
 	        for (done = false; !done; ) 
 	        {
 	        	try 

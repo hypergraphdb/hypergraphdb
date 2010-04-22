@@ -19,7 +19,10 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.indexing.HGValueIndexer;
+import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.util.HGUtils;
+
+import com.sleepycat.db.DeadlockException;
 
 /**
  * 
@@ -118,6 +121,9 @@ public class ApplyNewIndexer implements MaintenanceOperation
             }
             catch (Throwable t)
             {
+                Throwable cause = HGUtils.getRootCause(t);
+                if (cause instanceof TransactionConflictException || cause instanceof DeadlockException)
+                    continue;                
                 try { graph.getTransactionManager().endTransaction(false); }
                 catch (Throwable tt) { tt.printStackTrace(System.err); }
                 MaintenanceException mex = new MaintenanceException(

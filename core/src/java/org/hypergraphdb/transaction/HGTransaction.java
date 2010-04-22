@@ -158,7 +158,8 @@ public final class HGTransaction implements HGStorageTransaction
         // If this is a nested transaction, everything is much simpler
         if (parent != null)
         {
-            stran.commit();            
+            if (stran != null)
+                stran.commit();            
             parent.bodiesRead.addAll(bodiesRead);
             parent.boxesWritten.putAll(boxesWritten);
             finish();
@@ -177,7 +178,8 @@ public final class HGTransaction implements HGStorageTransaction
             {
                 if (validateCommit())
                 {
-                    stran.commit();
+                    if (stran != null)
+                        stran.commit();
                     Cons<VBoxBody<?>> bodiesCommitted = performValidCommit();
                     
                     // The commit is already done, so create a new ActiveTransactionsRecord
@@ -210,7 +212,10 @@ public final class HGTransaction implements HGStorageTransaction
             }
         }                
         else
-            stran.commit();
+        {
+            if (stran != null)
+                stran.commit();
+        }
         finish();            
         HyperGraph graph = context.getManager().getHyperGraph();
         graph.getEventManager().dispatch(graph,
@@ -221,7 +226,8 @@ public final class HGTransaction implements HGStorageTransaction
     private void privateAbort() throws HGTransactionException
     {
         finish();
-        stran.abort();        
+        if (stran != null)
+            stran.abort();        
     }
     
     public void abort() throws HGTransactionException
