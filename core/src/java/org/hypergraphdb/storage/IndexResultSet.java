@@ -76,7 +76,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected final void moveNext()
     {
 //        checkCursor();
-        //MINE:
+        //BIZI:
         prev = UNKNOWN;//current;
         current = next;
         next = UNKNOWN;
@@ -94,7 +94,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected final void movePrev()
     {
 //        checkCursor();
-        //MINE:
+      //BIZI:
         next = UNKNOWN;//current;
         current = prev;
         prev = UNKNOWN;
