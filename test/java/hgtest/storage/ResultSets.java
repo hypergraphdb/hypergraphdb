@@ -31,7 +31,7 @@ public class ResultSets
           graph.getIndexManager().register(new ByPartIndexer(th, "x"));
         for (int i = 0; i < COUNT; i++)
            graph.add(new TestInt(i));
-               
+        
         testKeyRangeForwardResultSet(graph, index);
         testKeyRangeBackwardResultSet(graph, index);
         testFilteredResultSet(graph, index);
@@ -44,6 +44,7 @@ public class ResultSets
     static void testKeyRangeForwardResultSet(HyperGraph graph, DefaultIndexImpl index)
     {
         HGSearchResult<HGHandle> res = index.findGTE(5);
+        boolean b = res.hasPrev();
         Assert.assertTrue(expectedType(res, "KeyRangeForwardResultSet"));
         List<Integer> list = result__list(graph, res);
         Assert.assertTrue(isSortedList(list, true));
