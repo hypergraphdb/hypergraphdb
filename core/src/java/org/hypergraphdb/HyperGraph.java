@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.cache.MRUCache;
@@ -301,7 +302,7 @@ public /*final*/ class HyperGraph
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
 	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
 	        ((MRUCache<HGPersistentHandle, IncidenceSet>)incidenceCache).setLockImplementation(
-                    new DummyReadWriteLock()	                                                                                           
+                    new ReentrantReadWriteLock()	                                                                                           
 	        		/* new HGLock(this, INCIDENCE_CACHE_ID) */);
 	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();
 	        incidenceCache.setResolver(new ISRefResolver(this));

@@ -36,7 +36,7 @@ import java.util.SortedSet;
 public class HGAtomSet implements HGSortedSet<HGHandle>
 {	
     static final long serialVersionUID = -1L;    
-	private HGSortedSet<HGPersistentHandle> impl = null;
+	protected HGSortedSet<HGPersistentHandle> impl = null;
 
 	public HGAtomSet()
 	{

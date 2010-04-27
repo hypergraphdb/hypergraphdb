@@ -25,8 +25,6 @@
  */
 package org.hypergraphdb.transaction;
 
-import org.hypergraphdb.util.Pair;
-
 public class VBox<E>
 {
     protected HGTransactionManager txManager;
@@ -41,8 +39,8 @@ public class VBox<E>
     public VBox(HGTransactionManager txManager, E initial)
     {
         this.txManager = txManager;
-//        put(initial);
         commit(null, initial, 0);
+        //put(initial);
     }
     
     public E get()
@@ -51,6 +49,14 @@ public class VBox<E>
         return  (tx == null) ? body.value : tx.getBoxValue(this);
     }
 
+    /**
+     * <p>
+     * Same as <code>get</code>, except the value is not marked is being read.
+     * Thus, if a transaction only writes to a value, that won't conflict with any
+     * other transactions. Calling this method makes sense for aggregate structures
+     * (collections or records) that are only written to.
+     * </p>  
+     */
     public E getForWrite()
     {
         HGTransaction tx = txManager.getContext().getCurrent();
@@ -104,7 +110,7 @@ public class VBox<E>
         return new VBoxBody<E>(value, version, next);
     }
     
-    public void finish()
+    public void finish(HGTransaction tx)
     {        
     }
 }

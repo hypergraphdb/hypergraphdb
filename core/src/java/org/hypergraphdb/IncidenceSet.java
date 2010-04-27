@@ -34,4 +34,13 @@ public final class IncidenceSet extends HGAtomSet
 	{
 		return atom;
 	}
+
+//    @Override
+//    public boolean isInTransaction()
+//    {
+//        if (impl instanceof HGTxObject)
+//            return ((HGTxObject)impl).isInTransaction();
+//        else
+//            return false;
+//    }	
 }

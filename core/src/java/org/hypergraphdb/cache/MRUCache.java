@@ -8,6 +8,7 @@
 package org.hypergraphdb.cache;
 
 import java.util.HashMap;
+
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -111,17 +112,22 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		}
 	}
 	
+	void unlink(Entry<Key, Value> e)
+	{
+        if (e.prev != null)
+            e.prev.next = e.next;
+        if (e.next != null)
+            e.next.prev = e.prev;
+        e.prev = e.next = null;	    
+	}
+	
 	class UnlinkEntry implements Runnable
 	{
 		Entry<Key, Value> e;
 		UnlinkEntry(Entry<Key, Value> e) { this.e = e;}
 		public void run()
 		{
-			if (e.prev != null)
-				e.prev.next = e.next;
-			if (e.next != null)
-				e.next.prev = e.prev;
-			e.prev = e.next = null;
+		    unlink(e);
 		}
 	}
 	
@@ -178,22 +184,44 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		{
 			if (top == null)
 				return;
-/*			double used = (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/
-			(double)Runtime.getRuntime().maxMemory();
-			System.out.println("EVICT ACTION CALLED -- " + map.size() + ", " + used);
-			System.out.println("EVICT ACTION EVICTING :" + Runtime.getRuntime().freeMemory());
-			int evicted = 0; */
+//			double used = (double)(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/
+//			(double)Runtime.getRuntime().maxMemory();
+//			System.out.println("EVICT ACTION CALLED -- " + map.size() + ", " + used);
+//			System.out.println("EVICT ACTION EVICTING :" + Runtime.getRuntime().freeMemory());
+//			int evicted = 0; 
 			adjustCutoffTail();
 			if (cutoffTail.prev != null)
 				cutoffTail.prev.next = null;
-			for (; cutoffTail != null; cutoffTail = cutoffTail.next)
+			while (cutoffTail != null)
 			{
 				lock.writeLock().lock();
-				map.remove(cutoffTail.key);
-				lock.writeLock().unlock();
+				try
+				{
+//    				Object value = cutoffTail.value;    	
+//    				if (value instanceof HGTxObject && false)
+//    				{
+//        				if (((HGTxObject)value).isInTransaction())
+//        				{
+//        				    System.out.println("not removing tx object, putting on top, cache size is=" + map.size());
+//        				    Entry<Key, Value> next = cutoffTail.next;
+//        				    cutoffTail.prev = null;
+//        				    cutoffTail.next = top;
+//        				    top.prev = cutoffTail;
+//        				    top = cutoffTail;
+//        				    cutoffTail = next;
+//        				    continue;
+//        				}        				
+//    				}
+				    map.remove(cutoffTail.key);
+				    cutoffTail = cutoffTail.next;    				    
+				}
+				finally
+				{
+				    lock.writeLock().unlock();
+				}
 //				evicted++;
 			}
-//			System.gc();
+			System.gc();
 //			System.out.println("EVICTION COMPLETED :" + evicted + ", "  + Runtime.getRuntime().freeMemory());
 		}
 	}
@@ -202,7 +230,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	{
 		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
-			System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
+//			System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
 			CacheActionQueueSingleton.get().pauseActions();
 			try
 			{
@@ -213,8 +241,8 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			{
 				CacheActionQueueSingleton.get().resumeActions();
 			}
-			System.gc();
-			System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
+//			System.gc();
+//			System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
 		}
 	};
 	
@@ -276,6 +304,9 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	
 	public Value get(Key key)
 	{
+//	    lock.writeLock().lock();
+//	    try
+//	    {
 		lock.readLock().lock();
 		Entry<Key, Value> e = map.get(key);
 		lock.readLock().unlock();
@@ -301,19 +332,30 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
 			return e.value;
 		}
+//	    }
+//	    finally
+//	    {
+//	        lock.writeLock().unlock();
+//	    }
 	}
 
 	public Value getIfLoaded(Key key)
 	{
 		lock.readLock().lock();
-		Entry<Key, Value> e = map.get(key);
-		lock.readLock().unlock();
-		if (e == null)
-			return null;
-		else
+		try
 		{
-			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
-			return e.value;
+    		Entry<Key, Value> e = map.get(key);
+    		if (e == null)
+    			return null;
+    		else
+    		{
+    			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+    			return e.value;
+    		}
+		}
+		finally
+		{
+	        lock.readLock().unlock();		    
 		}
 	}
 	

@@ -129,8 +129,10 @@ public final class HGTransaction implements HGStorageTransaction
 
     void finish() 
     {
+        for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
+            entry.getFirst().finish(this);            
         for (Map.Entry<VBox<?>, Object> entry : boxesWritten.entrySet())
-            entry.getKey().finish();
+            entry.getKey().finish(this);
         bodiesRead = null;
         boxesWritten = null;        
         activeTxRecord.decrementRunning();

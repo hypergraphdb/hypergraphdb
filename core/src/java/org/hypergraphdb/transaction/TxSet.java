@@ -51,7 +51,7 @@ public class TxSet<E> implements HGSortedSet<E>
     }
 
     private HGTransactionManager txManager;
-    private VBox<HGSortedSet<E>> S;
+    private SetVBox S;
     
     void log(int op, Object el)
     {
@@ -123,33 +123,13 @@ public class TxSet<E> implements HGSortedSet<E>
     public TxSet(final HGTransactionManager txManager, final HGSortedSet<E> backingSet)
     {
         this.txManager = txManager;
-        this.S = new VBox<HGSortedSet<E>>(txManager, backingSet)
-        {
-            @Override
-            public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
-            {
-                if (tx != null)
-                {                                    
-                    HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;
-                    if (lastCommitted == null) // is this the very first commit?
-                        return super.commit(tx, newvalue, txNumber);
-                    List<LogEntry> log = tx.getAttribute(TxSet.this);
-                    if (log != null) // did we do any modifications to the set?
-                    {
-                        lastCommitted = cloneSet(lastCommitted);
-                        applyLog(log, lastCommitted);
-                        return super.commit(tx, lastCommitted, txNumber);
-                    }
-                    else
-                        return body; // nothing to do, we've just been reading
-                }
-                else
-                {
-                    return super.commit(tx, newvalue, txNumber); // hope caller knows what they are doing
-                }            
-            }              
-        };
+        this.S = new SetVBox(txManager, backingSet);
     }    
+    
+//    public boolean isInTransaction()
+//    {
+//        return S.getTxCount() > 0;
+//    }
     
     public HGRandomAccessResult<E> getSearchResult()
     {
@@ -266,4 +246,67 @@ public class TxSet<E> implements HGSortedSet<E>
     {
         return read().toArray(a);
     }
+    
+    private class SetVBox extends VBox<HGSortedSet<E>>    
+    {
+//        private Map<HGTransaction, Boolean> txs =
+//            new ConcurrentHashMap<HGTransaction, Boolean>();
+        
+        SetVBox(final HGTransactionManager txManager, final HGSortedSet<E> backingSet)
+        {
+            super(txManager, backingSet);
+        }
+        
+//        int getTxCount()
+//        {
+//            return txs.size();
+//        }
+//
+//        @Override
+//        public HGSortedSet<E> get()
+//        {
+//            HGTransaction tx = txManager.getContext().getCurrent();
+//            if (tx != null)
+//                txs.put(tx, Boolean.TRUE);
+//            return super.get();
+//        }
+//        
+//        @Override
+//        public HGSortedSet<E> getForWrite()
+//        {
+//            HGTransaction tx = txManager.getContext().getCurrent();
+//            if (tx != null)
+//                txs.put(tx, Boolean.TRUE);
+//            return super.getForWrite();
+//        }
+        
+        @Override
+        public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
+        {
+            if (tx != null)
+            {                                    
+                HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;
+                List<LogEntry> log = tx.getAttribute(TxSet.this);
+                if (log != null) // did we do any modifications to the set?
+                {
+                    lastCommitted = cloneSet(lastCommitted);
+                    applyLog(log, lastCommitted);
+                    return super.commit(tx, lastCommitted, txNumber);
+                }
+                else
+                    return body; // nothing to do, we've just been reading
+            }
+            else
+            {
+                return super.commit(tx, newvalue, txNumber); // hope caller knows what they are doing
+            }            
+        }
+        
+//        @Override       
+//        public void finish(HGTransaction tx)
+//        {
+//            if (tx != null)
+//                txs.remove(tx);            
+//        }
+    }; 
 }
