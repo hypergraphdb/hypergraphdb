@@ -44,13 +44,13 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     		case EQ:
     			return value.equals(x);
     		case LT:
-    			return ((Comparable)value).compareTo(x) < 0;
+    			return ((Comparable)x).compareTo(value) < 0;
     		case GT:
-    			return ((Comparable)value).compareTo(x) > 0;
+    			return ((Comparable)x).compareTo(value) > 0;
     		case LTE:
-    			return ((Comparable)value).compareTo(x) <= 0;
+    			return ((Comparable)x).compareTo(value) <= 0;
     		case GTE:
-    			return ((Comparable)value).compareTo(x) >= 0;   
+    			return ((Comparable)x).compareTo(value) >= 0;   
     		default:
     			throw new HGException("Wrong operator code [" + operator + "] passed to SimpleValueCondition.");
     	}

@@ -26,4 +26,6 @@ class EmptySearchResult implements HGRandomAccessResult<Object>
 	public void remove() { new UnsupportedOperationException("This is an emtpy HGSearchResult");}
 	public boolean isOrdered() { return true; }
 	public GotoResult goTo(Object x, boolean exactMatch) { return GotoResult.nothing; }
+	public void goBeforeFirst() { }
+	public void goAfterLast() { }
 }

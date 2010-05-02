@@ -9,6 +9,7 @@ package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.transaction.BDBTxCursor;
+import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.LockMode;
@@ -16,6 +17,8 @@ import com.sleepycat.db.OperationStatus;
 
 class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
 {    
+    private DatabaseEntry initialKey = null;
+    
     protected T advance()
     {
         try
@@ -35,6 +38,8 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
     
     protected T back()
     {
+        if (HGUtils.eq(key.getData(), initialKey.getData()))
+            return null;        
         try
         {
             OperationStatus status = cursor.cursor().getNext(key, data, LockMode.DEFAULT);
@@ -52,7 +57,9 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
 
     public KeyRangeBackwardResultSet(BDBTxCursor cursor, DatabaseEntry key,  ByteArrayConverter<T> converter)
     {
-        super(cursor, key, converter);         
+        super(cursor, key, converter);     
+        initialKey = new DatabaseEntry();
+        assignData(initialKey, key.getData());                
     }
     
     public boolean isOrdered()

@@ -423,7 +423,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			else if (tc.getTypeHandle() == null)
 				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));			
 		}
-		else if (cond instanceof TypedValueCondition)
+		else if (cond instanceof TypedValueCondition && ((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)
 		{
 			TypedValueCondition tc = (TypedValueCondition)cond;
 			if (tc.getJavaClass() == null)
@@ -439,7 +439,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				cond = and;
 			}
 		}
-		else if (cond instanceof AtomValueCondition)
+		else if (cond instanceof AtomValueCondition && ((AtomValueCondition)cond).getOperator() == ComparisonOperator.EQ)
 		{
 			AtomValueCondition vc = (AtomValueCondition)cond;
             Object value = vc.getValue();

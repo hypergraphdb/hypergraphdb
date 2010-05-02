@@ -282,7 +282,24 @@ public class LLRBTree<E> extends AbstractSet<E>
 		    locked = acquireLock;
 		}
 		
-		public GotoResult goTo(E key, boolean exactMatch)
+		public void goBeforeFirst()
+		{
+		    lookahead = 0;
+	        next = current = prev = UNKNOWN;	        
+	        stack.clear(); 		    
+		}
+		
+		public void goAfterLast()
+		{
+            lookahead = 0;
+            stack.clear();          
+            stack.push(root);            
+            prev = max();            
+            next = current = UNKNOWN;            
+		}
+		
+		@SuppressWarnings("unchecked")
+        public GotoResult goTo(E key, boolean exactMatch)
 		{
 			// Not clear here whether we should be starting from the root really?
 			// Gotos are performed generally during result set intersection where the target
@@ -479,7 +496,8 @@ public class LLRBTree<E> extends AbstractSet<E>
 		return x == null ?  false : isRed(x.right) && isBlack(x.left);
 	}
 	
-	private Node<E> insert(Node<E> h, E key)
+	@SuppressWarnings("unchecked")
+    private Node<E> insert(Node<E> h, E key)
 	{
 		if (h == null)
 		{
@@ -584,7 +602,8 @@ public class LLRBTree<E> extends AbstractSet<E>
 		return h.fixUp();
 	}
 	
-	private Node<E> delete(Node<E> h, E key)
+	@SuppressWarnings("unchecked")
+    private Node<E> delete(Node<E> h, E key)
 	{
 		int cmp = providedComparator != null ? providedComparator.compare(key, h.key)
                                              : ((Comparable<E>)key).compareTo(h.key); 
@@ -854,6 +873,7 @@ public class LLRBTree<E> extends AbstractSet<E>
 		return isBST(root, first(), last());
 	}
 
+    @SuppressWarnings("unchecked")
     private boolean isBST(Node<E> x, E min, E max)
     {  // Are all the values in the BST rooted at x between min and max,
       // and does the same property hold for both subtrees?

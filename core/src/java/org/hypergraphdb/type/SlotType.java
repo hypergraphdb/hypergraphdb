@@ -93,8 +93,9 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
             throw new HGException("Attempting to create a duplicate slot: [name=" +
                         slot.getLabel() + ", value type=" + valueTypeHandle);
         else
-        {       
-            HGPersistentHandle labelHandle = typeSystem.getAtomType(String.class).store(slot.getLabel());
+        {   
+            HGAtomType stringType = typeSystem.getAtomType(String.class);
+            HGPersistentHandle labelHandle = stringType.store(slot.getLabel());
             HGPersistentHandle handle = hg.getStore().store( 
                     new HGPersistentHandle[]
                                 { hg.getPersistentHandle(slot.getValueType()),

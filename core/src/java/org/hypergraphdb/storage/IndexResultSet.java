@@ -34,11 +34,11 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 	private static final Object UNKNOWN = new Object();
 	
     protected BDBTxCursor cursor;
-    protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;
-//    protected int lookahead = 0;
+    protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;    
     protected DatabaseEntry key;        
     protected DatabaseEntry data = new DatabaseEntry();
     protected ByteArrayConverter<T> converter;
+    protected int lookahead = 0;
     
     protected final void closeNoException()
     {
@@ -76,12 +76,11 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected final void moveNext()
     {
 //        checkCursor();
-        //BIZI:
-        prev = UNKNOWN;//current;
+        prev = current;
         current = next;
         next = UNKNOWN;
-/*        lookahead--;
-        while (true)
+        lookahead--;
+/*        while (true)
         {
         	next = advance();
         	if (next == null)
@@ -94,12 +93,11 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected final void movePrev()
     {
 //        checkCursor();
-      //BIZI:
-        next = UNKNOWN;//current;
+        next = current;
         current = prev;
         prev = UNKNOWN;
-/*        lookahead++;
-        while (true)
+        lookahead++;
+/*        while (true)
         {
         	prev = back();
         	if (prev == null)
@@ -115,7 +113,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     /**
      * <p>Construct an empty result set.</p>
      */
-    public IndexResultSet()
+    protected IndexResultSet()
     {
     }
     
@@ -145,7 +143,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(data.getData());
-//	        lookahead = 1;
+	        lookahead = 1;
 	    }
 	    catch (Throwable t)
 	    {
@@ -156,15 +154,58 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected void positionToCurrent(byte [] data)
     {
 		current = converter.fromByteArray(data);
-/*        prev = back();
-        if (prev != null)
-        	advance();  	
-		next = advance();		
-        if (next != null) 
-        	lookahead = 1;
-        else */ 
-//        	lookahead = 0;
+       	lookahead = 0;
         prev = next = UNKNOWN;
+    }
+    
+    public void goBeforeFirst()
+    {
+        try
+        {
+            if (cursor.cursor().getFirst(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+            {
+                current = UNKNOWN;
+                prev = null;
+                next = converter.fromByteArray(data.getData());
+                lookahead = 1;
+            }
+            else
+            {
+                prev = next = null;
+                current = UNKNOWN;
+                lookahead = 0;
+            }
+        }
+        catch (Throwable t)
+        {
+            closeNoException();
+            throw new HGException(t);
+        }            
+    }
+    
+    public void goAfterLast()
+    {
+        try
+        {
+            if (cursor.cursor().getLast(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+            {
+                current = UNKNOWN;
+                next = null;
+                prev = converter.fromByteArray(data.getData());
+                lookahead = -1;
+            }
+            else
+            {
+                prev = next = null;
+                current = UNKNOWN;
+                lookahead = 0;
+            }            
+        }
+        catch (Throwable t)
+        {
+            closeNoException();
+            throw new HGException(t);
+        }        
     }
     
     public GotoResult goTo(T value, boolean exactMatch)
@@ -234,14 +275,32 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     public final boolean hasPrev()    
     {
     	if (prev == UNKNOWN)
-    		prev = back();
+    	{
+    	    while (lookahead > -1)
+    	    {
+    	        prev = back();
+    	        if (prev == null)
+    	            break;
+    	        lookahead--;
+    	    }
+//    		prev = back();
+    	}
     	return prev != null; 
     }
     
     public final boolean hasNext()    
     { 
     	if (next == UNKNOWN)
-    		next = advance();
+    	{
+            while (lookahead < 1)
+            {
+                next = advance();
+                if (next == null)
+                    break;
+                lookahead++;
+            }    	    
+//    		next = advance();
+    	}
     	return next != null; 
     }
     

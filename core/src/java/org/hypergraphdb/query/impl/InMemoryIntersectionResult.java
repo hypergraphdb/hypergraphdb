@@ -32,6 +32,18 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 		left = right = null;		
 	}
 	
+	public void goBeforeFirst()
+	{
+	    intersect();
+	    intersection.goBeforeFirst();
+	}
+	
+	public void goAfterLast()
+	{
+	    intersect();
+	    intersection.goAfterLast();
+	}
+	
 	public GotoResult goTo(T value, boolean exactMatch)
 	{
 		intersect();

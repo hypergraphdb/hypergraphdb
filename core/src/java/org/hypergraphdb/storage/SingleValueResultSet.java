@@ -45,7 +45,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
 	    {
 	        ((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT);
 	        next = converter.fromByteArray(pkey.getData());
-//	        lookahead = 1;
+	        lookahead = 1;
 	    }
 	    catch (Throwable t)
 	    {

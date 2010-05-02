@@ -8,7 +8,6 @@
 package org.hypergraphdb.util;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -415,8 +414,11 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 	{
 	    try
 	    {
-    	    ArrayBasedSet<E> S = (ArrayBasedSet<E>)super.clone();
-    	    S.array = Arrays.copyOf(array, size);
+    	    ArrayBasedSet<E> S = (ArrayBasedSet<E>)super.clone();    	    
+            S.array = ((Object)array.getClass() == (Object)Object[].class)
+                ? (E[]) new Object[size]
+                : (E[]) Array.newInstance(array.getClass().getComponentType(), size);
+            System.arraycopy(array, 0, S.array, 0, size);
     	    return S;
 	    } 
 	    catch (CloneNotSupportedException e) 
@@ -483,6 +485,16 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 			}
 		}
 
+		public void goBeforeFirst()
+		{
+		    pos = -1;
+		}
+		
+		public void goAfterLast()
+		{
+		    pos = size;
+		}
+		
 		public boolean hasPrev()
 		{
 			return pos > 0;
@@ -519,7 +531,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 
 		public E current()
 		{
-			if (pos < 0)
+			if (pos < 0 || pos >= size)
 				throw new NoSuchElementException();
 			return array[pos];
 		}

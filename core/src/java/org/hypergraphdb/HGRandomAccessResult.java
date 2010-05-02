@@ -63,4 +63,22 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	 * @return A <code>GotoResult</code>.
 	 */
 	GotoResult goTo(ValueType value, boolean exactMatch);
+	
+	/**
+	 * <p>Move the cursor of this result set after the last result. When positioned 
+	 * after the last result, there is no current element, <code>hasNext</code> will
+	 * return false and <code>hasPrev</code> will return true iff there's at least
+	 * one element in this result set.</p>
+	 */
+	void goAfterLast();
+
+    /**
+     * <p>Move the cursor of this result set before the first result. This is equivalent
+     * to resetting the cursor to its initial state, right after the result set was
+     * created. When positioned 
+     * before the first result, there is no current element, <code>hasPrev</code> will
+     * return false and <code>hasNext</code> will return true iff there's at least
+     * one element in this result set.</p>
+     */	
+	void goBeforeFirst();
 }

@@ -31,10 +31,10 @@ public class FilteredResultSet<T> implements HGSearchResult<T>
 	private T current = null;
 
 	//
-	// The number of elements preceeding the current in the underlying
+	// The number of elements preceding the current in the underlying
 	// searchResult that satisfy the predicate.
 	//
-	private int prevCount = 0;
+	private int prevCount = -1;
 	
 	//
 	// The diff in the underlying result b/w the location of our 'current' member

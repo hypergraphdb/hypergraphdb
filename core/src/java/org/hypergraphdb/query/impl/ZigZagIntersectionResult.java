@@ -140,7 +140,18 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		this.right = (HGRandomAccessResult<T>)right;
 	}
 	
-	@SuppressWarnings("unchecked")
+	public void goBeforeFirst()
+	{
+	    left.goBeforeFirst();
+	    right.goBeforeFirst();
+	}
+	
+	public void goAfterLast()
+	{
+	    left.goAfterLast();
+	    right.goAfterLast();
+	}
+	
 	public GotoResult goTo(T value, boolean exactMatch) 
 	{
 		// We need to save state of both left and right cursor. Because of swapping, save the current
