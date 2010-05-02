@@ -1,6 +1,6 @@
 package hgtest.storage;
 
-public class TestInt implements Comparable
+public class TestInt implements Comparable<TestInt>
 {
     private Integer x = 0;
     
@@ -24,9 +24,8 @@ public class TestInt implements Comparable
         this.x = x;
     }
 
-    public int compareTo(Object o)
+    public int compareTo(TestInt o)
     {
-       return x.compareTo(((TestInt)o).x);
+       return x.compareTo(o.x);
     }
-
 }

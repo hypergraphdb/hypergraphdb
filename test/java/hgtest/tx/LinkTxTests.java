@@ -1,11 +1,11 @@
 package hgtest.tx;
 
 import java.util.ArrayList;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery.hg;
@@ -14,12 +14,14 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 import hgtest.HGTestBase;
+import hgtest.T;
 
 public class LinkTxTests extends HGTestBase
 {
-    private int atomsCount = 50; // must be an even number
+    private int atomsCount = 100; // must be an even number
     private int linksCount = 50; // must be an even number
-    private int threadCount = 10;
+    private int threadCount = 5;
+    private boolean log = !true;
     
     private ArrayList<Throwable> errors = new ArrayList<Throwable>();
     
@@ -107,11 +109,11 @@ public class LinkTxTests extends HGTestBase
     {
         int i = 0;
         final HGTransactionManager txman = graph.getTransactionManager();
-        while (i < linksCount)
+        while (i < linksCount - 1)
         {
             final int finali = i;
-            txman.transact(new Callable<Object>() {
-            public Object call()
+            i = txman.transact(new Callable<Integer>() {
+            public Integer call()
             {
                 LinkType first = new LinkType(threadId, finali, x, y);
                 HGHandle existing = hg.findOne(graph, hg.and(hg.type(LinkType.class), 
@@ -119,7 +121,8 @@ public class LinkTxTests extends HGTestBase
                                                              hg.incident(x), 
                                                              hg.incident(y)));
                 if (existing != null)
-                    return null;
+                    return finali + 1;
+                
                 graph.add(first);
                 int next = finali + 1;
                 existing = hg.findOne(graph, hg.and(hg.type(LinkType.class), 
@@ -127,16 +130,24 @@ public class LinkTxTests extends HGTestBase
                                                     hg.incident(x), 
                                                     hg.incident(y)));
                 if (existing != null)
+                {
+                    if (log)
+                        T.getLogger("LinkTxTests").info("Aborting because of " + finali + "-" + next + " at " + threadId
+                                + ", x=" + x + ", y=" + y);
                     txman.abort();
+                }
                 else
+                {
+                    if (log)
+                        T.getLogger("LinkTxTests").info("Fine with " + finali + "-" + next + " at " + threadId);                    
                     graph.add(new LinkType(threadId, next, x , y));
-                return null;
+                }
+                return finali + 2;
             }
             });
-            i++;
             try { Thread.sleep((long)Math.random()*100); }
             catch (InterruptedException ex) {}
-        }        
+        }
     }
     
     private void populateLinks(int threadId)
@@ -149,21 +160,14 @@ public class LinkTxTests extends HGTestBase
             {
                 HGHandle hj = hg.findOne(graph, hg.eq(makeAtom(j)));
                 assertNotNull(hj);
-                System.out.println("Linking " + i + " <-> " + j);
+                if (log)
+                    T.getLogger("LinkTxTests").info("Linking " + i + " <-> " + j);
+                System.out.println("Linking " + i + " <-> " + j);                
                 linkThem(threadId, hi, hj);
             }
         }        
     }
-    
-    private long fact(long n) { return n == 0 ? 1 : n*fact(n-1); };
-    private long binomial(long n, long m) 
-    { 
-        long top = 1;
-        for (long i = n; i > (n - m); i--)
-            top *= i;
-        return top/fact(m);
-    }
-    
+
     @Test
     public void testConcurrentLinkCreation()
     {
@@ -199,9 +203,6 @@ public class LinkTxTests extends HGTestBase
             return;
         }        
         assertEquals(errors.size(), 0);
-        assertEquals(linksCount*binomial(atomsCount, 2),
-                     hg.count(graph, hg.type(LinkType.class)));
-        
         verifyData();
     }
     
