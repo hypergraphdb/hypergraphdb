@@ -184,14 +184,11 @@ public class ResultSets extends HGTestBase
             res.close();
         }
         
-        cond = hg.and(hg.type(TestInt.class), hg
-                .lte(new TestInt(10)));
-        res = graph.find(cond);
-        bounds_test(res, false);
-        
-        cond = hg.and(hg.type(TestInt.class), hg
-                .gte(new TestInt(-1)));
-        res = graph.find(cond);
+        //cond = hg.and(hg.type(TestInt.class), hg.lte(new TestInt(10)));
+        res = graph.find(hg.lte(new TestInt(10)));
+        bounds_test(res, true);       
+        //cond = hg.and(hg.type(TestInt.class), hg.gte(new TestInt(-1)));
+        res = graph.find(hg.gte(new TestInt(-1)));
         bounds_test(res, false);
     }
     
@@ -199,15 +196,8 @@ public class ResultSets extends HGTestBase
     {
         try
         {
-            if(upper)
-            {
-                Assert.assertTrue(res.hasPrev());
-                Assert.assertTrue(!res.hasNext());
-            }else
-            {
-                Assert.assertTrue(!res.hasPrev());
-                Assert.assertTrue(res.hasNext());
-            }
+            Assert.assertTrue(!res.hasPrev());
+            Assert.assertTrue(res.hasNext());
             print(result__list(graph, res)); 
         }
         finally
