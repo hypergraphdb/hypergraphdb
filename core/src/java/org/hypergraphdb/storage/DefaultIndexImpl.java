@@ -412,17 +412,23 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             if (status == OperationStatus.SUCCESS)
             {       
             	Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
-                if (!compare_equals)
+                if (!compare_equals) // strict < or >?
                 {
                     if (lower_range)
                         status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
                     else if (comparator.compare(keyAsBytes, keyEntry.getData()) == 0)
                     	status = cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
                 }
+                // BDB cursor will position on the key or on the next element greater than the key
+                // in the latter case we need to back up by one for < (or <=) query
                 else if (lower_range && comparator.compare(keyAsBytes, keyEntry.getData()) != 0)
                 	status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
             }
-
+            else if (lower_range)
+                status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
+            else
+                status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
+            
             if (status == OperationStatus.SUCCESS)
 	            if (lower_range)
 	                return new KeyRangeBackwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
