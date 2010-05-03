@@ -123,7 +123,14 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     
     public Comparator getComparator()
     {
-        return comparator;
+        try
+        {
+            return comparator == null ? db.getConfig().getBtreeComparator() : comparator;
+        }
+        catch (DatabaseException ex)
+        {
+            throw new HGException(ex);
+        }
     }
     
     public void open()
