@@ -32,23 +32,23 @@ public class ResultSets extends HGTestBase
     final static int COUNT = 10;
     final static int ALIAS_COUNT = 5;
     HGSortIndex<Integer, HGHandle> index;
-//
-//    public static void main(String[] args)
-//    {
-//        new ResultSets().test();
-//    }
-//
-//    public void test()
-//    {
-//        setUp();
-//        testSingleValueResultSet();
-//        testKeyScanResultSet();
-//        testKeyRangeForwardResultSet();
-//        testKeyRangeBackwardResultSet();
-//        testFilteredResultSet();
-//        testSingleKeyResultSet();
-//        tearDown();
-//    }
+
+    public static void main(String[] args)
+    {
+        new ResultSets().test();
+    }
+
+    public void test()
+    {
+        setUp();
+        testSingleValueResultSet();
+        testKeyScanResultSet();
+        testKeyRangeForwardResultSet();
+        testKeyRangeBackwardResultSet();
+        testFilteredResultSet();
+        testSingleKeyResultSet();
+        tearDown();
+    }
 
     @BeforeClass
     public void setUp()
@@ -138,6 +138,7 @@ public class ResultSets extends HGTestBase
         {
             res.close();
         }
+        bounds_test(index.findGTE(-1), false);
     }
 
     @Test
@@ -157,9 +158,10 @@ public class ResultSets extends HGTestBase
         finally
         {
             res.close();
-        }
+        }        
+        bounds_test(index.findLT(10), true);
     }
-
+    
     @Test
     public void testFilteredResultSet()
     {
@@ -176,6 +178,37 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+        }
+        finally
+        {
+            res.close();
+        }
+        
+        cond = hg.and(hg.type(TestInt.class), hg
+                .lte(new TestInt(10)));
+        res = graph.find(cond);
+        bounds_test(res, false);
+        
+        cond = hg.and(hg.type(TestInt.class), hg
+                .gte(new TestInt(-1)));
+        res = graph.find(cond);
+        bounds_test(res, false);
+    }
+    
+    void bounds_test(HGSearchResult<HGHandle> res, boolean upper)
+    {
+        try
+        {
+            if(upper)
+            {
+                Assert.assertTrue(res.hasPrev());
+                Assert.assertTrue(!res.hasNext());
+            }else
+            {
+                Assert.assertTrue(!res.hasPrev());
+                Assert.assertTrue(res.hasNext());
+            }
+            print(result__list(graph, res)); 
         }
         finally
         {
