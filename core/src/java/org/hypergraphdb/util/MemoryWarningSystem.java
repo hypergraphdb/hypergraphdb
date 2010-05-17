@@ -124,7 +124,7 @@ public class MemoryWarningSystem
 			if (pool.getType() == MemoryType.HEAP && pool.isUsageThresholdSupported())
 			{
 				last = pool;
-				System.out.println("pool " + pool);
+//				System.out.println("pool " + pool);
 			}
 		}
 		if (last != null)

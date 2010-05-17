@@ -69,7 +69,6 @@ public class HGIndexManager
 		return i >= 0 ? L.get(i) : null;
 	}
 	
-	// TODO: this needs to be made thread safe.
 	private <KeyType extends Object, ValueType extends Object> 
 		HGIndex<KeyType, ValueType> getOrCreateIndex(HGIndexer indexer)
 	{
