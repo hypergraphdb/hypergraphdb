@@ -9,12 +9,14 @@ import java.util.List;
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.HGQueryCondition;
@@ -41,6 +43,7 @@ public class ResultSets extends HGTestBase
     public void test()
     {
         setUp();
+        testAlGenerator();
         testSingleValueResultSet();
         testKeyScanResultSet();
         testKeyRangeForwardResultSet();
@@ -88,6 +91,22 @@ public class ResultSets extends HGTestBase
         super.tearDown();
     }
 
+    @Test
+    public void testAlGenerator()
+    {
+        HGHandle needH = graph.add(new TestLink.Int(1000));
+        HGHandle anotherH = graph.add(new TestLink.Int(-1000));
+        graph.add(new TestLink(needH));
+        graph.add(new HGPlainLink(needH, anotherH));
+        DefaultALGenerator gen = new DefaultALGenerator(graph, null, null);
+        HGSearchResult<HGHandle> i =  gen.generate(needH);
+        while (i.hasNext())
+        {
+            Assert.assertNotNull(gen.getCurrentLink());
+            HGHandle a = i.next();
+        }
+    }
+    
     @Test
     public void testSingleValueResultSet()
     {
