@@ -46,15 +46,15 @@ public class GraphClassics
 		{
 			HGHandle next = to_explore.remove();
 			visited.add(next);
-			HGSearchResult<HGHandle> rs = adjencyGenerator.generate(next);
+			HGSearchResult<Pair<HGHandle, HGHandle>> rs = adjencyGenerator.generate(next);
 			try
 			{
 				while (rs.hasNext())
 				{
-					HGHandle x = rs.next();
-					if (visited.contains(x))
+				    Pair<HGHandle, HGHandle> x = rs.next();
+					if (visited.contains(x.getSecond()))
 						return true;
-					to_explore.add(x);
+					to_explore.add(x.getSecond());
 				}
 			}
 			finally
@@ -177,30 +177,30 @@ public class GraphClassics
 			if (a.equals(goal))
 				return dm.get(goal);
 			settled.add(a);
-			HGSearchResult<HGHandle> neighbors = adjencyGenerator.generate(a);
+			HGSearchResult<Pair<HGHandle, HGHandle>> neighbors = adjencyGenerator.generate(a);
 			double weightCurrent = dm.get(a).doubleValue();
 			while (neighbors.hasNext())
 			{
-				HGHandle n = neighbors.next();
-				if (settled.contains(n))
+			    Pair<HGHandle, HGHandle> n = neighbors.next();
+				if (settled.contains(n.getSecond()))
 					continue;
 				Double weightN = dm.get(n);
-				Double weightAN = weight.eval(adjencyGenerator.getCurrentLink());
+				Double weightAN = weight.eval(n.getFirst());
 				if (weightN == null)
 				{
-					dm.put(n, weightCurrent + weightAN);
-					unsettled.add(n);
+					dm.put(n.getSecond(), weightCurrent + weightAN);
+					unsettled.add(n.getSecond());
 					if (predecessorMatrix != null)
-						predecessorMatrix.put(n, a);					
+						predecessorMatrix.put(n.getSecond(), a);					
 				}
 				else if (weightN > weightCurrent + weightAN)
 				{
 					// new distance found for n, re-insert at appropriate position
 					unsettled.remove(n);
-					dm.put(n, weightCurrent + weightAN);
-					unsettled.add(n);
+					dm.put(n.getSecond(), weightCurrent + weightAN);
+					unsettled.add(n.getSecond());
 					if (predecessorMatrix != null)
-						predecessorMatrix.put(n, a);
+						predecessorMatrix.put(n.getSecond(), a);
 				}
 			}
 			neighbors.close();

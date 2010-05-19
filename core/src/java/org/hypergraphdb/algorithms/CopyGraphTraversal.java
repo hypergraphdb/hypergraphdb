@@ -51,19 +51,17 @@ public class CopyGraphTraversal implements HGTraversal
         if (distance >= maxDistance)
             return;
         
-        HGSearchResult<HGHandle> i = adjListGenerator.generate(from);
+        HGSearchResult<Pair<HGHandle, HGHandle>> i = adjListGenerator.generate(from);
         try
         {
 	        Integer dd = distance + 1;
 	        while (i.hasNext())
 	        {
-	            HGHandle link = adjListGenerator.getCurrentLink();
-	            HGHandle h = i.next();
-	            Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);            
-	            if (!examined.containsKey(p))
+	            Pair<HGHandle, HGHandle> curr = i.next();
+	            if (!examined.containsKey(curr))
 	            {                
-	                to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
-	                examined.put(p, Boolean.FALSE);
+	                to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(curr, dd));
+	                examined.put(curr, Boolean.FALSE);
 	            }
 	        }
         }

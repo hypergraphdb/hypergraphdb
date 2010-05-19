@@ -43,15 +43,14 @@ public class HGDepthFirstTraversal implements HGTraversal
 	
 	private void advance(HGHandle from)
 	{
-		HGSearchResult<HGHandle> i = adjListGenerator.generate(from);
+		HGSearchResult<Pair<HGHandle, HGHandle>> i = adjListGenerator.generate(from);
 		while (i.hasNext())
 		{
-			HGHandle link = adjListGenerator.getCurrentLink();
-			HGHandle h = i.next();
-			if (!examined.containsKey(h))
+		    Pair<HGHandle, HGHandle> p = i.next();
+			if (!examined.containsKey(p.getSecond()))
 			{
-				to_explore.push(new Pair<HGHandle, HGHandle>(link, h));
-				examined.put(h, Boolean.FALSE);
+				to_explore.push(p);
+				examined.put(p.getSecond(), Boolean.FALSE);
 			}
 		}
 		i.close();

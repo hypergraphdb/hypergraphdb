@@ -13,6 +13,7 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.TempLink;
 
 /**
@@ -27,15 +28,15 @@ public class SimpleALGenerator implements HGALGenerator
 {
 	private HyperGraph graph;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);	
-	private HGHandle hCurrLink;
 	private AdjIterator currIterator = null;
 	
-	private class AdjIterator implements HGSearchResult<HGHandle>
+	private class AdjIterator implements HGSearchResult<Pair<HGHandle,HGHandle>>
 	{
 		HGHandle src;
 		Iterator<HGHandle> linksIterator;
+		HGHandle hCurrLink;
 		HGLink currLink;
-		HGHandle current;
+		Pair<HGHandle,HGHandle> current;
 		int currLinkPos;
 		boolean closeResultSet;
 		
@@ -81,17 +82,15 @@ public class SimpleALGenerator implements HGALGenerator
 			return currLink != null;
 		}
 		
-		public HGHandle next()
+		public Pair<HGHandle,HGHandle> next()
 		{
-			current = currLink.getTargetAt(currLinkPos);
-	        hCurrLink = graph.getHandle(currLink);
+			current = new Pair<HGHandle,HGHandle>(hCurrLink, currLink.getTargetAt(currLinkPos));	        
 			// advance within link, then check whether we're pointing to 'src' and, if so, advance again
 			if (++currLinkPos == currLink.getArity())
 				getNextLink();
 			else if (currLink.getTargetAt(currLinkPos).equals(src))
 				if (++currLinkPos == currLink.getArity())
-					getNextLink();
-			
+					getNextLink();			
 			return current;
 		}
 
@@ -101,7 +100,7 @@ public class SimpleALGenerator implements HGALGenerator
 				((HGSearchResult<HGHandle>)linksIterator).close();			
 		}
 
-		public HGHandle current()
+		public Pair<HGHandle,HGHandle> current()
 		{
 			return current;
 		}
@@ -112,7 +111,7 @@ public class SimpleALGenerator implements HGALGenerator
 		}
 
 		public boolean hasPrev() { throw new UnsupportedOperationException(); }
-		public HGHandle prev() { throw new UnsupportedOperationException(); }				
+		public Pair<HGHandle,HGHandle> prev() { throw new UnsupportedOperationException(); }				
 	}
 
 	/**
@@ -135,12 +134,7 @@ public class SimpleALGenerator implements HGALGenerator
 		this.graph = hg;
 	}
 	
-	public HGHandle getCurrentLink()
-	{
-		return hCurrLink;
-	}
-	
-	public HGSearchResult<HGHandle> generate(HGHandle h) 
+	public HGSearchResult<Pair<HGHandle,HGHandle>> generate(HGHandle h) 
 	{
 		return new AdjIterator(
 				h, 

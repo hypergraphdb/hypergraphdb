@@ -16,6 +16,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.CloseMe;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.TempLink;
 
 /**
@@ -73,7 +74,6 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 {
 	private HyperGraph hg;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);
-	private HGHandle hCurrLink;
 	private HGAtomPredicate linkPredicate;
 	private HGAtomPredicate siblingPredicate;
 	private boolean returnPreceeding = true, 
@@ -82,12 +82,13 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				    returnSource = false;
 	private AdjIterator currIterator = null;
 	
-	private class AdjIterator implements HGSearchResult<HGHandle>
+	private class AdjIterator implements HGSearchResult<Pair<HGHandle, HGHandle>>
 	{
 		HGHandle src;
 		Iterator<HGHandle> linksIterator;
 		HGLink currLink;
-		HGHandle current;
+	    HGHandle hCurrLink;		
+	    Pair<HGHandle, HGHandle> current;
 		TargetSetIterator tsIter;
 		boolean closeResultSet;
 		int minArity = 2;
@@ -335,10 +336,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 			return currLink != null;
 		}
 		
-		public HGHandle next()
-		{
-			current = tsIter.next();
-			hCurrLink = hg.getHandle(currLink);
+		public Pair<HGHandle, HGHandle> next()
+		{		    
+			current = new Pair<HGHandle, HGHandle>(hCurrLink, tsIter.next());
 			if (!tsIter.hasNext())
 				getNextLink();			
 			return current;
@@ -350,7 +350,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				((HGSearchResult<HGHandle>)linksIterator).close();			
 		}
 
-		public HGHandle current()
+		public Pair<HGHandle, HGHandle> current()
 		{
 			return current;
 		}
@@ -361,7 +361,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		}
 
 		public boolean hasPrev() { throw new UnsupportedOperationException(); }
-		public HGHandle prev() { throw new UnsupportedOperationException(); }		
+		public Pair<HGHandle, HGHandle> prev() { throw new UnsupportedOperationException(); }		
 	}
 	
 	/**
@@ -502,13 +502,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 //			throw new HGException("DefaultALGenerator: attempt to construct with both returnSucceeding and returnPreceeding set to false.");
 	}
 	
-	
-	public HGHandle getCurrentLink()
-	{
-		return hCurrLink;
-	}
-	
-	public HGSearchResult<HGHandle> generate(HGHandle h) 
+	public HGSearchResult<Pair<HGHandle, HGHandle>> generate(HGHandle h) 
 	{		
 		return new AdjIterator(h, 
 							   hg.getIncidenceSet(h).getSearchResult(), 

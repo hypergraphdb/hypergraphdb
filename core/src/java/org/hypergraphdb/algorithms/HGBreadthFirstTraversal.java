@@ -50,17 +50,15 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	    if (distance >= maxDistance)
 	        return;
 	    
-		HGSearchResult<HGHandle> i = adjListGenerator.generate(from);
+		HGSearchResult<Pair<HGHandle, HGHandle>> i = adjListGenerator.generate(from);
 		Integer dd = distance + 1;
 		while (i.hasNext())
 		{
-			HGHandle link = adjListGenerator.getCurrentLink();
-			HGHandle h = i.next();
-			if (!examined.containsKey(h))
+		    Pair<HGHandle, HGHandle> p = i.next();
+			if (!examined.containsKey(p.getSecond()))
 			{
-			    Pair<HGHandle, HGHandle> p = new Pair<HGHandle, HGHandle>(link, h);
 				to_explore.add(new Pair<Pair<HGHandle, HGHandle>, Integer>(p, dd));
-				examined.put(h, Boolean.FALSE);
+				examined.put(p.getSecond(), Boolean.FALSE);
 			}
 		}
 		i.close();
