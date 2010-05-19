@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGQuery.hg;
+
 import static org.testng.Assert.*;
 import org.testng.annotations.Test;
 
@@ -31,7 +33,7 @@ public class TypingTxTests extends HGTestBase
         assertNull(h);        
     }
     
-    @Test(invocationCount=1)
+    @Test(invocationCount=10)
     public void testConcurrentTypeAdd()
     {
         ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -71,4 +73,41 @@ public class TypingTxTests extends HGTestBase
             }
         }
     }
+    
+    @Test(invocationCount=10)
+    public void testConcurrentTypeRemove()
+    {
+        long totalAtoms = hg.count(graph, hg.all());
+        final HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+        graph.add(new SimpleBean());
+        graph.add(new SimpleBean());
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        Callable<HGHandle> op = new Callable<HGHandle>()
+        {
+            public HGHandle call()
+            {
+                graph.remove(typeHandle);
+                return typeHandle;
+            }
+        };
+        try
+        {
+            Future<HGHandle> f1 = pool.submit(op);
+            Future<HGHandle> f2 = pool.submit(op);        
+            f1.get();
+            f2.get();
+        }
+        catch (InterruptedException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (ExecutionException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        assertNull(graph.getTypeSystem().getTypeHandleIfDefined(SimpleBean.class));
+        assertEquals(totalAtoms, hg.count(graph, hg.all()));
+   }    
 }

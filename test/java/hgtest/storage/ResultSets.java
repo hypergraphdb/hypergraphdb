@@ -22,6 +22,7 @@ import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
+import org.hypergraphdb.util.Pair;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -99,11 +100,10 @@ public class ResultSets extends HGTestBase
         graph.add(new TestLink(needH));
         graph.add(new HGPlainLink(needH, anotherH));
         DefaultALGenerator gen = new DefaultALGenerator(graph, null, null);
-        HGSearchResult<HGHandle> i =  gen.generate(needH);
+        HGSearchResult<Pair<HGHandle, HGHandle>> i =  gen.generate(needH);
         while (i.hasNext())
         {
-            Assert.assertNotNull(gen.getCurrentLink());
-            HGHandle a = i.next();
+            Assert.assertNotNull(i.next().getFirst());
         }
     }
     
