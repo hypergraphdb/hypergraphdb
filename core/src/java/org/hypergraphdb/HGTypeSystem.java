@@ -343,14 +343,9 @@ public class HGTypeSystem
 			} });
 	}
 
-	HGHandle defineNewJavaType(final Class<?> clazz)
-	{
-		if (graph.getTransactionManager().getContext().getCurrent() != null)
-			return makeNewJavaType(clazz);
-		else
-			return graph.getTransactionManager().transact(new Callable<HGHandle>()
-					{ public HGHandle call() { return makeNewJavaType(clazz); } });
-	}
+//	HGHandle defineNewJavaType(final Class<?> clazz)
+//	{
+//	}
 
 	HGHandle makeNewJavaType(Class<?> clazz)
 	{
@@ -845,10 +840,17 @@ public class HGTypeSystem
 	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
 	 * will be returned.
 	 */
-	public HGHandle getTypeHandle(Class<?> clazz)
+	public HGHandle getTypeHandle(final Class<?> clazz)
 	{
-		HGHandle h = getTypeHandleIfDefined(clazz);
-		return h != null ? h : defineNewJavaType(clazz);
+        return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
+        { 
+            public HGHandle call() 
+            {
+                
+                HGHandle h = getTypeHandleIfDefined(clazz);
+                return h != null ? h : makeNewJavaType(clazz);
+            } 
+        });
 	}
 
 	/**
@@ -1001,11 +1003,8 @@ public class HGTypeSystem
 	 */
 	void remove(final HGPersistentHandle typeHandle, final HGAtomType type)
 	{
-		if (graph.getTransactionManager().getContext().getCurrent() != null)
-			removeTransaction(typeHandle, type);
-		else
-			graph.getTransactionManager().transact(new Callable<Object>()
-				{ public Object call() { removeTransaction(typeHandle, type); return null; } });
+		graph.getTransactionManager().ensureTransaction(new Callable<Object>()
+			{ public Object call() { removeTransaction(typeHandle, type); return null; } });
 	}
 	private void removeTransaction(HGPersistentHandle typeHandle, HGAtomType type)
 	{
