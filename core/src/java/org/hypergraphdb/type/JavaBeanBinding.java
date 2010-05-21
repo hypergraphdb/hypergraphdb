@@ -45,12 +45,16 @@ public class JavaBeanBinding extends JavaAbstractBinding
         try
         {
             JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-            if (targetSet != null && targetSet.deref().length > 0)
-            	if (linkConstructor != null)
+            if (linkConstructor != null)
+            {
+            	if (targetSet != null)
             		bean = linkConstructor.newInstance(new Object[] { targetSet.deref() });
             	else
-            		throw new RuntimeException("Can't construct link with Java type " +
-            				javaClass.getName() + " please include a (HGHandle [] ) constructor.");
+            		bean = javaClass.newInstance();
+            }
+            else if (targetSet != null && targetSet.deref().length > 0)
+        		throw new RuntimeException("Can't construct link with Java type " +
+        				javaClass.getName() + " please include a (HGHandle [] ) constructor.");
             else
            	   bean = javaClass.newInstance();
             TypeUtils.setValueFor(graph, handle, bean);            

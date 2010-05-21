@@ -56,7 +56,8 @@ public interface HGAtomType extends HGGraphHolder
      * @param handle The <code>HGPersistentHandle</code> of the atom value.
      * @param targetSet When the atom is a link, this parameter holds the target set of
      * the link. When the atom is a node, the parameter is an array of 0 length.
-     * @param incidenceSet TODO
+     * @param incidenceSet A lazy reference to the set of links pointing to this atom. This is
+     * <code>null</code> if we are constructing an internal/nested value of some complex type.
      * @return The run-time atom instance. The return value should never be <code>null</code>.
      * In case the <code>handle</code> points to an invalid instance (inexisting or with
      * a erronous layout), the method should throw a <code>HGException</code>.

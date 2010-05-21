@@ -481,7 +481,6 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		else if (cond instanceof LinkCondition)
 		{
 			And result = new And();
-//			result.add(cond);
 			for (HGHandle h : ((LinkCondition)cond).targets())
 				if (!h.equals(HGHandleFactory.anyHandle()))
 					result.add(new IncidentCondition(h));

@@ -34,6 +34,7 @@ public class HGConfiguration
 	private boolean skipOpenedEvent = false;
 	private boolean storageMVCC = true;
 	private int maxCachedIncidenceSetSize = 10000; 
+	private boolean runDatabaseRecovery = false;
 	
 	public HGConfiguration()
 	{
@@ -242,5 +243,29 @@ public class HGConfiguration
     public void setMaxCachedIncidenceSetSize(int maxCachedIncidenceSetSize)
     {
         this.maxCachedIncidenceSetSize = maxCachedIncidenceSetSize;
-    }    
+    }
+
+    /**
+     * <p>Return <code>true</code> if full (catastrophic) recovery will be run on the storage
+     * layer upon opening the database, and <code>false</code> otherwise.</p>
+     */
+	public boolean isRunDatabaseRecovery()
+	{
+		return runDatabaseRecovery;
+	}
+
+	/**
+     * <p>Specify whether full (catastrophic) recovery should be run on the storage
+     * layer upon opening the database.</p>
+     * 
+     *  @param runDatabaseRecovery - <code>true</code> to run full recovery and
+     *  <code>false</code> not to run it. The default is <code>false</code>. Note that a lightweight
+     *  recovery is run anyway. This flag should be set only if you are not able
+     *  to open the database otherwise. Running a full recovery takes longer than the normal
+     *  recovery.
+	 */
+	public void setRunDatabaseRecovery(boolean runDatabaseRecovery)
+	{
+		this.runDatabaseRecovery = runDatabaseRecovery;
+	}    
 }

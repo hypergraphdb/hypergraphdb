@@ -22,13 +22,13 @@ public class HGRel extends HGPlainLink
 {
 	private String name;
 	
-	public HGRel(HGHandle [] targetSet)
+	public HGRel(HGHandle...targetSet)
 	{
 		super(targetSet);
 		this.name = "<name unavailable>";
 	}
 	
-	public HGRel(String name, HGHandle [] targetSet)
+	public HGRel(String name, HGHandle...targetSet)
 	{
 		super(targetSet);
 		this.name = name;

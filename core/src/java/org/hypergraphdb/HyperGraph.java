@@ -686,8 +686,10 @@ public /*final*/ class HyperGraph
         }
         else
             result = addNode(atom, type, (byte)flags);
-        if (result instanceof HGGraphHolder)
-            ((HGGraphHolder)result).setHyperGraph(this);
+        if (atom instanceof HGGraphHolder)
+            ((HGGraphHolder)atom).setHyperGraph(this);
+        if (atom instanceof HGHandleHolder)
+        	((HGHandleHolder)atom).setAtomHandle(result);
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
     }
@@ -1521,7 +1523,8 @@ public /*final*/ class HyperGraph
     private HGLiveHandle atomAdded(HGPersistentHandle pHandle, Object instance, byte flags)
     {
     	if (instance instanceof HGGraphHolder)
-    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);    	
+    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
+    	HGLiveHandle lHandle;
         if ( (flags & HGSystemFlags.MANAGED) != 0)
         {
         	AtomAttrib attribs = new AtomAttrib();
@@ -1529,11 +1532,11 @@ public /*final*/ class HyperGraph
         	attribs.retrievalCount = 1;
         	attribs.lastAccessTime = System.currentTimeMillis();
         	setAtomAttributes(pHandle, attribs);        	
-        	return cache.atomRead(pHandle, 
-        			 		      instance, 
-        						  attribs.flags, 
-        						  attribs.retrievalCount, 
-        						  attribs.lastAccessTime);
+        	lHandle = cache.atomRead(pHandle, 
+		 		      				 instance, 
+	        						 attribs.flags, 
+	        						 attribs.retrievalCount, 
+	        						 attribs.lastAccessTime);
         }        
         else
         {
@@ -1543,8 +1546,11 @@ public /*final*/ class HyperGraph
         		attribs.flags = flags;
         		setAtomAttributes(pHandle, attribs);
         	}
-        	return cache.atomRead(pHandle, instance, flags);
+        	lHandle = cache.atomRead(pHandle, instance, flags);
         }
+        if (instance instanceof HGHandleHolder)
+        	((HGHandleHolder)instance).setAtomHandle(lHandle);    	        	
+        return lHandle;
     }
     
     /**
@@ -1647,6 +1653,8 @@ public /*final*/ class HyperGraph
 	        	instance = typeSystem.loadedType(result, (HGAtomType)instance, true);
 	    	if (instance instanceof HGGraphHolder)
 	    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
+	    	if (instance instanceof HGHandleHolder)
+	    		((HGHandleHolder)instance).setAtomHandle(result);
 	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));  
 	        return new Pair<HGLiveHandle, Object>(result, instance);
     	}});
@@ -2030,6 +2038,10 @@ public /*final*/ class HyperGraph
 	    	
 	    	if (lHandle != null)
 	    		cache.atomRefresh(lHandle, atom);
+	    	if (atom instanceof HGGraphHolder)
+	    		((HGGraphHolder)atom).setHyperGraph(this);
+	    	if (atom instanceof HGHandleHolder)
+	    		((HGHandleHolder)atom).setAtomHandle(lHandle);
     }
     
     /**

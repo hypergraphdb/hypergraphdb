@@ -33,7 +33,7 @@ public class HGRelType extends HGAtomTypeBase implements HGLink
 	private String name;
 	private HGHandle [] targetTypes;
 	
-	private void init(String name, HGHandle [] targetTypes)
+	private void init(String name, HGHandle...targetTypes)
 	{
 		this.name = name;
 		if (targetTypes == null)
@@ -43,20 +43,20 @@ public class HGRelType extends HGAtomTypeBase implements HGLink
 	
 	public HGRelType()
 	{
-		init("", null);
+		init("");
 	}
 	
 	public HGRelType(String name)
 	{
-		init(name, null);
+		init(name);
 	}
 	
-	public HGRelType(HGHandle [] targetTypes)
+	public HGRelType(HGHandle...targetTypes)
 	{
 		init("", targetTypes);
 	}
 	
-	public HGRelType(String name, HGHandle [] targetTypes)
+	public HGRelType(String name, HGHandle...targetTypes)
 	{
 		init(name, targetTypes);
 	}

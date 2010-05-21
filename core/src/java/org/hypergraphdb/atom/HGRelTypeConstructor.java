@@ -8,18 +8,24 @@
 package org.hypergraphdb.atom;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.type.HGAtomType;
-import org.hypergraphdb.type.HGAtomTypeBase;
+import org.hypergraphdb.type.HGCompositeType;
+import org.hypergraphdb.type.HGProjection;
+
 
 /**
  * <p>
@@ -30,15 +36,47 @@ import org.hypergraphdb.type.HGAtomTypeBase;
  * querying on the class name). In any case, a <code>HGRelType</code> is conceptually
  * not really a record...
  * </p>
- * 
- * @author Borislav Iordanov
  */
-public class HGRelTypeConstructor extends HGAtomTypeBase 
-								  implements HGSearchable<HGRelType, HGPersistentHandle>
+public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersistentHandle>, HGCompositeType
 {
     public static final String INDEX_NAME = "hg_reltype_value_index";
     
+    private HyperGraph graph = null;
     private HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;
+    private Map<String, HGProjection> projections = new HashMap<String, HGProjection>();
+    
+    private void initProjections()
+    {
+    	projections.put("name", new HGProjection()
+    	{
+
+			public int[] getLayoutPath()
+			{
+				return new int[0];
+			}
+
+			public String getName()
+			{
+				return "name";
+			}
+
+			public HGHandle getType()
+			{
+				return graph.getTypeSystem().getTypeHandle(String.class);
+			}
+
+			public void inject(Object atomValue, Object value)
+			{
+				((HGRelType)atomValue).setName((String)value);
+			}
+
+			public Object project(Object atomValue)
+			{
+				return ((HGRelType)atomValue).getName();
+			}    		
+    	}
+    	);
+    }
     
     private final HGSortIndex<byte[], HGPersistentHandle> getIndex()
     {
@@ -139,4 +177,20 @@ public class HGRelTypeConstructor extends HGAtomTypeBase
 		
 		return getIndex().find(key.getName().getBytes());
 	}
+
+	public Iterator<String> getDimensionNames()
+	{
+		return projections.keySet().iterator();
+	}
+
+	public HGProjection getProjection(String dimensionName)
+	{
+		return projections.get(dimensionName);
+	}
+
+	public void setHyperGraph(HyperGraph graph)
+	{
+		this.graph = graph;
+		initProjections();
+	}		
 }

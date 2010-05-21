@@ -46,4 +46,14 @@ public final class HGValueLink extends HGPlainLink
     {
         return value;
     }
+    
+    public String toString()
+    {
+    	StringBuilder b = new StringBuilder(value == null ? "null" : value.toString());
+    	b.append('[');
+    	for (HGHandle h : this.outgoingSet)
+    		b.append(h.toString());
+    	b.append(']');
+    	return b.toString();
+    }
 }
