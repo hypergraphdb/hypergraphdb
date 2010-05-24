@@ -1,5 +1,6 @@
 package hgtest.types;
 
+import java.util.Calendar;
 import org.testng.annotations.Test;
 import hgtest.AtomOperation;
 import hgtest.HGTestBase;
@@ -148,5 +149,19 @@ public class TestPrimitives extends HGTestBase
           false,
           false,
           true);        
-    }     
+    }
+    
+    @Test 
+    public void testDates()
+    {
+        new BasicOperations(graph).executeAndVerify(new AtomOperation[]
+          {          
+              new AtomOperation(add, new java.util.Date()),
+              new AtomOperation(add, Calendar.getInstance()),
+              new AtomOperation(add, new java.sql.Timestamp(new java.util.Date().getTime()))              
+          }, 
+          false,
+          false,
+          true);                
+    }   
 }
