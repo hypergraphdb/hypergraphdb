@@ -15,7 +15,7 @@ import java.util.Comparator;
  */
 public abstract class NumericTypeBase<T> extends PrimitiveTypeBase<T>
 {
-	private static final NumericComparator comp = new NumericComparator();
+	public static final NumericComparator COMPARATOR = new NumericComparator();
 	
     public static class NumericComparator implements Comparator<byte[]>
     {
@@ -33,6 +33,6 @@ public abstract class NumericTypeBase<T> extends PrimitiveTypeBase<T>
      
     public Comparator<byte[]> getComparator()
     {
-        return comp;
+        return COMPARATOR;
     }
 }

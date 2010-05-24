@@ -28,3 +28,6 @@ f0f59c28-07c9-11da-831d-8d375c1471fe org.hypergraphdb.type.SlotType org.hypergra
 db733325-19d5-11db-8b55-23bc8177d6ec org.hypergraphdb.type.NullType 
 2ec10476-d964-11db-a08c-eb6f4c8f155a org.hypergraphdb.type.AtomRefType org.hypergraphdb.atom.HGAtomRef
 b211d3bb-e0a5-11db-b848-d63153bea5bf org.hypergraphdb.atom.HGRelTypeConstructor org.hypergraphdb.atom.HGRelType
+3ba40437-622a-49fa-8a71-0e9b67c14c67 org.hypergraphdb.type.javaprimitive.DateType java.util.Date
+d735dfcf-b26c-4853-aa66-1791f46acd61 org.hypergraphdb.type.javaprimitive.CalendarType java.util.Calendar java.util.GregorianCalendar java.util.JapaneseImperialCalendar
+9dbcbc60-b4a8-4d61-af12-e085ae9ddfe3 org.hypergraphdb.type.javaprimitive.TimestampType java.sql.Timestamp
