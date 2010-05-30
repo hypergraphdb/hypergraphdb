@@ -4,7 +4,7 @@ package hgtest.types;
  * 
  * <p>
  * The type system should return null when an attempt is made to get a HGDB type for this
- * class.
+ * class, because it has no default constructor.
  * </p>
  *
  * @author Borislav Iordanov

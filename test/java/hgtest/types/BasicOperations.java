@@ -131,10 +131,9 @@ public class BasicOperations
         }                
     }
     
-    public void executeAndVerify(AtomOperation operation)
+    public void executeAndVerify(AtomOperation operation, boolean verifyCached, boolean verifyReloaded)
     {
-        execute(operation);
-        makeVerifier(operation).verify(graph);
+        executeAndVerify(new AtomOperation[] { operation}, false, verifyCached, verifyReloaded);
     }
     
     public void executeAndVerify(final AtomOperation [] operations, 

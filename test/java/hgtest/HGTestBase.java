@@ -15,7 +15,7 @@ public class HGTestBase
     public void reopenDb()
     {
         graph.close();
-        graph = HGEnvironment.get(getGraphLocation());
+        graph.open(graph.getLocation());
     }
     
     public String getGraphLocation()
