@@ -10,6 +10,7 @@ package org.hypergraphdb.type;
 import java.lang.reflect.Constructor;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
@@ -26,37 +27,57 @@ import org.hypergraphdb.atom.HGAtomRef;
  */
 public class JavaBeanBinding extends JavaAbstractBinding
 {
+    private Constructor<?> defaultConstructor = null;
     private Constructor<?> linkConstructor = null;
-
+    private Constructor<?> handleListConstructor = null;
         
     public JavaBeanBinding(HGHandle typeHandle, RecordType hgType, Class<?> clazz)
     {
     	super(typeHandle, hgType, clazz);
+    	defaultConstructor = JavaTypeFactory.findDefaultConstructor(javaClass);
+    	if (defaultConstructor != null)
+    	    defaultConstructor.setAccessible(true);
         try
         {
         	linkConstructor = javaClass.getDeclaredConstructor(new Class[] {HGHandle[].class} );
+        	if (linkConstructor != null)
+        	    linkConstructor.setAccessible(true);
         }
-        catch (NoSuchMethodException ex) { }
+        catch (NoSuchMethodException ex) 
+        { 
+            handleListConstructor = JavaTypeFactory.findHandleArgsConstructor(javaClass);
+            if (handleListConstructor != null)
+                handleListConstructor.setAccessible(true);
+        }        
     }
 
+    private HGLink makeLink(HGHandle[] targetSet) throws Exception
+    {
+        if (linkConstructor != null)
+            return (HGLink)linkConstructor.newInstance(new Object[]{targetSet});
+        else if (handleListConstructor != null)
+        {
+            return (HGLink)handleListConstructor.newInstance((Object[])targetSet);
+        }
+        else
+            throw new RuntimeException("Can't construct link with Java type " +
+                    javaClass.getName() + " please include a (HGHandle [] ) " +
+                    " or a (HGHandle, HGHandle, ..., HGHandle) constructor.");            
+    }
+    
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         Object bean = null;
         try
         {
             JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-            if (linkConstructor != null)
-            {
-            	if (targetSet != null)
-            		bean = linkConstructor.newInstance(new Object[] { targetSet.deref() });
-            	else
-            		bean = javaClass.newInstance();
-            }
-            else if (targetSet != null && targetSet.deref().length > 0)
-        		throw new RuntimeException("Can't construct link with Java type " +
-        				javaClass.getName() + " please include a (HGHandle [] ) constructor.");
+            if (targetSet != null && targetSet.deref().length > 0)
+        		bean = makeLink(targetSet.deref());
+            else if (defaultConstructor != null)
+           	   bean = defaultConstructor.newInstance();
             else
-           	   bean = javaClass.newInstance();
+                throw new RuntimeException("Can't construct object of type " + javaClass.getName() +
+                        " no default constructor and/or no HGHandle array-based constructor.");
             TypeUtils.setValueFor(graph, handle, bean);            
             Record record = (Record)hgType.make(handle, targetSet, null);
 	        RecordType recordType = (RecordType)hgType;

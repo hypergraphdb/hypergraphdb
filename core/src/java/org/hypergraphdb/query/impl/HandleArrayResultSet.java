@@ -58,7 +58,7 @@ public class HandleArrayResultSet implements HGSearchResult<HGHandle>
 	{
 		if (pos < start || pos >= end)
 			throw new NoSuchElementException();
-		return null;
+		return A[pos];
 	}
 
 	public boolean isOrdered()

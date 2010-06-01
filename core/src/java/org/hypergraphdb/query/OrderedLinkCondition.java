@@ -16,7 +16,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.storage.BAUtils;
+//import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -38,19 +38,19 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 	private HGHandle [] targetSet = HyperGraph.EMTPY_HANDLE_SET;
 	private byte [] targetsBuffer = null;
 	
-	private byte [] getTargetsBuffer(HyperGraph graph)
-	{
-		if (targetsBuffer == null)
-		{
-			targetsBuffer = new byte[16*targetSet.length];
-			for (int i = 0; i < targetSet.length; i++)
-			{
-				byte [] src = graph.getPersistentHandle(targetSet[i]).toByteArray();
-				System.arraycopy(src, 0, targetsBuffer, i*16, 16);
-			}
-		}
-		return targetsBuffer;
-	}
+//	private byte [] getTargetsBuffer(HyperGraph graph)
+//	{
+//		if (targetsBuffer == null)
+//		{
+//			targetsBuffer = new byte[16*targetSet.length];
+//			for (int i = 0; i < targetSet.length; i++)
+//			{
+//				byte [] src = graph.getPersistentHandle(targetSet[i]).toByteArray();
+//				System.arraycopy(src, 0, targetsBuffer, i*16, 16);
+//			}
+//		}
+//		return targetsBuffer;
+//	}
 	
 	public OrderedLinkCondition()
 	{
@@ -124,19 +124,19 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		}
 		else
 		{
-			byte [] A = hg.getStore().getLinkData(hg.getPersistentHandle(handle));
-			byte [] B = getTargetsBuffer(hg);
-			byte [] anyBuffer = HGHandleFactory.anyHandle.toByteArray();
-			int i = 32, j = 0;
-			while (i < A.length && j < B.length)
-			{
-				if (BAUtils.eq(A, i, B, j, 16) || BAUtils.eq(B, j, anyBuffer, 0, 16))
-					j += 16;
-				i += 16;
-			}
-			return j == B.length;
+//			byte [] A = hg.getStore().getLinkData(hg.getPersistentHandle(handle));
+//			byte [] B = getTargetsBuffer(hg);
+//			byte [] anyBuffer = HGHandleFactory.anyHandle.toByteArray();
+//			int i = 32, j = 0;
+//			while (i < A.length && j < B.length)
+//			{
+//				if (BAUtils.eq(A, i, B, j, 16) || BAUtils.eq(B, j, anyBuffer, 0, 16))
+//					j += 16;
+//				i += 16;
+//			}
+//			return j == B.length;
 			
-/* 			HGPersistentHandle [] A = hg.getStore().getLink(hg.getPersistentHandle(handle));			
+ 			HGPersistentHandle [] A = hg.getStore().getLink(hg.getPersistentHandle(handle));			
 			int i = 2, j = 0;
 			while (i < A.length && j < targetSet.length)
 			{
@@ -144,7 +144,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 					j++;
 				i++;
 			}
-			return j == targetSet.length; */ 			
+			return j == targetSet.length; 			
 		}
 	}
 

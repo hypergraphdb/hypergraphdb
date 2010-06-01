@@ -30,7 +30,6 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
-import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.HGLogger;
 import org.hypergraphdb.util.Pair;
 
@@ -313,21 +312,11 @@ public /*final*/ class HyperGraph
 	        //
 	        // Make sure system indices are created.
 	        //
-	        indexByType = store.getIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        						     
-	        if (indexByType == null)
-	            indexByType = store.createIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
+	        indexByType = store.getIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        						     	        
+	        indexByValue = store.getIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        
+	        if (config.isUseSystemAtomAttributes())
+    	        systemAttributesDB = store.getIndex(SA_DB_NAME, BAtoHandle.getInstance(), AtomAttrib.baConverter, null);
 	        
-	        indexByValue = store.getIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-	        if (indexByValue == null)
-	        	indexByValue = store.createIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-	        
-	        systemAttributesDB = store.getIndex(SA_DB_NAME, BAtoHandle.getInstance(), AtomAttrib.baConverter, null);
-	        if (systemAttributesDB == null)
-	        {
-	        	
-	        	systemAttributesDB = store.createIndex(SA_DB_NAME, BAtoHandle.getInstance(), AtomAttrib.baConverter, null);
-	        }     
-	                    
 	        idx_manager = new HGIndexManager(this);
 	        
 	        //
@@ -394,22 +383,7 @@ public /*final*/ class HyperGraph
         try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
     	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
     	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
-        try 
-        { 
-            if (store.checkPointThread != null)
-            {
-            	store.checkPointThread.stop = true;
-            	store.checkPointThread.interrupt();
-            	while (store.checkPointThread.running)
-            		try { Thread.sleep(500); }
-            		catch (InterruptedException ex) { /* need to wait here until it stops... */}
-            }
-        	store.close();								 	 
-        } 
-        catch (Throwable t) 
-        { 
-        	problems.add(t); 
-        }
+        try { store.close();                                     } catch (Throwable t) { problems.add(t); }
         is_open = false;
         for (Throwable t : problems)
         {
@@ -1343,7 +1317,9 @@ public /*final*/ class HyperGraph
     
     public int getSystemFlags(HGHandle handle)
     {
-    	if (handle instanceof HGLiveHandle)
+        if (!config.isUseSystemAtomAttributes())
+            return 0;
+        else if (handle instanceof HGLiveHandle)
     		if (handle instanceof HGManagedLiveHandle)
     			return ((HGManagedLiveHandle)handle).getFlags();
     		else
@@ -1360,6 +1336,8 @@ public /*final*/ class HyperGraph
     
     public void setSystemFlags(final HGHandle handle, final int flags)
     {
+        if (!config.isUseSystemAtomAttributes())
+            return;
     	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
 	    	//

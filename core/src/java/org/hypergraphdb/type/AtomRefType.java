@@ -73,9 +73,10 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (hardIdx == null)
 		{
-			hardIdx = hg.getStore().getIndex(IDX_HARD_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-			if (hardIdx == null)
-				hardIdx = hg.getStore().createIndex(IDX_HARD_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);				
+			hardIdx = hg.getStore().getIndex(IDX_HARD_DB_NAME, 
+			                                 BAtoHandle.getInstance(), 
+			                                 BAtoHandle.getInstance(), 
+			                                 null);
 		}
 		return hardIdx;
 	}
@@ -84,9 +85,10 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (symbolicIdx == null)
 		{
-			symbolicIdx = hg.getStore().getIndex(IDX_SYMBOLIC_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-			if (symbolicIdx == null)
-				symbolicIdx = hg.getStore().createIndex(IDX_SYMBOLIC_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);				
+			symbolicIdx = hg.getStore().getIndex(IDX_SYMBOLIC_DB_NAME, 
+			                                     BAtoHandle.getInstance(), 
+			                                     BAtoHandle.getInstance(), 
+			                                     null);
 		}
 		return symbolicIdx;
 	}
@@ -95,9 +97,10 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (floatingIdx == null)
 		{
-			floatingIdx = hg.getStore().getIndex(IDX_FLOATING_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);
-			if (floatingIdx == null)
-				floatingIdx = hg.getStore().createIndex(IDX_FLOATING_DB_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);				
+			floatingIdx = hg.getStore().getIndex(IDX_FLOATING_DB_NAME, 
+			                                     BAtoHandle.getInstance(), 
+			                                     BAtoHandle.getInstance(), 
+			                                     null);
 		}
 		return floatingIdx;
 	}

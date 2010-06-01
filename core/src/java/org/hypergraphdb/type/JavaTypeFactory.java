@@ -9,6 +9,7 @@ package org.hypergraphdb.type;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -89,6 +90,14 @@ public class JavaTypeFactory implements JavaTypeMapper
 		  	   Modifier.isInterface(c.getModifiers());
 	}
 	
+	public static Constructor<?> findDefaultConstructor(Class<?> c)
+	{
+        for (Constructor<?> con : c.getDeclaredConstructors())
+            if (con.getParameterTypes().length == 0)
+                return con;
+        return null;	    
+	}
+	
 	public static boolean isDefaultConstructible(Class<?> c)
 	{
 		try 
@@ -98,20 +107,40 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 		catch (NoSuchMethodException ex) 
 		{
-			return false;
+			return findDefaultConstructor(c) != null;
 		}		
+	}
+	
+	public static Constructor<?> findHandleArgsConstructor(Class<?> c)
+	{
+	    for (Constructor<?> con : c.getDeclaredConstructors())
+	    {
+	        boolean match = true;
+	        for (Class<?> paramClass : con.getParameterTypes())
+	            if (!HGHandle.class.isAssignableFrom(paramClass))
+	            {
+	                match = false;
+	                break;
+	            }
+	        if (match)
+	            return con;
+	    }
+	    return null;
 	}
 	
 	public static boolean isLink(Class<?> c)
 	{
+	    boolean b = HGLink.class.isAssignableFrom(c);
+	    if (!b)
+	        return false;
 		try 
 		{
 			c.getDeclaredConstructor(new Class[] { HGHandle[].class });
-			return HGLink.class.isAssignableFrom(c);
+			return true;
 		}
 		catch (NoSuchMethodException ex) 
 		{
-			return false;
+			return findHandleArgsConstructor(c) != null;
 		}		
 	}
 	

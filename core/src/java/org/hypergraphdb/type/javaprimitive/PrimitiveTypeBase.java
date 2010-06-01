@@ -89,12 +89,6 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
             																			 BAtoHandle.getInstance(),
             																			 comparator);
 
-            if (valueIndex == null)
-                valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)hg.getStore().createIndex(
-												                		 getIndexName(),
-																		 BAtoBA.getInstance(), 
-																		 BAtoHandle.getInstance(),
-																		 comparator);
         }
         return valueIndex;
     }

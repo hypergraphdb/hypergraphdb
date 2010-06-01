@@ -85,11 +85,11 @@ public class HGIndexManager
 											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 											   converter, 
 											   indexer.getComparator(graph));
-			if (result == null)
-				result = graph.getStore().createIndex(name, 
-													  (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
-													  converter, 
-													  indexer.getComparator(graph));
+//			if (result == null)
+//				result = graph.getStore().createIndex(name, 
+//													  (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
+//													  converter, 
+//													  indexer.getComparator(graph));
 			indices.put(indexer, result);
 		}
 		return result;

@@ -97,11 +97,6 @@ public class HGTypeSystem
 			                                       BAtoString.getInstance(),
 			                                       BAtoHandle.getInstance(),
 			                                       null);
-			if (classToTypeDB == null)
-				classToTypeDB = graph.getStore().createBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
-				                                          BAtoString.getInstance(),
-				                                          BAtoHandle.getInstance(),
-				                                          null);
 		}
 		return classToTypeDB;
 	}
@@ -114,11 +109,6 @@ public class HGTypeSystem
 			                                   BAtoString.getInstance(),
 			                                   BAtoHandle.getInstance(),
 			                                   null);
-			if (aliases == null)
-				aliases = graph.getStore().createBidirectionalIndex(TYPE_ALIASES_DB_NAME,
-				                                     BAtoString.getInstance(),
-				                                     BAtoHandle.getInstance(),
-				                                     null);
 		}
 		return aliases;
 	}
@@ -131,11 +121,6 @@ public class HGTypeSystem
 			                                 BAtoHandle.getInstance(),
 			                                 BAtoString.getInstance(),
 			                                 null);
-			if (predefinedTypesDB == null)
-				predefinedTypesDB = graph.getStore().createIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
-				                                BAtoHandle.getInstance(),
-				                                BAtoString.getInstance(),
-				                                null);
 		}
 		return predefinedTypesDB;
 	}

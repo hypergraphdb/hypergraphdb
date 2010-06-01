@@ -35,6 +35,7 @@ public class HGConfiguration
 	private boolean storageMVCC = true;
 	private int maxCachedIncidenceSetSize = 10000; 
 	private boolean runDatabaseRecovery = false;
+	private boolean useSystemAtomAttributes = true;
 	
 	public HGConfiguration()
 	{
@@ -267,5 +268,25 @@ public class HGConfiguration
 	public void setRunDatabaseRecovery(boolean runDatabaseRecovery)
 	{
 		this.runDatabaseRecovery = runDatabaseRecovery;
-	}    
+	}
+
+	/**
+	 * Return <code>true</code> (the default) if system-level atom attributes are 
+	 * stored and <code>false</code> otherwise. When false, this means that all system
+	 * facilities depending on the availability of those attributes are not available.  
+	 */
+    public boolean isUseSystemAtomAttributes()
+    {
+        return useSystemAtomAttributes;
+    }
+
+    /**
+     * Specify whether system-level atom attributes are 
+     * stored - the default is <code>true</code>. When false, this means that all system
+     * facilities depending on the availability of those attributes are not available.   
+     */
+    public void setUseSystemAtomAttributes(boolean useSystemAtomAttributes)
+    {
+        this.useSystemAtomAttributes = useSystemAtomAttributes;
+    }
 }

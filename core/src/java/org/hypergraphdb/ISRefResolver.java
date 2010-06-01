@@ -8,8 +8,9 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.storage.DBKeyedSortedSet;
+//import org.hypergraphdb.storage.DBKeyedSortedSet;
 import org.hypergraphdb.storage.IndexResultSet;
+import org.hypergraphdb.storage.StorageBasedIncidenceSet;
 import org.hypergraphdb.transaction.TxSet;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.DummyReadWriteLock;
@@ -61,8 +62,8 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				return result;
 			}
 			else
-				return new IncidenceSet(key, 
-										new DBKeyedSortedSet(graph.getStore().getIncidenceDbAsIndex(), key));
+				return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));
+//										new DBKeyedSortedSet(graph.getStore().getIncidenceDbAsIndex(), key));
 		}
 		finally
 		{

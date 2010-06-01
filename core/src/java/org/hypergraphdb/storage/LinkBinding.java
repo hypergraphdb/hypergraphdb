@@ -25,6 +25,7 @@ import org.hypergraphdb.HyperGraph;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public class LinkBinding extends TupleBinding
 {
 	public static HGPersistentHandle [] readHandles(byte [] buffer, int offset, int length)

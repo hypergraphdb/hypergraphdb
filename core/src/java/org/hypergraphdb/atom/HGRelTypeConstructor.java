@@ -95,13 +95,6 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
             																			 BAtoBA.getInstance(), 
             																			 BAtoHandle.getInstance(),
             																			 comparator);
-
-            if (valueIndex == null)
-                valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().createIndex(
-                													     INDEX_NAME,
-																		 BAtoBA.getInstance(), 
-																		 BAtoHandle.getInstance(),
-																		 comparator);
         }
         return valueIndex;
     }
