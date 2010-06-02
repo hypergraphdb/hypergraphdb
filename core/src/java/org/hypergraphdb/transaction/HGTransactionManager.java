@@ -181,10 +181,10 @@ public class HGTransactionManager
 	 * @return The newly created transaction.
 	 */
 	HGTransaction createTransaction(HGTransaction parent, HGTransactionConfig config)
-	{		 
+	{	
+	    ActiveTransactionsRecord activeRecord = mostRecentRecord.getRecordForNewTransaction();
 		if (enabled)
-		{
-		    ActiveTransactionsRecord activeRecord = mostRecentRecord.getRecordForNewTransaction();
+		{		    
 			HGTransaction result = new HGTransaction(getContext(),
 			                                         parent,
 			                                         activeRecord,
