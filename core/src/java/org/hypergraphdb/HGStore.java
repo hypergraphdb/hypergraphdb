@@ -10,6 +10,7 @@ package org.hypergraphdb;
 import java.util.Comparator;
 
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.storage.BDBStorageImplementation;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.storage.LinkBinding;
@@ -40,7 +41,7 @@ public class HGStore
     private String databaseLocation;
 //    private HGConfiguration config;
     private HGTransactionManager transactionManager = null;    
-    private HGStoreImplementation impl;    
+    private HGStoreImplementation impl = new BDBStorageImplementation();    
     
     private ThreadLocal<StorageGraph> overlayGraph = new ThreadLocal<StorageGraph>();
       
