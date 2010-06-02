@@ -195,7 +195,7 @@ public class HGTransactionManager
 			return result;
 		}
 		else
-			return new HGTransaction(getContext(), parent, null, new VanillaTransaction());
+			return new HGTransaction(getContext(), parent, activeRecord, new VanillaTransaction());
 	}
 	
 	/**
