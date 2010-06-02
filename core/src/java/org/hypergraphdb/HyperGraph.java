@@ -1022,8 +1022,20 @@ public /*final*/ class HyperGraph
 		            finally { rsInc.close(); }		        	
 	        	}
 	        	else
-	        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
-	        			removeTransaction(h, false);
+	        	{
+	        	    HGSearchResult<HGHandle> rsInc = (HGSearchResult)store.getIncidenceResultSet(pHandle);
+	        	    try
+	        	    {
+	                    while (rsInc.hasNext())
+	                        removeTransaction(rsInc.next(), false);	        	        
+	        	    }
+	        	    finally
+	        	    {
+	        	        rsInc.close();
+	        	    }
+	        	}   
+//	        		for (HGPersistentHandle h : store.getIncidenceSet(pHandle))
+//	        			removeTransaction(h, false);
 	        }
 	        store.removeIncidenceSet(pHandle);   
 	        cache.getIncidenceCache().remove(pHandle);
