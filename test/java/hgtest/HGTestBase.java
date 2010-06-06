@@ -20,7 +20,7 @@ public class HGTestBase
     
     public String getGraphLocation()
     {
-        return /* T.getTmpDirectory() */ "/home/borislav/data" + File.separator + "hgtest"; 
+        return T.getTmpDirectory() /* "/home/borislav/data" */ + File.separator + "hgtest"; 
     }
     
     public HyperGraph getGraph()
