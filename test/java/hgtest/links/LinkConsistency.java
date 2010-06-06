@@ -114,12 +114,17 @@ public class LinkConsistency
 		}
 		else
 		{
-			HGHandle [] isArray = graph.getStore().getIncidenceSet(target);
-			if (isArray == null && !ignoreMissing)
-				throw new TestException("The incidence set of atom " + target + " is not available from the HGStore.");
-			for (HGHandle h : isArray)
-				if (h.equals(link))
-					return true;
+			HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(target);
+			try
+			{
+			    while (rs.hasNext())
+			        if (rs.next().equals(link))
+			            return true;
+			}
+			finally
+			{
+			    rs.close();
+			}
 		}
 		return false;
 	}
@@ -182,10 +187,10 @@ public class LinkConsistency
 		HGAtomSet is = null;
 		if (!forceCache && (ignoreCache || !graph.isIncidenceSetLoaded(atom)))
 		{
-			HGPersistentHandle [] A = graph.getStore().getIncidenceSet(atom);
-			is = new HGAtomSet();
-			for (HGPersistentHandle h : A) 
-				is.add(h);
+		    is = new HGAtomSet();
+		    HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(atom);
+		    try { while (rs.hasNext()) is.add(rs.next()); }
+		    finally { rs.close(); }
 		}
 		else
 			is = graph.getIncidenceSet(atom);
