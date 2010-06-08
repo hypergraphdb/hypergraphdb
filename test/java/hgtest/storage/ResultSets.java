@@ -8,9 +8,11 @@ import java.util.List;
 
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HGTypeSystem;
@@ -51,7 +53,10 @@ public class ResultSets extends HGTestBase
         testKeyRangeBackwardResultSet();
         testFilteredResultSet();
         testSingleKeyResultSet();
+        testUnionResult();
+        testInMemoryIntersectionResult();
         tearDown();
+       
     }
 
     @BeforeClass
@@ -93,6 +98,54 @@ public class ResultSets extends HGTestBase
     }
 
     @Test
+    public void testUnionResult()
+    {
+        HGSearchResult<HGHandle> res = 
+            graph.find(
+                    hg.and(hg.type(TestInt.class),
+                    hg.or(hg.eq(new TestInt(9)), 
+                            hg.eq(new TestInt(5)))));
+        try
+        {
+            Assert.assertTrue(expectedType(res, "UnionResult"));
+            List<Integer> list = result__list(graph, res);
+            Assert.assertEquals(list.size(), 2);
+            List<Integer> back_list = back_result__list(graph, res);
+            Assert.assertTrue(reverseLists(list, back_list));
+        }
+        finally
+        {
+            res.close();
+        }
+    }
+    
+    @Test
+    public void testInMemoryIntersectionResult()
+    {
+//        HGHandle h = graph.add(new TestLink.Int(1000));
+//        HGHandle linkH = graph.add(new TestLink(h));
+//       // graph.add(new TestLink.Int(-1000));
+//        HGQuery q = 
+//                HGQuery.make(graph,
+//                        hg.orderedLink(h, HGHandleFactory.anyHandle,
+//                                HGHandleFactory.anyHandle));
+//        HGSearchResult<HGHandle> res = 
+//            q.execute();
+//      try
+//      {
+//          //Assert.assertTrue(expectedType(res, "InMemoryIntersectionResult"));
+//          List<Integer> list = result__list(graph, res);
+//          Assert.assertEquals(list.size(), 2);
+//          List<Integer> back_list = back_result__list(graph, res);
+//          Assert.assertTrue(reverseLists(list, back_list));
+//      }
+//      finally
+//      {
+//          res.close();
+//      }
+    }
+    
+    @Test
     public void testAlGenerator()
     {
         HGHandle needH = graph.add(new TestLink.Int(1000));
@@ -105,6 +158,7 @@ public class ResultSets extends HGTestBase
         {
             Assert.assertNotNull(i.next().getFirst());
         }
+        
     }
     
     @Test
@@ -131,6 +185,7 @@ public class ResultSets extends HGTestBase
                 back_list.add(res.prev());
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
@@ -152,6 +207,7 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
@@ -173,6 +229,7 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
@@ -239,6 +296,7 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
@@ -263,11 +321,22 @@ public class ResultSets extends HGTestBase
                 back_list.add(res.prev());
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
             res.close();
         }
+    }
+    
+    private void checkBeforeFirstAfterLastNotEmptyRS(HGRandomAccessResult res)
+    {
+        res.goAfterLast();
+        Assert.assertFalse(res.hasNext());
+        Assert.assertNotNull(res.prev());
+        res.goBeforeFirst();
+        Assert.assertFalse(res.hasPrev());
+        Assert.assertNotNull(res.next());
     }
 
     static List<Integer> result__list(HyperGraph graph,
