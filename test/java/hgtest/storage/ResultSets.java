@@ -2,7 +2,6 @@ package hgtest.storage;
 
 import hgtest.HGTestBase;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +21,8 @@ import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.query.impl.InMemoryIntersectionResult;
+import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
 import org.hypergraphdb.util.Pair;
@@ -54,9 +55,9 @@ public class ResultSets extends HGTestBase
         testFilteredResultSet();
         testSingleKeyResultSet();
         testUnionResult();
-        testInMemoryIntersectionResult();
+        testZigZagAndInMemoryIntersectionResult();
         tearDown();
-       
+
     }
 
     @BeforeClass
@@ -68,8 +69,8 @@ public class ResultSets extends HGTestBase
         for (int i = 0; i < ALIAS_COUNT; i++)
             ts.addAlias(typeH, ALIAS_PREFIX + i);
 
-        index = (HGSortIndex<Integer, HGHandle>)
-            graph.getIndexManager().<Integer, HGHandle>register(new ByPartIndexer(typeH, "x"));
+        index = (HGSortIndex<Integer, HGHandle>) graph.getIndexManager()
+                .<Integer, HGHandle> register(new ByPartIndexer(typeH, "x"));
         for (int i = 0; i < COUNT; i++)
             graph.add(new TestInt(i));
     }
@@ -91,20 +92,17 @@ public class ResultSets extends HGTestBase
             }
         List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(
                 graph.getTypeSystem().getTypeHandle(TestInt.class));
-        if (indexers != null)
-            for (HGIndexer indexer : indexers)
-                graph.getIndexManager().deleteIndex(indexer);
+        if (indexers != null) for (HGIndexer indexer : indexers)
+            graph.getIndexManager().deleteIndex(indexer);
         super.tearDown();
     }
 
     @Test
     public void testUnionResult()
     {
-        HGSearchResult<HGHandle> res = 
-            graph.find(
-                    hg.and(hg.type(TestInt.class),
-                    hg.or(hg.eq(new TestInt(9)), 
-                            hg.eq(new TestInt(5)))));
+        HGSearchResult<HGHandle> res = graph.find(hg.and(
+                hg.type(TestInt.class), hg.or(hg.eq(new TestInt(9)), hg
+                        .eq(new TestInt(5)))));
         try
         {
             Assert.assertTrue(expectedType(res, "UnionResult"));
@@ -118,33 +116,37 @@ public class ResultSets extends HGTestBase
             res.close();
         }
     }
-    
+
     @Test
-    public void testInMemoryIntersectionResult()
+    public void testZigZagAndInMemoryIntersectionResult()
     {
-//        HGHandle h = graph.add(new TestLink.Int(1000));
-//        HGHandle linkH = graph.add(new TestLink(h));
-//       // graph.add(new TestLink.Int(-1000));
-//        HGQuery q = 
-//                HGQuery.make(graph,
-//                        hg.orderedLink(h, HGHandleFactory.anyHandle,
-//                                HGHandleFactory.anyHandle));
-//        HGSearchResult<HGHandle> res = 
-//            q.execute();
-//      try
-//      {
-//          //Assert.assertTrue(expectedType(res, "InMemoryIntersectionResult"));
-//          List<Integer> list = result__list(graph, res);
-//          Assert.assertEquals(list.size(), 2);
-//          List<Integer> back_list = back_result__list(graph, res);
-//          Assert.assertTrue(reverseLists(list, back_list));
-//      }
-//      finally
-//      {
-//          res.close();
-//      }
+        zigzag_or_in_memory_test(true);
+        zigzag_or_in_memory_test(false);
     }
     
+    private void zigzag_or_in_memory_test(boolean zigzag_or_in_memory)
+    {
+        HGRandomAccessResult<HGHandle> res = (zigzag_or_in_memory) ? 
+            new ZigZagIntersectionResult<HGHandle>(): new InMemoryIntersectionResult<HGHandle>();
+        try
+        {
+            HGRandomAccessResult<HGHandle> left = index.findLT(5);
+            HGRandomAccessResult<HGHandle> right = index.findGT(1);
+            if(zigzag_or_in_memory)
+              ((ZigZagIntersectionResult)res).init(left, right);
+            else
+                ((InMemoryIntersectionResult)res).init(left, right); 
+            List<Integer> list = result__list(graph, res);
+            Assert.assertEquals(list.size(), 2);
+            List<Integer> back_list = back_result__list(graph, res);
+            Assert.assertTrue(reverseLists(list, back_list));
+            checkBeforeFirstAfterLastNotEmptyRS(res);
+        }
+        finally
+        {
+            res.close();
+        }
+    }
     @Test
     public void testAlGenerator()
     {
@@ -153,14 +155,14 @@ public class ResultSets extends HGTestBase
         graph.add(new TestLink(needH));
         graph.add(new HGPlainLink(needH, anotherH));
         DefaultALGenerator gen = new DefaultALGenerator(graph, null, null);
-        HGSearchResult<Pair<HGHandle, HGHandle>> i =  gen.generate(needH);
+        HGSearchResult<Pair<HGHandle, HGHandle>> i = gen.generate(needH);
         while (i.hasNext())
         {
             Assert.assertNotNull(i.next().getFirst());
         }
-        
+
     }
-    
+
     @Test
     public void testSingleValueResultSet()
     {
@@ -199,7 +201,7 @@ public class ResultSets extends HGTestBase
         HGSearchResult<HGHandle> res = index.findGTE(5);
         try
         {
-            //boolean b = res.hasPrev();
+            // boolean b = res.hasPrev();
             Assert.assertTrue(expectedType(res, "KeyRangeForwardResultSet"));
             List<Integer> list = result__list(graph, res);
             Assert.assertTrue(isSortedList(list, true));
@@ -234,21 +236,22 @@ public class ResultSets extends HGTestBase
         finally
         {
             res.close();
-        }        
+        }
         bounds_test(index.findLT(10), true);
     }
-    
+
     @Test
     public void testFilteredResultSet()
     {
-        Assert.assertEquals(hg.findAll(graph, hg.type(TestInt.class)).size(), 10);
-        HGQueryCondition cond = hg.lte(new TestInt(5)); 
-            // hg.and(hg.type(TestInt.class), hg.lte("x", 5));
+        Assert.assertEquals(hg.findAll(graph, hg.type(TestInt.class)).size(),
+                10);
+        HGQueryCondition cond = hg.lte(new TestInt(5));
+        // hg.and(hg.type(TestInt.class), hg.lte("x", 5));
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
         HGSearchResult<HGHandle> res = q.execute();
         try
         {
-//            Assert.assertTrue(expectedType(res, "FilteredResultSet"));
+            // Assert.assertTrue(expectedType(res, "FilteredResultSet"));
             List<Integer> list = result__list(graph, res);
             Assert.assertEquals(list.size(), COUNT - 5 + 1);
             List<Integer> back_list = back_result__list(graph, res);
@@ -259,22 +262,22 @@ public class ResultSets extends HGTestBase
         {
             res.close();
         }
-        
-        //cond = hg.and(hg.type(TestInt.class), hg.lte(new TestInt(10)));
+
+        // cond = hg.and(hg.type(TestInt.class), hg.lte(new TestInt(10)));
         res = graph.find(hg.lte(new TestInt(10)));
-        bounds_test(res, true);       
-        //cond = hg.and(hg.type(TestInt.class), hg.gte(new TestInt(-1)));
+        bounds_test(res, true);
+        // cond = hg.and(hg.type(TestInt.class), hg.gte(new TestInt(-1)));
         res = graph.find(hg.gte(new TestInt(-1)));
         bounds_test(res, false);
     }
-    
+
     void bounds_test(HGSearchResult<HGHandle> res, boolean upper)
     {
         try
         {
             Assert.assertTrue(!res.hasPrev());
             Assert.assertTrue(res.hasNext());
-            print(result__list(graph, res)); 
+            //print(result__list(graph, res));
         }
         finally
         {
@@ -328,7 +331,7 @@ public class ResultSets extends HGTestBase
             res.close();
         }
     }
-    
+
     private void checkBeforeFirstAfterLastNotEmptyRS(HGRandomAccessResult res)
     {
         res.goAfterLast();
@@ -355,13 +358,12 @@ public class ResultSets extends HGTestBase
 
     static boolean isSortedList(List<Integer> list, boolean up)
     {
-        if (list.isEmpty())
-            return true;
+        if (list.isEmpty()) return true;
         int curr = list.get(0);
         for (int i = 1; i < list.size(); i++)
         {
-            if (up && curr < list.get(i) || !up && curr > list.get(i))
-                curr = list.get(i);
+            if (up && curr < list.get(i) || !up && curr > list.get(i)) curr = list
+                    .get(i);
             else
                 return false;
         }
@@ -370,12 +372,10 @@ public class ResultSets extends HGTestBase
 
     static boolean reverseLists(List<?> list, List<?> other)
     {
-        if (list.size() != other.size())
-            return false;
+        if (list.size() != other.size()) return false;
         int size = list.size();
         for (int i = 0; i < list.size(); i++)
-            if (!list.get(i).equals(other.get(size - 1 - i)))
-                return false;
+            if (!list.get(i).equals(other.get(size - 1 - i))) return false;
         return true;
     }
 
