@@ -21,8 +21,11 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
+import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.impl.InMemoryIntersectionResult;
+import org.hypergraphdb.query.impl.TraversalBasedQuery;
+import org.hypergraphdb.query.impl.TraversalResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
@@ -48,15 +51,16 @@ public class ResultSets extends HGTestBase
     public void test()
     {
         setUp();
+        //testSingleValueResultSet();
+        //testKeyScanResultSet();
+        //testKeyRangeForwardResultSet();
+        //testKeyRangeBackwardResultSet();
+        //testSingleKeyResultSet();
+        //testZigZagAndInMemoryIntersectionResult();
         testAlGenerator();
-        testSingleValueResultSet();
-        testKeyScanResultSet();
-        testKeyRangeForwardResultSet();
-        testKeyRangeBackwardResultSet();
-        testFilteredResultSet();
-        testSingleKeyResultSet();
         testUnionResult();
-        testZigZagAndInMemoryIntersectionResult();
+        testFilteredResultSet();
+        testTraversalResult();
         tearDown();
 
     }
@@ -80,6 +84,9 @@ public class ResultSets extends HGTestBase
     public void tearDown()
     {
         List<HGHandle> list = hg.findAll(graph, hg.type(TestInt.class));
+        for (HGHandle handle : list)
+            graph.remove(handle);
+        list = hg.findAll(graph, hg.type(TestLink.Int.class));
         for (HGHandle handle : list)
             graph.remove(handle);
         HGTypeSystem ts = graph.getTypeSystem();
@@ -169,20 +176,36 @@ public class ResultSets extends HGTestBase
     @Test
     public void testAlGenerator()
     {
-        HGHandle needH = graph.add(new TestLink.Int(1000));
-        HGHandle anotherH = graph.add(new TestLink.Int(-1000));
-        graph.add(new TestLink(needH));
-        graph.add(new HGPlainLink(needH, anotherH));
+        HGHandle needH = create_simple_subgraph();
         DefaultALGenerator gen = new DefaultALGenerator(graph, null, null);
         HGSearchResult<Pair<HGHandle, HGHandle>> i = gen.generate(needH);
         while (i.hasNext())
         {
             Assert.assertNotNull(i.next().getFirst());
         }
-
     }
-
+    
+    
     @Test
+    public void testTraversalResult()
+    {
+        HGHandle needH = create_simple_subgraph();
+        BFSCondition rs = hg.bfs(needH);
+        TraversalBasedQuery tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.both);
+        TraversalResult res = (TraversalResult) tbs.execute();
+        int both = countRS(res, true);
+        tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.links);
+        res = (TraversalResult) tbs.execute();
+        int links = countRS(res, true);
+        tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
+        res = (TraversalResult) tbs.execute();
+        int targets = countRS(res, true);
+        Assert.assertEquals(both-targets-links, 0);
+        //2 links + 2 targets
+        Assert.assertEquals(both, 4);
+    }
+    
+       @Test
     public void testSingleValueResultSet()
     {
         HGBidirectionalIndex<String, HGPersistentHandle> idx = graph.getStore()
@@ -435,6 +458,27 @@ public class ResultSets extends HGTestBase
         System.out.println("Reversed list");
         for (int i = 0; i < list.size(); i++)
             System.out.println(":" + i + ":" + list.get(i));
+    }
+    
+    private HGHandle create_simple_subgraph()
+    {
+        HGHandle needH = graph.add(new TestLink.Int(1000));
+        HGHandle anotherH = graph.add(new TestLink.Int(-1000));
+        graph.add(new TestLink(needH));
+        graph.add(new HGPlainLink(needH, anotherH));
+        return needH;
+    }
+    
+    private int countRS(HGSearchResult res, boolean close)
+    {
+        int i = 0;
+        while(res.hasNext())
+        { 
+            res.next(); i++;
+        }
+        if(close)
+            res.close();
+        return i;
     }
 
 }
