@@ -24,6 +24,7 @@ import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.impl.InMemoryIntersectionResult;
+import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.query.impl.TraversalResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
@@ -51,18 +52,18 @@ public class ResultSets extends HGTestBase
     public void test()
     {
         setUp();
-        //testSingleValueResultSet();
-        //testKeyScanResultSet();
-        //testKeyRangeForwardResultSet();
-        //testKeyRangeBackwardResultSet();
-        //testSingleKeyResultSet();
-        //testZigZagAndInMemoryIntersectionResult();
+        // testSingleValueResultSet();
+        // testKeyScanResultSet();
+        // testKeyRangeForwardResultSet();
+        // testKeyRangeBackwardResultSet();
+        // testSingleKeyResultSet();
+        // testZigZagAndInMemoryIntersectionResult();
         testAlGenerator();
         testUnionResult();
         testFilteredResultSet();
         testTraversalResult();
+        testSortedIntersectionResult();
         tearDown();
-
     }
 
     @BeforeClass
@@ -131,41 +132,41 @@ public class ResultSets extends HGTestBase
         zigzag_or_in_memory_test(true);
         zigzag_or_in_memory_test(false);
     }
-    
+
     private void zigzag_or_in_memory_test(boolean zigzag_or_in_memory)
     {
-        HGRandomAccessResult<HGHandle> res = (zigzag_or_in_memory) ? 
-            new ZigZagIntersectionResult<HGHandle>(): new InMemoryIntersectionResult<HGHandle>();
+        HGRandomAccessResult<HGHandle> res = (zigzag_or_in_memory) ? new ZigZagIntersectionResult<HGHandle>()
+                : new InMemoryIntersectionResult<HGHandle>();
         try
         {
             HGRandomAccessResult<HGHandle> left = index.findGTE(9);
             HGRandomAccessResult<HGHandle> right = index.findGTE(8);
-            if(zigzag_or_in_memory)
-              ((ZigZagIntersectionResult)res).init(left, right);
+            if (zigzag_or_in_memory) ((ZigZagIntersectionResult) res).init(
+                    left, right);
             else
-                ((InMemoryIntersectionResult)res).init(left, right); 
-//            List<Integer> left_list = result__list(graph, left);
-//            List<Integer> right_list = result__list(graph, right);
-//            left.goBeforeFirst(); right.goBeforeFirst();
-            if(true)
+                ((InMemoryIntersectionResult) res).init(left, right);
+            // List<Integer> left_list = result__list(graph, left);
+            // List<Integer> right_list = result__list(graph, right);
+            // left.goBeforeFirst(); right.goBeforeFirst();
+            if (true)
             {
                 HGHandle l = left.next();
                 GotoResult gt = right.goTo(l, false);
                 GotoResult gt1 = right.goTo(l, true);
                 System.out.println("L:" + l + "GT:" + gt + ":" + gt1);
             }
-           List<Integer> list = result__list(graph, res);
-          //  Assert.assertEquals(list.size(), 2);
-            if(list.size() != 1)
+            List<Integer> list = result__list(graph, res);
+            // Assert.assertEquals(list.size(), 2);
+            if (list.size() != 1)
             {
-               res.goBeforeFirst();
+                res.goBeforeFirst();
                 while (left.hasNext())
                     System.out.println("L:" + left.next());
                 while (right.hasNext())
                     System.out.println("R:" + right.next());
             }
-           // List<Integer> back_list = back_result__list(graph, res);
-           // Assert.assertTrue(reverseLists(list, back_list));
+            // List<Integer> back_list = back_result__list(graph, res);
+            // Assert.assertTrue(reverseLists(list, back_list));
             checkBeforeFirstAfterLastNotEmptyRS(res);
         }
         finally
@@ -173,6 +174,7 @@ public class ResultSets extends HGTestBase
             res.close();
         }
     }
+
     @Test
     public void testAlGenerator()
     {
@@ -184,28 +186,30 @@ public class ResultSets extends HGTestBase
             Assert.assertNotNull(i.next().getFirst());
         }
     }
-    
-    
+
     @Test
     public void testTraversalResult()
     {
         HGHandle needH = create_simple_subgraph();
         BFSCondition rs = hg.bfs(needH);
-        TraversalBasedQuery tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.both);
-        TraversalResult res = (TraversalResult) tbs.execute();
+        TraversalBasedQuery tbs = new TraversalBasedQuery(rs
+                .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
+        HGSearchResult res = (TraversalResult) tbs.execute();
         int both = countRS(res, true);
-        tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.links);
-        res = (TraversalResult) tbs.execute();
+        tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+                TraversalBasedQuery.ReturnType.links);
+        res = tbs.execute();
         int links = countRS(res, true);
-        tbs = new TraversalBasedQuery(rs.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
-        res = (TraversalResult) tbs.execute();
+        tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+                TraversalBasedQuery.ReturnType.targets);
+        res = tbs.execute();
         int targets = countRS(res, true);
-        Assert.assertEquals(both-targets-links, 0);
-        //2 links + 2 targets
-        Assert.assertEquals(both, 4);
+        Assert.assertEquals(both, targets);
+        // 2 links + 2 targets
+        Assert.assertEquals(links, targets);
     }
-    
-       @Test
+
+    @Test
     public void testSingleValueResultSet()
     {
         HGBidirectionalIndex<String, HGPersistentHandle> idx = graph.getStore()
@@ -229,7 +233,7 @@ public class ResultSets extends HGTestBase
                 back_list.add(res.prev());
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
-           // checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
+            // checkBeforeFirstAfterLastNotEmptyRS((HGRandomAccessResult) res);
         }
         finally
         {
@@ -249,7 +253,7 @@ public class ResultSets extends HGTestBase
             Assert.assertTrue(isSortedList(list, true));
             Assert.assertEquals(list.size(), 5);
             List<Integer> back_list = back_result__list(graph, res);
-            //print(list); print(back_list);
+            // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
             res.goBeforeFirst();
         }
@@ -257,7 +261,7 @@ public class ResultSets extends HGTestBase
         {
             res.close();
         }
-        bounds_test(index.findGTE(-1), false);
+        bounds_test(index.findGTE(-1));
     }
 
     @Test
@@ -274,12 +278,12 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
-         }
+        }
         finally
         {
             res.close();
         }
-        bounds_test(index.findLT(10), true);
+        bounds_test(index.findLT(10));
     }
 
     @Test
@@ -305,21 +309,40 @@ public class ResultSets extends HGTestBase
             res.close();
         }
 
-        // cond = hg.and(hg.type(TestInt.class), hg.lte(new TestInt(10)));
         res = graph.find(hg.lte(new TestInt(10)));
-        bounds_test(res, true);
-        // cond = hg.and(hg.type(TestInt.class), hg.gte(new TestInt(-1)));
+        bounds_test(res);
         res = graph.find(hg.gte(new TestInt(-1)));
-        bounds_test(res, false);
+        bounds_test(res);
     }
 
-    void bounds_test(HGSearchResult<HGHandle> res, boolean upper)
+    @Test
+    public void testSortedIntersectionResult()
+    {
+        HGQueryCondition cond = hg.lte(new TestInt(5));
+        HGQuery<HGHandle> q = HGQuery.make(graph, cond);
+        HGSearchResult<HGHandle> left = q.execute();
+        left = q.execute();
+        cond = hg.lte(new TestInt(7));
+        q = HGQuery.make(graph, cond);
+        HGSearchResult<HGHandle> right = q.execute();
+        HGSearchResult<HGHandle> res = new SortedIntersectionResult<HGHandle>(
+                left, right);
+
+        List<Integer> list = result__list(graph, res);
+        Assert.assertEquals(list.size(), 6);
+        List<Integer> back_list = back_result__list(graph, res);
+        Assert.assertTrue(reverseLists(list, back_list));
+        Assert.assertTrue(isSortedList(list, false));
+        bounds_test(res);
+    }
+
+    void bounds_test(HGSearchResult<HGHandle> res)
     {
         try
         {
             Assert.assertTrue(!res.hasPrev());
             Assert.assertTrue(res.hasNext());
-            //print(result__list(graph, res));
+            // print(result__list(graph, res));
         }
         finally
         {
@@ -332,7 +355,8 @@ public class ResultSets extends HGTestBase
     {
         HGQueryCondition cond = hg.and(hg.type(TestInt.class));
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
-        HGRandomAccessResult<HGHandle> res = (HGRandomAccessResult<HGHandle>)q.execute();
+        HGRandomAccessResult<HGHandle> res = (HGRandomAccessResult<HGHandle>) q
+                .execute();
         try
         {
             checkBeforeFirstAfterLastNotEmptyRS(res);
@@ -342,7 +366,7 @@ public class ResultSets extends HGTestBase
             List<Integer> back_list = back_result__list(graph, res);
             // print(list); print(back_list);
             Assert.assertTrue(reverseLists(list, back_list));
-            
+
         }
         finally
         {
@@ -357,7 +381,7 @@ public class ResultSets extends HGTestBase
         try
         {
             Assert.assertTrue(expectedType(res, "KeyScanResultSet"));
-            //checkBeforeFirstAfterLastNotEmptyRS(res);
+            // checkBeforeFirstAfterLastNotEmptyRS(res);
             List<Integer> list = new ArrayList<Integer>();
             while (res.hasNext())
                 list.add(res.next());
@@ -375,18 +399,20 @@ public class ResultSets extends HGTestBase
         }
     }
 
-    private void checkBeforeFirstAfterLastNotEmptyRS(HGRandomAccessResult<HGHandle> res)
+    private void checkBeforeFirstAfterLastNotEmptyRS(
+            HGRandomAccessResult<HGHandle> res)
     {
-        //check goTo() for all the elements in the result set
+        // check goTo() for all the elements in the result set
         List<HGHandle> handles = new ArrayList<HGHandle>();
         while (res.hasNext())
             handles.add(res.next());
         int i = 0;
-        for(HGHandle h: handles)
+        for (HGHandle h : handles)
         {
-            //Assert.assertEquals(GotoResult.found, res.goTo(h, false));
-            if(res.goTo(h, !false) != GotoResult.found)
-                System.out.println("Problem in: " + i + " of " + handles.size());
+            // Assert.assertEquals(GotoResult.found, res.goTo(h, false));
+            if (res.goTo(h, !false) != GotoResult.found)
+                System.out
+                        .println("Problem in: " + i + " of " + handles.size());
             i++;
         }
         res.goAfterLast();
@@ -459,25 +485,27 @@ public class ResultSets extends HGTestBase
         for (int i = 0; i < list.size(); i++)
             System.out.println(":" + i + ":" + list.get(i));
     }
-    
+
     private HGHandle create_simple_subgraph()
     {
         HGHandle needH = graph.add(new TestLink.Int(1000));
         HGHandle anotherH = graph.add(new TestLink.Int(-1000));
+        HGHandle yet_anotherH = graph.add(new TestLink.Int(-4000));
         graph.add(new TestLink(needH));
         graph.add(new HGPlainLink(needH, anotherH));
+        graph.add(new HGPlainLink(needH, yet_anotherH));
         return needH;
     }
-    
+
     private int countRS(HGSearchResult res, boolean close)
     {
         int i = 0;
-        while(res.hasNext())
-        { 
-            res.next(); i++;
+        while (res.hasNext())
+        {
+            res.next();
+            i++;
         }
-        if(close)
-            res.close();
+        if (close) res.close();
         return i;
     }
 
