@@ -24,8 +24,7 @@ public class BDBConfig
         envConfig.setErrorStream(System.out);          
         
         dbConfig.setAllowCreate(true);
-        dbConfig.setType(DatabaseType.BTREE);       
-        dbConfig.setSortedDuplicates(true);
+        dbConfig.setType(DatabaseType.BTREE);
     }
     
     public BDBConfig()

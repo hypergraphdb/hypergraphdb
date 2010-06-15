@@ -28,7 +28,7 @@ public class Top implements HGAtomType
     
     private static final Top instance = new Top();
     
-    private Top()
+    public Top()
     {        
     }
     

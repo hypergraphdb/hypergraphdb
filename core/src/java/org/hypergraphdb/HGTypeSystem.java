@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +33,7 @@ import org.hypergraphdb.type.BonesOfBeans;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.JavaTypeFactory;
 import org.hypergraphdb.type.LinkType;
+import org.hypergraphdb.type.NullType;
 import org.hypergraphdb.type.PlainLinkType;
 import org.hypergraphdb.type.SubsumesType;
 import org.hypergraphdb.type.Top;
@@ -178,7 +180,7 @@ public class HGTypeSystem
 		                                                   (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(HGSubsumes.class, subsumesHandle);
 		graph.cache.freeze(subsumesHandle);
-
+ 
 		//
 		// If we are actually creating a new database, populate with primitive types.
 		//
@@ -201,15 +203,23 @@ public class HGTypeSystem
 			for (HGPersistentHandle typeHandle : config.getHandles())
 			{
 			    Class<? extends HGAtomType> cl = config.getTypeImplementation(typeHandle);
+			    if (cl.equals(Top.class) || 
+			        cl.equals(LinkType.class) || 
+			        cl.equals(PlainLinkType.class) || 
+			        cl.equals(SubsumesType.class))
+			        continue;
 			    HGAtomType typeInstance = null;
-			    try { cl.newInstance(); }
+			    try { typeInstance = cl.newInstance(); }
 			    catch (Exception ex) { System.err.println("[HYPERGRAPHDB WARNING]: failed to create instance of type '" + 
-			                cl.getName() + "'"); }
+			                cl.getName() + "'"); ex.printStackTrace(System.err); }
 			    List<Class<?>> targets = config.getMappedClasses(typeHandle);
+			    HGLiveHandle liveHandle = null;
 			    if (targets.isEmpty())
-			        addPredefinedType(typeHandle, typeInstance, null);
+			        liveHandle = (HGLiveHandle)addPredefinedType(typeHandle, typeInstance, null);
 			    else for (Class<?> target : targets)
-			        this.addPredefinedType(typeHandle, typeInstance, target);
+			        liveHandle = (HGLiveHandle)addPredefinedType(typeHandle, typeInstance, target);			    
+                if (cl.equals(NullType.class))
+                    nullTypeHandle = liveHandle;			    
 			}
 		}
 	}
@@ -673,6 +683,8 @@ public class HGTypeSystem
 	}
 	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, Class<?> clazz)
 	{
+	    type.setHyperGraph(graph);
+	    
 		//
 		// Make sure the type is in storage...
 		//

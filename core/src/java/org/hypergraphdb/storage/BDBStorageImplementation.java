@@ -86,8 +86,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
         try
         {
             env = new Environment(envDir, envConfig);
-            data_db = env.openDatabase(null, DATA_DB_NAME, null, configuration.getDatabaseConfig());    
-            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, configuration.getDatabaseConfig());
+            data_db = env.openDatabase(null, DATA_DB_NAME, null, configuration.getDatabaseConfig().cloneConfig());    
+            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, configuration.getDatabaseConfig().cloneConfig());
             
             DatabaseConfig incConfig = configuration.getDatabaseConfig().cloneConfig();
             incConfig.setSortedDuplicates(true);
