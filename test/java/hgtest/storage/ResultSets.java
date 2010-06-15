@@ -49,20 +49,25 @@ public class ResultSets extends HGTestBase
         new ResultSets().test();
     }
 
+    private boolean index_rs_fixed = false;
+
     public void test()
     {
         setUp();
-        // testSingleValueResultSet();
-        // testKeyScanResultSet();
-        // testKeyRangeForwardResultSet();
-        // testKeyRangeBackwardResultSet();
-        // testSingleKeyResultSet();
-        // testZigZagAndInMemoryIntersectionResult();
+        if (index_rs_fixed)
+        {
+            testSingleValueResultSet();
+            testKeyScanResultSet();
+            testKeyRangeForwardResultSet();
+            testKeyRangeBackwardResultSet();
+            testSingleKeyResultSet();
+            testZigZagAndInMemoryIntersectionResult();
+        }
+        testSortedIntersectionResult();
         testAlGenerator();
         testUnionResult();
         testFilteredResultSet();
         testTraversalResult();
-        testSortedIntersectionResult();
         testLinkTargetsRSAndHandleArrayRS();
         tearDown();
     }
@@ -205,7 +210,7 @@ public class ResultSets extends HGTestBase
         Assert.assertEquals(both, targets);
         // 2 links + 2 targets
         Assert.assertEquals(links, targets);
-        //TODO: we could check for duplicates in the links RS 
+        // TODO: we could check for duplicates in the links RS
     }
 
     @Test
@@ -317,20 +322,20 @@ public class ResultSets extends HGTestBase
     @Test
     public void testSortedIntersectionResult()
     {
-        //test with sorted sets
+        // test with sorted sets
         testSorted(index.findLTE(5), index.findLTE(7), true);
-        
-        //test with unsorted sets
+
+        // test with unsorted sets
         HGQueryCondition cond = hg.lte(new TestInt(5));
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
         HGSearchResult<HGHandle> left = q.execute();
         cond = hg.lte(new TestInt(7));
         q = HGQuery.make(graph, cond);
         HGSearchResult<HGHandle> right = q.execute();
-        //we didn't test for sorted result set here...
+        // we didn't test for sorted result set here...
         testSorted(left, right, false);
     }
-    
+
     @Test
     public void testLinkTargetsRSAndHandleArrayRS()
     {
@@ -338,11 +343,11 @@ public class ResultSets extends HGTestBase
         HGLink link = new TestLink(needH);
         HGHandle linkH = graph.add(link);
         testL(new LinkTargetsResultSet(link));
-        HGPersistentHandle [] A = graph.getStore().getLink(
+        HGPersistentHandle[] A = graph.getStore().getLink(
                 graph.getPersistentHandle(linkH));
         testL(new HandleArrayResultSet(A, 2));
     }
-    
+
     private void testL(HGSearchResult<HGHandle> res)
     {
         try
@@ -357,19 +362,18 @@ public class ResultSets extends HGTestBase
             res.close();
         }
     }
-    
-    
-    private void testSorted(HGSearchResult<HGHandle> left, HGSearchResult<HGHandle> right, boolean
-            assert_sorted)
+
+    private void testSorted(HGSearchResult<HGHandle> left,
+            HGSearchResult<HGHandle> right, boolean assert_sorted)
     {
-        HGSearchResult<HGHandle> res = new SortedIntersectionResult<HGHandle>(left, right);
+        HGSearchResult<HGHandle> res = new SortedIntersectionResult<HGHandle>(
+                left, right);
 
         List<Integer> list = result__list(graph, res);
         Assert.assertEquals(list.size(), 6);
         List<Integer> back_list = back_result__list(graph, res);
         Assert.assertTrue(reverseLists(list, back_list));
-        if(assert_sorted)
-           Assert.assertTrue(isSortedList(list, false));
+        if (assert_sorted) Assert.assertTrue(isSortedList(list, false));
         bounds_test(res);
     }
 
@@ -525,8 +529,10 @@ public class ResultSets extends HGTestBase
 
     private HGHandle create_simple_subgraph()
     {
-        HGHandle linkH = graph.add(new TestLink(graph.add(35), graph.add("Bizi")));
-        HGHandle linkH1 = graph.add(new TestLink(graph.add("Bobi"), graph.add("Other"), linkH ));
+        HGHandle linkH = graph.add(new TestLink(graph.add(35), graph
+                .add("Bizi")));
+        HGHandle linkH1 = graph.add(new TestLink(graph.add("Bobi"), graph
+                .add("Other"), linkH));
         return linkH;
     }
 
