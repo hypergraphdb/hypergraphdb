@@ -20,6 +20,12 @@ public class TestLink extends HGPlainLink
     }
     
     
+    public TestLink(HGHandle... outgoingSet)
+    {
+        super(outgoingSet);
+    }
+
+
     public static class Int implements Comparable<Int>
     {
         private Integer x = 0;

@@ -7,9 +7,8 @@ import java.util.List;
 
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -23,10 +22,11 @@ import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.query.impl.HandleArrayResultSet;
 import org.hypergraphdb.query.impl.InMemoryIntersectionResult;
+import org.hypergraphdb.query.impl.LinkTargetsResultSet;
 import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
-import org.hypergraphdb.query.impl.TraversalResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
@@ -63,6 +63,7 @@ public class ResultSets extends HGTestBase
         testFilteredResultSet();
         testTraversalResult();
         testSortedIntersectionResult();
+        testLinkTargetsRSAndHandleArrayRS();
         tearDown();
     }
 
@@ -194,19 +195,17 @@ public class ResultSets extends HGTestBase
         BFSCondition rs = hg.bfs(needH);
         TraversalBasedQuery tbs = new TraversalBasedQuery(rs
                 .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
-        HGSearchResult res = (TraversalResult) tbs.execute();
-        int both = countRS(res, true);
+        int both = countRS(tbs.execute(), true);
         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
                 TraversalBasedQuery.ReturnType.links);
-        res = tbs.execute();
-        int links = countRS(res, true);
+        int links = countRS(tbs.execute(), true);
         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
                 TraversalBasedQuery.ReturnType.targets);
-        res = tbs.execute();
-        int targets = countRS(res, true);
+        int targets = countRS(tbs.execute(), true);
         Assert.assertEquals(both, targets);
         // 2 links + 2 targets
         Assert.assertEquals(links, targets);
+        //TODO: we could check for duplicates in the links RS 
     }
 
     @Test
@@ -318,21 +317,59 @@ public class ResultSets extends HGTestBase
     @Test
     public void testSortedIntersectionResult()
     {
+        //test with sorted sets
+        testSorted(index.findLTE(5), index.findLTE(7), true);
+        
+        //test with unsorted sets
         HGQueryCondition cond = hg.lte(new TestInt(5));
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
         HGSearchResult<HGHandle> left = q.execute();
-        left = q.execute();
         cond = hg.lte(new TestInt(7));
         q = HGQuery.make(graph, cond);
         HGSearchResult<HGHandle> right = q.execute();
-        HGSearchResult<HGHandle> res = new SortedIntersectionResult<HGHandle>(
-                left, right);
+        //we didn't test for sorted result set here...
+        testSorted(left, right, false);
+    }
+    
+    @Test
+    public void testLinkTargetsRSAndHandleArrayRS()
+    {
+        HGHandle needH = graph.add(new TestInt(1200));
+        HGLink link = new TestLink(needH);
+        HGHandle linkH = graph.add(link);
+        testL(new LinkTargetsResultSet(link));
+        HGPersistentHandle [] A = graph.getStore().getLink(
+                graph.getPersistentHandle(linkH));
+        testL(new HandleArrayResultSet(A, 2));
+    }
+    
+    private void testL(HGSearchResult<HGHandle> res)
+    {
+        try
+        {
+            List<Integer> list = result__list(graph, res);
+            Assert.assertEquals(list.size(), 3);
+            List<Integer> back_list = back_result__list(graph, res);
+            Assert.assertTrue(reverseLists(list, back_list));
+        }
+        finally
+        {
+            res.close();
+        }
+    }
+    
+    
+    private void testSorted(HGSearchResult<HGHandle> left, HGSearchResult<HGHandle> right, boolean
+            assert_sorted)
+    {
+        HGSearchResult<HGHandle> res = new SortedIntersectionResult<HGHandle>(left, right);
 
         List<Integer> list = result__list(graph, res);
         Assert.assertEquals(list.size(), 6);
         List<Integer> back_list = back_result__list(graph, res);
         Assert.assertTrue(reverseLists(list, back_list));
-        Assert.assertTrue(isSortedList(list, false));
+        if(assert_sorted)
+           Assert.assertTrue(isSortedList(list, false));
         bounds_test(res);
     }
 
@@ -488,13 +525,9 @@ public class ResultSets extends HGTestBase
 
     private HGHandle create_simple_subgraph()
     {
-        HGHandle needH = graph.add(new TestLink.Int(1000));
-        HGHandle anotherH = graph.add(new TestLink.Int(-1000));
-        HGHandle yet_anotherH = graph.add(new TestLink.Int(-4000));
-        graph.add(new TestLink(needH));
-        graph.add(new HGPlainLink(needH, anotherH));
-        graph.add(new HGPlainLink(needH, yet_anotherH));
-        return needH;
+        HGHandle linkH = graph.add(new TestLink(graph.add(35), graph.add("Bizi")));
+        HGHandle linkH1 = graph.add(new TestLink(graph.add("Bobi"), graph.add("Other"), linkH ));
+        return linkH;
     }
 
     private int countRS(HGSearchResult res, boolean close)
@@ -502,7 +535,7 @@ public class ResultSets extends HGTestBase
         int i = 0;
         while (res.hasNext())
         {
-            res.next();
+            System.out.println(res.next());
             i++;
         }
         if (close) res.close();
