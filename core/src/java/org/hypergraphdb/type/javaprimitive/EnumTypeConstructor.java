@@ -9,7 +9,6 @@ package org.hypergraphdb.type.javaprimitive;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
@@ -35,8 +34,8 @@ import org.hypergraphdb.util.HGUtils;
  */
 public class EnumTypeConstructor extends  HGAtomTypeBase
 {
-    public static final HGPersistentHandle HGHANDLE =
-        HGHandleFactory.makeHandle("4e3c44ec-da21-11db-84d5-cf67a5f089dc");
+//    public static final HGPersistentHandle HGHANDLE =
+//        HGHandleFactory.makeHandle("4e3c44ec-da21-11db-84d5-cf67a5f089dc");
  
     @SuppressWarnings("unchecked")
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)

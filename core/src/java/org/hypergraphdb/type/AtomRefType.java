@@ -8,7 +8,6 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSearchable;
@@ -45,9 +44,9 @@ public class AtomRefType implements HGAtomType,
 								    HGSearchable<HGPersistentHandle, HGPersistentHandle>,
 								    ByteArrayConverter<Object>
 {
-    public static final HGPersistentHandle HGHANDLE =
-        HGHandleFactory.makeHandle("2ec10476-d964-11db-a08c-eb6f4c8f155a");
-	
+//    public static final HGPersistentHandle HGHANDLE =
+//        HGHandleFactory.makeHandle("2ec10476-d964-11db-a08c-eb6f4c8f155a");
+//	
 	//
 	// IMPLEMENTATION NOTE: for a given referent atom, we are reference counting each
 	// type of reference (hard, symbolic or floating). Because the 'make' operation should
@@ -64,7 +63,7 @@ public class AtomRefType implements HGAtomType,
 	private static final int REFCOUNT_OFFSET = 1; // 1 byte for the mode and 4 for the reference count
 	private static final int ATOM_HANDLE_OFFSET = 5; // 1 byte for the mode and 4 for the reference count
 	
-	private HyperGraph hg;
+	private HyperGraph graph;
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> hardIdx = null;
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> symbolicIdx = null;
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> floatingIdx = null;
@@ -73,10 +72,11 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (hardIdx == null)
 		{
-			hardIdx = hg.getStore().getIndex(IDX_HARD_DB_NAME, 
+			hardIdx = graph.getStore().getIndex(IDX_HARD_DB_NAME, 
 			                                 BAtoHandle.getInstance(), 
 			                                 BAtoHandle.getInstance(), 
-			                                 null);
+			                                 null,
+			                                 true);
 		}
 		return hardIdx;
 	}
@@ -85,10 +85,11 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (symbolicIdx == null)
 		{
-			symbolicIdx = hg.getStore().getIndex(IDX_SYMBOLIC_DB_NAME, 
+			symbolicIdx = graph.getStore().getIndex(IDX_SYMBOLIC_DB_NAME, 
 			                                     BAtoHandle.getInstance(), 
 			                                     BAtoHandle.getInstance(), 
-			                                     null);
+			                                     null,
+			                                     true);
 		}
 		return symbolicIdx;
 	}
@@ -97,10 +98,11 @@ public class AtomRefType implements HGAtomType,
 	{
 		if (floatingIdx == null)
 		{
-			floatingIdx = hg.getStore().getIndex(IDX_FLOATING_DB_NAME, 
+			floatingIdx = graph.getStore().getIndex(IDX_FLOATING_DB_NAME, 
 			                                     BAtoHandle.getInstance(), 
 			                                     BAtoHandle.getInstance(), 
-			                                     null);
+			                                     null,
+			                                     true);
 		}
 		return floatingIdx;
 	}
@@ -124,24 +126,24 @@ public class AtomRefType implements HGAtomType,
 	public void setHyperGraph(HyperGraph hg) 
 	{
 		// unlikely that we would ever change the HyperGraph instance, but who knows....
-		if (this.hg != null) 
-			this.hg.getEventManager().removeListener(HGAtomRemoveRequestEvent.class, removalListener);
-		this.hg = hg;
+		if (this.graph != null) 
+			this.graph.getEventManager().removeListener(HGAtomRemoveRequestEvent.class, removalListener);
+		this.graph = hg;
 		hg.getEventManager().addListener(HGAtomRemoveRequestEvent.class, removalListener);
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
-		byte [] data = hg.getStore().getData(handle);
+		byte [] data = graph.getStore().getData(handle);
 		HGAtomRef.Mode mode = HGAtomRef.Mode.get(data[MODE_OFFSET]);
-		HGPersistentHandle atomHandle = HGHandleFactory.makeHandle(data, ATOM_HANDLE_OFFSET);
+		HGPersistentHandle atomHandle = graph.getHandleFactory().makeHandle(data, ATOM_HANDLE_OFFSET);
 		return new HGAtomRef(atomHandle, mode);
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
 		HGAtomRef ref = (HGAtomRef)instance;
-		HGPersistentHandle refHandle = hg.getPersistentHandle(ref.getReferent());
+		HGPersistentHandle refHandle = graph.getPersistentHandle(ref.getReferent());
 		HGPersistentHandle valueHandle;
 		HGIndex<HGPersistentHandle, HGPersistentHandle> idx;
 		switch (ref.getMode())
@@ -167,21 +169,21 @@ public class AtomRefType implements HGAtomType,
 			data[MODE_OFFSET] = ref.getMode().getCode();
 			System.arraycopy(refHandle.toByteArray(), 0, data, ATOM_HANDLE_OFFSET, handleSize);
 			BAUtils.writeInt(1, data, REFCOUNT_OFFSET);
-			valueHandle = hg.getStore().store(data);
+			valueHandle = graph.getStore().store(data);
 			idx.addEntry(refHandle, valueHandle);
 		}
 		else
 		{
-			byte [] data = hg.getStore().getData(valueHandle);
+			byte [] data = graph.getStore().getData(valueHandle);
 			BAUtils.writeInt(BAUtils.readInt(data, REFCOUNT_OFFSET) + 1, data, REFCOUNT_OFFSET);
-			hg.getStore().store(valueHandle, data);
+			graph.getStore().store(valueHandle, data);
 		}
 		return valueHandle;
 	}
 	
 	public void release(HGPersistentHandle handle) 
 	{
-		byte [] data = hg.getStore().getData(handle);
+		byte [] data = graph.getStore().getData(handle);
 		HGAtomRef.Mode mode = HGAtomRef.Mode.get(data[MODE_OFFSET]);
 		int count = BAUtils.readInt(data, REFCOUNT_OFFSET) - 1;
 		if (count == 0)
@@ -189,7 +191,7 @@ public class AtomRefType implements HGAtomType,
 			boolean makeManaged = false;
 			boolean removeRef = false;
 			HGPersistentHandle otherRef = null;	
-			HGPersistentHandle refHandle = HGHandleFactory.makeHandle(data, ATOM_HANDLE_OFFSET);
+			HGPersistentHandle refHandle = graph.getHandleFactory().makeHandle(data, ATOM_HANDLE_OFFSET);
 			switch (mode)
 			{
 				case hard:
@@ -198,7 +200,7 @@ public class AtomRefType implements HGAtomType,
 					if (otherRef != null)
 					{
 						makeManaged = true;
-						removeRef = BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
+						removeRef = BAUtils.readInt(graph.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
 					}
 					else
 						removeRef = true;
@@ -207,7 +209,7 @@ public class AtomRefType implements HGAtomType,
 				}
 				case symbolic:
 				{
-					hg.getStore().removeData(handle);
+					graph.getStore().removeData(handle);
 					getSymbolicIdx().removeAllEntries(refHandle);
 					break;
 				}	
@@ -215,30 +217,30 @@ public class AtomRefType implements HGAtomType,
 				{
 					makeManaged = true;
 					otherRef = getHardIdx().findFirst(refHandle);
-					removeRef = otherRef == null || BAUtils.readInt(hg.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
+					removeRef = otherRef == null || BAUtils.readInt(graph.getStore().getData(otherRef), REFCOUNT_OFFSET) == 0;
 					getFloatingIdx().removeAllEntries(refHandle);
 					break;
 				}
 			}
 			if (removeRef)
 			{
-				hg.getStore().removeData(handle);
+				graph.getStore().removeData(handle);
 				if (otherRef != null)
-					hg.getStore().removeData(otherRef);
+					graph.getStore().removeData(otherRef);
 				if (makeManaged)
 				{
-					int flags = hg.getSystemFlags(refHandle);
+					int flags = graph.getSystemFlags(refHandle);
 					if ((flags & HGSystemFlags.MANAGED) == 0)
-						hg.setSystemFlags(refHandle, flags | HGSystemFlags.MANAGED);
+						graph.setSystemFlags(refHandle, flags | HGSystemFlags.MANAGED);
 				}
 				else
-					hg.remove(refHandle);
+					graph.remove(refHandle);
 			}			
 		}
 		else
 		{
 			BAUtils.writeInt(count, data, REFCOUNT_OFFSET);
-			hg.getStore().store(handle, data);
+			graph.getStore().store(handle, data);
 		}
 	}
 
@@ -260,7 +262,7 @@ public class AtomRefType implements HGAtomType,
 		if (key instanceof HGAtomRef)
 		{
 			HGAtomRef ref = (HGAtomRef)key;
-			HGPersistentHandle pHandle = hg.getPersistentHandle(ref.getReferent());
+			HGPersistentHandle pHandle = graph.getPersistentHandle(ref.getReferent());
 			switch (ref.getMode())
 			{
 				case hard:
@@ -271,7 +273,7 @@ public class AtomRefType implements HGAtomType,
 					return getFloatingIdx().find(pHandle);
 			}
 		}
-		HGPersistentHandle referent = hg.getPersistentHandle((HGHandle)key);
+		HGPersistentHandle referent = graph.getPersistentHandle((HGHandle)key);
 		return new UnionResult(getHardIdx().find(referent), 
 							   new UnionResult(getSymbolicIdx().find(referent),
 									   		   getFloatingIdx().find(referent)));
@@ -280,17 +282,17 @@ public class AtomRefType implements HGAtomType,
 	public Object fromByteArray(byte[] byteArray)
 	{
 		HGPersistentHandle h = BAtoHandle.getInstance().fromByteArray(byteArray);
-		if (h.equals(HGHandleFactory.nullHandle()))
+		if (h.equals(graph.getHandleFactory().nullHandle()))
 			return null;
 		else
-			return hg.get(h);
+			return graph.get(h);
 	}
 
 	public byte[] toByteArray(Object object)
 	{
 		if (object == null)
-			return HGHandleFactory.nullHandle().toByteArray();
+			return graph.getHandleFactory().nullHandle().toByteArray();
 		else
-			return hg.getPersistentHandle(hg.getHandle(object)).toByteArray();
+			return graph.getPersistentHandle(graph.getHandle(object)).toByteArray();
 	}
 }

@@ -27,7 +27,6 @@ import com.sleepycat.db.Cursor;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseEntry;
-import com.sleepycat.db.Environment;
 import com.sleepycat.db.OperationStatus;
 
 /**
@@ -48,7 +47,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	 */
     public static final String DB_NAME_PREFIX = "hgstore_idx_";
         
-    protected Environment env;
+    protected BDBStorageImplementation storage;
     protected CursorConfig cursorConfig = new CursorConfig();
     protected HGTransactionManager transactionManager;
     protected String name;
@@ -76,34 +75,34 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     		return (TransactionBDBImpl)tx.getStorageTransaction();
     }
 
-    public DefaultIndexImpl(Environment env,
-    						Database db,
-							HGTransactionManager transactionManager,
-							ByteArrayConverter<KeyType> keyConverter,
-							ByteArrayConverter<ValueType> valueConverter,
-							Comparator comparator)
-	{
-		this.db = db;
-		this.env = env;
-		this.transactionManager = transactionManager;
-		this.keyConverter = keyConverter;
-		this.valueConverter = valueConverter;
-		this.comparator = comparator;
-		owndb = false;
-		try { name = db.getDatabaseName(); }
-		catch (Exception ex) { throw new HGException(ex); }
-		
-	}
+//    public DefaultIndexImpl(Environment env,
+//    						Database db,
+//							HGTransactionManager transactionManager,
+//							ByteArrayConverter<KeyType> keyConverter,
+//							ByteArrayConverter<ValueType> valueConverter,
+//							Comparator comparator)
+//	{
+//		this.db = db;
+//		this.env = env;
+//		this.transactionManager = transactionManager;
+//		this.keyConverter = keyConverter;
+//		this.valueConverter = valueConverter;
+//		this.comparator = comparator;
+//		owndb = false;
+//		try { name = db.getDatabaseName(); }
+//		catch (Exception ex) { throw new HGException(ex); }
+//		
+//	}
     
     public DefaultIndexImpl(String indexName, 
-    						Environment env,
+    						BDBStorageImplementation storage,
     						HGTransactionManager transactionManager,
     						ByteArrayConverter<KeyType> keyConverter,
     						ByteArrayConverter<ValueType> valueConverter,
     						Comparator comparator)
     {
         this.name = indexName;
-        this.env = env;
+        this.storage = storage;
         this.transactionManager = transactionManager;
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
@@ -125,7 +124,12 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     {
         try
         {
-            return comparator == null ? db.getConfig().getBtreeComparator() : comparator;
+            if (comparator != null)
+                return comparator;
+            else if (db.getConfig().getType() == DatabaseType.BTREE)
+                return db.getConfig().getBtreeComparator();
+            else 
+                return db.getConfig().getHashComparator();
         }
         catch (DatabaseException ex)
         {
@@ -137,26 +141,19 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     {    	
         try
         {
-            DatabaseConfig dbConfig = new DatabaseConfig();
-            dbConfig.setAllowCreate(true);
-            if (env.getConfig().getTransactional())
-            {
-                dbConfig.setTransactional(true);                
-                if (env.getConfig().getMultiversion())   
-                {
-                    dbConfig.setMultiversion(true);
+            DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().cloneConfig();
+            if (storage.getBerkleyEnvironment().getConfig().getTransactional() &&
+                storage.getConfiguration().isStorageMVCC())
                     cursorConfig.setSnapshot(true);
-                }
-            }
             dbConfig.setSortedDuplicates(sort_duplicates);
             if (comparator != null)
             {
-           		dbConfig.setBtreeComparator(comparator);
-                dbConfig.setType(DatabaseType.BTREE);           		
+                if (dbConfig.getType() == DatabaseType.BTREE)
+                    dbConfig.setBtreeComparator(comparator);
+                else
+                    dbConfig.setHashComparator(comparator);
             }
-            else
-                dbConfig.setType(DatabaseType.BTREE);
-            db = env.openDatabase(null, DB_NAME_PREFIX + name, null, dbConfig);
+            db = storage.getBerkleyEnvironment().openDatabase(null, DB_NAME_PREFIX + name, null, dbConfig);
         }
         catch (Throwable t)
         {
@@ -422,7 +419,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             OperationStatus status = cursor.getSearchKeyRange(keyEntry, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
             {       
-            	Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
+            	Comparator<byte[]> comparator = db.getConfig().getType() == DatabaseType.BTREE ? 
+            	            db.getConfig().getBtreeComparator() : db.getConfig().getHashComparator();
                 if (!compare_equals) // strict < or >?
                 {
                     if (lower_range)

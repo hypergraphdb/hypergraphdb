@@ -27,10 +27,8 @@ import com.sleepycat.db.Database;
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.DatabaseException;
-import com.sleepycat.db.DatabaseType;
 import com.sleepycat.db.Environment;
 import com.sleepycat.db.EnvironmentConfig;
-import com.sleepycat.db.LockDetectMode;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
 import com.sleepycat.db.TransactionConfig;
@@ -41,6 +39,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
      
+    private BDBConfig configuration;
     private HGStore store;
     private CursorConfig cursorConfig = new CursorConfig();
     private Environment env = null;
@@ -59,74 +58,40 @@ public class BDBStorageImplementation implements HGStoreImplementation
         else
             return (TransactionBDBImpl)tx.getStorageTransaction();
     }    
-      
+    
+    public BDBStorageImplementation()
+    {
+        configuration = new BDBConfig();
+    }
+    
+    public BDBConfig getConfiguration()
+    {
+        return configuration;
+    }
+    
+    public Environment getBerkleyEnvironment()
+    {
+        return env;
+    }
+    
     public void startup(HGStore store, HGConfiguration config)
     {
         this.store = store;
-        EnvironmentConfig envConfig = new EnvironmentConfig();
-        envConfig.setAllowCreate(true);
-        envConfig.setInitializeCache(true);  
-        envConfig.setCacheSize(config.getStoreCacheSize());
-        envConfig.setCacheCount(config.getNumberOfStoreCaches());
-        envConfig.setErrorPrefix("BERKELEYDB");
-        envConfig.setErrorStream(System.out);     
-//        config.setStorageMVCC(false);
+        EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
+//      configuration.setStorageMVCC(false);
         if (config.isTransactional())
-        {
-            envConfig.setInitializeLogging(true);
-            envConfig.setTransactional(true);            
-            if (!config.isStorageMVCC())
-            {
-                envConfig.setInitializeLocking(true);
-                envConfig.setLockDetectMode(LockDetectMode.RANDOM);
-                envConfig.setMaxLockers(2000);
-                envConfig.setMaxLockObjects(20000);
-                envConfig.setMaxLocks(20000);                
-            }
-            else
-            {
-                envConfig.setMultiversion(true);
-                envConfig.setTxnSnapshot(true);
-            }
-            envConfig.setTxnWriteNoSync(true);
-            envConfig.setCachePageSize(4*1024);
-            long maxActive = envConfig.getCacheSize() / envConfig.getCachePageSize();
-            envConfig.setTxnMaxActive((int)maxActive*10);                   
-            envConfig.setRunRecovery(true);
-            envConfig.setRegister(true);
-            envConfig.setLogAutoRemove(true);
-//          envConfig.setMaxMutexes(10000);
-    //        envConfig.setRunFatalRecovery(true);          
-        }
-        
+            configuration.configureTransactional();
         File envDir = new File(store.getDatabaseLocation());
         envDir.mkdirs();
         try
         {
             env = new Environment(envDir, envConfig);
-            DatabaseConfig dbConfig = new DatabaseConfig();
-            dbConfig.setAllowCreate(true);
-            if (env.getConfig().getTransactional())
-            {
-                dbConfig.setTransactional(true);            
-                if (config.isStorageMVCC())
-                    dbConfig.setMultiversion(true);
-            }
-            dbConfig.setType(DatabaseType.BTREE);
-            data_db = env.openDatabase(null, DATA_DB_NAME, null, dbConfig);    
-            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, dbConfig);
+            data_db = env.openDatabase(null, DATA_DB_NAME, null, configuration.getDatabaseConfig());    
+            primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, configuration.getDatabaseConfig());
             
-            dbConfig = new DatabaseConfig();
-            dbConfig.setAllowCreate(true);
-            if (env.getConfig().getTransactional())
-            {
-                dbConfig.setTransactional(true);
-                if (config.isStorageMVCC())
-                    dbConfig.setMultiversion(true);   
-            }
-            dbConfig.setSortedDuplicates(true);
-            dbConfig.setType(DatabaseType.BTREE);
-            incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, dbConfig);
+            DatabaseConfig incConfig = configuration.getDatabaseConfig().cloneConfig();
+            incConfig.setSortedDuplicates(true);
+            incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, incConfig);
             
             if (config.isTransactional())
             {
@@ -537,14 +502,14 @@ public class BDBStorageImplementation implements HGStoreImplementation
             
             if (isBidirectional)
                 result =  new DefaultBiIndexImpl<KeyType, ValueType>(name, 
-                                                                     env, 
+                                                                     this, 
                                                                      store.getTransactionManager(),
                                                                      keyConverter, 
                                                                      valueConverter,
                                                                      comparator);
             else
                 result = new DefaultIndexImpl<KeyType, ValueType>(name, 
-                                                                  env, 
+                                                                  this, 
                                                                   store.getTransactionManager(),
                                                                   keyConverter, 
                                                                   valueConverter,

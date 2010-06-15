@@ -8,7 +8,7 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
+
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
@@ -16,8 +16,11 @@ import org.hypergraphdb.LazyRef;
 
 public class NullType implements HGAtomType
 {
+    private HyperGraph graph;
+    
 	public void setHyperGraph(HyperGraph hg)
 	{
+	    this.graph = hg;
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
@@ -27,7 +30,7 @@ public class NullType implements HGAtomType
 
 	public HGPersistentHandle store(Object instance)
 	{
-		return HGHandleFactory.makeHandle();
+		return graph.getHandleFactory().makeHandle();
 	}
 
 	public void release(HGPersistentHandle handle)

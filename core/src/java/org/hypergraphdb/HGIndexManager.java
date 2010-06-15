@@ -84,7 +84,8 @@ public class HGIndexManager
 			result = graph.getStore().getIndex(name, 
 											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 											   converter, 
-											   indexer.getComparator(graph));
+											   indexer.getComparator(graph),
+											   true);
 //			if (result == null)
 //				result = graph.getStore().createIndex(name, 
 //													  (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 

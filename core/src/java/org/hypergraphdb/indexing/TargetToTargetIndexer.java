@@ -8,9 +8,7 @@
 package org.hypergraphdb.indexing;
 
 import java.util.Comparator;
-
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -85,7 +83,7 @@ public class TargetToTargetIndexer extends HGValueIndexer
 			
 			public HGHandle fromByteArray(byte [] A)
 			{
-				return HGHandleFactory.makeHandle(A);
+				return graph.getHandleFactory().makeHandle(A);
 			}
 		};
 	}
@@ -108,7 +106,7 @@ public class TargetToTargetIndexer extends HGValueIndexer
 			
 			public HGHandle fromByteArray(byte [] A)
 			{
-				return HGHandleFactory.makeHandle(A);
+				return graph.getHandleFactory().makeHandle(A);
 			}
 		};
 	}

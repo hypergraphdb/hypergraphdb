@@ -8,17 +8,20 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
+
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGPlainLink;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 
 public class PlainLinkType implements HGAtomType 
 {	
+    private HyperGraph graph;
+    
 	public void setHyperGraph(HyperGraph hg) 
 	{
+	    this.graph = hg;
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
@@ -28,7 +31,7 @@ public class PlainLinkType implements HGAtomType
 
 	public HGPersistentHandle store(Object instance) 
 	{
-		return HGHandleFactory.nullHandle();
+		return graph.getHandleFactory().nullHandle();
 	}
 
 	public void release(HGPersistentHandle handle) 

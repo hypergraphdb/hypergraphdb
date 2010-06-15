@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGSearchResult;
@@ -34,8 +33,8 @@ import org.hypergraphdb.query.HGAtomPredicate;
  */
 public class Log
 {
-	public static final HGPersistentHandle LATEST_VERSION_HANDLE =
-		HGHandleFactory.makeHandle("136b5d67-7b0c-41f4-a0e0-105f2c42622e");
+	public static final HGPersistentHandle LATEST_VERSION_HANDLE = null;
+		// HGHandleFactory.makeHandle("136b5d67-7b0c-41f4-a0e0-105f2c42622e");
 
 	private HyperGraph logDb;
 	private HashMap<HGPeerIdentity, Peer> peers = new HashMap<HGPeerIdentity, Peer>();

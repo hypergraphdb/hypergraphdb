@@ -8,6 +8,7 @@
 package org.hypergraphdb.peer;
 
 import static org.hypergraphdb.peer.Structs.getPart;
+
 import static org.hypergraphdb.peer.Structs.getOptPart;
 
 import java.io.BufferedReader;
@@ -27,7 +28,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
@@ -182,7 +182,7 @@ public class HyperGraphPeer
         {             
             // Create new identity.
             PrivatePeerIdentity id = new PrivatePeerIdentity();
-            id.setId(HGHandleFactory.makeHandle());
+            id.setId(graph.getHandleFactory().makeHandle());
             id.setGraphLocation(graph.getLocation());
             id.setHostname(localMachine.getHostName());
             id.setIpAddress(localMachine.getHostAddress());
@@ -211,7 +211,7 @@ public class HyperGraphPeer
             	public HGPeerIdentity call()
             	{
 	                graph.remove(pid.getId());
-	                HGPersistentHandle newId = HGHandleFactory.makeHandle();
+	                HGPersistentHandle newId = graph.getHandleFactory().makeHandle();
 	                pid.setId(newId);
 	                pid.setGraphLocation(graph.getLocation());
 	                pid.setHostname(machine.getHostName());

@@ -67,7 +67,8 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
             slotIndex = hg.getStore().getIndex(INDEX_NAME, 
                                                BAtoBA.getInstance(), 
                                                BAtoHandle.getInstance(), 
-                                               null);
+                                               null,
+                                               true);
         }
         return slotIndex;
     }

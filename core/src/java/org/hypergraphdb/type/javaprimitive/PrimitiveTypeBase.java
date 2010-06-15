@@ -8,8 +8,8 @@
 package org.hypergraphdb.type.javaprimitive;
 
 import java.util.Comparator;
+
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
@@ -59,7 +59,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
 	                                                         Comparator<byte[]>,
 	                                                         HGRefCountedType
 {
-    protected HyperGraph hg = null;
+    protected HyperGraph graph = null;
     protected HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;
     
     /**
@@ -84,10 +84,11 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
         {
             Comparator<byte[]> comparator = getComparator();
             
-            valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)hg.getStore().getIndex(getIndexName(), 
+            valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().getIndex(getIndexName(), 
             																			 BAtoBA.getInstance(), 
             																			 BAtoHandle.getInstance(),
-            																			 comparator);
+            																			 comparator,
+            																			 true);
 
         }
         return valueIndex;
@@ -105,7 +106,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
 
     protected final HGPersistentHandle storeImpl(byte [] data)
     {
-        HGStore store = hg.getStore();
+        HGStore store = graph.getStore();
         HGPersistentHandle handle = null;
         
         //
@@ -117,7 +118,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
         
         if (handle == null)
         {
-            handle = HGHandleFactory.makeHandle();
+            handle = graph.getHandleFactory().makeHandle();
             putRefCount(1, data);            
             store.store(handle, data);
             idx.addEntry(data, handle);
@@ -142,12 +143,12 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
      
     public final void setHyperGraph(HyperGraph hg)
     {
-        this.hg = hg;
+        this.graph = hg;
     }
 
     public final void release(HGPersistentHandle handle)
     {
-        HGStore store = hg.getStore();
+        HGStore store = graph.getStore();
         byte [] ref_counted_data = store.getData(handle);
         int refCnt = getRefCount(ref_counted_data);
         if (--refCnt > 0)
@@ -164,7 +165,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
 
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {                 
-        byte [] asBytes = hg.getStore().getData(handle);
+        byte [] asBytes = graph.getStore().getData(handle);
         if (asBytes == null)
             throw new HGException("Could not find data for handle: " + handle.toString());
         return readBytes(asBytes, dataOffset);
@@ -233,7 +234,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     	byte [] B = objectAsBytes(o);
     	HGPersistentHandle handle = (HGPersistentHandle)this.getIndex().findFirst(B);
     	if (handle == null) return 0;
-        byte [] ref_counted_data = hg.getStore().getData(handle);
+        byte [] ref_counted_data = graph.getStore().getData(handle);
         int refCnt = getRefCount(ref_counted_data);
     	return refCnt;
     }    

@@ -9,6 +9,7 @@ package org.hypergraphdb.peer;
 
 import static org.hypergraphdb.peer.Structs.getPart;
 
+
 import static org.hypergraphdb.peer.Structs.object;
 import static org.hypergraphdb.peer.Structs.struct;
 
@@ -25,7 +26,6 @@ import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
@@ -427,7 +427,7 @@ public class SubgraphManager
             new HashMap<HGPersistentHandle, HGPersistentHandle>();
         for (Map.Entry<String, String> e : typeClasses.entrySet())
         {
-            HGPersistentHandle typeHandle = HGHandleFactory.makeHandle(e.getKey());
+            HGPersistentHandle typeHandle = graph.getHandleFactory().makeHandle(e.getKey());
             String classname = e.getValue();
             if (graph.get(typeHandle) == null) // do we have the atom type locally?
             {
@@ -551,7 +551,8 @@ public class SubgraphManager
                 graph.getStore().getIndex(HyperGraph.VALUES_INDEX_NAME, 
                                           BAtoHandle.getInstance(), 
                                           BAtoHandle.getInstance(), 
-                                          null);
+                                          null,
+                                          true);
             
         }
 

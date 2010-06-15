@@ -9,7 +9,6 @@ package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
@@ -84,7 +83,7 @@ public class HGRelType extends HGAtomTypeBase implements HGLink
 		// there's no value of the relation per se, it's only a link
 		// that's simply strongly typed....and we don't bother checking
 		// the types of the target atoms for now
-		return HGHandleFactory.nullHandle();
+		return graph.getHandleFactory().nullHandle();
 	}
 
 	public String getName() 

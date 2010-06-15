@@ -8,14 +8,13 @@
 package org.hypergraphdb.query.cond2qry;
 
 import java.util.ArrayList;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
-
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
@@ -333,7 +332,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					for (int ti = 0; ti < c.targets().length; ti++)
 					{					
 						HGHandle targetHandle = c.targets()[ti];
-						if (targetHandle.equals(HGHandleFactory.anyHandle))
+						if (targetHandle.equals(graph.getHandleFactory().anyHandle()))
 							continue;
 						ByTargetIndexer indexer = new ByTargetIndexer(typeHandle, ti);
 						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
@@ -474,7 +473,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			And result = new And();
 			result.add(cond);
 			for (HGHandle h : ((OrderedLinkCondition)cond).targets())
-				if (!h.equals(HGHandleFactory.anyHandle()))
+				if (!h.equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
 		}
@@ -482,7 +481,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 			And result = new And();
 			for (HGHandle h : ((LinkCondition)cond).targets())
-				if (!h.equals(HGHandleFactory.anyHandle()))
+				if (!h.equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
 		}		
@@ -495,9 +494,51 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		return cond;
 	}
 	
+	private void preprocess(HGQueryCondition c)
+	{
+	    if (c instanceof LinkCondition)
+	    {
+	        LinkCondition lc = (LinkCondition)c;
+	        if (lc.getTargetSet().contains(hg.anyHandle()))
+	        {
+	            lc.getTargetSet().remove(hg.anyHandle());
+	            lc.getTargetSet().add(graph.getHandleFactory().anyHandle());
+	        }
+	    }
+	    else if (c instanceof OrderedLinkCondition)
+	    {
+	        OrderedLinkCondition lc = (OrderedLinkCondition)c;
+	        for (int i = 0; i < lc.getTargets().length; i++)
+	            if (lc.getTargets()[i] == hg.anyHandle())
+	                lc.getTargets()[i] = graph.getHandleFactory().anyHandle();
+	    }
+	    else if (c instanceof Not)
+	    {
+	        if (((Not) c).getPredicate() instanceof HGQueryCondition)
+	        preprocess((HGQueryCondition)((Not)c).getPredicate());
+	    }
+	    else if (c instanceof And)
+	    {
+	        for (HGQueryCondition sub : (And)c)
+	            preprocess(sub);
+	    }
+        else if (c instanceof Or)
+        {
+            for (HGQueryCondition sub : (Or)c)
+                preprocess(sub);
+        }	    
+        else if (c instanceof MapCondition)
+        {
+            preprocess(((MapCondition)c).getCondition());
+        }
+	}
+	 
 	public ExpressionBasedQuery(final HyperGraph graph, final HGQueryCondition condition)
 	{
 		this.graph = graph;	
+		// this is temporary, to deal with the 'hg.anyHandle' issue 
+		// and the handle factory no longer being static		
+		preprocess(condition);  
 		this.condition = graph.getTransactionManager().ensureTransaction(new Callable<HGQueryCondition>() {
 			public HGQueryCondition call()
 			{

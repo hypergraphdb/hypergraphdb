@@ -7,6 +7,9 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.util.HGUtils;
+
 /**
  * 
  * <p>
@@ -18,36 +21,72 @@ package org.hypergraphdb;
  * @author Borislav Iordanov
  *
  */
-public class HGConfiguration
+public final class HGConfiguration
 {
 	/**
 	 * The default size in bytes of the storage (i.e. BerkeleyDB) cache = 20MB.
 	 */
-	public static final long DEFAULT_STORE_CACHE = 20*1024*1024; // 20MB
-	public static final int  DEFAULT_NUMBER_OF_STORAGE_CACHES = 1;
+//	public static final long DEFAULT_STORE_CACHE = 20*1024*1024; // 20MB
+//	public static final int  DEFAULT_NUMBER_OF_STORAGE_CACHES = 1;
 	
+	private HGHandleFactory handleFactory;
+	private HGStoreImplementation storeImplementation;
 	private boolean transactional;
-	private long storeCacheSize = DEFAULT_STORE_CACHE;
-	private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;
-	private boolean skipMaintenance = false;
-	private boolean cancelMaintenance = false;
-	private boolean skipOpenedEvent = false;
-	private boolean storageMVCC = true;
-	private int maxCachedIncidenceSetSize = 10000; 
-	private boolean runDatabaseRecovery = false;
-	private boolean useSystemAtomAttributes = true;
+	private boolean skipMaintenance;
+	private boolean cancelMaintenance;
+	private boolean skipOpenedEvent;
+	private int maxCachedIncidenceSetSize; 
+	private boolean useSystemAtomAttributes;
+	
+//    private long storeCacheSize = DEFAULT_STORE_CACHE;	
+//    private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;	
+//    private boolean storageMVCC = true;	
+//    private boolean runDatabaseRecovery = false;
 	
 	public HGConfiguration()
 	{
 		resetDefaults();
 	}
-	
-	/**
+		
+    public HGHandleFactory getHandleFactory()
+    {
+        if (handleFactory == null)
+            handleFactory = HGUtils.getImplementationOf(HGHandleFactory.class.getName(), 
+                                    "org.hypergraphdb.handle.UUIDHandleFactory");
+        return handleFactory;
+    }
+
+
+    public void setHandleFactory(HGHandleFactory handleFactory)
+    {
+        this.handleFactory = handleFactory;
+    }
+
+
+    public HGStoreImplementation getStoreImplementation()
+    {
+        if (storeImplementation == null)
+            storeImplementation = HGUtils.getImplementationOf(HGStoreImplementation.class.getName(), 
+                    "org.hypergraphdb.storage.BDBStorageImplementation");
+        return storeImplementation;
+    }
+
+    public void setStoreImplementation(HGStoreImplementation storeImplementation)
+    {
+        this.storeImplementation = storeImplementation;
+    }
+
+    /**
 	 * <p>Set all parameters of this configuration to their default values.</p>
 	 */
 	public void resetDefaults()
 	{
 		this.transactional = true;
+		this.skipMaintenance = false;
+		this.cancelMaintenance = false;
+		this.skipOpenedEvent = false;
+		this.maxCachedIncidenceSetSize = 10000;
+		this.useSystemAtomAttributes = true;
 	}
 	
 	/**
@@ -84,55 +123,55 @@ public class HGConfiguration
 		this.transactional = transactional;
 	}
 	
-	/**
-	 * 
-	 * <p>
-	 * Return the size (in bytes) of the cache used by the storage layer. The default value is 
-	 * <code>DEFAULT_STORE_CACHE</code>. 
-	 * </p>
-	 *
-	 * @return
-	 */
-	public long getStoreCacheSize()
-	{
-		return this.storeCacheSize;
-	}
-	
-	/**
-	 * 
-	 * <p>
-	 * Set the size (in bytes) of the cache used by the storage layer. The default value is
-	 * <code>DEFAULT_STORE_CACHE</code>.
-	 * </p>
-	 *
-	 * @param storeCacheSize
-	 */
-	public void setStoreCacheSize(long storeCacheSize)
-	{
-		this.storeCacheSize = storeCacheSize;
-	}
-
-	/**
-	 * <p>Return the number of cache regions of the storage layers. This defaults to 1,
-	 * but it may be useful to increase it when the operating system is unable to 
-	 * allocate a contiguous memory cache as large as the application needs.
-	 * </p> 
-	 */
-    public int getNumberOfStoreCaches()
-    {
-        return numberOfStoreCaches;
-    }
-
-    /**
-     * <p>Specify the number of cache regions of the storage layers. This defaults to 1,
-     * but it may be useful to increase it when the operating system is unable to 
-     * allocate a contiguous memory cache as large as the application needs.
-     * </p> 
-     */
-    public void setNumberOfStoreCaches(int numberOfStoreCaches)
-    {
-        this.numberOfStoreCaches = numberOfStoreCaches;
-    }
+//	/**
+//	 * 
+//	 * <p>
+//	 * Return the size (in bytes) of the cache used by the storage layer. The default value is 
+//	 * <code>DEFAULT_STORE_CACHE</code>. 
+//	 * </p>
+//	 *
+//	 * @return
+//	 */
+//	public long getStoreCacheSize()
+//	{
+//		return this.storeCacheSize;
+//	}
+//	
+//	/**
+//	 * 
+//	 * <p>
+//	 * Set the size (in bytes) of the cache used by the storage layer. The default value is
+//	 * <code>DEFAULT_STORE_CACHE</code>.
+//	 * </p>
+//	 *
+//	 * @param storeCacheSize
+//	 */
+//	public void setStoreCacheSize(long storeCacheSize)
+//	{
+//		this.storeCacheSize = storeCacheSize;
+//	}
+//
+//	/**
+//	 * <p>Return the number of cache regions of the storage layers. This defaults to 1,
+//	 * but it may be useful to increase it when the operating system is unable to 
+//	 * allocate a contiguous memory cache as large as the application needs.
+//	 * </p> 
+//	 */
+//    public int getNumberOfStoreCaches()
+//    {
+//        return numberOfStoreCaches;
+//    }
+//
+//    /**
+//     * <p>Specify the number of cache regions of the storage layers. This defaults to 1,
+//     * but it may be useful to increase it when the operating system is unable to 
+//     * allocate a contiguous memory cache as large as the application needs.
+//     * </p> 
+//     */
+//    public void setNumberOfStoreCaches(int numberOfStoreCaches)
+//    {
+//        this.numberOfStoreCaches = numberOfStoreCaches;
+//    }
 
     /** 
 	 * <p>Return true if HyperGraph should skip scheduled maintenance operations when
@@ -202,25 +241,25 @@ public class HGConfiguration
         this.skipOpenedEvent = skipOpenedEvent;
     }
 
-    /**
-     * <p>Return whether MVCC (snapshot) transaction isolation is used by the
-     * storage layer. Defaults to <code>true</code> which means less lock contention,
-     * higher transaction throughput, but more memory will be used.
-     */
-    public boolean isStorageMVCC()
-    {
-        return storageMVCC;
-    }
-
-    /**
-     * <p>Specify whether MVCC (snapshot) transaction isolation is used by the
-     * storage layer. Defaults to <code>true</code> which means less lock contention,
-     * higher transaction throughput, but more memory will be used.
-     */    
-    public void setStorageMVCC(boolean storageMVCC)
-    {
-        this.storageMVCC = storageMVCC;
-    }
+//    /**
+//     * <p>Return whether MVCC (snapshot) transaction isolation is used by the
+//     * storage layer. Defaults to <code>true</code> which means less lock contention,
+//     * higher transaction throughput, but more memory will be used.
+//     */
+//    public boolean isStorageMVCC()
+//    {
+//        return storageMVCC;
+//    }
+//
+//    /**
+//     * <p>Specify whether MVCC (snapshot) transaction isolation is used by the
+//     * storage layer. Defaults to <code>true</code> which means less lock contention,
+//     * higher transaction throughput, but more memory will be used.
+//     */    
+//    public void setStorageMVCC(boolean storageMVCC)
+//    {
+//        this.storageMVCC = storageMVCC;
+//    }
 
     /**
      * <p>Return the configured maximum size of atom incidence sets that are kept in 
@@ -246,29 +285,29 @@ public class HGConfiguration
         this.maxCachedIncidenceSetSize = maxCachedIncidenceSetSize;
     }
 
-    /**
-     * <p>Return <code>true</code> if full (catastrophic) recovery will be run on the storage
-     * layer upon opening the database, and <code>false</code> otherwise.</p>
-     */
-	public boolean isRunDatabaseRecovery()
-	{
-		return runDatabaseRecovery;
-	}
-
-	/**
-     * <p>Specify whether full (catastrophic) recovery should be run on the storage
-     * layer upon opening the database.</p>
-     * 
-     *  @param runDatabaseRecovery - <code>true</code> to run full recovery and
-     *  <code>false</code> not to run it. The default is <code>false</code>. Note that a lightweight
-     *  recovery is run anyway. This flag should be set only if you are not able
-     *  to open the database otherwise. Running a full recovery takes longer than the normal
-     *  recovery.
-	 */
-	public void setRunDatabaseRecovery(boolean runDatabaseRecovery)
-	{
-		this.runDatabaseRecovery = runDatabaseRecovery;
-	}
+//    /**
+//     * <p>Return <code>true</code> if full (catastrophic) recovery will be run on the storage
+//     * layer upon opening the database, and <code>false</code> otherwise.</p>
+//     */
+//	public boolean isRunDatabaseRecovery()
+//	{
+//		return runDatabaseRecovery;
+//	}
+//
+//	/**
+//     * <p>Specify whether full (catastrophic) recovery should be run on the storage
+//     * layer upon opening the database.</p>
+//     * 
+//     *  @param runDatabaseRecovery - <code>true</code> to run full recovery and
+//     *  <code>false</code> not to run it. The default is <code>false</code>. Note that a lightweight
+//     *  recovery is run anyway. This flag should be set only if you are not able
+//     *  to open the database otherwise. Running a full recovery takes longer than the normal
+//     *  recovery.
+//	 */
+//	public void setRunDatabaseRecovery(boolean runDatabaseRecovery)
+//	{
+//		this.runDatabaseRecovery = runDatabaseRecovery;
+//	}
 
 	/**
 	 * Return <code>true</code> (the default) if system-level atom attributes are 

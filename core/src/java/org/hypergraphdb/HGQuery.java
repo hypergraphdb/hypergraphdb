@@ -355,7 +355,8 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 			return c;
 		}
         
-        public static HGHandle anyHandle() { return HGHandleFactory.anyHandle; }
+        static final HGHandle the_any_handle = new HGHandle(){};
+        public static HGHandle anyHandle() { return the_any_handle; }
         
         /**
          * <p>

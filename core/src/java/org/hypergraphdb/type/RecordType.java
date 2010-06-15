@@ -8,12 +8,11 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.HGQuery.hg;
@@ -76,7 +75,7 @@ public class RecordType implements HGCompositeType
 	    			thisHandle = graph.getHandle(this);
 	    		rs = graph.find(hg.and(hg.type(AtomProjection.class), 
 	    							   hg.incident(thisHandle),
-	    							   hg.orderedLink(thisHandle, HGHandleFactory.anyHandle)));
+	    							   hg.orderedLink(thisHandle, graph.getHandleFactory().anyHandle())));
 	    		while (rs.hasNext())
 	    		{
 	    			AtomProjection l = (AtomProjection)graph.get(rs.next());
@@ -172,12 +171,12 @@ public class RecordType implements HGCompositeType
             Object value = null;
 //            try
 //            {
-            if (!layout[2*i + 1].equals(HGHandleFactory.nullHandle()))
+            if (!layout[2*i + 1].equals(graph.getHandleFactory().nullHandle()))
             {            	
 	        	HGAtomRef.Mode refMode = getReferenceMode(slotHandle);
 	        	if (refMode != null)
 	        	{
-	        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
+	        		AtomRefType refType = graph.getTypeSystem().getAtomType(HGAtomRef.class);
 	        		value = refType.make(layout[2*i + 1], null, null);
 	        	}
 	        	else
@@ -212,7 +211,7 @@ public class RecordType implements HGCompositeType
             if (value == null)
             {
             	layout[2*i] = graph.getPersistentHandle(slot.getValueType());
-            	layout[2*i + 1] = HGHandleFactory.nullHandle();
+            	layout[2*i + 1] = graph.getHandleFactory().nullHandle();
             }
             else
             {
@@ -222,7 +221,7 @@ public class RecordType implements HGCompositeType
 	                HGHandle actualTypeHandle = graph.getTypeSystem().getTypeHandle(value.getClass());
 	                if (actualTypeHandle == null)
 	                	actualTypeHandle = slot.getValueType();
-	                else if (actualTypeHandle.equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
+	                else if (actualTypeHandle.equals(graph.getTypeSystem().getTop()))
 	                	throw new HGException("Got TOP type for value for Java class " + value.getClass());
 	                HGAtomType type = graph.getTypeSystem().getType(actualTypeHandle);                
 	                layout[2*i] = graph.getPersistentHandle(actualTypeHandle);
@@ -240,7 +239,7 @@ public class RecordType implements HGCompositeType
 	                layout[2*i] = graph.getPersistentHandle(slot.getValueType());
 	                if (value instanceof HGAtomRef)
 	                {
-		        		AtomRefType refType = (AtomRefType)graph.get(AtomRefType.HGHANDLE);
+		        		AtomRefType refType = graph.getTypeSystem().getAtomType(HGAtomRef.class);
 		                layout[2*i + 1] = refType.store((HGAtomRef)value);
 	                }
 	                else
@@ -271,9 +270,9 @@ public class RecordType implements HGCompositeType
             if (getReferenceMode(slotHandle) == null)
             	type = graph.getTypeSystem().getType(layout[2*i]);
             else
-            	type = (HGAtomType)graph.get(AtomRefType.HGHANDLE);
+            	type = graph.getTypeSystem().getAtomType(HGAtomRef.class);
             int j = 2*i + 1;
-            if (!layout[j].equals(HGHandleFactory.nullHandle()))
+            if (!layout[j].equals(graph.getHandleFactory().nullHandle()))
             	if (!TypeUtils.isValueReleased(graph, layout[j]))
             	{
             		TypeUtils.releaseValue(graph, type, layout[j]);

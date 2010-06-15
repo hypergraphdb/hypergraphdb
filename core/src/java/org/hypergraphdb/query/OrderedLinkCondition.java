@@ -8,9 +8,7 @@
 package org.hypergraphdb.query;
 
 import java.util.List;
-
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
@@ -140,7 +138,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 			int i = 2, j = 0;
 			while (i < A.length && j < targetSet.length)
 			{
-				if (targetSet[j].equals(A[i]) || targetSet[j].equals(HGHandleFactory.anyHandle))
+				if (targetSet[j].equals(A[i]) || targetSet[j].equals(hg.getHandleFactory().anyHandle()))
 					j++;
 				i++;
 			}

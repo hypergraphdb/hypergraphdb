@@ -8,7 +8,7 @@
 package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
+
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
@@ -30,7 +30,7 @@ public class AtomQueueType implements HGAtomType
 		byte [] data = hg.getStore().getData(handle);
 		for (int i = 0; i < data.length; i += 16)
 		{
-			queue.enqueue(HGHandleFactory.makeHandle(data, i));			
+			queue.enqueue(hg.getHandleFactory().makeHandle(data, i));			
 		}		
 		return queue;
 	}

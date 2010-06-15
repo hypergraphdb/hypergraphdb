@@ -11,7 +11,6 @@ import java.security.SecureRandom;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-//import java.util.UUID;
 
 public final class UUIDPersistentHandle implements HGPersistentHandle
 {
@@ -62,13 +61,6 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with a null value.");
         else if (value.length - offset < 16)
             throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with wrong size byte array.");
-/*        long msb = 0;
-        long lsb = 0;
-        for (int i=offset; i < 8 + offset; i++)
-            msb = (msb << 8) | (value[i] & 0xff);
-        for (int i=8+offset; i < 16 + offset; i++)
-            lsb = (lsb << 8) | (value[i] & 0xff);
-        uuid = new UUID(msb, lsb); */
         uuid = new UUID(value, offset);
     }
     
@@ -124,7 +116,6 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     public static UUIDPersistentHandle makeHandle(String value)
     {
     	return new UUIDPersistentHandle(new UUID(value));
-        //return new UUIDPersistentHandle(UUID.fromString(value));
     }
     
 
@@ -133,29 +124,20 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
      */
     public byte [] toByteArray()
     {
-/*    	long msb = uuid.getMostSignificantBits();
-    	long lsb = uuid.getLeastSignificantBits();
-    	byte [] data = new byte[16]; // should we precompute and cache this?
-        data[0] = (byte) ((msb >>> 56)); 
-        data[1] = (byte) ((msb >>> 48));
-        data[2] = (byte) ((msb >>> 40)); 
-        data[3] = (byte) ((msb >>> 32));
-        data[4] = (byte) ((msb >>> 24)); 
-        data[5] = (byte) ((msb >>> 16));
-        data[6] = (byte) ((msb >>> 8)); 
-        data[7] = (byte) ((msb >>> 0));
-        data[8] = (byte) ((lsb >>> 56)); 
-        data[9] = (byte) ((lsb >>> 48));
-        data[10] = (byte) ((lsb >>> 40)); 
-        data[11] = (byte) ((lsb >>> 32));
-        data[12] = (byte) ((lsb >>> 24)); 
-        data[13] = (byte) ((lsb >>> 16));
-        data[14] = (byte) ((lsb >>> 8)); 
-        data[15] = (byte) ((lsb >>> 0));
-        return data; */
     	return uuid.mId;
     }
-    
+        
+    public UUID getUuid()
+    {
+        return uuid;
+    }
+
+
+    public void setUuid(UUID uuid)
+    {
+        this.uuid = uuid;
+    }
+
     public boolean equals(Object other)
     {
         if (other == this)

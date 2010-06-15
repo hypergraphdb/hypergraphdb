@@ -13,12 +13,14 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGSubsumes;
-import org.hypergraphdb.HGHandleFactory;
 
 public class SubsumesType implements HGAtomType 
 {
+    private HyperGraph graph;
+    
 	public void setHyperGraph(HyperGraph hg) 
 	{
+	    this.graph = hg;
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
@@ -28,7 +30,7 @@ public class SubsumesType implements HGAtomType
 
 	public HGPersistentHandle store(Object instance) 
 	{
-		return HGHandleFactory.nullHandle();
+		return graph.getHandleFactory().nullHandle();
 	}
 
 	public void release(HGPersistentHandle handle) 

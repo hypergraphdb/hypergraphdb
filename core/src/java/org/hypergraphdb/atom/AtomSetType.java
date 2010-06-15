@@ -9,7 +9,6 @@ package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
@@ -36,14 +35,14 @@ public class AtomSetType implements HGAtomType
 		byte [] data = graph.getStore().getData(handle);
 		HGAtomSet set = new HGAtomSet();
 		for (int  pos = 0; pos < data.length; pos += 16)
-			set.add(HGHandleFactory.makeHandle(data, pos));
+			set.add(graph.getHandleFactory().makeHandle(data, pos));
 		return set;
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
 		HGAtomSet set = (HGAtomSet)instance;
-		HGPersistentHandle result = HGHandleFactory.makeHandle();
+		HGPersistentHandle result = graph.getHandleFactory().makeHandle();
 		byte [] A = new byte[set.size()*16];
 		int pos = 0;
 		for (HGHandle h:set)

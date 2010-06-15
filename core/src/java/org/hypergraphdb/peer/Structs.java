@@ -886,7 +886,7 @@ public class Structs
     {
         public Object getObject(Object struct)
         {
-            return HGHandleFactory.makeHandle(struct.toString());
+            return UUIDPersistentHandle.makeHandle(struct.toString()); // TODO: generic handle handling
         }
 
         public Object getStruct(Object value)

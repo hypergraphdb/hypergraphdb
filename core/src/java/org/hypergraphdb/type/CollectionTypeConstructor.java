@@ -27,17 +27,18 @@ import org.hypergraphdb.LazyRef;
  */
 public class CollectionTypeConstructor implements HGAtomType 
 {
-	private HyperGraph hg;
+	private HyperGraph graph;
 	
 	public void setHyperGraph(HyperGraph hg) 
 	{
-		this.hg = hg;
+		this.graph = hg;
 	}
 
-	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
+	@SuppressWarnings("unchecked")
+    public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
 		CollectionType result = null;
-		String className = new String(hg.getStore().getData(handle));
+		String className = new String(graph.getStore().getData(handle));
 		try
 		{
 			Class<?> clazz = Class.forName(className);
@@ -55,13 +56,13 @@ public class CollectionTypeConstructor implements HGAtomType
 	{
 		CollectionType type = (CollectionType)instance;
 		String className = type.getFactory().getType().getName();
-		HGPersistentHandle result = hg.getStore().store(className.getBytes());
+		HGPersistentHandle result = graph.getStore().store(className.getBytes());
 		return result;
 	}
 
 	public void release(HGPersistentHandle handle) 
 	{
-		hg.getStore().removeData(handle);
+		graph.getStore().removeData(handle);
 	}
 
 	public boolean subsumes(Object general, Object specific) 

@@ -7,17 +7,15 @@
  */
 package org.hypergraphdb;
 
-import org.hypergraphdb.handle.UUIDPersistentHandle;
-
 /**
  * <p>
- * The <code>HGHandleFactory</code> class is used to construct unique (UUID) handles
+ * The <code>HGHandleFactory</code> class is used to manage persistent handles
  * for hypergraph atoms.
  * </p>
  * 
  * @author Borislav Iordanov
  */
-public class HGHandleFactory
+public interface HGHandleFactory
 {
     /**
      * <p>Construct and return a new, unique persistent handle. The handle 
@@ -25,28 +23,18 @@ public class HGHandleFactory
      * ever conflicting with another handle. 
      * </p>
      */
-    public static HGPersistentHandle makeHandle()
-    {
-        return UUIDPersistentHandle.makeHandle();
-    }
-    
+    HGPersistentHandle makeHandle();    
     /**
      * <p>Construct a persistent handle from its string representation.</p>
      */
-    public static HGPersistentHandle makeHandle(String handleAsString)
-    {
-        return UUIDPersistentHandle.makeHandle(handleAsString);
-    }
+    HGPersistentHandle makeHandle(String handleAsString);
     
     /**
      * <p>Construct a persistent handle from its byte array representation.</p>
      * 
      * @param buffer The byte array holding the handle value.
      */
-    public static HGPersistentHandle makeHandle(byte [] buffer)
-    {
-    	return UUIDPersistentHandle.makeHandle(buffer);
-    }
+    HGPersistentHandle makeHandle(byte [] buffer);
 
     /**
      * <p>Construct a persistent handle from its byte array representation where the byte array
@@ -55,10 +43,7 @@ public class HGHandleFactory
      * @param buffer The byte array holding the handle value.
      * @param offset The offset within <code>buffer</code> where the handle value starts.
      */
-    public static HGPersistentHandle makeHandle(byte [] buffer, int offset)
-    {
-    	return UUIDPersistentHandle.makeHandle(buffer, offset);
-    }
+    HGPersistentHandle makeHandle(byte [] buffer, int offset);
     
     /**
      * <p>Return the representation of a null persistent handle. A null
@@ -70,15 +55,12 @@ public class HGHandleFactory
      * to values are permitted and supported through the null 
      * <code>HGPersistentHandle</code></p>
      */
-    public static HGPersistentHandle nullHandle()
-    {
-    	return UUIDPersistentHandle.nullHandle();
-    }
+    HGPersistentHandle nullHandle();
     
     /**
      * <p>
      * The <code>anyHandle</code> is a persistent handle constant that represents
-     * a "don't care" handle during querying and comparison operations. It can abe used, for
+     * a "don't care" handle during querying and comparison operations. It can be used, for
      * instance, when defining an <code>OrdererLinkCondition</code> in a query. 
      * </p>
      * 
@@ -88,14 +70,6 @@ public class HGHandleFactory
      * more consistent to for <code>anyHandle.equals(x)</code> and <code>x.equals(anyHandle)</code>
      * to always return true.
      * </p>
-     */    
-    public static final HGPersistentHandle anyHandle = makeHandle("332c5a05-37c2-11dc-b44d-8884da7d2355");
-    
-    /**
-     * <p>Return the {@link anyHandle}. </p>
-     */
-    public static HGPersistentHandle anyHandle()
-    {
-    	return anyHandle;
-    }    
+     */        
+    HGPersistentHandle anyHandle();    
 }

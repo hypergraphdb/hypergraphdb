@@ -1,8 +1,6 @@
 package org.hypergraphdb.storage;
 
 import java.util.Comparator;
-
-
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
@@ -12,6 +10,7 @@ import org.hypergraphdb.transaction.HGTransactionFactory;
 
 public interface HGStoreImplementation
 {
+    Object getConfiguration();
     void startup(HGStore store, HGConfiguration configuration);
     void shutdown();
     

@@ -466,7 +466,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	 * false.
 	 * </p>
 	 * 
-	 * @param hg The HyperGraph instance from where incidence sets are fetched.
+	 * @param graph The HyperGraph instance from where incidence sets are fetched.
 	 * @param linkPredicate The predicate by which links are filtered. Only links satisfying
 	 * this predicate will be considered. If this parameter is <code>null</code>, all links
 	 * from the incidence set will be considered.

@@ -8,6 +8,7 @@
 package org.hypergraphdb.type;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -18,7 +19,6 @@ import java.util.StringTokenizer;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
@@ -252,7 +252,7 @@ public final class TypeUtils
 	    boolean topCall = initThreadLocals();
 	    try
 	    {
-    		HGPersistentHandle result = HGHandleFactory.makeHandle();
+    		HGPersistentHandle result = hg.getHandleFactory().makeHandle();
     		if (value instanceof WrappedRuntimeInstance) 
     			value = ((WrappedRuntimeInstance)value).getRealInstance();
     		JAVA_REF_MAP.get().put(value, result);

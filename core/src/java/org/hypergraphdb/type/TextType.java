@@ -8,7 +8,6 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
@@ -35,12 +34,12 @@ import org.hypergraphdb.LazyRef;
  */
 public class TextType extends HGAtomTypeBase 
 {
-	public static final HGPersistentHandle HGHANDLE = 
-		HGHandleFactory.makeHandle("9e821fcb-de41-11db-8f74-836f1a2faea9");
+//	public static final HGPersistentHandle HGHANDLE = 
+//		HGHandleFactory.makeHandle("9e821fcb-de41-11db-8f74-836f1a2faea9");
 	
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
-		if (HGHandleFactory.nullHandle().equals(handle))
+		if (graph.getHandleFactory().nullHandle().equals(handle))
 			return null;
 		byte [] bytes = graph.getStore().getData(handle); 
 		return new String(bytes);
@@ -48,14 +47,14 @@ public class TextType extends HGAtomTypeBase
 
 	public void release(HGPersistentHandle handle) 
 	{
-		if (!HGHandleFactory.nullHandle().equals(handle))
+		if (!graph.getHandleFactory().nullHandle().equals(handle))
 			graph.remove(handle);
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
 		if (instance == null)
-			return HGHandleFactory.nullHandle();
+			return graph.getHandleFactory().nullHandle();
 		return graph.getStore().store(instance.toString().getBytes());
 	}
 }

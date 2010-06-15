@@ -9,13 +9,12 @@ package org.hypergraphdb.peer.xmpp;
 
 import static org.hypergraphdb.peer.Structs.*;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.Future;
-
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.MessageHandler;
@@ -187,10 +186,12 @@ public class XMPPPeerInterface implements PeerInterface
                 String first = name.substring(0, name.indexOf('/'));
                 String second = name.substring(name.indexOf('/') + 1);
                 if(second.length() != 36) return second + "@" + connection.getServiceName();
-                try{
-                   HGHandleFactory.makeHandle(second);
+                try
+                {
+                    thisPeer.getGraph().getHandleFactory().makeHandle(second);
                    return first;
-                }catch(NumberFormatException ex)
+                }
+                catch(NumberFormatException ex)
                 {
                     return second;
                 }

@@ -245,6 +245,18 @@ public /*final*/ class HyperGraph
 	}
 
 	/**
+	 * <p>Return the {@link HGHandleFactory} implementation associated with this
+	 * HyperGraph instance. The handle factory is responsible for managing the 
+	 * representation of persistent handles - generating new ones, converting to and
+	 * from <code>byte[]</code> as well as the several predefined handles with special
+	 * semantics.</p>
+	 */
+	public HGHandleFactory getHandleFactory()
+	{
+	    return config.getHandleFactory();
+	}
+	
+	/**
 	 * <p>Return the {@link HGLogger} associated with this graph.</p>
 	 */
 	public HGLogger getLogger()
@@ -312,10 +324,22 @@ public /*final*/ class HyperGraph
 	        //
 	        // Make sure system indices are created.
 	        //
-	        indexByType = store.getIndex(TYPES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        						     	        
-	        indexByValue = store.getIndex(VALUES_INDEX_NAME, BAtoHandle.getInstance(), BAtoHandle.getInstance(), null);	        
+	        indexByType = store.getIndex(TYPES_INDEX_NAME, 
+	                                     BAtoHandle.getInstance(), 
+	                                     BAtoHandle.getInstance(), 
+	                                     null,
+	                                     true);	        						     	        
+	        indexByValue = store.getIndex(VALUES_INDEX_NAME, 
+	                                      BAtoHandle.getInstance(), 
+	                                      BAtoHandle.getInstance(), 
+	                                      null,
+	                                      true);	        
 	        if (config.isUseSystemAtomAttributes())
-    	        systemAttributesDB = store.getIndex(SA_DB_NAME, BAtoHandle.getInstance(), AtomAttrib.baConverter, null);
+    	        systemAttributesDB = store.getIndex(SA_DB_NAME, 
+    	                                            BAtoHandle.getInstance(), 
+    	                                            AtomAttrib.baConverter, 
+    	                                            null,
+    	                                            true);
 	        
 	        idx_manager = new HGIndexManager(this);
 	        
@@ -950,7 +974,7 @@ public /*final*/ class HyperGraph
 	        
 	        if (layout == null)
 	            return;
-	        else if (layout[0].equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
+	        else if (layout[0].equals(typeSystem.getTop()))
 	        	throw new HGException("Cannot remove the HyperGraph primitive type: " + pHandle);
 	        
 	        Object atom = get(handle); // need the atom in order to clear all indexes...
@@ -1260,7 +1284,7 @@ public /*final*/ class HyperGraph
     {
     	HGHandle typeHandle = null;
     	if (instance == null)
-    		typeHandle = HGTypeSystem.NULLTYPE_PERSISTENT_HANDLE;
+    		typeHandle = typeSystem.getNullType();
     	else
     		typeHandle = typeSystem.getTypeHandle(instance.getClass());
     	if (typeHandle == null)
@@ -1570,7 +1594,7 @@ public /*final*/ class HyperGraph
 	        HGPersistentHandle typeHandle = link[0];
 	        HGPersistentHandle valueHandle = link[1];
 	            
-	        if (typeHandle.equals(HGTypeSystem.TOP_PERSISTENT_HANDLE))
+	        if (typeHandle.equals(typeSystem.getTop()))
 	        {
 	        	HGLiveHandle result = typeSystem.loadPredefinedType(persistentHandle); 
 	        	return new Pair<HGLiveHandle, Object>(result, result.getRef());

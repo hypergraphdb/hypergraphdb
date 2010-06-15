@@ -382,4 +382,34 @@ public class HGUtils
                          }
         );
     }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> Class<T> getImplementationClass(String interfaceClassName, String defaultImplementation)
+    {
+        try
+        {
+            String className = System.getProperty(interfaceClassName);
+            if (className == null)
+                className = defaultImplementation;
+            return (Class<T>)Class.forName(className);
+                
+        }
+        catch (Exception ex)
+        {
+            throw new HGException(ex);
+        }
+    }
+    
+    public static <T> T getImplementationOf(String interfaceClassName, String defaultImplementation)
+    {
+        Class<T> cl = getImplementationClass(interfaceClassName, defaultImplementation);
+        try
+        {            
+            return cl.newInstance();
+        }
+        catch (Exception e)
+        {
+            throw new HGException(e);
+        }
+    }
 }

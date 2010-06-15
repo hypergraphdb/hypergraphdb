@@ -39,7 +39,7 @@ import org.hypergraphdb.transaction.HGTransactionManager;
 public class HGStore
 {
     private String databaseLocation;
-//    private HGConfiguration config;
+    private HGConfiguration config;
     private HGTransactionManager transactionManager = null;    
     private HGStoreImplementation impl = new BDBStorageImplementation();    
     
@@ -54,7 +54,7 @@ public class HGStore
     public HGStore(String database, HGConfiguration config)
     {
         databaseLocation = database;
-//        this.config = config;
+        this.config = config;
         impl.startup(this, config);
         transactionManager = new HGTransactionManager(impl.getTransactionFactory());
         if (!config.isTransactional())
@@ -106,7 +106,7 @@ public class HGStore
      */
     public HGPersistentHandle store(HGPersistentHandle [] link)
     {
-        return store(HGHandleFactory.makeHandle(), link);
+        return store(config.getHandleFactory().makeHandle(), link);
     }
     
     /**
@@ -134,7 +134,7 @@ public class HGStore
      */
     public HGPersistentHandle store(byte [] data)
     {
-        UUIDPersistentHandle handle = UUIDPersistentHandle.makeHandle();  
+        HGPersistentHandle handle = config.getHandleFactory().makeHandle();  
         store(handle, data);
         return handle;
     }
@@ -504,9 +504,10 @@ public class HGStore
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
 																	 ByteArrayConverter<KeyType> keyConverter, 
 																	 ByteArrayConverter<ValueType> valueConverter,
-																	 Comparator comparator)
+																	 Comparator comparator,
+																	 boolean allowCreate)
     {
-        return impl.getIndex(name, keyConverter, valueConverter, comparator, false, true);
+        return impl.getIndex(name, keyConverter, valueConverter, comparator, false, allowCreate);
     }
     
     /**
@@ -519,11 +520,11 @@ public class HGStore
     public <KeyType, ValueType> HGBidirectionalIndex<KeyType, ValueType> getBidirectionalIndex(String name,
 																							   ByteArrayConverter<KeyType> keyConverter, 
 																							   ByteArrayConverter<ValueType> valueConverter,
-																							   Comparator comparator)
+																							   Comparator comparator,
+																							   boolean allowCreate)
     {
         return (HGBidirectionalIndex<KeyType, ValueType>)
-            impl.getIndex(name, keyConverter, valueConverter, comparator, true, true);
-        
+            impl.getIndex(name, keyConverter, valueConverter, comparator, true, allowCreate);        
     }
     
     /**

@@ -9,11 +9,10 @@ package org.hypergraphdb.storage;
 
 import java.util.Comparator;
 
+
 import com.sleepycat.db.DatabaseException;
-import com.sleepycat.db.DatabaseType;
 import com.sleepycat.db.SecondaryCursor;
 import com.sleepycat.db.DatabaseEntry;
-import com.sleepycat.db.Environment;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
 import com.sleepycat.db.SecondaryConfig;
@@ -36,13 +35,13 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
     private SecondaryDatabase secondaryDb = null;
     
     public DefaultBiIndexImpl(String indexName, 
-    						  Environment env, 
+                              BDBStorageImplementation storage, 
     						  HGTransactionManager transactionManager,
     						  ByteArrayConverter<KeyType> keyConverter,
     						  ByteArrayConverter<ValueType> valueConverter,
     						  Comparator<?> comparator)
     {
-        super(indexName, env, transactionManager, keyConverter, valueConverter, comparator);
+        super(indexName, storage, transactionManager, keyConverter, valueConverter, comparator);
     }
     
     public void open()
@@ -53,16 +52,16 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
         {
             SecondaryConfig dbConfig = new SecondaryConfig();
             dbConfig.setAllowCreate(true);
-            if (env.getConfig().getTransactional())
+            if (storage.getBerkleyEnvironment().getConfig().getTransactional())
             {
                 dbConfig.setTransactional(true);                
-                if (env.getConfig().getMultiversion())                    
+                if (storage.getConfiguration().isStorageMVCC())                    
                     dbConfig.setMultiversion(true);
             }
             dbConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
             dbConfig.setSortedDuplicates(true);
-            dbConfig.setType(DatabaseType.BTREE);    
-            secondaryDb = env.openSecondaryDatabase(null, SECONDARY_DB_NAME_PREFIX + name, null, db, dbConfig);
+            dbConfig.setType(storage.getConfiguration().getDatabaseConfig().getType());    
+            secondaryDb = storage.getBerkleyEnvironment().openSecondaryDatabase(null, SECONDARY_DB_NAME_PREFIX + name, null, db, dbConfig);
         }
         catch (Throwable t)
         {

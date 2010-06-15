@@ -9,7 +9,6 @@ package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
@@ -30,7 +29,7 @@ public class AtomStackType implements HGAtomType
 		HGAtomStack stack = new HGAtomStack();
 		for (int i = 0; i < data.length; i += 16)
 		{
-			stack.push(HGHandleFactory.makeHandle(data, i));			
+			stack.push(hg.getHandleFactory().makeHandle(data, i));			
 		}
 		return stack;
 	}

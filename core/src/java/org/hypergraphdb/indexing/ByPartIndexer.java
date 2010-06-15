@@ -14,6 +14,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
+import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.type.AtomRefType;
 import org.hypergraphdb.type.HGAtomType;
@@ -65,7 +66,7 @@ public class ByPartIndexer extends HGIndexer
     					   hg.incident(ours.getType()),
     					   hg.eq("name", ours.getName())));
     		if (atomProj != null)
-    			projectionType = graph.get(AtomRefType.HGHANDLE);
+    			projectionType = graph.getTypeSystem().getAtomType(HGAtomRef.class);
     		else 
     			projectionType = graph.get(ours.getType());
 		}
