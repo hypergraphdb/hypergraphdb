@@ -9,9 +9,9 @@ package org.hypergraphdb.query.impl;
 
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGQuery;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.query.ComparisonOperator;
 
 /**
@@ -68,7 +68,7 @@ public class IndexBasedQuery extends HGQuery<Object>
     	this.operator = operator;
     }
     
-    public HGRandomAccessResult<Object> execute()
+    public HGSearchResult<Object> execute()
     {
     	switch (scanType)
     	{

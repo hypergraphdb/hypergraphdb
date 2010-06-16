@@ -7,12 +7,15 @@ public class UUIDHandleFactory implements HGHandleFactory
 {
     private final HGPersistentHandle anyHandle = makeHandle("332c5a05-37c2-11dc-b44d-8884da7d2355");
 
+    public static final UUIDHandleFactory I = new UUIDHandleFactory();
+    
     public HGPersistentHandle anyHandle()
     {
         return anyHandle;
     }
 
     private static long seed = 100;
+    
     public HGPersistentHandle makeHandle()
     {
         byte [] data = new byte[16];

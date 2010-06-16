@@ -402,7 +402,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         return result;        
     }
     
-    private HGRandomAccessResult<ValueType> findOrdered(KeyType key, boolean lower_range, boolean compare_equals)
+    private HGSearchResult<ValueType> findOrdered(KeyType key, boolean lower_range, boolean compare_equals)
     {
         checkOpen();
 /*        if (key == null)
@@ -457,22 +457,22 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         }
     }
     
-    public HGRandomAccessResult<ValueType> findGT(KeyType key)
+    public HGSearchResult<ValueType> findGT(KeyType key)
     {
         return findOrdered(key, false, false);
     }
 
-    public HGRandomAccessResult<ValueType> findGTE(KeyType key)
+    public HGSearchResult<ValueType> findGTE(KeyType key)
     {
         return findOrdered(key, false, true);
     }
 
-    public HGRandomAccessResult<ValueType> findLT(KeyType key)
+    public HGSearchResult<ValueType> findLT(KeyType key)
     {
         return findOrdered(key, true, false);
     }
 
-    public HGRandomAccessResult<ValueType> findLTE(KeyType key)
+    public HGSearchResult<ValueType> findLTE(KeyType key)
     {
         return findOrdered(key, true, true);
     }

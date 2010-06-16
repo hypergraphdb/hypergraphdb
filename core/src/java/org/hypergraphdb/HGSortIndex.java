@@ -26,8 +26,8 @@ package org.hypergraphdb;
 public interface HGSortIndex<KeyType, ValueType> extends HGIndex<KeyType, ValueType>, 
 														 HGOrderedSearchable<KeyType, ValueType>
 {
-	HGRandomAccessResult<ValueType> findLT(KeyType key);
-	HGRandomAccessResult<ValueType> findGT(KeyType key);
-	HGRandomAccessResult<ValueType> findLTE(KeyType key);
-	HGRandomAccessResult<ValueType> findGTE(KeyType key);	
+	HGSearchResult<ValueType> findLT(KeyType key);
+	HGSearchResult<ValueType> findGT(KeyType key);
+	HGSearchResult<ValueType> findLTE(KeyType key);
+	HGSearchResult<ValueType> findGTE(KeyType key);	
 }
