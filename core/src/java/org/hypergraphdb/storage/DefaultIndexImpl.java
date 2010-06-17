@@ -440,12 +440,12 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             
             if (status == OperationStatus.SUCCESS)
 	            if (lower_range)
-	                return new KeyRangeBackwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
+	                return new SearchResultWrapper(new KeyRangeBackwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter));
 	            else
-	                return new KeyRangeForwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
+	                return new SearchResultWrapper(new KeyRangeForwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter));
             else
                 try { cursor.close(); } catch (Throwable t) { }
-                return (HGRandomAccessResult<ValueType>)HGSearchResult.EMPTY;
+                return (HGSearchResult<ValueType>)HGSearchResult.EMPTY;
         }
         catch (Throwable ex)
         {
