@@ -124,7 +124,7 @@ public class TxSet<E> implements HGSortedSet<E>
     {
         this.txManager = txManager;
         this.S = new SetVBox(txManager, backingSet);
-    }    
+    }
     
 //    public boolean isInTransaction()
 //    {

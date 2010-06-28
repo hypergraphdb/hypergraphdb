@@ -9,8 +9,12 @@ package org.hypergraphdb.event;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.transaction.TxMap;
+import org.hypergraphdb.transaction.VBox;
 
 /**
  * <p>
@@ -22,33 +26,42 @@ import org.hypergraphdb.HyperGraph;
  */
 public class HGEventManager 
 {
-	private HashMap<Class<?>, ArrayList<HGListener>> listenerMap = new HashMap<Class<?>, ArrayList<HGListener>>();
+    private HyperGraph graph;
+	private Map<Class<?>, List<HGListener>> listenerMap = null;
+	
+	private List<HGListener> getListeners(Class<?> eventType)
+	{
+        List<HGListener> listeners = listenerMap.get(eventType);
+        if (listeners == null)
+        {
+            listeners = new ArrayList<HGListener>();
+            listenerMap.put(eventType, listeners);          
+        }
+        return listeners;
+	}
+	
+	public HGEventManager(HyperGraph graph)
+	{
+	    this.graph = graph;
+	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(), 
+	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
+	}
 	
 	public <T extends HGEvent> void addListener(Class<T> eventType, HGListener listener)
 	{
-		ArrayList<HGListener> listeners = listenerMap.get(eventType);
-		if (listeners == null)
-		{
-			listeners = new ArrayList<HGListener>();
-			listenerMap.put(eventType, listeners);			
-		}
-		listeners.add(listener);
+		getListeners(eventType).add(listener);
 	}
 	
 	public <T extends HGEvent> void removeListener(Class<T> eventType, HGListener listener)
 	{
-		ArrayList<HGListener> listeners = listenerMap.get(eventType);
-		if (listeners == null)
-			return;
-		else
-			listeners.remove(listener);
+		getListeners(eventType).remove(listener);
 	}
 	
 	public  HGListener.Result dispatch(HyperGraph hg, HGEvent event)
 	{
 		for (Class<?> clazz = event.getClass(); HGEvent.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass())
 		{
-			ArrayList<HGListener> listeners = listenerMap.get(clazz);
+			List<HGListener> listeners = listenerMap.get(clazz);
 			if (listeners == null)
 				continue;
 			for (HGListener l : listeners)

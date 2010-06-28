@@ -305,9 +305,9 @@ public /*final*/ class HyperGraph
     	is_open = true;
     	try
     	{
-    		eventManager = new HGEventManager();
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
+            eventManager = new HGEventManager(this);	        
 	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
