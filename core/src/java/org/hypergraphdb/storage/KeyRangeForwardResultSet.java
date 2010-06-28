@@ -55,6 +55,8 @@ class KeyRangeForwardResultSet<T> extends IndexResultSet<T>
         }                        
     }
     
+    
+    
     public KeyRangeForwardResultSet(BDBTxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter)
     {
         super(cursor, key, converter);

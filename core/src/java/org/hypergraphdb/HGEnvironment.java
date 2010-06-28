@@ -35,12 +35,12 @@ public class HGEnvironment
 	
 	synchronized static void set(String location, HyperGraph graph)
 	{
-		dbs.put(location, graph);
+		dbs.put(normalize(location), graph);
 	}
 	
 	synchronized static void remove(String location)
 	{
-		dbs.remove(location);
+		dbs.remove(normalize(location));
 	}
 	
 	static String normalize(String location)

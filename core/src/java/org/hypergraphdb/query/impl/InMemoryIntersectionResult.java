@@ -99,7 +99,7 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 
 	public void init(HGSearchResult<T> l, HGSearchResult<T> r)
 	{
-		this.left = (HGRandomAccessResult<T>)left;
-		this.right = (HGRandomAccessResult<T>)right;
+		this.left = (HGRandomAccessResult<T>)l;
+		this.right = (HGRandomAccessResult<T>)r;
 	}
 }

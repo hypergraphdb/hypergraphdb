@@ -180,7 +180,14 @@ public class HGTypeSystem
 		                                                   (byte)HGSystemFlags.DEFAULT);
 		classToAtomType.put(HGSubsumes.class, subsumesHandle);
 		graph.cache.freeze(subsumesHandle);
- 
+
+		HGAtomType nullType = new NullType();
+		nullType.setHyperGraph(graph);
+		nullTypeHandle = graph.cache.atomRead(config.getHandleOf(NullType.class), 
+		                                      nullType,
+		                                      (byte)HGSystemFlags.DEFAULT);
+		graph.cache.freeze(nullTypeHandle);
+		
 		//
 		// If we are actually creating a new database, populate with primitive types.
 		//
@@ -213,13 +220,10 @@ public class HGTypeSystem
 			    catch (Exception ex) { System.err.println("[HYPERGRAPHDB WARNING]: failed to create instance of type '" + 
 			                cl.getName() + "'"); ex.printStackTrace(System.err); }
 			    List<Class<?>> targets = config.getMappedClasses(typeHandle);
-			    HGLiveHandle liveHandle = null;
 			    if (targets.isEmpty())
-			        liveHandle = (HGLiveHandle)addPredefinedType(typeHandle, typeInstance, null);
+			        addPredefinedType(typeHandle, typeInstance, null);
 			    else for (Class<?> target : targets)
-			        liveHandle = (HGLiveHandle)addPredefinedType(typeHandle, typeInstance, target);			    
-                if (cl.equals(NullType.class))
-                    nullTypeHandle = liveHandle;			    
+			        addPredefinedType(typeHandle, typeInstance, target);			    
 			}
 		}
 	}

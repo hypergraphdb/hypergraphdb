@@ -184,7 +184,7 @@ public class GraphClassics
 			    Pair<HGHandle, HGHandle> n = neighbors.next();
 				if (settled.contains(n.getSecond()))
 					continue;
-				Double weightN = dm.get(n);
+				Double weightN = dm.get(n.getSecond());
 				Double weightAN = weight.eval(n.getFirst());
 				if (weightN == null)
 				{
@@ -196,7 +196,7 @@ public class GraphClassics
 				else if (weightN > weightCurrent + weightAN)
 				{
 					// new distance found for n, re-insert at appropriate position
-					unsettled.remove(n);
+					unsettled.remove(n.getSecond());
 					dm.put(n.getSecond(), weightCurrent + weightAN);
 					unsettled.add(n.getSecond());
 					if (predecessorMatrix != null)

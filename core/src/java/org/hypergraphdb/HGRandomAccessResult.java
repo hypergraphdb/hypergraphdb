@@ -67,7 +67,7 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
 	/**
 	 * <p>Move the cursor of this result set after the last result. When positioned 
 	 * after the last result, there is no current element, <code>hasNext</code> will
-	 * return false and <code>hasPrev</code> will return true iff there's at least
+	 * return false and <code>hasPrev</code> will return true if there's at least
 	 * one element in this result set.</p>
 	 */
 	void goAfterLast();
@@ -77,7 +77,7 @@ public interface HGRandomAccessResult<ValueType> extends HGSearchResult<ValueTyp
      * to resetting the cursor to its initial state, right after the result set was
      * created. When positioned 
      * before the first result, there is no current element, <code>hasPrev</code> will
-     * return false and <code>hasNext</code> will return true iff there's at least
+     * return false and <code>hasNext</code> will return true if there's at least
      * one element in this result set.</p>
      */	
 	void goBeforeFirst();

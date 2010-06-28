@@ -214,9 +214,11 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     	assignData(data, B);
     	try
     	{
+    	    OperationStatus status = null;
     		if (exactMatch)
     		{
-    			if (cursor.cursor().getSearchBoth(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    		    status = cursor.cursor().getSearchBoth(key, data, LockMode.DEFAULT);
+    			if (status == OperationStatus.SUCCESS)
     			{
     				positionToCurrent(data.getData());
     				return GotoResult.found; 
@@ -226,7 +228,8 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     		}
     		else 
     		{
-    			if (cursor.cursor().getSearchBothRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+    		    status = cursor.cursor().getSearchBothRange(key, data, LockMode.DEFAULT);
+    			if (status == OperationStatus.SUCCESS)
     			{
     				GotoResult result = HGUtils.eq(B, data.getData()) ? GotoResult.found : GotoResult.close; 
     				positionToCurrent(data.getData());

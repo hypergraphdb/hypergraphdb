@@ -24,6 +24,7 @@ import org.hypergraphdb.query.impl.UnionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -125,7 +126,7 @@ public class AtomRefType implements HGAtomType,
 	
 	public void setHyperGraph(HyperGraph hg) 
 	{
-		// unlikely that we would ever change the HyperGraph instance, but who knows....
+	    // unlikely that we would ever change the HyperGraph instance, but who knows....
 		if (this.graph != null) 
 			this.graph.getEventManager().removeListener(HGAtomRemoveRequestEvent.class, removalListener);
 		this.graph = hg;

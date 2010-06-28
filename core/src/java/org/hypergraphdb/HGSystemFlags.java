@@ -34,7 +34,7 @@ public interface HGSystemFlags
 	 * 
 	 * <p>
 	 * The default value for this system attribute is <code>false</code>. That is, atom run-time
-	 * instances are assumed immutable and applications need to explicitely invoke the
+	 * instances are assumed immutable and applications need to explicitly invoke the
 	 * <code>HyperGraph.replace</code> method if need be.
 	 * </p>
 	 */
@@ -53,7 +53,7 @@ public interface HGSystemFlags
 	 * 
 	 * <p>
 	 * The default value for this system attribute is <code>false</code>. That is, an atom
-	 * will by default persist in the database until explicitely removed with the 
+	 * will by default persist in the database until explicitly removed with the 
 	 * <code>HyperGraph.remove</code> method.
 	 * </p>
 	 */

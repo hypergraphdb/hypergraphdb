@@ -123,7 +123,7 @@ public /*final*/ class HyperGraph
     /**
      * Is a database currently open?
      */
-    private boolean is_open = false;
+    private volatile boolean is_open = false;
     
     /**
      * The hypergraph store. Manages low-level persistence operations and
