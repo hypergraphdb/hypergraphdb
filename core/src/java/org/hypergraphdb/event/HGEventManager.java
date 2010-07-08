@@ -26,7 +26,7 @@ import org.hypergraphdb.transaction.VBox;
  */
 public class HGEventManager 
 {
-    private HyperGraph graph;
+//    private HyperGraph graph;
 	private Map<Class<?>, List<HGListener>> listenerMap = null;
 	
 	private List<HGListener> getListeners(Class<?> eventType)
@@ -42,7 +42,7 @@ public class HGEventManager
 	
 	public HGEventManager(HyperGraph graph)
 	{
-	    this.graph = graph;
+//	    this.graph = graph;
 	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(), 
 	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
 	}
