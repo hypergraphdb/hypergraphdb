@@ -7,12 +7,12 @@
  */
 package org.hypergraphdb.event;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.transaction.TxList;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
 
@@ -26,7 +26,7 @@ import org.hypergraphdb.transaction.VBox;
  */
 public class HGEventManager 
 {
-//    private HyperGraph graph;
+    private HyperGraph graph;
 	private Map<Class<?>, List<HGListener>> listenerMap = null;
 	
 	private List<HGListener> getListeners(Class<?> eventType)
@@ -34,7 +34,7 @@ public class HGEventManager
         List<HGListener> listeners = listenerMap.get(eventType);
         if (listeners == null)
         {
-            listeners = new ArrayList<HGListener>();
+            listeners = new TxList<HGListener>(graph.getTransactionManager());
             listenerMap.put(eventType, listeners);          
         }
         return listeners;
@@ -42,7 +42,7 @@ public class HGEventManager
 	
 	public HGEventManager(HyperGraph graph)
 	{
-//	    this.graph = graph;
+	    this.graph = graph;
 	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(), 
 	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
 	}
