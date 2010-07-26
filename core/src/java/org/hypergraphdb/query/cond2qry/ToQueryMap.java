@@ -429,6 +429,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				qmd.randomAccess = false;
 				qmd.ordered = false; // should we have an order preserving mapping?
 				qmd.predicateCost = -1;
+				qmd.cond = c;
 				return qmd;
 			}
 		});
