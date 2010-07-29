@@ -7,6 +7,7 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.atom.impl.UUIDTrie;
+import org.hypergraphdb.handle.UUIDHandleFactory;
 
 /**
  * 
@@ -27,7 +28,7 @@ public class UUIDSetBench
 		for (HGHandle x : baseSet)
 		{
 			destination.contains(x);
-			destination.contains(HGHandleFactory.makeHandle());
+			destination.contains(UUIDHandleFactory.I.makeHandle());
 /*			System.out.println(x);
 			if (cnt % 100 == 0)
 				System.out.println("cnt=" + cnt);
@@ -52,7 +53,7 @@ public class UUIDSetBench
 		for (HGPersistentHandle x : baseSet)
 		{
 			destination.contains(x);
-			destination.contains(HGHandleFactory.makeHandle());
+			destination.contains(UUIDHandleFactory.I.makeHandle());
 /*			System.out.println(x);
 			if (cnt % 100 == 0)
 				System.out.println("cnt=" + cnt);
@@ -78,7 +79,7 @@ public class UUIDSetBench
         for (HGPersistentHandle x : baseSet)
         {
             destination.find(x.toByteArray());
-            destination.find(HGHandleFactory.makeHandle().toByteArray());
+            destination.find(UUIDHandleFactory.I.makeHandle().toByteArray());
 /*          System.out.println(x);
             if (cnt % 100 == 0)
                 System.out.println("cnt=" + cnt);
@@ -92,7 +93,7 @@ public class UUIDSetBench
 		HashSet<HGPersistentHandle> baseSet = new HashSet<HGPersistentHandle>();
 		for (int i = 0; i < 10000; i++)
 		{
-			HGPersistentHandle h = HGHandleFactory.makeHandle();
+			HGPersistentHandle h = UUIDHandleFactory.I.makeHandle();
 			baseSet.add(h);
 		}
         SortedSet<HGHandle> tset = Collections.synchronizedSortedSet(new TreeSet<HGHandle>());

@@ -168,7 +168,7 @@ public class LinkTxTests extends HGTestBase
         }        
     }
 
-    @Test
+   // @Test
     public void testConcurrentLinkCreation()
     {
         for (int i = 0; i < atomsCount; i++)

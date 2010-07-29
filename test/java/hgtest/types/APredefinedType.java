@@ -10,6 +10,8 @@ import org.hypergraphdb.type.HGAtomType;
 
 public class APredefinedType implements HGAtomType 
 {
+    private HyperGraph graph;
+    
 	public Object make(HGPersistentHandle handle,
 			LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 
 	{
@@ -22,11 +24,12 @@ public class APredefinedType implements HGAtomType
 
 	public void setHyperGraph(HyperGraph hg) 
 	{
+	    this.graph = hg;
 	}
 
 	public HGPersistentHandle store(Object instance) 
 	{
-		return HGHandleFactory.nullHandle();
+		return graph.getHandleFactory().nullHandle();
 	}
 
 	public boolean subsumes(Object general, Object specific) 

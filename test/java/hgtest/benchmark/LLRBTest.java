@@ -3,6 +3,8 @@ package hgtest.benchmark;
 import hgtest.T;
 
 import java.util.*;
+
+import org.hypergraphdb.handle.UUIDHandleFactory;
 import org.hypergraphdb.util.*;
 import org.hypergraphdb.*;
 import org.hypergraphdb.HGRandomAccessResult.GotoResult;
@@ -13,7 +15,7 @@ public class LLRBTest
 	static void populate(Collection<HGPersistentHandle> S, int size)
 	{
 		for (int i = 0; i < size; i++)
-			S.add(HGHandleFactory.makeHandle());
+			S.add(UUIDHandleFactory.I.makeHandle());
 	}
 	
 	static void compare(TreeSet<HGPersistentHandle> baseSet, SortedSet<HGPersistentHandle> tree)
@@ -46,7 +48,7 @@ public class LLRBTest
 			
 			// Find missing with exact match:
 			HGPersistentHandle current = (HGPersistentHandle)rs.current();
-			h = HGHandleFactory.makeHandle();
+			h = UUIDHandleFactory.I.makeHandle();
 			if (rs.goTo(h, true) != GotoResult.nothing)
 				throw new RuntimeException("oops, shouldn't have found " + h);
 			else if (current != rs.current())

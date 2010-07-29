@@ -60,7 +60,7 @@ public class BasicTxTests extends HGTestBase
     @Test
     public void defineAbort()
     {
-        HGPersistentHandle persistent = HGHandleFactory.makeHandle();
+        HGPersistentHandle persistent = graph.getHandleFactory().makeHandle();
         Object x = "txDefineAbort";
         graph.getTransactionManager().beginTransaction();
         graph.define(persistent, x);

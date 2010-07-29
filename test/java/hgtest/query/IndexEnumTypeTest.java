@@ -1,5 +1,6 @@
 package hgtest.query;
 
+import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
@@ -17,6 +18,16 @@ import hgtest.beans.BeanWithEnum;
 
 public class IndexEnumTypeTest extends HGTestBase
 {
+    public static void main(String[] args)
+    {
+        IndexEnumTypeTest t = new IndexEnumTypeTest();
+        //t.setUp();
+        t.graph = HGEnvironment.get(t.getGraphLocation());
+        t.testEnumIndex();
+        //t.tearDown();
+        t.graph.close();
+    }
+    
     @SuppressWarnings("unchecked")
     @Test
     public void testEnumIndex()
