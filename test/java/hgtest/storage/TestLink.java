@@ -1,20 +1,14 @@
 package hgtest.storage;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGPlainLink;
-import org.hypergraphdb.handle.UUIDHandleFactory;
 
 public class TestLink extends HGPlainLink
 {
-   // public static final HGPersistentHandle HANDLE = UUIDHandleFactory.I.makeHandle("bb9bdb36-cdcf-11dc-bd27-e1853813fbe2");
-
     public TestLink()
     {
         
     }
-    
     
     public TestLink(HGHandle... outgoingSet)
     {

@@ -12,10 +12,10 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 @SuppressWarnings("unchecked")
 public class LLRBTest
 {
-	static void populate(Collection<HGPersistentHandle> S, int size)
+	static void populate(HGHandleFactory handleFactory, Collection<HGPersistentHandle> S, int size)
 	{
 		for (int i = 0; i < size; i++)
-			S.add(UUIDHandleFactory.I.makeHandle());
+			S.add(handleFactory.makeHandle());
 	}
 	
 	static void compare(TreeSet<HGPersistentHandle> baseSet, SortedSet<HGPersistentHandle> tree)
@@ -31,7 +31,7 @@ public class LLRBTest
 		((HGSearchResult)j).close();
 	}
 	
-	static void randomWalk(SortedSet<HGPersistentHandle> set, List<HGPersistentHandle> L, int iterations)
+	static void randomWalk(HGHandleFactory handleFactory, SortedSet<HGPersistentHandle> set, List<HGPersistentHandle> L, int iterations)
 	{
 		HGRandomAccessResult<HGPersistentHandle> rs = (set instanceof LLRBTree) ? 
 						((LLRBTree)set).getSearchResult() : ((ArrayBasedSet)set).getSearchResult();
@@ -48,7 +48,7 @@ public class LLRBTest
 			
 			// Find missing with exact match:
 			HGPersistentHandle current = (HGPersistentHandle)rs.current();
-			h = UUIDHandleFactory.I.makeHandle();
+			h = handleFactory.makeHandle();
 			if (rs.goTo(h, true) != GotoResult.nothing)
 				throw new RuntimeException("oops, shouldn't have found " + h);
 			else if (current != rs.current())
@@ -139,12 +139,12 @@ public class LLRBTest
 	}
 
 	
-	static void testLLRBTree(int iterations)
+	static void testLLRBTree(HGHandleFactory handleFactory, int iterations)
 	{
 		for (int n = 0; n < iterations; n++)
 		{
 			TreeSet<HGPersistentHandle> baseSet = new TreeSet<HGPersistentHandle>();
-			populate(baseSet, 10000);
+			populate(handleFactory, baseSet, 10000);
 			LLRBTree<HGPersistentHandle> tree = new LLRBTree<HGPersistentHandle>();
 			List<HGPersistentHandle> list = new ArrayList<HGPersistentHandle>();
 			list.addAll(baseSet);
@@ -158,13 +158,13 @@ public class LLRBTest
 			T.backAndForth(rs, 10, 10000);
 			rs.close();			
 			System.out.println("Doing a random walk...");
-			randomWalk(tree, list, 1000);
+			randomWalk(handleFactory, tree, list, 1000);
 			System.out.println("Test removals...");
 			testRemovals(tree, baseSet, list, 20);
 			System.out.println("Test insert-remove-insert-etc. several times...");
 			for (int i = 0; i < 10; i++)
 			{
-				populate(list, 20);
+				populate(handleFactory, list, 20);
 				baseSet.addAll(list);
 				tree.addAll(list);
 /*				if (!tree.check())
@@ -174,7 +174,7 @@ public class LLRBTest
 					throw new RuntimeException("RB-tree check failed after remove & insert");					
 				} */
 				compare(baseSet, tree);
-				randomWalk(tree, list, 1000);				
+				randomWalk(handleFactory, tree, list, 1000);				
 				testRemovals(tree, baseSet, list, 18);
 			}
 			System.out.println("Loopback " + n);
@@ -183,10 +183,11 @@ public class LLRBTest
 	
 	static void testArraySet(int iterations)
 	{
+	    HGHandleFactory handleFactory = new UUIDHandleFactory();
 		for (int n = 0; n < iterations; n++)
 		{
 			TreeSet<HGPersistentHandle> baseSet = new TreeSet<HGPersistentHandle>();
-			populate(baseSet, 10000);
+			populate(handleFactory, baseSet, 10000);
 			ArrayBasedSet<HGPersistentHandle> array = new ArrayBasedSet<HGPersistentHandle>(new HGPersistentHandle[0]);
 			List<HGPersistentHandle> list = new ArrayList<HGPersistentHandle>();
 			list.addAll(baseSet);
@@ -210,11 +211,11 @@ public class LLRBTest
 			System.out.println("Test insert-remove-insert-etc. several times...");
 			for (int i = 0; i < 10; i++)
 			{
-				populate(list, 20);
+				populate(handleFactory, list, 20);
 				baseSet.addAll(list);
 				array.addAll(list);
 				compare(baseSet, array);
-				randomWalk(array, list, 1000);				
+				randomWalk(handleFactory, array, list, 1000);				
 				testArrayRemovals(array, baseSet, list, 18);
 			}
 			System.out.println("Loopback " + n);

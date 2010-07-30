@@ -20,7 +20,7 @@ import org.hypergraphdb.handle.UUIDHandleFactory;
  */
 public class UUIDSetBench
 {
-	private static double lookupAll(Set<HGPersistentHandle> baseSet, HGAtomSet destination)
+	private static double lookupAll(HGHandleFactory handleFactory, Set<HGPersistentHandle> baseSet, HGAtomSet destination)
 	{
 		long start = System.currentTimeMillis();
 //		int cnt = 0;
@@ -28,7 +28,7 @@ public class UUIDSetBench
 		for (HGHandle x : baseSet)
 		{
 			destination.contains(x);
-			destination.contains(UUIDHandleFactory.I.makeHandle());
+			destination.contains(handleFactory.makeHandle());
 /*			System.out.println(x);
 			if (cnt % 100 == 0)
 				System.out.println("cnt=" + cnt);
@@ -45,7 +45,7 @@ public class UUIDSetBench
 		return (System.currentTimeMillis() - start)/1000.0;		
 	}
 
-	private static double lookupAll(Set<HGPersistentHandle> baseSet, Set<HGHandle> destination)
+	private static double lookupAll(HGHandleFactory handleFactory, Set<HGPersistentHandle> baseSet, Set<HGHandle> destination)
 	{
 		long start = System.currentTimeMillis();
 //		int cnt = 0;
@@ -53,7 +53,7 @@ public class UUIDSetBench
 		for (HGPersistentHandle x : baseSet)
 		{
 			destination.contains(x);
-			destination.contains(UUIDHandleFactory.I.makeHandle());
+			destination.contains(handleFactory.makeHandle());
 /*			System.out.println(x);
 			if (cnt % 100 == 0)
 				System.out.println("cnt=" + cnt);
@@ -71,7 +71,7 @@ public class UUIDSetBench
         return (System.currentTimeMillis() - start)/1000.0;     
     }
 
-    private static double lookupAll(Set<HGPersistentHandle> baseSet, UUIDTrie destination)
+    private static double lookupAll(HGHandleFactory handleFactory, Set<HGPersistentHandle> baseSet, UUIDTrie destination)
     {
         long start = System.currentTimeMillis();
 //      int cnt = 0;
@@ -79,7 +79,7 @@ public class UUIDSetBench
         for (HGPersistentHandle x : baseSet)
         {
             destination.find(x.toByteArray());
-            destination.find(UUIDHandleFactory.I.makeHandle().toByteArray());
+            destination.find(handleFactory.makeHandle().toByteArray());
 /*          System.out.println(x);
             if (cnt % 100 == 0)
                 System.out.println("cnt=" + cnt);
@@ -91,16 +91,17 @@ public class UUIDSetBench
 	public static void main(String []argv)
 	{
 		HashSet<HGPersistentHandle> baseSet = new HashSet<HGPersistentHandle>();
+		HGHandleFactory handleFactory = new UUIDHandleFactory();
 		for (int i = 0; i < 10000; i++)
 		{
-			HGPersistentHandle h = UUIDHandleFactory.I.makeHandle();
+			HGPersistentHandle h = handleFactory.makeHandle();
 			baseSet.add(h);
 		}
         SortedSet<HGHandle> tset = Collections.synchronizedSortedSet(new TreeSet<HGHandle>());
         System.out.println("treeset add:" + addAll(baseSet, tset));
-        System.out.println("treeset lookup:" + lookupAll(baseSet, tset));
+        System.out.println("treeset lookup:" + lookupAll(handleFactory, baseSet, tset));
 		HGAtomSet set = new HGAtomSet();
 		System.out.println("atomset add:" + addAll(baseSet, set));
-		System.out.println("atomset lookup:" + lookupAll(baseSet, set));
+		System.out.println("atomset lookup:" + lookupAll(handleFactory, baseSet, set));
 	}
 }

@@ -1,7 +1,6 @@
 package hgtest.types;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
@@ -24,7 +23,7 @@ public class APredefinedType implements HGAtomType
 
 	public void setHyperGraph(HyperGraph hg) 
 	{
-	    this.graph = hg;
+	    graph = hg;
 	}
 
 	public HGPersistentHandle store(Object instance) 

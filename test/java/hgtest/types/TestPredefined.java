@@ -1,18 +1,17 @@
 package hgtest.types;
 
 import org.hypergraphdb.*;
+
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.handle.UUIDHandleFactory;
 import org.hypergraphdb.type.HGAtomType;
 
 public class TestPredefined 
 {
-	private static final HGPersistentHandle TYPEHANDLE = UUIDHandleFactory.I.makeHandle("7023c8e3-3ae4-11dc-872e-b08ac7fa685c");
-	
 	public static void main(String [] argv)
 	{
 		HyperGraph graph = new HyperGraph("c:/temp/hgpredefined");
 		
+		HGPersistentHandle TYPEHANDLE = graph.getHandleFactory().makeHandle();
 		try
 		{
 			HGAtomType type = new APredefinedType();
