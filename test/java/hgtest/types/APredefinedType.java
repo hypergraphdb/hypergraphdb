@@ -21,9 +21,9 @@ public class APredefinedType implements HGAtomType
 	{
 	}
 
-	public void setHyperGraph(HyperGraph hg) 
+	public void setHyperGraph(HyperGraph graph) 
 	{
-	    graph = hg;
+		this.graph = graph;
 	}
 
 	public HGPersistentHandle store(Object instance) 

@@ -10,6 +10,11 @@ public class TestLink extends HGPlainLink
         
     }
     
+    public TestLink(HGHandle h)
+    {
+        super(h, h, h);
+    }
+    
     public TestLink(HGHandle... outgoingSet)
     {
         super(outgoingSet);
