@@ -324,7 +324,7 @@ public class ResultSets extends HGTestBase
         Assert.assertEquals(RSUtils.countRS(index.findLTE(7), true), 8);
         
         
-        //BUG: doesn't always work as expected
+        //BUG: doesn't always work as expected, occurs randomly
         testSorted(index.findLTE(5), index.findLTE(7), true);
 
         // test with unsorted sets
