@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HGTypeSystem;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.GraphClassics;
-import org.hypergraphdb.algorithms.HGALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.indexing.ByPartIndexer;
-import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.LinkCondition;
@@ -29,7 +29,6 @@ import org.hypergraphdb.query.TargetCondition;
 import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.type.Top;
-import org.hypergraphdb.type.javaprimitive.BooleanType;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -43,6 +42,8 @@ public class Queries extends HGTestBase
     final static int ALIAS_COUNT = 5;
     HGSortIndex<Integer, HGHandle> index;
 
+    boolean value_link_or_normal_link = true;
+
     public static void main(String[] args)
     {
         new Queries().test();
@@ -52,131 +53,146 @@ public class Queries extends HGTestBase
     {
         setUp();
         testAnyAtomCondition();
-        testArityCondition();
         testAtomPartCondition();
         testAtomProjectionCondition();
         testAtomTypeCondition();
         testAtomValueCondition();
-        testBFSCondition();
-        testDFSCondition();
-        testIncidentCondition();
         testIndexCondition();
         testIndexedPartCondition();
-        testLinkCondition();
-        testMapCondition();
-        testOrderedLinkCondition();
         testSubsumedCondition();
         testSubsumesCondition();
-        testTargetCondition();
-        testTypedValueCondition();
+        testMapCondition();
         testTypePlusCondition();
+        testTypedValueCondition();
+        
+        //make 2 passes with different link types
+        for (int i = 0; i < 2; i++)
+        {
+            if(i == 1)
+            {
+                value_link_or_normal_link = !value_link_or_normal_link;
+                create_simple_subgraph();
+            }
+            testArityCondition();
+            testBFSCondition();
+            testDFSCondition();
+            testIncidentCondition();
+            testLinkCondition();
+            testOrderedLinkCondition();
+            testTargetCondition();
+        }
         tearDown();
     }
-    
+
     @Test
     public void testArityCondition()
     {
-        Assert.assertNotNull(hg.findOne(graph, 
-                hg.and(hg.type(TestLink.class), hg.arity(0))));
-        Assert.assertNotNull(hg.findOne(graph, 
-                hg.and(hg.type(TestLink.class), hg.arity(3))));
+        Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(getLinkType()),
+               hg.arity(0))));
+        Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(getLinkType()),
+                hg.arity(3))));
     }
+
     @Test
     public void testAtomPartCondition()
     {
-        //empty RS
-        HGQueryCondition cond = hg.and(hg.type(NestedBean.class), hg.eq("innerBean.number", 5), 
-                hg.gt("innerBean.number", 5));
+        // empty RS
+        HGQueryCondition cond = hg.and(hg.type(NestedBean.class), hg.eq(
+                "innerBean.number", 5), hg.gt("innerBean.number", 5));
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
         Assert.assertEquals(RSUtils.countRS(q.execute(), true), 0);
-        
-        //nested part condition
+
+        // nested part condition
         cond = hg.and(hg.type(NestedBean.class), hg.eq("innerBean.number", 5));
         q = HGQuery.make(graph, cond);
         Assert.assertNotSame(RSUtils.countRS(q.execute(), true), 0);
     }
-    
+
     @Test
     public void testAtomProjectionCondition()
     {
-        //tested in testAtomPartCondition()
+        // tested in testAtomPartCondition()
     }
-    
+
     @Test
     public void testIncidentCondition()
     {
-        HGHandle emptyH = 
-            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(0)));
-        Assert.assertNull(hg.findOne(graph,hg.incident(emptyH)));
-        HGHandle not_emptyH = 
-            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-        //Object o = graph.get(not_emptyH);
+        HGHandle emptyH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(0)));
+        Assert.assertNull(hg.findOne(graph, hg.incident(emptyH)));
+        HGHandle not_emptyH = hg.findOne(graph, hg.and(hg.type(getLinkType()),
+                hg.arity(2)));
+        // Object o = graph.get(not_emptyH);
         HGSearchResult<HGHandle> res = graph.find(hg.incident(not_emptyH));
         Assert.assertEquals(RSUtils.countRS(res, true), 1);
     }
-    
+
     @Test
     public void testLinkCondition()
     {
-        HGHandle linkH = 
-            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-        //empty
+        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(2)));
+        // empty
         LinkCondition cond = new LinkCondition(new HGHandle[0]);
-        Assert.assertTrue(cond.satisfies(graph,linkH));
-        //missing
-        cond = new LinkCondition(new HGHandle[]{getNestedBeanHandle(5)});
-        Assert.assertFalse(cond.satisfies(graph,linkH));
-        //present
-        cond = new LinkCondition(new HGHandle[]{getNestedBeanHandle(1)});
-        Assert.assertTrue(cond.satisfies(graph,linkH));
+        Assert.assertTrue(cond.satisfies(graph, linkH));
+        // missing
+        cond = new LinkCondition(new HGHandle[] { getNestedBeanHandle(5) });
+        Assert.assertFalse(cond.satisfies(graph, linkH));
+        // present
+        cond = new LinkCondition(new HGHandle[] { getNestedBeanHandle(1) });
+        Assert.assertTrue(cond.satisfies(graph, linkH));
     }
-    
+
     @Test
     public void testTargetCondition()
     {
-        HGHandle linkH = 
-            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-//        HGPlainLink o = graph.get(linkH);
+        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(2)));
+        // HGPlainLink o = graph.get(linkH);
         HGHandle tgtH = getNestedBeanHandle(1);
-//        boolean is_target = false;
-//        for(int i = 0; i < o.getArity(); i++)
-//            if(o.getTargetAt(i).equals(tgtH))
-//            {
-//                is_target = true;
-//                break;
-//            }
-//        Assert.assertTrue(is_target);
+        // boolean is_target = false;
+        // for(int i = 0; i < o.getArity(); i++)
+        // if(o.getTargetAt(i).equals(tgtH))
+        // {
+        // is_target = true;
+        // break;
+        // }
+        // Assert.assertTrue(is_target);
         TargetCondition cond = new TargetCondition(linkH);
         Assert.assertTrue(cond.satisfies(graph, tgtH));
         Assert.assertFalse(cond.satisfies(graph, getNestedBeanHandle(5)));
     }
-    
+
     @Test
     public void testOrderedLinkCondition()
     {
-        HGHandle linkH = 
-            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-        List<HGHandle> L = hg.findAll(graph, hg.orderedLink(getNestedBeanHandle(0), 
-                getNestedBeanHandle(1)));
-        Assert.assertEquals(L.size(),1);
+        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(2)));
+        List<HGHandle> L = hg.findAll(graph, hg.and(hg.type(getLinkType()), hg.orderedLink(
+                getNestedBeanHandle(0), getNestedBeanHandle(1))));
+        Assert.assertEquals(L.size(), 1);
         Assert.assertEquals(L.get(0), linkH);
-        //empty
+        // empty
         OrderedLinkCondition cond = new OrderedLinkCondition(new HGHandle[0]);
-        Assert.assertTrue(cond.satisfies(graph,linkH));
-        //missing
-        cond = new OrderedLinkCondition(new HGHandle[]{getNestedBeanHandle(5)});
-        Assert.assertFalse(cond.satisfies(graph,linkH));
-        //present
-        cond = new OrderedLinkCondition(new HGHandle[]{getNestedBeanHandle(1)});
-        Assert.assertTrue(cond.satisfies(graph,linkH));
-        //present both
-        cond = new OrderedLinkCondition(new HGHandle[]{getNestedBeanHandle(0), getNestedBeanHandle(1)});
-        Assert.assertTrue(cond.satisfies(graph,linkH));
-       //present both - places exchanged
-        cond = new OrderedLinkCondition(new HGHandle[]{getNestedBeanHandle(1), getNestedBeanHandle(0)});
-        Assert.assertFalse(cond.satisfies(graph,linkH));
+        Assert.assertTrue(cond.satisfies(graph, linkH));
+        // missing
+        cond = new OrderedLinkCondition(
+                new HGHandle[] { getNestedBeanHandle(5) });
+        Assert.assertFalse(cond.satisfies(graph, linkH));
+        // present
+        cond = new OrderedLinkCondition(
+                new HGHandle[] { getNestedBeanHandle(1) });
+        Assert.assertTrue(cond.satisfies(graph, linkH));
+        // present both
+        cond = new OrderedLinkCondition(new HGHandle[] {
+                getNestedBeanHandle(0), getNestedBeanHandle(1) });
+        Assert.assertTrue(cond.satisfies(graph, linkH));
+        // present both - places exchanged
+        cond = new OrderedLinkCondition(new HGHandle[] {
+                getNestedBeanHandle(1), getNestedBeanHandle(0) });
+        Assert.assertFalse(cond.satisfies(graph, linkH));
     }
-  
+
     @Test
     public void testAtomTypeCondition()
     {
@@ -184,29 +200,31 @@ public class Queries extends HGTestBase
         HGQuery<HGHandle> q = HGQuery.make(graph, cond);
         Assert.assertEquals(RSUtils.countRS(q.execute(), true), COUNT);
     }
+
     @Test
     public void testAtomValueCondition()
     {
-        //empty
-        HGHandle emptyH = 
-            hg.findOne(graph, hg.and(hg.type(NestedBean.class), hg.eq(NestedBean.create(1444))));
+        // empty
+        HGHandle emptyH = hg.findOne(graph, hg.and(hg.type(NestedBean.class),
+                hg.eq(NestedBean.create(1444))));
         Assert.assertNull(emptyH);
-        //present
-        HGHandle not_emptyH = 
-            hg.findOne(graph, hg.and(hg.type(NestedBean.class), hg.eq(NestedBean.create(4))));
+        // present
+        HGHandle not_emptyH = hg.findOne(graph, hg.and(hg
+                .type(NestedBean.class), hg.eq(NestedBean.create(4))));
         Assert.assertNotNull(not_emptyH);
-        //duplicated 
-        HGSearchResult<HGHandle> res = graph.find(
-                hg.and(hg.type(NestedBean.class), 
-                hg.eq(NestedBean.create(DUPLICATED_NUM))));
+        // duplicated
+        HGSearchResult<HGHandle> res = graph.find(hg.and(hg
+                .type(NestedBean.class), hg.eq(NestedBean
+                .create(DUPLICATED_NUM))));
         Assert.assertEquals(RSUtils.countRS(res, true), 2);
     }
+
     @Test
     public void testTypedValueCondition()
     {
-        //tested in testAtomValueCondition()
+        // tested in testAtomValueCondition()
     }
-    
+
     @Test
     public void testTypePlusCondition()
     {
@@ -214,54 +232,57 @@ public class Queries extends HGTestBase
         graph.add(new NestedBean.InnerBean());
         graph.add(new NestedBean.ExInnerBean1());
         graph.add(new NestedBean.ExInnerBean2());
-        //All the above
-        HGSearchResult<HGHandle> res = graph.find(new 
-                TypePlusCondition(NestedBean.InnerBean.class));
+        // All the above
+        HGSearchResult<HGHandle> res = graph.find(new TypePlusCondition(
+                NestedBean.InnerBean.class));
         Assert.assertEquals(RSUtils.countRS(res, true), 4);
-        
-        //ExInnerBean1 + ExExInnerBean1 
+
+        // ExInnerBean1 + ExExInnerBean1
         res = graph.find(new TypePlusCondition(NestedBean.ExInnerBean1.class));
         Assert.assertEquals(RSUtils.countRS(res, true), 2);
-        
-        //All nested beans
+
+        // All nested beans
         res = graph.find(new TypePlusCondition(NestedBean.class));
         Assert.assertEquals(RSUtils.countRS(res, true), COUNT);
     }
-      
+
     @Test
-    public void testIndexCondition(){}
+    public void testIndexCondition()
+    {
+    }
+
     @Test
-    public void testIndexedPartCondition(){}
+    public void testIndexedPartCondition()
+    {
+    }
+
     @Test
     public void testMapCondition()
     {
-//        HGHandle linkH = 
-//            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-//        HGHandle linkH1 = 
-//            hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(4)));
-        Double length = GraphClassics.dijkstra(//linkH1, linkH,
-                getNestedBeanHandle(5), getNestedBeanHandle(6), 
-                         new DefaultALGenerator(graph));
+        // HGHandle linkH =
+        // hg.findOne(graph, hg.and(hg.type(getLinkType()), hg.arity(2)));
+        // HGHandle linkH1 =
+        // hg.findOne(graph, hg.and(hg.type(getLinkType()), hg.arity(4)));
+        Double length = GraphClassics.dijkstra(
+                // linkH1, linkH,
+                getNestedBeanHandle(5), getNestedBeanHandle(6),
+                new DefaultALGenerator(graph));
         // Assert.assertEquals(length, 1.0); //??? should be 1
-        length = GraphClassics.dijkstra(
-                getNestedBeanHandle(5), getNestedBeanHandle(3), 
-                         new DefaultALGenerator(graph));
-       // Assert.assertEquals(length, 2.0);
-        Double length1 = GraphClassics.dijkstra(
-                getNestedBeanHandle(6), getNestedBeanHandle(3), 
-                         new DefaultALGenerator(graph));
+        length = GraphClassics.dijkstra(getNestedBeanHandle(5),
+                getNestedBeanHandle(3), new DefaultALGenerator(graph));
+        // Assert.assertEquals(length, 2.0);
+        Double length1 = GraphClassics.dijkstra(getNestedBeanHandle(6),
+                getNestedBeanHandle(3), new DefaultALGenerator(graph));
         Assert.assertEquals(length, length1);
-        Double length2 = GraphClassics.dijkstra(
-                getNestedBeanHandle(6), getNestedBeanHandle(3), 
-                         new DefaultALGenerator(graph));
+        Double length2 = GraphClassics.dijkstra(getNestedBeanHandle(6),
+                getNestedBeanHandle(3), new DefaultALGenerator(graph));
         Assert.assertEquals(length1, length2);
-        Double length3 = GraphClassics.dijkstra(
-                getNestedBeanHandle(0), getNestedBeanHandle(1), 
-                         new DefaultALGenerator(graph));
+        Double length3 = GraphClassics.dijkstra(getNestedBeanHandle(0),
+                getNestedBeanHandle(1), new DefaultALGenerator(graph));
         Assert.assertEquals(length3, 1.0);
-        
+
     }
-  
+
     @Test
     public void testSubsumedCondition()
     {
@@ -272,7 +293,7 @@ public class Queries extends HGTestBase
         cond = new SubsumedCondition(h1);
         Assert.assertFalse(cond.satisfies(graph, h));
     }
-    
+
     @Test
     public void testSubsumesCondition()
     {
@@ -281,45 +302,46 @@ public class Queries extends HGTestBase
         SubsumesCondition cond = new SubsumesCondition(h1);
         Assert.assertTrue(cond.satisfies(graph, h));
         cond = new SubsumesCondition(h);
-        Assert.assertFalse(cond.satisfies(graph, h1));   
+        Assert.assertFalse(cond.satisfies(graph, h1));
     }
-   
-   
-   
+
     @Test
     public void testBFSCondition()
     {
-        HGHandle needH =  
-         hg.findOne(graph, hg.and(hg.type(TestLink.class), hg.arity(2)));
-            
+        HGHandle needH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(2)));
+
         BFSCondition rs = hg.bfs(needH);
         HGTraversal tr = rs.getTraversal(graph);
         List<HGHandle> list = new ArrayList<HGHandle>();
-        while(tr.hasNext())
-         list.add(tr.next().getSecond());   
-        
+        while (tr.hasNext())
+            list.add(tr.next().getSecond());
+
         TraversalBasedQuery tbs = new TraversalBasedQuery(rs
                 .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
         int both = RSUtils.countRS(tbs.execute(), true);
-//        tbs = new TraversalBasedQuery(rs.getTraversal(graph),
-//                TraversalBasedQuery.ReturnType.links);
-//        int links = RSUtils.countRS(tbs.execute(), true);
-//        tbs = new TraversalBasedQuery(rs.getTraversal(graph),
-//                TraversalBasedQuery.ReturnType.targets);
-//        int targets = RSUtils.countRS(tbs.execute(), true);
-//        Assert.assertEquals(both, targets);
-//        // 2 links + 2 targets
-//        Assert.assertEquals(links, targets);
-       
+        // tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+        // TraversalBasedQuery.ReturnType.links);
+        // int links = RSUtils.countRS(tbs.execute(), true);
+        // tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+        // TraversalBasedQuery.ReturnType.targets);
+        // int targets = RSUtils.countRS(tbs.execute(), true);
+        // Assert.assertEquals(both, targets);
+        // // 2 links + 2 targets
+        // Assert.assertEquals(links, targets);
+
     }
+
     @Test
-    public void testDFSCondition(){}
-    
+    public void testDFSCondition()
+    {
+    }
+
     @Test
     public void testAnyAtomCondition()
-    {        
+    {
     }
-    
+
     @BeforeClass
     public void setUp()
     {
@@ -327,63 +349,74 @@ public class Queries extends HGTestBase
         HGTypeSystem ts = graph.getTypeSystem();
         HGHandle typeH = ts.getTypeHandle(NestedBean.InnerBean.class);
         for (int i = 0; i < ALIAS_COUNT; i++)
-         ts.addAlias(typeH, ALIAS_PREFIX + i);
+            ts.addAlias(typeH, ALIAS_PREFIX + i);
 
         index = (HGSortIndex<Integer, HGHandle>) graph.getIndexManager()
-                .<Integer, HGHandle> register(new ByPartIndexer(typeH, "number"));
+                .<Integer, HGHandle> register(
+                        new ByPartIndexer(typeH, "number"));
         for (int i = 0; i < COUNT - 1; i++)
             graph.add(NestedBean.create(i));
-        
-        //duplicated value
+
+        // duplicated value
         graph.add(NestedBean.create(DUPLICATED_NUM));
-        
+
         create_simple_subgraph();
     }
 
     @AfterClass
     public void tearDown()
     {
-//        List<HGHandle> list = hg.findAll(graph, hg.type(NestedBean.class));
-//        for (HGHandle handle : list)
-//            graph.remove(handle);
-//        HGTypeSystem ts = graph.getTypeSystem();
-//         for (int i = 0; i < ALIAS_COUNT; i++)
-//         try
-//         {
-//         ts.removeAlias(ALIAS_PREFIX + i);
-//         }
-//         catch (Throwable t)
-//         {
-//         }
-//        List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(
-//                graph.getTypeSystem().getTypeHandle(NestedBean.InnerBean.class));
-//        if (indexers != null) for (HGIndexer indexer : indexers)
-//            graph.getIndexManager().deleteIndex(indexer);
+        // List<HGHandle> list = hg.findAll(graph, hg.type(NestedBean.class));
+        // for (HGHandle handle : list)
+        // graph.remove(handle);
+        // HGTypeSystem ts = graph.getTypeSystem();
+        // for (int i = 0; i < ALIAS_COUNT; i++)
+        // try
+        // {
+        // ts.removeAlias(ALIAS_PREFIX + i);
+        // }
+        // catch (Throwable t)
+        // {
+        // }
+        // List<HGIndexer> indexers =
+        // graph.getIndexManager().getIndexersForType(
+        // graph.getTypeSystem().getTypeHandle(NestedBean.InnerBean.class));
+        // if (indexers != null) for (HGIndexer indexer : indexers)
+        // graph.getIndexManager().deleteIndex(indexer);
         super.tearDown();
     }
-    
+
     private HGHandle create_simple_subgraph()
     {
-        HGHandle linkH = graph.add(
-                new TestLink(getNestedBeanHandle(0), 
-                        getNestedBeanHandle(1)));
-        HGHandle linkH1 = graph.add(
-                new TestLink(getNestedBeanHandle(2), 
-                        getNestedBeanHandle(3), linkH));
-        graph.add(new TestLink(new HGHandle[0]));
-        graph.add(
-                new TestLink(getNestedBeanHandle(4), 
-                        getNestedBeanHandle(5), getNestedBeanHandle(6),
-                        getNestedBeanHandle(2), linkH1));
+        HGHandle linkH = graph.add(makeLink(getNestedBeanHandle(0),
+                getNestedBeanHandle(1)));
+        HGHandle linkH1 = graph.add(makeLink(getNestedBeanHandle(2),
+                getNestedBeanHandle(3), linkH));
+        graph.add(makeLink(new HGHandle[0]));
+        graph.add(makeLink(getNestedBeanHandle(4), getNestedBeanHandle(5),
+                getNestedBeanHandle(6), getNestedBeanHandle(2), linkH1));
         return linkH;
     }
-    
+
     private HGHandle getNestedBeanHandle(int num)
     {
-        return  hg.findOne(graph, 
-                hg.and(hg.type(NestedBean.class), hg.eq("innerBean.number", num)));
-    } 
-    
+        return hg.findOne(graph, hg.and(hg.type(NestedBean.class), hg.eq(
+                "innerBean.number", num)));
+    }
+
+    private HGLink makeLink(HGHandle... outgoingSet)
+    {
+        return (value_link_or_normal_link) ? new HGValueLink("SOMETHING",
+                outgoingSet) : new TestLink(outgoingSet);
+    }
+
+    private Class<?> getLinkType()
+    {
+        //returns the value type of the HGValueLink
+        return value_link_or_normal_link ? String.class 
+                : TestLink.class;
+    }
+
     private static class TestLink extends HGPlainLink
     {
 
