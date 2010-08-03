@@ -71,7 +71,12 @@ public class JavaBeanBinding extends JavaAbstractBinding
         try
         {
             JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-            if (targetSet != null && targetSet.deref().length > 0)
+            // We construct a link of the class is a HGLink and the target set is not-empty
+            // or if we don't have a default constructor at all.
+            if (HGLink.class.isAssignableFrom(javaClass) && 
+            	targetSet != null && 
+            	targetSet.deref().length > 0 ||
+            	defaultConstructor == null)
         		bean = makeLink(targetSet.deref());
             else if (defaultConstructor != null)
            	   bean = defaultConstructor.newInstance();

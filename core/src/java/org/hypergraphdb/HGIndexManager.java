@@ -1,5 +1,4 @@
 /* 
- * This file is part of the HyperGraphDB source distribution. This is copyrighted 
  * software. For permitted uses, licensing options and redistribution, please see  
  * the LicensingInformation file at the root level of the distribution.  
  * 
@@ -45,6 +44,11 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * is being registered will be automatically indexed. Naturally, this may be a very long operation.
  * Therefore it is recommended that indexer be registered at a time where there's no other activity
  * on the HyperGraph database.
+ * </p>
+ * <p>
+ * <strong>NOTE</strong>: this class is not thread safe and its methods do not participate in database
+ * transactions. Modification of the database indexing schema are meant to be used during initialization
+ * or other time when there's no other database activity. 
  * </p>
  * @author Borislav Iordanov
  */
@@ -241,9 +245,12 @@ public class HGIndexManager
 	 * <p>
 	 * Possibly create a new index based on the specified <code>IndexDescriptor</code>.
 	 * If an index corresponding to the descriptor already exists, the method
-	 * does nothing and returns <code>false</code>. Otherwise it creates a new index,
-	 * which triggers the automatic indexing of all atoms of the type specified in
-	 * the descriptor and returns <code>true</code> at the end.
+	 * does nothing and returns <code>false</code>. Otherwise it creates a new index which
+	 * will become active right away if there's no data with the specified <code>HGIndexer</code>'s
+	 * type. If there is already some data with the type (or sub-types) being indexed, the index
+	 * will become active the next time the database is opened when a potentially long indexing
+	 * operation will be triggered. If you want to do the indexing right after creating an index
+	 * on existing data, call the <code>HyperGraph.runMaintenance</code> method.
 	 * </p>
 	 * 
 	 * @param desc The descriptor of the index to be created.
@@ -253,6 +260,7 @@ public class HGIndexManager
 	public <KeyType, ValueType> HGIndex<KeyType, ValueType> register(HGIndexer indexer)
 	{
 	    boolean createNewIndex = false;
+	    boolean activate  = hg.count(graph, hg.typePlus(indexer.getType())) == 0;
 	    
         for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
         {
@@ -266,7 +274,8 @@ public class HGIndexManager
             {
                 if (currentType.equals(indexer.getType()))
                     createNewIndex = true;
-                forType.add(indexer);
+                if (activate)
+                	forType.add(indexer);
             }
         }
 	    
@@ -274,7 +283,8 @@ public class HGIndexManager
 		{
 			HGHandle hIndexer = graph.add(indexer);			
 			HGIndex<KeyType, ValueType> idx = getOrCreateIndex(indexer);
-			graph.add(new ApplyNewIndexer(hIndexer));
+			if (!activate)
+				graph.add(new ApplyNewIndexer(hIndexer));
 			return idx;
 		}
 		else
