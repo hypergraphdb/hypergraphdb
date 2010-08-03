@@ -318,6 +318,13 @@ public class ResultSets extends HGTestBase
     public void testSortedIntersectionResult()
     {
         // test with sorted sets
+        // List<Integer> list = result__list(graph, index.findLTE(5));
+        Assert.assertEquals(RSUtils.countRS(index.findLTE(5), true), 6);
+        //List<Integer> list1 = result__list(graph, index.findLTE(7));
+        Assert.assertEquals(RSUtils.countRS(index.findLTE(7), true), 8);
+        
+        
+        //BUG: doesn't always work as expected
         testSorted(index.findLTE(5), index.findLTE(7), true);
 
         // test with unsorted sets
@@ -351,6 +358,8 @@ public class ResultSets extends HGTestBase
         {
             List<Integer> list = result__list(graph, res);
             Assert.assertEquals(list.size(), 3);
+            //BUG: not clear if LinkTargetsResultSet
+            //works correctly by not allowing to traverse back...
             List<Integer> back_list = back_result__list(graph, res);
             Assert.assertTrue(reverseLists(list, back_list));
         }
