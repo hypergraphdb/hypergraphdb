@@ -41,8 +41,9 @@ public class LinkTargetsResultSet implements HGSearchResult<HGHandle>
 
 	public HGHandle current()
 	{
-		if (pos < 0 || pos >= l.getArity());
+		if (pos < 0 || pos >= l.getArity())
 			throw new NoSuchElementException();
+		return	l.getTargetAt(pos);	
 	}
 
 	public boolean isOrdered()
