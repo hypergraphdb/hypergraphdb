@@ -52,4 +52,12 @@ public class TestInt implements Comparable<TestInt>
     {
        return x.compareTo(o.x);
     }
+
+    @Override
+    public String toString()
+    {
+        return "TI: " + x;
+    }
+    
+    
 }

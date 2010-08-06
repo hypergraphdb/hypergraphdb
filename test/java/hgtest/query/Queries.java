@@ -20,6 +20,7 @@ import org.hypergraphdb.algorithms.GraphClassics;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.BFSCondition;
+import org.hypergraphdb.query.DFSCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.OrderedLinkCondition;
@@ -52,13 +53,10 @@ public class Queries extends HGTestBase
     public void test()
     {
         setUp();
-        testAnyAtomCondition();
         testAtomPartCondition();
         testAtomProjectionCondition();
         testAtomTypeCondition();
         testAtomValueCondition();
-        testIndexCondition();
-        testIndexedPartCondition();
         testSubsumedCondition();
         testSubsumesCondition();
         testMapCondition();
@@ -246,16 +244,7 @@ public class Queries extends HGTestBase
         Assert.assertEquals(RSUtils.countRS(res, true), COUNT);
     }
 
-    @Test
-    public void testIndexCondition()
-    {
-    }
-
-    @Test
-    public void testIndexedPartCondition()
-    {
-    }
-
+   
     @Test
     public void testMapCondition()
     {
@@ -312,34 +301,44 @@ public class Queries extends HGTestBase
                 .arity(2)));
 
         BFSCondition rs = hg.bfs(needH);
-        HGTraversal tr = rs.getTraversal(graph);
-        List<HGHandle> list = new ArrayList<HGHandle>();
-        while (tr.hasNext())
-            list.add(tr.next().getSecond());
+//        HGTraversal tr = rs.getTraversal(graph);
+//        List<HGHandle> list = new ArrayList<HGHandle>();
+//        while (tr.hasNext())
+//            list.add(tr.next().getSecond());
 
         TraversalBasedQuery tbs = new TraversalBasedQuery(rs
                 .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
         int both = RSUtils.countRS(tbs.execute(), true);
-        // tbs = new TraversalBasedQuery(rs.getTraversal(graph),
-        // TraversalBasedQuery.ReturnType.links);
-        // int links = RSUtils.countRS(tbs.execute(), true);
-        // tbs = new TraversalBasedQuery(rs.getTraversal(graph),
-        // TraversalBasedQuery.ReturnType.targets);
-        // int targets = RSUtils.countRS(tbs.execute(), true);
-        // Assert.assertEquals(both, targets);
-        // // 2 links + 2 targets
-        // Assert.assertEquals(links, targets);
+         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+         TraversalBasedQuery.ReturnType.links);
+         int links = RSUtils.countRS(tbs.execute(), true);
+         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+         TraversalBasedQuery.ReturnType.targets);
+         int targets = RSUtils.countRS(tbs.execute(), true);
+         Assert.assertEquals(both, targets);
+         // 2 links + 2 targets
+         Assert.assertEquals(links, targets);
 
     }
 
     @Test
     public void testDFSCondition()
     {
-    }
+        HGHandle needH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+                .arity(2)));
 
-    @Test
-    public void testAnyAtomCondition()
-    {
+        DFSCondition rs = hg.dfs(needH);
+        TraversalBasedQuery tbs = new TraversalBasedQuery(rs
+                .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
+        int both = RSUtils.countRS(tbs.execute(), true);
+         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+         TraversalBasedQuery.ReturnType.links);
+         int links = RSUtils.countRS(tbs.execute(), true);
+         tbs = new TraversalBasedQuery(rs.getTraversal(graph),
+         TraversalBasedQuery.ReturnType.targets);
+         int targets = RSUtils.countRS(tbs.execute(), true);
+         Assert.assertEquals(both, targets);
+         Assert.assertEquals(links, targets);
     }
 
     @BeforeClass

@@ -69,6 +69,7 @@ public class ResultSets extends HGTestBase
         testFilteredResultSet();
         testTraversalResult();
         testLinkTargetsRSAndHandleArrayRS();
+        testComplexAndOrs();
         tearDown();
     }
 
@@ -317,7 +318,8 @@ public class ResultSets extends HGTestBase
     @Test
     public void testSortedIntersectionResult()
     {
-//        // test with sorted sets
+        // test with sorted sets
+        //TODO: no API for sorted rsets in index yet...
 //        List<HGHandle> list = result__listH(graph, index.findLTE(5));
 //        //Assert.assertEquals(RSUtils.countRS(index.findLTE(5), true), 6);
 //        List<HGHandle> list1 = result__listH(graph, index.findLTE(7));
@@ -340,6 +342,24 @@ public class ResultSets extends HGTestBase
         // we didn't test for sorted result set here...
         testSorted(left, right, false);
     }
+    
+    public void testComplexAndOrs()
+    {
+        List<?> l = hg.getAll(graph, hg.and(hg.or(hg.lte(new TestInt(5)),
+                hg.gt(new TestInt(5)))));
+        //All [1...9]
+        Assert.assertEquals(l.size(), 10);
+        l = hg.getAll(graph,  
+                hg.or(hg.gte(new TestInt(7)),
+                        hg.gt(new TestInt(8))));
+        //All [7..9]
+        Assert.assertEquals(l.size(), 3);
+        l = hg.getAll(graph, hg.and(
+                hg.or(hg.lte(new TestInt(5)), hg.lt(new TestInt(5))), 
+                hg.or(hg.gt(new TestInt(7)),
+                        hg.gt(new TestInt(9)))));
+        Assert.assertEquals(l.size(), 7);
+    }
 
     @Test
     public void testLinkTargetsRSAndHandleArrayRS()
@@ -353,6 +373,9 @@ public class ResultSets extends HGTestBase
         HGPersistentHandle[] A = graph.getStore().getLink(
                 graph.getPersistentHandle(linkH));
         testL(new HandleArrayResultSet(A, 2));
+        graph.remove(needH1);
+        graph.remove(needH2);
+        graph.remove(needH3);
     }
 
     private void testL(HGSearchResult<HGHandle> res)
