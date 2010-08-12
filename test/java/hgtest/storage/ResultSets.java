@@ -352,6 +352,8 @@ public class ResultSets extends HGTestBase
         l = hg.getAll(graph,  
                 hg.or(hg.gte(new TestInt(7)),
                         hg.gt(new TestInt(8))));
+        
+        linkQueries();
         //All [7..9]
         Assert.assertEquals(l.size(), 3);
         l = hg.getAll(graph, hg.and(
@@ -359,6 +361,33 @@ public class ResultSets extends HGTestBase
                 hg.or(hg.gt(new TestInt(7)),
                         hg.gt(new TestInt(9)))));
         Assert.assertEquals(l.size(), 7);
+    }
+    
+    private void linkQueries()
+    {
+        List<?> l = hg.getAll(graph, hg.and(hg.type(TestLink.class),
+                hg.or(hg.arity(2), hg.arity(3))));
+        //2x2 + 2x3
+        Assert.assertEquals(l.size(), 4);
+        l = hg.getAll(graph, hg.and(hg.type(TestLink.class),
+                hg.and(hg.arity(2), hg.not(hg.arity(3)))));
+        //2x2
+        Assert.assertEquals(l.size(), 2);
+        
+        l = hg.getAll(graph, hg.and(hg.type(TestLink.class),
+                hg.or(hg.arity(2), hg.not(hg.arity(3)))));
+        //2x2
+        Assert.assertEquals(l.size(), 2);
+        
+        l = hg.getAll(graph, hg.and(hg.type(TestLink.class),
+                hg.and(hg.arity(2), hg.arity(3))));
+        //empty list
+        Assert.assertEquals(l.size(), 0);
+        
+        l = hg.getAll(graph, hg.and(hg.type(TestLink.class),
+                hg.and(hg.arity(2), hg.not(hg.arity(2)))));
+        //empty list
+        Assert.assertEquals(l.size(), 0);
     }
 
     @Test
