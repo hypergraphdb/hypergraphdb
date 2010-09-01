@@ -741,6 +741,29 @@ public class HGTypeSystem
 		return classname != null ? loadClass(classname) : null;
 	}
 
+	/**
+	 * <p>
+	 * Specifically map a HyperGraphDB {@link HGAtomType}, already stored as an
+	 * atom with handle <code>typeHandle</code> to the Java class <code>clazz</code>.
+	 * Any previous type association with <code>clazz</code> will be removed. 
+	 * </p>
+	 * @param typeHandle can't be null
+	 * @param clazz can't be null
+	 */
+	public void setTypeForClass(final HGHandle typeHandle, final Class<?> clazz)
+	{
+        graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
+        { 
+            public HGHandle call() 
+            {                        		
+				classToAtomType.put(clazz, typeHandle);
+				getClassToTypeDB().removeAllEntries(clazz.getName());
+				getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(typeHandle));
+				return null;
+            }
+        });		
+	}
+	
     /**
      * <p>
      * Return the Java classname that corresponds to the given HyperGraphDB type handle. The

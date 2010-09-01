@@ -60,9 +60,14 @@ public class MapType implements HGAtomType
 			key = TypeUtils.makeValue(hg, hValue, type);
 			hType = layout[i++];
 			hValue = layout[i++];
-			type = ts.getType(hType);
-			value = TypeUtils.makeValue(hg, hValue, type);
-			result.put(key, value);
+			if (hType.equals(hg.getHandleFactory().nullHandle()))
+				result.put(key, null);
+			else
+			{
+				type = ts.getType(hType);
+				value = TypeUtils.makeValue(hg, hValue, type);
+				result.put(key, value);
+			}
 		}
 		return result;
 	}
@@ -84,11 +89,19 @@ public class MapType implements HGAtomType
 			    throw new HGException("Unable to get HG type for class '" + key.getClass() + "'");
 			layout[pos++] = hg.getPersistentHandle(typeHandle);
 			layout[pos++] = TypeUtils.storeValue(hg, key, hg.getTypeSystem().getType(typeHandle));
-			typeHandle = hg.getTypeSystem().getTypeHandle(value.getClass());
-            if (typeHandle == null)
-                throw new HGException("Unable to get HG type for class '" + value.getClass() + "'");			
-			layout[pos++] = hg.getPersistentHandle(typeHandle);
-			layout[pos++] = TypeUtils.storeValue(hg, value, hg.getTypeSystem().getType(typeHandle));
+			if (value == null)
+			{
+				layout[pos++] = hg.getHandleFactory().nullHandle();
+				layout[pos++] = hg.getHandleFactory().nullHandle();
+			}
+			else
+			{
+				typeHandle = hg.getTypeSystem().getTypeHandle(value.getClass());
+	            if (typeHandle == null)
+	                throw new HGException("Unable to get HG type for class '" + value.getClass() + "'");			
+				layout[pos++] = hg.getPersistentHandle(typeHandle);
+				layout[pos++] = TypeUtils.storeValue(hg, value, hg.getTypeSystem().getType(typeHandle));
+			}
 		}		
 		return hg.getStore().store(result, layout); 
 	}
@@ -110,7 +123,8 @@ public class MapType implements HGAtomType
 			}
 			hType = layout[i++];
 			hValue = layout[i++];
-			if (!TypeUtils.isValueReleased(hg, hValue))
+			if (!hType.equals(hg.getHandleFactory().nullHandle()) && 
+				!TypeUtils.isValueReleased(hg, hValue))
 			{
 			    HGAtomType type = ts.getType(hType);
 				TypeUtils.releaseValue(hg, type, hValue);

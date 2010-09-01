@@ -873,15 +873,21 @@ public /*final*/ class HyperGraph
     public HGHandle getType(HGHandle handle)
     {
     	HGPersistentHandle pHandle;
+    	Object atom = null;
     	if (handle instanceof HGLiveHandle)
     	{
+    		atom = ((HGLiveHandle)handle).getRef();
     		pHandle = ((HGLiveHandle)handle).getPersistentHandle();
     	}
     	else
     	{
     		pHandle = (HGPersistentHandle)handle;
+    		HGLiveHandle lHandle = cache.get(pHandle);
+    		if (lHandle != null)
+    			atom = lHandle.getRef();
     	}
-    	
+    	if (atom != null && atom instanceof HGTypeHolder)
+    		return getHandle(((HGTypeHolder)atom).getAtomType());
     	HGPersistentHandle [] link = store.getLink(pHandle);
     	if (link == null || link.length < 2)
     		return null;
@@ -1669,6 +1675,8 @@ public /*final*/ class HyperGraph
 	    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
 	    	if (instance instanceof HGHandleHolder)
 	    		((HGHandleHolder)instance).setAtomHandle(result);
+	    	if (instance instanceof HGTypeHolder)
+	    		((HGTypeHolder)instance).setAtomType(type);
 	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));  
 	        return new Pair<HGLiveHandle, Object>(result, instance);
     	}});

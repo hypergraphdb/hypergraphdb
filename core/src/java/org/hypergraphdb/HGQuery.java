@@ -18,6 +18,7 @@ import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
+import org.hypergraphdb.type.HGTypedValue;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.CompositeMapping;
 import org.hypergraphdb.util.HGUtils;
@@ -217,14 +218,37 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                     	if (idx instanceof ByPartIndexer)
                     	{
                     		ByPartIndexer byPart = (ByPartIndexer)idx;
-                    		Object prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
-                    		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop));
+                    		HGTypedValue prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
+                    		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop.getValue()));
                     	}
                     }
                     HGHandle h = findOne(graph, and);
                     return h == null ?  graph.add(instance) : h;                    
                 }
             });            
+        }
+        
+        public static HGQueryCondition guessUniquenessCondition(final HyperGraph graph, final Object instance)
+        {
+        	if (instance == null)
+        		return null;
+            HGHandle type = graph.getTypeSystem().getTypeHandle(instance.getClass());
+            And and = new And();
+            and.add(type(type));
+            and.add(eq(instance));
+            if (instance instanceof HGLink)
+                and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
+            List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(type);
+            if (indexers != null) for (HGIndexer idx : indexers)
+            {
+            	if (idx instanceof ByPartIndexer)
+            	{
+            		ByPartIndexer byPart = (ByPartIndexer)idx;
+            		Object prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
+            		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop));
+            	}
+            }
+            return and;
         }
         
     	/**
