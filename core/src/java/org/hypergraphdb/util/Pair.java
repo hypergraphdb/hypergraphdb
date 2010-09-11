@@ -26,11 +26,7 @@ public class Pair<F, S> implements java.io.Serializable
 	public Pair(F first, S second)
 	{
 		this.first = first;
-		this.second = second;
-		
-        hash = (first != null) ? first.hashCode() : 0;
-		if (second != null)
-			hash ^= second.hashCode();		
+		this.second = second;		
 	}
 	
 	public F getFirst()
@@ -45,6 +41,12 @@ public class Pair<F, S> implements java.io.Serializable
 		
 	public int hashCode()
 	{
+	    if (hash == 0)
+	    {
+            hash = (first != null) ? first.hashCode() : 0;
+            if (second != null)
+                hash ^= second.hashCode();      
+	    }	    
 		return hash;
 	}
 	

@@ -160,7 +160,9 @@ public class RecordType implements HGCompositeType
         else
             result = new Record(graph.getHandle(this));
         TypeUtils.setValueFor(graph, handle, result);
-        HGPersistentHandle [] layout = graph.getStore().getLink(handle);
+        HGPersistentHandle [] layout = slots.isEmpty() ? 
+                                        HGUtils.EMPTY_HANDLE_ARRAY :
+                                        graph.getStore().getLink(handle);
         if (layout.length != slots.size() * 2)
             throw new HGException("RecordType.make: Record value of handle " + 
                                   handle + 
@@ -198,6 +200,8 @@ public class RecordType implements HGCompositeType
 
     public HGPersistentHandle store(Object instance)
     {
+        if (slots.isEmpty())
+            return graph.getHandleFactory().nullHandle();
         HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);
         if (! (instance instanceof Record))
             throw new HGException("RecordType.store: object is not of type Record.");
@@ -255,6 +259,8 @@ public class RecordType implements HGCompositeType
     
     public void release(HGPersistentHandle handle)
     {    	
+        if (slots.isEmpty())
+            return;
         HGPersistentHandle [] layout = graph.getStore().getLink(handle);
         if (layout == null)
             // this is fishy, a sys print out like this, next line will throw an NPE anyway

@@ -16,6 +16,7 @@ import java.lang.reflect.Modifier;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.AccessibleObjectCache;
@@ -36,29 +37,30 @@ import org.hypergraphdb.util.AccessibleObjectCache;
 public class JavaTypeFactory implements JavaTypeMapper
 {
 	protected HyperGraph graph;
-	private AccessibleObjectCache accessibleObjectCache = new AccessibleObjectCache();
+	static private AccessibleObjectCache accessibleObjectCache = new AccessibleObjectCache();
 	private ArrayList<JavaTypeMapper> mappers = new ArrayList<JavaTypeMapper>();
 	private JavaObjectMapper objectMapper = null;
 	private DefaultJavaTypeMapper defaultMapper = null;
 		
 	public JavaTypeFactory()
 	{
-		mappers.add(defaultMapper = new DefaultJavaTypeMapper());		
+		mappers.add(defaultMapper = new DefaultJavaTypeMapper());
+		mappers.add(objectMapper = new JavaObjectMapper());
 	}
 
-	public void initNonDefaultMappers()
-	{
-		objectMapper = new JavaObjectMapper();
-		objectMapper.setHyperGraph(graph);
-		mappers.add(0, objectMapper);
-	}
+//	public void initNonDefaultMappers()
+//	{
+//		objectMapper = new JavaObjectMapper();
+//		objectMapper.setHyperGraph(graph);
+//		mappers.add(0, objectMapper);
+//	}
 	
-	public void assign(Object bean, String property, Object value) 
+	void assign(Object bean, String property, Object value) 
 	{
 		BonesOfBeans.setProperty(bean, property, value);
 	}
 
-	public void assignPrivate(Class<?> clazz, Object x, String field, Object value)
+	static void assignPrivate(Class<?> clazz, Object x, String field, Object value)
 	{
 		Field f = accessibleObjectCache.getField(clazz, field);
 		try
@@ -71,7 +73,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 	}
 	
-	public Object retrievePrivate(Class<?> clazz, Object x, String field)
+	static Object retrievePrivate(Class<?> clazz, Object x, String field)
 	{
 		Field f = accessibleObjectCache.getField(x.getClass(), field);
 		try
@@ -84,13 +86,13 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 	}
 
-	public static boolean isAbstract(Class<?> c)
+	static boolean isAbstract(Class<?> c)
 	{
 		return Modifier.isAbstract(c.getModifiers()) || 
 		  	   Modifier.isInterface(c.getModifiers());
 	}
 	
-	public static Constructor<?> findDefaultConstructor(Class<?> c)
+	static Constructor<?> findDefaultConstructor(Class<?> c)
 	{
         for (Constructor<?> con : c.getDeclaredConstructors())
             if (con.getParameterTypes().length == 0)
@@ -98,7 +100,7 @@ public class JavaTypeFactory implements JavaTypeMapper
         return null;	    
 	}
 	
-	public static boolean isDefaultConstructible(Class<?> c)
+	static boolean isDefaultConstructible(Class<?> c)
 	{
 		try 
 		{
@@ -111,7 +113,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}		
 	}
 	
-	public static Constructor<?> findHandleArgsConstructor(Class<?> c)
+	static Constructor<?> findHandleArgsConstructor(Class<?> c)
 	{
 	    for (Constructor<?> con : c.getDeclaredConstructors())
 	    {
@@ -130,7 +132,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 	    return null;
 	}
 	
-	public static boolean isLink(Class<?> c)
+	static boolean isLink(Class<?> c)
 	{
 	    boolean b = HGLink.class.isAssignableFrom(c);
 	    if (!b)
@@ -146,12 +148,12 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}		
 	}
 	
-	public static boolean isHGInstantiable(Class<?> c)
+	static boolean isHGInstantiable(Class<?> c)
 	{
 		return !isAbstract(c) && (isDefaultConstructible(c) || isLink(c));
 	}
 	
-	public HGHandle getSlotHandle(String label, HGHandle type)
+	public static HGHandle getSlotHandle(HyperGraph graph, String label, HGHandle type)
 	{
 		HGHandle slotHandle = hg.findOne(graph, 
 				 						 hg.eq(new Slot(label,type)));
@@ -161,6 +163,17 @@ public class JavaTypeFactory implements JavaTypeMapper
 			return slotHandle;
 	}
 	
+	static HGHandle superSlot = null;	
+    static HGHandle getSuperSlot(HyperGraph graph)
+    {
+        if (superSlot == null)
+            superSlot = JavaTypeFactory.getSlotHandle(
+                    graph,
+                    "!super", 
+                    graph.getTypeSystem().getTypeHandle(HGPersistentHandle.class));
+        return superSlot;
+    }   
+    
 	public HGAtomType defineHGType(Class<?> javaClass, HGHandle typeHandle)
 	{
 		for (JavaTypeMapper m : mappers)

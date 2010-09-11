@@ -24,7 +24,6 @@ import org.hypergraphdb.query.impl.UnionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -74,8 +73,8 @@ public class AtomRefType implements HGAtomType,
 		if (hardIdx == null)
 		{
 			hardIdx = graph.getStore().getIndex(IDX_HARD_DB_NAME, 
-			                                 BAtoHandle.getInstance(), 
-			                                 BAtoHandle.getInstance(), 
+			                                 BAtoHandle.getInstance(graph.getHandleFactory()), 
+			                                 BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                 null,
 			                                 true);
 		}
@@ -87,8 +86,8 @@ public class AtomRefType implements HGAtomType,
 		if (symbolicIdx == null)
 		{
 			symbolicIdx = graph.getStore().getIndex(IDX_SYMBOLIC_DB_NAME, 
-			                                     BAtoHandle.getInstance(), 
-			                                     BAtoHandle.getInstance(), 
+			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
+			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                     null,
 			                                     true);
 		}
@@ -100,8 +99,8 @@ public class AtomRefType implements HGAtomType,
 		if (floatingIdx == null)
 		{
 			floatingIdx = graph.getStore().getIndex(IDX_FLOATING_DB_NAME, 
-			                                     BAtoHandle.getInstance(), 
-			                                     BAtoHandle.getInstance(), 
+			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
+			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                     null,
 			                                     true);
 		}
@@ -282,7 +281,7 @@ public class AtomRefType implements HGAtomType,
 
 	public Object fromByteArray(byte[] byteArray)
 	{
-		HGPersistentHandle h = BAtoHandle.getInstance().fromByteArray(byteArray);
+		HGPersistentHandle h = BAtoHandle.getInstance(graph.getHandleFactory()).fromByteArray(byteArray);
 		if (h.equals(graph.getHandleFactory().nullHandle()))
 			return null;
 		else

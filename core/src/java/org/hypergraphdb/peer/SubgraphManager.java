@@ -549,8 +549,8 @@ public class SubgraphManager
             this.wrapped = wrapped;
             indexByValue = 
                 graph.getStore().getIndex(HyperGraph.VALUES_INDEX_NAME, 
-                                          BAtoHandle.getInstance(), 
-                                          BAtoHandle.getInstance(), 
+                                          BAtoHandle.getInstance(graph.getHandleFactory()), 
+                                          BAtoHandle.getInstance(graph.getHandleFactory()), 
                                           null,
                                           true);
             

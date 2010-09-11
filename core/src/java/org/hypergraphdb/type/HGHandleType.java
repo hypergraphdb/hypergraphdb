@@ -10,7 +10,6 @@ package org.hypergraphdb.type;
 import java.util.Comparator;
 
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.type.javaprimitive.PrimitiveTypeBase;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
@@ -45,7 +44,7 @@ public class HGHandleType extends PrimitiveTypeBase<HGHandle>
 	@Override
 	protected HGHandle readBytes(byte[] data, int offset) 
 	{
-		return UUIDPersistentHandle.makeHandle(data, offset);
+		return graph.getHandleFactory().makeHandle(data, offset);
 	}
 
 	@Override

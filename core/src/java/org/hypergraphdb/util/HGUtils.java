@@ -14,6 +14,7 @@ import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -34,6 +35,8 @@ import com.sleepycat.db.DeadlockException;
  */
 public class HGUtils
 {
+    public static final HGPersistentHandle [] EMPTY_HANDLE_ARRAY = new HGPersistentHandle[0];
+    
 	public static boolean isEmpty(String s)
 	{
 		return s == null || s.length() == 0;

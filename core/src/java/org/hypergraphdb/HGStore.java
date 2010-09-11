@@ -8,12 +8,9 @@
 package org.hypergraphdb;
 
 import java.util.Comparator;
-
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.BDBStorageImplementation;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
-import org.hypergraphdb.storage.LinkBinding;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -61,17 +58,6 @@ public class HGStore
             transactionManager.disable();        
     }
     
-//    DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle> getIncidenceDbAsIndex()
-//    {
-//    	return new DefaultIndexImpl<HGPersistentHandle, HGPersistentHandle>(
-//    			env,
-//    			incidence_db,
-//			    transactionManager,
-//				BAtoHandle.getInstance(), 
-//				BAtoHandle.getInstance(),
-//				null);
-//    }
-//    
     /**
      * <p>Create and return a transaction factory for this <code>HGStore</code>.</p>
      */
@@ -189,85 +175,7 @@ public class HGStore
         }         
         return impl.getLink(handle);
     }
-
-    /**
-     * <p>
-     * Retrieves an existing link in raw byte form. The returned byte array contains 
-     * the 16 byte UUID of the handles constituting the link.
-     * </p>
-     * 
-     * @param handle
-     * @return
-     */
-//    public byte [] getLinkData(HGPersistentHandle handle)
-//    {
-//        if (handle == null)
-//            throw new NullPointerException("HGStore.getLink called with a null handle.");
-//        try
-//        {
-//            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-//            DatabaseEntry value = new DatabaseEntry();
-//            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
-//                return value.getData();
-//            else
-//                return null;
-//        }
-//        catch (Exception ex)
-//        {
-//            throw new HGException("Failed to retrieve link with handle " + handle, ex);
-//        }
-//    }
-    
-    /**
-     * <p>
-     * Read a persistent handle array of size <code>n</code> out of a raw data buffer.
-     * The buffer must contain at least <code>n</code> persistent handles starting 
-     * at <code>offset</code>.
-     * </p>
-     * 
-     * @param data The data buffer.
-     * @param offset The 0 based offset from which the read starts.
-     * @param n The number of handles to read.
-     * @return A new <code>HGPersistentHandle[]</code> with the retrieved handles.
-     */
-    public HGPersistentHandle [] readNHandles(byte [] data, int offset, int n)
-    {
-    	return readHandles(data, offset, n * UUIDPersistentHandle.SIZE);
-    }
-    
-    /**
-     * <p>
-     * Read a persistent handle array of size <code>n</code> out of a raw data buffer.
-     * </p>
-     *
-     * @param data The data buffer.
-     * @param offset The 0 based offset from which the read starts.
-     * @param length The number of bytes to read. 
-     * @return A new <code>HGPersistentHandle[]</code> with the retrieved handles.
-     */
-    public HGPersistentHandle [] readHandles(byte [] data, int offset, int length)
-    {
-    	return LinkBinding.readHandles(data, offset, length);
-    }
-    
-    /**
-     * <p>
-     * Read a persistent handle array of size <code>n</code> out of a raw data buffer.
-     * All bytes including and following <code>offset</code> are read. 
-     * </p>
-     *
-     * @param data The data buffer.
-     * @param offset The 0 based offset from which the read starts.
-     * @return A new <code>HGPersistentHandle[]</code> with the retrieved handles.
-     */
-    public HGPersistentHandle [] readHandles(byte [] data, int offset)
-    {
-    	if (data == null)
-    		return null;
-    	else
-    		return readHandles(data, offset, data.length - offset);
-    }
-
+  
     public boolean containsLink(HGPersistentHandle handle)
     {
         if (handle == null)
@@ -298,39 +206,6 @@ public class HGStore
         return impl.getData(handle);
     }
     
-//    public HGPersistentHandle [] getIncidenceSet(HGPersistentHandle handle)
-//    {
-//        if (handle == null)
-//            throw new NullPointerException("HGStore.getIncidenceSet called with a null handle.");
-//        
-//        Cursor cursor = null;
-//        try
-//        {
-//            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-//            DatabaseEntry value = new DatabaseEntry();            
-//            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
-//            OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
-//            if (status == OperationStatus.NOTFOUND)
-//                return new HGPersistentHandle[0];
-//            HGPersistentHandle [] result = new HGPersistentHandle[cursor.count()];
-//            for (int i = 0; status == OperationStatus.SUCCESS; i++)
-//            {
-//                result[i] = UUIDPersistentHandle.makeHandle(value.getData());
-//                status = cursor.getNextDup(key, value, LockMode.DEFAULT);
-//            }
-//            return result;
-//        }
-//        catch (Exception ex)
-//        {
-//            throw new HGException("Failed to retrieve incidence set for handle " + handle, ex);
-//        }
-//        finally
-//        {
-//            if (cursor != null)
-//                try { cursor.close(); } catch (Exception ex) { ex.printStackTrace(System.err); }
-//        }
-//    }
-
     /**
      * <p>Return a <code>HGSearchResult</code> of atom handles in a given atom's incidence
      * set.</p>
@@ -404,91 +279,7 @@ public class HGStore
             throw new NullPointerException("HGStore.removeIncidenceSet called with a null handle.");
         impl.removeIncidenceSet(handle);
     }
-        
-    /**
-     * <p>
-     * Create a new index with the specified name. If an index with this
-     * name already exists, the method will return <code>null</code>. 
-     * </p>
-     * 
-     * <p>
-     * Once the index is created, it can be used without further setup. Note that
-     * the <code>HGStore</code> does not provide any automatic population of manually
-     * created indices. It does, however, manage entries once they are added to an index 
-     * so that integrity is maintained after a removal operation.
-     * </p>
-     * 
-     * @param name The name of the newly created index.
-     * @param comparatorClass The comparator class used to compare the keys of this index. This
-     * parameter may be <code>null</code> if the default, lexicographical byte ordering
-     * comparator is to be used. 
-     * @return A ready to use <code>HGIndex</code> or <code>null</code> if an
-     * index with the specified name already exists.
-     */   
-//    public <KeyType, ValueType> HGIndex<KeyType, ValueType> createIndex(String name,
-//    																	ByteArrayConverter<KeyType> keyConverter,
-//    																	ByteArrayConverter<ValueType> valueConverter,
-//    																	Comparator<?> comparator)
-//    {
-//    	indicesLock.writeLock().lock();
-//    	try
-//    	{
-//	    	if (checkIndexExisting(name))
-//	    		return null;
-//	    	DefaultIndexImpl<KeyType, ValueType> idx = 
-//	    		new DefaultIndexImpl<KeyType, ValueType>(name, 
-//	    												 env, 
-//	    												 transactionManager,
-//	    												 keyConverter, 
-//	    												 valueConverter,
-//	    												 comparator);
-//	    	idx.open();
-//	    	openIndices.put(name, idx);
-//	    	return idx;
-//    	}
-//    	finally
-//    	{
-//    		indicesLock.writeLock().unlock();
-//    	}
-//    }
-     
-    /**
-     * <p>
-     * Creates a new <code>HGBidirectionalIndex</code>. This method has the exact
-     * same behavior as the <code>createIndex</code> method, except that a 
-     * bidirectional implementation is constructed.
-     * </p>
-     * 
-     */
-    @SuppressWarnings("unchecked")
-//    public <KeyType, ValueType> HGBidirectionalIndex<KeyType, ValueType> 
-//        createBidirectionalIndex(String name, 
-//        						 ByteArrayConverter<KeyType> keyConverter, 
-//        						 ByteArrayConverter<ValueType> valueConverter,
-//        						 Comparator comparator)
-//    {
-//    	indicesLock.writeLock().lock();
-//    	try
-//    	{
-//	    	if (checkIndexExisting(name))
-//	    		return null;
-//	    	DefaultBiIndexImpl<KeyType, ValueType> idx = 
-//	    		new DefaultBiIndexImpl<KeyType, ValueType>(name, 
-//	    												   env, 
-//	    												   transactionManager,
-//	    												   keyConverter, 
-//	    												   valueConverter,
-//	    												   comparator);
-//	    	idx.open();    	
-//	    	openIndices.put(name, idx);
-//	    	return idx;
-//    	}
-//    	finally
-//    	{
-//    		indicesLock.writeLock().unlock();
-//    	}
-//    }
-//    
+              
     /**
      * <p>
      * Retrieve an <code>HGIndex</code> by its name. An index will not 
@@ -500,11 +291,10 @@ public class HGStore
      * @return The <code>HGIndex</code> with the given name or <code>null</code>
      * if no such index exists.
      */
-//    @SuppressWarnings("unchecked")
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
 																	 ByteArrayConverter<KeyType> keyConverter, 
 																	 ByteArrayConverter<ValueType> valueConverter,
-																	 Comparator comparator,
+																	 Comparator<?> comparator,
 																	 boolean allowCreate)
     {
         return impl.getIndex(name, keyConverter, valueConverter, comparator, false, allowCreate);

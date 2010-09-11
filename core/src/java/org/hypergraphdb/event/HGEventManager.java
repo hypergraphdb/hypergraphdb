@@ -59,19 +59,22 @@ public class HGEventManager
 	
 	public  HGListener.Result dispatch(HyperGraph hg, HGEvent event)
 	{
-		for (Class<?> clazz = event.getClass(); HGEvent.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass())
+	    if (listenerMap.isEmpty()) // avoid looping through the class hierarchy cause it's expensive
+	        return HGListener.Result.ok;
+		for (Class<?> clazz = event.getClass(); clazz != null && HGEvent.class != clazz; clazz = clazz.getSuperclass())
 		{
 			List<HGListener> listeners = listenerMap.get(clazz);
 			if (listeners == null)
 				continue;
 			for (HGListener l : listeners)
-				// type safety warning OK, we are explicitely passing a correctly typed event.
+				// type safety warning OK, we are explicitly passing a correctly typed event.
 				switch (l.handle(hg, event)) 
 				{
 					case ok: continue;
 					case cancel: return HGListener.Result.cancel;
 				}
-		}		
+		}
+		// should we also invoke listener bound to HGEvent.class itself?
 		return HGListener.Result.ok;
 	}
 	

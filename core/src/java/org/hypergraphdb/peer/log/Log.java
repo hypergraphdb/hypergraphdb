@@ -8,6 +8,7 @@
 package org.hypergraphdb.peer.log;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -17,7 +18,6 @@ import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.StorageService;
@@ -59,7 +59,7 @@ public class Log
 		}
 		else
 		{
-			HGHandle handle = UUIDPersistentHandle.makeHandle(data);
+			HGHandle handle = logDb.getHandleFactory().makeHandle(data);
 			timestamp = logDb.get(handle);
 			
 			System.out.println("LATEST_VERSION_HANDLE : " + timestamp);

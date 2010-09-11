@@ -52,10 +52,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 	
 	public HGHandle getSuperSlot()
 	{
-		if (superSlot == null)
-			superSlot = graph.getTypeSystem().getJavaTypeFactory().getSlotHandle(
-					"!super", graph.getTypeSystem().getTypeHandle(HGPersistentHandle.class));
-		return superSlot;
+	    return JavaTypeFactory.getSuperSlot(graph);
 	}	
 	
 	protected void initClasses()
@@ -145,7 +142,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 			return null;
 		
 		HGTypeSystem typeSystem = graph.getTypeSystem();
-		JavaTypeFactory javaTypes = typeSystem.getJavaTypeFactory();
+//		JavaTypeMapper javaTypes = typeSystem.getJavaTypeFactory();
 		Field fields [] = javaClass.getDeclaredFields();
 				
 		RecordType recType = new RecordType();
@@ -160,7 +157,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 			boolean has_parent = false;
 			HGHandle parentTypeHandle = typeSystem.getTypeHandle(javaClass.getSuperclass());
 			Object x = graph.get(parentTypeHandle);			
-			if (x instanceof Class)
+			if (x instanceof Class<?>)
 			{
 				Class<?> clazz = (Class<?>)x;				
 				for (Field pf : clazz.getDeclaredFields())
@@ -186,7 +183,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 				throw new HGException("Unable to create HG type for field " + 
 									  field.getName() + " of class " + javaClass.getName());
 			}
-			HGHandle slotHandle = javaTypes.getSlotHandle(field.getName(), fieldTypeHandle);
+			HGHandle slotHandle = JavaTypeFactory.getSlotHandle(graph, field.getName(), fieldTypeHandle);
 			Slot slot = graph.get(slotHandle);			
 			recType.addSlot(slotHandle);			
 			HGAtomRef.Mode refMode = getReferenceMode(javaClass, field);						

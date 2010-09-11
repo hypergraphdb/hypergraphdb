@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
@@ -41,6 +42,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
      
     private BDBConfig configuration;
     private HGStore store;
+    private HGHandleFactory handleFactory;
     private CursorConfig cursorConfig = new CursorConfig();
     private Environment env = null;
     private Database data_db = null;
@@ -48,8 +50,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private Database incidence_db = null;
     private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
     private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();    
-    private LinkBinding linkBinding = new LinkBinding();
-
+    private LinkBinding linkBinding = null;
+    
     private TransactionBDBImpl txn()
     {
         HGTransaction tx = store.getTransactionManager().getContext().getCurrent();;
@@ -77,6 +79,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
     public void startup(HGStore store, HGConfiguration config)
     {
         this.store = store;
+        this.handleFactory = config.getHandleFactory();
+        this.linkBinding = new LinkBinding(handleFactory);
         EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
 //      configuration.setStorageMVCC(false);
         if (config.isTransactional())
@@ -189,7 +193,6 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
 
-    @SuppressWarnings("unchecked")
     public HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle[] link)
     {
         DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
@@ -297,7 +300,9 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 return (HGRandomAccessResult<HGPersistentHandle>)HGSearchResult.EMPTY;
             }
             else
-                return new SingleKeyResultSet(tx.attachCursor(cursor), key, BAtoHandle.getInstance());            
+                return new SingleKeyResultSet(tx.attachCursor(cursor), 
+                                              key, 
+                                              BAtoHandle.getInstance(handleFactory));            
         }
         catch (Throwable ex)
         {

@@ -8,6 +8,7 @@
 package org.hypergraphdb.peer.replication;
 
 import java.util.ArrayList;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,8 +17,6 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import static org.hypergraphdb.peer.HGDBOntology.*;
-
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
@@ -133,7 +132,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 				
 				if (handle == null) 
 				{
-					handle = UUIDPersistentHandle.makeHandle();
+					handle = this.getThisPeer().getGraph().getHandleFactory().makeHandle();
 					entity.setHandle(handle);
 				}
 				LogEntry entry = log.createLogEntry(handle, entity.getAtom(), entity.getOperation());

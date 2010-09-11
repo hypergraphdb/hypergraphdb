@@ -101,7 +101,7 @@ public /*final*/ class HyperGraph
     /**
      * The resource name of the default types configuration file.
      */
-    public static final String TYPES_CONFIG_FILE = "/org/hypergraphdb/types";
+//    public static final String TYPES_CONFIG_FILE = "/org/hypergraphdb/types";
     /**
      * The name of the main by-type atom index.
      */
@@ -325,18 +325,18 @@ public /*final*/ class HyperGraph
 	        // Make sure system indices are created.
 	        //
 	        indexByType = store.getIndex(TYPES_INDEX_NAME, 
-	                                     BAtoHandle.getInstance(), 
-	                                     BAtoHandle.getInstance(), 
+	                                     BAtoHandle.getInstance(this.getHandleFactory()), 
+	                                     BAtoHandle.getInstance(this.getHandleFactory()), 
 	                                     null,
 	                                     true);	        						     	        
 	        indexByValue = store.getIndex(VALUES_INDEX_NAME, 
-	                                      BAtoHandle.getInstance(), 
-	                                      BAtoHandle.getInstance(), 
+	                                      BAtoHandle.getInstance(this.getHandleFactory()), 
+	                                      BAtoHandle.getInstance(this.getHandleFactory()), 
 	                                      null,
 	                                      true);	        
 	        if (config.isUseSystemAtomAttributes())
     	        systemAttributesDB = store.getIndex(SA_DB_NAME, 
-    	                                            BAtoHandle.getInstance(), 
+    	                                            BAtoHandle.getInstance(this.getHandleFactory()), 
     	                                            AtomAttrib.baConverter, 
     	                                            null,
     	                                            true);
@@ -346,7 +346,7 @@ public /*final*/ class HyperGraph
 	        //
 	        // Now, bootstrap the type system.
 	        //
-	        typeSystem.bootstrap(TYPES_CONFIG_FILE);                 
+	        typeSystem.bootstrap(config.getTypeConfiguration());                 
             
     		idx_manager.loadIndexers();
     		
@@ -362,7 +362,7 @@ public /*final*/ class HyperGraph
 	        // option to avoid this typical bootstrapping circularity is the implement the JavaObjectMapper
 	        // to directly work with the HGStore instead of relying on the index manager. In any case,
 	        // it all remains an implementation detail.
-	        typeSystem.getJavaTypeFactory().initNonDefaultMappers();
+//	        typeSystem.getJavaTypeFactory().initNonDefaultMappers();
 	        
 	        if (config == null || !config.getSkipOpenedEvent())
 	            eventManager.dispatch(this, new HGOpenedEvent());	
@@ -1551,7 +1551,7 @@ public /*final*/ class HyperGraph
     	if (instance instanceof HGGraphHolder)
     		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
     	HGLiveHandle lHandle;
-        if ( (flags & HGSystemFlags.MANAGED) != 0)
+        if (config.isUseSystemAtomAttributes() && (flags & HGSystemFlags.MANAGED) != 0)
         {
         	AtomAttrib attribs = new AtomAttrib();
         	attribs.flags = flags;
@@ -1566,7 +1566,7 @@ public /*final*/ class HyperGraph
         }        
         else
         {
-        	if (flags != 0)
+        	if (config.isUseSystemAtomAttributes() && flags != 0)
         	{
         		AtomAttrib attribs = new AtomAttrib();
         		attribs.flags = flags;
@@ -1657,7 +1657,7 @@ public /*final*/ class HyperGraph
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {
-	        	AtomAttrib attribs = getAtomAttributes(persistentHandle);
+	        	AtomAttrib attribs = config.isUseSystemAtomAttributes() ? getAtomAttributes(persistentHandle) : null;
 	        	if (attribs != null)
 	        		if ( (attribs.flags & HGSystemFlags.MANAGED) != 0)
 		        		result = cache.atomRead(persistentHandle, 
@@ -2156,18 +2156,18 @@ public /*final*/ class HyperGraph
     		if (rs != null) rs.close();
     	}
     	
-    	eventManager.addListener(
-    			HGAtomEvictEvent.class,
-    			new HGListener()
-    			{
-    				public HGListener.Result handle(HyperGraph hg, HGEvent event)
-    				{
-    					HGAtomEvictEvent ev = (HGAtomEvictEvent)event;
-    					unloadAtom((HGLiveHandle)ev.getAtomHandle(), ev.getInstance());
-    					return Result.ok;
-    				}
-    			}
-    			);    	
+//    	eventManager.addListener(
+//    			HGAtomEvictEvent.class,
+//    			new HGListener()
+//    			{
+//    				public HGListener.Result handle(HyperGraph hg, HGEvent event)
+//    				{
+//    					HGAtomEvictEvent ev = (HGAtomEvictEvent)event;
+//    					unloadAtom((HGLiveHandle)ev.getAtomHandle(), ev.getInstance());
+//    					return Result.ok;
+//    				}
+//    			}
+//    			);    	
     }
     
     private void loadListeners()

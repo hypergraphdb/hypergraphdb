@@ -35,6 +35,7 @@ public class HGTransactionManager
 	private boolean enabled = true;
 	
     volatile ActiveTransactionsRecord mostRecentRecord = new ActiveTransactionsRecord(0, null);
+    
     final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
         
 	TxMonitor txMonitor = null;
@@ -77,7 +78,7 @@ public class HGTransactionManager
 	 * <p>Return the <code>HGTransactionContext</code> instance associated with the current
 	 * thread.</p>
 	 */
-    public synchronized HGTransactionContext getContext()
+    public HGTransactionContext getContext()
     {
     	HGTransactionContext ctx = tcontext.get();
     	if (ctx == null)
@@ -101,6 +102,7 @@ public class HGTransactionManager
 	public HGTransactionManager(HGTransactionFactory factory)
 	{
 		this.factory = factory;
+		
 	}
 
     /**
@@ -189,13 +191,14 @@ public class HGTransactionManager
 			                                         parent,
 			                                         activeRecord,
 			                                         config.isNoStorage() ? null
-			                                             : factory.createTransaction(getContext(), parent));
+			                                             : factory.createTransaction(getContext(), parent),
+			                                         config.isReadonly());
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);
 			return result;
 		}
 		else
-			return new HGTransaction(getContext(), parent, activeRecord, new VanillaTransaction());
+			return new HGTransaction(getContext(), parent, activeRecord, new VanillaTransaction(), config.isReadonly());
 	}
 	
 	/**
@@ -284,6 +287,16 @@ public class HGTransactionManager
 
 	/**
 	 * <p>
+	 * Equivalent to <code>ensureTransaction(transaction, HGTransactionConfig.DEFAULT)</code>.
+	 * </p>
+	 */
+	public <V> V ensureTransaction(Callable<V> transaction)
+	{
+	    return ensureTransaction(transaction, HGTransactionConfig.DEFAULT);
+	}
+	
+	/**
+	 * <p>
 	 * Perform a unit of work encapsulated as a transaction and return the result. This method
 	 * will reuse the currently active transaction if there is one or create a new transaction
 	 * otherwise.
@@ -291,10 +304,12 @@ public class HGTransactionManager
 	 * 
 	 * @param <V> The type of the return value.
 	 * @param transaction The transaction process encapsulated as a <code>Callable</code> instance.
+	 * @param config The configuration of this transaction - note that if there's a current transaction in
+	 * effect, this configuration parameter will be ignored as no new transaction will be created.
 	 * @return The result of <code>transaction.call()</code>.
 	 * @throws The method will (re)throw any exception that does not result from a deadlock.
 	 */
-	public <V> V ensureTransaction(Callable<V> transaction)
+	public <V> V ensureTransaction(Callable<V> transaction, HGTransactionConfig config)
 	{
 		if (getContext().getCurrent() != null)
 			try 
@@ -306,7 +321,7 @@ public class HGTransactionManager
 				throw new RuntimeException(ex);
 			}
 		else
-			return transact(transaction, HGTransactionConfig.DEFAULT);
+			return transact(transaction, config);
 	}
 	
 	private void handleTxException(Throwable t)

@@ -4,19 +4,33 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hypergraphdb.util.RefResolver;
 
+/**
+ * 
+ * <p>
+ * A transactional map - every operation on this map is conducted within a transaction and
+ * becomes void if the transaction is aborted. This map doesn't support <code>null</code>s 
+ * as values - a null indicates absence of a value.
+ * </p>
+ *
+ * @author Borislav Iordanov
+ *
+ * @param <K>
+ * @param <V>
+ */
 public class TxMap<K, V> implements Map<K, V>
 {
     //private ConcurrentMap<K, VBox<V>> M = new ConcurrentHashMap<K, VBox<V>>();
-    private Map<K, VBox<V>> M = null;
-    private HGTransactionManager txManager;
-    private RefResolver<Object, VBox<V>> boxGetter = null;
-    private VBox<Integer> sizebox = null;
+    protected Map<K, Box> M = null;
+    protected HGTransactionManager txManager;
+    protected RefResolver<Object, Box> boxGetter = null;
+    protected VBox<Integer> sizebox = null;
     
-    private class Box extends VBox<V>
+    protected class Box extends VBox<V>
     {
         WeakReference<K> key;
         
@@ -59,11 +73,11 @@ public class TxMap<K, V> implements Map<K, V>
     }
         
     @SuppressWarnings("unchecked")
-    private VBox<V> getBox(Object key)
+    protected Box getBox(Object key)
     {
         synchronized (M)
         {
-            VBox<V> box = M.get(key);
+            Box box = M.get(key);
             // Assume calls to this map are synchronized otherwise. If not, a ConcurrentMap needs to be 
             // used if we want lock free behavior. So the caching needs yet another rework for the
             // WeakRef maps to be lock free.
@@ -77,28 +91,39 @@ public class TxMap<K, V> implements Map<K, V>
             // return (box == null) ? M.putIfAbsent((K)key, new VBox<V>(txManager.getContext())) : box;
         }
     }
-    
-    public TxMap(HGTransactionManager tManager, Map<K, VBox<V>> backingMap)
+
+    /**
+     * <p>
+     * The constructor expects a {@link HGTransactionManager} and the map to be used
+     * to hold the entries. The <code>backingMap</code> parameter must be an empty map
+     * and it is not fully typed since internal object wrappers will be used to manage
+     * the transactional aspect.
+     * </p>
+     */
+    @SuppressWarnings("unchecked")
+    public TxMap(HGTransactionManager tManager, Map backingMap)
     {
         this.txManager = tManager;
-        this.M = backingMap;
+        this.M = backingMap == null ? new ConcurrentHashMap<K, Box>(): backingMap;        
         this.sizebox = new VBox<Integer>(txManager);
         this.sizebox.put(0);
-        if (backingMap instanceof ConcurrentMap)            
-            boxGetter = new RefResolver<Object,VBox<V>>() 
+        if (this.M instanceof ConcurrentMap)            
+            boxGetter = new RefResolver<Object,Box>() 
         {
-            private ConcurrentMap<K, VBox<V>> cm = (ConcurrentMap<K, VBox<V>>)M;
-            @SuppressWarnings("unchecked")
-            public VBox<V> resolve(Object k) 
+            private ConcurrentMap<K, Box> cm = (ConcurrentMap<K, Box>)M;
+            public Box resolve(Object k) 
             { 
-                VBox<V> box = cm.get(k);
-                return (box == null) ? cm.putIfAbsent((K)k, new VBox<V>(txManager)) : box;
+                Box box = cm.get(k);
+                if (box == null)
+                    box = new Box(txManager, (K)k);
+                Box box2 = cm.putIfAbsent((K)k, box);
+                return box2 != null ? box2 : box;
             }            
         };
         else
-            boxGetter = new RefResolver<Object,VBox<V>>() 
+            boxGetter = new RefResolver<Object,Box>() 
             {
-                public VBox<V> resolve(Object k) 
+                public Box resolve(Object k) 
                 {
                     return getBox(k);
                 }            

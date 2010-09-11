@@ -86,7 +86,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
             
             valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().getIndex(getIndexName(), 
             																			 BAtoBA.getInstance(), 
-            																			 BAtoHandle.getInstance(),
+            																			 BAtoHandle.getInstance(graph.getHandleFactory()),
             																			 comparator,
             																			 true);
 

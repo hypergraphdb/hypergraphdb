@@ -34,8 +34,7 @@ public class JavaObjectBinding extends JavaAbstractBinding
 
     private void assignFields(HGPersistentHandle valueHandle, Object instance)
     {    	 
-    	JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-    	HGHandle superSlot = javaTypes.getJavaObjectMapper().getSuperSlot();
+    	HGHandle superSlot = JavaTypeFactory.getSuperSlot(graph);
     	RecordType hgType = (RecordType)this.hgType;
     	Class<?> clazz = javaClass;    	
     	while (true)
@@ -53,7 +52,7 @@ public class JavaObjectBinding extends JavaAbstractBinding
 	        	Object value = record.get(slot);
 	        	if (value != null && hgType.getReferenceMode(slotHandle) != null)
 	        		value = graph.get(((HGAtomRef)value).getReferent());
-	            javaTypes.assignPrivate(clazz, instance, slot.getLabel(), value);	        	
+	            JavaTypeFactory.assignPrivate(clazz, instance, slot.getLabel(), value);	        	
 	        }
 	        if (ss != null)
         	{	
@@ -100,8 +99,7 @@ public class JavaObjectBinding extends JavaAbstractBinding
 		HGPersistentHandle result = TypeUtils.getHandleFor(graph, instance);
 		if (result == null)
 		{
-            JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
-            HGHandle superSlotHandle = javaTypes.getJavaObjectMapper().getSuperSlot();
+            HGHandle superSlotHandle = JavaTypeFactory.getSuperSlot(graph);
             Slot superSlot = graph.get(superSlotHandle);
             Class<?> clazz = javaClass;
 	        RecordType recordType = (RecordType)hgType;
@@ -122,7 +120,7 @@ public class JavaObjectBinding extends JavaAbstractBinding
 		        	{
 		        		Slot slot = (Slot)graph.get(slotHandle);
 			        	// Normal field declared at the level of instances' class.
-			        	Object value = javaTypes.retrievePrivate(clazz, instance, slot.getLabel());
+			        	Object value = JavaTypeFactory.retrievePrivate(clazz, instance, slot.getLabel());
 			        	HGAtomRef.Mode refMode = recordType.getReferenceMode(slotHandle);
 			        	if (refMode != null && value != null)
 			        	{

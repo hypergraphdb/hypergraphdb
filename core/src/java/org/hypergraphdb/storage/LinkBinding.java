@@ -10,9 +10,8 @@ package org.hypergraphdb.storage;
 import com.sleepycat.bind.tuple.TupleBinding;
 import com.sleepycat.bind.tuple.TupleInput;
 import com.sleepycat.bind.tuple.TupleOutput;
-
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 
@@ -25,43 +24,46 @@ import org.hypergraphdb.HyperGraph;
  * 
  * @author Borislav Iordanov
  */
-@SuppressWarnings("unchecked")
-public class LinkBinding extends TupleBinding
+public class LinkBinding extends TupleBinding<HGPersistentHandle[]>
 {
-	public static HGPersistentHandle [] readHandles(byte [] buffer, int offset, int length)
+    private HGHandleFactory handleFactory;
+    private int handleSize;
+    
+    public LinkBinding(HGHandleFactory handleFactory)
+    {
+        this.handleFactory = handleFactory;
+        handleSize = handleFactory.nullHandle().toByteArray().length;
+    }
+    
+	public HGPersistentHandle [] readHandles(byte [] buffer, int offset, int length)
 	{
         if (length == 0)
             return HyperGraph.EMPTY_PERSISTENT_HANDLE_SET;
-        int handle_count = length / UUIDPersistentHandle.SIZE;
+        int handle_count = length / handleSize;
         HGPersistentHandle [] handles = new HGPersistentHandle[handle_count];
         for (int i = 0; i < handle_count; i++)
-            handles[i] = UUIDPersistentHandle.makeHandle(buffer, offset + i*UUIDPersistentHandle.SIZE);
+            handles[i] = handleFactory.makeHandle(buffer, offset + i*handleSize);
         return handles;
 	}
 	
-    public Object entryToObject(TupleInput input)
+    public HGPersistentHandle[] entryToObject(TupleInput input)
     {
         int size = input.getBufferLength() - input.getBufferOffset();
-        if (size % UUIDPersistentHandle.SIZE != 0)
+        if (size % handleSize != 0)
             throw new HGException("While reading link tuple: the value buffer size is not a multiple of the handle size.");
         else
         	return readHandles(input.getBufferBytes(), 0, size);
     }
 
-    public void objectToEntry(Object object, TupleOutput output)
+    public void objectToEntry(HGPersistentHandle[] link, TupleOutput output)
     {
-        if ( !(object instanceof UUIDPersistentHandle []))
-           if(!(object instanceof HGPersistentHandle []))
-              throw new HGException("Attempt to store an object which is not a handle array as a link tuple.");
-        //UUIDPersistentHandle [] link = (UUIDPersistentHandle [])object;
-        HGPersistentHandle [] link = (HGPersistentHandle [])object;
-        byte [] buffer = new byte[link.length * UUIDPersistentHandle.SIZE];
+        byte [] buffer = new byte[link.length * handleSize];
         for (int i = 0; i < link.length; i++)
         {
-            UUIDPersistentHandle handle = (UUIDPersistentHandle)link[i];
+            HGPersistentHandle handle = (HGPersistentHandle)link[i];
             System.arraycopy(handle.toByteArray(), 0, 
-                             buffer, i*UUIDPersistentHandle.SIZE, 
-                             UUIDPersistentHandle.SIZE);            
+                             buffer, i*handleSize, 
+                             handleSize);            
         }
         output.writeFast(buffer);
     }

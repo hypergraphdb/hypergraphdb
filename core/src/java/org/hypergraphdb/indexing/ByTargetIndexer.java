@@ -60,7 +60,7 @@ public class ByTargetIndexer extends HGIndexer
 	@Override
 	public ByteArrayConverter<HGPersistentHandle> getConverter(HyperGraph graph)
 	{
-		return BAtoHandle.getInstance();
+		return BAtoHandle.getInstance(graph.getHandleFactory());
 	}
 
 	@Override

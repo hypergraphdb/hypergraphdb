@@ -42,10 +42,11 @@ public final class HGTransaction implements HGStorageTransaction
     private HGTransaction parent;
     private HGTransactionContext context;
     private HGStorageTransaction stran = null;
-    private HashMap<Object, Object> attributes = new HashMap<Object, Object>();
+    private Map<Object, Object> attributes = new HashMap<Object, Object>();
     private Set<Pair<VBox<?>, VBoxBody<?>>> bodiesRead = new HashSet<Pair<VBox<?>, VBoxBody<?>>>();
     private Map<VBox<?>, Object> boxesWritten = new HashMap<VBox<?>, Object>();
     private long number;
+    private boolean readonly = false;
     private ActiveTransactionsRecord activeTxRecord;
     
     long getNumber()
@@ -70,7 +71,8 @@ public final class HGTransaction implements HGStorageTransaction
         if (value == null)
         {
             VBoxBody<T> body = vbox.body.getBody(number);
-            bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(vbox, body));
+            if (!readonly)
+                bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(vbox, body));
             value = body.value;
         }
         return (value == NULL_VALUE) ? null : value;
@@ -94,7 +96,7 @@ public final class HGTransaction implements HGStorageTransaction
      */
     protected boolean validateCommit()
     {
-        for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
+        if (!readonly) for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
         {
             if (entry.getFirst().body != entry.getSecond())
             {
@@ -129,7 +131,7 @@ public final class HGTransaction implements HGStorageTransaction
 
     void finish() 
     {
-        for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
+        if (!readonly) for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
             entry.getFirst().finish(this);            
         for (Map.Entry<VBox<?>, Object> entry : boxesWritten.entrySet())
             entry.getKey().finish(this);
@@ -141,13 +143,15 @@ public final class HGTransaction implements HGStorageTransaction
     HGTransaction(HGTransactionContext context, 
                   HGTransaction parent,
                   ActiveTransactionsRecord activeTxRecord, 
-                  HGStorageTransaction impl)
+                  HGStorageTransaction impl,
+                  boolean readonly)
     {
         this.stran = impl;
         this.context = context;
         this.parent = parent;
         this.activeTxRecord = activeTxRecord;
         this.number = activeTxRecord.transactionNumber;
+        this.readonly = readonly;
     }
 
     public HGStorageTransaction getStorageTransaction()
@@ -161,8 +165,9 @@ public final class HGTransaction implements HGStorageTransaction
         if (parent != null)
         {
             if (stran != null)
-                stran.commit();            
-            parent.bodiesRead.addAll(bodiesRead);
+                stran.commit();
+            if (!readonly)
+                parent.bodiesRead.addAll(bodiesRead);
             parent.boxesWritten.putAll(boxesWritten);
             finish();
             HyperGraph graph = context.getManager().getHyperGraph();
@@ -188,6 +193,7 @@ public final class HGTransaction implements HGStorageTransaction
                     ActiveTransactionsRecord newRecord = new ActiveTransactionsRecord(number,
                                                                                       bodiesCommitted);
                     context.getManager().mostRecentRecord.setNext(newRecord);
+                    newRecord.setPrev(context.getManager().mostRecentRecord);
                     context.getManager().mostRecentRecord = newRecord;
                     
                     // as this transaction changed number, we must

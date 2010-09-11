@@ -47,6 +47,18 @@ public class VBoxBody<E>
         }
     }
 
+    void setNext(VBoxBody<E> value)
+    {
+        try
+        {
+            NEXT_FIELD.set(this, value);
+        }
+        catch (IllegalAccessException iae)
+        {
+            throw new Error("JVSTM error: cannot set the next field to null");
+        }        
+    }
+    
     public final long version;
     public final VBoxBody<E> next;
     public volatile E value;
@@ -85,13 +97,6 @@ public class VBoxBody<E>
         // problems that may occur do not affect the correcteness of
         // the system: we just want to set the field to null to allow
         // the garbage collector to do its thing...
-        try
-        {
-            NEXT_FIELD.set(this, null);
-        }
-        catch (IllegalAccessException iae)
-        {
-            throw new Error("JVSTM error: cannot set the next field to null");
-        }
+        setNext(null);
     }
 }

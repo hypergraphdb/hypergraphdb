@@ -8,13 +8,13 @@
 package org.hypergraphdb.storage;
 
 import java.util.HashSet;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.util.Pair;
 
 /**
@@ -90,7 +90,7 @@ public class HGStoreSubgraph implements StorageGraph
                 remaining.addLast(root);
             
             //TODO some UUIDs should not be visited?
-            visited.add(UUIDPersistentHandle.UUID_NULL_HANDLE);
+            visited.add(store.getTransactionManager().getHyperGraph().getHandleFactory().nullHandle());
         }
         
         public boolean hasNext()

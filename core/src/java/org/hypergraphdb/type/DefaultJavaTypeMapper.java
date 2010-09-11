@@ -116,8 +116,7 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 	public HGAtomType defineHGType(Class<?> javaClass, HGHandle typeHandle)
 	{
 		HGTypeSystem typeSystem = graph.getTypeSystem();
-		JavaTypeFactory javaTypes = typeSystem.getJavaTypeFactory();
-		
+	
 		if (javaClass == null)
 			throw new NullPointerException(
 					"JavaTypeFactory.getHGType: null beanClass parameter.");
@@ -192,8 +191,9 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 				if (valueTypeHandle == null)
 				    throw new HGException("Unable to get HyperGraph type for Java class " + 
 				                          propType.getName() + ": make sure it's default or 'link' constructible.");
-				HGHandle slotHandle = javaTypes.getSlotHandle(desc.getName(), 
-															  valueTypeHandle);
+				HGHandle slotHandle = JavaTypeFactory.getSlotHandle(graph,
+				                                                    desc.getName(), 
+				                                                    valueTypeHandle);
 				Slot slot = graph.get(slotHandle);
 				recordType.addSlot(slotHandle);
 				HGAtomRef.Mode refMode = getReferenceMode(javaClass, desc);						

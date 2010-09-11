@@ -14,7 +14,8 @@ public class HGTransactionConfig
     public static final HGTransactionConfig DEFAULT = new HGTransactionConfig();
     
     private boolean noStorage = false;
-
+    private boolean readonly = false;
+    
     public boolean isNoStorage()
     {
         return noStorage;
@@ -23,5 +24,15 @@ public class HGTransactionConfig
     public void setNoStorage(boolean noStorage)
     {
         this.noStorage = noStorage;
+    }
+
+    public boolean isReadonly()
+    {
+        return readonly;
+    }
+
+    public void setReadonly(boolean readonly)
+    {
+        this.readonly = readonly;
     }    
 }

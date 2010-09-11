@@ -84,7 +84,7 @@ public class HGIndexManager
 			if (indexer instanceof HGValueIndexer)
 				converter = (ByteArrayConverter<ValueType>)((HGValueIndexer)indexer).getValueConverter(graph);
 			else
-				converter = (ByteArrayConverter<ValueType>)BAtoHandle.getInstance();
+				converter = (ByteArrayConverter<ValueType>)BAtoHandle.getInstance(graph.getHandleFactory());
 			result = graph.getStore().getIndex(name, 
 											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 											   converter, 

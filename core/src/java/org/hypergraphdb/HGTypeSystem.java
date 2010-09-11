@@ -9,6 +9,7 @@ package org.hypergraphdb;
 
 import java.io.BufferedReader;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,7 +32,8 @@ import org.hypergraphdb.storage.BAtoString;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.type.BonesOfBeans;
 import org.hypergraphdb.type.HGAtomType;
-import org.hypergraphdb.type.JavaTypeFactory;
+import org.hypergraphdb.type.HGTypeConfiguration;
+import org.hypergraphdb.type.JavaTypeMapper;
 import org.hypergraphdb.type.LinkType;
 import org.hypergraphdb.type.NullType;
 import org.hypergraphdb.type.PlainLinkType;
@@ -89,7 +91,7 @@ public class HGTypeSystem
 	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
 	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;
-	private JavaTypeFactory javaTypes = null;
+	private JavaTypeMapper javaTypes = null;
 	private ClassLoader classLoader;	
 	private HGLiveHandle topHandle;
 	private HGLiveHandle nullTypeHandle;
@@ -100,7 +102,7 @@ public class HGTypeSystem
 		{
 			classToTypeDB = graph.getStore().getBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
 			                                       BAtoString.getInstance(),
-			                                       BAtoHandle.getInstance(),
+			                                       BAtoHandle.getInstance(graph.getHandleFactory()),
 			                                       null,
 			                                       true);
 		}
@@ -113,7 +115,7 @@ public class HGTypeSystem
 		{
 			aliases = graph.getStore().getBidirectionalIndex(TYPE_ALIASES_DB_NAME,
 			                                   BAtoString.getInstance(),
-			                                   BAtoHandle.getInstance(),
+			                                   BAtoHandle.getInstance(graph.getHandleFactory()),
 			                                   null,
 			                                   true);
 		}
@@ -125,7 +127,7 @@ public class HGTypeSystem
 		if (predefinedTypesDB == null)
 		{
 			predefinedTypesDB = graph.getStore().getIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
-			                                 BAtoHandle.getInstance(),
+			                                 BAtoHandle.getInstance(graph.getHandleFactory()),
 			                                 BAtoString.getInstance(),
 			                                 null,
 			                                 true);
@@ -145,10 +147,10 @@ public class HGTypeSystem
 		graph.indexByType.addEntry(topHandle.getPersistentHandle(), handle);
 	}
 
-	void bootstrap(String typeDefResource)
+	void bootstrap(HGTypeConfiguration typeConfiguration)
 	{
 	    PredefinedTypesConfig config = PredefinedTypesConfig.loadFromResource(graph.getHandleFactory(), 
-	                                                                          typeDefResource);
+	                                                                          typeConfiguration.getPredefinedTypes());
 		top.setHyperGraph(graph);
 		topHandle = graph.cache.atomRead(config.getHandleOf(top.getClass()), 
 		                                 top, 
@@ -226,6 +228,8 @@ public class HGTypeSystem
 			        addPredefinedType(typeHandle, typeInstance, target);			    
 			}
 		}
+		javaTypes = typeConfiguration.getJavaTypeMapper();
+		javaTypes.setHyperGraph(graph);
 	}
 	
 	public HGHandle getTopHandle()
@@ -540,8 +544,8 @@ public class HGTypeSystem
 		this.getAliases();
 		this.getClassToTypeDB();
 		this.getPredefinedTypesDB();
-		this.javaTypes = new JavaTypeFactory();
-		javaTypes.setHyperGraph(graph);
+//		this.javaTypes = new JavaTypeFactory();
+//		javaTypes.setHyperGraph(graph);
 	}
 
 	/**
@@ -558,7 +562,7 @@ public class HGTypeSystem
 	 * <p>Return the <code>JavaTypeFactory</code> which is responsible for mapping
 	 * Java class to HyperGraph types.</p>
 	 */
-	public JavaTypeFactory getJavaTypeFactory()
+	public JavaTypeMapper getJavaTypeFactory()
 	{
 		return this.javaTypes;
 	}
@@ -654,7 +658,7 @@ public class HGTypeSystem
 	 * </p>
 	 *
 	 * <p>
-	 * There is one special in the mapping of HyperGraph types to Java types: the handling of Java
+	 * There is one special case in the mapping of HyperGraph types to Java types: the handling of Java
 	 * primitive arrays. From HyperGraph's storage perspective, all arrays are generally recorded in the same
 	 * way regardless of the type of their elements (each element is stored through its own type).
 	 * Therefore, a single HyperGraph array type would be able to handle all Java primitive arrays.
@@ -714,11 +718,10 @@ public class HGTypeSystem
 		classToAtomType.put(type.getClass(), classToAtomType.get(Top.class));
 		if (clazz != null)
 		{
-			if (getClassToTypeDB().findFirst(clazz.getName()) == null)
-				classToTypeDB.addEntry(clazz.getName(), handle);
+			if (getClassToTypeDB().findFirst(clazz.getName()) != null)
+			    classToTypeDB.removeAllEntries(clazz.getName());
+			classToTypeDB.addEntry(clazz.getName(), handle);
 			classToAtomType.put(clazz, typeHandle);
-//			if (clazz.equals((new Object[0]).getClass()))
-//				this.primitiveArrayType = handle;
 		}
 		return typeHandle;
 	}

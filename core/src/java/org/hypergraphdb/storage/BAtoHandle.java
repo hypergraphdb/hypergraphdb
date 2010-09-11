@@ -7,25 +7,40 @@
  */
 package org.hypergraphdb.storage;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hypergraphdb.HGHandleFactory;
+
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 
 public class BAtoHandle implements ByteArrayConverter<HGPersistentHandle>
 {
-    private static final BAtoHandle instance = new BAtoHandle();
+    private static final Map<HGHandleFactory, BAtoHandle> M = 
+        new HashMap<HGHandleFactory, BAtoHandle>();
     
-    public static ByteArrayConverter<HGPersistentHandle> getInstance()
+    private HGHandleFactory handleFactory = null;
+    
+    public synchronized static ByteArrayConverter<HGPersistentHandle> getInstance(HGHandleFactory handleFactory)
     {
+        BAtoHandle instance = M.get(handleFactory);
+        if (instance == null)
+        {
+            instance = new BAtoHandle();
+            instance.handleFactory = handleFactory;
+            M.put(handleFactory, instance);
+        }
         return instance;
     }
     
     public byte[] toByteArray(HGPersistentHandle object)
     {
-        return ((UUIDPersistentHandle)object).toByteArray();
+        return object.toByteArray();
     }
 
     public HGPersistentHandle fromByteArray(byte[] byteArray)
     {
-        return UUIDPersistentHandle.makeHandle(byteArray);
+        return handleFactory.makeHandle(byteArray);
+//        return UUIDPersistentHandle.makeHandle(byteArray);
     }
 }

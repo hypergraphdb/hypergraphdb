@@ -71,7 +71,8 @@ public class ActiveTransactionsRecord
     // write-transaction commits, in
     // which case a new record is created
     private volatile ActiveTransactionsRecord next = null;
-
+    private volatile ActiveTransactionsRecord prev = null;
+    
     /*
      * The next field creates, in effect, a linked list of records, with older
      * records pointing to newer records. This linked-list of records will allow
@@ -202,6 +203,11 @@ public class ActiveTransactionsRecord
         return next;
     }
 
+    protected void setPrev(ActiveTransactionsRecord prev)
+    {
+        this.prev = prev;
+    }
+    
     protected void setNext(ActiveTransactionsRecord next)
     {
         this.next = next;
@@ -238,16 +244,46 @@ public class ActiveTransactionsRecord
             }
         }
     }
-
+    
+    public void maybeUnchain()
+    {
+        if (prev != null && next != null && running.get() == 0)
+        {
+            //System.out.println("Detaching record.");
+            prev.next = next;
+            next.prev = prev;
+            this.prev = null;
+        }        
+    }
+    
     public void decrementRunning()
     {
         if (running.decrementAndGet() == 0)
         {
             // when running reaches 0 maybe it's time to clean our successor
             maybeCleanSuc();
+            maybeUnchain();
         }
     }
 
+   /* void maybeUnchainSuc()
+    {
+        // Try to dispose of intermediary records in the chain list that are done. Otherwise,
+        // a long running transaction (i.e. couple of hours) coupled with millions of 
+        // smaller transactions (e.g. cache purging) leads ot OutOfMemory because of millions
+        // of chained records
+        System.out.println("Checking rec.next");                    
+        if (next.next != null && next.isClean() && next.running.get() == 0)
+        {
+            System.out.println("Try to dispose of rec.next!");
+            if (next.next.clean())
+            {
+                System.out.println("Disposing of rec.next!");
+                next = next.next;
+            }
+        }                
+    } */
+    
     private void maybeCleanSuc()
     {
         // it is crucial that we test the next field first, because
@@ -266,7 +302,7 @@ public class ActiveTransactionsRecord
             {
                 if (rec.next.clean())
                 {
-                    // if we cleaned-up, try to clean-up further down the list
+                    // if we cleaned-up, try to clean-up further down the list                                        
                     rec = rec.next;
                     continue;
                 }

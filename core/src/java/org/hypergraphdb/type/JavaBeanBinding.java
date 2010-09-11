@@ -30,7 +30,8 @@ public class JavaBeanBinding extends JavaAbstractBinding
     private Constructor<?> defaultConstructor = null;
     private Constructor<?> linkConstructor = null;
     private Constructor<?> handleListConstructor = null;
-        
+    private boolean isLinkInstance; // save the value of HGLink.isAssignableFrom(javaClass) - expensive to compute.
+    
     public JavaBeanBinding(HGHandle typeHandle, RecordType hgType, Class<?> clazz)
     {
     	super(typeHandle, hgType, clazz);
@@ -49,6 +50,7 @@ public class JavaBeanBinding extends JavaAbstractBinding
             if (handleListConstructor != null)
                 handleListConstructor.setAccessible(true);
         }        
+        isLinkInstance = HGLink.class.isAssignableFrom(javaClass);
     }
 
     private HGLink makeLink(HGHandle[] targetSet) throws Exception
@@ -70,10 +72,9 @@ public class JavaBeanBinding extends JavaAbstractBinding
         Object bean = null;
         try
         {
-            JavaTypeFactory javaTypes = graph.getTypeSystem().getJavaTypeFactory();
             // We construct a link of the class is a HGLink and the target set is not-empty
             // or if we don't have a default constructor at all.
-            if (HGLink.class.isAssignableFrom(javaClass) && 
+            if (isLinkInstance && 
             	targetSet != null && 
             	targetSet.deref().length > 0 ||
             	defaultConstructor == null)
@@ -94,7 +95,7 @@ public class JavaBeanBinding extends JavaAbstractBinding
 	        		value = graph.get(((HGAtomRef)value).getReferent());
 	        	try
 	        	{
-	        		javaTypes.assign(bean, slot.getLabel(), value);
+	        	    BonesOfBeans.setProperty(bean, slot.getLabel(), value);
 	        	}
 	        	catch (Throwable t)
 	        	{	        		

@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -37,6 +38,7 @@ public final class HGConfiguration
 	private boolean skipOpenedEvent;
 	private int maxCachedIncidenceSetSize; 
 	private boolean useSystemAtomAttributes;
+	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	
 //    private long storeCacheSize = DEFAULT_STORE_CACHE;	
 //    private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;	
@@ -327,5 +329,13 @@ public final class HGConfiguration
     public void setUseSystemAtomAttributes(boolean useSystemAtomAttributes)
     {
         this.useSystemAtomAttributes = useSystemAtomAttributes;
+    }
+    
+    /**
+     * <p>Return the configuration bean for the type system.</p>
+     */
+    public HGTypeConfiguration getTypeConfiguration()
+    {
+        return typeConfiguration;
     }
 }

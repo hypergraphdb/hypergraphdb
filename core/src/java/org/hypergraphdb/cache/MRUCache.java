@@ -8,11 +8,9 @@
 package org.hypergraphdb.cache;
 
 import java.util.HashMap;
-
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.util.ActionQueueThread;
 import org.hypergraphdb.util.CloseMe;
