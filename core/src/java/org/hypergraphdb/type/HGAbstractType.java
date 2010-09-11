@@ -19,15 +19,15 @@ import org.hypergraphdb.LazyRef;
  * The implementation of a HyperGraph abstract types. Abstract types serve the purpose
  * of <i>semantic tagging</i>. The main motivation is to model interfaces and abstract classes
  * in Java and other OO languages. From a general perspective, they serve the purpose of 
- * categorizing entites with no concrete realization except in a subtyping relation with 
+ * categorizing entities with no concrete realization except in a sub-typing relation with 
  * other types. 
  * </p> 
  * 
  * <p>
  * A possible future application of abstract types in HyperGraph would be to actually
- * create "abstract values" out of them. Those would be semi-specified/undefined atoms, with
- * values yet to be refined. Such atoms could be provisonally used for linkage with other atoms 
- * until futher (if ever) concretized. 
+ * create "abstract values" out of them. Those would be semi specified/undefined atoms, with
+ * values yet to be refined. Such atoms could be provisionally used for linkage with other atoms 
+ * until further (if ever) concretized. 
  * </p>
  * 
  * <p>

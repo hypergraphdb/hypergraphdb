@@ -241,7 +241,7 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 			recType.setThisHandle(typeHandle);
 			return new JavaBeanBinding(typeHandle, recType, javaClass);
 		}
-		else if (hgType instanceof HGCompositeType)
+		else if (hgType instanceof HGAbstractCompositeType)
 			return new JavaAbstractBinding(typeHandle, (HGCompositeType)hgType, javaClass);
 		else if (hgType instanceof HGAbstractType)
 			return new JavaInterfaceBinding(typeHandle, hgType, javaClass);

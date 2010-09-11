@@ -209,7 +209,8 @@ public class BonesOfBeans
 		HashMap<String, Object> m = new HashMap<String, Object>();
 		Map<String, PropertyDescriptor> dm = getAllPropertyDescriptors(bean);
 		for (Map.Entry<String, PropertyDescriptor> e : dm.entrySet())
-			setProperty(bean, e.getKey(), properties.get(e.getKey()));
+			if (e.getValue().getWriteMethod() != null && e.getValue().getReadMethod() != null)
+				setProperty(bean, e.getKey(), properties.get(e.getKey()));
 	}
 
 	/**

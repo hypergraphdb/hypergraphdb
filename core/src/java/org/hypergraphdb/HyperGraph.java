@@ -1328,6 +1328,8 @@ public /*final*/ class HyperGraph
               HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
               define(atomHandle, typeHandle, valueHandle, link, instance);
               HyperGraph.this.atomAdded(atomHandle, instance, flags);
+              if (instance instanceof HGTypeHolder)
+              	((HGTypeHolder)instance).setAtomType(type);
               return null;
           }});        
     }
@@ -1492,6 +1494,8 @@ public /*final*/ class HyperGraph
 	        layout[0] = pTypeHandle;
 	        layout[1] = valueHandle;
 	        final HGLiveHandle lHandle = atomAdded(store.store(layout), payload, flags);
+	        if (payload instanceof HGTypeHolder)
+	        	((HGTypeHolder)payload).setAtomType(type);    	        	        	        
 	        indexByType.addEntry(pTypeHandle, lHandle.getPersistentHandle());
 	        indexByValue.addEntry(valueHandle, lHandle.getPersistentHandle());
 	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistentHandle(), payload);	        
@@ -1528,7 +1532,9 @@ public /*final*/ class HyperGraph
 	        // Store in database.
 	        //	        
 	        HGPersistentHandle pHandle = store.store(layout);	        
-	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);        	        	        
+	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);
+	        if (payload instanceof HGTypeHolder)
+	        	((HGTypeHolder)payload).setAtomType(type);    	        	        	        
 	        indexByType.addEntry(pTypeHandle, pHandle);
 	        indexByValue.addEntry(valueHandle, pHandle);
 	        idx_manager.maybeIndex(pTypeHandle, type, pHandle, payload);	
@@ -1569,7 +1575,7 @@ public /*final*/ class HyperGraph
         	lHandle = cache.atomRead(pHandle, instance, flags);
         }
         if (instance instanceof HGHandleHolder)
-        	((HGHandleHolder)instance).setAtomHandle(lHandle);    	        	
+        	((HGHandleHolder)instance).setAtomHandle(lHandle);
         return lHandle;
     }
     

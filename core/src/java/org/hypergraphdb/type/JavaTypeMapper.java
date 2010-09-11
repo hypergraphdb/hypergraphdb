@@ -64,10 +64,10 @@ public interface JavaTypeMapper extends HGGraphHolder
 	 * HG type for actual storage and retrieval. 
 	 * </p>
 	 * 
-	 * @param typeHandle
-	 * @param hgType
-	 * @param javaClass
-	 * @return
+	 * @param typeHandle The handle of the type being wrapped.
+	 * @param hgType The HyperGraphDB type instance to be wrapped
+	 * @param javaClass The Java class corresponding to this HyperGraphDB type.
+	 * @return The type wrapper or <code>null</code> if 
 	 */
 	HGAtomType getJavaBinding(HGHandle typeHandle, 
 							  HGAtomType hgType, 

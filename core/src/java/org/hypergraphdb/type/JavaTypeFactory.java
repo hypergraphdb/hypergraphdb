@@ -115,6 +115,8 @@ public class JavaTypeFactory implements JavaTypeMapper
 	{
 	    for (Constructor<?> con : c.getDeclaredConstructors())
 	    {
+	    	if (con.getParameterTypes().length == 0)
+	    		continue;
 	        boolean match = true;
 	        for (Class<?> paramClass : con.getParameterTypes())
 	            if (!HGHandle.class.isAssignableFrom(paramClass))

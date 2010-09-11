@@ -13,6 +13,16 @@ import java.util.HashMap;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 
+/**
+ * 
+ * <p>
+ * Represents an abstract type (can't be instantiated) that has some properties - modeled
+ * after and mainly used to represent an abstract Java bean.
+ * </p>
+ *
+ * @author Borislav Iordanov
+ *
+ */
 public class HGAbstractCompositeType extends HGAbstractType implements HGCompositeType 
 {
 	public static class Projection implements HGProjection
@@ -74,5 +84,4 @@ public class HGAbstractCompositeType extends HGAbstractType implements HGComposi
 	{
 		return projections.get(dimensionName);
 	}
-
 }

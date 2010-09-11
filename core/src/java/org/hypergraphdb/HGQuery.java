@@ -223,7 +223,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                     	}
                     }
                     HGHandle h = findOne(graph, and);
-                    return h == null ?  graph.add(instance) : h;                    
+                    return h == null ?  graph.add(instance, type) : h;                    
                 }
             });            
         }
