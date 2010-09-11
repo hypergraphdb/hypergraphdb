@@ -456,9 +456,25 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		}		
 		else if (cond instanceof And)
 		{
+			HGQueryCondition statedType = null;
 			And result = new And();
 			for (HGQueryCondition sub : (And)cond)
-				result.add(expand(graph, sub));
+			{
+				if (sub instanceof AtomTypeCondition || sub instanceof TypedValueCondition)
+					statedType = sub;
+				HGQueryCondition expanded = expand(graph, sub);
+				if (expanded instanceof And)
+					result.addAll((And)expanded);
+				else
+					result.add(expanded);
+			}
+			if (statedType != null) // filter out any (possibly wrongly) inferred type conditions during the expansion process
+				for (Iterator<HGQueryCondition> i = result.iterator(); i.hasNext(); )
+				{
+					HGQueryCondition curr = i.next();
+					if (curr != statedType && curr instanceof AtomTypeCondition)
+						i.remove();
+				}
 			cond = result;
 		}
 		else if (cond instanceof Or)

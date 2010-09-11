@@ -9,6 +9,8 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -18,6 +20,8 @@ import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
+import org.hypergraphdb.type.HGAtomType;
+import org.hypergraphdb.type.HGCompositeType;
 import org.hypergraphdb.type.HGTypedValue;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.CompositeMapping;
@@ -208,20 +212,38 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                 {
                     And and = new And();
                     and.add(type(type));
-                    if (!ignoreValue)
-                        and.add(eq(instance));
                     if (instance instanceof HGLink)
                         and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
                     List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(type);
-                    if (indexers != null) for (HGIndexer idx : indexers)
+                	boolean skipValue = false;
+                    if (indexers != null)
                     {
-                    	if (idx instanceof ByPartIndexer)
+                    	HashSet<String> dimensions = new HashSet<String>();
+                    	for (HGIndexer idx : indexers)
+	                    {
+	                    	if (idx instanceof ByPartIndexer)
+	                    	{
+	                    		ByPartIndexer byPart = (ByPartIndexer)idx;
+	                    		HGTypedValue prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
+	                    		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop.getValue()));
+	                    		if (byPart.getDimensionPath().length == 1)
+	                    			dimensions.add(byPart.getDimensionPath()[0]);
+	                    	}
+	                    }
+                    	
+                    	// if we have a complex type where all dimensions are covered by indices,we don't need
+                    	// to include the full atom value in the condition
+                    	HGAtomType T = graph.get(type);
+                    	if (!dimensions.isEmpty() && T instanceof HGCompositeType)
                     	{
-                    		ByPartIndexer byPart = (ByPartIndexer)idx;
-                    		HGTypedValue prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
-                    		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop.getValue()));
+                    		for (Iterator<String> dimIter = ((HGCompositeType)T).getDimensionNames(); dimIter.hasNext(); )
+                    			dimensions.remove(dimIter.next());
+                    		if (dimensions.isEmpty())
+                    			skipValue = true;
                     	}
                     }
+                    if (!ignoreValue && !skipValue)
+                        and.add(eq(instance));                    
                     HGHandle h = findOne(graph, and);
                     return h == null ?  graph.add(instance, type) : h;                    
                 }
