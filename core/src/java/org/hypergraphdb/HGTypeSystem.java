@@ -1045,7 +1045,14 @@ public class HGTypeSystem
 			HGUtils.closeNoException(rs);
 		}
 	}
-
+	
+	public HGTypeStructuralInfo getTypeMetaData(HGHandle typeHandle)
+	{
+		HGTypeStructuralInfo typeStruct = hg.getOne(graph, hg.and(hg.type(HGTypeStructuralInfo.class), 
+												hg.eq("typeHandle", typeHandle)));
+		return typeStruct;
+	}
+		
 	/**
 	 * <p>
 	 * Remove a type alias. If the alias hasn't been previously

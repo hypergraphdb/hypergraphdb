@@ -34,7 +34,8 @@ import org.hypergraphdb.HGPersistentHandle;
  * 
  * <ul>
  * <li><b>typeHandle</b> - The persistent handle of the type to which this structural information applies.</li>
- * <li><b>arity</b>  - The fixed arity of all atoms of that particular type.</li>
+ * <li><b>arity</b>  - The fixed arity of all atoms of that particular type. A value of Integer.MAX_VALUE
+ * indicates variable arity.</li>
  * <li><b>ordered</b> - Whether links of that type are ordered or not. Note that this flag
  * 					    applies only when <code>arity > 0</code>.</li>
  * </ul>

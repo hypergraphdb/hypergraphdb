@@ -302,39 +302,44 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	
 	public Value get(Key key)
 	{
-//	    lock.writeLock().lock();
-//	    try
-//	    {
 		lock.readLock().lock();
-		Entry<Key, Value> e = map.get(key);
-		lock.readLock().unlock();
-		if (e == null)
+		try
 		{
-			lock.writeLock().lock();
-			e = map.get(key);
-			if (e != null)
+			Entry<Key, Value> e = map.get(key);
+			if (e == null)
 			{
-				lock.writeLock().unlock();
-				CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
-				return e.value;				
+				Value v = null;
+				lock.writeLock().lock();
+				try
+				{
+					e = map.get(key);
+					if (e != null)
+					{
+						lock.writeLock().unlock();
+						CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+						return e.value;				
+					}
+					v = resolver.resolve(key);
+					e = new Entry<Key, Value>(key, v, null, null);
+					map.put(key, e);
+				}
+				finally
+				{
+					lock.writeLock().unlock();
+				}
+				CacheActionQueueSingleton.get().addAction(new AddElement(e));
+				return v;
 			}
-			Value v = resolver.resolve(key);
-			e = new Entry<Key, Value>(key, v, null, null);
-			map.put(key, e);
-			lock.writeLock().unlock();
-			CacheActionQueueSingleton.get().addAction(new AddElement(e));
-			return v;
+			else
+			{
+				CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+				return e.value;
+			}
 		}
-		else
+		finally
 		{
-			CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
-			return e.value;
+			lock.readLock().unlock();			
 		}
-//	    }
-//	    finally
-//	    {
-//	        lock.writeLock().unlock();
-//	    }
 	}
 
 	public Value getIfLoaded(Key key)

@@ -35,6 +35,13 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 		
 	}
 	
+	public LinkCondition(HGLink link)
+	{
+		targetSet = new HashSet<HGHandle>();
+		for (int i = 0; i < link.getArity(); i++)
+			targetSet.add(link.getTargetAt(i));
+	}
+	
 	public LinkCondition(HGHandle [] targets)
 	{
 		if (targets == null)

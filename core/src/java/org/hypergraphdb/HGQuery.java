@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.*;
@@ -213,7 +214,13 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                     And and = new And();
                     and.add(type(type));
                     if (instance instanceof HGLink)
-                        and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
+                    {
+                    	HGTypeStructuralInfo typeMeta = graph.getTypeSystem().getTypeMetaData(type);
+                    	if (typeMeta != null && !typeMeta.isOrdered())                   		
+                    		and.add(link((HGLink)instance));
+                    	else
+                    		and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
+                    }
                     List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(type);
                 	boolean skipValue = false;
                     if (indexers != null)
@@ -339,6 +346,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
         public static TargetCondition target(HGHandle h) { return new TargetCondition(h); }
         public static IncidentCondition incident(HGHandle h) { return new IncidentCondition(h); }
+        public static LinkCondition link(HGLink link) { return new LinkCondition(link); }
         public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
         public static LinkCondition link(Collection<HGHandle> C) { return new LinkCondition(C); }
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
