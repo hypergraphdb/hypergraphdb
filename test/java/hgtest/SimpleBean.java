@@ -84,5 +84,5 @@ public class SimpleBean
 	}
 	public final void setStrPropNull(String strPropNull) {
 		this.strPropNull = strPropNull;
-	}
+	}	
 }
