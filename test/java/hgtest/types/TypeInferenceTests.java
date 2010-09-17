@@ -1,12 +1,15 @@
 package hgtest.types;
 
 import static hgtest.AtomOperationKind.add;
+
 import static hgtest.AtomOperationKind.remove;
 import hgtest.AtomOperation;
 import hgtest.HGTestBase;
 import hgtest.beans.BeanLink1;
 import hgtest.beans.BeanLink2;
+import hgtest.beans.BeanWithTransient;
 import hgtest.beans.PrivateConstructible;
+import hgtest.beans.SubBeanWithTransient;
 
 import java.awt.Color;
 import java.util.Collection;
@@ -15,7 +18,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.type.HGCompositeType;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -150,6 +155,31 @@ public class TypeInferenceTests extends HGTestBase
        c = graph.get(colorH);
        Assert.assertEquals(c, new Color(128, 128, 128));
        graph.remove(colorH);
+    }
+    
+    @Test
+    public void testTransientFields()
+    {
+        HGCompositeType type = graph.getTypeSystem().getAtomType(BeanWithTransient.class);
+        try
+        {
+            type.getProjection("tmpString");
+            Assert.fail("projection found!");
+        }
+        catch (HGException ex)
+        {
+            Assert.assertTrue(ex.getMessage().indexOf("Could not find projection") > -1);            
+        }
+        type = graph.getTypeSystem().getAtomType(SubBeanWithTransient.class);
+        try
+        {
+            type.getProjection("tmpString");
+            Assert.fail("projection found!");
+        }
+        catch (HGException ex)
+        {
+            Assert.assertTrue(ex.getMessage().indexOf("Could not find projection") > -1);
+        }
     }
     
     private Map createTestMap()

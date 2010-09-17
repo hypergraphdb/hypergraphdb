@@ -216,7 +216,7 @@ public class ResultSets extends HGTestBase
                 .getBidirectionalIndex(
                 /* HGTypeSystem.TYPE_ALIASES_DB_NAME, */
                 "hg_typesystem_type_alias", BAtoString.getInstance(),
-                        BAtoHandle.getInstance(), null, false);
+                        BAtoHandle.getInstance(graph.getHandleFactory()), null, false);
         HGRandomAccessResult<String> res = idx.findByValue(graph
                 .getPersistentHandle(graph.getTypeSystem().getTypeHandle(
                         TestInt.class)));

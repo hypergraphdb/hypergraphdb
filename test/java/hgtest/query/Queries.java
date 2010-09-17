@@ -1,6 +1,7 @@
 package hgtest.query;
 
 import hgtest.HGTestBase;
+import hgtest.beans.Folder;
 import hgtest.utils.RSUtils;
 
 import java.util.ArrayList;
@@ -62,6 +63,7 @@ public class Queries extends HGTestBase
         testMapCondition();
         testTypePlusCondition();
         testTypedValueCondition();
+        testFilteredLinkTarget();
         
         //make 2 passes with different link types
         for (int i = 0; i < 2; i++)
@@ -321,6 +323,47 @@ public class Queries extends HGTestBase
 
     }
 
+    @Test
+    public void testFilteredLinkTarget()
+    {
+        Folder folder01 = new Folder("Folder 01");
+        HGHandle folder01Handle = graph.add(folder01);
+        Folder folder02 = new Folder("Folder 02");
+        HGHandle folder02Handle = graph.add(folder02);
+        HGValueLink link1 = new HGValueLink("link", folder01Handle, folder02Handle);
+        graph.add(link1);
+        
+        HGQueryCondition cond01 = hg.type(Folder.class);
+        List<HGHandle> handleList01 = hg.findAll(graph, cond01);
+        Assert.assertTrue(handleList01.contains(folder01Handle));
+        Assert.assertTrue(handleList01.contains(folder02Handle));
+        Assert.assertEquals(handleList01.size(), 2);
+        
+        HGQueryCondition cond02 = hg.and(
+                hg.type(Folder.class),
+                hg.eq("name", "Folder 01"));
+        List<HGHandle> handleList02 = hg.findAll(graph, cond02);
+        Assert.assertEquals(handleList02.size(), 1);
+        Assert.assertTrue(handleList02.contains(folder01Handle));   
+        
+        HGQueryCondition cond03 = hg.apply(
+                    hg.targetAt(graph, 1),
+                    hg.orderedLink(folder01Handle, hg.anyHandle()));
+        List<HGHandle> handleList03 = hg.findAll(graph, cond03);
+        Assert.assertEquals(handleList03.size(), 1);
+        Assert.assertTrue(handleList03.contains(folder02Handle));   
+        
+        HGQueryCondition cond04 = hg.and(
+                hg.type(Folder.class),
+                hg.apply(
+                    hg.targetAt(graph, 1),
+                    hg.orderedLink(folder02Handle, hg.anyHandle())));
+        HGQuery<HGHandle> query = HGQuery.make(graph, cond04);
+        List<HGHandle> handleList04 = hg.findAll(query);        
+        Assert.assertEquals(handleList04.size(), 1);
+        Assert.assertTrue(handleList04.contains(folder02Handle));          
+    }
+    
     @Test
     public void testDFSCondition()
     {
