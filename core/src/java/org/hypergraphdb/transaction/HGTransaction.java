@@ -195,7 +195,7 @@ public final class HGTransaction implements HGStorageTransaction
                     context.getManager().mostRecentRecord.setNext(newRecord);
                     newRecord.setPrev(context.getManager().mostRecentRecord);
                     context.getManager().mostRecentRecord = newRecord;
-                    
+
                     // as this transaction changed number, we must
                     // update the activeRecords accordingly
 
@@ -209,10 +209,31 @@ public final class HGTransaction implements HGStorageTransaction
                 }
                 else
                 {
-//                    System.out.println("Transaction conflict.");
                     privateAbort();
                     throw new TransactionConflictException();
                 }
+            }
+            catch (Throwable t)
+            { 
+                // A Throwable here could only mean something rather severe, such
+                // as an OutOfMemory error, so we will just re-throw it. However, in case
+                // the caller (the client application) doesn't catch it but attempts
+                // some other DB operation (e.g. a graph.close() in a finally block or some
+                // such), another transaction could be attempted in an inconsistent state.
+                // To prevent that from happening, we disable transaction with the manager:
+                context.getManager().setEnabled(false);
+                // and since this is not enough (RAM transaction are still available and could
+                // go into an infinite loop if the logic behind the transaction numbers is 
+                // driven into an inconsistent path, we also nullify the transaction record
+                // which will throw an NPE on any attempt to start a new transaction.
+                context.getManager().mostRecentRecord = null;
+               
+                // We'll also just print it out in case it gets swallowed by application code
+                // and nobody can find the actual reason for the crash.
+                if (t instanceof Error)
+                    throw (Error)t;
+                else
+                    throw (RuntimeException)t;
             }
             finally
             {                
@@ -228,7 +249,6 @@ public final class HGTransaction implements HGStorageTransaction
         HyperGraph graph = context.getManager().getHyperGraph();
         graph.getEventManager().dispatch(graph,
                                          new HGTransactionEndEvent(this, true));
-//        System.out.println("Transaction succeeded.");
     }
 
     private void privateAbort() throws HGTransactionException

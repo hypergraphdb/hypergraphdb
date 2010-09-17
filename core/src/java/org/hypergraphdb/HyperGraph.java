@@ -346,9 +346,11 @@ public /*final*/ class HyperGraph
 	        //
 	        // Now, bootstrap the type system.
 	        //
-	        typeSystem.bootstrap(config.getTypeConfiguration());                 
-            
-    		idx_manager.loadIndexers();
+	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
+            typeSystem.bootstrap(config.getTypeConfiguration());                 
+            getTransactionManager().endTransaction(true);
+
+            idx_manager.loadIndexers();
     		
 	        // Initialize atom access statistics, purging and the like. 
 	        initAtomManagement();    
@@ -1673,7 +1675,7 @@ public /*final*/ class HyperGraph
 	        else
 	        {
 	        	result = liveHandle;
-	        	cache.atomRefresh(result, instance);
+	        	cache.atomRefresh(result, instance, false);
 	        }
 	        if (instance instanceof HGAtomType)
 	        	instance = typeSystem.loadedType(result, (HGAtomType)instance, true);
@@ -2065,7 +2067,7 @@ public /*final*/ class HyperGraph
 	    	idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
 	    	
 	    	if (lHandle != null)
-	    		cache.atomRefresh(lHandle, atom);
+	    		cache.atomRefresh(lHandle, atom, true);
 	    	if (atom instanceof HGGraphHolder)
 	    		((HGGraphHolder)atom).setHyperGraph(this);
 	    	if (atom instanceof HGHandleHolder)
@@ -2096,7 +2098,7 @@ public /*final*/ class HyperGraph
 		
 		HGLiveHandle instanceLiveHandle = cache.get(instanceHandle);
 		if (instanceLiveHandle != null && instanceLiveHandle.getRef() != null)
-			cache.atomRefresh(instanceLiveHandle, newInstance);
+			cache.atomRefresh(instanceLiveHandle, newInstance, true);
 		
 		if (oldInstance instanceof HGAtomType)
 		{

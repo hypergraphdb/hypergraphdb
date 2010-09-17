@@ -8,7 +8,8 @@ package org.hypergraphdb.cache;
  * The 'load' method is to be used when data is fetched from permanent storage
  * while the 'put' method is to be used where the data associated with a given
  * key is modified at runtime. This distinction is important for managing the
- * MVCC transactional cache. 
+ * MVCC transactional cache - the 'load' operation is <strong>not</strong> going to 
+ * be rolled back in case of an abort!
  * </p>
  *
  * @author Borislav Iordanov

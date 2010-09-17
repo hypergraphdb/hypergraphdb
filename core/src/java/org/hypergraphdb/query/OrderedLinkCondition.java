@@ -67,7 +67,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
     {
         if (targetSet == null)
             throw new HGException("OrderedLinkCondition instantiated with a null target set.");
-        this.targetSet = new HGHandle[this.targetSet.length];
+        this.targetSet = new HGHandle[targetSet.size()];
         int i = 0;
         for (HGHandle h : targetSet)
             this.targetSet[i++] = h; 

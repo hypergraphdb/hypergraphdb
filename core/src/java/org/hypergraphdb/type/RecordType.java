@@ -155,8 +155,15 @@ public class RecordType implements HGCompositeType
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
         Record result = null;
-        if (targetSet != null && targetSet.deref().length > 0)
-            result = new LinkRecord(graph.getHandle(this), targetSet.deref());
+        HGHandle [] targets = HGUtils.EMPTY_HANDLE_ARRAY;
+        if (targetSet != null)
+        {
+            targets = targetSet.deref();
+            if (targets == null)
+                targets = HGUtils.EMPTY_HANDLE_ARRAY;
+        }
+        if (targets.length > 0)
+            result = new LinkRecord(graph.getHandle(this), targets);
         else
             result = new Record(graph.getHandle(this));
         TypeUtils.setValueFor(graph, handle, result);

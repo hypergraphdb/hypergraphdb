@@ -480,7 +480,7 @@ public class HGTypeSystem
 		// instance of
 		//
 		if (newHandle instanceof HGLiveHandle)
-			graph.cache.atomRefresh((HGLiveHandle)newHandle, type);
+			graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
 		else
 			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle, type, (byte)HGSystemFlags.DEFAULT);
 
@@ -630,7 +630,7 @@ public class HGTypeSystem
 			type = javaTypes.getJavaBinding(handle, type, clazz);
 			if (refreshInCache)
 			{
-				graph.cache.atomRefresh(handle, type);
+				graph.cache.atomRefresh(handle, type, false);
 				classToAtomType.put(clazz, handle);
 			}
 		}

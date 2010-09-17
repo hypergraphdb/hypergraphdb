@@ -215,7 +215,7 @@ public class PhantomRefAtomCache implements HGAtomCache
         return h;
     }
 
-    public void atomRefresh(HGLiveHandle handle, Object atom) 
+    public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
     {
         if (closing)
         {

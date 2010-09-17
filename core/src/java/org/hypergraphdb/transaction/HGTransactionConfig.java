@@ -12,6 +12,14 @@ package org.hypergraphdb.transaction;
 public class HGTransactionConfig
 {
     public static final HGTransactionConfig DEFAULT = new HGTransactionConfig();
+    public static final HGTransactionConfig NO_STORAGE = new HGTransactionConfig();
+    public static final HGTransactionConfig READONLY = new HGTransactionConfig();
+    
+    static
+    {
+        NO_STORAGE.setNoStorage(true);
+        READONLY.setReadonly(true);
+    }
     
     private boolean noStorage = false;
     private boolean readonly = false;

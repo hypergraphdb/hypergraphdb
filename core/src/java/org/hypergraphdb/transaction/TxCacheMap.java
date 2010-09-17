@@ -1,6 +1,8 @@
 package org.hypergraphdb.transaction;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,6 +14,7 @@ import org.hypergraphdb.util.RefResolver;
 public class TxCacheMap<K, V>  implements CacheMap<K, V>
 {
     private Map<K, Pair<Box, AtomicInteger>> writeMap;    
+    private boolean weakrefs = false;
     
     //private ConcurrentMap<K, VBox<V>> M = new ConcurrentHashMap<K, VBox<V>>();
     protected Map<K, Box> M = null;
@@ -19,14 +22,19 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     protected RefResolver<Object, Box> boxGetter = null;
     protected VBox<Integer> sizebox = null;
     
-    protected class Box extends VBox<V>
+    protected abstract class Box extends VBox<V>
     {
-        K key;
-        
-        public Box(HGTransactionManager txManager, K key)
+        public Box(HGTransactionManager txManager)
         {
-            super(txManager);
-            this.key = key;
+            this.txManager = txManager;
+            super.commit(null, null, 0);            
+        }
+        
+        public abstract K getKey();
+        
+        public VBoxBody<V> commitImmediately(HGTransaction tx, V newValue, long txNumber)
+        {
+            return super.commit(tx, newValue, txNumber);
         }
         
         public VBoxBody<V> commit(HGTransaction tx, V newValue, long txNumber)
@@ -34,19 +42,45 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             if (M instanceof ConcurrentMap<?, ?>)
             {
                 // is this right? no synchronization here?
-                if (writeMap.get(key).getSecond().decrementAndGet() == 0)
-                    writeMap.remove(key);
+                if (writeMap.get(getKey()).getSecond().decrementAndGet() == 0)
+                    writeMap.remove(getKey());
             }
             else synchronized (M)
             {
-                if (writeMap.get(key).getSecond().decrementAndGet() == 0)
-                    writeMap.remove(key);
+                if (writeMap.get(getKey()).getSecond().decrementAndGet() == 0)
+                    writeMap.remove(getKey());
             }
             if (body.value == null)
                 return body = makeNewBody(newValue, tx.getNumber(), body.next);
             else // otherwise we just add as the newest body with the current tx number
                 return super.commit(tx, newValue, tx.getNumber());            
+        }        
+    }
+    
+    protected class StrongBox extends Box
+    {
+        K key;
+        
+        public StrongBox(HGTransactionManager txManager, K key)
+        {
+            super(txManager);
+            this.key = key;
         }
+        
+        public K getKey() { return key; } 
+    }
+    
+    protected class WeakBox extends Box
+    {
+        WeakReference<K> key;
+        
+        public WeakBox(HGTransactionManager txManager, K key)
+        {
+            super(txManager);
+            this.key = new WeakReference<K>(key);
+        }
+        
+        public K getKey() { return key.get(); }
     }
     
     @SuppressWarnings("unchecked")
@@ -68,8 +102,8 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                 M.put((K)key, p.getFirst());
                 return p.getFirst();
             }
-            
-            box = new Box(txManager, (K)key);
+                        
+            box = weakrefs ? new WeakBox(txManager, (K)key) : new StrongBox(txManager, (K)key);
             M.put((K)key, box);
             return box;
         }
@@ -81,6 +115,8 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         this.txManager = tManager;
         this.sizebox = new VBox<Integer>(txManager);
         this.sizebox.put(0);
+        if (mapImplementation != null)
+            this.weakrefs = WeakHashMap.class.isAssignableFrom(mapImplementation);
         
         try
         {
@@ -100,6 +136,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             throw new RuntimeException(e);
         }
         
+        
         if (this.M instanceof ConcurrentMap)            
             boxGetter = new RefResolver<Object,Box>() 
         {
@@ -117,7 +154,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                     c_map.putIfAbsent((K)k, p.getFirst());
                     return p.getFirst();
                 }
-                box = new Box(txManager, (K)k);
+                box = weakrefs ? new WeakBox(txManager, (K)k) : new StrongBox(txManager, (K)k);
                 Box box2 = c_map.putIfAbsent((K)k, box);
                 return box2 != null ? box2 : box;
             }            
@@ -149,8 +186,11 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         {
             if (writeMap instanceof ConcurrentMap)
             {
-                p = (Pair<Box, AtomicInteger>) ((ConcurrentMap)writeMap).putIfAbsent(key, 
-                        new Pair<Box, AtomicInteger>(box, new AtomicInteger(0)));                
+                p = new Pair<Box, AtomicInteger>(box, new AtomicInteger(0));
+                Pair<Box, AtomicInteger> existing = (Pair<Box, AtomicInteger>) 
+                    ((ConcurrentMap)writeMap).putIfAbsent(key, p);
+                if (existing != null)
+                    p = existing;
             }
             else synchronized (M)
             {
@@ -195,7 +235,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                     box.body = box.makeNewBody(value, tx.getNumber(), box.body.next);
                 }
                 else // otherwise we just add as the newest body with the current tx number
-                    box.commit(tx, value, tx.getNumber());
+                    box.commitImmediately(tx, value, tx.getNumber());
             }
             // if not current, we must insert it into the list of bodies and make sure
             // the top body is "null" in order to force a subsequent reload
@@ -203,7 +243,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             {
                 // make sure top body is null
                 if (box.body.value != null)
-                    box.commit(tx, null, txManager.mostRecentRecord.transactionNumber);
+                    box.commitImmediately(tx, null, txManager.mostRecentRecord.transactionNumber);
                 
                 VBoxBody<V> currentBody = box.body;
                 while (currentBody.next != null && currentBody.next.version > tx.getNumber())
@@ -243,6 +283,9 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         Box box = boxGetter.resolve(key);
         
         HGTransaction tx = txManager.getContext().getCurrent();
+        
+        if (tx == null)
+            return box.body.value;
         
         V value = tx.getLocalValue(box);
         

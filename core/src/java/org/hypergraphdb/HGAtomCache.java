@@ -102,18 +102,30 @@ public interface HGAtomCache
 								 final long retrievalCount, 
 								 final long lastAccessTime);
 	/**
-	 * <p>Refresh a previously evicted atom. This method is invoked when <code>HyperGraph</code>
+	 * <p>Replace the runtime instance of an atom with a new value. This method is invoked when <code>HyperGraph</code>
 	 * needs to inform the cache about a change of the value of an atom. The cache must 
 	 * assign the new reference to the cached live handle and, as the case may be, reinsert the atom
 	 * into its caching structures. 
+	 * </p>
+	 * 
+	 * <p>
+	 * Note that there are two important cases of "refreshing" an atom in the cache - the atom
+	 * being reloaded from permanent storage or when there is an actual value change. In the 
+	 * former case, a transaction abort does not need to rollback changes in the caching
+	 * structures while in the latter it does! The two cases are distinguished by the third
+	 * parameter of this method.
 	 * </p>
 	 * 
 	 * @param handle The <code>HGLiveHandle</code> handle of the atom to be refreshed.
 	 * @param atom The atom value. <code>HyperGraph</code> will obtain this value
 	 * either from the cache, in case the atom has already been re-fetched from storage
 	 * after the eviction event, or it will retrieve and create a new run-time instance.
+	 * @param replace <code>true</code> if this is a new atom value (old must be restored
+	 * if the transaction aborts) and <code>false</code> if this is simply a reload from
+	 * permanent storage where the effects of that reload may (or may not, depending on the
+	 * implementation) be reversed in case of a transaction abort.
 	 */
-	void atomRefresh(HGLiveHandle handle, Object atom);
+	void atomRefresh(HGLiveHandle handle, Object atom, boolean replace);
 	
 	/**
 	 * <p>

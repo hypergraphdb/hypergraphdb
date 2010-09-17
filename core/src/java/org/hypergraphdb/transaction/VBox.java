@@ -31,6 +31,11 @@ public class VBox<E>
     
     VBoxBody<E> body = makeNewBody(null, 0, null); // is this right?
 
+    /**
+     * for sub-classing only....
+     */
+    protected VBox() { }
+    
     public VBox(HGTransactionManager txManager)
     {
         this(txManager, (E) null);
