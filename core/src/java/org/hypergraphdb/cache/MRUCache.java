@@ -306,31 +306,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		try
 		{
 			Entry<Key, Value> e = map.get(key);
-			if (e == null)
-			{
-				Value v = null;
-				lock.writeLock().lock();
-				try
-				{
-					e = map.get(key);
-					if (e != null)
-					{
-						lock.writeLock().unlock();
-						CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
-						return e.value;				
-					}
-					v = resolver.resolve(key);
-					e = new Entry<Key, Value>(key, v, null, null);
-					map.put(key, e);
-				}
-				finally
-				{
-					lock.writeLock().unlock();
-				}
-				CacheActionQueueSingleton.get().addAction(new AddElement(e));
-				return v;
-			}
-			else
+			if (e != null)
 			{
 				CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
 				return e.value;
@@ -338,7 +314,27 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		}
 		finally
 		{
-			lock.readLock().unlock();			
+			lock.readLock().unlock();
+		}
+		
+		lock.writeLock().lock();
+		try
+		{
+			Entry<Key, Value> e = map.get(key);
+			if (e == null)
+			{				
+				Value v = resolver.resolve(key);
+				e = new Entry<Key, Value>(key, v, null, null);
+				map.put(key, e);
+				CacheActionQueueSingleton.get().addAction(new AddElement(e));
+				return v;
+			}
+			else
+				return e.value;
+		}
+		finally
+		{
+			lock.writeLock().unlock();			
 		}
 	}
 

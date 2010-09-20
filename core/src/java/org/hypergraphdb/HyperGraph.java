@@ -1095,7 +1095,7 @@ public /*final*/ class HyperGraph
     	if (h == null)
     		throw new HGException("Could not find HyperGraph handle for atom " + atom);
     	else
-    		return replace(h, atom);
+    		return replace(h, atom, getType(h));
     }
     
     /**
@@ -1134,6 +1134,8 @@ public /*final*/ class HyperGraph
      */
     public boolean replace(HGHandle handle, Object atom)
     {
+    	if (handle.equals(getHandle(atom)))
+    		return replace(handle, atom, getType(handle)); // this is an 'update'
     	HGHandle atomType;
     	if (atom instanceof HGValueLink)    		
     	{

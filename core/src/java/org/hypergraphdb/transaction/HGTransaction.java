@@ -140,6 +140,29 @@ public final class HGTransaction implements HGStorageTransaction
         activeTxRecord.decrementRunning();
     }
     
+    private void fatalFailure(Throwable t)
+    {
+        // A Throwable here could only mean something rather severe, such
+        // as an OutOfMemory error, so we will just re-throw it. However, in case
+        // the caller (the client application) doesn't catch it but attempts
+        // some other DB operation (e.g. a graph.close() in a finally block or some
+        // such), another transaction could be attempted in an inconsistent state.
+        // To prevent that from happening, we disable transaction with the manager:
+        context.getManager().setEnabled(false);
+        // and since this is not enough (RAM transaction are still available and could
+        // go into an infinite loop if the logic behind the transaction numbers is 
+        // driven into an inconsistent path, we also nullify the transaction record
+        // which will throw an NPE on any attempt to start a new transaction.
+        context.getManager().mostRecentRecord = null;
+       
+        // We'll also just print it out in case it gets swallowed by application code
+        // and nobody can find the actual reason for the crash.
+        if (t instanceof Error)
+            throw (Error)t;
+        else
+            throw (RuntimeException)t;
+    }
+    
     HGTransaction(HGTransactionContext context, 
                   HGTransaction parent,
                   ActiveTransactionsRecord activeTxRecord, 
@@ -180,11 +203,11 @@ public final class HGTransaction implements HGStorageTransaction
         
         if (isWriteTransaction())
         {
-            context.getManager().COMMIT_LOCK.lock();
-            try
+            if (validateCommit())
             {
-                if (validateCommit())
-                {
+                context.getManager().COMMIT_LOCK.lock();            	
+            	try
+            	{
                     if (stran != null)
                         stran.commit();
                     Cons<VBoxBody<?>> bodiesCommitted = performValidCommit();
@@ -206,38 +229,27 @@ public final class HGTransaction implements HGStorageTransaction
                     
                     // This assignment is need to decrementRunning in the finish method below.                    
                     this.activeTxRecord = newRecord;
-                }
-                else
-                {
-                    privateAbort();
-                    throw new TransactionConflictException();
-                }
+            	}
+            	catch (Throwable t)
+            	{
+            		fatalFailure(t);
+            	}
+                finally
+                {                
+                    context.getManager().COMMIT_LOCK.unlock();                
+                }            	
             }
-            catch (Throwable t)
-            { 
-                // A Throwable here could only mean something rather severe, such
-                // as an OutOfMemory error, so we will just re-throw it. However, in case
-                // the caller (the client application) doesn't catch it but attempts
-                // some other DB operation (e.g. a graph.close() in a finally block or some
-                // such), another transaction could be attempted in an inconsistent state.
-                // To prevent that from happening, we disable transaction with the manager:
-                context.getManager().setEnabled(false);
-                // and since this is not enough (RAM transaction are still available and could
-                // go into an infinite loop if the logic behind the transaction numbers is 
-                // driven into an inconsistent path, we also nullify the transaction record
-                // which will throw an NPE on any attempt to start a new transaction.
-                context.getManager().mostRecentRecord = null;
-               
-                // We'll also just print it out in case it gets swallowed by application code
-                // and nobody can find the actual reason for the crash.
-                if (t instanceof Error)
-                    throw (Error)t;
-                else
-                    throw (RuntimeException)t;
-            }
-            finally
-            {                
-                context.getManager().COMMIT_LOCK.unlock();                
+            else
+            {
+            	try
+            	{
+            		privateAbort();
+            	}
+            	catch (Throwable t)
+            	{
+            		fatalFailure(t);
+            	}
+                throw new TransactionConflictException();
             }
         }                
         else
