@@ -60,7 +60,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		BonesOfBeans.setProperty(bean, property, value);
 	}
 
-	static void assignPrivate(Class<?> clazz, Object x, String field, Object value)
+	public static void assignPrivate(Class<?> clazz, Object x, String field, Object value)
 	{
 		Field f = accessibleObjectCache.getField(clazz, field);
 		try
@@ -73,7 +73,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 	}
 	
-	static Object retrievePrivate(Class<?> clazz, Object x, String field)
+	public static Object retrievePrivate(Class<?> clazz, Object x, String field)
 	{
 		Field f = accessibleObjectCache.getField(x.getClass(), field);
 		try
@@ -86,13 +86,13 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}
 	}
 
-	static boolean isAbstract(Class<?> c)
+	public static boolean isAbstract(Class<?> c)
 	{
 		return Modifier.isAbstract(c.getModifiers()) || 
 		  	   Modifier.isInterface(c.getModifiers());
 	}
 	
-	static Constructor<?> findDefaultConstructor(Class<?> c)
+	public static Constructor<?> findDefaultConstructor(Class<?> c)
 	{
         for (Constructor<?> con : c.getDeclaredConstructors())
             if (con.getParameterTypes().length == 0)
@@ -100,7 +100,7 @@ public class JavaTypeFactory implements JavaTypeMapper
         return null;	    
 	}
 	
-	static boolean isDefaultConstructible(Class<?> c)
+	public static boolean isDefaultConstructible(Class<?> c)
 	{
 		try 
 		{
@@ -113,7 +113,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}		
 	}
 	
-	static Constructor<?> findHandleArgsConstructor(Class<?> c)
+	public static Constructor<?> findHandleArgsConstructor(Class<?> c)
 	{
 	    for (Constructor<?> con : c.getDeclaredConstructors())
 	    {
@@ -132,7 +132,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 	    return null;
 	}
 	
-	static boolean isLink(Class<?> c)
+	public static boolean isLink(Class<?> c)
 	{
 	    boolean b = HGLink.class.isAssignableFrom(c);
 	    if (!b)
@@ -148,7 +148,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 		}		
 	}
 	
-	static boolean isHGInstantiable(Class<?> c)
+	public static boolean isHGInstantiable(Class<?> c)
 	{
 		return !isAbstract(c) && (isDefaultConstructible(c) || isLink(c));
 	}
