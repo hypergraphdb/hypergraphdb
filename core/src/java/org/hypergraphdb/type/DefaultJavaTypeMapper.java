@@ -16,7 +16,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGHandleHolder;
+import org.hypergraphdb.HGTypeHolder;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGTypeSystem;
 import org.hypergraphdb.annotation.AtomReference;
@@ -91,7 +94,7 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		}		
 	}
 	
-	private boolean includeProperty(Class<?> javaClass, PropertyDescriptor desc)
+	public static boolean includeProperty(Class<?> javaClass, PropertyDescriptor desc)
 	{
 		Method reader = desc.getReadMethod();
 		Method writer = desc.getWriteMethod();
@@ -100,6 +103,12 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		if (reader.getAnnotation(HGIgnore.class) != null ||
 			writer.getAnnotation(HGIgnore.class) != null)
 			return false;
+		if (desc.getName().equals("atomHandle") && HGHandleHolder.class.isAssignableFrom(javaClass))
+			return false;
+		if (desc.getName().equals("atomType") && HGTypeHolder.class.isAssignableFrom(javaClass))
+			return false;
+		if (desc.getName().equals("hyperGraph") && HGGraphHolder.class.isAssignableFrom(javaClass))
+			return false;				
 		try
 		{
 			Field field = javaClass.getDeclaredField(desc.getName());

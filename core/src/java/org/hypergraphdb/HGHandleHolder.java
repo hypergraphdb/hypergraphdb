@@ -1,5 +1,7 @@
 package org.hypergraphdb;
 
+import org.hypergraphdb.annotation.HGIgnore;
+
 /**
  * 
  * <p>
@@ -15,6 +17,7 @@ public interface HGHandleHolder
 	/**
 	 * Return the HyperGraphDB atom handle of this object. 
 	 */
+	@HGIgnore
 	HGHandle getAtomHandle();
 	
 	/**
@@ -25,5 +28,6 @@ public interface HGHandleHolder
 	 * 
 	 * @param handle The atom handle.
 	 */
+	@HGIgnore
 	void setAtomHandle(HGHandle handle);
 }

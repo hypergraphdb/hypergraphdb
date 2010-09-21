@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.annotation.HGIgnore;
+
 /**
  * 
  * <p>
@@ -28,5 +30,6 @@ public interface HGGraphHolder
 	 * @param hg The <code>HyperGraph</code> that just loaded
 	 * the atom.
 	 */
+	@HGIgnore
 	void setHyperGraph(HyperGraph graph);
 }

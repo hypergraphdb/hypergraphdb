@@ -49,7 +49,7 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
 	public AtomTypeCondition(HGHandle typeHandle)
 	{
         if (typeHandle == null)
-            throw new NullPointerException();
+            throw new NullPointerException("Type handle is null.");
 		this.handle = typeHandle;
 	}
 	
