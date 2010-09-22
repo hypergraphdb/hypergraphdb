@@ -36,6 +36,11 @@ import java.util.Iterator;
  * of record values.
  * </p>
  * 
+ * <p>
+ * A null record is represented with a null handle {@link HGHandleFactory.nullHandle()}, while
+ * and empty record is represented with an "don't care" {@link HGHandleFactory.anyHandle()} 
+ * </p>
+ * 
  * @author Borislav Iordanov
  */
 public class RecordType implements HGCompositeType
@@ -154,6 +159,8 @@ public class RecordType implements HGCompositeType
    
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
+    	if (graph.getHandleFactory().nullHandle().equals(handle))
+    		return null;
         Record result = null;
         HGHandle [] targets = HGUtils.EMPTY_HANDLE_ARRAY;
         if (targetSet != null)
@@ -207,8 +214,10 @@ public class RecordType implements HGCompositeType
 
     public HGPersistentHandle store(Object instance)
     {
-        if (slots.isEmpty())
-            return graph.getHandleFactory().nullHandle();
+    	if (instance == null)
+    		return graph.getHandleFactory().nullHandle();
+    	else if (slots.isEmpty())
+            return graph.getHandleFactory().anyHandle();
         HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);
         if (! (instance instanceof Record))
             throw new HGException("RecordType.store: object is not of type Record.");
@@ -266,7 +275,7 @@ public class RecordType implements HGCompositeType
     
     public void release(HGPersistentHandle handle)
     {    	
-        if (slots.isEmpty())
+        if (slots.isEmpty() || graph.getHandleFactory().nullHandle().equals(handle))
             return;
         HGPersistentHandle [] layout = graph.getStore().getLink(handle);
         if (layout == null)
