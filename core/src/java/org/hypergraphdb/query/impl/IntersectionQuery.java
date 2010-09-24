@@ -19,9 +19,10 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
+@SuppressWarnings("unchecked")
 public class IntersectionQuery extends HGQuery 
-{
-	private HGQuery left, right;
+{	
+    private HGQuery left, right;
 	private RSCombiner combiner;
 	
 	/**
@@ -51,4 +52,34 @@ public class IntersectionQuery extends HGQuery
 		combiner.init(leftResult, rightResult);
 		return combiner;
 	}
+
+    public HGQuery getLeft()
+    {
+        return left;
+    }
+
+    public void setLeft(HGQuery left)
+    {
+        this.left = left;
+    }
+
+    public HGQuery getRight()
+    {
+        return right;
+    }
+
+    public void setRight(HGQuery right)
+    {
+        this.right = right;
+    }
+
+    public RSCombiner getCombiner()
+    {
+        return combiner;
+    }
+
+    public void setCombiner(RSCombiner combiner)
+    {
+        this.combiner = combiner;
+    } 
 }

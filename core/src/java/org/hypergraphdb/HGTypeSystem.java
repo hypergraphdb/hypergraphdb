@@ -496,7 +496,7 @@ public class HGTypeSystem
 			else
 			{
 				graph.add(new HGSubsumes(interfaceHandle, newHandle));
-                graph.getIndexManager().registerSubtype(interfaceHandle, newHandle);				
+                //graph.getIndexManager().registerSubtype(interfaceHandle, newHandle);				
 			}
 		}
 		//
@@ -515,7 +515,7 @@ public class HGTypeSystem
 			else
 			{
 				graph.add(new HGSubsumes(superHandle, newHandle));
-                graph.getIndexManager().registerSubtype(superHandle, newHandle);				
+                //graph.getIndexManager().registerSubtype(superHandle, newHandle);				
 			}
 		}
 		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitely

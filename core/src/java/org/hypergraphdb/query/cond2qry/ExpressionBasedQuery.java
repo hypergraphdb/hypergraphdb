@@ -23,6 +23,11 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
+import org.hypergraphdb.algorithms.HGTraversal;
+import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.ByTargetIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
@@ -38,6 +43,27 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	private HGQuery<ResultType> query = null; 
 	private HGQueryCondition condition;
 		
+	private Pair<HGHandle, HGIndex> findIndex(HGIndexer indexer)
+	{
+	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
+	                    new DefaultALGenerator(graph, 
+	                                           hg.type(HGSubsumes.class), 
+	                                           null, 
+	                                           true, 
+	                                           false, 
+	                                           false));
+	    for (HGHandle type = indexer.getType(); type != null; )
+	    {
+	        indexer.setType(type);
+	        HGIndex<?, ?> idx = graph.getIndexManager().getIndex(indexer);
+	        if (idx != null)
+	            return new Pair<HGHandle, HGIndex>(type, idx);
+	        else
+	            type = typeWalk.hasNext() ? typeWalk.next().getSecond() : null;
+	    }	    
+	    return null;
+	}
+	
 	/**
 	 * <p>Transform a query condition into a disjunctive normal form.</p>
 	 * 
@@ -300,24 +326,29 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						return Nothing.Instance;
 					else
 					{
-						ByPartIndexer indexer = new ByPartIndexer(typeHandle, pc.getDimensionPath());
-						HGIndex idx = graph.getIndexManager().getIndex(indexer);
-						if (idx != null)
+						Pair<HGHandle, HGIndex> p = findIndex(new ByPartIndexer(typeHandle, pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
+						if (p != null)
 						{
-							if (byType != null)
-							{
-								out.remove(byType);
-								byType = null;
-							}
-							else if (byTypedValue != null)
-							{
-								out.remove(byTypedValue);
-								out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
-															     byTypedValue.getOperator()));
-								byTypedValue = null;
-							}
-							out.remove(pc);
-							out.add(new IndexedPartCondition(typeHandle, idx, pc.getValue(), pc.getOperator()));
+						    if (typeHandle.equals(p.getFirst()))
+						    {
+    							if (byType != null)
+    							{
+    								out.remove(byType);
+    								byType = null;
+    							}
+    							else if (byTypedValue != null)
+    							{
+    								out.remove(byTypedValue);
+    								out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
+    															     byTypedValue.getOperator()));
+    								byTypedValue = null;
+    							}
+						    }
+                            out.remove(pc);						    
+							out.add(new IndexedPartCondition(p.getFirst(), 
+							                                 p.getSecond(), 
+							                                 pc.getValue(), 
+							                                 pc.getOperator()));
 						}
 					}
 			}
@@ -334,25 +365,27 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						HGHandle targetHandle = c.targets()[ti];
 						if (targetHandle.equals(graph.getHandleFactory().anyHandle()))
 							continue;
-						ByTargetIndexer indexer = new ByTargetIndexer(typeHandle, ti);
-						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
-						if (idx != null)
+						Pair<HGHandle, HGIndex> p = findIndex(new ByTargetIndexer(typeHandle, ti)); //graph.getIndexManager().getIndex(indexer);
+						if (p != null)
 						{
-							if (byType != null)
-							{
-								out.remove(byType);
-								byType = null;
-							}
-							else if (byTypedValue != null)
-							{
-								out.remove(byTypedValue);
-								out.add(new AtomValueCondition(byTypedValue.getValue(), 
-															   byTypedValue.getOperator()));
-								byTypedValue = null;
-							}							
+						    if (typeHandle.equals(p.getFirst()))
+						    {
+    							if (byType != null)
+    							{
+    								out.remove(byType);
+    								byType = null;
+    							}
+    							else if (byTypedValue != null)
+    							{
+    								out.remove(byTypedValue);
+    								out.add(new AtomValueCondition(byTypedValue.getValue(), 
+    															   byTypedValue.getOperator()));
+    								byTypedValue = null;
+    							}							
+						    }
+                            out.remove(new IncidentCondition(targetHandle));						    
 							out.add(new IndexCondition<HGPersistentHandle, HGPersistentHandle>(
-										idx, graph.getPersistentHandle(targetHandle)));
-							out.remove(new IncidentCondition(targetHandle));
+										p.getSecond(), graph.getPersistentHandle(targetHandle)));
 						}
 					}
 				}
