@@ -143,13 +143,12 @@ public class HGIndexManager
 			{
 			    // While an indexer is defined for a specific type T, we have
 			    // to also index all atoms with a subtype of T. 
-//			    for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
-//			    {
+			    for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
+			    {
 			    
 			    // the lookup of the indexer by subtype doesn't work because the HGIndexer.equals
 			    // method compare the type handles, so there's no point in associated the indexer
 			    // with the sub-types here.
-			    HGHandle currentType = indexer.getType();
     				List<HGIndexer> forType = indexers.get(currentType);
     				if (forType == null)
     				{
@@ -157,7 +156,7 @@ public class HGIndexManager
     					indexers.put(currentType, forType);
     				}
     				forType.add(indexer);
-//			    }
+			    }
 			}
 		}
 	}
@@ -310,23 +309,23 @@ public class HGIndexManager
 	 * @param superType The handle of the base type.
 	 * @param subType The handle of the sub-type.
 	 */
-//	void registerSubtype(HGHandle superType, HGHandle subType)
-//	{
-//	    List<HGIndexer> forSuperType = indexers.get(superType);
-//	    if (forSuperType == null)
-//	        return;
-//	    else if (forSuperType.isEmpty())
-//	        indexers.remove(forSuperType);
-//	    List<HGIndexer> forSubType = indexers.get(subType);
-//	    if (forSubType == null)
-//	    {
-//	        forSubType = new ArrayList<HGIndexer>();
-//            indexers.put(subType, forSubType);	        
-//	    }
-//	    for (HGIndexer idx : forSuperType)
-//	        if (!forSubType.contains(idx))
-//	            forSubType.add(idx);
-//	}
+	void registerSubtype(HGHandle superType, HGHandle subType)
+	{
+	    List<HGIndexer> forSuperType = indexers.get(superType);
+	    if (forSuperType == null)
+	        return;
+	    else if (forSuperType.isEmpty())
+	        indexers.remove(forSuperType);
+	    List<HGIndexer> forSubType = indexers.get(subType);
+	    if (forSubType == null)
+	    {
+	        forSubType = new ArrayList<HGIndexer>();
+            indexers.put(subType, forSubType);	        
+	    }
+	    for (HGIndexer idx : forSuperType)
+	        if (!forSubType.contains(idx))
+	            forSubType.add(idx);
+	}
 	
 	/**
 	 * <p>
