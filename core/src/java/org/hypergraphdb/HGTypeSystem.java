@@ -494,10 +494,7 @@ public class HGTypeSystem
 				throw new HGException("Unable to infer HG type for interface " +
 				                       interfaces[i].getName());
 			else
-			{
-				graph.add(new HGSubsumes(interfaceHandle, newHandle));
-                //graph.getIndexManager().registerSubtype(interfaceHandle, newHandle);				
-			}
+				assertSubtype(interfaceHandle, newHandle);
 		}
 		//
 		// Next, navigate to the superclass.
@@ -513,10 +510,7 @@ public class HGTypeSystem
 				                      " the superclass of " + clazz.getName());
 			}
 			else
-			{
-				graph.add(new HGSubsumes(superHandle, newHandle));
-                //graph.getIndexManager().registerSubtype(superHandle, newHandle);				
-			}
+				assertSubtype(superHandle, newHandle);
 		}
 		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitely
 		else if (clazz.isInterface())
@@ -528,6 +522,26 @@ public class HGTypeSystem
 		return newHandle;
 	}
 
+	/**
+	 * <p>
+	 * Declare that a given type is a sub-type of another type. It is not necessary to 
+	 * call this method for sub-typing relationships that are automatically inferred
+	 * from a Java class hierarchy. However, custom types and type constructors can use
+	 * this method for sub-type bookkeeping, which is important for querying and indexing.
+	 * A sub-type is represented by a {@link HGSubsumes} link. In addition, the {@link HGIndexManager}
+	 * must be informed about a sub-typing relationships in order to maintain indices
+	 * appropriately.  
+	 * </p>
+	 * 
+	 * @param superType The parent type.
+	 * @param subType The child type.
+	 */
+	public void assertSubtype(HGHandle superType, HGHandle subType)
+	{
+        graph.add(new HGSubsumes(superType, subType));
+        graph.getIndexManager().registerSubtype(superType, subType);                	    
+	}
+	
 	/**
 	 * <p>Construct the <code>HGtypeSystem</code> associated with a hypergraph.</p>
 	 *
