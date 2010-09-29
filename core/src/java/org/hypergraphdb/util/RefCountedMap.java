@@ -29,7 +29,7 @@ public class RefCountedMap<K, V> implements Map<K, V>
     public RefCountedMap(Map implementation)
     {
         if (implementation == null)
-            implementation = new ConcurrentHashMap<K, Pair<V, AtomicInteger>>();
+            this.implementation = new ConcurrentHashMap<K, Pair<V, AtomicInteger>>();
         else
             this.implementation = (Map<K, Pair<V, AtomicInteger>>)implementation;
     }

@@ -8,7 +8,7 @@ import org.hypergraphdb.util.RefResolver;
 public class TxCacheSet<Key, E> extends TxSet<E>
 {
     private Key key;
-    private RefCountedMap<Key, VBox<HGSortedSet<E>>> writeMap;    
+    private RefCountedMap<Key,SetTxBox<E>> writeMap;    
     private RefResolver<Key, ? extends HGSortedSet<E>> loader; 
     
     void insertBody(long txNumber, HGSortedSet<E> x)
@@ -59,6 +59,8 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     HGSortedSet<E> read()
     {
         HGTransaction tx = txManager.getContext().getCurrent();
+        if (tx == null)
+            return S.body.value;
         HGSortedSet<E> x = tx.getLocalValue(S);        
         if (x == null) // no local value, we get the correct version if loaded or return null if not
         {
@@ -106,8 +108,15 @@ public class TxCacheSet<Key, E> extends TxSet<E>
         this.txManager = txManager;
         this.key = key;
         this.loader = loader;
-        S = writeMap.get(key);
-        long txNumber = txManager.getContext().getCurrent().getNumber();
+        this.writeMap = writeMap;
+        HGTransaction tx = txManager.getContext().getCurrent();
+        if (tx == null)
+        {
+            S = new CacheSetTxBox<Key, E>(txManager, backingSet, this);
+            return;
+        }        
+        S = writeMap.get(key);         
+        long txNumber = tx.getNumber();
         if (S == null)
         {
             S = new CacheSetTxBox<Key, E>(txManager, backingSet, this);
@@ -137,7 +146,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
         @Override
         public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
         {
-            if (tx.getAttribute(thisSet) != null)
+            if (tx != null && tx.getAttribute(this) != null)
             {
                 TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;  
                 s.writeMap.remove(s.key);

@@ -161,7 +161,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
      */
     public void put(K key, V value)
     {
-        HGTransaction tx = txManager.getContext().getCurrent();        
+        HGTransaction tx = txManager.getContext().getCurrent();
         Box box = boxGetter.resolve(key);
         
         // first, check if this transaction was already written to that Box  and if not,
