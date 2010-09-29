@@ -219,7 +219,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 				}
 //				evicted++;
 			}
-			System.gc();
+//			System.gc();
 //			System.out.println("EVICTION COMPLETED :" + evicted + ", "  + Runtime.getRuntime().freeMemory());
 		}
 	}

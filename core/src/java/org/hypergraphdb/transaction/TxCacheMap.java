@@ -1,22 +1,19 @@
 package org.hypergraphdb.transaction;
 
 import java.lang.ref.WeakReference;
+
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.hypergraphdb.cache.CacheMap;
-import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 
 public class TxCacheMap<K, V>  implements CacheMap<K, V>
 {
-    private Map<K, Pair<Box, AtomicInteger>> writeMap;    
+    private RefCountedMap<K, Box> writeMap;    
     private boolean weakrefs = false;
-    
-    //private ConcurrentMap<K, VBox<V>> M = new ConcurrentHashMap<K, VBox<V>>();
     protected Map<K, Box> M = null;
     protected HGTransactionManager txManager;
     protected RefResolver<Object, Box> boxGetter = null;
@@ -39,17 +36,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         
         public VBoxBody<V> commit(HGTransaction tx, V newValue, long txNumber)
         {
-            if (M instanceof ConcurrentMap<?, ?>)
-            {
-                // is this right? no synchronization here?
-                if (writeMap.get(getKey()).getSecond().decrementAndGet() == 0)
-                    writeMap.remove(getKey());
-            }
-            else synchronized (M)
-            {
-                if (writeMap.get(getKey()).getSecond().decrementAndGet() == 0)
-                    writeMap.remove(getKey());
-            }
+            writeMap.remove(getKey());
             if (body.value == null)
                 return body = makeNewBody(newValue, tx.getNumber(), body.next);
             else // otherwise we just add as the newest body with the current tx number
@@ -95,12 +82,12 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             if (box != null)
                 return box;
             
-            Pair<Box, AtomicInteger> p = writeMap.get(key);
+            box = writeMap.get(key);
             
-            if (p != null)
+            if (box != null)
             {
-                M.put((K)key, p.getFirst());
-                return p.getFirst();
+                M.put((K)key, box);
+                return box;
             }
                         
             box = weakrefs ? new WeakBox(txManager, (K)key) : new StrongBox(txManager, (K)key);
@@ -123,12 +110,12 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             if (mapImplementation == null)
             {
                 this.M = new ConcurrentHashMap<K, Box>();
-                this.writeMap = new ConcurrentHashMap<K, Pair<Box, AtomicInteger>>();
+                this.writeMap = new RefCountedMap<K, Box>(new ConcurrentHashMap());
             }
             else
             {
                 this.M = mapImplementation.newInstance();
-                writeMap = mapImplementation.newInstance();
+                this.writeMap = new RefCountedMap(mapImplementation.newInstance());
             }
         }
         catch (Exception e)
@@ -141,18 +128,17 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             boxGetter = new RefResolver<Object,Box>() 
         {
             private ConcurrentMap<K, Box> c_map = (ConcurrentMap<K, Box>)M;
-            private ConcurrentMap<K, Pair<Box, AtomicInteger>> cwrite_map = 
-                (ConcurrentMap<K, Pair<Box, AtomicInteger>>)writeMap;
+            private Map<K, Box> cwrite_map = writeMap;
             public Box resolve(Object k) 
             { 
                 Box box = c_map.get(k);
                 if (box != null)
                     return box;
-                Pair<Box, AtomicInteger> p = cwrite_map.get(k);
-                if (p != null)
+                box = cwrite_map.get(k);
+                if (box != null)
                 {
-                    c_map.putIfAbsent((K)k, p.getFirst());
-                    return p.getFirst();
+                    c_map.putIfAbsent((K)k, box);
+                    return box;
                 }
                 box = weakrefs ? new WeakBox(txManager, (K)k) : new StrongBox(txManager, (K)k);
                 Box box2 = c_map.putIfAbsent((K)k, box);
@@ -173,36 +159,15 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
      * Overriden to maintain a global write map so that evicted versioned boxes from the cache
      * get re-attached upon reloading.
      */
-    @SuppressWarnings("unchecked")
     public void put(K key, V value)
     {
         HGTransaction tx = txManager.getContext().getCurrent();        
-        Pair<Box, AtomicInteger> p = null; // writeMap pair
         Box box = boxGetter.resolve(key);
         
         // first, check if this transaction was already written to that Box  and if not,
         // add it as a reference count
         if (tx.getLocalValue(box) == null)
-        {
-            if (writeMap instanceof ConcurrentMap)
-            {
-                p = new Pair<Box, AtomicInteger>(box, new AtomicInteger(0));
-                Pair<Box, AtomicInteger> existing = (Pair<Box, AtomicInteger>) 
-                    ((ConcurrentMap)writeMap).putIfAbsent(key, p);
-                if (existing != null)
-                    p = existing;
-            }
-            else synchronized (M)
-            {
-                p = writeMap.get(key);
-                if (p == null)
-                {
-                    p = new Pair<Box, AtomicInteger>(box, new AtomicInteger(0));
-                    writeMap.put(key, p);
-                }                    
-            }
-            p.getSecond().incrementAndGet();
-        }
+            writeMap.put(key, box);
         
         V old = box.get();
         if (old == null)
@@ -267,7 +232,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         // There are several cases to consider. Because of cache eviction patterns and 
         // potentially long running transactions, we may have the latest committed value
         // in the VBox or we may just have old values loaded for older transactions still
-        // running. In addition the current transaction may have started after the latest
+        // running. In addition, the current transaction may have started after the latest
         // value was committed or not. If the current transaction started after the latest
         // commit of this value, all we care about is whether we have that latest value in 
         // the VBox. Otherwise, we need a version that's exactly tagged with the transaction
@@ -276,7 +241,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         // with 6 and 3. Clearly, we can't return version 6 because it's more recent than
         // our transaction. But we can't return version 3 either, because transaction 4 may
         // have committed an intermediate version. We don't know - version 3 might be the correct
-        // one or not. So, we must force a load and tag it with version 4. In other words, we
+        // one or not. So, we must force a load and tag it with version 5. In other words, we
         // must return null in this case so that the upper layers (using the cache) perform
         // a load operation.
  

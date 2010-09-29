@@ -8,13 +8,14 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.handle.HGLiveHandle;
-//import org.hypergraphdb.storage.DBKeyedSortedSet;
 import org.hypergraphdb.storage.IndexResultSet;
 import org.hypergraphdb.storage.StorageBasedIncidenceSet;
-import org.hypergraphdb.transaction.TxSet;
+import org.hypergraphdb.transaction.TxCacheSet;
+import org.hypergraphdb.transaction.TxSet.SetTxBox;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.DummyReadWriteLock;
-//import org.hypergraphdb.util.HGLock;
+import org.hypergraphdb.util.HGSortedSet;
+import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 
 /**
@@ -32,11 +33,30 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
 	int keepInMemoryThreshold;
-	
+	RefCountedMap<HGPersistentHandle, SetTxBox<HGHandle>> writeMap;
+
+	RefResolver<HGPersistentHandle, HGSortedSet<HGHandle>> loader = 
+	    new RefResolver<HGPersistentHandle, HGSortedSet<HGHandle>>()
+	    {
+            public HGSortedSet<HGHandle> resolve(HGPersistentHandle key)
+            {
+                HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
+                int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
+                HGPersistentHandle [] A = new HGPersistentHandle[size];
+                for (int i = 0; i < A.length; i++)
+                    A[i] = rs.next();                
+                ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A);
+                impl.setLock(new DummyReadWriteLock());
+                return impl;
+            }
+	    
+	    };
+	    
 	ISRefResolver(HyperGraph graph)
 	{
 		this.graph = graph;
 		this.keepInMemoryThreshold = graph.getConfig().getMaxCachedIncidenceSetSize();
+		this.writeMap = new RefCountedMap<HGPersistentHandle, SetTxBox<HGHandle>>(null);
 	}
 
 	public IncidenceSet resolve(HGPersistentHandle key)
@@ -55,7 +75,12 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 //				impl.setLock(new HGLock(graph, key.toByteArray()));
                 impl.setLock(new DummyReadWriteLock());
 				
-				IncidenceSet result = new IncidenceSet(key, new TxSet(graph.getTransactionManager(), impl));
+				IncidenceSet result = new IncidenceSet(key, 
+				                            new TxCacheSet(graph.getTransactionManager(), 
+				                                           impl, 
+				                                           key,
+				                                           loader,
+				                                           writeMap));
 				HGLiveHandle lHandle = graph.cache.get(key);
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);
@@ -69,5 +94,5 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 		{
 			rs.close();
 		}
-	}	
+	}
 }

@@ -44,25 +44,25 @@ public class TxSet<E> implements HGSortedSet<E>
     private static final int REMOVEALL = 4;
     private static final int RETAINALL = 5;
     
-    private static class LogEntry
+    static class LogEntry
     {
         int op;
         Object el;
     }
 
-    private HGTransactionManager txManager;
-    private SetVBox S;
+    HGTransactionManager txManager;
+    SetTxBox<E> S;
     
     void log(int op, Object el)
     {
         LogEntry entry = new LogEntry();
         entry.op = op;
         entry.el = el;
-        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(this);
+        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(S);
         if (log == null)
         {
             log = new ArrayList<LogEntry>();
-            txManager.getContext().getCurrent().setAttribute(this, log);
+            txManager.getContext().getCurrent().setAttribute(S, log);
         }
         log.add(entry);
     }
@@ -104,13 +104,12 @@ public class TxSet<E> implements HGSortedSet<E>
     
     HGSortedSet<E> read()
     {
-        HGSortedSet<E> x = S.get();
-        return x;
+        return S.get();
     }
     
     HGSortedSet<E> write()
     {
-        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(this);
+        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(S);
         if (log == null) // should we copy-on-write?
         {
             HGSortedSet<E> readOnly = S.get(); // S.getForWrite();
@@ -120,10 +119,14 @@ public class TxSet<E> implements HGSortedSet<E>
         return S.get();
     }
     
+    protected TxSet()
+    {        
+    }
+    
     public TxSet(final HGTransactionManager txManager, final HGSortedSet<E> backingSet)
     {
         this.txManager = txManager;
-        this.S = new SetVBox(txManager, backingSet);
+        this.S = new SetTxBox<E>(txManager, backingSet, this);
     }
     
 //    public boolean isInTransaction()
@@ -247,14 +250,19 @@ public class TxSet<E> implements HGSortedSet<E>
         return read().toArray(a);
     }
     
-    private class SetVBox extends VBox<HGSortedSet<E>>    
+    public static class SetTxBox<E> extends VBox<HGSortedSet<E>>    
     {
 //        private Map<HGTransaction, Boolean> txs =
 //            new ConcurrentHashMap<HGTransaction, Boolean>();
         
-        SetVBox(final HGTransactionManager txManager, final HGSortedSet<E> backingSet)
+        TxSet<E> thisSet;
+        
+        SetTxBox(final HGTransactionManager txManager, 
+                 final HGSortedSet<E> backingSet,
+                 final TxSet<E> thisSet)
         {
             super(txManager, backingSet);
+            this.thisSet = thisSet;
         }
         
 //        int getTxCount()
@@ -286,11 +294,11 @@ public class TxSet<E> implements HGSortedSet<E>
             if (tx != null)
             {                                    
                 HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;
-                List<LogEntry> log = tx.getAttribute(TxSet.this);
+                List<LogEntry> log = tx.getAttribute(this);
                 if (log != null) // did we do any modifications to the set?
                 {
-                    lastCommitted = cloneSet(lastCommitted);
-                    applyLog(log, lastCommitted);
+                    lastCommitted = thisSet.cloneSet(lastCommitted);
+                    thisSet.applyLog(log, lastCommitted);
                     return super.commit(tx, lastCommitted, txNumber);
                 }
                 else
