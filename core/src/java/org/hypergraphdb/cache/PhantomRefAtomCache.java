@@ -8,20 +8,22 @@
 package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
+
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.event.HGAtomEvictEvent;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.PhantomHandle;
 import org.hypergraphdb.handle.PhantomManagedHandle;
 import org.hypergraphdb.util.CloseMe;
@@ -148,14 +150,19 @@ public class PhantomRefAtomCache implements HGAtomCache
         phantomCleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
     }
     
+    public HGLiveHandle atomAdded(HGPersistentHandle pHandle, Object atom, final HGAtomAttrib attrib) 
+    {
+        return atomRead(pHandle, atom, attrib);
+    }
+    
     @SuppressWarnings("unchecked")
     public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
                                  Object atom,
-                                 byte flags) 
+                                 final HGAtomAttrib attrib) 
     {
         if (closing)
         {
-            HGLiveHandle result = new TempLiveHandle(atom, pHandle, flags);
+            HGLiveHandle result = new TempLiveHandle(atom, pHandle, attrib.getFlags());
             atoms.put(atom, result);
             return result;
         }       
@@ -166,7 +173,15 @@ public class PhantomRefAtomCache implements HGAtomCache
             h = liveHandles.get(pHandle);
             if (h != null)
                 return h;
-            h = new PhantomHandle(atom, pHandle, flags, refQueue);          
+            if ( (attrib.getFlags() & HGSystemFlags.MANAGED) == 0)
+                h = new PhantomHandle(atom, pHandle, attrib.getFlags(), refQueue);
+            else
+                h = new PhantomManagedHandle(atom, 
+                        pHandle, 
+                        attrib.getFlags(), 
+                        refQueue,
+                        attrib.getRetrievalCount(),
+                        attrib.getLastAccessTime());         
             atoms.put(atom, h);
             liveHandles.put(pHandle, h);
             coldAtoms.add(atom);
@@ -178,42 +193,6 @@ public class PhantomRefAtomCache implements HGAtomCache
         return h;
     }
 
-    @SuppressWarnings("unchecked")
-    public HGManagedLiveHandle atomRead(HGPersistentHandle pHandle,
-                                        Object atom, 
-                                        byte flags, 
-                                        long retrievalCount, 
-                                        long lastAccessTime) 
-    {
-        if (closing)
-        {
-            HGManagedLiveHandle result = new TempLiveHandle(atom, pHandle, flags);
-            atoms.put(atom, result);
-            return result;
-        }
-        PhantomManagedHandle h = null;
-        lock.writeLock().lock();
-        try
-        {
-            h = (PhantomManagedHandle)liveHandles.get(pHandle);
-            if (h != null)
-                return h;
-            h = new PhantomManagedHandle(atom, 
-                                         pHandle, 
-                                         flags, 
-                                         refQueue,
-                                         retrievalCount,
-                                         lastAccessTime);
-            atoms.put(atom, h);
-            liveHandles.put(pHandle, h);
-            coldAtoms.add(atom);
-        }
-        finally
-        {
-            lock.writeLock().unlock();
-        }
-        return h;
-    }
 
     public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
     {

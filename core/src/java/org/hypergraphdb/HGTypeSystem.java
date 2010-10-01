@@ -154,7 +154,7 @@ public class HGTypeSystem
 		top.setHyperGraph(graph);
 		topHandle = graph.cache.atomRead(config.getHandleOf(top.getClass()), 
 		                                 top, 
-		                                 (byte)HGSystemFlags.DEFAULT);
+		                                 new HGAtomAttrib());
 		classToAtomType.put(Top.class, topHandle); // TOP is its own type
 		classToAtomType.put(Object.class, topHandle); // TOP also corresponds to the java.lang.Object "top type"
 		graph.cache.freeze(topHandle);
@@ -163,7 +163,7 @@ public class HGTypeSystem
 		plainLinktype.setHyperGraph(graph);
 		HGLiveHandle plainLinkHandle = graph.cache.atomRead(config.getHandleOf(plainLinktype.getClass()), 
 		                                                    plainLinktype, 
-		                                                    (byte)HGSystemFlags.DEFAULT);
+		                                                    new HGAtomAttrib());
 		classToAtomType.put(HGPlainLink.class, plainLinkHandle);
 		graph.cache.freeze(plainLinkHandle);
 
@@ -171,7 +171,7 @@ public class HGTypeSystem
 		linkType.setHyperGraph(graph);
 		HGLiveHandle linkHandle = graph.cache.atomRead(config.getHandleOf(linkType.getClass()), 
 		                                               linkType, 
-		                                               (byte)HGSystemFlags.DEFAULT);
+		                                               new HGAtomAttrib());
 		classToAtomType.put(HGLink.class, linkHandle);
 		graph.cache.freeze(linkHandle);
 
@@ -179,7 +179,7 @@ public class HGTypeSystem
 		subsumesType.setHyperGraph(graph);
 		HGLiveHandle subsumesHandle = graph.cache.atomRead(config.getHandleOf(subsumesType.getClass()), 
 		                                                   subsumesType, 
-		                                                   (byte)HGSystemFlags.DEFAULT);
+		                                                   new HGAtomAttrib());
 		classToAtomType.put(HGSubsumes.class, subsumesHandle);
 		graph.cache.freeze(subsumesHandle);
 
@@ -187,7 +187,7 @@ public class HGTypeSystem
 		nullType.setHyperGraph(graph);
 		nullTypeHandle = graph.cache.atomRead(config.getHandleOf(NullType.class), 
 		                                      nullType,
-		                                      (byte)HGSystemFlags.DEFAULT);
+		                                      new HGAtomAttrib());
 		graph.cache.freeze(nullTypeHandle);
 		
 		//
@@ -482,7 +482,9 @@ public class HGTypeSystem
 		if (newHandle instanceof HGLiveHandle)
 			graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
 		else
-			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle, type, (byte)HGSystemFlags.DEFAULT);
+			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle,
+			                                 type, 
+			                                 new HGAtomAttrib());
 
 		// Now, examine the super type and implemented interfaces
 		// First, make sure we've mapped all interfaces
@@ -727,7 +729,7 @@ public class HGTypeSystem
 			catch (NoSuchMethodException e) { /* Log this some day when we have logging. */}
 		}
 
-		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, (byte)HGSystemFlags.DEFAULT);
+		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());
 		graph.cache.freeze(typeHandle);
 		classToAtomType.put(type.getClass(), classToAtomType.get(Top.class));
 		if (clazz != null)

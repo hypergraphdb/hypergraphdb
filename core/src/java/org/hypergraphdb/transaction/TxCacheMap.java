@@ -37,9 +37,9 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         public VBoxBody<V> commit(HGTransaction tx, V newValue, long txNumber)
         {
             writeMap.remove(getKey());
-            if (body.value == null)
+            if (body.version == -1)
                 return body = makeNewBody(newValue, tx.getNumber(), body.next);
-            else // otherwise we just add as the newest body with the current tx number
+            else
                 return super.commit(tx, newValue, tx.getNumber());            
         }        
     }
@@ -192,10 +192,10 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         try
         {
             // if no current transaction, assume the value is the latest...no way to find out
-            if (tx == null || tx.getNumber() >= txManager.mostRecentRecord.transactionNumber)
+            if (tx.getNumber() >= txManager.mostRecentRecord.transactionNumber || tx == null)
             {
                 // a marker that we have loaded some older values for older, but still running tx
-                if (box.body.value == null)
+                if (box.body.version == -1)
                 {
                     box.body = box.makeNewBody(value, tx.getNumber(), box.body.next);
                 }
@@ -207,8 +207,8 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             else
             {
                 // make sure top body is null
-                if (box.body.value != null)
-                    box.commitImmediately(tx, null, txManager.mostRecentRecord.transactionNumber);
+                if (box.body.version != -1)
+                    box.commitImmediately(tx, null, -1);
                 
                 VBoxBody<V> currentBody = box.body;
                 while (currentBody.next != null && currentBody.next.version > tx.getNumber())
@@ -274,12 +274,17 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         return value == HGTransaction.NULL_VALUE ? null : value;
     }
 
-    /**
-     * This method will always return null - it's purpose is to evict something from the cache
-     * so the value that's already in there shouldn't matter!
-     */
     @SuppressWarnings("unchecked")
     public void remove(Object key)
+    {
+//        if (M instanceof ConcurrentMap)
+//            M.remove(key);
+//        else synchronized (M) { M.remove((K)key); }
+        put((K)key, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void drop(Object key)
     {
         if (M instanceof ConcurrentMap)
             M.remove(key);

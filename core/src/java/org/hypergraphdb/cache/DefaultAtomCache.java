@@ -8,14 +8,17 @@
 package org.hypergraphdb.cache;
 
 import java.util.HashMap;
+
 import java.util.Iterator;
+
+import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.util.ActionQueueThread;
 import org.hypergraphdb.event.HGAtomEvictEvent;
 
@@ -242,23 +245,21 @@ public final class DefaultAtomCache implements HGAtomCache
     	return result;
     }
     
+    public HGLiveHandle atomAdded(final HGPersistentHandle pHandle, final Object atom, final HGAtomAttrib attrib)
+    {
+        return atomRead(pHandle, atom, attrib);
+    }
+    
     /**
      * <p>Associate an atom instance and a persistent handle with a live handle.</p> 
      */
-    public HGLiveHandle atomRead(final HGPersistentHandle pHandle, final Object atom, final byte flags)
+    public HGLiveHandle atomRead(final HGPersistentHandle pHandle, final Object atom, final HGAtomAttrib attrib)
     {
-    	LiveHandle lHandle = new LiveHandle(atom, pHandle, flags);
-    	insert(lHandle);
-        return lHandle;
-    }
-
-    public HGManagedLiveHandle atomRead(final HGPersistentHandle pHandle, 
-    									final Object atom, 
-    									byte flags, 
-    									long retrievalCount, 
-    									long lastAccessTime)
-    {
-    	LiveHandle lHandle = new LiveHandle(atom, pHandle, flags, retrievalCount, lastAccessTime);
+        LiveHandle lHandle = null;
+        if ( (attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
+            lHandle = new LiveHandle(atom, pHandle, attrib.getFlags(), attrib.getRetrievalCount(), attrib.getLastAccessTime());
+        else
+            lHandle = new LiveHandle(atom, pHandle, attrib.getFlags());
     	insert(lHandle);
         return lHandle;
     }

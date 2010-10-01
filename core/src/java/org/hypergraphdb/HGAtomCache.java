@@ -9,7 +9,6 @@ package org.hypergraphdb;
 
 import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.handle.HGManagedLiveHandle;
 
 /**
  * <p>The <code>HGAtomCache</code> interface abstracts the HyperGraph
@@ -59,6 +58,21 @@ public interface HGAtomCache
 	 */
 	void setHyperGraph(final HyperGraph hg);
 	
+    /**
+     * <p>
+     * Inform the cache that a new atom has just been added to the database.
+     * The cache is free to decide whether that atom should be actually cached or not,
+     * but in any case it must construct and return <code>HGLiveHandle</code> for
+     * the atom.
+     * </p>
+     * 
+     * @param pHandle The persistent handle of the atom.
+     * @param atom The run-time instance of the atom.
+     * @param attrib Atom management related attributes that must be stored as part of its live handle.
+     * @return A valid <code>HGLiveHandle</code> to the atom.
+     */	
+	HGLiveHandle atomAdded(final HGPersistentHandle pHandle, final Object atom, final HGAtomAttrib attrib);
+	
 	/**
 	 * <p>
 	 * Inform the cache that an atom has just been read from persistent storage.
@@ -74,10 +88,10 @@ public interface HGAtomCache
 	 * 
 	 * @param pHandle The persistent handle of the atom.
 	 * @param atom The run-time instance of the atom.
-	 * @param flags Atom management related flags that must be stored as part of its live handle.
+	 * @param attrib Atom management related attributes that must be stored as part of its live handle.
 	 * @return A valid <code>HGLiveHandle</code> to the atom.
 	 */
-	HGLiveHandle atomRead(final HGPersistentHandle pHandle, final Object atom, final byte flags);
+	HGLiveHandle atomRead(final HGPersistentHandle pHandle, final Object atom, final HGAtomAttrib attrib);
 
 	/**
 	 * <p>
@@ -96,11 +110,11 @@ public interface HGAtomCache
 	 * @return A <code>HGManagedLiveHandle</code> encapsulating the atom instance,
 	 * persistence handle and system-level attributes.
 	 */
-	HGManagedLiveHandle atomRead(final HGPersistentHandle pHandle, 
-								 final Object atom, 
-								 final byte flags, 
-								 final long retrievalCount, 
-								 final long lastAccessTime);
+//	HGManagedLiveHandle atomRead(final HGPersistentHandle pHandle, 
+//								 final Object atom, 
+//								 final byte flags, 
+//								 final long retrievalCount, 
+//								 final long lastAccessTime);
 	/**
 	 * <p>Replace the runtime instance of an atom with a new value. This method is invoked when <code>HyperGraph</code>
 	 * needs to inform the cache about a change of the value of an atom. The cache must 

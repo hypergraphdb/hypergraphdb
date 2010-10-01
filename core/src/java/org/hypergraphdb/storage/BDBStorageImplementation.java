@@ -36,6 +36,19 @@ import com.sleepycat.db.TransactionConfig;
 
 public class BDBStorageImplementation implements HGStoreImplementation
 {
+//    static
+//    {
+//        String osname = System.getProperty("os.name");
+//        if (osname.indexOf("win") > -1 || osname.indexOf("Win") > -1)
+//        {
+//              System.loadLibrary("msvcm80");
+//              System.loadLibrary("msvcr80");
+//              System.loadLibrary("msvcp80");          
+//            System.loadLibrary("libdb50");
+//            System.loadLibrary("libdb_java50"); 
+//        }
+//    }
+    
     private static final String DATA_DB_NAME = "datadb";
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";

@@ -175,7 +175,7 @@ public /*final*/ class HyperGraph
      * An index holding system attributes for atoms with different than default 
      * system flags.
      */
-    HGIndex<HGPersistentHandle, AtomAttrib> systemAttributesDB = null;
+    HGIndex<HGPersistentHandle, HGAtomAttrib> systemAttributesDB = null;
     
     HGHandle statsHandle = null;
     HGStats stats = new HGStats();
@@ -337,7 +337,7 @@ public /*final*/ class HyperGraph
 	        if (config.isUseSystemAtomAttributes())
     	        systemAttributesDB = store.getIndex(SA_DB_NAME, 
     	                                            BAtoHandle.getInstance(this.getHandleFactory()), 
-    	                                            AtomAttrib.baConverter, 
+    	                                            HGAtomAttrib.baConverter, 
     	                                            null,
     	                                            true);
 	        
@@ -1374,7 +1374,7 @@ public /*final*/ class HyperGraph
     			return 0;
     	else
     	{
-    		AtomAttrib attribs = this.getAtomAttributes((HGPersistentHandle)handle);
+    		HGAtomAttrib attribs = this.getAtomAttributes((HGPersistentHandle)handle);
     		if (attribs != null)
     			return attribs.flags;
     		else
@@ -1396,7 +1396,7 @@ public /*final*/ class HyperGraph
 	    	// we have to adjust the live handle from/to managed/normal.
 	    	//
 	    	HGPersistentHandle pHandle = getPersistentHandle(handle);
-	    	AtomAttrib attribs = HyperGraph.this.getAtomAttributes(pHandle);
+	    	HGAtomAttrib attribs = HyperGraph.this.getAtomAttributes(pHandle);
 	    	boolean managed = (flags & HGSystemFlags.MANAGED) != 0;
 	    	boolean wasManaged = false;
 	    	if (attribs != null)
@@ -1420,7 +1420,7 @@ public /*final*/ class HyperGraph
 	    	}
 	    	else if (flags != HGSystemFlags.DEFAULT)
 	    	{
-	    		attribs = new AtomAttrib();
+	    		attribs = new HGAtomAttrib();
 	    		attribs.flags = (byte)flags;
 	    		if (managed)
 	    		{
@@ -1446,12 +1446,7 @@ public /*final*/ class HyperGraph
 	    		}    		
 	    		cache.remove(lHandle);
 	    		if (instance != null)
-	    		{
-		    		if (managed)
-		    			cache.atomRead(pHandle, instance, (byte)flags, 0 /* attribs.retrievalCount */, attribs.lastAccessTime);
-		    		else
-		    			cache.atomRead(pHandle, instance, (byte)flags);
-	    		}
+	    			cache.atomRead(pHandle, instance, attribs);
 	    	}
 	    	return null;
     	}});
@@ -1555,28 +1550,24 @@ public /*final*/ class HyperGraph
     	if (instance instanceof HGGraphHolder)
     		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
     	HGLiveHandle lHandle;
-        if (config.isUseSystemAtomAttributes() && (flags & HGSystemFlags.MANAGED) != 0)
+        if (config.isUseSystemAtomAttributes())
         {
-        	AtomAttrib attribs = new AtomAttrib();
+        	HGAtomAttrib attribs = new HGAtomAttrib();
         	attribs.flags = flags;
         	attribs.retrievalCount = 1;
         	attribs.lastAccessTime = System.currentTimeMillis();
         	setAtomAttributes(pHandle, attribs);        	
-        	lHandle = cache.atomRead(pHandle, 
-		 		      				 instance, 
-	        						 attribs.flags, 
-	        						 attribs.retrievalCount, 
-	        						 attribs.lastAccessTime);
+        	lHandle = cache.atomAdded(pHandle, instance, attribs);
         }        
         else
         {
+            HGAtomAttrib attribs = new HGAtomAttrib();            
         	if (config.isUseSystemAtomAttributes() && flags != 0)
         	{
-        		AtomAttrib attribs = new AtomAttrib();
         		attribs.flags = flags;
         		setAtomAttributes(pHandle, attribs);
         	}
-        	lHandle = cache.atomRead(pHandle, instance, flags);
+        	lHandle = cache.atomAdded(pHandle, instance, attribs);
         }
         if (instance instanceof HGHandleHolder)
         	((HGHandleHolder)instance).setAtomHandle(lHandle);
@@ -1661,18 +1652,8 @@ public /*final*/ class HyperGraph
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {
-	        	AtomAttrib attribs = config.isUseSystemAtomAttributes() ? getAtomAttributes(persistentHandle) : null;
-	        	if (attribs != null)
-	        		if ( (attribs.flags & HGSystemFlags.MANAGED) != 0)
-		        		result = cache.atomRead(persistentHandle, 
-		        						        instance, 
-		        								attribs.flags, 
-		        								1, // don't disturb the cache's own counting and importance calculation... 
-		        								attribs.lastAccessTime);
-	        		else
-	        			result = cache.atomRead(persistentHandle, instance, attribs.flags);        			
-	        	else
-	        		result = cache.atomRead(persistentHandle, instance, (byte)0);
+	        	HGAtomAttrib attribs = config.isUseSystemAtomAttributes() ? getAtomAttributes(persistentHandle) : new HGAtomAttrib();
+       			result = cache.atomRead(persistentHandle, instance, attribs);        			
 	        }
 	        else
 	        {
@@ -2207,12 +2188,12 @@ public /*final*/ class HyperGraph
     	}    	
     }
     
-    private AtomAttrib getAtomAttributes(HGPersistentHandle handle)
+    private HGAtomAttrib getAtomAttributes(HGPersistentHandle handle)
     {
     	return systemAttributesDB.findFirst(handle);    	
     }
     
-    private void setAtomAttributes(HGPersistentHandle handle, AtomAttrib attribs)
+    private void setAtomAttributes(HGPersistentHandle handle, HGAtomAttrib attribs)
     {
     	systemAttributesDB.removeAllEntries(handle);
     	systemAttributesDB.addEntry(handle, attribs);

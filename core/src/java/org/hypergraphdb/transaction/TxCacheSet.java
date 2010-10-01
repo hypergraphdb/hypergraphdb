@@ -19,7 +19,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             if (txNumber >= txManager.mostRecentRecord.transactionNumber) // is this the latest value
             {
                 // a marker that we have loaded some older values for older, but still running tx
-                if (S.body.value == null)
+                if (S.body.version == -1)
                 {
                     S.body = S.makeNewBody(x, txNumber, S.body.next);
                 }                
@@ -31,8 +31,8 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             else
             {
                 // make sure top body is null
-                if (S.body.value != null)
-                    S.body = S.makeNewBody(null, txManager.mostRecentRecord.transactionNumber, S.body);
+                if (S.body.version != -1)
+                    S.body = S.makeNewBody(null, -1, S.body);
                 
                 VBoxBody<HGSortedSet<E>> currentBody = S.body;
                 while (currentBody.next != null && currentBody.next.version > txNumber)
@@ -82,7 +82,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             }            
         }
         else 
-            return x;        
+            return x == HGTransaction.NULL_VALUE ? null : x;        
     }
     
     @Override
@@ -127,7 +127,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             // if this is an old transaction, we need to put null at the top of the body
             // list so the latest will get reloaded if needed
             if (txNumber < txManager.mostRecentRecord.transactionNumber)
-                S.body = S.makeNewBody(null, txManager.mostRecentRecord.transactionNumber, S.body);
+                S.body = S.makeNewBody(null, -1, S.body);
         }
         else
             insertBody(txNumber, backingSet);
@@ -151,7 +151,12 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                 TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;  
                 s.writeMap.remove(s.key);
             }
-            return super.commit(tx, newvalue, txNumber);
+            VBoxBody<HGSortedSet<E>> latest = super.commit(tx, newvalue, txNumber);
+            // check if we have the special "old value" marker hanging in the second place of
+            // the list of bodies after the commit, and if so unlink it
+            if (latest.next != null && latest.next.version == -1)
+                latest.setNext(latest.next.next);
+            return latest;
         }
     }
 }

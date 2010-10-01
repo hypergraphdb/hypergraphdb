@@ -14,13 +14,13 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * A simple structure that holds system-level atom attributes.
  * </p>
  */
-final class AtomAttrib 
+public final class HGAtomAttrib 
 {
-	byte flags;
+    byte flags = HGSystemFlags.DEFAULT;
 	long retrievalCount;
 	long lastAccessTime;
 
-	static class Converter implements ByteArrayConverter<AtomAttrib>
+	static class Converter implements ByteArrayConverter<HGAtomAttrib>
 	{
 		static void putLong(byte [] dest, int offset, long value)
 		{
@@ -46,19 +46,19 @@ final class AtomAttrib
 	                ((src[offset + 7] & 255) <<  0));    			
 		}
 		
-		public AtomAttrib fromByteArray(byte[] byteArray) 
+		public HGAtomAttrib fromByteArray(byte[] byteArray) 
 		{
-			AtomAttrib result = new AtomAttrib();
+			HGAtomAttrib result = new HGAtomAttrib();
 			result.flags = byteArray[0];
 			result.retrievalCount = getLong(byteArray, 1);
 			result.lastAccessTime = getLong(byteArray, 9);
 			return result;
 		}
 
-		public byte[] toByteArray(AtomAttrib object) 
+		public byte[] toByteArray(HGAtomAttrib object) 
 		{
 			byte [] result = new byte[17];
-			AtomAttrib attribs = (AtomAttrib)object;
+			HGAtomAttrib attribs = (HGAtomAttrib)object;
 			result[0] = attribs.flags;
 			putLong(result, 1, attribs.retrievalCount);
 			putLong(result, 9, attribs.lastAccessTime);
@@ -68,4 +68,34 @@ final class AtomAttrib
 	}
 	
 	static final Converter baConverter = new Converter();
+
+    public byte getFlags()
+    {
+        return flags;
+    }
+
+    public void setFlags(byte flags)
+    {
+        this.flags = flags;
+    }
+
+    public long getRetrievalCount()
+    {
+        return retrievalCount;
+    }
+
+    public void setRetrievalCount(long retrievalCount)
+    {
+        this.retrievalCount = retrievalCount;
+    }
+
+    public long getLastAccessTime()
+    {
+        return lastAccessTime;
+    }
+
+    public void setLastAccessTime(long lastAccessTime)
+    {
+        this.lastAccessTime = lastAccessTime;
+    }	
 }

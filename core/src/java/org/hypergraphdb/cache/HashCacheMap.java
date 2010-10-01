@@ -26,6 +26,11 @@ public class HashCacheMap<K, V> implements CacheMap<K, V>
         m.remove(key);
     }
 
+    public void drop(K key)
+    {
+        m.remove(key);
+    }
+    
     public void clear()
     {
         m.clear();
