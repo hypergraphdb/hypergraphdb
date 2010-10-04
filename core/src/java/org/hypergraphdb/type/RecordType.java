@@ -38,7 +38,7 @@ import java.util.Iterator;
  * 
  * <p>
  * A null record is represented with a null handle {@link HGHandleFactory.nullHandle()}, while
- * and empty record is represented with an "don't care" {@link HGHandleFactory.anyHandle()} 
+ * and empty record is represented with a newly created handle that doesn't point to anything. 
  * </p>
  * 
  * @author Borislav Iordanov
@@ -217,7 +217,7 @@ public class RecordType implements HGCompositeType
     	if (instance == null)
     		return graph.getHandleFactory().nullHandle();
     	else if (slots.isEmpty())
-            return graph.getHandleFactory().anyHandle();
+            return graph.getHandleFactory().makeHandle();
         HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);
         if (! (instance instanceof Record))
             throw new HGException("RecordType.store: object is not of type Record.");
