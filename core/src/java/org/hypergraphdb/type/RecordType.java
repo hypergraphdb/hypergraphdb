@@ -216,9 +216,9 @@ public class RecordType implements HGCompositeType
     {
     	if (instance == null)
     		return graph.getHandleFactory().nullHandle();
-    	else if (slots.isEmpty())
-            return graph.getHandleFactory().makeHandle();
-        HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);
+    	HGPersistentHandle handle = TypeUtils.getNewHandleFor(graph, instance);    	
+    	if (slots.isEmpty())
+            return handle;        
         if (! (instance instanceof Record))
             throw new HGException("RecordType.store: object is not of type Record.");
         Record record = (Record)instance;
