@@ -98,7 +98,10 @@ public final class HGTransaction implements HGStorageTransaction
     {
         if (!readonly) for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
         {
-            if (entry.getFirst().body != entry.getSecond())
+            // Compare versions instead of 'body' objects because we may have multiple
+            // re-loads of the same version of some disk data - we allow that in 
+            // transactional caches
+            if (entry.getFirst().body.version != entry.getSecond().version)
             {
                 return false;
             }

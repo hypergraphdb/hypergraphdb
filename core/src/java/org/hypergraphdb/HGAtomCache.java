@@ -125,9 +125,12 @@ public interface HGAtomCache
 	 * <p>
 	 * Note that there are two important cases of "refreshing" an atom in the cache - the atom
 	 * being reloaded from permanent storage or when there is an actual value change. In the 
-	 * former case, a transaction abort does not need to rollback changes in the caching
+	 * former case, a transaction abort does not need to roll back changes in the caching
 	 * structures while in the latter it does! The two cases are distinguished by the third
-	 * parameter of this method.
+	 * parameter of this method. ??? Note that the cache should perform a replace if <code>handle.getRef() != null
+	 * && handle.getRef() != atom</code> because this signals that a new value must be stored.
+     * If the atom's value hasn't changed (i.e. if <code>handle.getRef() == atom</code>) then
+     * nothing is done.
 	 * </p>
 	 * 
 	 * @param handle The <code>HGLiveHandle</code> handle of the atom to be refreshed.

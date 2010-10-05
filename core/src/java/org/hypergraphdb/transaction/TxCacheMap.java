@@ -19,13 +19,14 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     protected RefResolver<Object, Box> boxGetter = null;
     protected VBox<Integer> sizebox = null;
     
-    protected abstract class Box extends VBox<V>
+    public abstract class Box extends VBox<V>
     {
         public Box(HGTransactionManager txManager)
         {
-            this.txManager = txManager;
-            super.commit(null, null, 0);            
+            this.txManager = txManager;            
         }
+        
+        public VBoxBody<V> getBody() { return body; }
         
         public abstract K getKey();
         
@@ -221,6 +222,16 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         finally
         {
             txManager.COMMIT_LOCK.unlock();
+        }
+    }
+    
+    public Box boxOf(Object key)
+    {
+        if (M instanceof ConcurrentMap<?,?>)
+            return M.get(key);
+        else synchronized (M)
+        {
+            return M.get(key);
         }
     }
     

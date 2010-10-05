@@ -8,12 +8,14 @@
 package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.IdentityHashMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
@@ -30,6 +32,7 @@ import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.transaction.TxCacheMap;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
+import org.hypergraphdb.transaction.VBoxBody;
 import org.hypergraphdb.util.CloseMe;
 import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.WeakIdentityHashMap;
@@ -66,8 +69,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	private HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = null; // to be configured by the HyperGraph instance
 	
     private CacheMap<HGPersistentHandle, WeakHandle> liveHandles = null; 
-		
+    private TxCacheMap<HGPersistentHandle, WeakHandle> liveHandlesTx = null;
+    
 	private CacheMap<Object, HGLiveHandle> atoms = null;
+	private TxCacheMap<Object, HGLiveHandle> atomsTx = null;
 	
 	private Map<HGLiveHandle, Object> frozenAtoms =	null;
 	
@@ -75,7 +80,8 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
-	private ReadWriteLock lock = new DummyReadWriteLock(); // new ReentrantReadWriteLock();
+//	private ReadWriteLock lock = new DummyReadWriteLock(); // new ReentrantReadWriteLock();
+	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
     private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup cleanupThread = new PhantomCleanup();
 	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
@@ -101,44 +107,44 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}	
 	
-	int removalCount = 0;
 	private void processRefQueue() throws InterruptedException
+	{
+        WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
+        while (ref != null)
+        {
+            liveHandles.drop(ref.getPersistentHandle());
+            ref.clear();
+            synchronized (ref) { ref.notifyAll(); }         
+            ref = (WeakHandle)refQueue.poll();            
+        }
+	}
+	
+	private void processRefQueueTx() throws InterruptedException
 	{
 		WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
 		while (ref != null)
 		{
-//			graph.getEventManager().dispatch(graph, 
-//					 new HGAtomEvictEvent(ref, ref.fetchRef()));
-//		    System.out.println("Weak remove of " + ref);
-//			lock.writeLock().lock();
-		    
-		    final WeakHandle ref1 = ref;
-		    
-		    
-//		    graph.getTransactionManager().transact(new Callable<Object>() {
-//		        public Object call()
-//		        {
-//		            System.out.println("Removing live handle " + liveHandles.size() + ", " + ((TxMap)liveHandles).mapSize() +
-//		                               ", " + atoms.size() + "," + incidenceCache.size() + ", " + removalCount);
-		                               
-		            liveHandles.drop(ref1.getPersistentHandle());
-		            removalCount++;
-//		            return null;
-//		        }
-//		    },
-//		    cleanupTxConfig);
-		            
-//			try
-//			{
-//				liveHandles.remove(ref.getPersistentHandle());
-//			}
-//			finally
-//			{
-////				lock.writeLock().unlock();
-//			}
-			ref.clear();
-			synchronized (ref) { ref.notifyAll(); }			
-			ref = (WeakHandle)refQueue.poll();
+		    final HGPersistentHandle h = ref.getPersistentHandle();
+		    gcLock.writeLock().lock();
+		    try
+		    {
+		        TxCacheMap<HGPersistentHandle, WeakHandle>.Box theBox = liveHandlesTx.boxOf(h);
+		        if (theBox == null)
+		            continue;
+		        boolean keep = false;
+		        for (VBoxBody<WeakHandle> body = theBox.getBody(); body != null && !keep; body = body.next)
+		            if (atomsTx.boxOf(body.value.getRef()) != null)
+		                keep = true;
+		        if (!keep)
+		            liveHandles.drop(h);
+		    }
+		    finally
+		    {
+		        gcLock.writeLock().unlock();
+	            ref.clear();
+	            synchronized (ref) { ref.notifyAll(); }         
+	            ref = (WeakHandle)refQueue.poll();		        
+		    }		    
 		}
 	}
 	
@@ -154,7 +160,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	        {
 	        	try 
 	            {
-	        		processRefQueue();
+	        	    if (graph.getConfig().isTransactional())
+	        	        processRefQueueTx();
+	        	    else
+	        	        processRefQueue();
 	            } 
 	        	catch (InterruptedException exc) 
 	        	{
@@ -177,10 +186,11 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public WeakRefAtomCache(HyperGraph graph)
 	{
+	    this.graph = graph;
 	    if (graph.getConfig().isTransactional())
 	    {
-	        atoms = new TxCacheMap<Object, HGLiveHandle>(graph.getTransactionManager(), WeakIdentityHashMap.class);
-            liveHandles = new TxCacheMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), null); 	        
+	        atoms = atomsTx = new TxCacheMap<Object, HGLiveHandle>(graph.getTransactionManager(), WeakIdentityHashMap.class);
+            liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), null); 	        
 	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), null);
 	    }
 	    else
@@ -218,30 +228,30 @@ public class WeakRefAtomCache implements HGAtomCache
             atoms.put(atom, result);
             return result;
         }       
-        lock.writeLock().lock();
         WeakHandle h = null;
+        h = liveHandles.get(pHandle);
+        if (h != null)
+            return h;
+        if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
+            h = new WeakManagedHandle(atom, 
+                                      pHandle, 
+                                      attrib.getFlags(), 
+                                      refQueue,
+                                      attrib.getRetrievalCount(),
+                                      attrib.getLastAccessTime());
+        else
+            h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);
+        gcLock.readLock().lock();
         try
-        {           
-            h = liveHandles.get(pHandle);
-            if (h != null)
-                return h;
-            if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
-                h = new WeakManagedHandle(atom, 
-                                          pHandle, 
-                                          attrib.getFlags(), 
-                                          refQueue,
-                                          attrib.getRetrievalCount(),
-                                          attrib.getLastAccessTime());
-            else
-                h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);                  
+        {
             atoms.put(atom, h);
             liveHandles.put(pHandle, h);
-            coldAtoms.add(atom);
         }
         finally
         {
-            lock.writeLock().unlock();
+            gcLock.readLock().unlock();
         }
+        coldAtoms.add(atom);
         return h;
 }
 	
@@ -255,35 +265,41 @@ public class WeakRefAtomCache implements HGAtomCache
 			atoms.put(atom, result);
 			return result;
 		}		
-		lock.writeLock().lock();
 		WeakHandle h = null;
-		try
-		{			
-			h = liveHandles.get(pHandle);
-			if (h != null)
-				return h;
-			if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
-			    h = new WeakManagedHandle(atom, 
-                                          pHandle, 
-                                          attrib.getFlags(), 
-                                          refQueue,
-                                          attrib.getRetrievalCount(),
-                                          attrib.getLastAccessTime());
-			else
-			    h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);			
-			atoms.load(atom, h);
-			liveHandles.load(pHandle, h);
-			coldAtoms.add(atom);
-		}
-		finally
-		{
-			lock.writeLock().unlock();
-		}
+		h = liveHandles.get(pHandle);
+		if (h != null)
+			return h;
+		if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
+		    h = new WeakManagedHandle(atom, 
+                                      pHandle, 
+                                      attrib.getFlags(), 
+                                      refQueue,
+                                      attrib.getRetrievalCount(),
+                                      attrib.getLastAccessTime());
+		else
+		    h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);
+		
+		// Important to updates the atoms map first to prevent garbage collection
+		// of the liveHandles entry due to previously removed runtime instance of the
+		// same atom.
+		gcLock.readLock().lock();
+        try
+        {
+            atoms.load(atom, h);
+            liveHandles.load(pHandle, h);
+        }
+        finally
+        {
+            gcLock.readLock().unlock();
+        }		
+		coldAtoms.add(atom);
 		return h;
 	}
 
 	public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
 	{
+	    if (handle.getRef() == atom)
+	        return; // same atom, nothing to do
 		if (closing)
 		{
 			if (handle instanceof WeakHandle)
@@ -292,45 +308,49 @@ public class WeakRefAtomCache implements HGAtomCache
 				((TempLiveHandle)handle).setRef(atom);
 			return;
 		}
-		if (handle == null)
-			throw new NullPointerException("atomRefresh: handle is null.");
-		
-		lock.writeLock().lock();
-		
-		try
-		{
-		    WeakHandle newLive = null;
-		    if (handle instanceof WeakManagedHandle)
-		        newLive = new WeakManagedHandle(atom, 
-		                                        handle.getPersistentHandle(), 
-		                                        handle.getFlags(), 
-		                                        refQueue,
-		                                        ((WeakManagedHandle)handle).getRetrievalCount(),
-		                                        ((WeakManagedHandle)handle).getRetrievalCount());
-		    else
-		        newLive = new WeakHandle(atom, 
-		                                 handle.getPersistentHandle(),
-		                                 handle.getFlags(),
-		                                 refQueue);
-		    if (replace)
-		        liveHandles.put(handle.getPersistentHandle(), newLive);
-		    else
-		        liveHandles.load(handle.getPersistentHandle(), newLive);
-		    Object curr = handle.getRef();
-		    if (curr != null)
-		    {
-		        atoms.remove(curr);
-		    }
-		    if (replace)
-		        atoms.put(atom, newLive);
-		    else
-		        atoms.load(atom, newLive);
-            coldAtoms.add(atom);
-		}
-		finally
-		{
-			lock.writeLock().unlock();
-		}
+	    WeakHandle newLive = null;
+	    if (handle instanceof WeakManagedHandle)
+	        newLive = new WeakManagedHandle(atom, 
+	                                        handle.getPersistentHandle(), 
+	                                        handle.getFlags(), 
+	                                        refQueue,
+	                                        ((WeakManagedHandle)handle).getRetrievalCount(),
+	                                        ((WeakManagedHandle)handle).getRetrievalCount());
+	    else
+	        newLive = new WeakHandle(atom, 
+	                                 handle.getPersistentHandle(),
+	                                 handle.getFlags(),
+	                                 refQueue);
+	    
+	    // We are updating two maps here. Because the atoms map is weak-ref-based, the
+	    // correct order is to update it first for otherwise a previously kicked in
+	    // garbage collection of the corresponding 'liveHandles' entry will create a 
+	    // race condition
+	    
+	    Object curr = handle.getRef();
+	    // If we have some other Java instance as the atom, we need to force a replace
+	    // even if strictly speaking we don't need to (e.g. this happens with type wrappers)
+	    // because in case of a roll back the obligatory atoms.remove will be reversed.
+	    gcLock.readLock().lock();
+	    try
+	    {
+    	    if (replace || curr != null)
+    	    {
+    	        atoms.remove(curr);
+    	        atoms.put(atom, newLive);
+    	        liveHandles.put(handle.getPersistentHandle(), newLive);
+    	    }		    
+    	    else
+    	    {
+                atoms.load(atom, newLive);		        
+    	        liveHandles.load(handle.getPersistentHandle(), newLive);
+    	    }
+	    }
+	    finally
+	    {
+	        gcLock.readLock().unlock();	        
+	    }
+        coldAtoms.add(atom);
 	}
 
 	public void close() 
@@ -363,48 +383,30 @@ public class WeakRefAtomCache implements HGAtomCache
 
 	public HGLiveHandle get(HGPersistentHandle pHandle) 
 	{
-		lock.readLock().lock();
-		try
-		{
-		    WeakHandle h = liveHandles.get(pHandle);
-			if (h != null)
-				h.accessed();
-			return h;
-		}
-		finally
-		{
-			lock.readLock().unlock();			
-		}
+	    if (pHandle.toString().equals("6c46f2f2-04a7-11db-aae2-8dc354b70291"))
+	    {
+	        System.out.println("Looking for ArrayType ");
+	    }
+	    WeakHandle h = liveHandles.get(pHandle);
+		if (h != null)
+			h.accessed();
+        if (pHandle.toString().equals("6c46f2f2-04a7-11db-aae2-8dc354b70291"))
+        {
+            System.out.println("found-> " + ((h == null) ? "no" : "yes"));
+        }
+		
+		return h;
 	}
 
 	public HGLiveHandle get(Object atom) 
 	{
-		lock.readLock().lock();
-		try
-		{
-			return atoms.get(atom);
-		}
-		finally
-		{
-			lock.readLock().unlock();
-		}
+		return atoms.get(atom);
 	}
 
 	public void remove(HGLiveHandle handle) 
 	{
-		lock.writeLock().lock();
-		try
-		{
-			atoms.remove(handle.getRef());
-			// Shouldn't use clear here, since we might be gc-ing the ref!
-//			if (handle instanceof WeakHandle)
-//				((WeakHandle)handle).storeRef(null);
-			liveHandles.remove(handle.getPersistentHandle());			
-		}
-		finally
-		{
-			lock.writeLock().unlock();
-		}
+		atoms.remove(handle.getRef());
+		liveHandles.remove(handle.getPersistentHandle());			
 	}
 
 	

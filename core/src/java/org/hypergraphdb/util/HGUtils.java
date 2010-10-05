@@ -233,7 +233,8 @@ public class HGUtils
 	 * @param first A 1-based index of the first element to process.
 	 * @return The total number of elements processed. 
 	 */
-	public static <T> long queryBatchProcess(HGQuery<T> query, 
+	@SuppressWarnings("unchecked")
+    public static <T> long queryBatchProcess(HGQuery<T> query, 
 											 Mapping<T, Boolean> F, 
 											 int batchSize,
 											 T startAfter,
@@ -245,13 +246,14 @@ public class HGUtils
 		while (true)
 		{			
 		    T txLastProcessed = lastProcessed;
+		    int currentProcessed = 0;
 			query.getHyperGraph().getTransactionManager().beginTransaction();			
 			try
 			{
 				rs = query.execute();
-				if (txLastProcessed == null)
+				if (txLastProcessed == null) // if we are just starting
 				{
-					while (first > 0)
+					for (long i = first; i > 0; i--) // skip first 'first' entries
 					{
 						if (!rs.hasNext())
 						{
@@ -262,10 +264,9 @@ public class HGUtils
 						}
 						else 
 							rs.next();
-						first--;
 					}
 				}
-				else
+				else // else, position to the end of the last successful batch
 				{
 					GotoResult gt = null;
 					if (rs instanceof HGRandomAccessResult)
@@ -311,10 +312,10 @@ public class HGUtils
 						rs.close();
 						rs = null;						
 						query.getHyperGraph().getTransactionManager().endTransaction(true);
-						return totalProcessed;
+						return totalProcessed + currentProcessed;
 					}
 					txLastProcessed = x;	
-					totalProcessed++;
+					currentProcessed++;
 					if (!rs.hasNext())
 						break;
 					else
@@ -324,6 +325,7 @@ public class HGUtils
 				rs = null;
 				query.getHyperGraph().getTransactionManager().endTransaction(true);
 				lastProcessed = txLastProcessed;
+				totalProcessed += currentProcessed;
 //				double end = System.currentTimeMillis();
 				if (i < batchSize)
 					return totalProcessed;
