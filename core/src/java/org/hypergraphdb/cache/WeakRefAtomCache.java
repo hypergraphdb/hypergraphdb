@@ -232,7 +232,7 @@ public class WeakRefAtomCache implements HGAtomCache
         h = liveHandles.get(pHandle);
         if (h != null)
             return h;
-        if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
+        if (attrib != null && (attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
             h = new WeakManagedHandle(atom, 
                                       pHandle, 
                                       attrib.getFlags(), 
@@ -240,7 +240,7 @@ public class WeakRefAtomCache implements HGAtomCache
                                       attrib.getRetrievalCount(),
                                       attrib.getLastAccessTime());
         else
-            h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);
+            h = new WeakHandle(atom, pHandle, attrib == null ? HGSystemFlags.DEFAULT : attrib.getFlags(), refQueue);
         gcLock.readLock().lock();
         try
         {
@@ -269,7 +269,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		h = liveHandles.get(pHandle);
 		if (h != null)
 			return h;
-		if ((attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
+		if (attrib != null && (attrib.getFlags() & HGSystemFlags.MANAGED) != 0)
 		    h = new WeakManagedHandle(atom, 
                                       pHandle, 
                                       attrib.getFlags(), 
@@ -277,7 +277,7 @@ public class WeakRefAtomCache implements HGAtomCache
                                       attrib.getRetrievalCount(),
                                       attrib.getLastAccessTime());
 		else
-		    h = new WeakHandle(atom, pHandle, attrib.getFlags(), refQueue);
+		    h = new WeakHandle(atom, pHandle, attrib == null ? HGSystemFlags.DEFAULT : attrib.getFlags(), refQueue);
 		
 		// Important to updates the atoms map first to prevent garbage collection
 		// of the liveHandles entry due to previously removed runtime instance of the

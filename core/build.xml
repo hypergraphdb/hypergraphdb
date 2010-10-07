@@ -39,7 +39,7 @@
     </target>
     
 	<target name="core-compile" depends="init" description="Compile the HyperGraphDB Core Sources">
-		<javac source="1.5" classpathref="core-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}">
+		<javac classpathref="core-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}">
 			<exclude name="${peer-path}/**"/>
 		</javac>
 		<copy todir="${build}/">
