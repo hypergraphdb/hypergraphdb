@@ -264,7 +264,7 @@ public final class DefaultAtomCache implements HGAtomCache
         return lHandle;
     }
 
-    public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace)
+    public HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace)
     {
     	LiveHandle existing = liveHandles.get(handle.getPersistentHandle());  	
     	if (existing != null)
@@ -279,6 +279,7 @@ public final class DefaultAtomCache implements HGAtomCache
     		lHandle.setRef(atom);    		
     		insert(lHandle);    		
     	}
+    	return handle;
     }
     
     public void freeze(HGLiveHandle handle)

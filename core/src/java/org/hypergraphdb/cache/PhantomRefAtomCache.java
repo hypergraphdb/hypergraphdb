@@ -194,7 +194,7 @@ public class PhantomRefAtomCache implements HGAtomCache
     }
 
 
-    public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
+    public HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
     {
         if (closing)
         {
@@ -202,7 +202,7 @@ public class PhantomRefAtomCache implements HGAtomCache
                 ((PhantomHandle)handle).storeRef(atom);
             else
                 ((TempLiveHandle)handle).setRef(atom);
-            return;
+            return handle;
         }
         if (handle == null)
             throw new NullPointerException("atomRefresh: handle is null.");
@@ -237,6 +237,7 @@ public class PhantomRefAtomCache implements HGAtomCache
         {
             lock.writeLock().unlock();
         }
+        return handle;
     }
 
     public void close() 

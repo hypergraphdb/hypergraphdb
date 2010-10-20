@@ -121,21 +121,27 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private void processRefQueueTx() throws InterruptedException
 	{
+	    // need WeakHandle.geRef to return when ref is enqueued - deadlock otherwise!
+	    WeakHandle.returnEnqueued.set(Boolean.TRUE); 
 		WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
 		while (ref != null)
 		{
 		    final HGPersistentHandle h = ref.getPersistentHandle();
-		    gcLock.writeLock().lock();
+		    gcLock.writeLock().lock(); // we won't allow modifications to the cache maps during this
 		    try
 		    {
-		        TxCacheMap<HGPersistentHandle, WeakHandle>.Box theBox = liveHandlesTx.boxOf(h);
-		        if (theBox == null)
-		            continue;
-		        boolean keep = false;
-		        for (VBoxBody<WeakHandle> body = theBox.getBody(); body != null && !keep; body = body.next)
-		            if (atomsTx.boxOf(body.value.getRef()) != null)
-		                keep = true;
-		        if (!keep)
+//		        TxCacheMap<HGPersistentHandle, WeakHandle>.Box theBox = liveHandlesTx.boxOf(h);
+//		        if (theBox == null)
+//		            continue;
+//		        boolean keep = false;		        
+//		        for (VBoxBody<WeakHandle> body = theBox.getBody(); body != null && !keep; body = body.next)
+//		        {
+//		            // body.value can be null here if the atom got garbage collected before 
+//		            // a transaction committed 
+//		            if (body.value != null && atomsTx.boxOf(body.value.getRef()) != null)
+//		                keep = true;
+//		        }
+//		        if (!keep || true)
 		            liveHandles.drop(h);
 		    }
 		    finally
@@ -146,6 +152,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	            ref = (WeakHandle)refQueue.poll();		        
 		    }		    
 		}
+		WeakHandle.returnEnqueued.set(Boolean.FALSE);		
 	}
 	
 	private class PhantomCleanup extends Thread 
@@ -160,9 +167,9 @@ public class WeakRefAtomCache implements HGAtomCache
 	        {
 	        	try 
 	            {
-	        	    if (graph.getConfig().isTransactional())
-	        	        processRefQueueTx();
-	        	    else
+//	        	    if (graph.getConfig().isTransactional())
+//	        	        processRefQueueTx();
+//	        	    else
 	        	        processRefQueue();
 	            } 
 	        	catch (InterruptedException exc) 
@@ -253,7 +260,7 @@ public class WeakRefAtomCache implements HGAtomCache
         }
         coldAtoms.add(atom);
         return h;
-}
+    }
 	
 	public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
 								 Object atom,
@@ -296,17 +303,17 @@ public class WeakRefAtomCache implements HGAtomCache
 		return h;
 	}
 
-	public void atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
+	public HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
 	{
 	    if (handle.getRef() == atom)
-	        return; // same atom, nothing to do
+	        return handle; // same atom, nothing to do
 		if (closing)
 		{
 			if (handle instanceof WeakHandle)
 				((WeakHandle)handle).clear();
 			else
 				((TempLiveHandle)handle).setRef(atom);
-			return;
+			return handle;
 		}
 	    WeakHandle newLive = null;
 	    if (handle instanceof WeakManagedHandle)
@@ -328,13 +335,14 @@ public class WeakRefAtomCache implements HGAtomCache
 	    // race condition
 	    
 	    Object curr = handle.getRef();
+	    ((WeakHandle)handle).clear(); 
 	    // If we have some other Java instance as the atom, we need to force a replace
 	    // even if strictly speaking we don't need to (e.g. this happens with type wrappers)
 	    // because in case of a roll back the obligatory atoms.remove will be reversed.
 	    gcLock.readLock().lock();
 	    try
 	    {
-    	    if (replace || curr != null)
+    	    if (replace || curr != null || true)
     	    {
     	        atoms.remove(curr);
     	        atoms.put(atom, newLive);
@@ -351,6 +359,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	        gcLock.readLock().unlock();	        
 	    }
         coldAtoms.add(atom);
+        return newLive;
 	}
 
 	public void close() 
@@ -383,18 +392,9 @@ public class WeakRefAtomCache implements HGAtomCache
 
 	public HGLiveHandle get(HGPersistentHandle pHandle) 
 	{
-	    if (pHandle.toString().equals("6c46f2f2-04a7-11db-aae2-8dc354b70291"))
-	    {
-	        System.out.println("Looking for ArrayType ");
-	    }
 	    WeakHandle h = liveHandles.get(pHandle);
 		if (h != null)
 			h.accessed();
-        if (pHandle.toString().equals("6c46f2f2-04a7-11db-aae2-8dc354b70291"))
-        {
-            System.out.println("found-> " + ((h == null) ? "no" : "yes"));
-        }
-		
 		return h;
 	}
 
@@ -434,5 +434,14 @@ public class WeakRefAtomCache implements HGAtomCache
 		{		
 			frozenAtoms.remove(handle);
 		}
+	}
+	
+	// for debugging purposes
+	public void printSizes()
+	{
+	    System.out.println("atoms map: " + atomsTx.mapSize());
+	    System.out.println("liveHandles map: " + liveHandlesTx.mapSize());
+//	    System.out.println("cold atoms: " + coldAtoms.size());
+//	    System.out.println("frozen atoms: " + frozenAtoms.size());
 	}
 }

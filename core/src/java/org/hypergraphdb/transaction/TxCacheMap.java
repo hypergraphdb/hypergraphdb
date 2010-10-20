@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.hypergraphdb.cache.CacheMap;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
+import org.hypergraphdb.util.WeakIdentityHashMap;
 
 public class TxCacheMap<K, V>  implements CacheMap<K, V>
 {
@@ -32,17 +33,25 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         
         public VBoxBody<V> commitImmediately(HGTransaction tx, V newValue, long txNumber)
         {
-            return super.commit(tx, newValue, txNumber);
+            return super.commit(tx, newValue, txNumber);            
         }
         
         public VBoxBody<V> commit(HGTransaction tx, V newValue, long txNumber)
         {
-            writeMap.remove(getKey());
             if (body.version == -1)
                 return body = makeNewBody(newValue, tx.getNumber(), body.next);
             else
                 return super.commit(tx, newValue, tx.getNumber());            
         }        
+        
+        @Override
+        public void finish(HGTransaction tx)
+        {
+            if (tx.getLocalValue(this) != null)
+                writeMap.remove(getKey());
+            if (body.value == null && body.version == 0 && body.next == null)
+                drop(getKey());
+        }
     }
     
     protected class StrongBox extends Box
@@ -104,7 +113,8 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         this.sizebox = new VBox<Integer>(txManager);
         this.sizebox.put(0);
         if (mapImplementation != null)
-            this.weakrefs = WeakHashMap.class.isAssignableFrom(mapImplementation);
+            this.weakrefs = WeakHashMap.class.isAssignableFrom(mapImplementation) ||
+                            WeakIdentityHashMap.class.isAssignableFrom(mapImplementation);
         
         try
         {
@@ -200,23 +210,32 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                 {
                     box.body = box.makeNewBody(value, tx.getNumber(), box.body.next);
                 }
-                else // otherwise we just add as the newest body with the current tx number
+                else if (box.body.version == 0 || box.body.version < tx.getNumber()) // otherwise we just add as the newest body with the current tx number
                     box.commitImmediately(tx, value, tx.getNumber());
+                // TODO: remove the following else if, it's only a debugging assertion
+                else if (box.body.version == tx.getNumber() && !value.equals(box.body.value))
+                {
+                    System.err.println("oops same version but different value");
+                }
             }
             // if not current, we must insert it into the list of bodies and make sure
             // the top body is "null" in order to force a subsequent reload
             else
             {
                 // make sure top body is null
-                if (box.body.version != -1)
+                if (box.body.version < txManager.mostRecentRecord.transactionNumber && box.body.version != -1)
                     box.commitImmediately(tx, null, -1);
                 
                 VBoxBody<V> currentBody = box.body;
                 while (currentBody.next != null && currentBody.next.version > tx.getNumber())
                     currentBody = currentBody.next;
-                // we need to insert b/w currentBody and currentBody.next
-                VBoxBody<V> newBody = box.makeNewBody(value, tx.getNumber(), currentBody.next);
-                currentBody.setNext(newBody);                
+                if (currentBody.next != null && 
+                    (currentBody.next.version == 0 || currentBody.next.version < tx.getNumber()))
+                {
+                    // we need to insert b/w currentBody and currentBody.next
+                    VBoxBody<V> newBody = box.makeNewBody(value, tx.getNumber(), currentBody.next);
+                    currentBody.setNext(newBody);
+                }                
             }
         }
         finally

@@ -191,7 +191,7 @@ public class HGTransactionManager
 			                                         parent,
 			                                         activeRecord,
 			                                         config.isNoStorage() ? null
-			                                             : factory.createTransaction(getContext(), parent),
+			                                             : factory.createTransaction(getContext(), config, parent),
 			                                         config.isReadonly());
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);

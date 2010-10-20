@@ -43,7 +43,7 @@ public final class HGTransaction implements HGStorageTransaction
     private HGTransactionContext context;
     private HGStorageTransaction stran = null;
     private Map<Object, Object> attributes = new HashMap<Object, Object>();
-    private Set<Pair<VBox<?>, VBoxBody<?>>> bodiesRead = new HashSet<Pair<VBox<?>, VBoxBody<?>>>();
+    Set<Pair<VBox<?>, VBoxBody<?>>> bodiesRead = new HashSet<Pair<VBox<?>, VBoxBody<?>>>();
     private Map<VBox<?>, Object> boxesWritten = new HashMap<VBox<?>, Object>();
     private long number;
     private boolean readonly = false;
@@ -115,6 +115,11 @@ public final class HGTransaction implements HGStorageTransaction
         return doCommit();
     }
 
+    /**
+     * Commit all "written boxes" and return a linked list of the newly attached bodies
+     * to them. Those bodies will be garbage collected eventually when it is determined
+     * that no current transaction (or future) could be using them (see ActiveTransactionRecord.clean()). 
+     */
     protected Cons<VBoxBody<?>> doCommit()
     {
         Cons<VBoxBody<?>> newBodies = Cons.EMPTY;
@@ -187,6 +192,9 @@ public final class HGTransaction implements HGStorageTransaction
 
     public void commit() throws HGTransactionException
     {
+        assert !(isReadOnly() && isWriteTransaction()) : 
+               "Transaction configured as read-only was used to modify data!";
+        
         // If this is a nested transaction, everything is much simpler
         if (parent != null)
         {
@@ -206,11 +214,11 @@ public final class HGTransaction implements HGStorageTransaction
         
         if (isWriteTransaction())
         {
-            if (validateCommit())
+            context.getManager().COMMIT_LOCK.lock();
+            try
             {
-                context.getManager().COMMIT_LOCK.lock();            	
-            	try
-            	{
+                if (validateCommit())
+                {                            	
                     if (stran != null)
                         stran.commit();
                     Cons<VBoxBody<?>> bodiesCommitted = performValidCommit();
@@ -219,7 +227,7 @@ public final class HGTransaction implements HGStorageTransaction
                     ActiveTransactionsRecord newRecord = new ActiveTransactionsRecord(number,
                                                                                       bodiesCommitted);
                     context.getManager().mostRecentRecord.setNext(newRecord);
-                    newRecord.setPrev(context.getManager().mostRecentRecord);
+                    //newRecord.setPrev(context.getManager().mostRecentRecord);
                     context.getManager().mostRecentRecord = newRecord;
 
                     // as this transaction changed number, we must
@@ -232,28 +240,29 @@ public final class HGTransaction implements HGStorageTransaction
                     
                     // This assignment is need to decrementRunning in the finish method below.                    
                     this.activeTxRecord = newRecord;
-            	}
-            	catch (Throwable t)
-            	{
-            		fatalFailure(t);
-            	}
-                finally
-                {                
-                    context.getManager().COMMIT_LOCK.unlock();                
-                }            	
+                }
+                else
+                {
+                    try
+                    {
+                        privateAbort();
+                    }
+                    catch (Throwable t)
+                    {
+                        fatalFailure(t);
+                    }
+                    throw new TransactionConflictException();
+                }                
             }
-            else
+            catch (TransactionConflictException rethrowme) { throw rethrowme; }
+            catch (Throwable t)
             {
-            	try
-            	{
-            		privateAbort();
-            	}
-            	catch (Throwable t)
-            	{
-            		fatalFailure(t);
-            	}
-                throw new TransactionConflictException();
+                fatalFailure(t);
             }
+            finally
+            {                
+                context.getManager().COMMIT_LOCK.unlock();                
+            }                          
         }                
         else
         {
@@ -300,4 +309,9 @@ public final class HGTransaction implements HGStorageTransaction
     {
         attributes.put(key, value);
     }
+    
+    public boolean isReadOnly()
+    {
+        return this.readonly;
+    }    
 }

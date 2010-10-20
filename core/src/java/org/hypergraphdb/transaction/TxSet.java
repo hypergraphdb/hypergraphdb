@@ -250,6 +250,7 @@ public class TxSet<E> implements HGSortedSet<E>
         return read().toArray(a);
     }
     
+    
     public static class SetTxBox<E> extends VBox<HGSortedSet<E>>    
     {
 //        private Map<HGTransaction, Boolean> txs =
@@ -288,12 +289,17 @@ public class TxSet<E> implements HGSortedSet<E>
 //            return super.getForWrite();
 //        }
         
+        HGSortedSet<E> getLastCommitted(HGTransaction tx)
+        {
+            return body.getBody(tx.getNumber()).value;            
+        }
+        
         @Override
         public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
         {
             if (tx != null)
             {                                    
-                HGSortedSet<E> lastCommitted = body.getBody(txNumber).value;
+                HGSortedSet<E> lastCommitted = getLastCommitted(tx);                
                 List<LogEntry> log = tx.getAttribute(this);
                 if (log != null) // did we do any modifications to the set?
                 {

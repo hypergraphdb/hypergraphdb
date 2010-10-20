@@ -54,7 +54,7 @@ public class RefCountedMap<K, V> implements Map<K, V>
         throw new UnsupportedOperationException();
     }
 
-    public V get(Object key)
+    public synchronized V get(Object key)
     {
         Pair<V, AtomicInteger> p = implementation.get(key);
         return p == null ? null : p.getFirst();
@@ -71,7 +71,7 @@ public class RefCountedMap<K, V> implements Map<K, V>
     }
 
     @SuppressWarnings("unchecked")
-    public V put(K key, V value)
+    public synchronized V put(K key, V value)
     {
         Pair<V, AtomicInteger> p = null;        
         if (implementation instanceof ConcurrentMap)
@@ -101,13 +101,15 @@ public class RefCountedMap<K, V> implements Map<K, V>
             put(e.getKey(), e.getValue());
     }
 
-    public V remove(Object key)
+    public synchronized V remove(Object key)
     {
         Pair<V, AtomicInteger> p = implementation.get(key);
         if (p == null)
             return null;
         else if (p.getSecond().decrementAndGet() == 0)
+        {
             implementation.remove(key);
+        }
         return p.getFirst();
     }
 

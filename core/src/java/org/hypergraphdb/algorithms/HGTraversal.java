@@ -27,13 +27,6 @@ import org.hypergraphdb.util.Pair;
  * </p>
  *
  * <p>
- * Because of their result set like nature, <code>HGTraversal</code> instances must be closed 
- * once the work is completed or in case of an exception. While not all traversal will necessarily
- * maintain open cursors, it is always safer to make sure that they have been properly closed.
- * Once a <code>HGTraversal</code> is closed, it can no longer be used. 
- * </p>
- * 
- * <p>
  * It should be quite possible to implement the traversals as bidirectional (i.e. with
  * <code>hasPrev</code> and <code>prev</code> methods defined) should a real need arise.
  * </p>

@@ -9,5 +9,5 @@ package org.hypergraphdb.transaction;
 
 public interface HGTransactionFactory
 {
-	HGStorageTransaction createTransaction(HGTransactionContext context, HGTransaction parent);
+	HGStorageTransaction createTransaction(HGTransactionContext context, HGTransactionConfig config, HGTransaction parent);
 }

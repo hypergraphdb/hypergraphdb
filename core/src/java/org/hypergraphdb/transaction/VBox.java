@@ -62,18 +62,18 @@ public class VBox<E>
      * (collections or records) that are only written to.
      * </p>  
      */
-    public E getForWrite()
-    {
-        HGTransaction tx = txManager.getContext().getCurrent();
-        if (tx == null) 
-            return body.value;
-        {
-            E value = tx.getLocalValue(this);
-            if  (value == null)
-                value = body.getBody(tx.getNumber()).value; 
-            return (value == HGTransaction.NULL_VALUE) ? null : value;            
-        }
-    }
+//    public E getForWrite()
+//    {
+//        HGTransaction tx = txManager.getContext().getCurrent();
+//        if (tx == null) 
+//            return body.value;
+//        {
+//            E value = tx.getLocalValue(this);
+//            if  (value == null)
+//                value = body.getBody(tx.getNumber()).value; 
+//            return (value == HGTransaction.NULL_VALUE) ? null : value;            
+//        }
+//    }
     
     public void put(E newE)
     {
@@ -112,6 +112,10 @@ public class VBox<E>
 
     public VBoxBody<E> makeNewBody(E value, long version, VBoxBody<E> next)
     {
+        if (next != null && version > 0 && version == next.version)
+        {
+            System.err.println("oops: new body with same version...");
+        }
         return new VBoxBody<E>(value, version, next);
     }
     

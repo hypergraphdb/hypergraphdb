@@ -2,6 +2,7 @@ package org.hypergraphdb.transaction;
 
 import java.util.List;
 import org.hypergraphdb.util.HGSortedSet;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 
@@ -11,7 +12,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     private RefCountedMap<Key,SetTxBox<E>> writeMap;    
     private RefResolver<Key, ? extends HGSortedSet<E>> loader; 
     
-    void insertBody(long txNumber, HGSortedSet<E> x)
+    VBoxBody<HGSortedSet<E>> insertBody(long txNumber, HGSortedSet<E> x)
     {
         txManager.COMMIT_LOCK.lock();
         try
@@ -23,23 +24,30 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                 {
                     S.body = S.makeNewBody(x, txNumber, S.body.next);
                 }                
-                else // otherwise we just add as the newest body with the current tx number
+                else if (S.body.version < txNumber) // otherwise we just add as the newest body with the current tx number
                     S.body = S.makeNewBody(x, txNumber, S.body);
+                return S.body;
             }
             // if not current, we must insert it into the list of bodies and make sure
             // the top body is "null" in order to force a subsequent reload
             else
             {
-                // make sure top body is null
-                if (S.body.version != -1)
+                // make sure top body is null whenever the version at top is older
+                // than the current transaction
+                if (S.body.version < txManager.mostRecentRecord.transactionNumber && S.body.version != -1)                    
                     S.body = S.makeNewBody(null, -1, S.body);
                 
                 VBoxBody<HGSortedSet<E>> currentBody = S.body;
                 while (currentBody.next != null && currentBody.next.version > txNumber)
                     currentBody = currentBody.next;
+                // Could happen that we unnecessarily loaded the same set twice due to race conditions
+                // so at least we avoid storing it twice.
+                if (currentBody.next != null && currentBody.next.version == txNumber)
+                    return currentBody.next;
                 // we need to insert b/w currentBody and currentBody.next
                 VBoxBody<HGSortedSet<E>> newBody = S.makeNewBody(x, txNumber, currentBody.next);
-                currentBody.setNext(newBody);                
+                currentBody.setNext(newBody);
+                return newBody;
             }               
         }
         finally
@@ -48,11 +56,11 @@ public class TxCacheSet<Key, E> extends TxSet<E>
         }        
     }
     
-    HGSortedSet<E> load(long txNumber)
+    VBoxBody<HGSortedSet<E>> load(long txNumber)
     {
         HGSortedSet<E> x = loader.resolve(key);
-        insertBody(txNumber, x);
-        return x;
+        return insertBody(txNumber, x);
+        //return x;
     }
     
     @Override
@@ -69,17 +77,21 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             // it will be null if we need a load from disk or the latest committed value
             // which would be the correct version
             if (b.version <= tx.getNumber())
-                return b.value == null ? load(tx.getNumber()) : b.value;
+            {
+                if (b.value == null)
+                    b = load(tx.getNumber());
+            }
             else
             {
                 // else try to find the exact same version as the current transaction                
                 while (b.version > tx.getNumber() && b.next != null)
                     b = b.next;
-                if (b.version == tx.getNumber())
-                    return b.value;
-                else
-                    return load(tx.getNumber());
+                if (b.version != tx.getNumber())
+                    b = load(tx.getNumber());
             }            
+            if (!tx.isReadOnly())
+                tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(S, b));
+            return b.value;
         }
         else 
             return x == HGTransaction.NULL_VALUE ? null : x;        
@@ -89,7 +101,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     HGSortedSet<E> write()
     {
         List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(S);
-        if (log == null) // should we copy-on-write?
+        if (log == null) // should we copy-on-write or have we done so already?
         {
             HGSortedSet<E> readOnly = read(); // S.getForWrite();
             HGSortedSet<E> writeable = cloneSet(readOnly);
@@ -138,19 +150,21 @@ public class TxCacheSet<Key, E> extends TxSet<E>
         CacheSetTxBox(final HGTransactionManager txManager, 
                       final HGSortedSet<E> backingSet,
                       final TxSet<E> thisSet)
-                 {
-                    super(txManager, backingSet, thisSet);
-                 }
+        {
+            super(txManager, backingSet, thisSet);
+        }
         
         @SuppressWarnings("unchecked")
+        HGSortedSet<E> getLastCommitted(HGTransaction tx)
+        {
+            TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;            
+            HGSortedSet<E> lastCommitted = super.getLastCommitted(tx);                
+            return  (lastCommitted == null) ?  s.load(tx.getNumber()).value : lastCommitted;
+        }
+        
         @Override
         public VBoxBody<HGSortedSet<E>> commit(HGTransaction tx, HGSortedSet<E> newvalue, long txNumber)
         {
-            if (tx != null && tx.getAttribute(this) != null)
-            {
-                TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;  
-                s.writeMap.remove(s.key);
-            }
             VBoxBody<HGSortedSet<E>> latest = super.commit(tx, newvalue, txNumber);
             // check if we have the special "old value" marker hanging in the second place of
             // the list of bodies after the commit, and if so unlink it
@@ -158,5 +172,16 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                 latest.setNext(latest.next.next);
             return latest;
         }
+        
+        @SuppressWarnings("unchecked")
+        @Override
+        public void finish(HGTransaction tx)
+        {
+            if (tx.getAttribute(this) != null)
+            {
+                TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;                
+                s.writeMap.remove(s.key);
+            }
+        }        
     }
 }

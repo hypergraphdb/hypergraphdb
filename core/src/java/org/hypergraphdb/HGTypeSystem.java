@@ -417,7 +417,10 @@ public class HGTypeSystem
 			return null;
 		}
 		else
+		{
+            classToAtomType.put(clazz, inferred);		    
 			return inferred;
+		}
 	}
 
 	/**
@@ -480,7 +483,10 @@ public class HGTypeSystem
 		// instance of
 		//
 		if (newHandle instanceof HGLiveHandle)
+		{
 			graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
+			newHandle = graph.cache.get(((HGLiveHandle)newHandle).getPersistentHandle());
+		}
 		else
 			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle,
 			                                 type, 
@@ -646,7 +652,7 @@ public class HGTypeSystem
 			type = javaTypes.getJavaBinding(handle, type, clazz);
 			if (refreshInCache)
 			{
-				graph.cache.atomRefresh(handle, type, false);
+				graph.cache.atomRefresh(handle, type, true);
 				classToAtomType.put(clazz, handle);
 			}
 		}

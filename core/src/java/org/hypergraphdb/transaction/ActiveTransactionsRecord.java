@@ -71,6 +71,13 @@ public class ActiveTransactionsRecord
     // write-transaction commits, in
     // which case a new record is created
     private volatile ActiveTransactionsRecord next = null;
+    
+    // The original algorithm was modified to add a prev field so that a 
+    // transaction record may be removed from the list of successors created
+    // through the next field. This is necessary in order to support very long
+    // transactions. Such transactions occur, for example, as large read-only
+    // traversals or they may also happen in a distributed environment due 
+    // to long network latencies.
     private volatile ActiveTransactionsRecord prev = null;
     
     /*
@@ -245,6 +252,7 @@ public class ActiveTransactionsRecord
         }
     }
     
+    // see comment on 'prev' field on why this is being done
     public void maybeUnchain()
     {
         if (prev != null && next != null && running.get() == 0)
@@ -262,7 +270,7 @@ public class ActiveTransactionsRecord
         {
             // when running reaches 0 maybe it's time to clean our successor
             maybeCleanSuc();
-            maybeUnchain();
+//            maybeUnchain();
         }
     }
 

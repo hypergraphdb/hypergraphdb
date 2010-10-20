@@ -41,13 +41,20 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
             public HGSortedSet<HGHandle> resolve(HGPersistentHandle key)
             {
                 HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
-                int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
-                HGPersistentHandle [] A = new HGPersistentHandle[size];
-                for (int i = 0; i < A.length; i++)
-                    A[i] = rs.next();                
-                ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A);
-                impl.setLock(new DummyReadWriteLock());
-                return impl;
+                try
+                {                  
+                    int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
+                    HGPersistentHandle [] A = new HGPersistentHandle[size];
+                    for (int i = 0; i < A.length; i++)
+                        A[i] = rs.next();                
+                    ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A);
+                    impl.setLock(new DummyReadWriteLock());
+                    return impl;
+                }
+                finally
+                {
+                    rs.close();
+                }                
             }
 	    
 	    };

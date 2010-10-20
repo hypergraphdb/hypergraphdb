@@ -12,7 +12,7 @@ public class BDBConfig
         
     private EnvironmentConfig envConfig;
     private DatabaseConfig dbConfig;
-    private boolean storageMVCC;
+    private boolean storageMVCC = true;
     
     private void resetDefaults()
     {
@@ -48,7 +48,7 @@ public class BDBConfig
     {
         envConfig.setInitializeLogging(true);
         envConfig.setTransactional(true);            
-        if (storageMVCC)
+        if (!storageMVCC)
         {
             envConfig.setInitializeLocking(true);
             envConfig.setLockDetectMode(LockDetectMode.RANDOM);

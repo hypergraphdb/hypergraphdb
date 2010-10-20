@@ -37,6 +37,8 @@ public class ColdAtoms
 			synchronized (buckets)
 			{
 				int cnt = buckets.size() / evictFactor;
+				if (cnt == 0)
+				    cnt = buckets.size() > 0 ? 1 : 0;
 				while (cnt-- > 0)
 					buckets.fetch();
 			}				
@@ -69,8 +71,8 @@ public class ColdAtoms
 	
 	public void add(Object atom)
 	{
-//	    if (1 == 1)
-//	        return;
+	    if (1 == 1)
+	        return;
 		synchronized (buckets)
 		{
 			if (pos >= bucket_size)
@@ -80,5 +82,10 @@ public class ColdAtoms
 			}		
 			buckets.peekBack()[pos++] = atom;
 		}
+	}
+	
+	public int size()
+	{
+	    return bucket_size*buckets.size();
 	}
 }

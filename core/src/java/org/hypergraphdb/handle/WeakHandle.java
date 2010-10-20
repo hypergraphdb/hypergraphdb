@@ -14,6 +14,8 @@ import org.hypergraphdb.HGPersistentHandle;
 
 public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, Comparable<HGHandle>
 {
+    public static ThreadLocal<Boolean> returnEnqueued = new ThreadLocal<Boolean>();
+    
     private HGPersistentHandle persistentHandle;
     private byte flags;
 
@@ -42,10 +44,10 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
         //
         // Here, we want to return null when the object is about to be garbage
         // collected. This will be indicated by the fact that the object will
-        // be enqueued in the ReferenceQueue for this PhantomReference.
+        // be enqueued in the ReferenceQueue for this WeakReference.
         //
 
-        // Obviously, we are doing something unorthodox here. The main danger
+        // Obviously, we are doing something not orthodox here. The main danger
         // and the first thing to examine in case of weird behavior with this
         // is a situation where an atom gets removed from the 'atoms' WeakHashMap
         // in the cache (hence it's being garbage collected) and 'getRef' is called
@@ -57,17 +59,16 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
 
         //
         // However, there is a special case in which we don't want to return null: when
-        // we are in the phantom reference queue cleanup thread. Because cleanup may involve
-        // saving the atom which in turn might trigger a 'getRef' for another handle down
-        // in the reference queue, this may result in a deadlock within the phantom ref
+        // we are in the weak reference queue cleanup thread. Because cleanup may involve
+        // a call to 'getRef', this may result in a deadlock within the ref
         // cleanup thread itself. For this we use the thread local variable 'returnEnqueued'
         //
         Object x = get();      
         if (isEnqueued())
         {
-//            Boolean f = returnEnqueued.get();
-//            if (f != null && f.booleanValue())
-//                return x;
+            Boolean f = returnEnqueued.get();
+            if (f != null && f.booleanValue())
+                return x;
             x = null;
             do
             {

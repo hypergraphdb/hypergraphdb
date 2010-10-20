@@ -228,10 +228,10 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	{
 		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
-//			System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
+			System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
 			CacheActionQueueSingleton.get().pauseActions();
 			try
-			{
+			{			    
 				new EvictAction().run();
 			    //new ClearAction().run();
 			}
@@ -239,8 +239,8 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			{
 				CacheActionQueueSingleton.get().resumeActions();
 			}
-//			System.gc();
-//			System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
+			System.gc();
+			System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
 		}
 	};
 	

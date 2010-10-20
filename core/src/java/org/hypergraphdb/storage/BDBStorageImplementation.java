@@ -17,6 +17,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransaction;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.TransactionBDBImpl;
@@ -36,19 +37,6 @@ import com.sleepycat.db.TransactionConfig;
 
 public class BDBStorageImplementation implements HGStoreImplementation
 {
-//    static
-//    {
-//        String osname = System.getProperty("os.name");
-//        if (osname.indexOf("win") > -1 || osname.indexOf("Win") > -1)
-//        {
-//              System.loadLibrary("msvcm80");
-//              System.loadLibrary("msvcr80");
-//              System.loadLibrary("msvcp80");          
-//            System.loadLibrary("libdb50");
-//            System.loadLibrary("libdb_java50"); 
-//        }
-//    }
-    
     private static final String DATA_DB_NAME = "datadb";
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
@@ -95,7 +83,6 @@ public class BDBStorageImplementation implements HGStoreImplementation
         this.handleFactory = config.getHandleFactory();
         this.linkBinding = new LinkBinding(handleFactory);
         EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
-//      configuration.setStorageMVCC(false);
         if (config.isTransactional())
             configuration.configureTransactional();
         File envDir = new File(store.getDatabaseLocation());
@@ -375,7 +362,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
     {
         return new HGTransactionFactory()
         {
-            public HGStorageTransaction createTransaction(HGTransactionContext context, HGTransaction parent)
+            public HGStorageTransaction createTransaction(HGTransactionContext context, HGTransactionConfig config, HGTransaction parent)
             {           
                 try
                 {

@@ -1657,8 +1657,7 @@ public /*final*/ class HyperGraph
 	        }
 	        else
 	        {
-	        	result = liveHandle;
-	        	cache.atomRefresh(result, instance, false);
+	        	result = cache.atomRefresh(liveHandle, instance, false);
 	        }
 	        if (instance instanceof HGAtomType)
 	        	instance = typeSystem.loadedType(result, (HGAtomType)instance, true);

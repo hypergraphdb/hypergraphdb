@@ -141,8 +141,11 @@ public interface HGAtomCache
 	 * if the transaction aborts) and <code>false</code> if this is simply a reload from
 	 * permanent storage where the effects of that reload may (or may not, depending on the
 	 * implementation) be reversed in case of a transaction abort.
+	 * @return Possibly a new live handle instance or the <code>handle</code> parameter depending
+	 * on the implementation. If a new instance is return, the reference of the old instance
+	 * is cleared.
 	 */
-	void atomRefresh(HGLiveHandle handle, Object atom, boolean replace);
+	HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace);
 	
 	/**
 	 * <p>
