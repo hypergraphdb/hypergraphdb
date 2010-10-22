@@ -32,10 +32,28 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             // the top body is "null" in order to force a subsequent reload
             else
             {
+                if (S.body.version == -1)
+                {
+                    // We want to avoid endlessly loading the same version from disk in case
+                    // we always load into a transaction that doesn't have the latest number, but
+                    // the value hasn't actually changed. The 'S.loadedAt' field marks the transaction
+                    // number when the box was first loaded so if there are no commits between S.loadedAt
+                    // and now (which a top version of -1 indicates) then the latest possible version 
+                    // is S.loadedAt. So if txNumber>=S.loadedAt we should
+                    // mark this version as the latest
+                    if (txNumber >= ((CacheSetTxBox<Key, E>)S).loadedAt)
+                    {
+                        S.body = S.makeNewBody(x, ((CacheSetTxBox<Key, E>)S).loadedAt, S.body.next);
+                        return S.body;
+                    }
+                }
                 // make sure top body is null whenever the version at top is older
                 // than the current transaction
-                if (S.body.version < txManager.mostRecentRecord.transactionNumber && S.body.version != -1)                    
-                    S.body = S.makeNewBody(null, -1, S.body);
+//                else if (S.body.version < txManager.mostRecentRecord.transactionNumber)
+//                {
+//                    S.body = S.makeNewBody(null, -1, S.body);
+//                    System.err.println("This looks interesting.");
+//                }
                 
                 VBoxBody<HGSortedSet<E>> currentBody = S.body;
                 while (currentBody.next != null && currentBody.next.version > txNumber)
@@ -91,10 +109,21 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             }            
             if (!tx.isReadOnly())
                 tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(S, b));
+            if (b.value == null)
+            {
+                System.err.println("oops");                
+            }
             return b.value;
         }
         else 
-            return x == HGTransaction.NULL_VALUE ? null : x;        
+        {
+            x = x == HGTransaction.NULL_VALUE ? null : x;
+            if (x == null)
+            {
+                System.err.println("oops");                
+            }
+            return x;
+        }
     }
     
     @Override
@@ -135,7 +164,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             
             // we need to tag the body with the current transaction's version
             // since body.version is final, we replace with a new body
-            S.body = S.makeNewBody(backingSet, txNumber, null);
+            S.body = S.makeNewBody(backingSet, txNumber, null); 
             // if this is an old transaction, we need to put null at the top of the body
             // list so the latest will get reloaded if needed
             if (txNumber < txManager.mostRecentRecord.transactionNumber)
@@ -147,11 +176,14 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     
     public static class CacheSetTxBox<Key, E> extends SetTxBox<E>
     {
+        long loadedAt;
+        
         CacheSetTxBox(final HGTransactionManager txManager, 
                       final HGSortedSet<E> backingSet,
                       final TxSet<E> thisSet)
         {
             super(txManager, backingSet, thisSet);
+            loadedAt = txManager.mostRecentRecord.transactionNumber;
         }
         
         @SuppressWarnings("unchecked")
