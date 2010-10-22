@@ -12,6 +12,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     private RefCountedMap<Key,SetTxBox<E>> writeMap;    
     private RefResolver<Key, ? extends HGSortedSet<E>> loader; 
     
+    @SuppressWarnings("unchecked")
     VBoxBody<HGSortedSet<E>> insertBody(long txNumber, HGSortedSet<E> x)
     {
         txManager.COMMIT_LOCK.lock();
@@ -109,20 +110,11 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             }            
             if (!tx.isReadOnly())
                 tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(S, b));
-            if (b.value == null)
-            {
-                System.err.println("oops");                
-            }
             return b.value;
         }
         else 
         {
-            x = x == HGTransaction.NULL_VALUE ? null : x;
-            if (x == null)
-            {
-                System.err.println("oops");                
-            }
-            return x;
+            return x == HGTransaction.NULL_VALUE ? null : x;
         }
     }
     
