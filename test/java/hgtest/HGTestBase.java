@@ -31,9 +31,9 @@ public class HGTestBase
     @BeforeClass
     public void setUp()
     {
+        System.out.println("Using graph " + getGraphLocation());        
         dropHyperGraphInstance(getGraphLocation()); 
         graph = HGEnvironment.get(getGraphLocation());
-        System.out.println("Using graph " + graph.getLocation());
     }
     
     @AfterClass    

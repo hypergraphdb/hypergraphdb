@@ -2,14 +2,22 @@ package hgtest.tx;
 
 import java.util.ArrayList;
 
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGPlainLink;
+import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.cache.WeakRefAtomCache;
+import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
@@ -18,9 +26,9 @@ import hgtest.T;
 
 public class LinkTxTests extends HGTestBase
 {
-    private int atomsCount = 20; // must be an even number
-    private int linksCount = 10; // must be an even number
-    private int threadCount = 5;
+    private int atomsCount = 100; // must be an even number
+    private int linksCount = 100; // must be an even number
+    private int threadCount = 4;
     private boolean log = !true;
     
     private ArrayList<Throwable> errors = new ArrayList<Throwable>();
@@ -89,6 +97,33 @@ public class LinkTxTests extends HGTestBase
         } while (j < linksCount);        
     }
     
+    public void checkLinkSanity(HGPersistentHandle handle)
+    {
+        HGPersistentHandle [] atomLayout = graph.getStore().getLink(handle);
+        HGPersistentHandle [] valueLayout = graph.getStore().getLink(atomLayout[1]);
+        if (HGUtils.eq(atomLayout, valueLayout))
+            System.out.println("problem");
+    }
+    
+    public void checkLinkSanity()
+    {
+        int ok = 0, ko = 0;
+        HGSearchResult<HGPersistentHandle> rs = graph.find(hg.type(LinkType.class));
+        while (rs.hasNext())
+        {
+            HGPersistentHandle [] atomLayout = graph.getStore().getLink(rs.next());
+            HGPersistentHandle [] valueLayout = graph.getStore().getLink(atomLayout[1]);
+            if (HGUtils.eq(atomLayout, valueLayout))
+            {
+                System.err.println("messy.");
+                ko++;
+            }
+            ok++;
+        }
+        rs.close();
+        System.out.println("ok="+ok + ", ko=" + ko);
+    }
+    
     public void verifyData()
     {
         for (int i = 0; i < atomsCount; i++)
@@ -122,8 +157,7 @@ public class LinkTxTests extends HGTestBase
                                                              hg.incident(y)));
                 if (existing != null)
                     return finali + 1;
-                
-                graph.add(first);
+                checkLinkSanity(graph.getPersistentHandle(graph.add(first)));
                 int next = finali + 1;
                 existing = hg.findOne(graph, hg.and(hg.type(LinkType.class), 
                                                     hg.eq("idx", next), 
@@ -140,7 +174,7 @@ public class LinkTxTests extends HGTestBase
                 {
                     if (log)
                         T.getLogger("LinkTxTests").info("Fine with " + finali + "-" + next + " at " + threadId);                    
-                    graph.add(new LinkType(threadId, next, x , y));
+                    checkLinkSanity(graph.getPersistentHandle(graph.add(new LinkType(threadId, next, x , y))));
                 }
                 return finali + 2;
             }
@@ -162,17 +196,20 @@ public class LinkTxTests extends HGTestBase
                 assertNotNull(hj);
                 if (log)
                     T.getLogger("LinkTxTests").info("Linking " + i + " <-> " + j);
-                System.out.println("Linking " + i + " <-> " + j);                
+                System.out.println("Linking " + i + " <-> " + j);
                 linkThem(threadId, hi, hj);
+//                ((WeakRefAtomCache)graph.getCache()).printSizes();
             }
         }        
     }
 
-   // @Test
+    @Test
     public void testConcurrentLinkCreation()
     {
+        graph.getIndexManager().register(new ByPartIndexer(graph.getTypeSystem().getTypeHandle(LinkType.class), "idx"));
+        graph.runMaintenance();
         for (int i = 0; i < atomsCount; i++)
-            hg.assertAtom(graph, makeAtom(i));
+            hg.assertAtom(graph, makeAtom(i));        
         ExecutorService pool = Executors.newFixedThreadPool(10);
         for (int i = 0; i < threadCount; i++)
         {
@@ -203,12 +240,16 @@ public class LinkTxTests extends HGTestBase
             return;
         }        
         assertEquals(errors.size(), 0);
+        this.reopenDb();
         verifyData();
     }
     
     public static void main(String [] argv)
-    {
+    {        
         LinkTxTests test = new LinkTxTests();
+//        test.graph = HGEnvironment.get(test.getGraphLocation());
+//        test.checkLinkSanity();
+        
         dropHyperGraphInstance(test.getGraphLocation());
         test.setUp();        
         try

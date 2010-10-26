@@ -360,8 +360,8 @@ public class Queries extends HGTestBase
                     hg.orderedLink(folder02Handle, hg.anyHandle())));
         HGQuery<HGHandle> query = HGQuery.make(graph, cond04);
         List<HGHandle> handleList04 = hg.findAll(query);        
-        Assert.assertEquals(handleList04.size(), 1);
-        Assert.assertTrue(handleList04.contains(folder02Handle));          
+        Assert.assertEquals(handleList04.size(), 0);
+        Assert.assertFalse(handleList04.contains(folder02Handle));          
     }
     
     @Test

@@ -30,7 +30,7 @@ public class Folder implements Serializable {
         if (this.name == null) {
             return "No name";
         }
-        if (this.name.isEmpty()) {
+        if (this.name.length() == 0) {
             return "";
         }
         return name;

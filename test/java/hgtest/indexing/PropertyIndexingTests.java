@@ -62,8 +62,21 @@ public class PropertyIndexingTests extends HGTestBase
         HGHandle derivedTypeHandle = graph.getTypeSystem().getTypeHandle(DerivedBean.class);
         HGIndex<?,?> idx = graph.getIndexManager().register(new ByPartIndexer(simpleTypeHandle, "intProp"));
         HGIndex<?,?> idx2 = graph.getIndexManager().register(new ByPartIndexer(derivedTypeHandle, "derivedProperty"));
+
+        for (int i = 0; i < 50; i++)
+        {
+            DerivedBean bean = new DerivedBean();
+            bean.setIntProp(i);
+            bean.setDerivedProperty(Double.toString(Math.random()));
+            graph.add(bean);
+        }
         
-        for (int i = 0; i < 100; i++)
+        Assert.assertEquals(idx.count(), 50);
+        Assert.assertEquals(idx2.count(), 50);
+        
+        reopenDb();
+        
+        for (int i = 50; i < 100; i++)
         {
             DerivedBean bean = new DerivedBean();
             bean.setIntProp(i);
@@ -73,7 +86,10 @@ public class PropertyIndexingTests extends HGTestBase
         
         System.out.println("SimpleBean type " + graph.getTypeSystem().getTypeHandle(SimpleBean.class));
         System.out.println("DerivedBean type " + graph.getTypeSystem().getTypeHandle(DerivedBean.class));
-        
+
+        idx = graph.getIndexManager().getIndex(new ByPartIndexer(simpleTypeHandle, "intProp"));
+        idx2 = graph.getIndexManager().getIndex(new ByPartIndexer(derivedTypeHandle, "derivedProperty"));
+
         try
         {
             Assert.assertEquals(idx.count(), 100);

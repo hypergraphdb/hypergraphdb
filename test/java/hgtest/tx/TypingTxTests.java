@@ -33,7 +33,7 @@ public class TypingTxTests extends HGTestBase
         assertNull(h);        
     }
     
-    @Test(invocationCount=10)
+    @Test(invocationCount=100)
     public void testConcurrentTypeAdd()
     {
         ExecutorService pool = Executors.newFixedThreadPool(2);
@@ -41,7 +41,13 @@ public class TypingTxTests extends HGTestBase
         {
             public HGHandle call()
             {
-                return graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+                HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+                double x = Math.random();
+                SimpleBean bean = new SimpleBean();
+                bean.setDoubleProp(x);
+                HGHandle h = graph.add(bean);
+                assertEquals(h, hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.eq("doubleProp", x))));
+                return typeHandle;
             }
         };
         Future<HGHandle> f1 = pool.submit(op);
@@ -74,7 +80,7 @@ public class TypingTxTests extends HGTestBase
         }
     }
     
-    @Test(invocationCount=10)
+    @Test(invocationCount=100)
     public void testConcurrentTypeRemove()
     {
         long totalAtoms = hg.count(graph, hg.all());

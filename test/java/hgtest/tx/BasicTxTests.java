@@ -26,10 +26,10 @@ public class BasicTxTests extends HGTestBase
         live = (HGLiveHandle)graph.add(x);
         persistent = graph.getPersistentHandle(live);
         graph.getTransactionManager().abort();
+        assertNull(graph.getHandle(x));
         assertEquals(hg.count(graph, hg.eq(x)), 0);
         assertNull(graph.getCache().get(persistent));        
         assertNull(graph.get(live));        
-        assertNull(graph.getHandle(x));
     }
     
     @Test

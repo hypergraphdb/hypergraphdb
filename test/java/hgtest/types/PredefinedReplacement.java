@@ -7,6 +7,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -54,8 +55,8 @@ public class PredefinedReplacement extends HGTestBase
         super.reopenDb();
         Assert.assertEquals(graph.getTypeSystem().getTypeHandle(Integer.class),
                 myTypeHandle);
-        Assert.assertEquals(graph.getTypeSystem().getAtomType(Integer.class)
-                .getClass(), MyIntType.class);
+        HGAtomType intType = graph.getTypeSystem().getAtomType(Integer.class);
+        Assert.assertEquals(intType.getClass(), MyIntType.class);
         HGHandle h1 = graph.add(8573);
         HGHandle h2 = graph.add(0);
         HGHandle h3 = graph.add(Integer.MAX_VALUE);

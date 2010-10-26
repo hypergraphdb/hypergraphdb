@@ -18,15 +18,15 @@ import hgtest.beans.BeanWithEnum;
 
 public class IndexEnumTypeTest extends HGTestBase
 {
-    public static void main(String[] args)
-    {
-        IndexEnumTypeTest t = new IndexEnumTypeTest();
-        //t.setUp();
-        t.graph = HGEnvironment.get(t.getGraphLocation());
-        t.testEnumIndex();
-        //t.tearDown();
-        t.graph.close();
-    }
+//    public static void main(String[] args)
+//    {
+//        IndexEnumTypeTest t = new IndexEnumTypeTest();
+//        //t.setUp();
+//        t.graph = HGEnvironment.get(t.getGraphLocation());
+//        t.testEnumIndex();
+//        //t.tearDown();
+//        t.graph.close();
+//    }
     
     @SuppressWarnings("unchecked")
     @Test
@@ -53,5 +53,6 @@ public class IndexEnumTypeTest extends HGTestBase
                           (query instanceof ExpressionBasedQuery &&
                            ((ExpressionBasedQuery)query).getCompiledQuery() instanceof IndexBasedQuery));
         Assert.assertEquals(hg.findOne(graph, condition), h4);
+        this.reopenDb();
     }
 }
