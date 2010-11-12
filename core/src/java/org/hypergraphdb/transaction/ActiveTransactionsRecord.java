@@ -253,6 +253,14 @@ public class ActiveTransactionsRecord
     }
     
     // see comment on 'prev' field on why this is being done
+    // there's a potential race condition problem here because we're
+    // doing a relatively sophisticated data structure management 
+    // without synchronizing anything...but so far tests seem to pass
+    // and the assumption is that we are modifying an inactive record
+    // only by "writing" to the next/prev fields
+    //
+    // there's the potential of an NPE if, say, 'prev' becomes null after
+    // the if has passed, but I want to see it happen before dealing with it :)
     public void maybeUnchain()
     {
         if (prev != null && next != null && running.get() == 0)
@@ -260,7 +268,7 @@ public class ActiveTransactionsRecord
             //System.out.println("Detaching record.");
             prev.next = next;
             next.prev = prev;
-            this.prev = null;
+            this.prev = this.next = null;
         }        
     }
     
@@ -268,9 +276,9 @@ public class ActiveTransactionsRecord
     {
         if (running.decrementAndGet() == 0)
         {
-            // when running reaches 0 maybe it's time to clean our successor
+            // when running reaches 0 maybe it's time to clean
             maybeCleanSuc();
-//            maybeUnchain();
+            maybeUnchain();
         }
     }
 

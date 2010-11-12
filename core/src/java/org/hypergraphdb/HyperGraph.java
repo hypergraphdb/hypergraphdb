@@ -9,6 +9,7 @@ package org.hypergraphdb;
 
 import java.util.ArrayList;
 
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,11 +19,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.cache.MRUCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
-import org.hypergraphdb.handle.DefaultLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.type.*;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.HGStats;
 import org.hypergraphdb.maintenance.MaintenanceException;
 import org.hypergraphdb.maintenance.MaintenanceOperation;
@@ -349,12 +350,12 @@ public /*final*/ class HyperGraph
 	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
             typeSystem.bootstrap(config.getTypeConfiguration());                 
             getTransactionManager().endTransaction(true);
-
+            
             idx_manager.loadIndexers();
-    		
+    		            
 	        // Initialize atom access statistics, purging and the like. 
 	        initAtomManagement();    
-            
+            	        
 	        // Load all listeners stored in this HyperGraph as HGListenerAtoms
 	        loadListeners();
 
@@ -380,6 +381,7 @@ public /*final*/ class HyperGraph
 	        	else if (!config.getSkipMaintenance())
 	        		runMaintenance();
 	        }
+	        	        
     	}
     	catch (Throwable t)
     	{
@@ -1649,6 +1651,9 @@ public /*final*/ class HyperGraph
 	        {
 	        	TypeUtils.releaseThreadLocals(topCall);
 	        }
+            if (instance instanceof HGAtomType)
+                instance = typeSystem.toJavaBinding(persistentHandle, (HGAtomType)instance);
+	        
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
 	        {
@@ -1659,8 +1664,6 @@ public /*final*/ class HyperGraph
 	        {
 	        	result = cache.atomRefresh(liveHandle, instance, false);
 	        }
-	        if (instance instanceof HGAtomType)
-	        	instance = typeSystem.loadedType(result, (HGAtomType)instance, true);
 	    	if (instance instanceof HGGraphHolder)
 	    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
 	    	if (instance instanceof HGHandleHolder)
@@ -1672,66 +1675,66 @@ public /*final*/ class HyperGraph
     	}});
     }
     
-    private void unloadAtom(final HGLiveHandle lHandle, final Object instance)
-    {
-    	try
-    	{
-	    	getTransactionManager().ensureTransaction(new Callable<Object>() 
-	  	    { public Object call() {
-	  	    	
-	  	    	// The following (both the code for MUTABLE and MANAGED flags) cause
-	  	    	// deadlocks with a 'get' operation in the PhnatomHandle while
-	  	    	// an atom is waiting to be de-queued: graph.get(handle) blocks 
-	  	    	// on waiting for the PhantomHandle to return, which in turn waits
-	  	    	// for the atom (currently being GC-ed) to be dequeued, but this 
-	  	    	// doesn't happen because unloadAtom can't proceed due to simultaneous
-	  	    	// DB write with the get operation.
-/*		    	if ((lHandle.getFlags() & HGSystemFlags.MUTABLE) != 0)
-		    	{
-		    		//TODO: Maybe this should be done somewhere else or differently...
-		    		//in atomAdded() attribs are added only for MANAGED flag
-		    		AtomAttrib attrib = getAtomAttributes(lHandle.getPersistentHandle());
-		    		if(attrib == null){
-		    			attrib = new AtomAttrib();
-		    			attrib.flags = lHandle.getFlags();
-		    		   setAtomAttributes(lHandle.getPersistentHandle(), attrib);
-		    		}
-		    		//
-		    		// We don't explicitly track what has changed in atom. So
-		    		// we need to save its "whole" value. Because, the replace
-		    		// operation is too general and it may interact with the cache
-		    		// in complex ways, while this method may be called during cache
-		    		// cleanup, we can't use 'replace'. We need a separate version
-		    		// that is careful not to use the cache.
-		    		//
-		    		 // rawSave(lHandle.getPersistentHandle(), instance);
-		    		replace(lHandle, instance);
-		    	} 
-		    	if ((lHandle.getFlags() & HGSystemFlags.MANAGED) != 0)
-		    	{
-		    		HGManagedLiveHandle mHandle = (HGManagedLiveHandle)lHandle;
-		    		AtomAttrib attrib = getAtomAttributes(mHandle.getPersistentHandle());
-		    		attrib.flags = mHandle.getFlags();
-		    		attrib.retrievalCount += mHandle.getRetrievalCount();
-		    		attrib.lastAccessTime = Math.max(mHandle.getLastAccessTime(), attrib.lastAccessTime);
-		    		setAtomAttributes(lHandle.getPersistentHandle(), attrib);
-		    	} */
-		    	return null;
-	    	}});
-    	}
-    	catch (HGException ex)
-    	{
-    		throw new HGException("Problem while unloading atom " + 
-					  			  instance + " of type " + instance.getClass().getName() + " " + ex.getMessage(),
-					  			  ex);
-    	}
-    	catch (Throwable t)
-    	{
-    		throw new HGException("Problem while unloading atom " + 
-		  			  instance + " of type " + instance.getClass().getName(),
-		  			  t);
-    	}    	
-    }
+//    private void unloadAtom(final HGLiveHandle lHandle, final Object instance)
+//    {
+//    	try
+//    	{
+//	    	getTransactionManager().ensureTransaction(new Callable<Object>() 
+//	  	    { public Object call() {
+//	  	    	
+//	  	    	// The following (both the code for MUTABLE and MANAGED flags) cause
+//	  	    	// deadlocks with a 'get' operation in the PhnatomHandle while
+//	  	    	// an atom is waiting to be de-queued: graph.get(handle) blocks 
+//	  	    	// on waiting for the PhantomHandle to return, which in turn waits
+//	  	    	// for the atom (currently being GC-ed) to be dequeued, but this 
+//	  	    	// doesn't happen because unloadAtom can't proceed due to simultaneous
+//	  	    	// DB write with the get operation.
+///*		    	if ((lHandle.getFlags() & HGSystemFlags.MUTABLE) != 0)
+//		    	{
+//		    		//TODO: Maybe this should be done somewhere else or differently...
+//		    		//in atomAdded() attribs are added only for MANAGED flag
+//		    		AtomAttrib attrib = getAtomAttributes(lHandle.getPersistentHandle());
+//		    		if(attrib == null){
+//		    			attrib = new AtomAttrib();
+//		    			attrib.flags = lHandle.getFlags();
+//		    		   setAtomAttributes(lHandle.getPersistentHandle(), attrib);
+//		    		}
+//		    		//
+//		    		// We don't explicitly track what has changed in atom. So
+//		    		// we need to save its "whole" value. Because, the replace
+//		    		// operation is too general and it may interact with the cache
+//		    		// in complex ways, while this method may be called during cache
+//		    		// cleanup, we can't use 'replace'. We need a separate version
+//		    		// that is careful not to use the cache.
+//		    		//
+//		    		 // rawSave(lHandle.getPersistentHandle(), instance);
+//		    		replace(lHandle, instance);
+//		    	} 
+//		    	if ((lHandle.getFlags() & HGSystemFlags.MANAGED) != 0)
+//		    	{
+//		    		HGManagedLiveHandle mHandle = (HGManagedLiveHandle)lHandle;
+//		    		AtomAttrib attrib = getAtomAttributes(mHandle.getPersistentHandle());
+//		    		attrib.flags = mHandle.getFlags();
+//		    		attrib.retrievalCount += mHandle.getRetrievalCount();
+//		    		attrib.lastAccessTime = Math.max(mHandle.getLastAccessTime(), attrib.lastAccessTime);
+//		    		setAtomAttributes(lHandle.getPersistentHandle(), attrib);
+//		    	} */
+//		    	return null;
+//	    	}});
+//    	}
+//    	catch (HGException ex)
+//    	{
+//    		throw new HGException("Problem while unloading atom " + 
+//					  			  instance + " of type " + instance.getClass().getName() + " " + ex.getMessage(),
+//					  			  ex);
+//    	}
+//    	catch (Throwable t)
+//    	{
+//    		throw new HGException("Problem while unloading atom " + 
+//		  			  instance + " of type " + instance.getClass().getName(),
+//		  			  t);
+//    	}    	
+//    }
     
     void updateLinksInIncidenceSet(IncidenceSet incidenceSet, HGLiveHandle liveHandle)
     {
@@ -1896,7 +1899,7 @@ public /*final*/ class HyperGraph
      * @param type
      * @return
      */
-    private Object rawMake(HGPersistentHandle [] layout, HGAtomType type, HGPersistentHandle atomHandle)
+    public Object rawMake(HGPersistentHandle [] layout, HGAtomType type, HGPersistentHandle atomHandle)
     {
     	HGPersistentHandle [] targetSet = EMPTY_PERSISTENT_HANDLE_SET;
     	if (layout.length > 2)
@@ -1913,11 +1916,7 @@ public /*final*/ class HyperGraph
         if (targetSet.length > 0 && ! (result instanceof HGLink))
             result = new HGValueLink(result, targetSet);
         if (result instanceof HGAtomType)
-        	result = typeSystem.loadedType(new DefaultLiveHandle(result, 
-        														 atomHandle, 
-        														 (byte)0), 
-        								   (HGAtomType)result, 
-        								   false);
+        	result = typeSystem.toJavaBinding(atomHandle, (HGAtomType)result);
         return result;    	
     }
 
@@ -1940,6 +1939,7 @@ public /*final*/ class HyperGraph
     	});    	
     }
     
+    
     /**
      * Replace an atom with a new value. Recursively replace the values of type atoms.
      * 
@@ -1952,7 +1952,7 @@ public /*final*/ class HyperGraph
     							 	final HGPersistentHandle pHandle, 
     							 	final Object atom, 
     							 	final HGHandle typeHandle)
-    {
+    {        
 	        Object newValue = atom;
 	        if (atom instanceof HGValueLink)
 	        	newValue = ((HGValueLink)atom).getValue();
@@ -2047,13 +2047,12 @@ public /*final*/ class HyperGraph
 	    	store.store(pHandle, newLayout);
 	    	
 	    	idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
-	    	
+            if (atom instanceof HGGraphHolder)
+                ((HGGraphHolder)atom).setHyperGraph(this);
+            if (atom instanceof HGHandleHolder)
+                ((HGHandleHolder)atom).setAtomHandle(lHandle);	    	
 	    	if (lHandle != null)
 	    		cache.atomRefresh(lHandle, atom, true);
-	    	if (atom instanceof HGGraphHolder)
-	    		((HGGraphHolder)atom).setHyperGraph(this);
-	    	if (atom instanceof HGHandleHolder)
-	    		((HGHandleHolder)atom).setAtomHandle(lHandle);
     }
     
     /**
@@ -2108,38 +2107,46 @@ public /*final*/ class HyperGraph
 	}
     
     private void initAtomManagement()
-    {
+    {        
     	//
     	// Init HGStats atom.
     	//
-    	HGSearchResult<HGPersistentHandle> rs = null;
-    	
-    	try
-    	{
-	    	rs = find(new AtomTypeCondition(typeSystem.getTypeHandle(HGStats.class)));
-	    	if (rs.hasNext())
-	    	{
-	    		statsHandle = rs.next();
-	    		stats = (HGStats)get(statsHandle);
-	    	}
-	    	else
-	    	{
-	    		statsHandle = add(stats);
-	    	}
-    	}
-    	catch (HGException ex)
-    	{
-    		throw ex;
-    	}
-    	catch (Throwable t)
-    	{
-    		throw new HGException(t);
-    	}
-    	finally
-    	{
-    		if (rs != null) rs.close();
-    	}
-    	
+        getTransactionManager().transact(new Callable<Object>() { public Object call() {
+        statsHandle = hg.findOne(HyperGraph.this, hg.type(HGStats.class));
+        if (statsHandle == null)
+            statsHandle = add(stats);
+        else
+            stats = get(statsHandle);
+        return null; }});
+               
+//    	HGSearchResult<HGPersistentHandle> rs = null;
+//    	
+//    	try
+//    	{
+//	    	rs = find(new AtomTypeCondition(typeSystem.getTypeHandle(HGStats.class)));
+//	    	if (rs.hasNext())
+//	    	{
+//	    		statsHandle = rs.next();
+//	    		stats = (HGStats)get(statsHandle);
+//	    	}
+//	    	else
+//	    	{
+//	    		statsHandle = add(stats);
+//	    	}
+//    	}
+//    	catch (HGException ex)
+//    	{
+//    		throw ex;
+//    	}
+//    	catch (Throwable t)
+//    	{
+//    		throw new HGException(t);
+//    	}
+//    	finally
+//    	{
+//    		if (rs != null) rs.close();
+//    	}
+//    	
 //    	eventManager.addListener(
 //    			HGAtomEvictEvent.class,
 //    			new HGListener()

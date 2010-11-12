@@ -78,12 +78,11 @@ public class RecordType implements HGCompositeType
 	    	{
 	    		if (thisHandle == null)
 	    			thisHandle = graph.getHandle(this);
-	    		rs = graph.find(hg.and(hg.type(AtomProjection.class), 
+	    		List<AtomProjection> L = hg.getAll(graph, hg.and(hg.type(AtomProjection.class), 
 	    							   hg.incident(thisHandle),
 	    							   hg.orderedLink(thisHandle, graph.getHandleFactory().anyHandle())));
-	    		while (rs.hasNext())
+	    		for (AtomProjection l : L)
 	    		{
-	    			AtomProjection l = (AtomProjection)graph.get(rs.next());
 	    			HGHandle slotHandle = hg.findOne(graph, hg.eq(new Slot(l.getName(),l.getProjectionValueType())));	    			
 	    			refModes.put(slotHandle, l.getMode());
 	    		}

@@ -71,11 +71,9 @@ public class ColdAtoms
 	
 	public void add(Object atom)
 	{
-	    if (1 == 1)
-	        return;
 		synchronized (buckets)
 		{
-			if (pos >= bucket_size)
+			if (pos >= bucket_size || buckets.size() == 0)
 			{
 				buckets.put(new Object[bucket_size]);
 				pos = 0;

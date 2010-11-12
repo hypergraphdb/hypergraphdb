@@ -23,6 +23,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.event.HGLoadPredefinedTypeEvent;
@@ -230,6 +231,16 @@ public class HGTypeSystem
 		}
 		javaTypes = typeConfiguration.getJavaTypeMapper();
 		javaTypes.setHyperGraph(graph);
+		
+		// TODO : this is being initialized here because it causes a rather weird issue having to do
+		// with the MVCC implementation if initialized on the spot (the first time it is needed). It 
+		// causes the HGPlainLink.class HGDB type to have a null link pointing to it, presumably 
+		// HGSubsumes that ends up being null (not in the store). There's some self-referentiality 
+		// involved since AtomProjection is a bean, a RecordType and the RecordType implementation
+		// does rely on the AtomProjection type being already defined. But before the MVCC this used
+		// to work without a problem. Anyway, putting the initialization here fixed it, but it might
+		// be just a workaround to a deeper problem that we haven't gotten to the bottom of. --Boris
+		getTypeHandle(AtomProjection.class);
 	}
 	
 	public HGHandle getTopHandle()
@@ -431,7 +442,7 @@ public class HGTypeSystem
 	HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class<?> clazz)
 	{
 		//
-		// Next, create a HyperGraph type matching the Java class.
+		// Create a HyperGraph type matching the Java class.
 		//
 		HGAtomType inferredHGType = javaTypes.defineHGType(clazz, newHandle);
 
@@ -483,10 +494,7 @@ public class HGTypeSystem
 		// instance of
 		//
 		if (newHandle instanceof HGLiveHandle)
-		{
-			graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
-			newHandle = graph.cache.get(((HGLiveHandle)newHandle).getPersistentHandle());
-		}
+			newHandle = graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
 		else
 			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle,
 			                                 type, 
@@ -520,7 +528,7 @@ public class HGTypeSystem
 			else
 				assertSubtype(superHandle, newHandle);
 		}
-		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitely
+		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitly
 		else if (clazz.isInterface())
 			graph.add(new HGSubsumes(getTop(), newHandle));
 
@@ -643,18 +651,19 @@ public class HGTypeSystem
 	 *
 	 * @param type
 	 */
-	HGAtomType loadedType(HGLiveHandle handle, HGAtomType type, boolean refreshInCache)
+	HGAtomType toJavaBinding(HGPersistentHandle handle, HGAtomType type)
 	{
-		String classname = getClassToTypeDB().findFirstByValue(handle.getPersistentHandle());
+		String classname = getClassToTypeDB().findFirstByValue(handle);
 		if (classname != null)
 		{		  
 			Class<?> clazz = loadClass(classname);
 			type = javaTypes.getJavaBinding(handle, type, clazz);
-			if (refreshInCache)
-			{
-				graph.cache.atomRefresh(handle, type, true);
-				classToAtomType.put(clazz, handle);
-			}
+			classToAtomType.put(clazz, handle);
+//			if (refreshInCache)
+//			{
+//				graph.cache.atomRefresh(handle, type, true);
+//				classToAtomType.put(clazz, handle);
+//			}
 		}
 		return type;
 	}
@@ -815,7 +824,7 @@ public class HGTypeSystem
 	 */
 	public HGAtomType getType(HGHandle handle)
 	{
-		return (HGAtomType)graph.get(handle);
+        return (HGAtomType)graph.get(handle);
 	}
 
 	/**

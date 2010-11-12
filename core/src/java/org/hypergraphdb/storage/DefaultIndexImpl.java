@@ -28,6 +28,7 @@ import com.sleepycat.db.LockMode;
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.OperationStatus;
+import com.sleepycat.db.Transaction;
 
 /**
  * <p>
@@ -303,6 +304,22 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             throw new HGException("Failed to delete entry from index '" + 
                                   name + "': " + ex.toString(), ex);
         }
+    }
+    
+    void ping(Transaction tx)
+    {
+        DatabaseEntry key = new DatabaseEntry(new byte[1]);
+        DatabaseEntry data = new DatabaseEntry();
+        try
+        {
+            db.get(tx, key, data, LockMode.DEFAULT);
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to ping index '" + 
+                                  name + "': " + ex.toString(), 
+                                  ex);
+        }        
     }
     
     public ValueType findFirst(KeyType key)

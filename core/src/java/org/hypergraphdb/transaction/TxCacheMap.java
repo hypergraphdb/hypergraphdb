@@ -2,11 +2,13 @@ package org.hypergraphdb.transaction;
 
 import java.lang.ref.WeakReference;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.hypergraphdb.cache.CacheMap;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 import org.hypergraphdb.util.WeakIdentityHashMap;
@@ -24,7 +26,8 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     {
         public Box(HGTransactionManager txManager)
         {
-            this.txManager = txManager;            
+            this.txManager = txManager;
+            this.body = makeNewBody(null, -1, null);
         }
         
         public VBoxBody<V> getBody() { return body; }
@@ -39,7 +42,9 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         public VBoxBody<V> commit(HGTransaction tx, V newValue, long txNumber)
         {
             if (body.version == -1)
-                return body = makeNewBody(newValue, tx.getNumber(), body.next);
+            {
+                return body = makeNewBody(newValue, tx.getNumber(), body.next);                
+            }
             else
                 return super.commit(tx, newValue, tx.getNumber());            
         }        
@@ -121,13 +126,12 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             if (mapImplementation == null)
             {
                 this.M = new ConcurrentHashMap<K, Box>();
-                this.writeMap = new RefCountedMap<K, Box>(new ConcurrentHashMap());
             }
             else
             {
                 this.M = mapImplementation.newInstance();
-                this.writeMap = new RefCountedMap(mapImplementation.newInstance());
             }
+            this.writeMap = new RefCountedMap<K, Box>(new HashMap());            
         }
         catch (Exception e)
         {
@@ -167,7 +171,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     }
     
     /**
-     * Overriden to maintain a global write map so that evicted versioned boxes from the cache
+     * Override to maintain a global write map so that evicted versioned boxes from the cache
      * get re-attached upon reloading.
      */
     public void put(K key, V value)
@@ -180,25 +184,23 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         if (tx.getLocalValue(box) == null)
             writeMap.put(key, box);
         
-        V old = box.get();
+        V old = get(key);
+        box.put(value);   // TODO maybe don't do a 'put' if value == old     
         if (old == null)
         {
-            box.put(value);
             if (value != null)
                 sizebox.put(sizebox.get() + 1);
         }
-        else if (old != value)
+        else if (value == null)
         {
-            box.put(value);
-            if (value == null)
-                sizebox.put(sizebox.get() - 1);
+            sizebox.put(sizebox.get() - 1);
         }
     }
     
     public void load(K key, V value)
     {
         Box box = boxGetter.resolve(key);
-        HGTransaction tx = txManager.getContext().getCurrent();
+        HGTransaction tx = txManager.getContext().getCurrent();                
         txManager.COMMIT_LOCK.lock();
         try
         {
@@ -210,32 +212,17 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                 {
                     box.body = box.makeNewBody(value, tx.getNumber(), box.body.next);
                 }
-                else if (box.body.version == 0 || box.body.version < tx.getNumber()) // otherwise we just add as the newest body with the current tx number
+                // otherwise we just add as the newest body with the current tx number
+                else if (box.body.version == 0 || box.body.version < tx.getNumber())
                     box.commitImmediately(tx, value, tx.getNumber());
-                // TODO: remove the following else if, it's only a debugging assertion
-                else if (box.body.version == tx.getNumber() && !value.equals(box.body.value))
-                {
-                    System.err.println("oops same version but different value");
-                }
             }
-            // if not current, we must insert it into the list of bodies and make sure
-            // the top body is "null" in order to force a subsequent reload
+            // if not current, we must insert it into the list of bodies
             else
-            {
-                // make sure top body is null
-                if (box.body.version < txManager.mostRecentRecord.transactionNumber && box.body.version != -1)
-                    box.commitImmediately(tx, null, -1);
-                
+            {               
                 VBoxBody<V> currentBody = box.body;
                 while (currentBody.next != null && currentBody.next.version > tx.getNumber())
                     currentBody = currentBody.next;
-                if (currentBody.next != null && 
-                    (currentBody.next.version == 0 || currentBody.next.version < tx.getNumber()))
-                {
-                    // we need to insert b/w currentBody and currentBody.next
-                    VBoxBody<V> newBody = box.makeNewBody(value, tx.getNumber(), currentBody.next);
-                    currentBody.setNext(newBody);
-                }                
+                currentBody.setNext(box.makeNewBody(value, tx.getNumber(), currentBody.next));                
             }
         }
         finally
@@ -274,9 +261,9 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         // one or not. So, we must force a load and tag it with version 5. In other words, we
         // must return null in this case so that the upper layers (using the cache) perform
         // a load operation.
- 
+
         Box box = boxGetter.resolve(key);
-        
+               
         HGTransaction tx = txManager.getContext().getCurrent();
         
         if (tx == null)
@@ -290,26 +277,33 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             // if the current transaction is not older than the top body we return it:
             // it will be null if we need a load from disk or the latest committed value
             // which would be the correct version
-            if (b.version <= tx.getNumber())
+            if (b.version <= tx.getNumber() && b.version != -1)
+            {
                 value = b.value;
+                if (!tx.isReadOnly())
+                    tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(box, b));                
+            }
             else
             {
-                // else try to find the exact same version as the current transaction                
-                while (b.version > tx.getNumber() && b.next != null)
+                // else try to find the exact same version as the current transaction
+                if (b.version == -1)
                     b = b.next;
-                if (b.version == tx.getNumber())
+                while (b != null && b.version > tx.getNumber())
+                    b = b.next;
+                if (b != null && b.version == tx.getNumber())
+                {
                     value = b.value;
+                    if (!tx.isReadOnly())
+                        tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(box, b));                    
+                }
             }
         }        
-        return value == HGTransaction.NULL_VALUE ? null : value;
+        return value == HGTransaction.NULL_VALUE ? null : value;        
     }
 
     @SuppressWarnings("unchecked")
     public void remove(Object key)
     {
-//        if (M instanceof ConcurrentMap)
-//            M.remove(key);
-//        else synchronized (M) { M.remove((K)key); }
         put((K)key, null);
     }
 
@@ -333,7 +327,6 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     
     public void clear()
     {
-        //throw new UnsupportedOperationException();
         M.clear();
     }     
 }

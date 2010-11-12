@@ -33,6 +33,7 @@ import com.sleepycat.db.Environment;
 import com.sleepycat.db.EnvironmentConfig;
 import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
+import com.sleepycat.db.Transaction;
 import com.sleepycat.db.TransactionConfig;
 
 public class BDBStorageImplementation implements HGStoreImplementation
@@ -371,12 +372,17 @@ public class BDBStorageImplementation implements HGStoreImplementation
                         tconfig.setSnapshot(true);
                     tconfig.setWriteNoSync(true);
 //                  tconfig.setNoSync(true);
+                    Transaction tx = null;
                     if (parent != null)
-                        return new TransactionBDBImpl(env.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig), 
-                                                      env);
+                        tx = env.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig);
                     else
-                        return new TransactionBDBImpl(env.beginTransaction(null, tconfig), 
-                                                      env); 
+                        tx = env.beginTransaction(null, tconfig);
+                    // Necessary to force BerkeleyDB to isolate writes because we could be reading from
+                    // the cache and storage can be "thinking" that we are only writing. This means we can't
+                    // have storage "write only" transactions. Because the TX_INIT_DB is an empty DB, most
+                    // likely in the storage cache, there shouldn't be any noticeable performance penalties.
+                    ((DefaultIndexImpl<?,?>)getIndex("TX_INIT_DB", BAtoBA.getInstance(), BAtoBA.getInstance(), null, false, true)).ping(tx);
+                    return new TransactionBDBImpl(tx, env);
                 }
                 catch (DatabaseException ex)
                 {

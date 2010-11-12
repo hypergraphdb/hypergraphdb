@@ -8,12 +8,12 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
-
 import com.sleepycat.db.DeadlockException;
 
 /**
@@ -184,14 +184,15 @@ public class HGTransactionManager
 	 */
 	HGTransaction createTransaction(HGTransaction parent, HGTransactionConfig config)
 	{	
+	    HGStorageTransaction storageTx = config.isNoStorage() ? null
+                                        : factory.createTransaction(getContext(), config, parent);
 	    ActiveTransactionsRecord activeRecord = mostRecentRecord.getRecordForNewTransaction();
 		if (enabled)
 		{		    
 			HGTransaction result = new HGTransaction(getContext(),
 			                                         parent,
 			                                         activeRecord,
-			                                         config.isNoStorage() ? null
-			                                             : factory.createTransaction(getContext(), config, parent),
+			                                         storageTx,
 			                                         config.isReadonly());
 			if (txMonitor != null)
 				txMonitor.transactionCreated(result);
@@ -389,9 +390,8 @@ public class HGTransactionManager
 		// why a transaction shouldn't eventually be able to acquire
 		// the locks it needs.
 		while (true)
-		{
+		{		    
 			beginTransaction(config);
-			HGTransaction tx = getContext().getCurrent();
 			V result = null;
 			try
 			{
@@ -400,7 +400,7 @@ public class HGTransactionManager
 			catch (Throwable t)
 			{
                 try { endTransaction(false); }
-                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }                			    
+                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
 			    handleTxException(t); // will re-throw if we can't retry the transaction
 			    conflicted.incrementAndGet();
 //			    System.out.println("Retrying transaction");
@@ -408,8 +408,7 @@ public class HGTransactionManager
 			}
 			try
 			{
-			    if (tx == getContext().getCurrent())
-			        endTransaction(true);
+			    endTransaction(true);
                 successful.incrementAndGet(); // "successful" means not conflicting with other transactions				
 				return result;
 			}  

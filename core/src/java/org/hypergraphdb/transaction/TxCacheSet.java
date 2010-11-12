@@ -29,8 +29,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                     S.body = S.makeNewBody(x, txNumber, S.body);
                 return S.body;
             }
-            // if not current, we must insert it into the list of bodies and make sure
-            // the top body is "null" in order to force a subsequent reload
+            // if not current, we must insert it into the list of bodies 
             else
             {
                 if (S.body.version == -1)
@@ -48,13 +47,6 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                         return S.body;
                     }
                 }
-                // make sure top body is null whenever the version at top is older
-                // than the current transaction
-//                else if (S.body.version < txManager.mostRecentRecord.transactionNumber)
-//                {
-//                    S.body = S.makeNewBody(null, -1, S.body);
-//                    System.err.println("This looks interesting.");
-//                }
                 
                 VBoxBody<HGSortedSet<E>> currentBody = S.body;
                 while (currentBody.next != null && currentBody.next.version > txNumber)

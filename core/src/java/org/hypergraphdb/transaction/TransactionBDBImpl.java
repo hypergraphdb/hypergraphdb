@@ -48,8 +48,8 @@ public class TransactionBDBImpl implements HGStorageTransaction
 	{
 		try
 		{
-//			for (BDBTxCursor c : bdbCursors)
-//				c.close();
+			for (BDBTxCursor c : bdbCursors)
+				c.close();
 			if (t != null)
 				t.commit();
 		}
@@ -64,9 +64,9 @@ public class TransactionBDBImpl implements HGStorageTransaction
 		try
 		{
 			aborting = true;
-//			for (BDBTxCursor c : bdbCursors)
-//				try { c.close(); }
-//				catch (Throwable t) { System.err.println(t); }
+			for (BDBTxCursor c : bdbCursors)
+				try { c.close(); }
+				catch (Throwable t) { System.err.println(t); }
 			if (t != null)
 				t.abort();
 		}

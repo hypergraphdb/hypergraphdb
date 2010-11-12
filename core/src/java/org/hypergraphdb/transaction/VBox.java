@@ -112,10 +112,10 @@ public class VBox<E>
 
     public VBoxBody<E> makeNewBody(E value, long version, VBoxBody<E> next)
     {
-        if (next != null && version > 0 && version == next.version)
-        {
-            System.err.println("oops: new body with same version...");
-        }
+//        if (next != null && version > 0 && version == next.version)
+//        {
+//            System.err.println("oops: new body with same version...");
+//        }
         return new VBoxBody<E>(value, version, next);
     }
     

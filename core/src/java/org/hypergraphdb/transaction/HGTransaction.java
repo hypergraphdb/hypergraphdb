@@ -218,9 +218,10 @@ public final class HGTransaction implements HGStorageTransaction
             try
             {
                 if (validateCommit())
-                {                            	
+                {
                     if (stran != null)
-                        stran.commit();
+                        stran.commit();                    
+                    
                     Cons<VBoxBody<?>> bodiesCommitted = performValidCommit();
                     
                     // The commit is already done, so create a new ActiveTransactionsRecord
@@ -255,7 +256,7 @@ public final class HGTransaction implements HGStorageTransaction
                 }                
             }
             catch (TransactionConflictException rethrowme) { throw rethrowme; }
-            catch (Throwable t)
+            catch (Throwable t) // this should never happen, we're not expecting any exceptions here
             {
                 fatalFailure(t);
             }
@@ -277,9 +278,9 @@ public final class HGTransaction implements HGStorageTransaction
 
     private void privateAbort() throws HGTransactionException
     {
-        finish();
         if (stran != null)
-            stran.abort();        
+            stran.abort();                
+        finish();
     }
     
     public void abort() throws HGTransactionException

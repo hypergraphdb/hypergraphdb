@@ -130,19 +130,24 @@ public class WeakRefAtomCache implements HGAtomCache
 		    gcLock.writeLock().lock(); // we won't allow modifications to the cache maps during this
 		    try
 		    {
-//		        TxCacheMap<HGPersistentHandle, WeakHandle>.Box theBox = liveHandlesTx.boxOf(h);
-//		        if (theBox == null)
-//		            continue;
-//		        boolean keep = false;		        
-//		        for (VBoxBody<WeakHandle> body = theBox.getBody(); body != null && !keep; body = body.next)
-//		        {
-//		            // body.value can be null here if the atom got garbage collected before 
-//		            // a transaction committed 
-//		            if (body.value != null && atomsTx.boxOf(body.value.getRef()) != null)
-//		                keep = true;
-//		        }
-//		        if (!keep || true)
+		        TxCacheMap<HGPersistentHandle, WeakHandle>.Box theBox = liveHandlesTx.boxOf(h);
+		        if (theBox == null)
+		            continue;
+		        boolean keep = false;		        
+		        for (VBoxBody<WeakHandle> body = theBox.getBody(); body != null && !keep; body = body.next)
+		        {
+		            // body.value can be null here if the atom got garbage collected before 
+		            // a transaction committed 
+		            if (body.value != null)
+		             {
+		                VBox<?> bb = atomsTx.boxOf(body.value.getRef());
+		                if (bb != null)
+		                    keep = true;
+		             }		                
+		        }
+		        if (!keep)
 		            liveHandles.drop(h);
+		       //System.out.println("dropped " + h + " from cache.");		       
 		    }
 		    finally
 		    {
@@ -167,9 +172,9 @@ public class WeakRefAtomCache implements HGAtomCache
 	        {
 	        	try 
 	            {
-//	        	    if (graph.getConfig().isTransactional())
-//	        	        processRefQueueTx();
-//	        	    else
+	        	    if (graph.getConfig().isTransactional())
+	        	        processRefQueueTx();
+	        	    else
 	        	        processRefQueue();
 	            } 
 	        	catch (InterruptedException exc) 
@@ -197,7 +202,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	    if (graph.getConfig().isTransactional())
 	    {
 	        atoms = atomsTx = new TxCacheMap<Object, HGLiveHandle>(graph.getTransactionManager(), WeakIdentityHashMap.class);
-            liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), null); 	        
+            liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(graph.getTransactionManager(), HashMap.class); 	        
 	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), null);
 	    }
 	    else
@@ -248,18 +253,19 @@ public class WeakRefAtomCache implements HGAtomCache
                                       attrib.getLastAccessTime());
         else
             h = new WeakHandle(atom, pHandle, attrib == null ? HGSystemFlags.DEFAULT : attrib.getFlags(), refQueue);
+        
         gcLock.readLock().lock();
         try
         {
             atoms.put(atom, h);
             liveHandles.put(pHandle, h);
+            coldAtoms.add(atom);            
+            return h;
         }
         finally
         {
             gcLock.readLock().unlock();
         }
-        coldAtoms.add(atom);
-        return h;
     }
 	
 	public HGLiveHandle atomRead(HGPersistentHandle pHandle, 
@@ -289,18 +295,18 @@ public class WeakRefAtomCache implements HGAtomCache
 		// Important to updates the atoms map first to prevent garbage collection
 		// of the liveHandles entry due to previously removed runtime instance of the
 		// same atom.
-		gcLock.readLock().lock();
+        gcLock.readLock().lock();
         try
-        {
+        {                 
             atoms.load(atom, h);
             liveHandles.load(pHandle, h);
+            coldAtoms.add(atom);
+            return h;            
         }
         finally
         {
             gcLock.readLock().unlock();
         }		
-		coldAtoms.add(atom);
-		return h;
 	}
 
 	public HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace) 
@@ -335,16 +341,17 @@ public class WeakRefAtomCache implements HGAtomCache
 	    // race condition
 	    
 	    Object curr = handle.getRef();
-	    ((WeakHandle)handle).clear(); 
+	    ((WeakHandle)handle).clear();
 	    // If we have some other Java instance as the atom, we need to force a replace
 	    // even if strictly speaking we don't need to (e.g. this happens with type wrappers)
 	    // because in case of a roll back the obligatory atoms.remove will be reversed.
-	    gcLock.readLock().lock();
-	    try
-	    {
-    	    if (replace || curr != null || true)
+        gcLock.readLock().lock();
+        try
+        {       
+    	    if (replace || curr != null)
     	    {
-    	        atoms.remove(curr);
+    	        if (curr != null)
+    	            atoms.remove(curr);
     	        atoms.put(atom, newLive);
     	        liveHandles.put(handle.getPersistentHandle(), newLive);
     	    }		    
@@ -353,13 +360,13 @@ public class WeakRefAtomCache implements HGAtomCache
                 atoms.load(atom, newLive);		        
     	        liveHandles.load(handle.getPersistentHandle(), newLive);
     	    }
+            coldAtoms.add(atom);
+            return newLive;    	    
 	    }
 	    finally
 	    {
 	        gcLock.readLock().unlock();	        
 	    }
-        coldAtoms.add(atom);
-        return newLive;
 	}
 
 	public void close() 
@@ -400,13 +407,13 @@ public class WeakRefAtomCache implements HGAtomCache
 
 	public HGLiveHandle get(Object atom) 
 	{
-		return atoms.get(atom);
+        return atoms.get(atom);
 	}
 
 	public void remove(HGLiveHandle handle) 
 	{
 		atoms.remove(handle.getRef());
-		liveHandles.remove(handle.getPersistentHandle());			
+		liveHandles.remove(handle.getPersistentHandle());
 	}
 
 	
@@ -441,7 +448,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 	    System.out.println("atoms map: " + atomsTx.mapSize());
 	    System.out.println("liveHandles map: " + liveHandlesTx.mapSize());
-//	    System.out.println("cold atoms: " + coldAtoms.size());
-//	    System.out.println("frozen atoms: " + frozenAtoms.size());
+	    System.out.println("cold atoms: " + coldAtoms.size());
+	    System.out.println("frozen atoms: " + frozenAtoms.size());
 	}
 }

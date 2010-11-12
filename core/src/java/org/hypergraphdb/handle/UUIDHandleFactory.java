@@ -1,5 +1,7 @@
 package org.hypergraphdb.handle;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 
@@ -14,12 +16,12 @@ public class UUIDHandleFactory implements HGHandleFactory
         return anyHandle;
     }
 
-    private static long seed = System.currentTimeMillis();
+    private static AtomicLong seed = new AtomicLong(System.currentTimeMillis());
     
     public HGPersistentHandle makeHandle()
     {
         byte [] data = new byte[16];
-        long v = ++seed;
+        long v = seed.incrementAndGet();
         data[8] = (byte) ((v >>> 56)); 
         data[9] = (byte) ((v >>> 48));
         data[10] = (byte) ((v >>> 40)); 
