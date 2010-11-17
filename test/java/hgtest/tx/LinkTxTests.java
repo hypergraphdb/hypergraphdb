@@ -26,8 +26,8 @@ import hgtest.T;
 
 public class LinkTxTests extends HGTestBase
 {
-    private int atomsCount = 100; // must be an even number
-    private int linksCount = 100; // must be an even number
+    private int atomsCount = 40; // must be an even number
+    private int linksCount = 20; // must be an even number
     private int threadCount = 4;
     private boolean log = !true;
     

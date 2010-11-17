@@ -3,7 +3,10 @@ package hgtest;
 import java.io.File;
 
 import org.hypergraphdb.HGEnvironment;
+import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.util.Mapping;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -33,7 +36,7 @@ public class HGTestBase
     {
         System.out.println("Using graph " + getGraphLocation());        
         dropHyperGraphInstance(getGraphLocation()); 
-        graph = HGEnvironment.get(getGraphLocation());
+        graph = HGEnvironment.get(getGraphLocation());        
     }
     
     @AfterClass    
