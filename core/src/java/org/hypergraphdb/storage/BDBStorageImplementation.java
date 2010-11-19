@@ -381,7 +381,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
                     // the cache and storage can be "thinking" that we are only writing. This means we can't
                     // have storage "write only" transactions. Because the TX_INIT_DB is an empty DB, most
                     // likely in the storage cache, there shouldn't be any noticeable performance penalties.
-                    ((DefaultIndexImpl<?,?>)getIndex("TX_INIT_DB", BAtoBA.getInstance(), BAtoBA.getInstance(), null, false, true)).ping(tx);
+//                    ((DefaultIndexImpl<?,?>)getIndex("TX_INIT_DB", BAtoBA.getInstance(), BAtoBA.getInstance(), null, false, true)).ping(tx);
+//                    try { Thread.sleep(10); } catch (Throwable t){}
                     return new TransactionBDBImpl(tx, env);
                 }
                 catch (DatabaseException ex)
