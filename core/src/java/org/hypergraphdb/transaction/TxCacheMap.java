@@ -8,7 +8,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.hypergraphdb.cache.CacheMap;
-import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 import org.hypergraphdb.util.WeakIdentityHashMap;
@@ -61,7 +60,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     
     protected class StrongBox extends Box
     {
-        K key;
+        final K key;
         
         public StrongBox(HGTransactionManager txManager, K key)
         {
@@ -74,7 +73,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     
     protected class WeakBox extends Box
     {
-        WeakReference<K> key;
+        final WeakReference<K> key;
         
         public WeakBox(HGTransactionManager txManager, K key)
         {
@@ -170,6 +169,16 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             };        
     }
     
+    public Box boxOf(Object key)
+    {
+        if (M instanceof ConcurrentMap<?,?>)
+            return M.get(key);
+        else synchronized (M)
+        {
+            return M.get(key);
+        }
+    }
+    
     /**
      * Override to maintain a global write map so that evicted versioned boxes from the cache
      * get re-attached upon reloading.
@@ -199,48 +208,70 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     
     public void load(K key, V value)
     {
-        Box box = boxGetter.resolve(key);
-        HGTransaction tx = txManager.getContext().getCurrent();                
         txManager.COMMIT_LOCK.lock();
         try
         {
-            // if no current transaction, assume the value is the latest...no way to find out
-            if (tx.getNumber() >= txManager.mostRecentRecord.transactionNumber || tx == null)
+            Box box = boxGetter.resolve(key);
+            HGTransaction tx = txManager.getContext().getCurrent();
+            VBoxBody<V> read = null;
+            if (box.body.version == -1)
             {
-                // a marker that we have loaded some older values for older, but still running tx
-                if (box.body.version == -1)
+                // We don't have the latest version loaded currently, so if this transaction is
+                // a most recent one, set the passed in value as the latest 
+                if (tx.getNumber() >= txManager.mostRecentRecord.transactionNumber || tx == null)
                 {
                     box.body = box.makeNewBody(value, tx.getNumber(), box.body.next);
+                    read = box.body;
+                }                
+                else
+                {
+                    // Otherwise (the transaction is not the most recent one), insert the value
+                    // at the appropriate position in the body list.
+                    VBoxBody<V> curr = box.body;
+                    while (curr.next != null && curr.next.version > tx.getNumber())
+                        curr = curr.next;
+                    if (curr.next != null && curr.next.version == tx.getNumber())
+                        curr.next.value = value;
+                    else
+                        curr.setNext(box.makeNewBody(value, tx.getNumber(), curr.next));
+                    read = curr.next;
                 }
-                // otherwise we just add as the newest body with the current tx number
-                else if (box.body.version == 0 || box.body.version < tx.getNumber())
-                    box.commitImmediately(tx, value, tx.getNumber());
             }
-            // if not current, we must insert it into the list of bodies
             else
-            {               
-                VBoxBody<V> currentBody = box.body;
-                while (currentBody.next != null && currentBody.next.version > tx.getNumber())
-                    currentBody = currentBody.next;
-                currentBody.setNext(box.makeNewBody(value, tx.getNumber(), currentBody.next));                
-            }
+            {   
+                // box.body.version is already the latest, so just update the value if we're loading
+                // ...useful if this is gc-ed weak ref
+                if (tx.getNumber() >= box.body.version)
+                {
+                    box.body.value = value;
+                    read = box.body;                    
+                }
+                else
+                {                    
+                    VBoxBody<V> curr = box.body;
+                    while (curr.next != null && curr.next.version > tx.getNumber())
+                        curr = curr.next;
+                    if (curr.next.version == tx.getNumber())
+                    {
+                        curr.next.value = value;
+                        read = curr.next;
+                    }
+                    else
+                    {
+                        read = box.makeNewBody(value, tx.getNumber(), curr.next);
+                        curr.setNext(read);
+                    }
+                }
+            }   
+            if (!tx.isReadOnly())
+                tx.bodiesRead.put(box, read);
         }
         finally
         {
             txManager.COMMIT_LOCK.unlock();
         }
     }
-    
-    public Box boxOf(Object key)
-    {
-        if (M instanceof ConcurrentMap<?,?>)
-            return M.get(key);
-        else synchronized (M)
-        {
-            return M.get(key);
-        }
-    }
-    
+        
     public V get(Object key)
     {        
         // The logic to get the correct version here is a bit different than
@@ -281,21 +312,37 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             {
                 value = b.value;
                 if (!tx.isReadOnly())
-                    tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(box, b));                
+                    tx.bodiesRead.put(box, b);                
             }
             else
             {
                 // else try to find the exact same version as the current transaction
                 if (b.version == -1)
                     b = b.next;
+                // If the transaction is not readonly and we are not reading the latest committed
+                // value, it will conflict at the end anyway, so we might as well cut it off immediately.
+                // IMPORTANT NOTE: even though this looks like an optimization, without it the DataTxTests 
+                // fails and I haven't been able to figure out way after weeks of intense debugging, so
+                // I concluded it *could* have to do with a BerkeleyDB issue. What the following statement is
+                // essentially doing is preventing a read from disk on any dirty data in non-read-only 
+                // transactions. While debugging, I had modified the 'load' method to actually not load
+                // but throw the same TransactionConflictException in the exact same situation, but that
+                // didn't prevent the test from failing. So even though the cache is kept intact when 
+                // an older transaction tries to get old data and it's not read-only, some dirty data still
+                // sneaks in as latest as soon as it is being read from disk. I could not find a way to 
+                // explain way short of blaming BerkleyDB. At least the tests pass with the below. --Boris 
+                else if (!tx.isReadOnly())
+                    throw new TransactionConflictException();
                 while (b != null && b.version > tx.getNumber())
                     b = b.next;
                 if (b != null && b.version == tx.getNumber())
-                {
+                {                    
                     value = b.value;
                     if (!tx.isReadOnly())
-                        tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(box, b));                    
-                }
+                    {
+                        tx.bodiesRead.put(box, b);
+                    }
+                }                
             }
         }        
         return value == HGTransaction.NULL_VALUE ? null : value;        
@@ -328,5 +375,5 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     public void clear()
     {
         M.clear();
-    }     
+    }    
 }

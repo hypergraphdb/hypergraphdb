@@ -8,15 +8,11 @@
 package org.hypergraphdb.transaction;
 
 import java.util.HashMap;
-
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
 import org.hypergraphdb.util.Cons;
-import org.hypergraphdb.util.Pair;
 
 /**
  * 
@@ -43,7 +39,7 @@ public final class HGTransaction implements HGStorageTransaction
     private HGTransactionContext context;
     private HGStorageTransaction stran = null;
     private Map<Object, Object> attributes = new HashMap<Object, Object>();
-    Set<Pair<VBox<?>, VBoxBody<?>>> bodiesRead = new HashSet<Pair<VBox<?>, VBoxBody<?>>>();
+    Map<VBox<?>, VBoxBody<?>> bodiesRead = new HashMap<VBox<?>, VBoxBody<?>>();
     private Map<VBox<?>, Object> boxesWritten = new HashMap<VBox<?>, Object>();
     private long number;
     private boolean readonly = false;
@@ -72,7 +68,7 @@ public final class HGTransaction implements HGStorageTransaction
         {
             VBoxBody<T> body = vbox.body.getBody(number);
             if (!readonly)
-                bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(vbox, body));
+                bodiesRead.put(vbox, body);
             value = body.value;
         }
         return (value == NULL_VALUE) ? null : value;
@@ -96,12 +92,12 @@ public final class HGTransaction implements HGStorageTransaction
      */
     protected boolean validateCommit()
     {
-        if (!readonly) for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
+        if (!readonly) for (Map.Entry<VBox<?>, VBoxBody<?>> entry : bodiesRead.entrySet())
         {
             // Compare versions instead of 'body' objects because we may have multiple
             // re-loads of the same version of some disk data - we allow that in 
             // transactional caches
-            if (entry.getFirst().body.version != entry.getSecond().version)
+            if (entry.getKey().body.version != entry.getValue().version)
             {
                 return false;
             }
@@ -139,8 +135,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     void finish() 
     {
-        if (!readonly) for (Pair<VBox<?>, VBoxBody<?>> entry : bodiesRead)
-            entry.getFirst().finish(this);            
+        if (!readonly) for (Map.Entry<VBox<?>, VBoxBody<?>> entry : bodiesRead.entrySet())
+            entry.getKey().finish(this);            
         for (Map.Entry<VBox<?>, Object> entry : boxesWritten.entrySet())
             entry.getKey().finish(this);
         bodiesRead = null;
@@ -201,7 +197,7 @@ public final class HGTransaction implements HGStorageTransaction
             if (stran != null)
                 stran.commit();
             if (!readonly)
-                parent.bodiesRead.addAll(bodiesRead);
+                parent.bodiesRead.putAll(bodiesRead);
             parent.boxesWritten.putAll(boxesWritten);
             finish();
             HyperGraph graph = context.getManager().getHyperGraph();

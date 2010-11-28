@@ -29,7 +29,7 @@ public class VBox<E>
 {
     protected HGTransactionManager txManager;
     
-    VBoxBody<E> body = makeNewBody(null, 0, null); // is this right?
+    volatile VBoxBody<E> body = makeNewBody(null, 0, null); // is this right?
 
     /**
      * for sub-classing only....

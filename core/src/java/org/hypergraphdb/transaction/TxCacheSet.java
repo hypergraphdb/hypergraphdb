@@ -101,7 +101,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
                     b = load(tx.getNumber());
             }            
             if (!tx.isReadOnly())
-                tx.bodiesRead.add(new Pair<VBox<?>, VBoxBody<?>>(S, b));
+                tx.bodiesRead.put(S, b);
             return b.value;
         }
         else 

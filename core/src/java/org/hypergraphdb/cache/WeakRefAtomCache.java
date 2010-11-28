@@ -11,9 +11,6 @@ import java.lang.ref.ReferenceQueue;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.IdentityHashMap;
-import java.util.WeakHashMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -25,7 +22,6 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSet;
 import org.hypergraphdb.handle.DefaultManagedLiveHandle;
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.transaction.HGTransactionConfig;
@@ -34,7 +30,6 @@ import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.transaction.VBoxBody;
 import org.hypergraphdb.util.CloseMe;
-import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.WeakIdentityHashMap;
 
 /**
@@ -80,7 +75,6 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
-//	private ReadWriteLock lock = new DummyReadWriteLock(); // new ReentrantReadWriteLock();
 	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
     private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup cleanupThread = new PhantomCleanup();
@@ -146,8 +140,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		             }		                
 		        }
 		        if (!keep)
-		            liveHandles.drop(h);
-		       //System.out.println("dropped " + h + " from cache.");		       
+		            liveHandles.drop(h);		       
 		    }
 		    finally
 		    {
@@ -162,11 +155,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private class PhantomCleanup extends Thread 
 	{
-		private boolean done;
+		private volatile boolean done;
 		
 	    public void run() 
 	    {
-//			WeakHandle.returnEnqueued.set(Boolean.TRUE);
 	        cleanupTxConfig.setNoStorage(true);
 	        for (done = false; !done; ) 
 	        {
@@ -187,7 +179,6 @@ public class WeakRefAtomCache implements HGAtomCache
 	        		t.printStackTrace(System.err);
 	        	}
 	        }
-//			WeakHandle.returnEnqueued.set(Boolean.FALSE);
 	    }
 
 	    public void end()
@@ -375,20 +366,6 @@ public class WeakRefAtomCache implements HGAtomCache
 		cleanupThread.end();	
 		while (cleanupThread.isAlive() )
 			try { cleanupThread.join(); } catch (InterruptedException ex) { }
-//		WeakHandle.returnEnqueued.set(Boolean.TRUE);
-//		try { processRefQueue(); } catch (InterruptedException ex) { }
-//		for (Iterator<Map.Entry<HGPersistentHandle, WeakHandle>> i = liveHandles.entrySet().iterator(); 
-//			 i.hasNext(); ) 
-//		{
-//		    WeakHandle h = i.next().getValue();
-//			Object x = h.fetchRef();
-//			graph.getEventManager().dispatch(graph, new HGAtomEvictEvent(h, x));			
-//			if (h.isEnqueued())
-//			{
-//				h.clear();
-//			}
-//		}
-//		WeakHandle.returnEnqueued.set(Boolean.FALSE);
 		frozenAtoms.clear();		
 		incidenceCache.clear();
 		if (incidenceCache instanceof CloseMe)

@@ -40,7 +40,7 @@ class DefaultTransactionContext implements HGTransactionContext
         if (tstack.isEmpty())
             tstack.push(manager.createTransaction(null, config));
         else
-            tstack.push(manager.createTransaction(tstack.peek(), config));        
+            tstack.push(manager.createTransaction(tstack.peek(), config));
     }
     
 	public void endTransaction(boolean success) throws HGTransactionException

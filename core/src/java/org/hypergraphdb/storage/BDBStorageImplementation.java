@@ -368,7 +368,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 try
                 {
                     TransactionConfig tconfig = new TransactionConfig();
-                    if (env.getConfig().getMultiversion())                    
+                    if (env.getConfig().getMultiversion() && config.isReadonly())                    
                         tconfig.setSnapshot(true);
                     tconfig.setWriteNoSync(true);
 //                  tconfig.setNoSync(true);
@@ -377,12 +377,6 @@ public class BDBStorageImplementation implements HGStoreImplementation
                         tx = env.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig);
                     else
                         tx = env.beginTransaction(null, tconfig);
-                    // Necessary to force BerkeleyDB to isolate writes because we could be reading from
-                    // the cache and storage can be "thinking" that we are only writing. This means we can't
-                    // have storage "write only" transactions. Because the TX_INIT_DB is an empty DB, most
-                    // likely in the storage cache, there shouldn't be any noticeable performance penalties.
-//                    ((DefaultIndexImpl<?,?>)getIndex("TX_INIT_DB", BAtoBA.getInstance(), BAtoBA.getInstance(), null, false, true)).ping(tx);
-//                    try { Thread.sleep(10); } catch (Throwable t){}
                     return new TransactionBDBImpl(tx, env);
                 }
                 catch (DatabaseException ex)
