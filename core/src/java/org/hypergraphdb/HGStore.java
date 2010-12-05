@@ -31,6 +31,12 @@ import org.hypergraphdb.transaction.HGTransactionManager;
  * in any special way with the semantic layer of HyperGraphDB and the way data and types are
  * laid out in the store.</p>
  * 
+ * <p>
+ * The <code>HGStore</code> will use the {@link HGStorageImplementation} provided by the 
+ * {@link HGConfiguration} parameter to the constructor of this class. In fact, this class
+ * is merely a wrapper to the underlying storage implementation.
+ * </p>
+ * 
  * @author Borislav Iordanov
  */
 public class HGStore
@@ -176,6 +182,12 @@ public class HGStore
         return impl.getLink(handle);
     }
   
+    /**
+     * <p>
+     * Return <code>true</code> if there is a storage link bound to the passed in
+     * handle parameter and <code>false</code> otherwise.
+     * </p>
+     */
     public boolean containsLink(HGPersistentHandle handle)
     {
         if (handle == null)
@@ -328,17 +340,32 @@ public class HGStore
         impl.removeIndex(name);
     }
         
+    /**
+     * <p>
+     * Mainly for internal use - invoked by the main {@link HyperGraph} instance.
+     * </p>
+     */    
     public void close()
     {
         impl.shutdown();
    	}
     
     
+    /**
+     * <p>
+     * Reserver to internal use.
+     * </p>
+     */
     public void attachOverlayGraph(StorageGraph sgraph)
     {
         overlayGraph.set(sgraph);
     }
     
+    /**
+     * <p>
+     * Reserver to internal use.
+     * </p>
+     */
     public void detachOverlayGraph()
     {
         overlayGraph.set(null);

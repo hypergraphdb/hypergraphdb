@@ -46,11 +46,42 @@ import org.hypergraphdb.util.PredefinedTypesConfig;
 /**
  * <p>
  * The <code>HGTypeSystem</code> manages atom type information for a given
- * hypergraph database. Every hypergraph database can have its own user-definable
- * type system.
+ * {@link HyperGraph} database. Each atom stored in the database has a type
+ * that carries some semantic information about the atom as well as implementing
+ * the low-level storage representation of the atom's value. Types can be dynamically
+ * added to and removed from the database - they themselves are atoms. Such atom types
+ * are distinguished by the fact that their runtime instances implement the 
+ * {@link HGAtomType} interface. Every 
+ * database can have its own user-definable type system bootstrapped with a 
+ * set of predefined types. The type of all predefined types is called top. When 
+ * the instances of a given type are themselves types (i.e. implement the 
+ * {@link HGAtomType} interface, they are called type constructors. Such type
+ * constructors are used to manage dynamically added types, for example for
+ * application specific Java classes.   
+ * 
+ * <p>
+ * This class is also responsible for creating and managing mappings from Java classes to
+ * HyperGraphDB types. The runtime instance of each atom is of some Java class and 
+ * there is one and only one HyperGraphDB type associated with that class. Predefined
+ * types and the mechanism by which Java class are mapped to HyperGraphDB type go hand in
+ * hand and they are both part of the global database configuration in the form of a
+ * {@link HGTypeConfiguration} instance.  
  * </p>
  *
- *
+ * <p>
+ * You can obtain the type of a given atom or the type associated with a given Java class by
+ * calling one of the <code>getAtomType</code> methods. To obtain the handle of a type (instead 
+ * of the actual {@link HGAtomType} instance), call one of the <code>getTypeHandle</code> methods. 
+ * </p>
+ * 
+ * <h3>Class loading</h3>
+ * 
+ * Since this class does a lot of introspection when mapping newly seen Java classes to 
+ * HyperGraphDB types, it is worth noting how classes are looked up. The mechanism is rather 
+ * simple: the <code>ClassLoader</code> set via the <code>setClassLoader</code> is
+ * tried if provided at all, otherwise the current thread class loader is tried, and finally
+ * <code>this.getClass().getClassLoader()</code> is tried.
+ * 
  * <h3>Aliases</h3>
  *
  * <p>
@@ -241,11 +272,6 @@ public class HGTypeSystem
 		// to work without a problem. Anyway, putting the initialization here fixed it, but it might
 		// be just a workaround to a deeper problem that we haven't gotten to the bottom of. --Boris
 		getTypeHandle(AtomProjection.class);
-	}
-	
-	public HGHandle getTopHandle()
-	{
-	    return topHandle;
 	}
 	
 	/**
@@ -597,11 +623,17 @@ public class HGTypeSystem
 		return this.javaTypes;
 	}
 	
+	/**
+	 * <p>Return the type of the special Java value <code>null</code>.</p>
+	 */
 	public HGHandle getNullType()
 	{
 	    return nullTypeHandle;
 	}
 	
+	/**
+	 * <p>Return the type of all predefined types.</p>
+	 */
 	public HGHandle getTop()
 	{
 		return topHandle;
@@ -985,6 +1017,13 @@ public class HGTypeSystem
 		}
 	}
 
+	/**
+	 * <p>
+	 * Return the (handle of the) type of the given atom.
+	 * </p>
+	 * 
+	 * @param atomHandle The handle of the atom whose type is desired.
+	 */
 	public HGHandle getTypeHandle(HGHandle atomHandle)
 	{
 		HGPersistentHandle [] layout = graph.getStore().getLink(graph.getPersistentHandle(atomHandle));
@@ -1077,6 +1116,9 @@ public class HGTypeSystem
 		}
 	}
 	
+	/**
+	 * <p>Return any metadata associated with the given type or <code>null</code>.</p>
+	 */
 	public HGTypeStructuralInfo getTypeMetaData(HGHandle typeHandle)
 	{
 		HGTypeStructuralInfo typeStruct = hg.getOne(graph, hg.and(hg.type(HGTypeStructuralInfo.class), 

@@ -42,11 +42,17 @@ public class HGTypeConfiguration
         this.predefinedTypes = predefinedTypes;
     }
 
+    /**
+     * <p>Return the instance responsible for creating HyperGraphDB type from Java classes.</p>
+     */
     public JavaTypeMapper getJavaTypeMapper()
     {
         return javaTypeMapper;
     }
 
+    /**
+     * <p>Specify the instance responsible for creating HyperGraphDB type from Java classes.</p>
+     */    
     public void setJavaTypeMapper(JavaTypeMapper javaTypeMapper)
     {
         this.javaTypeMapper = javaTypeMapper;

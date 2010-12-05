@@ -10,11 +10,11 @@ package org.hypergraphdb;
 
 /**
  * <p>
- * <code>HGValueLink</code> is a <code>HGLink</code> that can hold an arbitrary
+ * <code>HGValueLink</code> is a {@link HGLink} that can hold an arbitrary
  * object as payload. The object can be of any type and can be interpreted by the 
  * application, for instance, as a label where it will be usually a <code>String</code>
  * or a weight, if it is a number. Note that the type of the stored atom will be
- * the type of wrapped object, not <code>HGValueLink.class</code>. Thus, if you wrapping
+ * the type of wrapped object, not <code>HGValueLink.class</code>. Thus, if you are wrapping
  * a Java String as a link, for example, you would query with <code>hg.type(String.class)</code>
  * rather than <code>hg.type(HGValueLink.class)</code>.
  * </p>
@@ -40,11 +40,17 @@ public final class HGValueLink extends HGPlainLink
         this.value = value;
     }
     
+    /**
+     * Set the underlying value.
+     */
     public void setValue(Object value)
     {
         this.value = value;
     }
-    
+
+    /**
+     * Return the underlying value.
+     */
     public Object getValue()
     {
         return value;
