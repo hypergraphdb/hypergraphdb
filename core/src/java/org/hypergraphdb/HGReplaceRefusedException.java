@@ -1,5 +1,7 @@
 package org.hypergraphdb;
 
+import org.hypergraphdb.event.HGAtomReplaceRequestEvent;
+
 /**
  * <p>
  * This exception is thrown when an attempt to replace the value of an existing atom 

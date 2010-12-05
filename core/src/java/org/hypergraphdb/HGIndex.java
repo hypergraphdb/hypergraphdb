@@ -13,8 +13,8 @@ package org.hypergraphdb;
  * data structure.</p>
  * 
  * <p>
- * Taking advantage of the new Java 1.5 feature allowing overriding methods to
- * further specialize on the return type (i.e. allowing contravariant return types),
+ * Note that taking advantage of the fact that Java allows overriding methods to
+ * further specialize on the return type (i.e. allowing contra-variant return types),
  * the <code>find</code> method of the super-interface is redeclared to return a 
  * <code>HGRandomAccessResult</code>. 
  * </p> 

@@ -23,32 +23,33 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * allow quick lookup of atoms depending on their value and/or target sets.  
  * </p>
  * <p>
- * Atom indexing in HyperGraph relies on the concept of a <code>HGIndexer</code>. Indexers
- * are always bound to an atom type. They are mainly responsible for producing an index <em>key</em> 
- * given an atom instance. The index manager interacts with the <code>HGStore</code> to create
- * and update indices at the storage level based on an implementation of the <code>HGIndexer</code>
+ * Atom indexing in {@link HyperGraph} relies on the concept of a {@link HGIndexer}. Indexers
+ * are always bound to an atom type and they are responsible for producing an index <em>key</em> 
+ * given an atom instance. The index manager interacts with the {@link HGStore} to create
+ * and update indices at the storage level based on an implementation of the {@link HGIndexer}
  * interface.    
  * </p>
  * <p>
- * When an implementation of a <code>HGIndexer</code> does not produce keys of <code>byte[]</code>
- * type, it is required to return a non-null <code>ByteArrayConverter</code> from its
+ * When an implementation of a {@link HGIndexer} does not produce keys of <code>byte[]</code>
+ * type, it is required to return a non-null {@link ByteArrayConverter} from its
  * <code>getConverter</code> method. In addition, if a regular byte ordering is not appropriate
- * for a given key type, the <code>HGIndexer</code> implementation must return a non-null
+ * for a given key type, the {@link HGIndexer} implementation must return a non-null
  * <code>Comparator</code> from its <code>getComparator</code> method. 
  * </p>
  * <p>
  * To create a new index for a given atom type, call the <code>register(HGIndexer)</code> method.
  * To later remove it, call the <code>unregister(HGIndexer)</code> method. Registering an
  * indexer will store the indexer as a HyperGraph atom and it will request a low-level storage
- * index from the <code>HGStore</code>. All atom instance of the type for which a new indexer
- * is being registered will be automatically indexed. Naturally, this may be a very long operation.
- * Therefore it is recommended that indexer be registered at a time where there's no other activity
- * on the HyperGraph database.
+ * index from the {@link HGStore}. Atom instances of the type for which a new indexer
+ * is being registered will be automatically indexed henceforth. If there are already atoms of that
+ * type in the database, they be indexed the next time the database is opened. You can force this
+ * indexing of existing data to happen right away by calling the <code>runMaintenance</code> of 
+ * the {@link HyperGraph} instance.
  * </p>
  * <p>
  * <strong>NOTE</strong>: this class is not thread safe and its methods do not participate in database
  * transactions. Modification of the database indexing schema are meant to be used during initialization
- * or other time when there's no other database activity. 
+ * or other times when there's no other database activity. 
  * </p>
  * @author Borislav Iordanov
  */

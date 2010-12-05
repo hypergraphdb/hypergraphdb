@@ -11,7 +11,10 @@ import org.hypergraphdb.util.CloseMe;
 
 /**
  * <p>
- * Represents the result set of a HyperGraph query. 
+ * Represents the result set of a {@link HyperGraph} query. Note that results are
+ * represented as bi-directional iterator with a current position. Moreover, 
+ * in general search results must be properly closed as they may hold external system
+ * resources such open disk files etc.  
  * </p>
  * 
  * @author Borislav Iordanov

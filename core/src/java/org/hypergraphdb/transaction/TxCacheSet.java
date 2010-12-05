@@ -1,8 +1,8 @@
 package org.hypergraphdb.transaction;
 
 import java.util.List;
+
 import org.hypergraphdb.util.HGSortedSet;
-import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 

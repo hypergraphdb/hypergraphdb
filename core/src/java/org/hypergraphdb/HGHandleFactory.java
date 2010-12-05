@@ -9,8 +9,17 @@ package org.hypergraphdb;
 
 /**
  * <p>
- * The <code>HGHandleFactory</code> class is used to manage persistent handles
- * for hypergraph atoms.
+ * The <code>HGHandleFactory</code> is used to manage persistent handles
+ * for the atoms of {@link HyperGraph} instance. One such factory is configured
+ * per HyperGraphDB instance via the {@link HGConfiguration} passed when the instance
+ * is opened. The factory is responsible for creating new {@link HGPersistentHandle}s
+ * that must be unique at least within the current database instance. Certain factories
+ * can also guarantee universal uniqueness (e.g. in a distributed environment or across
+ * the Internet). Factories are also responsible for creating handle out of their
+ * <code>String</code> or <code>byte[]</code> representations. The main requirement that 
+ * a handle factory implementation must observe is that all
+ * persistent handles must be of the exact same <code>byte[]</code> size. For example, this
+ * rules out the use of URIs as persistent handles.
  * </p>
  * 
  * @author Borislav Iordanov

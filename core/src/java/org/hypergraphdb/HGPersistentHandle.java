@@ -17,7 +17,7 @@ import java.io.Serializable;
  * </p>
  * 
  * <p>
- * A concrete implementation is garantueed to be a compact, serialiazable Java object that
+ * A concrete implementation is guaranteed to be a compact, serialiazable Java object that
  * can be stored by the application using some other means and reused to refer to the same 
  * atom in subsequent runs of the same HyperGraph instance, or within a distributed environment.
  * </p>
@@ -27,9 +27,16 @@ import java.io.Serializable;
  * access whereas <code>HGPersistentHandle</code> are designed as a persistent, long-term reference.
  * </p>
  * 
+ * @see HGHandleFactory
+ * 
  * @author Borislav Iordanov
  */
 public interface HGPersistentHandle extends HGHandle, Serializable, Comparable<HGPersistentHandle>
 {
+    /**
+     * <p>Return a <code>byte[]</code> representation of the handle. Note that <code>byte[]</code>
+     * representations of all handles will be of the same size. For example 4 for integer based handles,
+     * or 16 for UUID based handles.
+     */
     byte [] toByteArray();
 }

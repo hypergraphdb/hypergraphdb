@@ -30,17 +30,11 @@ public final class IncidenceSet extends HGAtomSet
 		this.atom = atom;
 	}
 	
+	/**
+	 * <p>Return the atom whose incidence set this instance represents.
+	 */
 	public HGHandle getAtom()
 	{
 		return atom;
 	}
-
-//    @Override
-//    public boolean isInTransaction()
-//    {
-//        if (impl instanceof HGTxObject)
-//            return ((HGTxObject)impl).isInTransaction();
-//        else
-//            return false;
-//    }	
 }

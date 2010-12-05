@@ -6,7 +6,8 @@ import org.hypergraphdb.annotation.HGIgnore;
  * 
  * <p>
  * Implement this interface for atoms that will hold their HyperGraphDB handle
- * as a bean property.
+ * as a bean property. The system will set this property when an atom is added 
+ * to or loaded from the database.
  * </p>
  *
  * @author Borislav Iordanov

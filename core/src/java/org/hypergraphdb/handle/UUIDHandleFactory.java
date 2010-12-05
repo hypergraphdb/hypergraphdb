@@ -1,10 +1,19 @@
 package org.hypergraphdb.handle;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 
+/**
+ * 
+ * <p>
+ * A persistent handle factory based on type IV (crypto-strong) UUIDs. This is 
+ * the default handle factory. The handle produced by it a universally unique 
+ * and play well in a distributed environment.
+ * </p>
+ *
+ * @author Borislav Iordanov
+ *
+ */
 public class UUIDHandleFactory implements HGHandleFactory
 {
     private final HGPersistentHandle anyHandle = makeHandle("332c5a05-37c2-11dc-b44d-8884da7d2355");
@@ -15,25 +24,11 @@ public class UUIDHandleFactory implements HGHandleFactory
     {
         return anyHandle;
     }
-
-    private static AtomicLong seed = new AtomicLong(System.currentTimeMillis());
     
     public HGPersistentHandle makeHandle()
     {
-        byte [] data = new byte[16];
-        long v = seed.incrementAndGet();
-        data[8] = (byte) ((v >>> 56)); 
-        data[9] = (byte) ((v >>> 48));
-        data[10] = (byte) ((v >>> 40)); 
-        data[11] = (byte) ((v >>> 32));
-        data[12] = (byte) ((v >>> 24)); 
-        data[13] = (byte) ((v >>> 16));
-        data[14] = (byte) ((v >>> 8)); 
-        data[15] = (byte) ((v >>> 0));
-        return UUIDPersistentHandle.makeHandle(data);        
-//        return UUIDPersistentHandle.makeHandle();
+        return UUIDPersistentHandle.makeHandle();
     }
-
 
     public HGPersistentHandle makeHandle(String handleAsString)
     {

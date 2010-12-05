@@ -50,6 +50,12 @@ public final class HGConfiguration
 		resetDefaults();
 	}
 		
+	/**
+	 * <p>
+	 * Return the handle factory configured for this database. If no factory has been
+	 * explicitly configured, a default implementation based on UUIDs is provided.
+	 * </p>
+	 */
     public HGHandleFactory getHandleFactory()
     {
         if (handleFactory == null)
@@ -59,12 +65,24 @@ public final class HGConfiguration
     }
 
 
+    /**
+     * <p>
+     * Set the persistent handle factory for this database. 
+     * </p>
+     *  
+     * @param handleFactory The handle factory instance.
+     */
     public void setHandleFactory(HGHandleFactory handleFactory)
     {
         this.handleFactory = handleFactory;
     }
 
-
+    /**
+     *<p>
+     * Return the low-level storage implementation to be used for this
+     * database instance.
+     * </p>
+     */
     public HGStoreImplementation getStoreImplementation()
     {
         if (storeImplementation == null)
@@ -73,6 +91,12 @@ public final class HGConfiguration
         return storeImplementation;
     }
 
+    /**
+     * <p>
+     * Specify the low-level storage implementation to be used for this database instance.
+     * </p>
+     * @param storeImplementation
+     */
     public void setStoreImplementation(HGStoreImplementation storeImplementation)
     {
         this.storeImplementation = storeImplementation;

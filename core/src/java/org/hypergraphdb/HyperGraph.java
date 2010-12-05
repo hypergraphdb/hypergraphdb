@@ -48,20 +48,21 @@ import org.hypergraphdb.util.Pair;
  * class is essentially a connection to the database and it must be always properly closed
  * before application shutdown. To close the database, call the <code>close</code> method. 
  * When the application exits abruptly, without having a chance to close, it may fail to
- * open subsequently without running a recovery process. A light recovery process is performed
- * every time you open a database, but sometimes a full recovery may be needed in which case
- * a separate command line utility must be run as documented in the reference guide.
+ * open subsequently without running a recovery process. The recovery process depends on the
+ * underlying storage implementation. The default storage implementation performs a light recovery
+ * process every time you open a database. If a full recovery is needed, please consult the 
+ * documentation of the storage implementation.
  * </p>  
  *   
  * <p>
  * This class encapsulates and offers access to all important HyperGraphDB top-level objects such as
- * its associated <code>HGTransactionManager</code>, <code>HGTypeSystem</code>, 
- * <code>HGEventManager</code> and the low-level <code>HGStore</code>.
+ * its associated {@link HGTransactionManager}, {@link HGTypeSystem},
+ * {@link HGEventManager} and the low-level {@link HGStore}.
  * </p>
  * 
  * <p>
  * Each datum in a HyperGraph database is called an <code>atom</code>. Atoms are either
- * arbitrary plain objects or instances of <code>HGLink</code>. Using this class, you may:
+ * arbitrary plain objects or instances of {@link HGLink}. Using this class, you may:
  * 
  * <ul>
  * <li>Add new atoms with the <code>add</code> family of methods.</li>
@@ -81,7 +82,7 @@ import org.hypergraphdb.util.Pair;
  * <p>
  * For aggregate structures such as Java beans, it is often useful to create indices
  * to speed up searching by certain properties. You can manipulate indices with the
- * {@link HGIndexerManager} associated with a HyperGraph instance. Call <code>getIndexManager</code>
+ * {@link HGIndexManager} associated with a HyperGraph instance. Call <code>getIndexManager</code>
  * to get the index manager.
  * </p>
  * 

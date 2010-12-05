@@ -31,9 +31,9 @@ import org.hypergraphdb.util.Mapping;
 
 /**
  * <p>
- * The <code>HGQuery</code> class represents an arbitrary query to the hypergraph
- * database. Queries can be defined either by using the query language, or they
- * can be built directly from query condition instances.
+ * The <code>HGQuery</code> class represents an arbitrary query to the {@link HyperGraph}
+ * database. Queries can be constructed out of {@link HGQueryCondition}s via the static {@link make}
+ * method and then executed through the {@link execute} method. 
  * </p>
  * 
  * @author Borislav Iordanov
@@ -43,31 +43,68 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 {  	
 	protected HyperGraph graph;	
 	
+	/**
+	 * A query that return the empty result set.
+	 */
 	public final static HGQuery<Object> NOP = new HGQuery<Object>()
 	{
 		public HGSearchResult<Object> execute() { return (HGSearchResult<Object>)HGSearchResult.EMPTY; }
 	};
-	
-/*	public static HGQuery make(HyperGraph hg, String expression)
-	{
-		return new ExpressionBasedQuery(hg, expression);
-	} */
 
-	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph hg, HGQueryCondition condition)
+	/**
+	 * <p>
+	 * Create a new query returning all atoms matching the given {@link HGQueryCondition}. The query condition
+	 * can be constructed directly from classes implementing the {@link HGQueryCondition} interface or 
+	 * by using  the expression building static methods of the {@link hg} class nested here.
+	 * </p>
+	 * 
+	 * <p>
+	 * The result of this method can be executed repeatedly. In place where performance is critical and
+	 * a given query is executed often, it is beneficial to construct it before hand and reuse. The
+	 * performance gain will depend on how complex the condition is. Constructing a query involves
+	 * creating an execution plan based on indices etc. Therefore, a trivial condition that only
+	 * constraints the type of the atoms doesn't take much time to translate into a query, while a more
+	 * complex one involving some structural pattern will burn valuable extra cycles in building a query plan.  
+	 * </p>
+	 * 
+	 * @param <SearchResult> The type of the return result. 
+	 * @param graph The {@link HyperGraph} instance against which the query will be executed.
+	 * @param condition The {@link HGQueryCondition} specifying which atoms to return from the graph.
+	 * @return An executable <code>HGQuery</code> object.
+	 */
+	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph graph, HGQueryCondition condition)
 	{
-		return (HGQuery<SearchResult>)new ExpressionBasedQuery(hg, condition);
+		return (HGQuery<SearchResult>)new ExpressionBasedQuery(graph, condition);
 	}
 	
+	/**
+	 * <p>Return the {@link HyperGraph} instance against which this query is executed.</p>
+	 */
 	public HyperGraph getHyperGraph()
 	{
 		return graph;
 	}
 
+	/**
+	 * <p>Specify the HyperGraph instance against which this method is executed. This method is intended
+	 * mostly for internal use. A <code>HGQuery</code> object is normally constructed by using
+	 * information from a specific graph instance (e.g. available indices). Therefore, changing
+	 * the graph instance and executing it again may fail if the metadata used in building the query
+	 * differs between the two graphs.
+	 * </p>  
+	 */
 	public void setHyperGraph(HyperGraph graph)
 	{
 		this.graph = graph;
 	}
 
+	/**
+	 * <p>
+	 * Execute the query and return the result set. Note that queries are lazily executed so that
+	 * results are actually obtained when one iterates (using the <code>next</code> and <code>prev</code>
+	 * of the returned object).
+	 * </p>
+	 */
 	public abstract HGSearchResult<SearchResult> execute();
     
     /**
@@ -257,6 +294,17 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
             });            
         }
         
+        /**
+         * <p>
+         * Construct a {@link HGQueryCondition} that uniquely identifies an atom based on
+         * the passed in <code>Object</code> instance.
+         * </p>
+         * 
+         * @param graph The {@link HyperGraph} database instance.
+         * @param instance The object for which an unique atom condition must be constructed.
+         * @return <code>null</code> if <code>instance == null</code>, otherwise a query condition
+         * identifying <code>instance</code> in the database.
+         */
         public static HGQueryCondition guessUniquenessCondition(final HyperGraph graph, final Object instance)
         {
         	if (instance == null)
@@ -282,7 +330,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
     	/**
     	 * <p>
-    	 * Add the given instance as an atom in the graph iff no atoms
+    	 * Add the given instance as an atom in the graph if and only if no atoms
     	 * match the passed in {@link HGQueryCondition}
     	 * </p>
     	 */
@@ -299,6 +347,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	});
         }
         
+        /**
+         * <p>
+         * Add a new atom of a given type only if there's no atom matching the passed in
+         * {@link HGQueryCondition}. Note that an {@link AtomTypeCondition}
+         * based on the <code>typeHandle</code> parameter is "and-ed" with the <code>condition</code>
+         * parameter.   
+         * </p>
+         */
         public static HGHandle addUnique(final HyperGraph graph, 
         								 final Object instance, 
         								 final HGHandle typeHandle, 
@@ -313,6 +369,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	});		            
         }
         
+        /**
+         * <p>
+         * Add a new atom of a given type only if there's no atom matching the passed in
+         * {@link HGQueryCondition}. Note that an {@link AtomTypeCondition}
+         * based on the <code>javaClass</code> parameter is "and-ed" with the <code>condition</code>
+         * parameter.   
+         * </p>
+         */
         public static HGHandle addUnique(HyperGraph graph, 
         								 Object instance, 
         								 Class javaClass, 
@@ -321,13 +385,52 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
             return addUnique(graph, instance, graph.getTypeSystem().getTypeHandle(javaClass), condition);
         }        
         
-        public static AtomTypeCondition type(HGHandle h) { return new AtomTypeCondition(h); }
-        public static AtomTypeCondition type(Class<?> c) { return new AtomTypeCondition(c); }
+        /**
+         * <p>Return a {@link HGQueryCondition} constraining the type of the result
+         * to the type identified by <code>typeHandle</code>.</p>
+         * @see AtomTypeCondition
+         */
+        public static AtomTypeCondition type(HGHandle typeHandle) { return new AtomTypeCondition(typeHandle); }
+        /**
+         * <p>Return a {@link HGQueryCondition} constraining the type of the result
+         * to the type corresponding to the Java class <code>clazz</code>.</p>
+         * @see AtomTypeCondition
+         */
+        public static AtomTypeCondition type(Class<?> clazz) { return new AtomTypeCondition(clazz); }
+        /**
+         * <p>Return a {@link HGQueryCondition} constraining the type of the result
+         * to the type identified by <code>typeHandle</code> and all its sub-types. The set
+         * of sub-types is obtained as the closure of the {@link HGSubsumes} relation.</p> 
+         * @see TypePlusCondition
+         */
         public static TypePlusCondition typePlus(HGHandle h) { return new TypePlusCondition(h); }
-        public static TypePlusCondition typePlus(Class<?> c) { return new TypePlusCondition(c); }        
-        public static SubsumesCondition subsumes(HGHandle h) { return new SubsumesCondition(h); }
-        public static SubsumedCondition subsumed(HGHandle h) { return new SubsumedCondition(h); }
+        /**
+         * <p>Return a {@link HGQueryCondition} constraining the type of the result
+         * to the type corresponding to the Java class <code>clazz</code> and all its sub-types. The set
+         * of sub-types is obtained as the closure of the {@link HGSubsumes} relation.</p> 
+         * @see TypePlusCondition
+         */
+        public static TypePlusCondition typePlus(Class<?> clazz) { return new TypePlusCondition(clazz); }
+        /**
+         * <p>Return a condition constraining the result set to atoms more general than the passed in
+         * <code>specific</code> parameter. This condition is generally useful when searching for types,
+         * but it is applicable to any set atoms interlinked with the {@link HGSubsumes} relation.
+         * @see SubsumesCondition
+         */
+        public static SubsumesCondition subsumes(HGHandle specific) { return new SubsumesCondition(specific); }
+        /**
+         * <p>Return a condition constraining the result set to atoms more specific than the passed in
+         * <code>general</code> parameter. This condition is generally useful when searching for types,
+         * but it is applicable to any set atoms interlinked with the {@link HGSubsumes} relation.
+         * @see SubsumedCondition
+         */
+        public static SubsumedCondition subsumed(HGHandle general) { return new SubsumedCondition(general); }
         
+        /**
+         * <p>Return a conjunction (logical <code>and</code>) of conditions - atoms in the result set will have
+         * to match all condition in the parameter list.</p>
+         * @see And
+         */
         public static And and(HGQueryCondition...clauses)
         {
             And and = new And();
@@ -335,6 +438,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                 and.add(x); 
             return and;            
         }
+        
+        /**
+         * <p>Return a disjunction (logical <code>or</code>) of conditions - atoms in the result set will have
+         * to match at least one of the conditions in the parameter list.</p>
+         * @see Or
+         */
         public static Or or(HGQueryCondition...clauses)
         {
             Or or = new Or();
@@ -342,40 +451,292 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                 or.add(x);
             return or;            
         }
-        public static Not not(HGAtomPredicate c) { return new Not(c); }
         
-        public static TargetCondition target(HGHandle h) { return new TargetCondition(h); }
-        public static IncidentCondition incident(HGHandle h) { return new IncidentCondition(h); }
+        /**
+         * <p>Return the negation of an {@link HGAtomPredicate}. </p>
+         * @see Not
+         */
+        public static Not not(HGAtomPredicate predicate) { return new Not(predicate); }
+        
+        /**
+         * <p>
+         * Return a query condition that constraints the result set to atoms that are targets to a specific link. 
+         * </p> 
+         * @param linkHandle The handle of the {@link HGLink} whose target the resulting atom should be.
+         * @see TargetCondition 
+         */
+        public static TargetCondition target(HGHandle linkHandle) { return new TargetCondition(linkHandle); }
+        
+        /**
+         * <p>
+         * Return a condition constraining the result to links to a specific atom.
+         * </p>         
+         * @param atomHandle The atom to which resulting links should point to.
+         * @see IncidentCondition
+         */
+        public static IncidentCondition incident(HGHandle atomHandle) { return new IncidentCondition(atomHandle); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to links pointing to a target set 
+         * of atoms. 
+         * </p>
+         * @param link The target set specified as a {@link HGLink} instance. The order of targets in this
+         * link is ignored - it is treated as a set.
+         * @see LinkCondition
+         */
         public static LinkCondition link(HGLink link) { return new LinkCondition(link); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to links pointing to a target set 
+         * of atoms. 
+         * </p>
+         * @param link The target set specified as a {@link HGHandle} array. The order of targets in this
+         * array is ignored - it is treated as a set.
+         * @see LinkCondition
+         */
         public static LinkCondition link(HGHandle...h) { return new LinkCondition(h); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to links pointing to a target set 
+         * of atoms. 
+         * </p>
+         * @param C The target set specified as a Java collection.
+         * @see LinkCondition
+         */        
         public static LinkCondition link(Collection<HGHandle> C) { return new LinkCondition(C); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to being ordered links of a certain
+         * form. 
+         * </p>
+         * @param h The target set specified as a {@link HGHandle} array. The order of targets in this
+         * array sets the order of targets in the resulting atoms. 
+         * @see OrderedLinkCondition
+         */        
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to being ordered links of a certain
+         * form. 
+         * </p>
+         * @param L The target set specified as a Java list. The order of targets in this
+         * list sets the order of targets in the resulting atoms.
+         * @see OrderedLinkCondition 
+         */        
         public static OrderedLinkCondition orderedLink(List<HGHandle> L) { return new OrderedLinkCondition(L); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to being links with the specified arity (number
+         * of targets).
+         * </p>
+         * @param i The arity of the atoms in the result set. 
+         * @see ArityCondition
+         */                
         public static ArityCondition arity(int i) { return new ArityCondition(i); }
+        
+        /**
+         * <p>Return an atom predicate constraining the result set to atoms that are not connected
+         * to other atoms, i.e. whose incidence set is empty.</p>
+         * @see DisconnectedPredicate
+         */
         public static DisconnectedPredicate disconnected() { return new DisconnectedPredicate(); }
         
+        /**
+         * <p>
+         * Return a condition that constraints resulting atoms by a specific value and {@link ComparisonOperator}.
+         * </p>
+         * 
+         * @param value The value to compare with.
+         * @param op The {@link ComparisonOperator} to use in the comparison.
+         * @see AtomValueCondition
+         */
         public static AtomValueCondition value(Object value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
+        
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is equal to 
+         * the passed in <code>x</code> parameter.
+         * </p>
+         * @see AtomValueCondition
+         */
         public static AtomValueCondition eq(Object x) { return value(x, ComparisonOperator.EQ); }
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is less than 
+         * the passed in <code>x</code> parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
         public static AtomValueCondition lt(Object x) { return value(x, ComparisonOperator.LT); }        
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is greater than 
+         * the passed in <code>x</code> parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
         public static AtomValueCondition gt(Object x) { return value(x, ComparisonOperator.GT); }
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is less than or equal to 
+         * the passed in <code>x</code> parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
         public static AtomValueCondition lte(Object x) { return value(x, ComparisonOperator.LTE); }
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is greater than equal to 
+         * the passed in <code>x</code> parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
         public static AtomValueCondition gte(Object x) { return value(x, ComparisonOperator.GTE); }
         
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a certain part (e.g. a Java property) as specified by the <code>value</code> and <code>op</code>
+         * {@link ComparisonOperator} parameters.  
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @param op The {@link ComparisonOperator} to use. Not that if <code>op != ComparisonOperator.EQ</code>, the
+         * atom part must be <code>Comparable</code>.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition part(String path, Object value, ComparisonOperator op) {  return new AtomPartCondition(path.split("\\."), value, op); }
+        
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a part (e.g. a Java property) equal to the specified <code>value</code>.
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition eq(String path, Object x) { return part(path, x, ComparisonOperator.EQ); }
+
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a part (e.g. a Java property) less than the specified <code>value</code>.
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition lt(String path, Object x) { return part(path, x, ComparisonOperator.LT); }        
+
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a part (e.g. a Java property) greater than the specified <code>value</code>.
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition gt(String path, Object x) { return part(path, x, ComparisonOperator.GT); }
+        
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a part (e.g. a Java property) less than or equal to the specified <code>value</code>.
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition lte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
+        
+        /**
+         * <p>
+         * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
+         * a part (e.g. a Java property) greater than or equal to the specified <code>value</code>.
+         * </p>
+         * @param path The path of the property with the nested value structure of the atom. This is specified with
+         * "dotted" notation. For example: <code>user.address.street</code>.
+         * @param value The value to compare the atom part against.
+         * @see AtomPartCondition
+         */
         public static AtomPartCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.GTE); }
         
+        /**
+         * <p>
+         * Return a "condition" that transforms the result set by applying an arbitrary {@link Mapping} to each 
+         * element. 
+         * </p>
+         * 
+         * @param m The {@link Mapping} to apply.
+         * @param c The underlying condition to evaluate before applying the mapping.
+         * @see MapCondition
+         */
         public static HGQueryCondition apply(Mapping<?,?> m, HGQueryCondition c) { return new MapCondition(c, m); }
+        
+        /**
+         * <p>
+         * Return a {@link Mapping} that takes a link atom and returns a target at the given position.
+         * </p>
+         * @param targetPosition The position of the target to be returned.
+         * @see LinkProjectionMapping
+         */
         public static Mapping<HGLink, HGHandle> linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
+        
+        /**
+         * <p>
+         * Return a {@link Mapping} that takes a {@link HGHandle} of an atom and return its runtime against
+         * through a call to <code>HyperGraph.get</code>.
+         * </p>
+         * @param graph The {@link HyperGraph} instance against which to dereference the atom.
+         * @see DerefMapping
+         */
         public static Mapping<HGHandle, Object> deref(HyperGraph graph) { return new DerefMapping(graph); }
+        
+        /**
+         * <p>
+         * Return a {@link Mapping} that given a handle to a link will return the target (handle) at the specified
+         * target position. This is a {@link CompositeMapping} of <code>deref(graph)</code> and <code>linkProjection(targetPosition)</code>.
+         * </p>
+         * @param graph The HyperGraph instance.
+         * @param targetPosition The target position.
+         * @see CompositeMapping
+         */
         public static Mapping<HGHandle,HGHandle> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
+        
+        /**
+         * <p>
+         * Return a condition that will yield all atoms in the graph.
+         * </p>
+         * @see AnyAtomCondition
+         */
         public static HGQueryCondition all() { return new AnyAtomCondition(); }
      
-        // traversals
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @see BFSCondition
+         */
         public static BFSCondition bfs(HGHandle start) { return new BFSCondition(start); }
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>. 
+         * @see BFSCondition
+         */
         public static BFSCondition bfs(HGHandle start, 
         							   HGAtomPredicate lp, 
         							   HGAtomPredicate sp) 
@@ -385,20 +746,61 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	c.setSiblingPredicate(sp);
         	return c;
         }
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @param returnPreceding Whether to return siblings preceding the current atom in an ordered link.
+         * @param returnSucceeding Whether to return siblings following the current atom in an ordered link.
+         * @see BFSCondition 
+         */        
         public static BFSCondition bfs(HGHandle start, 
 									   HGAtomPredicate lp, 
 									   HGAtomPredicate sp,
-									   boolean returnPreceeding,
+									   boolean returnPreceding,
 									   boolean returnSucceeding) 
 		{ 
 			BFSCondition c = new BFSCondition(start);
 			c.setLinkPredicate(lp);
 			c.setSiblingPredicate(sp);
-			c.setReturnPreceeding(returnPreceeding);
+			c.setReturnPreceeding(returnPreceding);
 			c.setReturnSucceeding(returnSucceeding);
 			return c;
 		}        
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @see DFSCondition
+         */        
         public static DFSCondition dfs(HGHandle start) { return new DFSCondition(start); }
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @see DFSCondition 
+         */        
         public static DFSCondition dfs(HGHandle start, 
         							   HGAtomPredicate lp, 
         							   HGAtomPredicate sp) 
@@ -408,6 +810,23 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	c.setSiblingPredicate(sp);
         	return c;
         }
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start The starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @param returnPreceding Whether to return siblings preceding the current atom in an ordered link.
+         * @param returnSucceeding Whether to return siblings following the current atom in an ordered link.
+         * @see DFSCondition 
+         */         
         public static DFSCondition dfs(HGHandle start, 
 									   HGAtomPredicate lp, 
 									   HGAtomPredicate sp,
@@ -423,7 +842,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 		}
         
         static final HGHandle the_any_handle = new HGHandle(){};
+        
+        /**
+         * <p>Return a special handle indicating a "don't care" in a condition expression (e.g.
+         * when specifying the form of a link in a <code>hg.orderedLink(hg.anyHandle(), x, y)</code>
+         * condition.</p>
+         */
         public static HGHandle anyHandle() { return the_any_handle; }
+        
         
         /**
          * <p>
@@ -458,9 +884,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * Count the result set from executing the given query. The query is executed and
          * the result set scanned completely.
          * </p>
-         * 
-         * @param query
-         * @return
          */
         public static long count(final HGQuery<?> query)
         {
@@ -484,7 +907,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * 
     	 * @param graph The HyperGraph database to query.
     	 * @param condition The query condition.
-    	 * @return
     	 */
     	public static <T> T getOne(HyperGraph graph, HGQueryCondition condition)
     	{
@@ -499,9 +921,10 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * return <code>null</code>.
     	 * </p>
     	 * 
-    	 * @param graph
-    	 * @param condition
-    	 * @return
+    	 * @param graph The {@link HyperGraph} instance to run the query against.
+    	 * @param condition The query condition constraining the resulting atom.
+    	 * @return The very first result from the result set, or <code>null</code> if
+    	 * the result set is empty. 
     	 */
     	public static <T> T findOne(final HyperGraph graph, final HGQueryCondition condition)
     	{
@@ -531,9 +954,9 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * from the result set into a <code>java.util.List</code>.
     	 * </p>
     	 *  
-    	 * @param graph
-    	 * @param condition
-    	 * @return
+    	 * @param graph The {@link HyperGraph} to run the query against.
+    	 * @param condition The query condition constraining the result set.
+    	 * @return A list of all results from the result set.
     	 */
     	public static <T> List<T> findAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
@@ -574,9 +997,10 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * from the result set into a <code>java.util.List</code>.
     	 * </p>
     	 *  
-    	 * @param graph
-    	 * @param condition
-    	 * @return
+         * @param graph The {@link HyperGraph} to run the query against.
+         * @param condition The query condition constraining the result set.
+         * @return A list of all results from the result set, dereferenced as <code>HGHandle</code>s
+         * against the graph.
     	 */
     	public static <T> List<T> getAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
@@ -611,6 +1035,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 //            	});    		     		
     	}
     	
+    	/**
+    	 * <p>
+    	 * Execute the given query, put all the elements from the result set in a <code>List</code>
+    	 * and return that <code>List</code> 
+    	 * </p>
+    	 */
     	public static <T> List<T> findAll(final HGQuery<T> query)
     	{
     		final ArrayList<T> result = new ArrayList<T>();
