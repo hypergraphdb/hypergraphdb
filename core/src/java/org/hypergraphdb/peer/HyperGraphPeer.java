@@ -350,8 +350,10 @@ public class HyperGraphPeer
                        {
                            public void peerJoined(Object target)
                            {
+//                               System.out.println("peer join: " + target);
                                if (getIdentity(target) != null) // already known?
                                    return;
+//                               System.out.println("exchanging identity: " + target);                               
                                AffirmIdentity task = new AffirmIdentity(HyperGraphPeer.this, target);
                                activityManager.initiateActivity(task);
                            }
@@ -372,6 +374,7 @@ public class HyperGraphPeer
 			}
 			catch (Exception ex)
 			{			    
+			    ex.printStackTrace(System.err);
 			    HGUtils.throwRuntimeException(ex);
 			}
 		}
@@ -426,12 +429,12 @@ public class HyperGraphPeer
 	    HGPersistentHandle pHandle = graph.getPersistentHandle(handle);
 		if (graph.getStore().containsLink(pHandle))
 		{
-			System.out.println("Handle found in local repository");
+//			System.out.println("Handle found in local repository");
 			return new HGStoreSubgraph(pHandle, graph.getStore());			
 		}
 		else 
 		{
-			System.out.println("Handle NOT found in local repository");
+//			System.out.println("Handle NOT found in local repository");
 			return null;
 		}
 	}
@@ -535,6 +538,7 @@ public class HyperGraphPeer
             graph.define(id.getId(), id);
             for (PeerPresenceListener listener : peerListeners)
                 listener.peerJoined(id);
+            //System.out.println("Added peer " + networkTarget + ":" + id + " to " + this.getIdentity());
         }
     }
     

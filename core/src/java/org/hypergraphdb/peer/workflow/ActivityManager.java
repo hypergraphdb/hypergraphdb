@@ -114,7 +114,7 @@ public class ActivityManager implements MessageHandler
                     {
                     	if (reportEmpty >= 50)
                     	{
-                    		System.out.println("ActivityManager Global Queue is empty");
+                    		//System.out.println("ActivityManager Global Queue is empty");
                     		reportEmpty = 0;
                     	}
                     	reportEmpty++;                    	

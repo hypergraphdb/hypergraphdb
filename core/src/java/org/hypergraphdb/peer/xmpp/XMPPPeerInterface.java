@@ -107,14 +107,14 @@ public class XMPPPeerInterface implements PeerInterface
     {
 //    	System.out.println("peer joined: " + name);
         for (NetworkPeerPresenceListener listener : presenceListeners)
-            listener.peerJoined(user);    	
+            listener.peerJoined(name);    	
     }
     
     private void processPeerLeft(String name)
     {
 //    	System.out.println("peer left: " + name);
         for (NetworkPeerPresenceListener listener : presenceListeners)
-            listener.peerLeft(user);    	
+            listener.peerLeft(name);    	
     }
     
     private void processMessage(Message msg)
@@ -152,6 +152,7 @@ public class XMPPPeerInterface implements PeerInterface
             private void handlePresence(Presence presence)
             {
                 String user = presence.getFrom();
+                //System.out.println("Presence: " + user);
                 Roster roster = connection.getRoster();
                 String n = makeRosterName(user);
                 //me - don't fire
@@ -210,6 +211,7 @@ public class XMPPPeerInterface implements PeerInterface
             },
            new PacketFilter() { public boolean accept(Packet p)               
            {
+               //System.out.println("filtering " + p);
              if (p instanceof Presence) return true;
              if (! (p instanceof Message)) return false;
              Message msg = (Message)p;
