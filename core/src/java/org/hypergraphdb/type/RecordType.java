@@ -250,7 +250,7 @@ public class RecordType implements HGCompositeType
 	                }
 	                catch (HGException ex)
 	                {
-	                	throw ex;
+	                	throw new HGException("Failed on slot '" + slot.getLabel() + "' of class " + value.getClass(),ex);
 	                }
 	        	}
 	        	else
