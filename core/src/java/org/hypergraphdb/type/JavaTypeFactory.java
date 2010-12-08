@@ -112,6 +112,18 @@ public class JavaTypeFactory implements JavaTypeMapper
 			return findDefaultConstructor(c) != null;
 		}		
 	}
+
+	public static Field findDeclaredField(Class<?> c, String name) throws SecurityException
+	{
+	    try
+	    {
+	        return c.getDeclaredField(name);
+	    }
+	    catch (NoSuchFieldException ex)
+	    {
+	        return (c.getSuperclass() == null) ? null : findDeclaredField(c.getSuperclass(), name);
+	    }
+	}
 	
 	public static Constructor<?> findHandleArgsConstructor(Class<?> c)
 	{

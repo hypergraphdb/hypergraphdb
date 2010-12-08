@@ -109,16 +109,12 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 			return false;
 		if (desc.getName().equals("hyperGraph") && HGGraphHolder.class.isAssignableFrom(javaClass))
 			return false;				
-		try
-		{
-			Field field = javaClass.getDeclaredField(desc.getName());
-			return field.getAnnotation(HGIgnore.class) == null && 
-				  (field.getModifiers() & Modifier.TRANSIENT) == 0; 
-		}
-		catch (NoSuchFieldException ex)
-		{
-			return true;
-		}
+		Field field = JavaTypeFactory.findDeclaredField(javaClass, desc.getName());
+		if (field == null)
+		    return false;
+		else
+    		return field.getAnnotation(HGIgnore.class) == null && 
+    			  (field.getModifiers() & Modifier.TRANSIENT) == 0; 
 	}
 	
 	@SuppressWarnings("unchecked")

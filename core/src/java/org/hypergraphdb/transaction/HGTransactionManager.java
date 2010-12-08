@@ -379,7 +379,8 @@ public class HGTransactionManager
 	 * @param <V> The type of the return value.
 	 * @param transaction The transaction process encapsulated as a <code>Callable</code> instance.
 	 * @param config The transaction configuration parameters.
-	 * @return The result of <code>transaction.call()</code>.
+	 * @return The result of <code>transaction.call()</code> or <code>null</code> if the transaction
+	 * was aborted by the application by throwing a {@link HGUserAbortException}.
 	 * @throws The method will (re)throw any exception that does not result from a deadlock.
 	 */
 	public <V> V transact(Callable<V> transaction, HGTransactionConfig config)
@@ -394,6 +395,12 @@ public class HGTransactionManager
 			try
 			{
 				result = transaction.call();
+			}
+			catch (HGUserAbortException ex)
+			{
+                try { endTransaction(false); }
+                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
+                return null;
 			}
 			catch (Throwable t)
 			{

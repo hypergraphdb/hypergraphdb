@@ -1,5 +1,7 @@
 package org.hypergraphdb.handle;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.BAUtils;
@@ -23,16 +25,16 @@ public class IntHandleFactory implements HGHandleFactory
     private static final IntPersistentHandle any = new IntPersistentHandle(1);
     private static final IntPersistentHandle nil = new IntPersistentHandle(0);
     
-    private int next = 1000;
+    private AtomicInteger next = new AtomicInteger(1000);
      
     public int getNext()
     {
-        return next;
+        return next.get();
     }
 
     public void setNext(int next)
     {
-        this.next = next;
+        this.next.set(next);
     }
 
     public HGPersistentHandle anyHandle()
@@ -42,7 +44,7 @@ public class IntHandleFactory implements HGHandleFactory
 
     public HGPersistentHandle makeHandle()
     {
-        return new IntPersistentHandle(next++);
+        return new IntPersistentHandle(next.getAndIncrement());
     }
 
     public HGPersistentHandle makeHandle(String handleAsString)

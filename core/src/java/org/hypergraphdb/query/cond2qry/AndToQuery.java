@@ -109,7 +109,7 @@ public class AndToQuery implements ConditionToQuery
 		else if (and.size() == 1)
 			return ToQueryMap.toQuery(graph, and.iterator().next());
 		
-		// query conditions are partitionned into the following categories:
+		// query conditions are partitioned into the following categories:
 		// - ORA: ordered random access results
 		// - RA: random access (but unordered) results
 		// - O: ordered results
@@ -126,7 +126,9 @@ public class AndToQuery implements ConditionToQuery
 			ConditionToQuery transformer = ToQueryMap.getInstance().get(sub.getClass());
 			if (transformer == null)
 			{
-				P.add(QueryMetaData.MISTERY.clone(sub));
+			    QueryMetaData qmd = QueryMetaData.MISTERY.clone(sub);
+			    qmd.predicateOnly = true;
+				P.add(qmd);
 				continue;
 			}
 			QueryMetaData qmd = transformer.getMetaData(graph, sub);
@@ -213,6 +215,7 @@ public class AndToQuery implements ConditionToQuery
 		}
 		
 		if (result == null)
+		{
 			if (W.size() > 0)
 			{
 				Iterator<QueryMetaData> i = W.iterator();
@@ -239,9 +242,24 @@ public class AndToQuery implements ConditionToQuery
 				result = ToQueryMap.toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 				RA.remove(c1);						
 			}
-			else
+			else if (P.size() > 0) // some predicates can also be used as bases for search...when !qmd.predicateOnly
+			{
+			    QueryMetaData found = null;
+			    for (QueryMetaData qmd : P)
+			        if (!qmd.predicateOnly)
+			        {
+			            found = qmd;
+			            break;
+			        }
+			    if (found != null)
+			    {
+			        result = ToQueryMap.toQuery(graph, found.cond);
+			        P.remove(found);
+			    }
+			}
+			if (result == null)
 				throw new HGException("No query condition translatable into a scannable result set.");
-		
+		}
 		// Here, it remains to convert all remaining RA sets to predicates and all remaining W sets into
 		// in memory sets and again into predicates.				
 		

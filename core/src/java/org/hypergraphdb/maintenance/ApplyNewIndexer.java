@@ -37,7 +37,7 @@ import com.sleepycat.db.DeadlockException;
 @SuppressWarnings("unchecked")
 public class ApplyNewIndexer implements MaintenanceOperation
 {
-	private HGHandle hIndexer;
+	private HGHandle hindexer;
 	private List<HGHandle> typesAdded = new ArrayList<HGHandle>();
 	private HGPersistentHandle lastProcessed = null;
 	private int batchSize = 100;
@@ -146,17 +146,17 @@ public class ApplyNewIndexer implements MaintenanceOperation
 	
 	public ApplyNewIndexer(HGHandle hIndexer)
 	{
-		this.hIndexer = hIndexer;
+		this.hindexer = hIndexer;
 	}
 	
 	public void execute(HyperGraph graph) throws MaintenanceException
 	{		
-		HGIndexer indexer = graph.get(hIndexer);
+		HGIndexer indexer = graph.get(hindexer);
 		if (indexer == null)
 			return;
 		HGIndex idx = graph.getIndexManager().getIndex(indexer);
 		if (idx == null)
-			throw new MaintenanceException(false,"Indexer " + indexer + " with handle " + hIndexer + 
+			throw new MaintenanceException(false,"Indexer " + indexer + " with handle " + hindexer + 
 												 " present in graph, but no actual index has been created.");
 		for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
 		{		    
@@ -178,14 +178,14 @@ public class ApplyNewIndexer implements MaintenanceOperation
 		}
 	}
 
-	public HGHandle getHIndexer()
+	public HGHandle getHindexer()
 	{
-		return hIndexer;
+		return hindexer;
 	}
 
-	public void setHIndexer(HGHandle indexer)
+	public void setHindexer(HGHandle indexer)
 	{
-		hIndexer = indexer;
+		hindexer = indexer;
 	}
 
 	public HGPersistentHandle getLastProcessed()

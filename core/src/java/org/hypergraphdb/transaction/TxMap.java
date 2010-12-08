@@ -65,7 +65,7 @@ public class TxMap<K, V> implements Map<K, V>
             }
         }
         
-        public void finish()
+        public void finish(HGTransaction tx)
         {
             if (body.version == 0)
                 synchronized (M) { M.remove(key.get()); }
