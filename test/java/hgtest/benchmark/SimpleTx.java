@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
 public class SimpleTx extends HGTestBase
@@ -111,7 +112,7 @@ public class SimpleTx extends HGTestBase
     public static void main(String [] argv)
     {
         SimpleTx test = new SimpleTx();
-        dropHyperGraphInstance(test.getGraphLocation());
+        HGUtils.dropHyperGraphInstance(test.getGraphLocation());
         test.setUp();        
         try
         {

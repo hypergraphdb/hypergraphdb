@@ -12,6 +12,7 @@ import hgtest.beans.PrivateConstructible;
 import hgtest.beans.SubBeanWithTransient;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -193,7 +194,7 @@ public class TypeInferenceTests extends HGTestBase
     
     private Collection createTestCollection()
     {
-        Collection coll = new HashSet();
+        Collection coll = new ArrayList();
         coll.add(14);
         coll.add("some_key");
         coll.add(new PrivateConstructible("from test"));

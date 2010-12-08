@@ -1,27 +1,22 @@
 package hgtest.tx;
 
 import static org.testng.Assert.assertEquals;
-
 import static org.testng.Assert.assertNotNull;
 import hgtest.HGTestBase;
-import hgtest.tx.TxCacheTest.SimpleData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.BAUtils;
-import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
 
 import com.sleepycat.db.DeadlockException;
 
@@ -55,7 +50,7 @@ public class StorageTxTest extends HGTestBase
         while (true)
         {
             txman.beginTransaction();
-            HGTransaction tx = txman.getContext().getCurrent();
+//            HGTransaction tx = txman.getContext().getCurrent();
             boolean mismatch = false;
             try
             {
@@ -215,7 +210,7 @@ public class StorageTxTest extends HGTestBase
         for (int i = 0; i < 100; i++)
         {
             StorageTxTest test = new StorageTxTest();
-            dropHyperGraphInstance(test.getGraphLocation());
+            HGUtils.dropHyperGraphInstance(test.getGraphLocation());
             test.setUp();        
             try
             {

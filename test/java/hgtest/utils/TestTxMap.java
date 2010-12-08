@@ -130,7 +130,7 @@ public class TestTxMap extends HGTestBase
         //
         // This test commits max / 2 entries in the map and aborts another max / 2. The end result
         // is that the map size should be max / 2, and the map.mapSize (its internal map size) should
-        // also be max / 2, making sure that aborted transaction don't leave entries erronously hanging
+        // also be max / 2, making sure that aborted transaction don't leave entries erroneously hanging
         // in the map.
         //
         

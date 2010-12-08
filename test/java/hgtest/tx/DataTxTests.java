@@ -17,11 +17,12 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.util.HGUtils;
 
 public class DataTxTests extends HGTestBase
 {
     private int atomsCount = 200;
-    private int threadCount = 20;
+    private int threadCount = 2;
 
     private boolean log = false;
 
@@ -212,9 +213,9 @@ public class DataTxTests extends HGTestBase
 
     public static void main(String[] argv)
     {
-        for (int i = 0; i  < 50; i++ ){
+        for (int i = 0; i  < Integer.MAX_VALUE; i++ ){
         DataTxTests test = new DataTxTests();
-        dropHyperGraphInstance(test.getGraphLocation());
+        HGUtils.dropHyperGraphInstance(test.getGraphLocation());
         test.setUp();        
         try
         {

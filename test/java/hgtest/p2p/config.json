@@ -3,20 +3,14 @@
 "localDB": "c:/temp/hgdbpeertest",
 "bootstrap" : [ {"class" : "org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap", "config" : {}},
                 {"class" : "org.hypergraphdb.peer.bootstrap.CACTBootstrap", "config" : {}},
-                {"class" : "org.disco.utils.ScriptingBootstrap",
-                        "config": {}
-                }
-                
               ],
 "interfaceType"	: "org.hypergraphdb.peer.xmpp.XMPPPeerInterface",
 "peerName"	: "Peer",
 "interfaceConfig"		:
 {
-    "user" : "bolerio",
+    "user" : "test1",
     "password" : "password",
 	"serverUrl"	: "localhost",
-	"ignoreRoster" : true,
-	"room" : "testroom@conference.localhost",
 	"port"	: 5222
 }
 }

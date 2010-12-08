@@ -4,7 +4,6 @@ import hgtest.HGTestBase;
 import hgtest.beans.Folder;
 import hgtest.utils.RSUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
@@ -18,7 +17,6 @@ import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.GraphClassics;
-import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.DFSCondition;
@@ -36,6 +34,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+//@Test(sequential=true)
 public class Queries extends HGTestBase
 {
     private static final String ALIAS_PREFIX = "NestedBean.InnerBean.number";
@@ -44,14 +43,15 @@ public class Queries extends HGTestBase
     final static int ALIAS_COUNT = 5;
     HGSortIndex<Integer, HGHandle> index;
 
-    boolean value_link_or_normal_link = true;
+    boolean value_link_or_normal_link = true;    
 
     public static void main(String[] args)
     {
-        new Queries().test();
+        Queries q = new Queries();
+        q.test();        
     }
 
-    public void test()
+    void test()
     {
         setUp();
         testAtomPartCondition();
@@ -87,9 +87,9 @@ public class Queries extends HGTestBase
     @Test
     public void testArityCondition()
     {
-        Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(getLinkType()),
+        Assert.assertNotNull(hg.findOne(graph, hg.and(linkCondition(),
                hg.arity(0))));
-        Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(getLinkType()),
+        Assert.assertNotNull(hg.findOne(graph, hg.and(linkCondition(),
                 hg.arity(3))));
     }
 
@@ -117,20 +117,18 @@ public class Queries extends HGTestBase
     @Test
     public void testIncidentCondition()
     {
-        HGHandle emptyH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
-                .arity(0)));
+        HGHandle emptyH = hg.findOne(graph, 
+                                     hg.and(linkCondition(), hg.arity(0)));
         Assert.assertNull(hg.findOne(graph, hg.incident(emptyH)));
-        HGHandle not_emptyH = hg.findOne(graph, hg.and(hg.type(getLinkType()),
-                hg.arity(2)));
-        // Object o = graph.get(not_emptyH);
-        HGSearchResult<HGHandle> res = graph.find(hg.incident(not_emptyH));
-        Assert.assertEquals(RSUtils.countRS(res, true), 1);
+        HGHandle not_emptyH = hg.findOne(graph, 
+                                         hg.and(linkCondition(), hg.arity(2)));
+        Assert.assertEquals(hg.count(graph, hg.incident(not_emptyH)), 1);
     }
 
     @Test
     public void testLinkCondition()
     {
-        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+        HGHandle linkH = hg.findOne(graph, hg.and(linkCondition(), hg
                 .arity(2)));
         // empty
         LinkCondition cond = new LinkCondition(new HGHandle[0]);
@@ -146,7 +144,7 @@ public class Queries extends HGTestBase
     @Test
     public void testTargetCondition()
     {
-        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+        HGHandle linkH = hg.findOne(graph, hg.and(linkCondition(), hg
                 .arity(2)));
         // HGPlainLink o = graph.get(linkH);
         HGHandle tgtH = getNestedBeanHandle(1);
@@ -166,9 +164,9 @@ public class Queries extends HGTestBase
     @Test
     public void testOrderedLinkCondition()
     {
-        HGHandle linkH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+        HGHandle linkH = hg.findOne(graph, hg.and(linkCondition(), hg
                 .arity(2)));
-        List<HGHandle> L = hg.findAll(graph, hg.and(hg.type(getLinkType()), hg.orderedLink(
+        List<HGHandle> L = hg.findAll(graph, hg.and(linkCondition(), hg.orderedLink(
                 getNestedBeanHandle(0), getNestedBeanHandle(1))));
         Assert.assertEquals(L.size(), 1);
         Assert.assertEquals(L.get(0), linkH);
@@ -299,7 +297,7 @@ public class Queries extends HGTestBase
     @Test
     public void testBFSCondition()
     {
-        HGHandle needH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+        HGHandle needH = hg.findOne(graph, hg.and(linkCondition(), hg
                 .arity(2)));
 
         BFSCondition rs = hg.bfs(needH);
@@ -367,7 +365,7 @@ public class Queries extends HGTestBase
     @Test
     public void testDFSCondition()
     {
-        HGHandle needH = hg.findOne(graph, hg.and(hg.type(getLinkType()), hg
+        HGHandle needH = hg.findOne(graph, hg.and(linkCondition(), hg
                 .arity(2)));
 
         DFSCondition rs = hg.dfs(needH);
@@ -430,13 +428,18 @@ public class Queries extends HGTestBase
 
     private HGHandle create_simple_subgraph()
     {
-        HGHandle linkH = graph.add(makeLink(getNestedBeanHandle(0),
-                getNestedBeanHandle(1)));
+        HGHandle linkH = graph.add(makeLink(getNestedBeanHandle(0), 
+                                            getNestedBeanHandle(1)));
+        System.out.println("linkH="+linkH);
         HGHandle linkH1 = graph.add(makeLink(getNestedBeanHandle(2),
-                getNestedBeanHandle(3), linkH));
+                                             getNestedBeanHandle(3), 
+                                             linkH));
         graph.add(makeLink(new HGHandle[0]));
-        graph.add(makeLink(getNestedBeanHandle(4), getNestedBeanHandle(5),
-                getNestedBeanHandle(6), getNestedBeanHandle(2), linkH1));
+        graph.add(makeLink(getNestedBeanHandle(4), 
+                           getNestedBeanHandle(5),
+                           getNestedBeanHandle(6), 
+                           getNestedBeanHandle(2), 
+                           linkH1));
         return linkH;
     }
 
@@ -452,12 +455,16 @@ public class Queries extends HGTestBase
                 outgoingSet) : new TestLink(outgoingSet);
     }
 
-    private Class<?> getLinkType()
+    private HGQueryCondition linkCondition()
     {
-        //returns the value type of the HGValueLink
-        return value_link_or_normal_link ? String.class 
-                : TestLink.class;
+        return value_link_or_normal_link ? 
+                /*hg.and(hg.type(String.class), hg.eq("SOMETHING"))*/hg.eq("SOMETHING")  : hg.type(TestLink.class);
     }
+//    private Class<?> getLinkType()
+//    {
+//        //returns the value type of the HGValueLink
+//        return value_link_or_normal_link ? String.class  : TestLink.class;
+//    }
 
     private static class TestLink extends HGPlainLink
     {

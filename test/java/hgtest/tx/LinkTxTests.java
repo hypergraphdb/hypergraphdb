@@ -1,28 +1,26 @@
 package hgtest.tx;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import hgtest.HGTestBase;
+import hgtest.T;
+
 import java.util.ArrayList;
-
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.transaction.HGUserAbortException;
 import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.*;
-import hgtest.HGTestBase;
-import hgtest.T;
 
 public class LinkTxTests extends HGTestBase
 {
@@ -147,7 +145,7 @@ public class LinkTxTests extends HGTestBase
         while (i < linksCount - 1)
         {
             final int finali = i;
-            i = txman.transact(new Callable<Integer>() {
+            Integer result = txman.transact(new Callable<Integer>() {
             public Integer call()
             {
                 LinkType first = new LinkType(threadId, finali, x, y);
@@ -168,7 +166,7 @@ public class LinkTxTests extends HGTestBase
                     if (log)
                         T.getLogger("LinkTxTests").info("Aborting because of " + finali + "-" + next + " at " + threadId
                                 + ", x=" + x + ", y=" + y);
-                    txman.abort();
+                    throw new HGUserAbortException();
                 }
                 else
                 {
@@ -179,6 +177,8 @@ public class LinkTxTests extends HGTestBase
                 return finali + 2;
             }
             });
+            if (result == null) i++;
+            else i = result;
             try { Thread.sleep((long)Math.random()*100); }
             catch (InterruptedException ex) {}
         }
@@ -250,7 +250,7 @@ public class LinkTxTests extends HGTestBase
 //        test.graph = HGEnvironment.get(test.getGraphLocation());
 //        test.checkLinkSanity();
         
-        dropHyperGraphInstance(test.getGraphLocation());
+        HGUtils.dropHyperGraphInstance(test.getGraphLocation());
         test.setUp();        
         try
         {
