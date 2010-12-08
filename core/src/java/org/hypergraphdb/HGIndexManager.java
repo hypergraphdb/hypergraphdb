@@ -410,11 +410,12 @@ public class HGIndexManager
 		for (HGIndexer indexer : indList)
 		{
 			HGIndex<Object, Object> idx = getOrCreateIndex(indexer);
-			Object key = indexer.getKey(graph, atom);			
-			Object value = (indexer instanceof HGValueIndexer) ? 
-			               ((HGValueIndexer)indexer).getValue(graph, atom) 
-						   : atomHandle;
-			idx.addEntry(key, value);
+			indexer.index(graph, atomHandle, atom, idx);
+//			Object key = indexer.getKey(graph, atom);			
+//			Object value = (indexer instanceof HGValueIndexer) ? 
+//			               ((HGValueIndexer)indexer).getValue(graph, atom) 
+//						   : atomHandle;
+//			idx.addEntry(key, value);
 		}
 	}
 	
@@ -438,12 +439,13 @@ public class HGIndexManager
 		if (indList == null)
 			return;
 		for (HGIndexer indexer : indList)
-		{
+		{		    
 			HGIndex<Object, Object> idx = getOrCreateIndex(indexer);
-			Object key = indexer.getKey(graph, atom);			
-			Object value = (indexer instanceof HGValueIndexer) ? ((HGValueIndexer)indexer).getValue(graph, atom) 
-						   : atomHandle;
-			idx.removeEntry(key, value);
+			indexer.unindex(graph, atomHandle, atom, idx);
+//			Object key = indexer.getKey(graph, atom);			
+//			Object value = (indexer instanceof HGValueIndexer) ? ((HGValueIndexer)indexer).getValue(graph, atom) 
+//						   : atomHandle;
+//			idx.removeEntry(key, value);
 		}
 	}
 }

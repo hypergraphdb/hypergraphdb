@@ -17,114 +17,107 @@ import org.hypergraphdb.util.HGUtils;
 /**
  * 
  * <p>
- * A {@link HGValueIndexer} for hypergraph links where the key in the index
- * is one of the targets within a link and the value is another one
- * of the targets. 
+ * A {@link HGValueIndexer} for hypergraph links where the key in the index is
+ * one of the targets within a link and the value is another one of the targets.
  * </p>
- *
+ * 
  * @author Borislav Iordanov
- *
+ * 
  */
 public class TargetToTargetIndexer extends HGValueIndexer
 {
-	private int fromTarget, toTarget;
-	
-	public TargetToTargetIndexer()
-	{		
-	}
-	
-	public TargetToTargetIndexer(HGHandle type, int fromTarget, int toTarget)
-	{
-		super(type);
-		this.fromTarget = fromTarget;
-		this.toTarget = toTarget;
-	}
-		
-	public int getFromTarget()
-	{
-		return fromTarget;
-	}
+    private int fromTarget, toTarget;
 
-	public void setFromTarget(int fromTarget)
-	{
-		this.fromTarget = fromTarget;
-	}
+    public TargetToTargetIndexer()
+    {
+    }
 
-	public int getToTarget()
-	{
-		return toTarget;
-	}
+    public TargetToTargetIndexer(HGHandle type, int fromTarget, int toTarget)
+    {
+        super(type);
+        this.fromTarget = fromTarget;
+        this.toTarget = toTarget;
+    }
 
-	public void setToTarget(int toTarget)
-	{
-		this.toTarget = toTarget;
-	}
+    public int getFromTarget()
+    {
+        return fromTarget;
+    }
 
-	@Override
-	public Object getKey(HyperGraph graph, Object atom)
-	{
-		return ((HGLink)atom).getTargetAt(fromTarget);
-	}
-	
-	@Override
-	public Object getValue(HyperGraph graph, Object atom)
-	{
-		return ((HGLink)atom).getTargetAt(toTarget);
-	}
+    public void setFromTarget(int fromTarget)
+    {
+        this.fromTarget = fromTarget;
+    }
 
-	public ByteArrayConverter<HGHandle> getValueConverter(final HyperGraph graph)
-	{
-		return new ByteArrayConverter<HGHandle>()
-		{
-			public byte[] toByteArray(HGHandle h)
-			{
-				return graph.getPersistentHandle(h).toByteArray();
-			}
-			
-			public HGHandle fromByteArray(byte [] A)
-			{
-				return graph.getHandleFactory().makeHandle(A);
-			}
-		};
-	}
-	
-	@Override
-	public Comparator<?> getComparator(HyperGraph graph)
-	{
-		return null;
-	}
+    public int getToTarget()
+    {
+        return toTarget;
+    }
 
-	@Override
-	public ByteArrayConverter<?> getConverter(final HyperGraph graph)
-	{
-		return new ByteArrayConverter<HGHandle>()
-		{
-			public byte[] toByteArray(HGHandle h)
-			{
-				return graph.getPersistentHandle(h).toByteArray();
-			}
-			
-			public HGHandle fromByteArray(byte [] A)
-			{
-				return graph.getHandleFactory().makeHandle(A);
-			}
-		};
-	}
+    public void setToTarget(int toTarget)
+    {
+        this.toTarget = toTarget;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return HGUtils.hashThem(getType(), HGUtils.hashThem(fromTarget, toTarget));
-	}
-	
-	@Override
-	public boolean equals(Object other)
-	{
-		if (! (other instanceof TargetToTargetIndexer))
-			return false;
-		TargetToTargetIndexer i = (TargetToTargetIndexer)other;
-		return HGUtils.eq(getType(), i.getType()) && 
-			   fromTarget == i.fromTarget &&
-			   toTarget == i.toTarget;
-	}	
+    public Object getKey(HyperGraph graph, Object atom)
+    {
+        return ((HGLink) atom).getTargetAt(fromTarget);
+    }
+
+    public Object getValue(HyperGraph graph, Object atom)
+    {
+        return ((HGLink) atom).getTargetAt(toTarget);
+    }
+
+    public ByteArrayConverter<HGHandle> getValueConverter(final HyperGraph graph)
+    {
+        return new ByteArrayConverter<HGHandle>()
+        {
+            public byte[] toByteArray(HGHandle h)
+            {
+                return graph.getPersistentHandle(h).toByteArray();
+            }
+
+            public HGHandle fromByteArray(byte[] A)
+            {
+                return graph.getHandleFactory().makeHandle(A);
+            }
+        };
+    }
+
+    public Comparator<?> getComparator(HyperGraph graph)
+    {
+        return null;
+    }
+
+    public ByteArrayConverter<?> getConverter(final HyperGraph graph)
+    {
+        return new ByteArrayConverter<HGHandle>()
+        {
+            public byte[] toByteArray(HGHandle h)
+            {
+                return graph.getPersistentHandle(h).toByteArray();
+            }
+
+            public HGHandle fromByteArray(byte[] A)
+            {
+                return graph.getHandleFactory().makeHandle(A);
+            }
+        };
+    }
+
+    public int hashCode()
+    {
+        return HGUtils.hashThem(getType(), HGUtils.hashThem(fromTarget,
+                toTarget));
+    }
+
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof TargetToTargetIndexer))
+            return false;
+        TargetToTargetIndexer i = (TargetToTargetIndexer) other;
+        return HGUtils.eq(getType(), i.getType()) && fromTarget == i.fromTarget
+                && toTarget == i.toTarget;
+    }
 }

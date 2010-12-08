@@ -8,6 +8,7 @@
 package org.hypergraphdb.maintenance;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
@@ -18,7 +19,6 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.HGIndexer;
-import org.hypergraphdb.indexing.HGValueIndexer;
 import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.util.HGUtils;
 
@@ -103,10 +103,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
                 for (int i = 0; i < batchSize; i++)
                 {
                     Object atom = graph.get(rs.current());
-                    if (indexer instanceof HGValueIndexer)
-                        idx.addEntry(indexer.getKey(graph, atom), ((HGValueIndexer)indexer).getValue(graph, atom)); 
-                    else
-                        idx.addEntry(indexer.getKey(graph, atom), rs.current());
+                    indexer.index(graph, rs.current(), atom, idx);
                     txLastProcessed = rs.current();                   
                     if (!rs.hasNext())
                         break;

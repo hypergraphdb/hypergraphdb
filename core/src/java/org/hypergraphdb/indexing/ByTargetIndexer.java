@@ -19,70 +19,63 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 /**
  * 
  * <p>
- * Represents an index by a specific target position in ordered
- * links.
+ * Represents an index by a specific target position in ordered links.
  * </p>
- *
+ * 
  * @author Borislav Iordanov
- *
+ * 
  */
-public class ByTargetIndexer extends HGIndexer
+public class ByTargetIndexer extends HGKeyIndexer
 {
-	private int target;
-	
-	public ByTargetIndexer()
-	{		
-	}
-	
-	public ByTargetIndexer(HGHandle type, int target)
-	{
-		super(type);
-		this.target = target;
-	}
+    private int target;
 
-	public int getTarget()
-	{
-		return target;
-	}
+    public ByTargetIndexer()
+    {
+    }
 
-	public void setTarget(int target)
-	{
-		this.target = target;
-	}
+    public ByTargetIndexer(HGHandle type, int target)
+    {
+        super(type);
+        this.target = target;
+    }
 
+    public int getTarget()
+    {
+        return target;
+    }
 
-	@Override
-	public Comparator<?> getComparator(HyperGraph graph)
-	{
-		return null;
-	}
+    public void setTarget(int target)
+    {
+        this.target = target;
+    }
 
-	@Override
-	public ByteArrayConverter<HGPersistentHandle> getConverter(HyperGraph graph)
-	{
-		return BAtoHandle.getInstance(graph.getHandleFactory());
-	}
+    public Comparator<?> getComparator(HyperGraph graph)
+    {
+        return null;
+    }
 
-	@Override
-	public Object getKey(HyperGraph graph, Object atom)
-	{
-		return graph.getPersistentHandle(((HGLink)atom).getTargetAt(target));
-	}
+    public ByteArrayConverter<HGPersistentHandle> getConverter(HyperGraph graph)
+    {
+        return BAtoHandle.getInstance(graph.getHandleFactory());
+    }
 
-	@Override
-	public boolean equals(Object other)
-	{
-		if (other == this)
-			return true;
-		if (! (other instanceof ByTargetIndexer))
-			return false;
-		ByTargetIndexer idx = (ByTargetIndexer)other;
-		return getType().equals(idx.getType()) && idx.target == target;
-	}
+    public Object getKey(HyperGraph graph, Object atom)
+    {
+        return graph.getPersistentHandle(((HGLink) atom).getTargetAt(target));
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return getType().hashCode();
-	}	
+    public boolean equals(Object other)
+    {
+        if (other == this)
+            return true;
+        if (!(other instanceof ByTargetIndexer))
+            return false;
+        ByTargetIndexer idx = (ByTargetIndexer) other;
+        return getType().equals(idx.getType()) && idx.target == target;
+    }
+
+    public int hashCode()
+    {
+        return getType().hashCode();
+    }
 }

@@ -31,6 +31,7 @@ import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.ByTargetIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
+import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.query.*;
 
 /**
@@ -43,7 +44,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	private HGQuery<ResultType> query = null; 
 	private HGQueryCondition condition;
 		
-	private Pair<HGHandle, HGIndex> findIndex(HGIndexer indexer)
+	private Pair<HGHandle, HGIndex> findIndex(HGKeyIndexer indexer)
 	{
 	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
 	                    new DefaultALGenerator(graph, 

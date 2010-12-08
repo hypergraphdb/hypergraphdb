@@ -8,6 +8,9 @@
 package org.hypergraphdb.indexing;
 
 import org.hypergraphdb.HGHandle;
+
+import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.ByteArrayConverter;
 
@@ -24,7 +27,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  *
  */
-public abstract class HGValueIndexer extends HGIndexer
+public abstract class HGValueIndexer extends HGKeyIndexer
 {
 	public HGValueIndexer()
 	{		
@@ -35,6 +38,19 @@ public abstract class HGValueIndexer extends HGIndexer
 		super(type);
 	}
 	
+    @SuppressWarnings("unchecked")
+    public void index(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex index)
+    {
+        index.addEntry(getKey(graph, atom), getValue(graph, atom));        
+    }
+
+    
+    @SuppressWarnings("unchecked")
+    public void unindex(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex index)
+    {
+        index.removeEntry(getKey(graph, atom), getValue(graph, atom));        
+    }
+    
 	/**
 	 * <p>
 	 * Return the value of an index entry based on the passed in atom. 

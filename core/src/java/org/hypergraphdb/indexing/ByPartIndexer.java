@@ -31,7 +31,7 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public class ByPartIndexer extends HGIndexer
+public class ByPartIndexer extends HGKeyIndexer
 {
 	private String [] dimensionPath;
 	private HGProjection [] projections = null;
@@ -107,7 +107,7 @@ public class ByPartIndexer extends HGIndexer
 		this.dimensionPath = dimensionPath;
 	}
 
-	@Override
+	
 	public Comparator<?> getComparator(HyperGraph graph)
 	{
 		if (projectionType == null)
@@ -118,7 +118,7 @@ public class ByPartIndexer extends HGIndexer
 			return (Comparator<?>)projectionType;
 	}
 
-	@Override
+	
 	public ByteArrayConverter<?> getConverter(HyperGraph graph)
 	{
 		if (projectionType == null)
@@ -126,7 +126,7 @@ public class ByPartIndexer extends HGIndexer
 		return (ByteArrayConverter<?>)projectionType;
 	}
 
-	@Override
+	
 	public Object getKey(HyperGraph graph, Object atom)
 	{
 		Object result = atom;
@@ -135,7 +135,7 @@ public class ByPartIndexer extends HGIndexer
 		return result;
 	}
 
-	@Override
+	
 	public boolean equals(Object other)
 	{
 		if (other == this)
@@ -146,7 +146,7 @@ public class ByPartIndexer extends HGIndexer
 		return getType().equals(idx.getType()) && HGUtils.eq(dimensionPath, idx.dimensionPath);
 	}
 
-	@Override
+	
 	public int hashCode()
 	{
 		return getType().hashCode();
