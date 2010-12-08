@@ -9,9 +9,9 @@ package org.hypergraphdb.indexing;
 
 import java.util.Comparator;
 
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.ByteArrayConverter;
 
@@ -41,8 +41,30 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  */
 public interface HGIndexer
 {
-    void index(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex<?, ?> index);
-    void unindex(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex<?, ?> index);
+    /**
+     * <p>
+     * Add a particular atom the the index. This method can safely assume that the atom
+     * hasn't been previously added to the index.
+     * </p>
+     * 
+     * @param graph The <code>HyperGraph</code> instance where the atom resides.
+     * @param atomHandle
+     * @param atom
+     * @param index The storage index where the atom should be added.
+     */
+    void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<?, ?> index);
+    
+    /**
+     * <p>
+     * Remove a particular from the index, assuming it is currently being indexed.
+     * </p>
+     * 
+     * @param graph The <code>HyperGraph</code> instance where the atom resides.
+     * @param atomHandle
+     * @param atom
+     * @param index The storage index from the atom should be removed.
+     */
+    void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<?, ?> index);
     
     /**
      * <p>Return a <code>ByteArrayConverter</code> capable of translating keys

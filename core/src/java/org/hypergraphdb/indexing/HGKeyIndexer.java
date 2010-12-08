@@ -1,8 +1,8 @@
 package org.hypergraphdb.indexing;
 
 import org.hypergraphdb.HGHandle;
+
 import org.hypergraphdb.HGIndex;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 
 /**
@@ -50,15 +50,15 @@ public abstract class HGKeyIndexer implements HGIndexer
     }
 
     @SuppressWarnings("unchecked")
-    public void index(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex index)
+    public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
     {
-        index.addEntry(getKey(graph, atom), atomHandle);        
+        index.addEntry(getKey(graph, atom), graph.getPersistentHandle(atomHandle));        
     }
     
     @SuppressWarnings("unchecked")
-    public void unindex(HyperGraph graph, HGPersistentHandle atomHandle, Object atom, HGIndex index)
+    public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
     {
-        index.removeEntry(getKey(graph, atom), atomHandle);        
+        index.removeEntry(getKey(graph, atom), graph.getPersistentHandle(atomHandle));        
     }
     
     /**
