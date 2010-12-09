@@ -1,7 +1,5 @@
 package hgtest;
 
-import java.util.List;
-
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery;
@@ -11,7 +9,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.CompositeIndexer;
-import org.hypergraphdb.indexing.HGIndexer;
+import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.util.HGUtils;
 
 public class VersionedBean
@@ -49,7 +47,8 @@ public class VersionedBean
 		graph.add(x);
 	}
 	
-	public static void main(String [] argv)
+	@SuppressWarnings("unchecked")
+    public static void main(String [] argv)
 	{
 		String location = "c:/temp/hgtest";
 		HGUtils.dropHyperGraphInstance(location);
@@ -57,7 +56,7 @@ public class VersionedBean
 		
 		HGHandle type = graph.getTypeSystem().getTypeHandle(VersionedBean.class);
 		
-		CompositeIndexer indexer = new CompositeIndexer(type, new HGIndexer[]{ new ByPartIndexer(type, "id"),
+		CompositeIndexer indexer = new CompositeIndexer(type, new HGKeyIndexer[]{ new ByPartIndexer(type, "id"),
 				   new ByPartIndexer(type, "ver")});
 		graph.getIndexManager().register(indexer);
 		graph.getIndexManager().register(new ByPartIndexer(type, "ver"));
@@ -74,7 +73,7 @@ public class VersionedBean
 		graph = HGEnvironment.get(location);
 		
 		HGQuery query = HGQuery.make(graph, hg.and(hg.type(VersionedBean.class), hg.eq("ver", 9)));
-		HGSearchResult<HGHandle> L = query.execute();
+		/*HGSearchResult<HGHandle> L = */query.execute();
 		
 		
 		HGSortIndex idx = (HGSortIndex)graph.getIndexManager().getIndex(indexer);
