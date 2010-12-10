@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir="." name="HyperGraphDB Core" default="all">
 	<description>HyperGraphDB Core Build File</description>
-    <property name="version" value="1.0"/>
+    <property name="version" value="1.1"/>
     <property name="distfilename" value="hypergraphdb-${version}"/>    
     <property name="build" value="build"/>
     <property name="dist" value="dist"/>
@@ -110,7 +110,14 @@
         <tar destfile="${dist}/${distfilename}.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
    	</target>
 
-	<target name="all" depends="core-jar, peer-jar, full-jar, dist-win, dist-lin"/>
+	<target name="dist-mac" depends="dist-common" description="Create MacOS distribution">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/macos" dest="${distfilename}/native"/>
+        <tar destfile="${dist}/${distfilename}-macos.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+
+	<target name="all" depends="core-jar, peer-jar, full-jar, dist-win, dist-lin, dist-mac"/>
 	
     <target description="clean up" name="clean">
 	    <!-- Delete the ${build} and ${dist} directory trees -->
