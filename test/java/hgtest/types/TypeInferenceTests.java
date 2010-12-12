@@ -5,6 +5,7 @@ import static hgtest.AtomOperationKind.add;
 import static hgtest.AtomOperationKind.remove;
 import hgtest.AtomOperation;
 import hgtest.HGTestBase;
+import hgtest.beans.BeanIgnoreFieldVariants;
 import hgtest.beans.BeanLink1;
 import hgtest.beans.BeanLink2;
 import hgtest.beans.BeanWithTransient;
@@ -181,6 +182,44 @@ public class TypeInferenceTests extends HGTestBase
         {
             Assert.assertTrue(ex.getMessage().indexOf("Could not find projection") > -1);
         }
+    }
+    
+    @Test
+    public void testIgnoredFields()
+    {
+        BeanIgnoreFieldVariants x = new BeanIgnoreFieldVariants();
+        x.setIgnoreMe(false);
+        x.setIgnoreMeToo(4);
+        BeanIgnoreFieldVariants y = new BeanIgnoreFieldVariants();
+        HGHandle hx = graph.add(x);
+        HGHandle hy = graph.add(y);
+        
+        HGCompositeType type = graph.getTypeSystem().getAtomType(BeanIgnoreFieldVariants.class);
+        try
+        {
+            type.getProjection("ignoreMe");
+            Assert.fail("projection found!");
+        }
+        catch (HGException ex)
+        {
+            Assert.assertTrue(ex.getMessage().indexOf("Could not find projection") > -1);            
+        }
+        try
+        {
+            type.getProjection("ignoreMeToo");
+            Assert.fail("projection found!");
+        }
+        catch (HGException ex)
+        {
+            Assert.assertTrue(ex.getMessage().indexOf("Could not find projection") > -1);            
+        }        
+        
+        reopenDb();
+        
+        BeanIgnoreFieldVariants xread = graph.get(hx);
+        BeanIgnoreFieldVariants yread = graph.get(hy);
+        Assert.assertFalse(xread.equals(x));
+        Assert.assertEquals(yread, y);
     }
     
     private Map createTestMap()
