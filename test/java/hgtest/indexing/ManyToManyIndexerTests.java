@@ -54,32 +54,32 @@ public class ManyToManyIndexerTests extends HGTestBase
     {
         private HGHandle type;
         
-        @Override
+        
         public Comparator<?> getComparator(HyperGraph graph)
         {
             return null;
         }
 
-        @Override
+        
         public ByteArrayConverter<?> getConverter(HyperGraph graph)
         {
             return BAtoHandle.getInstance(graph.getHandleFactory());
         }
 
-        @Override
+        
         public HGHandle getType()
         {
             return type;
         }
 
-        @Override
+        
         public void setType(HGHandle type)
         {
             this.type = type;
         }
         
         @SuppressWarnings("unchecked")
-        @Override
+        
         public void index(HyperGraph graph, HGHandle atomHandle, Object atom,
                 HGIndex index)
         {
@@ -91,7 +91,7 @@ public class ManyToManyIndexerTests extends HGTestBase
         }
 
         @SuppressWarnings("unchecked")
-        @Override
+        
         public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom,
                 HGIndex index)
         {
