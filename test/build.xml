@@ -32,6 +32,7 @@
     
      <target name="test" description="Perform all tests">
        <testng classpathref="test-classpath">
+	   <jvmarg value="-Djava.library.path=d:/work/hg/core/native/windows"/>
          <classfileset dir="build" includes="hgtest/**/*.class"/>
        </testng>
      </target>
