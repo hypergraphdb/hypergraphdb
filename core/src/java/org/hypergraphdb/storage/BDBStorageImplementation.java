@@ -42,6 +42,15 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
      
+    static
+    {
+        // This is solely because of failing to resolve dependencies under 
+        // Windows. For some reason, when libdb50 is loaded explicitly first,
+        // it all works out fine.
+        System.loadLibrary("libdb50");
+        System.loadLibrary("libdb_java50");
+    }
+    
     private BDBConfig configuration;
     private HGStore store;
     private HGHandleFactory handleFactory;
