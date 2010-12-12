@@ -5,21 +5,53 @@
 <body>
 <center>
 <h1>README</h1>
-<h2>HyperGraphDB, Release 1.0</h2>
+<h2>HyperGraphDB, Release 1.1</h2>
 </center>
 <h2>Contents</h2> 
 <ul> 
-    <li><a href=#introduction>Introduction</a> 
+    <li><a href=#introduction>Introduction</a>
+    <li><a href=#changes>Changes</a>
     <li><a href=#install>System Requirementsand and Installation</a> 
     <li><a href=#license>Licensing</a> 
     <li><a href=#documentation>Documentation</a>  
     <li><a href=#bugs>Bug Reports and Feedback</a> 
     <li><a href=#redistribution>Redistribution</a>  
-</ul> 
+</ul>
+<a name="changes">
+<h2>Changes</h2>
+<p>
+This release is a maintenance release containing many small improvements across
+the different sub-systems of the database. A list of changes can be found at:
+</p>
+
+<a href="http://www.hypergraphdb.org/learn?page=NextReleaseNotes&project=hypergraphdb">
+Changes for HyperGraphDB, Release 1.1</a> wiki page.
+
+<p>
+The most notable improvements in this release are:
+
+<ol>
+<li>Implementation of full MVCC transactions with unbounded read isolation. Both
+the RAM cache of atoms and on disk storage are manipulated and synchronized 
+through MVCC transactions and one can traverse an unlimited number of atoms in an
+isolated transaction without locking/blocking and without running out of memory.</li>
+<li>
+Refactoring of the low-level storage implementation to allow for easier customization
+of back-end storage, handle (i.e. id) generation and type system boostrapping. All
+those were architecturally possible in the previous release, but there wasn't explicit
+API support for them.
+</li>
+<li>
+Numerous bug fixes and adjustments based on user feedback since the 1.0 release.
+</li>
+</ol>
+
+</p>
+
 <a name="introduction">
 <h2>Introduction</h2>
 <p>
-Thank you for downloading the HyperGraphDB distribution, release 1.0. 
+Thank you for downloading the HyperGraphDB distribution, release 1.1. 
 HyperGraphDB is an innovative database management system geared towards 
 the complexities and open-endedness of modern, data intensive
 information systems, in particular the semantic web, artificial intelligence,
@@ -35,7 +67,7 @@ robust and high-performance BerkeleyDB storage system.
 <li>Java 5 or later is required to compile and/or run HyperGraphDB.</li>
 <li>A fairly recent version of Linux 32bit/AMD64 or Windows 32bit/AMD64 is 
 required for prebundled BerkeleyDB libraries to run, OR</li>
-<li>Any platform that will run Java 5 and BerkeleyDB.</li>
+<li>Any platform that will run Java 5 and BerkeleyDB 5.0.</li>
 </ul>
 <a name="license">
 <h2>Licensing</h2>
@@ -56,7 +88,6 @@ a list of all licenses you may need to accept in order to use HyperGraphDB:
 BerkeleyDB license</a></li>
 <li><a target="_blank" href="http://www.igniterealtime.org/builds/smack/docs/latest/README.html">
 Smack license</a></li>
-<li><a target="_blank" href="https://jxta.dev.java.net/jxta_license.htm">JXTA license</a></li>
 </ul>
 </p>
 <a name="documentation">
@@ -66,12 +97,15 @@ The following documentation is currently available:
 
 <ul>
 <li>
-<a target="_blank" href="http://www.kobrix.com/wikishow?project=hypergraphdb&page=FirstSteps">Tutorial</a> -
+<a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=FirstSteps">Tutorial</a> -
 walks you over most of what you need to develop real-world applications with
 HyperGraphDB.
 </li>
 <li>
-<a target="_blank" href="http://www.kobrix.com/wikishow?project=hypergraphdb&page=HyperGraphDBApplications">
+<a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=QuestionsAndAnswers">Q&A</a> - information in question and answer format.
+</li>
+<li>
+<a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=HyperGraphDBApplications">
 HyperGraphDB Application</a> - APIs and application integrating HyperGraphDB
 with other software such WordNet and a Prolog language interpreter as well as
 implementions of industry standards such topics maps and OWL (upcoming).
@@ -80,8 +114,8 @@ implementions of industry standards such topics maps and OWL (upcoming).
 An API reference in the form of Javadocs is available online and it is also
 included within this distribution for offline use:
 <ul>
-<li><a target="_blank" href="http://www.kobrix.com/javadocs/hgcore/index.html">Online HyperGraphDB Javadocs</a></li>
-<li><a target="_blank" href="javadoc/index.html">Offline HyperGraphDB JAvadocs</a></li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/javadocs/hgcore/index.html">Online HyperGraphDB Javadocs</a></li>
+<li><a target="_blank" href="javadoc/index.html">Offline HyperGraphDB Javadocs</a></li>
 </ul>
 Since we update the online documentation with each new release, the offline 
 version will be more accurate for the release contained within this distribution.
@@ -107,7 +141,7 @@ according as permitted by corresponding license agreements.
 </p>
 <p>
 Documentation on how to compile and deploy HyperGraphDB can be found
-on the <a target="_blank" href="http://www.kobrix.com/wikishow?project=hypergraphdb&page=CompilationAndDeployment">compilation and deployment</a> wiki page.
+on the <a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=CompilationAndDeployment">compilation and deployment</a> wiki page.
 </p>
 <hr>
 <p style="font-size:8pt">
