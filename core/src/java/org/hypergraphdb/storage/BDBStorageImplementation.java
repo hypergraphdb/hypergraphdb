@@ -47,8 +47,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
         // This is solely because of failing to resolve dependencies under 
         // Windows. For some reason, when libdb50 is loaded explicitly first,
         // it all works out fine.
-        System.loadLibrary("libdb50");
-        System.loadLibrary("libdb_java50");
+        if (System.getProperty("os.name").toLowerCase().indexOf("win") > -1)
+        {
+            System.loadLibrary("libdb50");
+            System.loadLibrary("libdb_java50");
+        }
     }
     
     private BDBConfig configuration;
