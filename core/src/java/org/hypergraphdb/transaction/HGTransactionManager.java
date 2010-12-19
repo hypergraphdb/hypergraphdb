@@ -182,7 +182,7 @@ public class HGTransactionManager
 	 */
 	HGTransaction createTransaction(HGTransaction parent, HGTransactionConfig config)
 	{	
-	    HGStorageTransaction storageTx = config.isNoStorage() ? null
+	    HGStorageTransaction storageTx = config.isNoStorage() || !enabled ? null
                                         : factory.createTransaction(getContext(), config, parent);
 	    ActiveTransactionsRecord activeRecord = mostRecentRecord.getRecordForNewTransaction();
 		if (enabled)
