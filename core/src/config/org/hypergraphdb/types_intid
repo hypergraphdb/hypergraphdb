@@ -1,0 +1,37 @@
+100 org.hypergraphdb.type.Top         
+101 org.hypergraphdb.type.PlainLinkType
+102 org.hypergraphdb.type.LinkType
+103 org.hypergraphdb.type.SubsumesType
+104 org.hypergraphdb.type.NullType
+105 org.hypergraphdb.type.HGHandleType org.hypergraphdb.HGHandle org.hypergraphdb.HGPersistentHandle org.hypergraphdb.handle.HGLiveHandle org.hypergraphdb.handle.UUIDPersistentHandle org.hypergraphdb.handle.PhantomHandle org.hypergraphdb.handle.PhantomManagedHandle org.hypergraphdb.handle.WeakHandle org.hypergraphdb.handle.WeakManagedHandle
+106 org.hypergraphdb.type.javaprimitive.ByteType java.lang.Byte
+107 org.hypergraphdb.type.javaprimitive.CharType java.lang.Character
+108 org.hypergraphdb.type.javaprimitive.BooleanType java.lang.Boolean
+109 org.hypergraphdb.type.javaprimitive.FloatType java.lang.Float
+110 org.hypergraphdb.type.javaprimitive.DoubleType java.lang.Double
+111 org.hypergraphdb.type.javaprimitive.IntType java.lang.Integer
+112 org.hypergraphdb.type.javaprimitive.LongType java.lang.Long
+113 org.hypergraphdb.type.javaprimitive.ShortType java.lang.Short
+114 org.hypergraphdb.type.javaprimitive.StringType java.lang.String
+115 org.hypergraphdb.type.javaprimitive.IntPrimitiveArrayType [I
+116 org.hypergraphdb.type.javaprimitive.BooleanPrimitiveArrayType [Z
+117 org.hypergraphdb.type.javaprimitive.BytePrimitiveArrayType [B
+118 org.hypergraphdb.type.javaprimitive.CharPrimitiveArrayType [C
+119 org.hypergraphdb.type.javaprimitive.DoublePrimitiveArrayType [D
+120 org.hypergraphdb.type.javaprimitive.FloatPrimitiveArrayType [F
+121 org.hypergraphdb.type.javaprimitive.LongPrimitiveArrayType [J
+122 org.hypergraphdb.type.javaprimitive.ShortPrimitiveArrayType [S
+123 org.hypergraphdb.type.javaprimitive.EnumTypeConstructor org.hypergraphdb.type.javaprimitive.EnumType
+124 org.hypergraphdb.type.RecordTypeConstructor org.hypergraphdb.type.RecordType
+125 org.hypergraphdb.type.SlotType org.hypergraphdb.type.Slot
+126 org.hypergraphdb.type.AbstractTypeConstructor org.hypergraphdb.type.HGAbstractType org.hypergraphdb.type.HGAbstractCompositeType
+127 org.hypergraphdb.atom.AtomSetType org.hypergraphdb.atom.HGAtomSet
+128 org.hypergraphdb.type.ArrayTypeConstructor org.hypergraphdb.type.ArrayType
+129 org.hypergraphdb.type.CollectionTypeConstructor org.hypergraphdb.type.CollectionType
+130 org.hypergraphdb.type.MapTypeConstructor org.hypergraphdb.type.MapType
+131 org.hypergraphdb.type.SerializableType java.io.Serializable 
+132 org.hypergraphdb.type.AtomRefType org.hypergraphdb.atom.HGAtomRef
+133 org.hypergraphdb.atom.HGRelTypeConstructor org.hypergraphdb.atom.HGRelType
+134 org.hypergraphdb.type.javaprimitive.DateType java.util.Date
+135 org.hypergraphdb.type.javaprimitive.CalendarType java.util.Calendar java.util.GregorianCalendar java.util.JapaneseImperialCalendar
+136 org.hypergraphdb.type.javaprimitive.TimestampType java.sql.Timestamp
