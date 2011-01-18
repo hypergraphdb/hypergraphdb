@@ -67,7 +67,9 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		//
 		try
 		{
-			Field field = javaClass.getDeclaredField(desc.getName());
+			Field field = JavaTypeFactory.findDeclaredField(javaClass, desc.getName());
+			if (field == null)
+			    return null;
 			AtomReference ann = (AtomReference)field.getAnnotation(AtomReference.class);
 			if (ann == null)
 				return null;
@@ -83,7 +85,7 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 						"' for field '" + field.getName() + "' of class '" +
 						javaClass.getName() + "', must be one of \"hard\", \"symbolic\" or \"floating\".");
 		}
-		catch (NoSuchFieldException ex)
+		catch (Throwable ex)
 		{
 			// Perhaps issue a warning here if people are misspelling
 			// unintentionally? Proper spelling is only useful for

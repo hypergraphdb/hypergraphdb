@@ -21,7 +21,6 @@ import org.hypergraphdb.storage.BAUtils;
  */
 public class IntHandleFactory implements HGHandleFactory
 {
-
     private static final IntPersistentHandle any = new IntPersistentHandle(1);
     private static final IntPersistentHandle nil = new IntPersistentHandle(0);
     

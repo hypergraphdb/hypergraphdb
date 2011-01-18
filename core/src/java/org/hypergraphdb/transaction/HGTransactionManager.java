@@ -37,8 +37,8 @@ public class HGTransactionManager
     final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
         
 	TxMonitor txMonitor = null;
-    public AtomicInteger conflicted = new AtomicInteger(0);
-    public AtomicInteger successful = new AtomicInteger(0);
+    AtomicInteger conflicted = new AtomicInteger(0);
+    AtomicInteger successful = new AtomicInteger(0);
 	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>

@@ -17,6 +17,30 @@ package org.hypergraphdb.storage;
  */
 public class BAUtils 
 {
+    public static long readLong(byte [] bytes, int offset)
+    {
+        return new Long((((long)bytes[offset] << 56) +
+                ((long)(bytes[offset + 1] & 255) << 48) +
+                ((long)(bytes[offset + 2] & 255) << 40) +
+                ((long)(bytes[offset + 3] & 255) << 32) +
+                ((long)(bytes[offset + 4] & 255) << 24) +
+                ((bytes[offset + 5] & 255) << 16) + 
+                ((bytes[offset + 6] & 255) <<  8) + 
+                ((bytes[offset + 7] & 255) <<  0))); 
+    }
+    
+    public static void writeLong(long v, byte [] data, int offset)
+    {
+        data[offset] = (byte) ((v >>> 56)); 
+        data[offset + 1] = (byte) ((v >>> 48));
+        data[offset + 2] = (byte) ((v >>> 40)); 
+        data[offset + 3] = (byte) ((v >>> 32));
+        data[offset + 4] = (byte) ((v >>> 24)); 
+        data[offset + 5] = (byte) ((v >>> 16));
+        data[offset + 6] = (byte) ((v >>> 8)); 
+        data[offset + 7] = (byte) ((v >>> 0));
+    }
+    
 	public static int readInt(byte [] buffer, int offset)
 	{
         int ch1 = buffer[offset];
