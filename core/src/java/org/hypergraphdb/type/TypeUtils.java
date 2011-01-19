@@ -330,6 +330,19 @@ public final class TypeUtils
             releaseThreadLocals(topCall);
         }	    
 	}
+
+	public static Object getValueFor(HyperGraph graph, HGPersistentHandle h)
+	{
+        boolean topCall = initThreadLocals();
+        try
+        {    	    
+    		return HANDLE_REF_MAP.get().get(h);
+        }
+        finally
+        {
+            releaseThreadLocals(topCall);
+        }
+	}
 	
 	public static void setValueFor(HyperGraph graph, HGPersistentHandle h, Object value)
 	{

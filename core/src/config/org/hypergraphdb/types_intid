@@ -35,3 +35,4 @@
 134 org.hypergraphdb.type.javaprimitive.DateType java.util.Date
 135 org.hypergraphdb.type.javaprimitive.CalendarType java.util.Calendar java.util.GregorianCalendar java.util.JapaneseImperialCalendar
 136 org.hypergraphdb.type.javaprimitive.TimestampType java.sql.Timestamp
+137 org.hypergraphdb.type.PairType org.hypergraphdb.util.Pair

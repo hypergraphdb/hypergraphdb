@@ -7,8 +7,18 @@
  */
 package org.hypergraphdb.util;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.PrintStream;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
@@ -417,4 +427,93 @@ public class HGUtils
             throw new HGException(e);
         }
     }
+    
+    @SuppressWarnings("unchecked")
+    public static <T> T cloneObject(T p, 
+                                    Mapping<Pair<Object, String>, Boolean> propertyFilter) throws Exception
+    {
+        if (p == null)
+            return null;
+        
+        if (p instanceof Cloneable)
+        {
+            Method cloneMethod = p.getClass().getMethod("clone", (Class[])null);
+            if (cloneMethod != null)
+                return (T)cloneMethod.invoke(p, (Object[])null);
+
+        }
+        else if (p.getClass().isArray())
+        {
+            Object [] A = (Object[])p;
+            Class type = p.getClass(); 
+            Object [] ac = (Object[])Array.newInstance(type.getComponentType(), A.length);
+            for (int i = 0; i < A.length; i++)
+                ac[i] = cloneObject(A[i], propertyFilter);
+            return (T)ac;
+        }
+        else if (identityCloneClasses.contains(p.getClass()))
+            return p;
+        
+        //
+        // Need to implement cloning ourselves. We do this by copying bean properties.
+        //
+        Constructor cons = null;
+        
+        try
+        {
+            cons = p.getClass().getConstructor((Class[])null);
+        }
+        catch (Throwable t)
+        {
+            return p;
+        }
+        
+        Object copy = cons.newInstance((Object[])null);
+        
+        if (p instanceof Collection)
+        {
+            Collection cc = (Collection)copy;
+            for (Object el : (Collection)p)
+                cc.add(cloneObject(el, propertyFilter));            
+        }
+        else if (p instanceof Map)
+        {
+            Map cm = (Map)copy;
+            for (Object key : ((Map)p).keySet())
+                cm.put(key, cloneObject(((Map)p).get(key), propertyFilter));
+        }
+        else
+        {
+            BeanInfo bean_info = Introspector.getBeanInfo(p.getClass());        
+            PropertyDescriptor beanprops [] = bean_info.getPropertyDescriptors();
+            if (beanprops == null || beanprops.length == 0)
+                copy = p;
+            else for (PropertyDescriptor desc : beanprops)
+            {
+                Method rm = desc.getReadMethod();
+                Method wm = desc.getWriteMethod();
+                if (rm == null || wm == null)
+                    continue;
+                Object value = rm.invoke(p, (Object[])null);
+                if (propertyFilter == null || propertyFilter.eval(new Pair<Object, String>(p, desc.getName())))
+                    value = cloneObject(value, propertyFilter); 
+                wm.invoke(copy, new Object[] { value });
+            }
+        }
+        return (T)copy;
+    }
+    
+    static final Set<Class<?>> identityCloneClasses = new HashSet<Class<?>>();
+    static
+    {
+        identityCloneClasses.add(String.class);
+        identityCloneClasses.add(Byte.class);
+        identityCloneClasses.add(Short.class);
+        identityCloneClasses.add(Integer.class);
+        identityCloneClasses.add(Long.class);
+        identityCloneClasses.add(Float.class);
+        identityCloneClasses.add(Double.class);
+        identityCloneClasses.add(Boolean.class);
+        identityCloneClasses.add(Character.class);        
+    }    
 }

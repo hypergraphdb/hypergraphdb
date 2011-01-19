@@ -162,7 +162,8 @@ public class HGEnvironment
 	 */
 	public synchronized static boolean isOpen(String location)
 	{
-		return dbs.containsKey(location);
+		HyperGraph graph = dbs.get(location);
+		return graph != null && graph.isOpen();		
 	}
 	
 	/**

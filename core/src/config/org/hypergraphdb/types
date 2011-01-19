@@ -35,3 +35,4 @@ b211d3bb-e0a5-11db-b848-d63153bea5bf org.hypergraphdb.atom.HGRelTypeConstructor 
 3ba40437-622a-49fa-8a71-0e9b67c14c67 org.hypergraphdb.type.javaprimitive.DateType java.util.Date
 d735dfcf-b26c-4853-aa66-1791f46acd61 org.hypergraphdb.type.javaprimitive.CalendarType java.util.Calendar java.util.GregorianCalendar java.util.JapaneseImperialCalendar
 9dbcbc60-b4a8-4d61-af12-e085ae9ddfe3 org.hypergraphdb.type.javaprimitive.TimestampType java.sql.Timestamp
+e8cb59c5-d3d5-44a0-ab69-9a449c375f72 org.hypergraphdb.type.PairType org.hypergraphdb.util.Pair

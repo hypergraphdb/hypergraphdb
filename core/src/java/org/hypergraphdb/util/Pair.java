@@ -52,7 +52,7 @@ public class Pair<F, S> implements java.io.Serializable
 	
 	public boolean equals(Object other)
 	{
-		if (! (other instanceof Pair))
+		if (! (other instanceof Pair<?,?>))
 			return false;
 		
 		Pair<?,?> p = (Pair<?,?>)other;
