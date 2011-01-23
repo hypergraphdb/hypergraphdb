@@ -20,6 +20,12 @@ import org.hypergraphdb.util.HGUtils;
 @SuppressWarnings("unchecked")
 public class T
 {
+	public static void sleep(long millis)
+	{
+		try { Thread.sleep(millis) ; }
+		catch (InterruptedException ex) { }
+	}
+	
     public static String getTmpDirectory()
     {
         return System.getProperty("user.home") + File.separator + "hgtest.tmp";
