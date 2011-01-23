@@ -261,7 +261,8 @@ public class XMPPPeerInterface implements PeerInterface
             {
                 connection.login(user, 
                 			     password, 
-                			     thisPeer != null ? thisPeer.getIdentity().getId().toString() : null);
+                			     thisPeer != null && thisPeer.getGraph() != null ? 
+                			    		 thisPeer.getIdentity().getId().toString() : null);
             }
             catch (XMPPException ex)
             {

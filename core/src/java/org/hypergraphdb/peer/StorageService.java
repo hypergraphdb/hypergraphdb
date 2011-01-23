@@ -48,7 +48,7 @@ public class StorageService
 	{
 	    this.thisPeer = thisPeer;
 		this.graph = thisPeer.getGraph();
-		this.logGraph = thisPeer.getTempDb();
+//		this.logGraph = thisPeer.getTempDb();
 		this.log = thisPeer.getLog();
 		
 /*		graph.getEventManager().addListener(HGAtomAddedEvent.class, new AtomAddedListener());

@@ -34,7 +34,6 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.replication.GetInterestsTask;
-import org.hypergraphdb.peer.serializer.GenericSerializer;
 import org.hypergraphdb.peer.serializer.JSONReader;
 import org.hypergraphdb.peer.workflow.ActivityManager;
 import org.hypergraphdb.peer.workflow.ActivityResult;
@@ -63,6 +62,11 @@ public class HyperGraphPeer
 	 * The object used to configure the peer.
 	 */
 	private Map<String, Object> configuration;
+	
+	/**
+	 * Holds any exception that prevents the peer from starting up.
+	 */
+	private Throwable startupFailedException = null;
 	
 	/**
 	 * Object used for communicating with other peers
@@ -115,7 +119,7 @@ public class HyperGraphPeer
 	// Assuming 'configuration' is set, initialize the rest of the member variables.
 	private void init()
 	{
-		Number threadPoolSize = (Number)configuration.get("threadPoolSize");
+		Number threadPoolSize = (Number)configuration.get(PeerConfig.THREAD_POOL_SIZE);
 		if (threadPoolSize == null || threadPoolSize.intValue() <= 0)
 			executorService = Executors.newCachedThreadPool();
 		else
@@ -281,15 +285,25 @@ public class HyperGraphPeer
 	}
 	
 	/**
+	 * <p>Return <code>start()</code>, parameters ignored.</p>
+	 * @deprecated
+	 */
+	public Future<Boolean> start(String ignored1, String ignored2)
+	{
+		return start(null, null);
+	}
+	
+	/**
 	 * Starts the peer and leaves it in a state where all its functions are available.
 	 * 
 	 * @param user The user name to use when the group is joined.
 	 * @param passwd Password to use to authenticate against the group.
 	 * @return
 	 */
-	public Future<Boolean> start(String user, String passwd)
+	public Future<Boolean> start()
 	{
 	    init();
+	    this.startupFailedException = null;
 	    return executorService.submit(new Callable<Boolean>() 
 	    {
 	    public Boolean call() {    
@@ -301,14 +315,14 @@ public class HyperGraphPeer
 			//get required objects
 			try
 			{
-				String option = getOptPart(configuration, null, PeerConfig.TEMP_DB);				
-				if (!HGUtils.isEmpty(option))
-				{
-					tempGraph = HGEnvironment.get(option);
-					GenericSerializer.setTempDB(tempGraph);
-				}
+//				String option = getOptPart(configuration, null, PeerConfig.TEMP_DB);				
+//				if (!HGUtils.isEmpty(option))
+//				{
+//					tempGraph = HGEnvironment.get(option);
+//					GenericSerializer.setTempDB(tempGraph);
+//				}
 
-				option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
+				String option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
 				if (graph == null && !HGUtils.isEmpty(option))
 				{
 					graph = HGEnvironment.get(option);					
@@ -318,7 +332,7 @@ public class HyperGraphPeer
 				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(HyperGraphPeer.this);
-				Map<String, Object> interfaceConfig = getPart(configuration, "interfaceConfig");
+				Map<String, Object> interfaceConfig = getPart(configuration, PeerConfig.INTERFACE_CONFIG);
 				if (interfaceConfig == null)
 				    throw new RuntimeException("Missing interfaceConfig configuration parameter.");
 				peerInterface.configure(interfaceConfig);
@@ -328,7 +342,7 @@ public class HyperGraphPeer
 				boolean managePresence = false; // manage presence only if AffirmIdentity activity is bootstrapped
 				
                 // Call all bootstrapping operations configured:                    
-                List<?> bootstrapOperations = getOptPart(configuration, null, "bootstrap");                 
+                List<?> bootstrapOperations = getOptPart(configuration, null, PeerConfig.BOOTSTRAP);                 
                 if (bootstrapOperations != null)
                     for (Object x : bootstrapOperations)
                     {
@@ -374,13 +388,16 @@ public class HyperGraphPeer
 			}
 			catch (Exception ex)
 			{			    
-			    ex.printStackTrace(System.err);
-			    HGUtils.throwRuntimeException(ex);
+				status = false;
+				HyperGraphPeer.this.startupFailedException = ex;
+//			    ex.printStackTrace(System.err);			    
+//			    HGUtils.throwRuntimeException(ex);
 			}
 		}
 		else 
 		{
-			System.out.println("Can not start HGBD: configuration not loaded");
+			HyperGraphPeer.this.startupFailedException = 
+				new Exception("Can not start HGBD: configuration not loaded");
 		}
 		
 		return status;
@@ -491,10 +508,10 @@ public class HyperGraphPeer
 		return peers; */
 	}
 
-	public HyperGraph getTempDb()
-	{
-		return tempGraph;
-	}
+//	public HyperGraph getTempDb()
+//	{
+//		return tempGraph;
+//	}
 
 	public ActivityManager getActivityManager()
 	{
@@ -572,6 +589,14 @@ public class HyperGraphPeer
     public Map<String, Object> getConfiguration()
     {
         return  configuration;
+    }
+
+    /**
+     * <p>Return the exception (if any) that prevents this peer from starting up.</p>
+     */
+    public Throwable getStartupFailedException()
+    {
+    	return this.startupFailedException;
     }
     
     public void addPeerPresenceListener(PeerPresenceListener listener)

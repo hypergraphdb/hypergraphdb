@@ -173,7 +173,7 @@ public class ActivityManager implements MessageHandler
                                    struct(PERFORMATIVE, Performative.NotUnderstood,
                                           CONTENT, msg));
             thisPeer.getPeerInterface().send(getSender(msg), reply);
-            System.out.println("Sending not understood on " + msg + " because " + exlanation);
+            //System.out.println("Sending not understood on " + msg + " because " + exlanation);
         }
         catch (Throwable t)
         {
@@ -382,7 +382,8 @@ public class ActivityManager implements MessageHandler
         // HyperGraph instance? Classes are loaded either by the type systems within
         // the core of HGDB, or in the P2P Structs classes that does serialization/deserialization
         // of beans.
-        schedulerThread.setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
+        if (thisPeer.getGraph() != null)
+        	schedulerThread.setContextClassLoader(thisPeer.getGraph().getTypeSystem().getClassLoader());
         schedulerThread.start();
     }
 
@@ -650,7 +651,7 @@ public class ActivityManager implements MessageHandler
             } 
             activity = type.getFactory().make(thisPeer, activityId, msg);
             insertNewActivity(activity, parentActivity, null);
-            System.out.println("inserted new activity in queue " + activity.getId());            
+            //System.out.println("inserted new activity in queue " + activity.getId());            
             activity.getState().compareAndAssign(Limbo, Started);            
         }
         else

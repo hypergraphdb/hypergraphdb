@@ -306,7 +306,7 @@ public /*final*/ class HyperGraph
     		close();
     	is_open = true;
     	try
-    	{
+    	{    		
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
             eventManager = new HGEventManager(this);	        
@@ -1900,7 +1900,7 @@ public /*final*/ class HyperGraph
      * @param type
      * @return
      */
-    public Object rawMake(HGPersistentHandle [] layout, HGAtomType type, HGPersistentHandle atomHandle)
+    private Object rawMake(HGPersistentHandle [] layout, HGAtomType type, HGPersistentHandle atomHandle)
     {
     	HGPersistentHandle [] targetSet = EMPTY_PERSISTENT_HANDLE_SET;
     	if (layout.length > 2)
