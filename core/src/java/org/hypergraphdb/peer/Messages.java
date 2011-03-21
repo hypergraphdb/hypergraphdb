@@ -57,7 +57,9 @@ public class Messages
 	public static Message getReply(Message msg)
 	{
 		Map<String, Object> s = struct(ACTIVITY_TYPE, getPart(msg, ACTIVITY_TYPE),
-		                               CONVERSATION_ID, getPart(msg, CONVERSATION_ID));
+		                               CONVERSATION_ID, getPart(msg, CONVERSATION_ID),
+		                               PARENT_SCOPE, getPart(msg, PARENT_SCOPE));
+		
 		String replyWith = getPart(msg, REPLY_WITH);
 		if (replyWith != null)
 		    return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
@@ -87,4 +89,5 @@ public class Messages
     public static final String CONVERSATION_ID = "conversation-id";
     public static final String PARENT_SCOPE = "x-parent-scope";
     public static final String ACTIVITY_TYPE = "x-activity-type";
+    public static final String WHY_NOT_UNDERSTOOD = "x-why-not-understood";
 }

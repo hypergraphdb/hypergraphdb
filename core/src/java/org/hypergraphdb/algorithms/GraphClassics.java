@@ -138,9 +138,9 @@ public class GraphClassics
 			private int compareHandles(HGHandle left, HGHandle right)
 			{				
 				HGPersistentHandle x = left instanceof HGPersistentHandle ?
-						(HGPersistentHandle)left : ((HGLiveHandle)left).getPersistentHandle();
+						(HGPersistentHandle)left : ((HGLiveHandle)left).getPersistent();
 				HGPersistentHandle y = right instanceof HGPersistentHandle ?
-						(HGPersistentHandle)right : ((HGLiveHandle)right).getPersistentHandle();
+						(HGPersistentHandle)right : ((HGLiveHandle)right).getPersistent();
 				return x.compareTo(y);				
 			}
 			

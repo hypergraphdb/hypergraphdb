@@ -16,8 +16,10 @@ import static org.hypergraphdb.peer.Messages.*;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.Performative;
+import org.hypergraphdb.peer.Structs;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -97,6 +99,16 @@ public abstract class Activity
         return thisPeer.getPeerInterface();
     }
 
+    protected Message createMessage(Performative performative, Object content)
+    {
+        Message msg = Messages.createMessage(performative, this);
+        Activity parent = thisPeer.getActivityManager().getParent(this);
+        if (parent != null)
+            Structs.combine(msg, Structs.struct(PARENT_SCOPE, parent.getId()));
+        Structs.combine(msg, Structs.struct(CONTENT, content));
+        return msg;
+    }
+    
     /**
      * <p>A convenience method to send a message to a target peer.</p>
      * 

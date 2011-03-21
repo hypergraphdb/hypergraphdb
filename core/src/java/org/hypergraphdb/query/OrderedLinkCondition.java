@@ -95,7 +95,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		if (newTarget instanceof HGPersistentHandle)
 			B = ((HGPersistentHandle)newTarget).toByteArray();
 		else
-			B = ((HGLiveHandle)newTarget).getPersistentHandle().toByteArray();
+			B = ((HGLiveHandle)newTarget).getPersistent().toByteArray();
 		if (targetsBuffer != null)
 			System.arraycopy(B, 0, targetsBuffer, B.length*pos, B.length);
 	}

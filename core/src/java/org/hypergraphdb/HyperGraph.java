@@ -89,7 +89,7 @@ import org.hypergraphdb.util.Pair;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public /*final*/ class HyperGraph
+public /*final*/ class HyperGraph implements HyperNode
 {
     public static final HGHandle [] EMTPY_HANDLE_SET = new HGHandle[0];
     public static final LazyRef<HGHandle[]> EMTPY_HANDLE_SET_REF = new ReadyRef<HGHandle[]>(new HGHandle[0]);
@@ -495,7 +495,7 @@ public /*final*/ class HyperGraph
         if (handle instanceof HGPersistentHandle)
             return (HGPersistentHandle)handle;
         else
-            return ((HGLiveHandle)handle).getPersistentHandle();
+            return ((HGLiveHandle)handle).getPersistent();
     }
     
     /**
@@ -745,11 +745,11 @@ public /*final*/ class HyperGraph
     		HGLiveHandle live = (HGLiveHandle)handle;
     		if (live.getRef() == null)
     		{
-    			HGLiveHandle updated = cache.get(live.getPersistentHandle());
+    			HGLiveHandle updated = cache.get(live.getPersistent());
     			if (updated != null)
     				return updated;
     			else
-    				return live.getPersistentHandle();
+    				return live.getPersistent();
     		}
     		else
     			return handle;
@@ -787,7 +787,7 @@ public /*final*/ class HyperGraph
         		//
         		// The atom has been evicted from the cache, so the live reference is no
         		// longer valid. We have to rely on the persistent handle reference.
-        		HGLiveHandle existing = cache.get(liveHandle.getPersistentHandle());
+        		HGLiveHandle existing = cache.get(liveHandle.getPersistent());
         		if (existing != null)
         		{
         			theAtom = (T)existing.getRef();
@@ -797,7 +797,7 @@ public /*final*/ class HyperGraph
         				return (T)theAtom;
         			}
         		}
-       			persistentHandle = liveHandle.getPersistentHandle();
+       			persistentHandle = liveHandle.getPersistent();
         	}
         	else
         	{
@@ -882,7 +882,7 @@ public /*final*/ class HyperGraph
     	if (handle instanceof HGLiveHandle)
     	{
     		atom = ((HGLiveHandle)handle).getRef();
-    		pHandle = ((HGLiveHandle)handle).getPersistentHandle();
+    		pHandle = ((HGLiveHandle)handle).getPersistent();
     	}
     	else
     	{
@@ -1206,7 +1206,7 @@ public /*final*/ class HyperGraph
         else
         {
         	lHandle = (HGLiveHandle)handle;
-            pHandle = lHandle.getPersistentHandle();
+            pHandle = lHandle.getPersistent();
         }
         
         replaceInternal(lHandle, pHandle, atom, type);
@@ -1467,6 +1467,16 @@ public /*final*/ class HyperGraph
         return query.execute();
     }
     
+    public <T> List<T> getAll(HGQueryCondition condition)
+    {
+        return hg.getAll(this, condition);
+    }
+    
+    public List<HGHandle> findAll(HGQueryCondition condition)
+    {
+        return hg.findAll(this, condition);
+    }
+    
     /**
      * <p>
      * Return the <code>HGIndexManager</code> that is associated with this
@@ -1498,9 +1508,9 @@ public /*final*/ class HyperGraph
 	        final HGLiveHandle lHandle = atomAdded(store.store(layout), payload, flags);
 	        if (payload instanceof HGTypeHolder)
 	        	((HGTypeHolder)payload).setAtomType(type);    	        	        	        
-	        indexByType.addEntry(pTypeHandle, lHandle.getPersistentHandle());
-	        indexByValue.addEntry(valueHandle, lHandle.getPersistentHandle());
-	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistentHandle(), payload);	        
+	        indexByType.addEntry(pTypeHandle, lHandle.getPersistent());
+	        indexByValue.addEntry(valueHandle, lHandle.getPersistent());
+	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistent(), payload);	        
 	        return lHandle;    
     	} });    	
     }
@@ -1777,7 +1787,7 @@ public /*final*/ class HyperGraph
             HGHandle current = link.getTargetAt(i);
             if (current == lHandle)
                 return;
-            else if (current.equals(lHandle.getPersistentHandle()))
+            else if (current.equals(lHandle.getPersistent()))
             {
                 link.notifyTargetHandleUpdate(i, lHandle);
                 return;

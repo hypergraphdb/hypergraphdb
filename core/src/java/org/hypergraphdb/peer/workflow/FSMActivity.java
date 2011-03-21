@@ -72,7 +72,8 @@ public abstract class FSMActivity extends Activity
         HGPeerIdentity id = getThisPeer().getIdentity(getSender(msg));
         this.future.result.exception = new ExceptionAtPeer(id,
                                                            "Peer did not understand last message:" +
-                                                           getPart(msg, CONTENT));
+                                                           getPart(msg, CONTENT) + ", because " +
+                                                           getPart(msg, WHY_NOT_UNDERSTOOD));
         getState().assign(WorkflowState.Failed);        
     }
     

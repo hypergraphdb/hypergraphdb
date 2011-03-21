@@ -28,5 +28,4 @@ public interface HGLiveHandle extends HGHandle
 {
 	byte getFlags(); 
     Object getRef();
-    HGPersistentHandle getPersistentHandle();
 }

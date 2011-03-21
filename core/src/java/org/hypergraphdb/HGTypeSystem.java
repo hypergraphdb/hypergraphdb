@@ -171,12 +171,12 @@ public class HGTypeSystem
 	{
 		HGPersistentHandle [] layout = new HGPersistentHandle[]
 			{
-				topHandle.getPersistentHandle(),
+				topHandle.getPersistent(),
 				graph.getHandleFactory().nullHandle()
 			};
 		graph.getStore().store(handle, layout);
 //		if (hg.indexByType.)
-		graph.indexByType.addEntry(topHandle.getPersistentHandle(), handle);
+		graph.indexByType.addEntry(topHandle.getPersistent(), handle);
 	}
 
 	void bootstrap(HGTypeConfiguration typeConfiguration)
@@ -225,21 +225,21 @@ public class HGTypeSystem
 		//
 		// If we are actually creating a new database, populate with primitive types.
 		//
-		if (graph.getStore().getLink(topHandle.getPersistentHandle()) == null)
+		if (graph.getStore().getLink(topHandle.getPersistent()) == null)
 		{
-			addPrimitiveTypeToStore(topHandle.getPersistentHandle());
-			addPrimitiveTypeToStore(plainLinkHandle.getPersistentHandle());
-			addPrimitiveTypeToStore(linkHandle.getPersistentHandle());
-			addPrimitiveTypeToStore(subsumesHandle.getPersistentHandle());
-			graph.add(new HGSubsumes(topHandle.getPersistentHandle(), 
-			                         linkHandle.getPersistentHandle()), 
-			          subsumesHandle.getPersistentHandle());
-			graph.add(new HGSubsumes(linkHandle.getPersistentHandle(), 
-			                         plainLinkHandle.getPersistentHandle()), 
-			                         subsumesHandle.getPersistentHandle());
-			graph.add(new HGSubsumes(plainLinkHandle.getPersistentHandle(), 
-			                         subsumesHandle.getPersistentHandle()), 
-			          subsumesHandle.getPersistentHandle());
+			addPrimitiveTypeToStore(topHandle.getPersistent());
+			addPrimitiveTypeToStore(plainLinkHandle.getPersistent());
+			addPrimitiveTypeToStore(linkHandle.getPersistent());
+			addPrimitiveTypeToStore(subsumesHandle.getPersistent());
+			graph.add(new HGSubsumes(topHandle.getPersistent(), 
+			                         linkHandle.getPersistent()), 
+			          subsumesHandle.getPersistent());
+			graph.add(new HGSubsumes(linkHandle.getPersistent(), 
+			                         plainLinkHandle.getPersistent()), 
+			                         subsumesHandle.getPersistent());
+			graph.add(new HGSubsumes(plainLinkHandle.getPersistent(), 
+			                         subsumesHandle.getPersistent()), 
+			          subsumesHandle.getPersistent());
 			//storePrimitiveTypes(typeDefResource);
 			for (HGPersistentHandle typeHandle : config.getHandles())
 			{

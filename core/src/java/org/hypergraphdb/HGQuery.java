@@ -841,7 +841,18 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 			return c;
 		}
         
-        static final HGHandle the_any_handle = new HGHandle(){};
+        static final HGHandle the_any_handle = new HGHandle()
+        {
+            public HGPersistentHandle getPersistent()
+            {
+                // A persistent "any handle" should never be used
+                // in this context. If needed, it has to be obtained
+                // from the handle factory associated with the graph.
+                // The runtime "any handle" here is only to be used
+                // as a don't care in query expressions.
+                return null; 
+            }
+        };
         
         /**
          * <p>Return a special handle indicating a "don't care" in a condition expression (e.g.

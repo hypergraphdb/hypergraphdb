@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.util.Pair;
 
@@ -30,6 +31,11 @@ public class RAMStorageGraph implements StorageGraph
     private Set<HGPersistentHandle> roots;
     private Map<HGPersistentHandle, Object> map = new HashMap<HGPersistentHandle, Object>();
     
+    public RAMStorageGraph()
+    {
+        this.roots = new HashSet<HGPersistentHandle>();
+    }
+    
     public RAMStorageGraph(HGPersistentHandle root)
     {
         this.roots = new HashSet<HGPersistentHandle>();
@@ -41,7 +47,7 @@ public class RAMStorageGraph implements StorageGraph
         this.roots = roots;
     }
     
-    public void translateHandles(Map<HGPersistentHandle, HGPersistentHandle> subst)
+    public void translateHandles(Map<HGHandle, HGHandle> subst)
     {
         Map<HGPersistentHandle, Object> translated = new HashMap<HGPersistentHandle, Object>();
         for (Map.Entry<HGPersistentHandle, Object> e : map.entrySet())
@@ -51,15 +57,15 @@ public class RAMStorageGraph implements StorageGraph
                 HGPersistentHandle[] A = (HGPersistentHandle[])e.getValue();
                 for (int i = 0; i < A.length; i++)
                 {
-                    HGPersistentHandle h = subst.get(A[i]);
+                    HGHandle h = subst.get(A[i]);
                     if (h != null)
-                        A[i] = h;
+                        A[i] = h.getPersistent();
                 }
             }
-            HGPersistentHandle h = subst.get(e.getKey());            
+            HGHandle h = subst.get(e.getKey());            
             if (h == null)            	
             	h = e.getKey();
-            translated.put(h, e.getValue());
+            translated.put(h.getPersistent(), e.getValue());
         }
         map = translated;
     }
@@ -74,6 +80,20 @@ public class RAMStorageGraph implements StorageGraph
         map.put(handle, data);
     }
     
+    public HGPersistentHandle store(HGPersistentHandle handle,
+                                    HGPersistentHandle[] link)
+    {
+        put(handle, link);
+        return handle;
+    }
+
+    @Override
+    public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
+    {
+        put(handle, data);
+        return handle;
+    }
+
     public byte[] getData(HGPersistentHandle handle)
     {
         return (byte[])map.get(handle);

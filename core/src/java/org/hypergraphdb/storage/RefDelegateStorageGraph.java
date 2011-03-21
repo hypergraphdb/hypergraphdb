@@ -39,7 +39,17 @@ public class RefDelegateStorageGraph implements StorageGraph
         return del != null ? wrapped.getLink(del) : wrapped.getLink(handle);
     }
 
-    
+    public HGPersistentHandle store(HGPersistentHandle handle,
+                                    HGPersistentHandle[] link)
+    {
+        return wrapped.store(handle, link);
+    }
+
+    public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
+    {
+        return wrapped.store(handle, data);
+    }
+
     public Set<HGPersistentHandle> getRoots()
     {
         return wrapped.getRoots();

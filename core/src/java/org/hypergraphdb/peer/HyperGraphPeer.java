@@ -98,7 +98,7 @@ public class HyperGraphPeer
         new TwoWayMap<Object, HGPeerIdentity>(); 
 	
     private List<PeerPresenceListener> peerListeners = 
-        new ArrayList<PeerPresenceListener>();
+        Collections.synchronizedList(new ArrayList<PeerPresenceListener>());
     
 	/**
 	 * Temporary storage for all types of things, including replication and subgraph serialization.

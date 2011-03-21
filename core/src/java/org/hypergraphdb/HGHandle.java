@@ -32,4 +32,5 @@ package org.hypergraphdb;
  */
 public interface HGHandle
 {
+    HGPersistentHandle getPersistent();
 }

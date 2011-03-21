@@ -53,7 +53,7 @@ public class HGHandleType extends PrimitiveTypeBase<HGHandle>
 		if (value instanceof HGPersistentHandle)
 			return ((HGPersistentHandle)value).toByteArray();
 		else
-			return ((HGLiveHandle)value).getPersistentHandle().toByteArray();
+			return ((HGLiveHandle)value).getPersistent().toByteArray();
 	}
 
 	public Comparator<byte[]> getComparator() 

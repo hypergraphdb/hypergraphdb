@@ -106,7 +106,7 @@ public class WeakRefAtomCache implements HGAtomCache
         WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
         while (ref != null)
         {
-            liveHandles.drop(ref.getPersistentHandle());
+            liveHandles.drop(ref.getPersistent());
             ref.clear();
             synchronized (ref) { ref.notifyAll(); }         
             ref = (WeakHandle)refQueue.poll();            
@@ -120,7 +120,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
 		while (ref != null)
 		{
-		    final HGPersistentHandle h = ref.getPersistentHandle();
+		    final HGPersistentHandle h = ref.getPersistent();
 		    gcLock.writeLock().lock(); // we won't allow modifications to the cache maps during this
 		    try
 		    {
@@ -315,14 +315,14 @@ public class WeakRefAtomCache implements HGAtomCache
 	    WeakHandle newLive = null;
 	    if (handle instanceof WeakManagedHandle)
 	        newLive = new WeakManagedHandle(atom, 
-	                                        handle.getPersistentHandle(), 
+	                                        handle.getPersistent(), 
 	                                        handle.getFlags(), 
 	                                        refQueue,
 	                                        ((WeakManagedHandle)handle).getRetrievalCount(),
 	                                        ((WeakManagedHandle)handle).getRetrievalCount());
 	    else
 	        newLive = new WeakHandle(atom, 
-	                                 handle.getPersistentHandle(),
+	                                 handle.getPersistent(),
 	                                 handle.getFlags(),
 	                                 refQueue);
 	    
@@ -344,12 +344,12 @@ public class WeakRefAtomCache implements HGAtomCache
     	        if (curr != null)
     	            atoms.remove(curr);
     	        atoms.put(atom, newLive);
-    	        liveHandles.put(handle.getPersistentHandle(), newLive);
+    	        liveHandles.put(handle.getPersistent(), newLive);
     	    }		    
     	    else
     	    {
                 atoms.load(atom, newLive);		        
-    	        liveHandles.load(handle.getPersistentHandle(), newLive);
+    	        liveHandles.load(handle.getPersistent(), newLive);
     	    }
             coldAtoms.add(atom);
             return newLive;    	    
@@ -390,7 +390,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public void remove(HGLiveHandle handle) 
 	{
 		atoms.remove(handle.getRef());
-		liveHandles.remove(handle.getPersistentHandle());
+		liveHandles.remove(handle.getPersistent());
 	}
 
 	

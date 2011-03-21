@@ -360,29 +360,21 @@ public class XMPPPeerInterface implements PeerInterface
                         // Encapsulate message serialization into a transaction because the HGDB might
                         // be accessed during this process.
                         //                   
-                        // NOTE: this breaks when a large sub-graph is being serialized because
-                        // there aren't enough BDB locks to cover every page being accessed. There are
-                        // several possible solution to this problem until BDB implements an unlimited
-                        // locks feature (which would be pretty nice): either track and break down
-                        // such large messages into smaller pieces (that's a heavy burden on P2P
-                        // activities, but it's the cleanest solution) or implement a facility to grab
-                        // a global lock on the whole DB environment which again requires a BDB feature.
-                        // So we disable the message serialization transaction for now.
-//                        thisPeer.getGraph().getTransactionManager().beginTransaction();
-//                        try
-//                        {
+                        thisPeer.getGraph().getTransactionManager().beginTransaction();
+                        try
+                        {
                             protocol.writeMessage(out, msg);
-//                        }
-//                        catch (Throwable t)
-//                        {
-//                        	System.err.println("Failed to serialize message " + msg);
-//                        	t.printStackTrace(System.err);
-//                        }
-//                        finally
-//                        {
-//                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
-//                            catch (Throwable t) { t.printStackTrace(System.err); }
-//                        }  
+                        }
+                        catch (Throwable t)
+                        {
+                        	System.err.println("Failed to serialize message " + msg);
+                        	t.printStackTrace(System.err);
+                        }
+                        finally
+                        {
+                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
+                            catch (Throwable t) { t.printStackTrace(System.err); }
+                        }  
                         
                         byte [] data = out.toByteArray();
                         if (data.length > fileTransferThreshold)

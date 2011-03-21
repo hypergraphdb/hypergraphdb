@@ -70,7 +70,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		return flags;
 	}
 
-	public HGPersistentHandle getPersistentHandle()
+	public HGPersistentHandle getPersistent()
 	{
 		return persistentHandle;
 	}
@@ -154,7 +154,7 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		if (other == null || ! (other instanceof HGHandle))
 			return false;
 		else if (other instanceof HGLiveHandle)
-			return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
+			return persistentHandle.equals(((HGLiveHandle)other).getPersistent());
 		else
 			return persistentHandle.equals((HGPersistentHandle)other);
 	}
@@ -169,6 +169,6 @@ public class PhantomHandle extends PhantomReference<Object> implements HGLiveHan
 		if (h instanceof HGPersistentHandle)
 			return this.persistentHandle.compareTo((HGPersistentHandle)h);
 		else
-			return this.persistentHandle.compareTo(((HGLiveHandle)h).getPersistentHandle());
+			return this.persistentHandle.compareTo(((HGLiveHandle)h).getPersistent());
 	}
 }

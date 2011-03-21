@@ -17,7 +17,7 @@ import static org.hypergraphdb.peer.Structs.struct;
 
 import java.util.UUID;
 
-import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
@@ -42,7 +42,7 @@ public class TransferGraph extends FSMActivity
     
     private HGPeerIdentity target;
     private HGTraversal traversal;
-    private Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder = null;
+    private Mapping<Pair<HGHandle, Object>, HGHandle> atomFinder = null;
     private boolean trace = true;
     
     public TransferGraph(HyperGraphPeer thisPeer, UUID id)
@@ -62,7 +62,7 @@ public class TransferGraph extends FSMActivity
     public TransferGraph(HyperGraphPeer thisPeer, 
                          HGTraversal traversal, 
                          HGPeerIdentity target,
-                         Mapping<Pair<HGPersistentHandle, Object>, HGPersistentHandle> atomFinder)
+                         Mapping<Pair<HGHandle, Object>, HGHandle> atomFinder)
     {
         this(thisPeer, traversal, target);
         this.atomFinder = atomFinder;

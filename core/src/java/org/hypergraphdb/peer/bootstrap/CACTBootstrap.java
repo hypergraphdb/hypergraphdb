@@ -11,8 +11,15 @@ import java.util.Map;
 
 import org.hypergraphdb.peer.BootstrapPeer;
 import org.hypergraphdb.peer.HyperGraphPeer;
+import org.hypergraphdb.peer.cact.AddAtom;
 import org.hypergraphdb.peer.cact.DefineAtom;
+import org.hypergraphdb.peer.cact.GetAtom;
+import org.hypergraphdb.peer.cact.GetAtomType;
 import org.hypergraphdb.peer.cact.GetClassForType;
+import org.hypergraphdb.peer.cact.RemoveAtom;
+import org.hypergraphdb.peer.cact.ReplaceAtom;
+import org.hypergraphdb.peer.cact.RemoteQueryExecution;
+import org.hypergraphdb.peer.cact.RunRemoteQuery;
 import org.hypergraphdb.peer.cact.TransferGraph;
 
 public class CACTBootstrap implements BootstrapPeer
@@ -22,5 +29,18 @@ public class CACTBootstrap implements BootstrapPeer
         peer.getActivityManager().registerActivityType(GetClassForType.TYPENAME, GetClassForType.class);
         peer.getActivityManager().registerActivityType(DefineAtom.TYPENAME, DefineAtom.class);
         peer.getActivityManager().registerActivityType(TransferGraph.TYPENAME, TransferGraph.class);
+        peer.getActivityManager().registerActivityType(GetAtom.TYPENAME, GetAtom.class);
+        peer.getActivityManager().registerActivityType(AddAtom.TYPENAME, AddAtom.class);
+        peer.getActivityManager().registerActivityType(GetAtomType.TYPENAME, GetAtomType.class);
+        peer.getActivityManager().registerActivityType(RemoveAtom.TYPENAME, RemoveAtom.class);
+        peer.getActivityManager().registerActivityType(ReplaceAtom.TYPENAME, ReplaceAtom.class);
+        peer.getActivityManager().registerActivityType(RunRemoteQuery.TYPENAME, RunRemoteQuery.class);
+        
+        RemoteQueryExecution.ResultSetOpen.getConst();
+        
+        peer.getActivityManager().registerActivityType(RemoteQueryExecution.TYPENAME, 
+                                                       RemoteQueryExecution.class);        
+        peer.getActivityManager().registerActivityType(RemoteQueryExecution.IterateActivity.TYPENAME, 
+                                                       RemoteQueryExecution.IterateActivity.class);
     }
 }

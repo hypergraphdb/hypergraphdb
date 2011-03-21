@@ -145,7 +145,7 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
         else if (other instanceof UUIDPersistentHandle)
         	return uuid.equals(((UUIDPersistentHandle)other).uuid);
         else if (other instanceof HGLiveHandle)
-            return ((HGLiveHandle)other).getPersistentHandle().equals(this);
+            return ((HGLiveHandle)other).getPersistent().equals(this);
         else
         	return false;
     }
@@ -163,12 +163,19 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     public int compareTo(HGHandle other)
     {
     	if (other instanceof HGLiveHandle)
-    		other = ((HGLiveHandle)other).getPersistentHandle();
+    		other = ((HGLiveHandle)other).getPersistent();
     	return uuid.compareTo(((UUIDPersistentHandle)other).uuid);
     }
     
     public int compareTo(HGPersistentHandle other)
     {
     	return uuid.compareTo(((UUIDPersistentHandle)other).uuid);    	
+    }
+
+
+    @Override
+    public HGPersistentHandle getPersistent()
+    {
+        return this;
     }    
 }

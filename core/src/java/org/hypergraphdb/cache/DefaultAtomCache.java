@@ -155,7 +155,7 @@ public final class DefaultAtomCache implements HGAtomCache
     		queueThread.setPriority(Thread.NORM_PRIORITY + 2);
 //    		queueThread.completeAll();
     	}
-        liveHandles.put(handle.getPersistentHandle(), handle);
+        liveHandles.put(handle.getPersistent(), handle);
         atoms.put(handle.getRef(), handle);
         queueThread.addAction(new AddAtomAction(handle));		
 	}
@@ -266,7 +266,7 @@ public final class DefaultAtomCache implements HGAtomCache
 
     public HGLiveHandle atomRefresh(HGLiveHandle handle, Object atom, boolean replace)
     {
-    	LiveHandle existing = liveHandles.get(handle.getPersistentHandle());  	
+    	LiveHandle existing = liveHandles.get(handle.getPersistent());  	
     	if (existing != null)
     	{
     		atoms.remove(existing.getRef());    		
@@ -304,9 +304,9 @@ public final class DefaultAtomCache implements HGAtomCache
      */
     public void remove(HGLiveHandle handle)
     {
-    	incidenceSets.remove(handle.getPersistentHandle());
+    	incidenceSets.remove(handle.getPersistent());
         atoms.remove(handle.getRef());
-        liveHandles.remove(handle.getPersistentHandle());
+        liveHandles.remove(handle.getPersistent());
     	queueThread.addAction(new AtomDetachAction((LiveHandle)handle));        
         ((LiveHandle)handle).setRef(null);
     }
@@ -369,7 +369,7 @@ public final class DefaultAtomCache implements HGAtomCache
     		while (n-- > 0 && newTail.next != null)
     		{
     			LiveHandle current = newTail;
-    			liveHandles.remove(newTail.getPersistentHandle());
+    			liveHandles.remove(newTail.getPersistent());
     			atoms.remove(newTail.getRef());
     			hg.getEventManager().dispatch(hg, new HGAtomEvictEvent(newTail, newTail.getRef()));    			
     			newTail.setRef(null);
@@ -378,7 +378,7 @@ public final class DefaultAtomCache implements HGAtomCache
     		}
     		if (newTail.next == null)
     		{
-    			liveHandles.remove(newTail.getPersistentHandle());
+    			liveHandles.remove(newTail.getPersistent());
     			atoms.remove(newTail.getRef());
     			hg.getEventManager().dispatch(hg, new HGAtomEvictEvent(newTail, newTail.getRef()));    			
     			newTail.setRef(null);

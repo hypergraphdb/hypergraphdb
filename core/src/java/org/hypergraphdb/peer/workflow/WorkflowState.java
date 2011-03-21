@@ -12,6 +12,11 @@ import java.util.ConcurrentModificationException;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -204,6 +209,65 @@ public class WorkflowState
             throw new ConcurrentModificationException("Concurrent state change to " + 
                                                       newState.name.get() + " from " + name.get() +
                                                       " which changed recently from " + s);            
+    }
+    
+    /**
+     * <p>
+     * Return a <code>Future</code> representing the task of this state reaching an expected
+     * value. The future will complete as soon as the state changes to the <code>expected</code>
+     * parameter. One can use such a <code>Future</code> to explicitly block and wait until
+     * a certain state is reached. 
+     * </p>
+     * 
+     * @param expected The expected state.
+     */
+    public Future<WorkflowStateConstant> getFuture(final WorkflowStateConstant expected)
+    {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final StateListener L = new StateListener()
+        {
+            public void stateChanged(WorkflowState state)
+            {
+                if (expected == state.getConst())
+                    latch.countDown();
+            }            
+        };
+        addListener(L);
+        return new Future<WorkflowStateConstant>()        
+        {                     
+            public boolean cancel(boolean arg0)
+            {
+                throw new UnsupportedOperationException();
+            }
+            
+            public WorkflowStateConstant get() throws InterruptedException,
+                    ExecutionException
+            {
+                latch.await();
+                removeListener(L);
+                return WorkflowState.this.getConst();
+            }
+            
+            public WorkflowStateConstant get(long time, TimeUnit unit)
+                    throws InterruptedException, ExecutionException,
+                    TimeoutException
+            {
+                latch.await(time, unit);
+                removeListener(L);
+                return WorkflowState.this.getConst();
+            }
+
+            
+            public boolean isCancelled()
+            {
+                return false;
+            }
+            
+            public boolean isDone()
+            {
+                return latch.getCount() == 0;
+            }                       
+        };
     }
     
     /**

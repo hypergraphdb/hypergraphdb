@@ -32,7 +32,7 @@ public class DefaultLiveHandle implements HGLiveHandle
         return ref;
     }
     
-    public final HGPersistentHandle getPersistentHandle()
+    public final HGPersistentHandle getPersistent()
     {
         return persistentHandle;
     }
@@ -42,7 +42,7 @@ public class DefaultLiveHandle implements HGLiveHandle
         if (other == null)
             return false;
         else if (other instanceof HGLiveHandle)
-            return persistentHandle.equals(((HGLiveHandle)other).getPersistentHandle());
+            return persistentHandle.equals(((HGLiveHandle)other).getPersistent());
         else
         	return persistentHandle.equals((HGPersistentHandle)other);
     }

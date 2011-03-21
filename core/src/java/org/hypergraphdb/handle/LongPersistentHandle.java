@@ -57,10 +57,15 @@ public class LongPersistentHandle implements HGPersistentHandle
         if (obj == null)
             return false;
         if (obj instanceof HGLiveHandle)
-            obj = ((HGLiveHandle)obj).getPersistentHandle();        
+            obj = ((HGLiveHandle)obj).getPersistent();        
         if (getClass() != obj.getClass())
             return false;
         LongPersistentHandle other = (LongPersistentHandle) obj;
         return value() == other.value();
+    }
+
+    public HGPersistentHandle getPersistent()
+    {
+        return this;
     }    
 }

@@ -20,7 +20,7 @@ class U
 		if (h instanceof HGPersistentHandle)
 			return (HGPersistentHandle)h;
 		else
-			return ((HGLiveHandle)h).getPersistentHandle();
+			return ((HGLiveHandle)h).getPersistent();
 	}
 	
 	static byte [] getBytes(HGHandle h)
@@ -28,7 +28,7 @@ class U
 		if (h instanceof HGPersistentHandle)
 			return ((HGPersistentHandle)h).toByteArray();
 		else
-			return ((HGLiveHandle)h).getPersistentHandle().toByteArray();
+			return ((HGLiveHandle)h).getPersistent().toByteArray();
 	}
 	
 	static final class HandleLink

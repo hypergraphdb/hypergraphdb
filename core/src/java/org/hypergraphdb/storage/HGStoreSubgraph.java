@@ -13,13 +13,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.util.Pair;
 
 /**
  * <p>
- * A {@link StorageGraph} bound to a {@link HGStore}.
+ * A {@link StorageGraph} bound to a {@link HGStore}. It's based on a set of root handles
+ * and its iterator will traverse the primitive storage graph starting from those roots. 
  * </p>
  * 
  * @author Borislav Iordanov
@@ -37,10 +39,10 @@ public class HGStoreSubgraph implements StorageGraph
      * @param root A single root, starting point of the storage graph.
      * @param store The backing store instance.
      */
-    public HGStoreSubgraph(HGPersistentHandle root, HGStore store)
+    public HGStoreSubgraph(HGHandle root, HGStore store)
     {
         this.roots = new HashSet<HGPersistentHandle>();
-        this.roots.add(root);
+        this.roots.add(root.getPersistent());
         this.store = store;
     }
     
@@ -52,9 +54,11 @@ public class HGStoreSubgraph implements StorageGraph
      * @param root A single root, starting point of the storage graph.
      * @param store The backing store instance.
      */
-    public HGStoreSubgraph(Set<HGPersistentHandle> roots, HGStore store)
+    public HGStoreSubgraph(Set<HGHandle> roots, HGStore store)
     {
-        this.roots = roots;
+        this.roots = new HashSet<HGPersistentHandle>();
+        for (HGHandle root : roots)
+            this.roots.add(root.getPersistent());
         this.store = store;
     }
 
@@ -67,6 +71,17 @@ public class HGStoreSubgraph implements StorageGraph
     public HGPersistentHandle[] getLink(HGPersistentHandle handle)
     {
         return store.getLink(handle);
+    }
+
+    public HGPersistentHandle store(HGPersistentHandle handle,
+                                    HGPersistentHandle[] link)
+    {
+        return store.store(handle, link);
+    }
+
+    public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
+    {
+        return store.store(handle, data);
     }
 
     public Set<HGPersistentHandle> getRoots()

@@ -43,12 +43,18 @@ public class IntPersistentHandle implements HGPersistentHandle
         if (obj == null)
             return false;
         if (obj instanceof HGLiveHandle)
-            obj = ((HGLiveHandle)obj).getPersistentHandle();        
+            obj = ((HGLiveHandle)obj).getPersistent();        
         if (getClass() != obj.getClass())
             return false;
         IntPersistentHandle other = (IntPersistentHandle) obj;
         if (x != other.x)
             return false;
         return true;
+    }
+
+    @Override
+    public HGPersistentHandle getPersistent()
+    {
+        return this;
     }    
 }

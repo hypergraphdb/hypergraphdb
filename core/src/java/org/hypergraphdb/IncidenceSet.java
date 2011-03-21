@@ -24,7 +24,7 @@ public final class IncidenceSet extends HGAtomSet
 {
 	private HGHandle atom;
 	
-	IncidenceSet(HGHandle atom, HGSortedSet<HGHandle> impl)
+	public IncidenceSet(HGHandle atom, HGSortedSet<HGHandle> impl)
 	{
 		super(impl);
 		this.atom = atom;

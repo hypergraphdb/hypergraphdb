@@ -9,8 +9,10 @@ package org.hypergraphdb.peer.cact;
 
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.Structs.*;
+
 import java.util.UUID;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGLink;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
@@ -22,6 +24,10 @@ import org.hypergraphdb.peer.workflow.OnMessage;
 import org.hypergraphdb.peer.workflow.PossibleOutcome;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
+import org.hypergraphdb.storage.RAMStorageGraph;
+import org.hypergraphdb.storage.StorageGraph;
+import org.hypergraphdb.type.HGAtomType;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -37,7 +43,17 @@ public class DefineAtom extends FSMActivity
     public static final String TYPENAME = "define-atom";
     
     private HGPeerIdentity target;
-    private HGHandle atom;
+    private HGHandle atomHandle;
+    private HGHandle typeHandle;
+    private Object atom;
+    
+    private HGHandle [] getAtomTargets()
+    {
+        if (! (atom instanceof HGLink))
+          return HGUtils.EMPTY_HANDLE_ARRAY;
+        else
+            return HGUtils.toHandleArray((HGLink)atom);
+    }
     
     public DefineAtom(HyperGraphPeer thisPeer, UUID id)
     {
@@ -47,7 +63,15 @@ public class DefineAtom extends FSMActivity
     public DefineAtom(HyperGraphPeer thisPeer, HGHandle atom, HGPeerIdentity target)
     {
         super(thisPeer);
+        this.atomHandle = atom;
+        this.target = target;
+    }
+
+    public DefineAtom(HyperGraphPeer thisPeer, Object atom, HGHandle typeHandle, HGPeerIdentity target)
+    {
+        super(thisPeer);
         this.atom = atom;
+        this.typeHandle = typeHandle;
         this.target = target;
     }
     
@@ -55,9 +79,33 @@ public class DefineAtom extends FSMActivity
     public void initiate()
     {
         Message msg = createMessage(Performative.Request, this);
-        combine(msg, 
-                struct(CONTENT, 
-                       SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), atom))); 
+        if (atomHandle != null)
+            combine(msg, 
+                    struct(CONTENT, 
+                           SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), atomHandle)));
+        else
+        {
+            if (typeHandle == null)
+                typeHandle = getThisPeer().getGraph().getTypeSystem().getTypeHandle(atom);
+            HGAtomType  type = getThisPeer().getGraph().get(typeHandle);
+            StorageGraph sgraph = new RAMStorageGraph();
+            getThisPeer().getGraph().getStore().attachOverlayGraph(sgraph);
+            try
+            {
+                sgraph.getRoots().add(type.store(atom));
+                combine(msg, 
+                        struct(CONTENT,             
+                               struct("storage-graph", object(sgraph),
+                                      "type-handle", typeHandle, 
+                                      "type-classes", struct()),
+                                      "targets", list((Object[])getAtomTargets())));
+                send(target, msg);
+            }
+            finally
+            {
+                getThisPeer().getGraph().getStore().detachOverlayGraph();
+            }
+        }        
         send(target, msg);        
     }
 

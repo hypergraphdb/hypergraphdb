@@ -37,6 +37,8 @@ public interface StorageGraph extends Iterable<Pair<HGPersistentHandle, Object>>
      */
     Set<HGPersistentHandle> getRoots();
     HGPersistentHandle [] getLink(HGPersistentHandle handle);
+    HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle [] link);
     byte [] getData(HGPersistentHandle handle);
+    HGPersistentHandle store(HGPersistentHandle handle, byte [] data);
     Iterator<Pair<HGPersistentHandle, Object>> iterator();
 }

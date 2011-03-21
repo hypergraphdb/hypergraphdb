@@ -138,9 +138,10 @@ public class HGStore
      * @param A non-null, but possibly empty <code>byte[]</code> holding the data to write.
      * @return The <code>handle</code> parameter.
      */    
-    public void store(HGPersistentHandle handle, byte [] data)
+    public HGPersistentHandle store(HGPersistentHandle handle, byte [] data)
     {
-        impl.store(handle, data);        
+        impl.store(handle, data);
+        return handle;
     }
     
     /**

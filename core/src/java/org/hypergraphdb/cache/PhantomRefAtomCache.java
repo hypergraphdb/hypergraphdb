@@ -83,7 +83,7 @@ public class PhantomRefAtomCache implements HGAtomCache
             lock.writeLock().lock();
             try
             {
-                liveHandles.remove(ref.getPersistentHandle());
+                liveHandles.remove(ref.getPersistent());
             }
             finally
             {
@@ -212,17 +212,17 @@ public class PhantomRefAtomCache implements HGAtomCache
         try
         {
             PhantomHandle ph = (PhantomHandle)handle;
-            PhantomHandle existing = liveHandles.get(ph.getPersistentHandle());
+            PhantomHandle existing = liveHandles.get(ph.getPersistent());
             
             if (existing != ph)
             {
                 if (existing != null)
                 {
-                    liveHandles.remove(existing.getPersistentHandle());
+                    liveHandles.remove(existing.getPersistent());
                     atoms.remove(existing.getRef());                
                 }
                 ph.storeRef(atom);
-                liveHandles.put(ph.getPersistentHandle(), ph);
+                liveHandles.put(ph.getPersistent(), ph);
                 atoms.put(atom, ph);
                 coldAtoms.add(atom);
             }       
@@ -306,7 +306,7 @@ public class PhantomRefAtomCache implements HGAtomCache
             // Shouldn't use clear here, since we might be gc-ing the ref!
             if (handle instanceof PhantomHandle)
                 ((PhantomHandle)handle).storeRef(null);
-            liveHandles.remove(handle.getPersistentHandle());           
+            liveHandles.remove(handle.getPersistent());           
         }
         finally
         {

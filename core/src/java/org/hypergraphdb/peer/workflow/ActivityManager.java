@@ -165,13 +165,14 @@ public class ActivityManager implements MessageHandler
         return root;
     }
     
-    private void notUnderstood(final Message msg, final String exlanation)
+    private void notUnderstood(final Message msg, final String explanation)
     {
         try 
         { 
             Message reply = combine(Messages.getReply(msg), 
                                    struct(PERFORMATIVE, Performative.NotUnderstood,
-                                          CONTENT, msg));
+                                          CONTENT, msg,
+                                          WHY_NOT_UNDERSTOOD, explanation));
             thisPeer.getPeerInterface().send(getSender(msg), reply);
             //System.out.println("Sending not understood on " + msg + " because " + exlanation);
         }
@@ -658,6 +659,8 @@ public class ActivityManager implements MessageHandler
         {
             //System.out.println("Msg for existing activity " + activity.getId() + " at state " + activity.getState());        	
             type = activityTypes.get(activity.getType());
+            if (type == null)                
+                handleActivityException(activity, new NullPointerException("no local activity type found with name " + activity.getType()), msg);
         }
         try
         {
