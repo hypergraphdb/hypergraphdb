@@ -204,9 +204,16 @@ public class Structs
             return new CustomSerializedValue(x);
         else if (x instanceof CustomSerializedValue)
             return x;
-        else if (x == null || x instanceof Boolean || x instanceof String
-                || x instanceof Map)
+        else if (x == null || x instanceof Boolean || x instanceof String)
             return x;
+        else if (x instanceof Map)
+        {
+            HashMap<Object, Object> m  = new HashMap<Object, Object>();
+            Map<Object, Object> M = (Map)x;
+            for (Map.Entry<Object, Object> e : M.entrySet())
+                m.put(svalue(e.getKey()), svalue(e.getValue()));
+            return m;
+        }
         else if (x instanceof Number)
         {
             // might be a property that gives no information on what needs to be
@@ -709,6 +716,13 @@ public class Structs
                 }
                 return result;
             }
+        }
+        else if (source instanceof Map)
+        {
+            HashMap<Object, Object> result = new HashMap<Object, Object>();
+            for (Map.Entry<Object, Object> e : ((Map<Object, Object>)source).entrySet())
+                result.put(createObject(e.getKey()), createObject(e.getValue()));
+            return result;
         }
         else
             return source;

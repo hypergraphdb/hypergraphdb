@@ -7,9 +7,12 @@
  */
 package org.hypergraphdb.peer;
 
+import static org.hypergraphdb.peer.Messages.CONTENT;
 import static org.hypergraphdb.peer.Structs.getPart;
 
 
+import static org.hypergraphdb.peer.Structs.combine;
+import static org.hypergraphdb.peer.Structs.list;
 import static org.hypergraphdb.peer.Structs.object;
 import static org.hypergraphdb.peer.Structs.struct;
 
@@ -171,6 +174,14 @@ public class SubgraphManager
         HGTransactionConfig.DEFAULT);
     }
 
+    public static HGHandle [] getAtomTargets(Object atom)
+    {
+        if (! (atom instanceof HGLink))
+          return HGUtils.EMPTY_HANDLE_ARRAY;
+        else
+            return HGUtils.toHandleArray((HGLink)atom);
+    }
+    
     /**
      * Assuming a single root, write the <code>StorageGraph</code> to (merge it with)
      * the <code>HyperGraph</code> for the sole purpose of reading back a run-time
@@ -231,6 +242,64 @@ public class SubgraphManager
         }
         return struct("storage-graph", object(atomGraph),
                       "type-classes", types);                   
+    }
+    
+    /**
+     * Serialize an arbitrary object (not necessarily stored in the database) as a hypergraph atom for
+     * wire transmission.
+     * @param graph
+     * @param atom
+     * @param typeHandle
+     * @return
+     */
+    public static Object getTransferObjectRepresentation(HyperGraph graph, 
+                                                         HGHandle atomHandle, 
+                                                         Object atom, 
+                                                         HGHandle typeHandle)
+    {
+        if (typeHandle == null)
+            typeHandle = graph.getTypeSystem().getTypeHandle(atom);
+        HGAtomType  type = graph.get(typeHandle);
+        StorageGraph sgraph = new RAMStorageGraph();
+        graph.getStore().attachOverlayGraph(sgraph);
+        try
+        {
+            HGHandle valueHandle = type.store(atom);
+            HGHandle [] targets = SubgraphManager.getAtomTargets(atom);
+            HGPersistentHandle [] layout = new HGPersistentHandle[2 + targets.length];
+            layout[0] = typeHandle.getPersistent();
+            layout[1] = valueHandle.getPersistent();
+            for (int i = 0; i < targets.length; i++)
+                layout[i + 2] = targets[i].getPersistent();
+            sgraph.store(atomHandle.getPersistent(), layout);
+            sgraph.getRoots().add(atomHandle.getPersistent());
+            
+            Map<String, String> types = new HashMap<String, String>();
+            String clname = graph.getTypeSystem().getClassNameForType(typeHandle);
+            if (clname != null)
+                types.put(typeHandle.getPersistent().toString(), clname);
+            for (Pair<HGPersistentHandle, Object> p : sgraph)
+            {
+                if (p == null)
+                    continue;
+                if (p.getSecond() instanceof HGPersistentHandle[])
+                {
+                    for (HGPersistentHandle h : (HGPersistentHandle[])p.getSecond())
+                        if ( (clname = graph.getTypeSystem().getClassNameForType(h)) != null )
+                            types.put(h.toString(), clname);
+                }
+                clname = graph.getTypeSystem().getClassNameForType(p.getFirst());
+                if (clname != null)
+                    types.put(p.getFirst().getPersistent().toString(), clname);
+            }
+            return struct("storage-graph", object(sgraph),
+                          "type-handle", typeHandle, 
+                          "type-classes", types);            
+        }
+        finally
+        {
+            graph.getStore().detachOverlayGraph();
+        }                                                                   
     }
     
     public static Object getTransferGraphRepresentation(HyperGraph graph,

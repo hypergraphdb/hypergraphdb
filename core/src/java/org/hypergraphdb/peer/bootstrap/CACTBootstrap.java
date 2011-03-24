@@ -16,6 +16,7 @@ import org.hypergraphdb.peer.cact.DefineAtom;
 import org.hypergraphdb.peer.cact.GetAtom;
 import org.hypergraphdb.peer.cact.GetAtomType;
 import org.hypergraphdb.peer.cact.GetClassForType;
+import org.hypergraphdb.peer.cact.QueryCount;
 import org.hypergraphdb.peer.cact.RemoveAtom;
 import org.hypergraphdb.peer.cact.ReplaceAtom;
 import org.hypergraphdb.peer.cact.RemoteQueryExecution;
@@ -35,6 +36,7 @@ public class CACTBootstrap implements BootstrapPeer
         peer.getActivityManager().registerActivityType(RemoveAtom.TYPENAME, RemoveAtom.class);
         peer.getActivityManager().registerActivityType(ReplaceAtom.TYPENAME, ReplaceAtom.class);
         peer.getActivityManager().registerActivityType(RunRemoteQuery.TYPENAME, RunRemoteQuery.class);
+        peer.getActivityManager().registerActivityType(QueryCount.TYPENAME, QueryCount.class);
         
         RemoteQueryExecution.ResultSetOpen.getConst();
         

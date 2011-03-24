@@ -7,10 +7,10 @@ public interface HyperNode
 {
     <T> T get(HGHandle handle);
     HGHandle add(Object atom, HGHandle type, int flags);
-    public void define(HGPersistentHandle handle,
+    public void define(HGHandle handle,
                        HGHandle type,
                        Object instance,
-                       byte flags);    
+                       int flags);    
     boolean remove(HGHandle handle);
     boolean replace(HGHandle handle, Object newValue, HGHandle newType);
     HGHandle getType(HGHandle handle);
@@ -18,4 +18,5 @@ public interface HyperNode
     <T> HGSearchResult<T> find(HGQueryCondition condition);
     <T> List<T> getAll(HGQueryCondition condition);
     List<HGHandle> findAll(HGQueryCondition condition);
+    long count(HGQueryCondition condition);
 }

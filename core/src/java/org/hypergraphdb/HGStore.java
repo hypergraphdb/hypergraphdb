@@ -97,7 +97,7 @@ public class HGStore
      * @return The newly created <code>HGPersistentHandle</code>.
      */
     public HGPersistentHandle store(HGPersistentHandle [] link)
-    {
+    {        
         return store(config.getHandleFactory().makeHandle(), link);
     }
     
@@ -113,7 +113,10 @@ public class HGStore
      */
     public HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle [] link)
     {
-        return impl.store(handle, link);      
+        if (overlayGraph.get() != null)
+            return overlayGraph.get().store(handle, link);
+        else
+            return impl.store(handle, link);      
     }
     
     /**
@@ -140,8 +143,10 @@ public class HGStore
      */    
     public HGPersistentHandle store(HGPersistentHandle handle, byte [] data)
     {
-        impl.store(handle, data);
-        return handle;
+        if (overlayGraph.get() != null)
+            return overlayGraph.get().store(handle, data);
+        else       
+            return impl.store(handle, data);
     }
     
     /**
@@ -354,7 +359,7 @@ public class HGStore
     
     /**
      * <p>
-     * Reserver to internal use.
+     * Reserved to internal use.
      * </p>
      */
     public void attachOverlayGraph(StorageGraph sgraph)
@@ -364,11 +369,21 @@ public class HGStore
     
     /**
      * <p>
-     * Reserver to internal use.
+     * Reserved to internal use.
      * </p>
      */
     public void detachOverlayGraph()
     {
         overlayGraph.set(null);
+    }
+
+    /**
+     * <p>
+     * Reserved to internal use.
+     * </p>
+     */
+    public boolean hasOverlayGraph()
+    {
+        return overlayGraph.get() != null;
     }
 }

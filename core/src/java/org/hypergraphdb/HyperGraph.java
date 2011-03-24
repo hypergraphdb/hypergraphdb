@@ -1240,7 +1240,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * update any indices related to the atom. If this parameter is <code>null</code>, an attempt to 
      * construct the instance from the <code>valueHandle</code> will be made.
      */
-    public void define(final HGPersistentHandle atomHandle, 
+    public void define(final HGHandle atomHandle, 
     				   final HGHandle typeHandle, 
     				   final HGHandle valueHandle, 
     				   final HGLink   outgoingSet,
@@ -1254,9 +1254,9 @@ public /*final*/ class HyperGraph implements HyperNode
 	    	if (outgoingSet != null)
 	    		for (int i = 0; i < outgoingSet.getArity(); i++)
 	    			layout[i + 2] = getPersistentHandle(outgoingSet.getTargetAt(i));
-	    	store.store(atomHandle, layout);
-	    	indexByType.addEntry(layout[0], atomHandle);
-	    	indexByValue.addEntry(layout[1], atomHandle);
+	    	store.store(atomHandle.getPersistent(), layout);
+	    	indexByType.addEntry(layout[0], atomHandle.getPersistent());
+	    	indexByValue.addEntry(layout[1], atomHandle.getPersistent());
 	    	
 	    	// Need to construct the value and add it to atom indices.	    	
 	    	HGAtomType type = get(typeHandle);
@@ -1265,12 +1265,12 @@ public /*final*/ class HyperGraph implements HyperNode
 	    	{
 	    		HGHandle [] targets = new HGHandle[outgoingSet.getArity()];
 		    	System.arraycopy(layout, 2, targets, 0, targets.length);
-		    	updateTargetsIncidenceSets(atomHandle, outgoingSet);
+		    	updateTargetsIncidenceSets(atomHandle.getPersistent(), outgoingSet);
 		    	linkRef = new ReadyRef<HGHandle[]>(targets);
     		}
 	        idx_manager.maybeIndex(layout[0], 
 	        					   type, 
-	        					   atomHandle,
+	        					   atomHandle.getPersistent(),
 	        					   instance == null ? type.make(layout[1], linkRef, null) : instance);	        	    	
 	    	return null;
     	}});
@@ -1293,7 +1293,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param instance The handle of the atom's value. May be <code>null</code> in which case the default
      * HyperGraph <code>NullType</code> is used. 
      */
-    public void define(final HGPersistentHandle atomHandle, final Object instance, final byte flags)
+    public void define(final HGPersistentHandle atomHandle, final Object instance, final int flags)
     {
     	HGHandle typeHandle = null;
     	if (instance == null)
@@ -1316,10 +1316,10 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param instance The atom instance.
      * @param flags System flags.
      */
-    public void define(final HGPersistentHandle atomHandle, 
+    public void define(final HGHandle atomHandle, 
                        final HGHandle typeHandle, 
                        final Object instance, 
-                       final byte flags)
+                       final int flags)
     {
         getTransactionManager().ensureTransaction(new Callable<Object>() 
           { public Object call() {        
@@ -1334,7 +1334,7 @@ public /*final*/ class HyperGraph implements HyperNode
               }
               HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
               define(atomHandle, typeHandle, valueHandle, link, instance);
-              HyperGraph.this.atomAdded(atomHandle, instance, flags);
+              HyperGraph.this.atomAdded(atomHandle.getPersistent(), instance, flags);
               if (instance instanceof HGTypeHolder)
               	((HGTypeHolder)instance).setAtomType(type);
               return null;
@@ -1477,6 +1477,11 @@ public /*final*/ class HyperGraph implements HyperNode
         return hg.findAll(this, condition);
     }
     
+    public long count(HGQueryCondition condition)
+    {
+        return hg.count(this, condition);
+    }
+    
     /**
      * <p>
      * Return the <code>HGIndexManager</code> that is associated with this
@@ -1558,7 +1563,7 @@ public /*final*/ class HyperGraph implements HyperNode
     	}});
     }
     
-    private HGLiveHandle atomAdded(HGPersistentHandle pHandle, Object instance, byte flags)
+    private HGLiveHandle atomAdded(HGPersistentHandle pHandle, Object instance, int flags)
     {
     	if (instance instanceof HGGraphHolder)
     		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
@@ -1566,7 +1571,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (config.isUseSystemAtomAttributes())
         {
         	HGAtomAttrib attribs = new HGAtomAttrib();
-        	attribs.flags = flags;
+        	attribs.flags = (byte)flags;
         	attribs.retrievalCount = 1;
         	attribs.lastAccessTime = System.currentTimeMillis();
         	setAtomAttributes(pHandle, attribs);        	
@@ -1577,7 +1582,7 @@ public /*final*/ class HyperGraph implements HyperNode
             HGAtomAttrib attribs = new HGAtomAttrib();            
         	if (config.isUseSystemAtomAttributes() && flags != 0)
         	{
-        		attribs.flags = flags;
+        		attribs.flags = (byte)flags;
         		setAtomAttributes(pHandle, attribs);
         	}
         	lHandle = cache.atomAdded(pHandle, instance, attribs);

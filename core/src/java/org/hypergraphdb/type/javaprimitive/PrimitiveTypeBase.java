@@ -107,12 +107,18 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     protected final HGPersistentHandle storeImpl(byte [] data)
     {
         HGStore store = graph.getStore();
+        
+        if (store.hasOverlayGraph())
+        {
+            return store.store(data);
+        }
+        
         HGPersistentHandle handle = null;
         
         //
         // First lookup that string value in the DB and return its 
         // handle if available.
-        //
+        //        
         HGIndex<byte[], HGPersistentHandle> idx = getIndex();
         handle = idx.findFirst(data);
         

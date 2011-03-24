@@ -22,7 +22,7 @@ public interface HGStoreImplementation
     void removeLink(HGPersistentHandle handle);
     boolean containsLink(HGPersistentHandle handle);
     
-    void store(HGPersistentHandle handle, byte [] data);    
+    HGPersistentHandle store(HGPersistentHandle handle, byte [] data);    
     void removeData(HGPersistentHandle handle);         
     byte [] getData(HGPersistentHandle handle);
     

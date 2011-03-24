@@ -11,12 +11,21 @@ import java.util.Stack;
 
 import org.hypergraphdb.HGException;
 
-class DefaultTransactionContext implements HGTransactionContext
+/**
+ * <p>
+ * A default implementation of {@link HGTransactionContext} using a stack of currently
+ * active transactions. Transactions in the stack are in a parent-child relationship where
+ * the bottom doesn't have any parent. 
+ * </p>
+ * @author Borislav Iordanov
+ *
+ */
+public class DefaultTransactionContext implements HGTransactionContext
 {
 	private Stack<HGTransaction> tstack = new Stack<HGTransaction>();
 	private HGTransactionManager manager = null;
 	
-	DefaultTransactionContext(HGTransactionManager manager)
+	public DefaultTransactionContext(HGTransactionManager manager)
 	{
 		this.manager = manager;
 	}

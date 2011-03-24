@@ -266,10 +266,10 @@ public final class HGTransaction implements HGStorageTransaction
             if (stran != null)
                 stran.commit();
         }
-        finish();            
         HyperGraph graph = context.getManager().getHyperGraph();
         graph.getEventManager().dispatch(graph,
                                          new HGTransactionEndEvent(this, true));
+        finish();        
     }
 
     private void privateAbort() throws HGTransactionException

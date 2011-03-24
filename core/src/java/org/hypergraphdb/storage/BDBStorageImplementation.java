@@ -189,7 +189,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
 
-    public void store(HGPersistentHandle handle, byte[] data)
+    public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
     {
         try
         {
@@ -198,7 +198,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                                                  new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
                 throw new Exception("OperationStatus: " + result);            
-            
+            return handle;
         }
         catch (Exception ex)
         {

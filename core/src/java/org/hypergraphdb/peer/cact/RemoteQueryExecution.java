@@ -28,8 +28,10 @@ import org.hypergraphdb.peer.workflow.PossibleOutcome;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.transaction.DefaultTransactionContext;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.util.HGUtils;
 
 public class RemoteQueryExecution<T> extends FSMActivity
@@ -39,9 +41,22 @@ public class RemoteQueryExecution<T> extends FSMActivity
         WorkflowState.makeStateConstant("ResultSetOpen");
     private HGPeerIdentity target;
     private HGTransaction tx;
+    private HGTransactionContext txContext;
     private HGQueryCondition queryExpression;
     private HGSearchResult<T> rs;
 
+    private void bindTxContext()
+    {
+        if (txContext == null)
+            txContext = new DefaultTransactionContext(getThisPeer().getGraph().getTransactionManager());
+        getThisPeer().getGraph().getTransactionManager().threadAttach(txContext);
+    }
+    
+    private void unbindTxContext()
+    {
+        getThisPeer().getGraph().getTransactionManager().threadDetach();
+    }
+    
     private class RemoteSearchResult<E> implements HGSearchResult<E>
     {
         boolean hasnext = false, hasprev = false;
@@ -117,6 +132,14 @@ public class RemoteQueryExecution<T> extends FSMActivity
         public void close()
         {
             send(target, createMessage(Performative.Cancel, RemoteQueryExecution.this));
+            try
+            {
+                RemoteQueryExecution.this.getState().getFuture(WorkflowState.Completed).get();
+            }
+            catch (Exception ex)
+            {
+                throw new HGException(ex);
+            }
         }
 
         public boolean isOrdered()
@@ -167,32 +190,40 @@ public class RemoteQueryExecution<T> extends FSMActivity
                 throws Throwable
         {
             HyperGraph graph = getThisPeer().getGraph();
-            String op = getPart(msg, CONTENT);
-            Message reply;
-            if ("next".equals(op) || "prev".equals(op))
+            getParent().bindTxContext();
+            try
             {
-                Object x = "next".equals(op) ? getParent().rs.next() : getParent().rs.prev();
-                Object current = (x instanceof HGHandle) ? x
-                        : SubgraphManager.getTransferAtomRepresentation(graph,
-                                                                        graph.getHandle(x));
-                boolean hasnext = getParent().rs.hasNext();
-                boolean hasprev = false;
-                try { hasprev = getParent().rs.hasPrev(); }
-                catch (UnsupportedOperationException ex) { } // traversals, for example, don't support prev even though they should...
-                reply = getReply(msg, Performative.InformRef);
-                combine(reply,
-                        struct(CONTENT,
-                               struct("has-next",
-                                      hasnext,
-                                      "has-prev",
-                                      hasprev,
-                                      "current",
-                                      current)));
+                String op = getPart(msg, CONTENT);
+                Message reply;
+                if ("next".equals(op) || "prev".equals(op))
+                {
+                    Object x = "next".equals(op) ? getParent().rs.next() : getParent().rs.prev();
+                    Object current = (x instanceof HGHandle) ? x
+                            : SubgraphManager.getTransferAtomRepresentation(graph,
+                                                                            graph.getHandle(x));
+                    boolean hasnext = getParent().rs.hasNext();
+                    boolean hasprev = false;
+                    try { hasprev = getParent().rs.hasPrev(); }
+                    catch (UnsupportedOperationException ex) { } // traversals, for example, don't support prev even though they should...
+                    reply = getReply(msg, Performative.InformRef);
+                    combine(reply,
+                            struct(CONTENT,
+                                   struct("has-next",
+                                          hasnext,
+                                          "has-prev",
+                                          hasprev,
+                                          "current",
+                                          current)));
+                }
+                else
+                    reply = getReply(msg, Performative.NotUnderstood);
+                send(getSender(msg), reply);
+                return WorkflowStateConstant.Completed;
             }
-            else
-                reply = getReply(msg, Performative.NotUnderstood);
-            send(getSender(msg), reply);
-            return WorkflowStateConstant.Completed;
+            finally
+            {
+                getParent().unbindTxContext();
+            }
         }
 
         @FromState("Started")
@@ -237,19 +268,26 @@ public class RemoteQueryExecution<T> extends FSMActivity
     {
         queryExpression = getPart(msg, CONTENT);
         HyperGraph graph = getThisPeer().getGraph();
-        graph.getTransactionManager()
-                .beginTransaction(HGTransactionConfig.READONLY);
-        tx = graph.getTransactionManager().getContext().getCurrent();
-        rs = getThisPeer().getGraph().find(queryExpression);
-        Message reply = getReply(msg, Performative.Agree);
-        combine(reply,
-                struct(CONTENT,
-                       struct("has-next",
-                              rs.hasNext(),
-                              "is-ordered",
-                              rs.isOrdered())));
-        send(getSender(msg), reply);
-        return ResultSetOpen;
+        bindTxContext();
+        try
+        {
+            graph.getTransactionManager().beginTransaction(HGTransactionConfig.READONLY);
+            tx = graph.getTransactionManager().getContext().getCurrent();
+            rs = getThisPeer().getGraph().find(queryExpression);
+            Message reply = getReply(msg, Performative.Agree);
+            combine(reply,
+                    struct(CONTENT,
+                           struct("has-next",
+                                  rs.hasNext(),
+                                  "is-ordered",
+                                  rs.isOrdered())));
+            send(getSender(msg), reply);
+            return ResultSetOpen;
+        }
+        finally
+        {
+            unbindTxContext();
+        }
     }
 
     @FromState("Started")
@@ -267,11 +305,27 @@ public class RemoteQueryExecution<T> extends FSMActivity
     @PossibleOutcome("Completed")
     public WorkflowStateConstant onClose(Message msg) throws Throwable
     {
-        HGUtils.closeNoException(rs);
-        tx.commit();
-        return WorkflowStateConstant.Completed;
+        bindTxContext();
+        try
+        {
+            HGUtils.closeNoException(rs);
+            tx.commit();
+            reply(msg, Performative.Confirm, null);
+            return WorkflowStateConstant.Completed;
+        }
+        finally
+        {
+            unbindTxContext();
+        }
     }
 
+    @FromState("ResultSetOpen")
+    @OnMessage(performative = "Confirm")
+    public WorkflowStateConstant onClosed(Message msg)
+    {
+        return WorkflowStateConstant.Completed;
+    }
+    
     public HGSearchResult<T> getSearchResult()
     {
         return rs;

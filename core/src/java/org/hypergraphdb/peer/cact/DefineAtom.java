@@ -10,9 +10,13 @@ package org.hypergraphdb.peer.cact;
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.Structs.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
@@ -28,6 +32,7 @@ import org.hypergraphdb.storage.RAMStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Pair;
 
 /**
  * <p>
@@ -47,29 +52,26 @@ public class DefineAtom extends FSMActivity
     private HGHandle typeHandle;
     private Object atom;
     
-    private HGHandle [] getAtomTargets()
-    {
-        if (! (atom instanceof HGLink))
-          return HGUtils.EMPTY_HANDLE_ARRAY;
-        else
-            return HGUtils.toHandleArray((HGLink)atom);
-    }
-    
     public DefineAtom(HyperGraphPeer thisPeer, UUID id)
     {
         super(thisPeer, id);
     }
 
-    public DefineAtom(HyperGraphPeer thisPeer, HGHandle atom, HGPeerIdentity target)
+    public DefineAtom(HyperGraphPeer thisPeer, HGHandle atomHandle, HGPeerIdentity target)
     {
         super(thisPeer);
-        this.atomHandle = atom;
+        this.atomHandle = atomHandle;
         this.target = target;
     }
 
-    public DefineAtom(HyperGraphPeer thisPeer, Object atom, HGHandle typeHandle, HGPeerIdentity target)
+    public DefineAtom(HyperGraphPeer thisPeer, 
+                      HGHandle atomHandle, 
+                      Object atom, 
+                      HGHandle typeHandle, 
+                      HGPeerIdentity target)
     {
         super(thisPeer);
+        this.atomHandle = atomHandle;
         this.atom = atom;
         this.typeHandle = typeHandle;
         this.target = target;
@@ -78,35 +80,24 @@ public class DefineAtom extends FSMActivity
     @Override
     public void initiate()
     {
+        HyperGraph graph = getThisPeer().getGraph();
         Message msg = createMessage(Performative.Request, this);
-        if (atomHandle != null)
+        if (graph.get(atomHandle) != null)
+        {
             combine(msg, 
                     struct(CONTENT, 
-                           SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), atomHandle)));
+                           SubgraphManager.getTransferAtomRepresentation(
+                                 graph, atomHandle)));
+            send(target, msg);            
+        }
         else
         {
-            if (typeHandle == null)
-                typeHandle = getThisPeer().getGraph().getTypeSystem().getTypeHandle(atom);
-            HGAtomType  type = getThisPeer().getGraph().get(typeHandle);
-            StorageGraph sgraph = new RAMStorageGraph();
-            getThisPeer().getGraph().getStore().attachOverlayGraph(sgraph);
-            try
-            {
-                sgraph.getRoots().add(type.store(atom));
-                combine(msg, 
-                        struct(CONTENT,             
-                               struct("storage-graph", object(sgraph),
-                                      "type-handle", typeHandle, 
-                                      "type-classes", struct()),
-                                      "targets", list((Object[])getAtomTargets())));
-                send(target, msg);
-            }
-            finally
-            {
-                getThisPeer().getGraph().getStore().detachOverlayGraph();
-            }
+            combine(msg,
+                    struct(CONTENT, 
+                           SubgraphManager.getTransferObjectRepresentation(
+                                graph, atomHandle, atom, typeHandle)));
+            send(target, msg);            
         }        
-        send(target, msg);        
     }
 
     @FromState("Started")

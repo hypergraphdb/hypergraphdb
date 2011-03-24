@@ -10,18 +10,21 @@ import static org.hypergraphdb.peer.Structs.list;
 import static org.hypergraphdb.peer.Structs.object;
 import static org.hypergraphdb.peer.Structs.struct;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Performative;
+import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.FSMActivity;
 import org.hypergraphdb.peer.workflow.FromState;
 import org.hypergraphdb.peer.workflow.OnMessage;
@@ -31,6 +34,7 @@ import org.hypergraphdb.storage.RAMStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Pair;
 
 public class AddAtom extends FSMActivity
 {
@@ -70,6 +74,7 @@ public class AddAtom extends FSMActivity
     @Override
     public void initiate()
     {
+        HyperGraph graph = getThisPeer().getGraph();
         Message msg = createMessage(Performative.Request, this);
         if (typeHandle == null)
             typeHandle = getThisPeer().getGraph().getTypeSystem().getTypeHandle(atom);
@@ -79,12 +84,30 @@ public class AddAtom extends FSMActivity
         try
         {
             sgraph.getRoots().add(type.store(atom));
+            Map<String, String> types = new HashMap<String, String>();
+            String clname = graph.getTypeSystem().getClassNameForType(typeHandle);
+            if (clname != null)
+                types.put(typeHandle.getPersistent().toString(), clname);
+            for (Pair<HGPersistentHandle, Object> p : sgraph)
+            {
+                if (p == null)
+                    continue;
+                if (p.getSecond() instanceof HGPersistentHandle[])
+                {
+                    for (HGPersistentHandle h : (HGPersistentHandle[])p.getSecond())
+                        if ( (clname = graph.getTypeSystem().getClassNameForType(h)) != null )
+                            types.put(h.toString(), clname);
+                }
+                clname = graph.getTypeSystem().getClassNameForType(p.getFirst());
+                if (clname != null)
+                    types.put(p.getFirst().getPersistent().toString(), clname);
+            }                 
             combine(msg, 
                     struct(CONTENT,             
                            struct("storage-graph", object(sgraph),
                                   "type-handle", typeHandle, 
-                                  "type-classes", struct()),
-                                  "targets", list((Object[])getAtomTargets())));
+                                  "type-classes", types,
+                                  "targets", list((Object[])getAtomTargets()))));
             send(target, msg);
         }
         finally
@@ -104,20 +127,25 @@ public class AddAtom extends FSMActivity
         final Map<String, String>  typeClasses = getPart(A, "type-classes");
         final HGHandle typeHandle = getPart(A, "type-handle");
         final List<Object> targets = getPart(A, "targets");
+        Map<HGHandle, HGHandle> localTypes = SubgraphManager.getLocalTypes(graph, typeClasses); 
+        subgraph.translateHandles(localTypes);
+        HGHandle ltype = localTypes.get(typeHandle);
+        if (ltype == null)
+            ltype = typeHandle;        
         graph.getStore().attachOverlayGraph(subgraph);
         try
         {    
-            HGHandle [] targetSet = targets.toArray(HGUtils.EMPTY_HANDLE_ARRAY);            
-            HGAtomType type = graph.get(typeHandle);                    
+            HGHandle [] targetSet = targets.toArray(HGUtils.EMPTY_HANDLE_ARRAY);
+            HGAtomType type = graph.get(ltype);                    
             atom = type.make(subgraph.getRoots().iterator().next(), 
                              new ReadyRef<HGHandle[]>(targetSet), 
-                             null);                
+                             null);                       
         }
         finally
         {
             graph.getStore().detachOverlayGraph();
         }         
-        this.atomHandle = graph.add(atom);
+        this.atomHandle = graph.add(atom, ltype);
         reply(msg, Performative.Agree, struct("atom-handle", atomHandle));
         return WorkflowStateConstant.Completed;
     }
