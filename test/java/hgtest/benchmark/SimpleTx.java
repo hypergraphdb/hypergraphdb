@@ -117,12 +117,8 @@ public class SimpleTx extends HGTestBase
         try
         {
 //            test.oneAtomOneLink();
-            test.graph.getTransactionManager().conflicted.set(0);
-            test.graph.getTransactionManager().successful.set(0);
             test.parallelBulkAdd();
             test.checkRange(0, 200);
-            System.out.println("Done, CONFLICTS=" + test.graph.getTransactionManager().conflicted.get() +
-                               ", SUCCESSFUL=" + test.graph.getTransactionManager().successful.get());
         }
         finally
         {
