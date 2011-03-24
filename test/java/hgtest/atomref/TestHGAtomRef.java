@@ -1,12 +1,18 @@
 package hgtest.atomref;
 
 import org.hypergraphdb.annotation.AtomReference;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.*;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import hgtest.CircRefBean;
 import hgtest.CircRefOtherBean;
+import hgtest.HGTestBase;
+import hgtest.beans.Car;
+import hgtest.beans.Person;
 
-public class TestHGAtomRef
+public class TestHGAtomRef extends HGTestBase
 {
 	@AtomReference("hard")
 	private CircRefBean ref1;
@@ -40,18 +46,36 @@ public class TestHGAtomRef
 		this.other = other;
 	}
 	
+	@Test
+	public void testRefInParentType()
+	{
+	    Car car = new Car();
+	    car.setMake("Honda");
+	    car.setYear(1997);
+	    Person person = new Person();
+	    person.setFirstName("Toto");
+	    person.setLastName("Cutunio");
+	    car.setOwner(person);
+	    
+	    HGHandle carHandle = graph.add(car);
+	    this.reopenDb();
+	    car = graph.get(carHandle);
+	    Assert.assertNotNull(graph.getHandle(car.getOwner()));
+	}
+	
 	public static void main(String [] argv)
 	{
-		HyperGraph graph = new HyperGraph("/tmp/testHG");
-		TestHGAtomRef refering = new TestHGAtomRef();
-		CircRefBean ref1 = CircRefBean.make();
-		refering.setRef1(ref1);
-		refering.setRef2(CircRefBean.make());
-		CircRefOtherBean other = new CircRefOtherBean();
-		other.setRef(ref1);
-		refering.setOther(other);
-		HGHandle h = graph.add(refering);
-		
-		graph.remove(h);
+	    TestHGAtomRef test = new TestHGAtomRef();
+        HGUtils.dropHyperGraphInstance(test.getGraphLocation());
+        test.setUp();        
+        try
+        {
+            test.testRefInParentType();
+        }
+        finally
+        {
+            test.tearDown();
+        }        
+	    
 	}
 }
