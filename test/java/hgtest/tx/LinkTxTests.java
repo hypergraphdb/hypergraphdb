@@ -254,11 +254,7 @@ public class LinkTxTests extends HGTestBase
         test.setUp();        
         try
         {
-            test.graph.getTransactionManager().conflicted.set(0);
-            test.graph.getTransactionManager().successful.set(0);
             test.testConcurrentLinkCreation();
-            System.out.println("Done, CONFLICTS=" + test.graph.getTransactionManager().conflicted.get() +
-                               ", SUCCESSFUL=" + test.graph.getTransactionManager().successful.get());
         }
         finally
         {

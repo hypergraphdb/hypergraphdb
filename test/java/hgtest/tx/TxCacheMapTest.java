@@ -192,10 +192,6 @@ public class TxCacheMapTest extends HGTestBase
             test.theMap = new TxCacheMap<Integer, SimpleData>(test.graph.getTransactionManager(), HashMap.class);
             //test.localMap = new TxMap<Integer, SimpleData>(test.graph.getTransactionManager(), null);
             test.runMe();
-            System.out.println("Done, CONFLICTS="
-                    + test.graph.getTransactionManager().conflicted.get()
-                    + ", SUCCESSFUL="
-                    + test.graph.getTransactionManager().successful.get());
         }
         catch (Throwable t)
         {
