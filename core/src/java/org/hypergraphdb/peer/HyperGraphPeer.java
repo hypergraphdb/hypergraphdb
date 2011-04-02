@@ -290,7 +290,7 @@ public class HyperGraphPeer
 	 */
 	public Future<Boolean> start(String ignored1, String ignored2)
 	{
-		return start(null, null);
+		return start();
 	}
 	
 	/**

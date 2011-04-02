@@ -8,13 +8,13 @@
 package org.hypergraphdb.type.javaprimitive;
 
 import org.hypergraphdb.HGException;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
-import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -42,18 +42,25 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 	{
 		EnumType result = new EnumType();
 		result.setHyperGraph(graph);
-		HGPersistentHandle [] layout = graph.getStore().getLink(handle);
-		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
-		String classname = (String)stringType.make(layout[0], null, null);
-		try
-		{
-			Class<Enum> cl = HGUtils.loadClass(getHyperGraph(), classname);
-			result.setEnumType(cl);
-		}
-		catch (ClassNotFoundException ex)
-		{
-			throw new HGException("Unable to load enum class " + classname, ex);
-		}
+		
+		// We are pretty sure that this is an atom, so we can find its handle with the by value
+		// index. And we use that to get Java class of the enum, instead of the stored one
+		// so we can gracefully handle class name changes.
+		HGPersistentHandle typeHandle = graph.getIndexManager().getIndexByValue().findFirst(handle);
+		Class<Enum> cl = (Class<Enum>)graph.getTypeSystem().getClassForType(typeHandle);
+		result.setEnumType(cl);		
+//		HGPersistentHandle [] layout = graph.getStore().getLink(handle);		
+//		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);		
+//		String classname = (String)stringType.make(layout[0], null, null);
+//		try
+//		{
+//			cl = HGUtils.loadClass(getHyperGraph(), classname);
+//			result.setEnumType(cl);
+//		}
+//		catch (ClassNotFoundException ex)
+//		{
+//			throw new HGException("Unable to load enum class " + classname, ex);
+//		}
 		return result;
 	}
 

@@ -39,6 +39,12 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
         this.converter = converter;
         this.cursor = cursor;
         this.key = new DatabaseEntry();
+        this.data = new DatabaseEntry();
+        // TODO: for fixed size key and data,we should actually reuse the buffers, but
+        // this has to be passed somehow as a configuration parameter to the HGIndex
+        // implementation and down to result sets. It's a worthwhile optimization.
+        this.key.setReuseBuffer(false);
+        this.data.setReuseBuffer(false);
         if (keyIn != null)
         	assignData(key, keyIn.getData());        
 	    try

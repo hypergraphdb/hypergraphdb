@@ -8,6 +8,8 @@
 package org.hypergraphdb.type;
 
 import java.lang.reflect.Constructor;
+import java.util.Iterator;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGLink;
@@ -15,6 +17,9 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
+import org.hypergraphdb.indexing.CompositeIndexer;
+import org.hypergraphdb.indexing.HGIndexer;
+import org.hypergraphdb.indexing.HGKeyIndexer;
 
 /**
  * <p>
@@ -69,6 +74,24 @@ public class JavaBeanBinding extends JavaAbstractBinding
     
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
+//    	if (this.javaClass.getName().equals(CompositeIndexer.class.getName()))
+//    	{
+//    		RecordType recordType = (RecordType)hgType;
+//    		for (Iterator<HGHandle> i = recordType.getSlots().iterator(); i.hasNext(); )
+//    		{
+//    			HGHandle slotHandle = i.next();
+//    			Slot slot = graph.get(slotHandle);
+//    			if (slot.getLabel().equals("indexerParts"))
+//    			{
+//    				HGHandle slotType = graph.getTypeSystem().getTypeHandle(HGKeyIndexer[].class);
+//    				if (!slotType.equals(slot.getValueType()))
+//    				{
+//    					slot.setValueType(slotType);
+//    					graph.update(slot);
+//    				}
+//    			}
+//    		}
+//    	}
         Object bean = null;
         try
         {
@@ -95,6 +118,15 @@ public class JavaBeanBinding extends JavaAbstractBinding
 	        		value = graph.get(((HGAtomRef)value).getReferent());
 	        	try
 	        	{
+	        		// TODO: tmp for porting old DBs to new version.
+	        		// DELME
+//	        		if (value instanceof HGIndexer[])
+//	        		{
+//	        			HGIndexer [] A = (HGIndexer[])value;
+//	        			HGKeyIndexer [] newvalue = new HGKeyIndexer[A.length];
+//	        			for (int i = 0; i < A.length; i++) newvalue[i] = (HGKeyIndexer)A[i];
+//	        			value = newvalue;
+//	        		}
 	        	    BonesOfBeans.setProperty(bean, slot.getLabel(), value);
 	        	}
 	        	catch (Throwable t)

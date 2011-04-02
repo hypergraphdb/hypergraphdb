@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGOrderedSearchable;
 import org.hypergraphdb.HGPersistentHandle;
@@ -23,6 +24,7 @@ import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
+import org.hypergraphdb.atom.HGSubgraph;
 import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AnyAtomCondition;
@@ -43,6 +45,7 @@ import org.hypergraphdb.query.MapCondition;
 import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
+import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.query.SubsumedCondition;
 import org.hypergraphdb.query.SubsumesCondition;
 import org.hypergraphdb.query.TargetCondition;
@@ -580,7 +583,28 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				x.predicateCost = 100; // this is because they will be a query involved in the predicate etc...expensive stuff
 				return x;
 			}
-		});		
+		});
+		instance.put(SubgraphMemberCondition.class, new ConditionToQuery()
+		{
+			public QueryMetaData getMetaData(HyperGraph graph,
+											 HGQueryCondition condition)
+			{
+				return QueryMetaData.ORACCESS.clone(condition);
+			}
+
+			public HGQuery<?> getQuery(final HyperGraph graph,
+									   final HGQueryCondition condition)
+			{
+				return new HGQuery()
+				{
+					public HGSearchResult execute() 
+					{
+						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getIndex(graph);
+						return idx.find(((SubgraphMemberCondition)condition).getSubgraphHandle().getPersistent());
+					}
+				};				
+			}			
+		});
 	}
 	
 	public static ToQueryMap getInstance() { return instance; }

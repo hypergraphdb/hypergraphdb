@@ -36,7 +36,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
     protected BDBTxCursor cursor;
     protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;    
     protected DatabaseEntry key;        
-    protected DatabaseEntry data = new DatabaseEntry();
+    protected DatabaseEntry data;
     protected ByteArrayConverter<T> converter;
     protected int lookahead = 0;
     
@@ -137,6 +137,12 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
         this.converter = converter;
         this.cursor = cursor;
         this.key = new DatabaseEntry();
+        this.data = new DatabaseEntry();
+        // TODO: for fixed size key and data,we should actually reuse the buffers, but
+        // this has to be passed somehow as a configuration parameter to the HGIndex
+        // implementation and down to result sets. It's a worthwhile optimization.
+        this.key.setReuseBuffer(false);
+        this.data.setReuseBuffer(false);
         if (keyIn != null)
         	assignData(this.key, keyIn.getData());
 	    try

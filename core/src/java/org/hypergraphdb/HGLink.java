@@ -9,18 +9,13 @@ package org.hypergraphdb;
 
 /**
  * <p>
- * The <code>HGLink</code> interface defines an unordered hypergraph link. A hypergraph link
- * is an atom that holds other atoms in a relationship. The precise semantics and interpretation
+ * The <code>HGLink</code> interface defines a hypergraph link. A hypergraph link
+ * is an atom that holds other atoms in a tuple-like relationship. The precise semantics and interpretation
  * of the relationship are application specific and will generally depend on a particular link's
  * type and properties. The only restriction imposed by HyperGraph is that a link be of arity greater
  * than 0.
  * </p>
  * 
- * <p>
- * The collection of atoms which an instance of <code>HGLink</code> connects is immutable. However, if
- * the link is an instance of a particular type, its associated properties are mutable.
- * </p>
- *  
  * <p>
  * Implementations of this interfaces must provide a the <code>notifyTargetHandleUpdate</code> to allow
  * hypergraph to notify them when a target atom was loaded/unloaded from the database. 
