@@ -1,0 +1,46 @@
+Visiting atom interface Ifc1 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,interface Ifc1
+Visiting atom org.hypergraphdb.atom.HGRelTypeConstructor@2be2befa pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.atom.HGRelTypeConstructor@2be2befa
+Visiting atom org.hypergraphdb.type.RecordTypeConstructor@a50a649 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.RecordTypeConstructor@a50a649
+Visiting atom interface org.hypergraphdb.indexing.HGIndexer pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,interface org.hypergraphdb.indexing.HGIndexer
+Visiting atom org.hypergraphdb.type.NullType@69267649 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.NullType@69267649
+Visiting atom org.hypergraphdb.type.javaprimitive.IntPrimitiveArrayType@224c47db pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.IntPrimitiveArrayType@224c47db
+Visiting atom org.hypergraphdb.type.javaprimitive.IntType@7ed75415 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.IntType@7ed75415
+Visiting atom org.hypergraphdb.type.javaprimitive.EnumTypeConstructor@20b40ec4 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.EnumTypeConstructor@20b40ec4
+Visiting atom org.hypergraphdb.type.javaprimitive.DoubleType@75be16f5 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.DoubleType@75be16f5
+Visiting atom org.hypergraphdb.type.HGHandleType@65efb4be pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.HGHandleType@65efb4be
+Visiting atom class org.hypergraphdb.atom.HGStats pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,class org.hypergraphdb.atom.HGStats
+Visiting atom org.hypergraphdb.type.javaprimitive.ShortPrimitiveArrayType@526d0040 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.ShortPrimitiveArrayType@526d0040
+Visiting atom org.hypergraphdb.type.javaprimitive.ByteType@7dc5ddc9 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.ByteType@7dc5ddc9
+Visiting atom org.hypergraphdb.type.javaprimitive.BooleanPrimitiveArrayType@59556d12 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.BooleanPrimitiveArrayType@59556d12
+Visiting atom class java.lang.Enum pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,class java.lang.Enum
+Visiting atom org.hypergraphdb.type.javaprimitive.EnumType@1b45e2d5 pointed to by subsumes(class java.lang.Enum,org.hypergraphdb.type.javaprimitive.EnumType@1b45e2d5
+Visiting atom org.hypergraphdb.type.AtomRefType@76a9b9c pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.AtomRefType@76a9b9c
+Visiting atom org.hypergraphdb.type.javaprimitive.BytePrimitiveArrayType@7afaa550 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.BytePrimitiveArrayType@7afaa550
+Visiting atom interface java.lang.Comparable pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,interface java.lang.Comparable
+Visiting atom org.hypergraphdb.type.javaprimitive.DateType@25961581 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.DateType@25961581
+Visiting atom org.hypergraphdb.type.ArrayTypeConstructor@7e859a68 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.ArrayTypeConstructor@7e859a68
+Visiting atom org.hypergraphdb.type.javaprimitive.CharType@6a47a0d4 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.CharType@6a47a0d4
+Visiting atom org.hypergraphdb.type.javaprimitive.StringType@2a0ab444 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.StringType@2a0ab444
+Visiting atom org.hypergraphdb.type.javaprimitive.FloatPrimitiveArrayType@112c3327 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.FloatPrimitiveArrayType@112c3327
+Visiting atom org.hypergraphdb.type.javaprimitive.CalendarType@50059a34 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.CalendarType@50059a34
+Visiting atom interface org.hypergraphdb.maintenance.MaintenanceOperation pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,interface org.hypergraphdb.maintenance.MaintenanceOperation
+Visiting atom org.hypergraphdb.type.javaprimitive.CharPrimitiveArrayType@1fbbd7b2 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.CharPrimitiveArrayType@1fbbd7b2
+Visiting atom org.hypergraphdb.type.CollectionTypeConstructor@37722456 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.CollectionTypeConstructor@37722456
+Visiting atom org.hypergraphdb.type.javaprimitive.FloatType@1f8166e5 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.FloatType@1f8166e5
+Visiting atom org.hypergraphdb.type.javaprimitive.BooleanType@1b815bfb pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.BooleanType@1b815bfb
+Visiting atom org.hypergraphdb.atom.AtomSetType@7174d93a pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.atom.AtomSetType@7174d93a
+Visiting atom org.hypergraphdb.type.SerializableType@7f5e2075 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.SerializableType@7f5e2075
+Visiting atom org.hypergraphdb.type.SlotType@7eda18ac pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.SlotType@7eda18ac
+Visiting atom org.hypergraphdb.type.javaprimitive.TimestampType@900bac2 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.TimestampType@900bac2
+Visiting atom class org.hypergraphdb.event.HGListenerAtom pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,class org.hypergraphdb.event.HGListenerAtom
+Visiting atom org.hypergraphdb.type.javaprimitive.LongPrimitiveArrayType@4fa4ded3 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.LongPrimitiveArrayType@4fa4ded3
+Visiting atom org.hypergraphdb.type.LinkType@6a340101 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.LinkType@6a340101
+Visiting atom org.hypergraphdb.type.PlainLinkType@5ecd2e33 pointed to by subsumes(org.hypergraphdb.type.LinkType@6a340101,org.hypergraphdb.type.PlainLinkType@5ecd2e33
+Visiting atom class org.hypergraphdb.atom.AtomProjection pointed to by subsumes(org.hypergraphdb.type.PlainLinkType@5ecd2e33,class org.hypergraphdb.atom.AtomProjection
+Visiting atom org.hypergraphdb.type.SubsumesType@48e61a35 pointed to by subsumes(org.hypergraphdb.type.PlainLinkType@5ecd2e33,org.hypergraphdb.type.SubsumesType@48e61a35
+Visiting atom interface Ifc2 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,interface Ifc2
+Visiting atom org.hypergraphdb.type.javaprimitive.ShortType@9e1be92 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.ShortType@9e1be92
+Visiting atom org.hypergraphdb.type.javaprimitive.LongType@6126f827 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.LongType@6126f827
+Visiting atom org.hypergraphdb.type.javaprimitive.DoublePrimitiveArrayType@20968fda pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.javaprimitive.DoublePrimitiveArrayType@20968fda
+Visiting atom org.hypergraphdb.type.AbstractTypeConstructor@470b9279 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.AbstractTypeConstructor@470b9279
+Visiting atom org.hypergraphdb.type.MapTypeConstructor@3d358f03 pointed to by subsumes(org.hypergraphdb.type.Top@3bc0f2e5,org.hypergraphdb.type.MapTypeConstructor@3d358f03

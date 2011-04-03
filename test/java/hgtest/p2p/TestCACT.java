@@ -219,7 +219,7 @@ public class TestCACT
             HGQueryCondition expression = hg.dfs(graph1.getTypeSystem().getTop(), 
                                                hg.type(HGSubsumes.class), null, false, true); 
             RunRemoteQuery activity = 
-                new RunRemoteQuery(peer1, expression, false, peer2.getIdentity());
+                new RunRemoteQuery(peer1, expression, false, -1, peer2.getIdentity());
             peer1.getActivityManager().initiateActivity(activity);
             activity.getFuture().get();
             @SuppressWarnings("unchecked")
@@ -232,7 +232,7 @@ public class TestCACT
             for (Object x : beans)
                 graph2.add(x);
             
-            activity = new RunRemoteQuery(peer1, hg.type(PlainBean.class), true, peer2.getIdentity());
+            activity = new RunRemoteQuery(peer1, hg.type(PlainBean.class), true, -1, peer2.getIdentity());
             peer1.getActivityManager().initiateActivity(activity);
             activity.getFuture().get();
             
