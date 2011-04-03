@@ -2,10 +2,11 @@ package org.hypergraphdb.atom;
 
 import java.util.List;
 
-import org.hypergraphdb.HGBidirectionalIndex;
+import java.util.concurrent.Callable;
 import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleHolder;
+import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -32,8 +33,9 @@ import org.hypergraphdb.storage.BAtoHandle;
  */
 public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 {
-	private static final String IDX_NAME = "subgraph.index";
-	
+    private static final String IDX_NAME = "subgraph.index";
+    private static final String REVIDX_NAME = "revsubgraph.index";
+    
 	@HGIgnore
 	HyperGraph graph;
 	HGHandle thisHandle;
@@ -43,33 +45,69 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		return hg.and(new SubgraphMemberCondition(thisHandle), condition);		
 	}	
 	
-	private HGBidirectionalIndex<HGPersistentHandle, HGPersistentHandle> getIndex()
+	private HGIndex<HGPersistentHandle, HGPersistentHandle> getIndex()
 	{
-		return graph.getStore().getBidirectionalIndex(IDX_NAME, 
-													  BAtoHandle.getInstance(graph.getHandleFactory()), 
-													  BAtoHandle.getInstance(graph.getHandleFactory()), 
-													  null, 
-													  true);
+		return graph.getStore().getIndex(IDX_NAME, 
+										  BAtoHandle.getInstance(graph.getHandleFactory()), 
+										  BAtoHandle.getInstance(graph.getHandleFactory()), 
+										  null, 
+										  true);
 	}
+
+    private HGIndex<HGPersistentHandle, HGPersistentHandle> getReverseIndex()
+    {
+        return graph.getStore().getIndex(REVIDX_NAME, 
+                                          BAtoHandle.getInstance(graph.getHandleFactory()), 
+                                          BAtoHandle.getInstance(graph.getHandleFactory()), 
+                                          null, 
+                                          true);
+    }
 	
 	/**
 	 * DO NOT USE: internal method, implementation dependent, may disappear at any time.
 	 */
-	public static HGBidirectionalIndex<HGPersistentHandle, HGPersistentHandle> getIndex(HyperGraph atGraph)
+	public static HGIndex<HGPersistentHandle, HGPersistentHandle> getReverseIndex(HyperGraph atGraph)
 	{
-		return atGraph.getStore().getBidirectionalIndex(IDX_NAME, 
+		return atGraph.getStore().getIndex(REVIDX_NAME, 
 				  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
 				  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
 				  null, 
 				  true);		
 	}
+
+    /**
+     * DO NOT USE: internal method, implementation dependent, may disappear at any time.
+     */
+    public static HGIndex<HGPersistentHandle, HGPersistentHandle> getIndex(HyperGraph atGraph)
+    {
+        return atGraph.getStore().getIndex(IDX_NAME, 
+                  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
+                  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
+                  null, 
+                  true);        
+    }
+
+    
+	private void index(HGHandle h)
+	{
+	    getIndex().addEntry(thisHandle.getPersistent(), h.getPersistent());
+	    getReverseIndex().addEntry(h.getPersistent(), thisHandle.getPersistent());
+	}
+
+    private void unindex(HGHandle h)
+    {
+        getIndex().removeEntry(thisHandle.getPersistent(), h.getPersistent());
+        getReverseIndex().removeEntry(h.getPersistent(), thisHandle.getPersistent());
+    }
 	
 	public boolean isMember(HGHandle atom)
 	{
-		HGRandomAccessResult<HGPersistentHandle> rs = getIndex().find(thisHandle.getPersistent());
+	    // it's quicker to lookup the reverse index because we expect fewer subgraphs than
+	    // atoms in them
+		HGRandomAccessResult<HGPersistentHandle> rs = getReverseIndex().find(atom.getPersistent());
 		try
 		{
-			return rs.goTo(atom.getPersistent(), true) == GotoResult.found;
+			return rs.goTo(thisHandle.getPersistent(), true) == GotoResult.found;
 		}
 		finally
 		{
@@ -86,10 +124,15 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	 * @param atom
 	 * @return The <code>atom</code> parameter.
 	 */
-	public HGHandle add(HGHandle atom)
+	public HGHandle add(final HGHandle atom)
 	{
-		getIndex().addEntry(thisHandle.getPersistent(), atom.getPersistent());
-		return atom;
+        return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>() {
+            public HGHandle call()
+            {
+                index(atom);
+                return atom;
+            }
+        });
 	}
 
 	/**
@@ -114,6 +157,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 					   int flags)
 	{
 		graph.define(handle, type, instance, flags);
+		add(handle);
 	}
 
 	public <T> HGSearchResult<T> find(HGQueryCondition condition)
@@ -121,6 +165,16 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		return graph.find(localizeCondition(condition));
 	}
 
+	public <T> T findOne(HGQueryCondition condition)
+	{
+	    return graph.findOne(localizeCondition(condition));
+	}
+
+    public <T> T getOne(HGQueryCondition condition)
+    {
+        return graph.getOne(localizeCondition(condition));
+    }
+	
 	public List<HGHandle> findAll(HGQueryCondition condition)
 	{
 		return graph.findAll(localizeCondition(condition));
@@ -151,26 +205,62 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	}
 
 	/**
+	 * Removes the atom globally from the database as well as from the nested graph.
+	 * @param handle The atom to remove.
+	 * @return The result of {@link HyperGraph.remove}. 
+	 */
+	public boolean removeGlobally(HGHandle handle)
+	{
+	    unindex(handle);
+	    return graph.remove(handle);
+	}
+
+    /**
+     * Removes the atom globally from the database as well as from the nested graph.
+     * @param handle The atom to remove.
+     * @param keepIncidentLinks - whether to also remove links pointing to the removed
+     * atom. This parameter applies recursively to the links removed.
+     * @return The result of {@link HyperGraph.remove}. 
+     */
+    public boolean removeGlobally(HGHandle handle, boolean keepIncidentLinks)
+    {
+        unindex(handle);
+        return graph.remove(handle, keepIncidentLinks);
+    }
+	
+	/**
 	 * Removes an atom from this scope. The atom is not deleted from the
 	 * global {@link HyperGraph} database. If you wish to delete it globally,
 	 * use {@link HyperGraph.remove}.
 	 * 
 	 * @return Return value is unreliable
 	 */
-	public boolean remove(HGHandle handle)
+	public boolean remove(final HGHandle handle)
 	{
-		boolean ret = isMember(handle);
-		getIndex().removeEntry(thisHandle.getPersistent(), handle.getPersistent());
-		return ret;
+	    return graph.getTransactionManager().ensureTransaction(new Callable<Boolean>() 
+	    {
+	       public Boolean call()
+	       {
+	           boolean ret = isMember(handle);
+	           unindex(handle);
+	           return ret;
+	       }	       
+	    });
 	}
 
 	/**
 	 * Performs the replace in the global database as this only deals with
 	 * an atom's value.
 	 */
-	public boolean replace(HGHandle handle, Object newValue, HGHandle newType)
+	public boolean replace(final HGHandle handle, final Object newValue, final HGHandle newType)
 	{
-		return graph.replace(handle, newValue, newType);
+        return graph.getTransactionManager().ensureTransaction(new Callable<Boolean>() 
+        {
+            public Boolean call()
+            {	    
+                return graph.replace(handle, newValue, newType);
+            }
+        });
 	}
 
 	public HGHandle getAtomHandle()

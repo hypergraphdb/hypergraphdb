@@ -540,6 +540,24 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DisconnectedPredicate
          */
         public static DisconnectedPredicate disconnected() { return new DisconnectedPredicate(); }
+
+        /**
+         * <p>
+         * Return a condition constraining the result set to atoms that are members of the 
+         * specified subgraph.
+         * </p>
+         * @param subgraphHandle The atom handle of the {@link HGSubgraph} atoms.
+         */
+        public static SubgraphMemberCondition memberOf(HGHandle subgraphHandle) { return new SubgraphMemberCondition(subgraphHandle); }
+        
+        /**
+         * <p>
+         * Return a condition constraining the result set to atoms that are instances of
+         * {@link HGSubgraph} and containing the specified atom.
+         * </p>
+         * @param The atom that return subgraphs should contain.
+         */
+        public static SubgraphContainsCondition contains(HGHandle atom) { return new SubgraphContainsCondition(atom); }
         
         /**
          * <p>

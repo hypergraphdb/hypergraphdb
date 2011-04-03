@@ -1455,6 +1455,16 @@ public /*final*/ class HyperGraph implements HyperNode
     	}});
     }
     
+    public <T> T findOne(HGQueryCondition condition)
+    {
+        return hg.findOne(this, condition);
+    }
+    
+    public <T> T getOne(HGQueryCondition condition)
+    {
+        return hg.getOne(this, condition);
+    }
+    
     /**
      * <p>Run a HyperGraphDB lookup query based on the specified condition.</p>
      * 

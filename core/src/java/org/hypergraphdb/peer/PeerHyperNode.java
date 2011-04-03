@@ -177,10 +177,44 @@ public class PeerHyperNode implements HyperNode
         return A.getSearchResult();
     }
     
+    @SuppressWarnings("unchecked")
+    public <T> T findOne(HGQueryCondition condition)
+    {
+        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, false, 1, other);
+        thisPeer.getActivityManager().initiateActivity(A);
+        try
+        {
+            ActivityResult R = A.getFuture().get();
+            maybeThrow(R);
+        }
+        catch (Exception e)
+        {
+            throw new HGException(e);
+        }           
+        return (T)A.getResult().get(0);        
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T getOne(HGQueryCondition condition)
+    {
+        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, true, 1, other);
+        thisPeer.getActivityManager().initiateActivity(A);
+        try
+        {
+            ActivityResult R = A.getFuture().get();
+            maybeThrow(R);
+        }
+        catch (Exception e)
+        {
+            throw new HGException(e);
+        }           
+        return (T)A.getResult().get(0);        
+    }
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> List<T> getAll(HGQueryCondition condition)
     {
-        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, true, other);
+        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, true, -1, other);
         thisPeer.getActivityManager().initiateActivity(A);
         try
         {
@@ -201,7 +235,7 @@ public class PeerHyperNode implements HyperNode
     
     public List<HGHandle> findAll(HGQueryCondition condition)
     {
-        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, false, other);
+        RunRemoteQuery A = new RunRemoteQuery(thisPeer, condition, false, -1, other);
         thisPeer.getActivityManager().initiateActivity(A);
         try
         {

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
@@ -45,6 +46,7 @@ import org.hypergraphdb.query.MapCondition;
 import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
+import org.hypergraphdb.query.SubgraphContainsCondition;
 import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.query.SubsumedCondition;
 import org.hypergraphdb.query.SubsumesCondition;
@@ -595,9 +597,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public HGQuery<?> getQuery(final HyperGraph graph,
 									   final HGQueryCondition condition)
 			{
-				return new HGQuery()
+				return new HGQuery<HGPersistentHandle>()
 				{
-					public HGSearchResult execute() 
+					public HGSearchResult<HGPersistentHandle> execute() 
 					{
 						HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getIndex(graph);
 						return idx.find(((SubgraphMemberCondition)condition).getSubgraphHandle().getPersistent());
@@ -605,6 +607,27 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				};				
 			}			
 		});
+        instance.put(SubgraphContainsCondition.class, new ConditionToQuery()
+        {
+            public QueryMetaData getMetaData(HyperGraph graph,
+                                             HGQueryCondition condition)
+            {
+                return QueryMetaData.ORACCESS.clone(condition);
+            }
+
+            public HGQuery<?> getQuery(final HyperGraph graph,
+                                       final HGQueryCondition condition)
+            {
+                return new HGQuery<HGPersistentHandle>()
+                {
+                    public HGSearchResult<HGPersistentHandle> execute() 
+                    {
+                        HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getReverseIndex(graph);
+                        return idx.find(((SubgraphContainsCondition)condition).getAtom().getPersistent());
+                    }
+                };              
+            }           
+        });		
 	}
 	
 	public static ToQueryMap getInstance() { return instance; }

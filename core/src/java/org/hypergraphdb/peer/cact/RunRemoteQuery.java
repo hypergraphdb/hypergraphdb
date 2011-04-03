@@ -36,6 +36,7 @@ public class RunRemoteQuery extends FSMActivity
     private HGQueryCondition expression;
     private HGPeerIdentity target;
     private boolean deref = false;
+    private int limit = -1; 
     private List<Object> result = null;
     
     public RunRemoteQuery(HyperGraphPeer thisPeer, UUID id)
@@ -46,11 +47,13 @@ public class RunRemoteQuery extends FSMActivity
     public RunRemoteQuery(HyperGraphPeer thisPeer, 
                           HGQueryCondition expression,
                           boolean deref,
+                          int limit,
                           HGPeerIdentity target)
     {
         super(thisPeer);
         this.target = target;
         this.deref = deref;
+        this.limit = limit;
         this.expression = expression;
     }
 
@@ -71,8 +74,25 @@ public class RunRemoteQuery extends FSMActivity
         HyperGraph graph = getThisPeer().getGraph();
         expression = getPart(msg, CONTENT, "condition");
         deref = getPart(msg, CONTENT, "deref");
-        List<?> L = deref ? hg.getAll(graph, expression)
+        List<Object> L = null;
+        switch (limit)
+        {
+            case 1:
+                (L = new ArrayList<Object>()).add(deref ? hg.getOne(graph, expression) :
+                                                          hg.findOne(graph, expression));
+                break;
+            case 0:
+                L = new ArrayList<Object>();
+                break;
+            case -1:
+                L = deref ? hg.getAll(graph, expression)
                           : hg.findAll(graph, expression);
+            default:
+                L = deref ? hg.getAll(graph, expression)
+                        : hg.findAll(graph, expression);
+                L = L.subList(0, limit);
+        }
+             
         List<Object> result = new ArrayList<Object>();
         for (Object x : L)
         {
@@ -157,6 +177,16 @@ public class RunRemoteQuery extends FSMActivity
     public void setDeref(boolean deref)
     {
         this.deref = deref;
+    }
+    
+    public int getLimit()
+    {
+        return limit;
+    }
+
+    public void setLimit(int limit)
+    {
+        this.limit = limit;
     }
 
     @SuppressWarnings("unchecked")
