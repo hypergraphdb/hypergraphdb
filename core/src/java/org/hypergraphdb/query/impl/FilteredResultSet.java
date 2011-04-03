@@ -9,11 +9,9 @@ package org.hypergraphdb.query.impl;
 
 import java.util.NoSuchElementException;
 
-import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.CloseMe;
+import org.hypergraphdb.util.Mapping;
 
 /**
  * 
@@ -25,10 +23,9 @@ import org.hypergraphdb.util.CloseMe;
  */
 public class FilteredResultSet<T> implements HGSearchResult<T>
 {
-    private HyperGraph hg;
-	private HGSearchResult<T> searchResult;
-	private HGAtomPredicate predicate;		
-	private T current = null;
+	HGSearchResult<T> searchResult;
+	Mapping<T, Boolean> predicate;		
+	T current = null;
 
 	//
 	// The number of elements preceding the current in the underlying
@@ -52,12 +49,10 @@ public class FilteredResultSet<T> implements HGSearchResult<T>
 	 * @param searchResult
 	 * @param predicate
 	 */
-	public FilteredResultSet(HyperGraph hg, 
-							 HGSearchResult<T> searchResult, 
-							 HGAtomPredicate predicate,
+	public FilteredResultSet(HGSearchResult<T> searchResult, 
+							 Mapping<T, Boolean> predicate,
 							 int lookahead)
 	{
-        this.hg = hg;
 		this.searchResult = searchResult;
 		this.predicate = predicate;
 		this.lookahead = lookahead;
@@ -90,21 +85,21 @@ public class FilteredResultSet<T> implements HGSearchResult<T>
 			searchResult.prev();
 		}
 		prevCount--;			
-		while (searchResult.hasPrev() && !predicate.satisfies(hg, (HGHandle)searchResult.prev()));
+		while (searchResult.hasPrev() && !predicate.eval(searchResult.prev()));
 		return current = searchResult.current();
 	}
 
 	public boolean hasNext() 
 	{
 		if (lookahead > 0)
-			return predicate.satisfies(hg, (HGHandle)searchResult.current());
+			return predicate.eval(searchResult.current());
 		
 		while (true)
 		{
 			if (!searchResult.hasNext())
 				return false;
 			lookahead++;				
-			if (!predicate.satisfies(hg, (HGHandle)searchResult.next()))
+			if (!predicate.eval(searchResult.next()))
 				continue;
 			else
 				return true;

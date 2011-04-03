@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A variation on a map where values are managed like resources: a put 
  * increments a reference count on an existing key-value entry and a remove
  * actually delete the entry when the reference count goes to zero. This
- * was implementation to help with the transactions framework.
+ * was implemented to help with the transactions framework.
  * </p>
  *
  * @author Borislav Iordanov

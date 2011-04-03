@@ -19,6 +19,8 @@ import org.hypergraphdb.annotation.HGIgnore;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.storage.BAtoHandle;
+import org.hypergraphdb.util.FilteredSortedSet;
+import org.hypergraphdb.util.Mapping;
 
 /**
  * 
@@ -39,7 +41,14 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	@HGIgnore
 	HyperGraph graph;
 	HGHandle thisHandle;
-
+	Mapping<HGHandle, Boolean> memberPredicate = new Mapping<HGHandle, Boolean>() 
+	{
+	    public Boolean eval(HGHandle h)
+	    {
+	        return isMember(h);
+	    }
+	};
+	
 	private HGQueryCondition localizeCondition(HGQueryCondition condition)
 	{
 		return hg.and(new SubgraphMemberCondition(thisHandle), condition);		
@@ -191,12 +200,19 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		return isMember(handle) ? (T)graph.get(handle) : null;
 	}
 
+	/**
+	 * Return incidence set where each element is a member of this <code>HGSubgraph</code>.
+	 * The atom itself whose incidence set is returned doesn't have to be a member of the
+	 * subgraph!
+	 */
 	public IncidenceSet getIncidenceSet(HGHandle handle)
 	{
 		// maybe should return empty set, instead of null? 
 	    // but if the atom is not here, one shouldn't be asking for incidence set
 		// so null seems more appropriate
-		return isMember(handle) ? graph.getIncidenceSet(handle) : null;
+	    return new IncidenceSet(handle, 
+	                            new FilteredSortedSet<HGHandle>(graph.getIncidenceSet(handle),
+	                                                            memberPredicate));
 	}
 
 	public HGHandle getType(HGHandle handle)

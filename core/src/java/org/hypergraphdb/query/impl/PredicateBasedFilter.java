@@ -14,6 +14,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Mapping;
 
 /**
  * <p>
@@ -23,10 +24,10 @@ import org.hypergraphdb.util.HGUtils;
  * 
  * @author Borislav Iordanov
  */
-public final class PredicateBasedFilter extends HGQuery 
+public final class PredicateBasedFilter<T> extends HGQuery<T> 
 {
-	private HGQuery query;
-	private HGAtomPredicate predicate;
+	private HGQuery<T> query;
+	private Mapping<T, Boolean> predicate;
 	
 	/**
 	 * <p>Construct a <code>PredicateBasedFilter</code>, filtering the result
@@ -36,23 +37,40 @@ public final class PredicateBasedFilter extends HGQuery
 	 * @param query The base query that is being filtered.
 	 * @param predicate The filtering predicate.
 	 */
-	public PredicateBasedFilter(HyperGraph hg, HGQuery query, HGAtomPredicate predicate)
+	public PredicateBasedFilter(final HyperGraph graph, 
+	                            final HGQuery<T> query, 
+	                            final HGAtomPredicate atomPredicate)
 	{
-        this.graph = hg;
+        this.graph = graph;
 		this.query = query;
-		this.predicate = predicate;
+		this.predicate = new Mapping<T, Boolean>() {
+		    public Boolean eval(T h)
+		    {
+		        return atomPredicate.satisfies(graph, (HGHandle)h);
+		    }
+		};
 	}
-	
-	public HGSearchResult execute() 
+
+    public PredicateBasedFilter(final HyperGraph graph, 
+                                final HGQuery<T> query, 
+                                final Mapping<T, Boolean> predicate)
+    {
+        this.graph = graph;
+        this.query = query;
+        this.predicate = predicate;
+    }
+    
+	@SuppressWarnings("unchecked")
+    public HGSearchResult<T> execute() 
 	{
-		HGSearchResult baseResult = query.execute();
+		HGSearchResult<T> baseResult = query.execute();
 		try
 		{
 			while (baseResult.hasNext())
 			{
-				Object next = baseResult.next();
-				if (predicate.satisfies(graph, (HGHandle)next))
-					return new FilteredResultSet(graph, baseResult, predicate, 1);
+				T next = baseResult.next();
+				if (predicate.eval(next))
+					return new FilteredResultSet<T>(baseResult, predicate, 1);
 			}
 		}
 		catch (Throwable t)
@@ -61,6 +79,6 @@ public final class PredicateBasedFilter extends HGQuery
 			HGUtils.wrapAndRethrow(t);			
 		}
 		baseResult.close();		
-		return HGSearchResult.EMPTY;
+		return (HGSearchResult<T>)HGSearchResult.EMPTY;
 	}
 }
