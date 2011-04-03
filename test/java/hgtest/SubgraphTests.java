@@ -1,6 +1,7 @@
 package hgtest;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.HGSubgraph;
 import org.testng.Assert;
@@ -15,6 +16,7 @@ public class SubgraphTests extends HGTestBase
         graph.add(subgraph);
         
         HGHandle stringType = graph.getTypeSystem().getTypeHandle(String.class);
+        HGHandle linkType = graph.getTypeSystem().getTypeHandle(HGPlainLink.class);
         HGHandle globalAtom = graph.add("global");
         subgraph.add(globalAtom);
         Assert.assertTrue(subgraph.isMember(globalAtom));
@@ -31,7 +33,16 @@ public class SubgraphTests extends HGTestBase
         subgraph.remove(toBeRemoved);
         HGHandle toBeReplaced = subgraph.add("toBeReplaced", stringType, 0);
         Assert.assertTrue(subgraph.get(toBeReplaced).equals("toBeReplaced"));
-                
+        
+        // A b/w atoms in the subgraph, attached itself to the subgraph
+        HGHandle localLink1 = subgraph.add(new HGPlainLink(localAtom, globalAtom), linkType, 0);
+        // A b/w atoms not all in the subgraph, but still attached itself to the subgraph
+        HGHandle localLink2 = subgraph.add(new HGPlainLink(globalOnly, localAtom), linkType, 0);
+        // A b/w atoms in the subgraph, but not attached itself to the subgraph
+        HGHandle globalLink = graph.add(new HGPlainLink(localDefine, globalAtom), linkType, 0);
+        HGHandle globalLink2 = graph.add(new HGPlainLink(globalOnly, localDefine, globalAtom), linkType, 0);
+        Assert.assertFalse(subgraph.getIncidenceSet(localDefine).contains(globalLink2));
+        
         this.reopenDb();
         
         subgraph = graph.get(subgraph.getAtomHandle());        
@@ -43,6 +54,20 @@ public class SubgraphTests extends HGTestBase
 
         Assert.assertEqualsNoOrder(subgraph.getAll(hg.type(String.class)).toArray(), 
                             new Object[] {"global", "localAtom", "localDefinedAtom", "alreadyReplaced" });
+        
+        // Checks links and incidence sets
+        Assert.assertTrue(subgraph.isMember(localLink1));
+        Assert.assertTrue(subgraph.isMember(localLink2));
+        Assert.assertFalse(subgraph.isMember(globalLink));
+        
+        Assert.assertEquals(subgraph.getIncidenceSet(localAtom).size(), 2);
+        Assert.assertEquals(subgraph.getIncidenceSet(globalAtom).size(), 1);
+        Assert.assertEquals(subgraph.getIncidenceSet(localDefine).size(), 0);
+        Assert.assertEquals(subgraph.getIncidenceSet(globalOnly).size(), 1);
+        
+        Assert.assertEqualsNoOrder(subgraph.getIncidenceSet(localAtom).toArray(), 
+                                   new Object[] { localLink1, localLink2 });
+        
     }
     
     public static void main(String[] argv)
