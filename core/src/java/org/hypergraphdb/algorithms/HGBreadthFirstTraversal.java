@@ -19,7 +19,7 @@ import org.hypergraphdb.util.Pair;
 /**
  * <p>
  * Implements a depth-first search of a graph. As a reminder, breadth-first will visit all atoms 
- * in an adjency list before exploring their adjacent atoms in turn.
+ * in an adjacency list before exploring their adjacent atoms in turn.
  * </p>
  *  
  * @author Borislav Iordanov
@@ -27,7 +27,7 @@ import org.hypergraphdb.util.Pair;
 public class HGBreadthFirstTraversal implements HGTraversal 
 {
 	private HGHandle startAtom;
-	private int maxDistance; // the maximum reachable distance from the starting node
+	private int maxDistance = Integer.MAX_VALUE; // the maximum reachable distance from the starting node
 	// The following maps contains all atoms that have been reached: if they have
 	// been actually visited (i.e. returned by the 'next' method), they map to 
 	// Boolean.TRUE, otherwise they map to Boolean.FALSE.
@@ -39,7 +39,6 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	
 	private void init()
 	{
-        this.maxDistance = Integer.MAX_VALUE;	    
         examined.put(startAtom, Boolean.TRUE);
         advance(startAtom, 0);     	    
         initialized = true;        
