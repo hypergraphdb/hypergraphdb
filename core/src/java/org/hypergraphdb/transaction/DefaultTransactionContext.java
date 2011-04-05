@@ -7,9 +7,8 @@
  */
 package org.hypergraphdb.transaction;
 
-import java.util.Stack;
-
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.util.SimpleStack;
 
 /**
  * <p>
@@ -22,7 +21,7 @@ import org.hypergraphdb.HGException;
  */
 public class DefaultTransactionContext implements HGTransactionContext
 {
-	private Stack<HGTransaction> tstack = new Stack<HGTransaction>();
+	private SimpleStack<HGTransaction> tstack = new SimpleStack<HGTransaction>();
 	private HGTransactionManager manager = null;
 	
 	public DefaultTransactionContext(HGTransactionManager manager)
