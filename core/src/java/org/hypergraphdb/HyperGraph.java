@@ -1457,12 +1457,12 @@ public /*final*/ class HyperGraph implements HyperNode
     
     public <T> T findOne(HGQueryCondition condition)
     {
-        return hg.findOne(this, condition);
+        return (T)hg.findOne(this, condition);
     }
     
     public <T> T getOne(HGQueryCondition condition)
     {
-        return hg.getOne(this, condition);
+        return (T)hg.getOne(this, condition);
     }
     
     /**

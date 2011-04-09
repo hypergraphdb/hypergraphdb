@@ -35,8 +35,8 @@ public class RunRemoteQuery extends FSMActivity
     
     private HGQueryCondition expression;
     private HGPeerIdentity target;
-    private boolean deref = false;
-    private int limit = -1; 
+    private Boolean deref = false;
+    private Integer limit = -1; 
     private List<Object> result = null;
     
     public RunRemoteQuery(HyperGraphPeer thisPeer, UUID id)

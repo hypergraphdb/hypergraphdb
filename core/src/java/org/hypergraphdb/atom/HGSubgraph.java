@@ -174,14 +174,16 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		return graph.find(localizeCondition(condition));
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T findOne(HGQueryCondition condition)
 	{
-	    return graph.findOne(localizeCondition(condition));
+	    return (T)graph.findOne(localizeCondition(condition));
 	}
 
-    public <T> T getOne(HGQueryCondition condition)
+    @SuppressWarnings("unchecked")
+	public <T> T getOne(HGQueryCondition condition)
     {
-        return graph.getOne(localizeCondition(condition));
+        return (T)graph.getOne(localizeCondition(condition));
     }
 	
 	public List<HGHandle> findAll(HGQueryCondition condition)

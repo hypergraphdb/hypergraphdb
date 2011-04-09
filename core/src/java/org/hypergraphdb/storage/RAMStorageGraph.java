@@ -87,7 +87,6 @@ public class RAMStorageGraph implements StorageGraph
         return handle;
     }
 
-    @Override
     public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
     {
         put(handle, data);

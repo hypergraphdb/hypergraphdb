@@ -57,12 +57,13 @@ public abstract class RequestResponseActivity<Request, Response> extends FSMActi
         send(target, msg);        
     }
 
-    @FromState("Started")
+    @SuppressWarnings("unchecked")
+	@FromState("Started")
     @OnMessage(performative="Request")
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onRequest(Message msg) throws Throwable
     {
-        Request request = getPart(msg, CONTENT);
+        Request request = (Request)getPart(msg, CONTENT);
         Response response = doRequest(request);
 //        Performative.
         Message reply = getReply(msg, Performative.Agree);

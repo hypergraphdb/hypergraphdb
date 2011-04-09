@@ -12,8 +12,9 @@ public class HGAtomResolver<T> implements RefResolver<HGHandle, T>
         this.node = graph;
     }
     
-    public T resolve(HGHandle key)
+    @SuppressWarnings("unchecked")
+	public T resolve(HGHandle key)
     {
-        return node.get(key);
+        return (T)node.get(key);
     }
 }

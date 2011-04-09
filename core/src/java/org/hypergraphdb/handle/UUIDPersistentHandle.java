@@ -172,8 +172,6 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
     	return uuid.compareTo(((UUIDPersistentHandle)other).uuid);    	
     }
 
-
-    @Override
     public HGPersistentHandle getPersistent()
     {
         return this;

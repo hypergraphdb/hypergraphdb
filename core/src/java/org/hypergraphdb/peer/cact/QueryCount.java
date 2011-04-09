@@ -25,7 +25,7 @@ public class QueryCount extends FSMActivity
     
     private HGQueryCondition expression;
     private HGPeerIdentity target;
-    private long result = -1;
+    private Long result = -1l;
     
     public QueryCount(HyperGraphPeer thisPeer, UUID id)
     {

@@ -42,7 +42,7 @@ public class ReplaceAtom extends FSMActivity
     private HGHandle typeHandle;
     private Object value;
     private HGPeerIdentity target;
-    private boolean replaced;
+    private Boolean replaced;
     
     private HGHandle [] getAtomTargets()
     {

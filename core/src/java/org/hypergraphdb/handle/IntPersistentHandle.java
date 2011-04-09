@@ -26,7 +26,6 @@ public class IntPersistentHandle implements HGPersistentHandle
         return x - ((IntPersistentHandle)o).x; 
     }
 
-    @Override
     public int hashCode()
     {
         final int prime = 31;
@@ -35,7 +34,6 @@ public class IntPersistentHandle implements HGPersistentHandle
         return result;
     }
 
-    @Override
     public boolean equals(Object obj)
     {
         if (this == obj)
@@ -52,7 +50,6 @@ public class IntPersistentHandle implements HGPersistentHandle
         return true;
     }
 
-    @Override
     public HGPersistentHandle getPersistent()
     {
         return this;

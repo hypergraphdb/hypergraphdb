@@ -53,7 +53,7 @@ public class StartPeer
 		if (port != null)
 		    Structs.getStruct(configuration, "jxta", "tcp").put("port", Integer.parseInt(port));
         HyperGraphPeer server = new HyperGraphPeer(configuration);
-        server.start("user", "pwd");
+        server.start();
         while (true)
         	try { Thread.sleep(5000); } catch (InterruptedException ex) { break; }
 	}

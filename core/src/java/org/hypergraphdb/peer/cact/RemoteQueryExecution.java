@@ -57,11 +57,11 @@ public class RemoteQueryExecution<T> extends FSMActivity
         getThisPeer().getGraph().getTransactionManager().threadDetach();
     }
     
-    private class RemoteSearchResult<E> implements HGSearchResult<E>
+    private class RemoteSearchResult implements HGSearchResult<T>
     {
-        boolean hasnext = false, hasprev = false;
-        boolean isordered = false;
-        E current;
+        Boolean hasnext = false, hasprev = false;
+        Boolean isordered = false;
+        T current;
 
         public RemoteSearchResult(boolean hasnext, boolean isordered)
         {
@@ -74,10 +74,10 @@ public class RemoteQueryExecution<T> extends FSMActivity
             return hasprev;
         }
 
-        public E prev()
+        public T prev()
         {
             Future<ActivityResult> f = getThisPeer().getActivityManager()
-                    .initiateActivity(new IterateActivity<E>(getThisPeer(), "prev"),
+                    .initiateActivity(new IterateActivity<T>(getThisPeer(), "prev"),
                                       RemoteQueryExecution.this,
                                       null);
             try
@@ -99,10 +99,10 @@ public class RemoteQueryExecution<T> extends FSMActivity
             return hasnext;
         }
 
-        public E next()
+        public T next()
         {
             Future<ActivityResult> f = getThisPeer().getActivityManager()
-                    .initiateActivity(new IterateActivity<E>(getThisPeer(), "next"), 
+                    .initiateActivity(new IterateActivity<T>(getThisPeer(), "next"), 
                                       RemoteQueryExecution.this,
                                       null);
             try
@@ -124,7 +124,7 @@ public class RemoteQueryExecution<T> extends FSMActivity
             throw new UnsupportedOperationException();
         }
 
-        public E current()
+        public T current()
         {
             return current;
         }
@@ -201,8 +201,8 @@ public class RemoteQueryExecution<T> extends FSMActivity
                     Object current = (x instanceof HGHandle) ? x
                             : SubgraphManager.getTransferAtomRepresentation(graph,
                                                                             graph.getHandle(x));
-                    boolean hasnext = getParent().rs.hasNext();
-                    boolean hasprev = false;
+                    Boolean hasnext = getParent().rs.hasNext();
+                    Boolean hasprev = false;
                     try { hasprev = getParent().rs.hasPrev(); }
                     catch (UnsupportedOperationException ex) { } // traversals, for example, don't support prev even though they should...
                     reply = getReply(msg, Performative.InformRef);
@@ -226,13 +226,15 @@ public class RemoteQueryExecution<T> extends FSMActivity
             }
         }
 
-        @FromState("Started")
+        @SuppressWarnings("unchecked")
+		@FromState("Started")
         @OnMessage(performative = "InformRef")
         public WorkflowStateConstant onIterateResult(Message msg)
                 throws Throwable
         {
             Map<String, Object> C = getPart(msg, CONTENT);
-            RemoteQueryExecution<E>.RemoteSearchResult<E> rs = (RemoteQueryExecution<E>.RemoteSearchResult<E>)getParent().rs;
+            RemoteQueryExecution.RemoteSearchResult rs = 
+            	(RemoteQueryExecution.RemoteSearchResult)getParent().rs;
             rs.hasnext = getPart(C, "has-next");
             rs.hasprev = getPart(C, "has-prev");
             rs.current = getPart(C, "current");
@@ -294,9 +296,9 @@ public class RemoteQueryExecution<T> extends FSMActivity
     @OnMessage(performative = "Agree")
     public WorkflowStateConstant onQueryPerformed(Message msg) throws Throwable
     {
-        boolean hasnext = getPart(msg, CONTENT, "has-next");
-        boolean isordered = getPart(msg, CONTENT, "is-ordered");
-        rs = new RemoteSearchResult<T>(hasnext, isordered);
+        Boolean hasnext = getPart(msg, CONTENT, "has-next");
+        Boolean isordered = getPart(msg, CONTENT, "is-ordered");
+        rs = new RemoteSearchResult(hasnext, isordered);
         return ResultSetOpen;
     }
 
