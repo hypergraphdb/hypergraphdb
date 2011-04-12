@@ -29,7 +29,7 @@ public class HGReplaceRefusedException extends HGException
      */
     public HGReplaceRefusedException()
     {
-        super("Addition of new hypergraph atom failed because.");        
+        super("Replace of hypergraph atom failed");        
     }
 
     /**
@@ -40,7 +40,7 @@ public class HGReplaceRefusedException extends HGException
      */
     public HGReplaceRefusedException(HGHandle atom, Object reason)
     {
-        super("Addition of new hypergraph atom failed because.");
+        super("Replace of hypergraph atom failed");
         this.atom = atom;
         this.reason = reason;
     }

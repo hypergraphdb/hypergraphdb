@@ -8,6 +8,7 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
+
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSearchable;
@@ -17,9 +18,6 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.atom.HGAtomRef;
-import org.hypergraphdb.event.HGEvent;
-import org.hypergraphdb.event.HGListener;
-import org.hypergraphdb.event.HGAtomRemoveRequestEvent;
 import org.hypergraphdb.query.impl.UnionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAUtils;
@@ -68,7 +66,7 @@ public class AtomRefType implements HGAtomType,
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> symbolicIdx = null;
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> floatingIdx = null;
 	
-	private HGIndex<HGPersistentHandle, HGPersistentHandle> getHardIdx()
+	public HGIndex<HGPersistentHandle, HGPersistentHandle> getHardIdx()
 	{
 		if (hardIdx == null)
 		{
@@ -81,7 +79,7 @@ public class AtomRefType implements HGAtomType,
 		return hardIdx;
 	}
 
-	private HGIndex<HGPersistentHandle, HGPersistentHandle> getSymbolicIdx()
+	public HGIndex<HGPersistentHandle, HGPersistentHandle> getSymbolicIdx()
 	{
 		if (symbolicIdx == null)
 		{
@@ -94,7 +92,7 @@ public class AtomRefType implements HGAtomType,
 		return symbolicIdx;
 	}
 
-	private HGIndex<HGPersistentHandle, HGPersistentHandle> getFloatingIdx()
+	public HGIndex<HGPersistentHandle, HGPersistentHandle> getFloatingIdx()
 	{
 		if (floatingIdx == null)
 		{
@@ -107,29 +105,29 @@ public class AtomRefType implements HGAtomType,
 		return floatingIdx;
 	}
 	
-	private class RemovalListener implements HGListener
-	{
-		public HGListener.Result handle(HyperGraph hg, HGEvent event)
-		{
-			HGAtomRemoveRequestEvent ev = (HGAtomRemoveRequestEvent)event;
-			HGPersistentHandle pHandle = hg.getPersistentHandle(ev.getAtomHandle());
-			if (getHardIdx().findFirst(pHandle) != null ||
-				getFloatingIdx().findFirst(pHandle) != null) // symbolic links don't prevent removal of atoms
-				return Result.cancel;
-			else
-				return Result.ok;
-		}
-	}
-
-	private RemovalListener removalListener = new RemovalListener();
+//	private class RemovalListener implements HGListener
+//	{
+//		public HGListener.Result handle(HyperGraph hg, HGEvent event)
+//		{
+//			HGAtomRemoveRequestEvent ev = (HGAtomRemoveRequestEvent)event;
+//			HGPersistentHandle pHandle = hg.getPersistentHandle(ev.getAtomHandle());
+//			if (getHardIdx().findFirst(pHandle) != null ||
+//				getFloatingIdx().findFirst(pHandle) != null) // symbolic links don't prevent removal of atoms
+//				return Result.cancel;
+//			else
+//				return Result.ok;
+//		}
+//	}
+//
+//	private RemovalListener removalListener = new RemovalListener();
 	
 	public void setHyperGraph(HyperGraph hg) 
 	{
 	    // unlikely that we would ever change the HyperGraph instance, but who knows....
-		if (this.graph != null) 
-			this.graph.getEventManager().removeListener(HGAtomRemoveRequestEvent.class, removalListener);
+//		if (this.graph != null) 
+//			this.graph.getEventManager().removeListener(HGAtomRemoveRequestEvent.class, removalListener);
 		this.graph = hg;
-		hg.getEventManager().addListener(HGAtomRemoveRequestEvent.class, removalListener);
+//		hg.getEventManager().addListener(HGAtomRemoveRequestEvent.class, removalListener);
 	}
 
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet) 

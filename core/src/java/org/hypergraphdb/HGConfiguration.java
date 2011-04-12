@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.event.HGDefaultEventManager;
+import org.hypergraphdb.event.HGEventManager;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.util.HGUtils;
@@ -36,9 +38,11 @@ public final class HGConfiguration
 	private boolean skipMaintenance;
 	private boolean cancelMaintenance;
 	private boolean skipOpenedEvent;
+	private boolean preventDanglingAtomReferences = true; 
 	private int maxCachedIncidenceSetSize; 
 	private boolean useSystemAtomAttributes;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
+	private HGEventManager eventManager = new HGDefaultEventManager();
 	
 //    private long storeCacheSize = DEFAULT_STORE_CACHE;	
 //    private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;	
@@ -344,8 +348,30 @@ public final class HGConfiguration
     {
         return useSystemAtomAttributes;
     }
+    
+    /**
+     * <p>Return <code>true</code> if the system should detect and throw an exception 
+     * when a possible invalid {@link HGAtomRef} occurs. This happens when when an atom
+     * is being removed, but here's a {@link HGAtomRef.Mode.hard} reference to it. The
+     * default is <code>true</code>. </p> 
+     */
+    public boolean getPreventDanglingAtomReferences()
+	{
+		return this.preventDanglingAtomReferences;
+	}
 
     /**
+     * <p>Specify whether the system should detect and throw an exception 
+     * when a possible invalid {@link HGAtomRef} occurs. This happens when when an atom
+     * is being removed, but here's a {@link HGAtomRef.Mode.hard} reference to it. The
+     * default is <code>true</code>. </p> 
+     */
+    public void setPreventDanglingAtomReferences(boolean preventDanglingAtomReferences)
+	{
+		this.preventDanglingAtomReferences = preventDanglingAtomReferences;
+	}
+
+	/**
      * Specify whether system-level atom attributes are 
      * stored - the default is <code>true</code>. When false, this means that all system
      * facilities depending on the availability of those attributes are not available.   
@@ -362,4 +388,24 @@ public final class HGConfiguration
     {
         return typeConfiguration;
     }
+
+    /**
+     * <p>Return the {@link HGEventManager} to be used by the database. The default is an
+     * instance of {@link HGDefaultEventManager}.</p>
+     */
+	public HGEventManager getEventManager()
+	{
+		return eventManager;
+	}
+
+    /**
+     * <p>
+     * Specify the {@link HGEventManager} to be used by the database. The default is an
+     * instance of {@link HGDefaultEventManager}. 
+     * </p>
+     */
+	public void setEventManager(HGEventManager eventManager)
+	{
+		this.eventManager = eventManager;
+	}    
 }

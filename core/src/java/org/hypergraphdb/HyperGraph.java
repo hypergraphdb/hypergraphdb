@@ -24,6 +24,7 @@ import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.type.*;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.atom.HGStats;
 import org.hypergraphdb.maintenance.MaintenanceException;
 import org.hypergraphdb.maintenance.MaintenanceOperation;
@@ -309,7 +310,8 @@ public /*final*/ class HyperGraph implements HyperNode
     	{    		
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
-            eventManager = new HGEventManager(this);	        
+            eventManager = config.getEventManager();	 
+            eventManager.setHyperGraph(this);
 	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
@@ -908,9 +910,15 @@ public /*final*/ class HyperGraph implements HyperNode
      * that most frequently links as ordered tuples that establish a particular 
      * relationship b/w their targets and therefore make sense only as a whole.</p>
      * 
-     * @param handle
+     * @param handle The handle of the atom to be removed. <strong>NOTE:</strong> if no atom
+     * exists with this handle (e.g. the atom was already removed), the method does nothing and
+     * return false. If an attempt is made to remove an atom with a <code>null</code>
+     * handle, then a regular <code>NullPointerException</code> is thrown.
      * @return <code>true</code> if the atom was successfully removed and <code>false</code>
      * otherwise.
+     * @throws HGRemoveRefusedException if integrity constrains are violated or a user registered
+     * listener to the {@link HGAtomRemoveRequestEvent} returns a {@link HGListener.Result.cancel}
+     * result.
      */
     public boolean remove(final HGHandle handle)
     {
@@ -949,7 +957,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * 
      * @param handle The handle of the atom to be removed. <strong>NOTE:</strong> if no atom
      * exists with this handle (e.g. the atom was already removed), the method does nothing and
-     * throws no exception. If an attempt is made to remove an atom with a <code>null</code>
+     * return false. If an attempt is made to remove an atom with a <code>null</code>
      * handle, then a regular <code>NullPointerException</code> is thrown.
      * @param keepIncidentLinks A flag indicating whether to remove the atom from the links
      * pointing to it (if <code>true</code>) or whether to remove the links altogether (if
@@ -957,25 +965,36 @@ public /*final*/ class HyperGraph implements HyperNode
      * this call.
      * @return <code>true</code> if the atom was successfully removed and <code>false</code>
      * otherwise.
+     * @throws HGRemoveRefusedException if integrity constrains are violated or a user registered
+     * listener to the {@link HGAtomRemoveRequestEvent} returns a {@link HGListener.Result.cancel}
+     * result.
      */
     public boolean remove(final HGHandle handle, final boolean keepIncidentLinks)
     {
     	if (eventManager.dispatch(this, new HGAtomRemoveRequestEvent(handle)) == HGListener.Result.cancel)
-    		return false;
+    		throw new HGRemoveRefusedException(handle, "Removal cancelled by atom listener");
     	
-    	getTransactionManager().ensureTransaction(new Callable<Object>() 
-    	{ public Object call() { removeTransaction(handle, keepIncidentLinks); return null; }});
-    	return true;
+    	if (config.getPreventDanglingAtomReferences())
+    	{
+    		AtomRefType refType = typeSystem.getAtomType(HGAtomRef.class);
+    		 // symbolic links don't prevent removal of atoms
+			if (refType.getHardIdx().findFirst(handle.getPersistent()) != null ||
+				refType.getFloatingIdx().findFirst(handle.getPersistent()) != null)
+				throw new HGRemoveRefusedException(handle, "Atom is in use in a HGAtomRef");
+    	}
+    	
+    	return getTransactionManager().ensureTransaction(new Callable<Boolean>() 
+    	{ public Boolean call() { return removeTransaction(handle, keepIncidentLinks); }});
     }
     
-    private void removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
+    private boolean removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)
     {
         HGPersistentHandle pHandle = getPersistentHandle(handle);
         Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
         													   TxAttribute.IN_REMOVAL, 
         													   HashSet.class); 
         if (inRemoval.contains(handle))
-        	return;
+        	return true;
         else
         	inRemoval.add(pHandle);
         
@@ -984,9 +1003,10 @@ public /*final*/ class HyperGraph implements HyperNode
 	        HGPersistentHandle [] layout = store.getLink(pHandle);        
 	        
 	        if (layout == null)
-	            return;
+	            return false;
 	        else if (layout[0].equals(typeSystem.getTop()))
-	        	throw new HGException("Cannot remove the HyperGraph primitive type: " + pHandle);
+	        	throw new HGRemoveRefusedException(handle, 
+	        			"Cannot remove the HyperGraph primitive type: " + pHandle);
 	        
 	        Object atom = get(handle); // need the atom in order to clear all indexes...
 	        
@@ -1076,6 +1096,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        cache.getIncidenceCache().remove(pHandle);
 	        cache.remove(cache.get(atom));        
 	        eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));
+	        return true;
         }
         finally
         {

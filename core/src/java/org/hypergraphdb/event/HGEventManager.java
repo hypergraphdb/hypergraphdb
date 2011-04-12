@@ -7,79 +7,65 @@
  */
 package org.hypergraphdb.event;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.transaction.TxList;
-import org.hypergraphdb.transaction.TxMap;
-import org.hypergraphdb.transaction.VBox;
 
 /**
  * <p>
  * A <code>HGEventManager</code> is bound to a single HyperGraph instance. It is responsible for holding
- * all event listeners and it performs event handling  via its <code>dispatch</code> method.
+ * all event listeners and it performs event handling  via its <code>dispatch</code> method. Concrete
+ * implementations can be configured with the {@link HGConfiguration} object when the database is 
+ * opened. 
+ * </p>
+ * 
+ * <p>
+ * Event types are simply identified by their Java class objects. 
  * </p>
  * 
  * @author Borislav Iordanov
  */
-public class HGEventManager 
+public interface HGEventManager extends HGGraphHolder
 {
-    private HyperGraph graph;
-	private Map<Class<?>, List<HGListener>> listenerMap = null;
+	/**
+	 * Register a new listener for a given event type.
+	 * 
+	 * @param <T>
+	 * @param eventType
+	 * @param listener
+	 */
+	<T extends HGEvent> void addListener(Class<T> eventType, HGListener listener);
 	
-	private List<HGListener> getListeners(Class<?> eventType)
-	{
-        List<HGListener> listeners = listenerMap.get(eventType);
-        if (listeners == null)
-        {
-            listeners = new TxList<HGListener>(graph.getTransactionManager());
-            listenerMap.put(eventType, listeners);          
-        }
-        return listeners;
-	}
+	/**
+	 * Remove a listener registered for the particular type.
+	 * @param <T>
+	 * @param eventType
+	 * @param listener
+	 */
+	<T extends HGEvent> void removeListener(Class<T> eventType, HGListener listener);
 	
-	public HGEventManager(HyperGraph graph)
-	{
-	    this.graph = graph;
-	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(), 
-	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
-	}
+	/**
+	 * Removal all event listeners for all event types.
+	 */
+	void clear();
 	
-	public <T extends HGEvent> void addListener(Class<T> eventType, HGListener listener)
-	{
-		getListeners(eventType).add(listener);
-	}
-	
-	public <T extends HGEvent> void removeListener(Class<T> eventType, HGListener listener)
-	{
-		getListeners(eventType).remove(listener);
-	}
-	
-	public  HGListener.Result dispatch(HyperGraph hg, HGEvent event)
-	{
-	    if (listenerMap.isEmpty()) // avoid looping through the class hierarchy cause it's expensive
-	        return HGListener.Result.ok;
-		for (Class<?> clazz = event.getClass(); clazz != null && HGEvent.class != clazz; clazz = clazz.getSuperclass())
-		{
-			List<HGListener> listeners = listenerMap.get(clazz);
-			if (listeners == null)
-				continue;
-			for (HGListener l : listeners)
-				// type safety warning OK, we are explicitly passing a correctly typed event.
-				switch (l.handle(hg, event)) 
-				{
-					case ok: continue;
-					case cancel: return HGListener.Result.cancel;
-				}
-		}
-		// should we also invoke listener bound to HGEvent.class itself?
-		return HGListener.Result.ok;
-	}
-	
-	public void clear()
-	{
-		listenerMap.clear();
-	}
+	/**
+	 * <p>
+	 * Dispatch an event to all listeners registered for its type. All listeners
+	 * are invoked in the order in which they were registered.  If a listener returns
+	 * a {@link HGListener.Result.cancel} event, the dispatch process is interrupted and
+	 * the cancellation is passed on to the caller of the dispatch method without invoking
+	 * any further listeners.
+	 * </p>
+	 * 
+	 * <p>
+	 * Because event types can be organized in hierarchy, rooted at {@link HGEvent}, a dispatcher
+	 * must call listener registered for the particular event class and also all its superclasses up 
+	 * to the <code>HGEvent</code> type itself.
+	 * </p>
+	 * 
+	 * @param graph
+	 * @param event
+	 * @return
+	 */
+	HGListener.Result dispatch(HyperGraph graph, HGEvent event);	
 }
