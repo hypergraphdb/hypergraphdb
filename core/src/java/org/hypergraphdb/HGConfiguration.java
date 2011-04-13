@@ -25,13 +25,7 @@ import org.hypergraphdb.util.HGUtils;
  *
  */
 public final class HGConfiguration
-{
-	/**
-	 * The default size in bytes of the storage (i.e. BerkeleyDB) cache = 20MB.
-	 */
-//	public static final long DEFAULT_STORE_CACHE = 20*1024*1024; // 20MB
-//	public static final int  DEFAULT_NUMBER_OF_STORAGE_CACHES = 1;
-	
+{	
 	private HGHandleFactory handleFactory;
 	private HGStoreImplementation storeImplementation;
 	private boolean transactional;
@@ -43,11 +37,6 @@ public final class HGConfiguration
 	private boolean useSystemAtomAttributes;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	private HGEventManager eventManager = new HGDefaultEventManager();
-	
-//    private long storeCacheSize = DEFAULT_STORE_CACHE;	
-//    private int numberOfStoreCaches = DEFAULT_NUMBER_OF_STORAGE_CACHES;	
-//    private boolean storageMVCC = true;	
-//    private boolean runDatabaseRecovery = false;
 	
 	public HGConfiguration()
 	{
@@ -153,56 +142,6 @@ public final class HGConfiguration
 		this.transactional = transactional;
 	}
 	
-//	/**
-//	 * 
-//	 * <p>
-//	 * Return the size (in bytes) of the cache used by the storage layer. The default value is 
-//	 * <code>DEFAULT_STORE_CACHE</code>. 
-//	 * </p>
-//	 *
-//	 * @return
-//	 */
-//	public long getStoreCacheSize()
-//	{
-//		return this.storeCacheSize;
-//	}
-//	
-//	/**
-//	 * 
-//	 * <p>
-//	 * Set the size (in bytes) of the cache used by the storage layer. The default value is
-//	 * <code>DEFAULT_STORE_CACHE</code>.
-//	 * </p>
-//	 *
-//	 * @param storeCacheSize
-//	 */
-//	public void setStoreCacheSize(long storeCacheSize)
-//	{
-//		this.storeCacheSize = storeCacheSize;
-//	}
-//
-//	/**
-//	 * <p>Return the number of cache regions of the storage layers. This defaults to 1,
-//	 * but it may be useful to increase it when the operating system is unable to 
-//	 * allocate a contiguous memory cache as large as the application needs.
-//	 * </p> 
-//	 */
-//    public int getNumberOfStoreCaches()
-//    {
-//        return numberOfStoreCaches;
-//    }
-//
-//    /**
-//     * <p>Specify the number of cache regions of the storage layers. This defaults to 1,
-//     * but it may be useful to increase it when the operating system is unable to 
-//     * allocate a contiguous memory cache as large as the application needs.
-//     * </p> 
-//     */
-//    public void setNumberOfStoreCaches(int numberOfStoreCaches)
-//    {
-//        this.numberOfStoreCaches = numberOfStoreCaches;
-//    }
-
     /** 
 	 * <p>Return true if HyperGraph should skip scheduled maintenance operations when
 	 * it is open. Return false otherwise.</p> 
@@ -270,26 +209,6 @@ public final class HGConfiguration
     {
         this.skipOpenedEvent = skipOpenedEvent;
     }
-
-//    /**
-//     * <p>Return whether MVCC (snapshot) transaction isolation is used by the
-//     * storage layer. Defaults to <code>true</code> which means less lock contention,
-//     * higher transaction throughput, but more memory will be used.
-//     */
-//    public boolean isStorageMVCC()
-//    {
-//        return storageMVCC;
-//    }
-//
-//    /**
-//     * <p>Specify whether MVCC (snapshot) transaction isolation is used by the
-//     * storage layer. Defaults to <code>true</code> which means less lock contention,
-//     * higher transaction throughput, but more memory will be used.
-//     */    
-//    public void setStorageMVCC(boolean storageMVCC)
-//    {
-//        this.storageMVCC = storageMVCC;
-//    }
 
     /**
      * <p>Return the configured maximum size of atom incidence sets that are kept in 

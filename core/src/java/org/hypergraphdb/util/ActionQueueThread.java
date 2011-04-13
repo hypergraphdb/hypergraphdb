@@ -112,8 +112,8 @@ public class ActionQueueThread extends Thread
 			synchronized (actionList)
 			{
 				while (actionList.isEmpty() && running)
-					try { actionList.wait(); }
-					catch (InterruptedException ex) { }
+					try { actionList.wait(1000); }
+					catch (InterruptedException ex) { running = false; }
 			    if (actionList.isEmpty())
 			    	break;
 				action = (Runnable)actionList.removeFirst();
