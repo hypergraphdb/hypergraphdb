@@ -14,7 +14,7 @@ public class SubgraphTests extends HGTestBase
     {
         HGSubgraph subgraph = new HGSubgraph();
         graph.add(subgraph);
-        
+
         HGHandle stringType = graph.getTypeSystem().getTypeHandle(String.class);
         HGHandle linkType = graph.getTypeSystem().getTypeHandle(HGPlainLink.class);
         HGHandle globalAtom = graph.add("global");

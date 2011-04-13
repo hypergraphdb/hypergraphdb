@@ -63,6 +63,57 @@ public class TestHGAtomRef extends HGTestBase
 	    Assert.assertNotNull(graph.getHandle(car.getOwner()));
 	}
 	
+	@Test
+	public void testDanglingDetect()
+	{
+	    Float cost = new Float(500.0);
+	    Integer ten = new Integer(10);	    
+	    HGHandle hten = graph.add(ten);
+	    HGHandle hcost = graph.add(cost);	    
+        Car car = new Car();
+        car.setMake("Honda");
+        car.setYear(1997);
+        Person person = new Person();
+        person.setFirstName("Toto");
+        person.setLastName("Cutunio");
+        car.setOwner(person);
+        car.setAge(ten);
+        car.setCost(cost);
+        
+        HGHandle hcar = graph.add(car);
+        
+        HGHandle hperson = graph.getHandle(person);
+        Assert.assertNotNull(hperson);        
+        
+        try
+        {
+            Assert.assertFalse(graph.remove(hten));
+            Assert.fail("Atom removal creates dangling reference.");
+            Assert.assertFalse(graph.remove(hcost));
+            Assert.fail("Atom removal creates dangling reference.");
+        }
+        catch (HGRemoveRefusedException ex) { }
+        
+        this.reopenDb();
+        try
+        {
+            Assert.assertFalse(graph.remove(hten));
+            Assert.fail("Atom removal creates dangling reference.");
+            Assert.assertFalse(graph.remove(hcost));
+            Assert.fail("Atom removal creates dangling reference.");
+        }
+        catch (HGRemoveRefusedException ex) { }
+        Assert.assertTrue(graph.remove(hperson));
+        
+        // Test with dangling detect ignored.
+        this.graph.close();
+        HGConfiguration config = new HGConfiguration();
+        config.setPreventDanglingAtomReferences(false);
+        this.graph = HGEnvironment.get(graph.getLocation(), config);
+        Assert.assertTrue(graph.remove(hten));
+        Assert.assertTrue(graph.remove(hcost));
+	}
+	
 	public static void main(String [] argv)
 	{
 	    TestHGAtomRef test = new TestHGAtomRef();
@@ -70,7 +121,8 @@ public class TestHGAtomRef extends HGTestBase
         test.setUp();        
         try
         {
-            test.testRefInParentType();
+            test.testDanglingDetect();
+            System.out.println("Test completed successfully.");
         }
         finally
         {

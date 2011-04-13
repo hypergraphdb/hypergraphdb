@@ -6,7 +6,12 @@ public abstract class Transport
 {
     @AtomReference("symbolic")
     private Person owner;
+    @AtomReference("floating")
+    private Float cost;
+    @AtomReference("hard")
+    private Integer age;
 
+    
     public Person getOwner()
     {
         return owner;
@@ -16,4 +21,26 @@ public abstract class Transport
     {
         this.owner = owner;
     }
+
+    public Float getCost()
+    {
+        return cost;
+    }
+
+    public void setCost(Float cost)
+    {
+        this.cost = cost;
+    }
+
+    public Integer getAge()
+    {
+        return age;
+    }
+
+    public void setAge(Integer age)
+    {
+        this.age = age;
+    }
+    
+    
 }
