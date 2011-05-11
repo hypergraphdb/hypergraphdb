@@ -773,7 +773,7 @@ public class HGTypeSystem
 				if (type.getClass().getConstructor(new Class[0]) != null)
 					getPredefinedTypesDB().addEntry(handle, type.getClass().getName());
 			}
-			catch (NoSuchMethodException e) { /* Log this some day when we have logging. */}
+			catch (NoSuchMethodException e) { /* TODO Log this some day when we have logging. */}
 		}
 
 		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());

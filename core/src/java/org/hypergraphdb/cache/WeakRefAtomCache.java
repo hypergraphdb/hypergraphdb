@@ -389,6 +389,8 @@ public class WeakRefAtomCache implements HGAtomCache
 
 	public void remove(HGLiveHandle handle) 
 	{
+	    if (handle == null)
+	        return;
 		atoms.remove(handle.getRef());
 		liveHandles.remove(handle.getPersistent());
 	}

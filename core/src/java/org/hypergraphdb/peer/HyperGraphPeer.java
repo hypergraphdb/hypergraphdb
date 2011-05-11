@@ -66,7 +66,7 @@ public class HyperGraphPeer
 	/**
 	 * Holds any exception that prevents the peer from starting up.
 	 */
-	private Throwable startupFailedException = null;
+	private Exception startupFailedException = null;
 	
 	/**
 	 * Object used for communicating with other peers
@@ -165,8 +165,9 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
-	public static HGPeerIdentity getIdentity(final HyperGraph graph, String peerName)
+	public static HGPeerIdentity getIdentity(final HyperGraph graph, final String peerName)
 	{
+	    return graph.getTransactionManager().transact(new Callable<HGPeerIdentity>() { public HGPeerIdentity call() {
 	    HGPeerIdentity identity = null;	    
         java.net.InetAddress localMachine = null;
         try
@@ -191,17 +192,23 @@ public class HyperGraphPeer
             id.setHostname(localMachine.getHostName());
             id.setIpAddress(localMachine.getHostAddress());
             id.setName(peerName);
+            System.out.println("DEFINE PEER IDENTITY: " + peerName);
             graph.define(id.getId(), id);
             return identity = id.makePublicIdentity();
         }
         else if (all.size() > 1)
+        {
+            for (PrivatePeerIdentity ii : all)
+                System.out.println("IDD : " + ii.getName() + " - " + ii.getId());
             throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
+        }
         else
         {
         	final PrivatePeerIdentity pid = all.get(0);
             if (!HGUtils.eq(pid.getName(), peerName))
             {
                 pid.setName(peerName);
+                System.out.println("UPDATE PEER IDENTITY: " + peerName);                
                 graph.update(pid);
             }
             identity = pid.makePublicIdentity();
@@ -220,6 +227,7 @@ public class HyperGraphPeer
 	                pid.setGraphLocation(graph.getLocation());
 	                pid.setHostname(machine.getHostName());
 	                pid.setIpAddress(machine.getHostAddress());
+	                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
 	                graph.define(newId, pid);
 	                return pid.makePublicIdentity();
             	}}, 
@@ -227,7 +235,7 @@ public class HyperGraphPeer
             }
             return identity;
         }
-	    
+	    }});
 	}
 	
 	/**
@@ -594,7 +602,7 @@ public class HyperGraphPeer
     /**
      * <p>Return the exception (if any) that prevents this peer from starting up.</p>
      */
-    public Throwable getStartupFailedException()
+    public Exception getStartupFailedException()
     {
     	return this.startupFailedException;
     }
