@@ -20,8 +20,12 @@ public class BasicOperations
         this.graph = graph;
     }
     
-    public Verifier makeVerifier(final AtomOperation operation)
+    public Verifier makeVerifier(final AtomOperation operation, boolean persistentHandles)
     {
+        final HGHandle atomHandle = operation.atomHandle == null ? null : 
+                              (persistentHandles ? operation.atomHandle.getPersistent() : operation.atomHandle);
+        final HGHandle atomType = operation.atomType == null ? null : 
+            (persistentHandles ? operation.atomType.getPersistent() : operation.atomType);        
         switch (operation.kind)
         {
             case add:
@@ -29,8 +33,8 @@ public class BasicOperations
                 {
                     public void verify(HyperGraph graph)
                     {
-                        assertEqualsDispatch(graph.get(operation.atomHandle), operation.atomValue);
-                        assertEqualsDispatch(graph.getType(operation.atomHandle), operation.atomType);
+                        assertEqualsDispatch(graph.get(atomHandle), operation.atomValue);
+                        assertEqualsDispatch(graph.getType(atomHandle), atomType);
                     }
                 };
             case remove:
@@ -38,7 +42,7 @@ public class BasicOperations
                 {
                     public void verify(HyperGraph graph)
                     {
-                        assertNull(graph.get(operation.atomHandle));
+                        assertNull(graph.get(atomHandle));
                     }
                 };
             case replace:
@@ -46,8 +50,8 @@ public class BasicOperations
                 {
                     public void verify(HyperGraph graph)
                     {
-                        assertEqualsDispatch(graph.get(operation.atomHandle), operation.atomValue);
-                        assertEqualsDispatch(graph.getType(operation.atomHandle), operation.atomType);
+                        assertEqualsDispatch(graph.get(atomHandle), operation.atomValue);
+                        assertEqualsDispatch(graph.getType(atomHandle), atomType);
                     }
                 };
             case define:
@@ -55,8 +59,8 @@ public class BasicOperations
                 {
                     public void verify(HyperGraph graph)
                     {
-                        assertEqualsDispatch(graph.get(operation.atomHandle), operation.atomValue);
-                        assertEqualsDispatch(graph.getType(operation.atomHandle), operation.atomType);
+                        assertEqualsDispatch(graph.get(atomHandle), operation.atomValue);
+                        assertEqualsDispatch(graph.getType(atomHandle), atomType);
                     }
                 };        
             default:
@@ -64,7 +68,7 @@ public class BasicOperations
         }
     }
     
-    public Verifier makeVerifier(final AtomOperation [] operations)
+    public Verifier makeVerifier(final AtomOperation [] operations, final boolean persistentHandles)
     {
         return new Verifier()
         {
@@ -78,7 +82,7 @@ public class BasicOperations
                         continue;
                     else
                         ignoreHandles.add(op.atomHandle);                        
-                    makeVerifier(op).verify(graph);
+                    makeVerifier(op, persistentHandles).verify(graph);
                 }
             }
         };
@@ -155,12 +159,12 @@ public class BasicOperations
         else for (AtomOperation op : operations)
             execute(op);
         if (verifyCached)
-            makeVerifier(operations).verify(graph);
+            makeVerifier(operations, false).verify(graph);
         if (verifyReloaded)
         {
             graph.close();
             graph.open(graph.getLocation());
-            makeVerifier(operations).verify(graph);
+            makeVerifier(operations, true).verify(graph);
         }
     }
 }

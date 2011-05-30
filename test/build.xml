@@ -18,8 +18,10 @@
         </fileset>        
 		<pathelement path="${java.class.path}" />
 	</path>
-
+<!--
     <taskdef name="testng" classpathref="test-classpath" classname="org.testng.TestNGAntTask" />
+-->
+    <taskdef resource="testngtasks" classpathref="test-classpath"/>
     
     <target name="init">
 		<mkdir dir="${build}"/>
@@ -31,9 +33,11 @@
 
     
      <target name="test" description="Perform all tests">
-       <testng classpathref="test-classpath">
-	   <jvmarg value="-Djava.library.path=d:/work/hg/core/native/windows"/>
-         <classfileset dir="build" includes="hgtest/**/*.class"/>
+       <testng classpathref="test-classpath" verbose="2">
+         <jvmarg value="-Djava.library.path=../core/native/linux/x86_64"/>
+         <classfileset dir="build">
+            <include name="hgtest/**/*.class"/>
+         </classfileset>
        </testng>
      </target>
      

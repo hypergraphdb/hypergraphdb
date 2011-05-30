@@ -2,6 +2,7 @@ package hgtest;
 
 import java.io.File;
 
+import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
@@ -33,14 +34,14 @@ public class HGTestBase
     public void setUp()
     {
         HGUtils.dropHyperGraphInstance(getGraphLocation());
-        graph = HGEnvironment.get(getGraphLocation());        
+        graph = HGEnvironment.get(getGraphLocation(), new HGConfiguration());
     }
     
     @AfterClass    
     public void tearDown()
     {
         graph.close();
-        HGUtils.dropHyperGraphInstance(getGraphLocation());        
+        HGUtils.dropHyperGraphInstance(getGraphLocation());
     }
     
     

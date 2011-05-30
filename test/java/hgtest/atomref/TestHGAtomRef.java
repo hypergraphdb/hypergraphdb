@@ -59,7 +59,7 @@ public class TestHGAtomRef extends HGTestBase
 	    
 	    HGHandle carHandle = graph.add(car);
 	    this.reopenDb();
-	    car = graph.get(carHandle);
+	    car = graph.get(carHandle.getPersistent());
 	    Assert.assertNotNull(graph.getHandle(car.getOwner()));
 	}
 	
@@ -97,21 +97,21 @@ public class TestHGAtomRef extends HGTestBase
         this.reopenDb();
         try
         {
-            Assert.assertFalse(graph.remove(hten));
+            Assert.assertFalse(graph.remove(hten.getPersistent()));
             Assert.fail("Atom removal creates dangling reference.");
-            Assert.assertFalse(graph.remove(hcost));
+            Assert.assertFalse(graph.remove(hcost.getPersistent()));
             Assert.fail("Atom removal creates dangling reference.");
         }
         catch (HGRemoveRefusedException ex) { }
-        Assert.assertTrue(graph.remove(hperson));
+        Assert.assertTrue(graph.remove(hperson.getPersistent()));
         
         // Test with dangling detect ignored.
         this.graph.close();
         HGConfiguration config = new HGConfiguration();
         config.setPreventDanglingAtomReferences(false);
         this.graph = HGEnvironment.get(graph.getLocation(), config);
-        Assert.assertTrue(graph.remove(hten));
-        Assert.assertTrue(graph.remove(hcost));
+        Assert.assertTrue(graph.remove(hten.getPersistent()));
+        Assert.assertTrue(graph.remove(hcost.getPersistent()));
 	}
 	
 	public static void main(String [] argv)

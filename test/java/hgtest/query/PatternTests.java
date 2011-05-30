@@ -68,6 +68,7 @@ public class PatternTests extends HGTestBase
         try
         {
             test.testCommonAdjacencyPattern();
+            System.out.println("Tests completed successfully.");
         }
         catch (Throwable t)
         {

@@ -5,7 +5,6 @@ import java.util.List;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.util.HGUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;

@@ -115,5 +115,26 @@ public class TypingTxTests extends HGTestBase
         }
         assertNull(graph.getTypeSystem().getTypeHandleIfDefined(SimpleBean.class));
         assertEquals(totalAtoms, hg.count(graph, hg.all()));
-   }    
+   }
+    
+    public static void main(String[] argv)
+    {
+        TypingTxTests test = new TypingTxTests();
+        try
+        {
+            test.setUp();
+            test.testTypeAbort();
+            test.testConcurrentTypeAdd();
+            test.testConcurrentTypeRemove();
+            System.out.println("test passed successfully");
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace(System.err);
+        }
+        finally
+        {
+            test.tearDown();
+        }
+    }    
 }

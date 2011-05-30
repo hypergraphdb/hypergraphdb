@@ -45,7 +45,8 @@ public class SubgraphTests extends HGTestBase
         
         this.reopenDb();
         
-        subgraph = graph.get(subgraph.getAtomHandle());        
+        stringType = graph.getTypeSystem().getTypeHandle(String.class);
+        subgraph = graph.get(subgraph.getAtomHandle().getPersistent());        
         Assert.assertNull(subgraph.get(globalOnly));
         Assert.assertNull(subgraph.findOne(hg.eq("toBeRemoved")));
         Assert.assertNotNull(graph.findOne(hg.eq("toBeRemoved")));

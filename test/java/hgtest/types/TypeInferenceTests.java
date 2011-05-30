@@ -75,8 +75,9 @@ public class TypeInferenceTests extends HGTestBase
         basics.executeAndVerify(new AtomOperation(add, l), true, true);
         basics.executeAndVerify(new AtomOperation(add, l2), true, true);
         basics.executeAndVerify(new AtomOperation[] {
-                new AtomOperation(remove, x), new AtomOperation(remove, y),
-                new AtomOperation(remove, z) }, false, false, true);
+                new AtomOperation(remove, x.getPersistent()), 
+                new AtomOperation(remove, y.getPersistent()),
+                new AtomOperation(remove, z.getPersistent()) }, false, false, true);
     }
 
     @Test
@@ -98,12 +99,13 @@ public class TypeInferenceTests extends HGTestBase
         HGHandle mapH1 = graph.add(map);
         graph.close();
         graph.open(getGraphLocation());
-        map = graph.get(mapH);
-        map1 = graph.get(mapH1);
+        map = graph.get(mapH.getPersistent());
+        map1 = graph.get(mapH1.getPersistent());
         Assert.assertEquals(map.size(), map1.size());
         for(Object key : map.keySet())
             Assert.assertEquals(map.get(key), map1.get(key));
-        graph.remove(mapH); graph.remove(mapH1);
+        graph.remove(mapH.getPersistent()); 
+        graph.remove(mapH1.getPersistent());
     }
     
     @Test
@@ -116,16 +118,18 @@ public class TypeInferenceTests extends HGTestBase
                 false, false, true);
         HGHandle collH = graph.add(coll);
         HGHandle collH1 = graph.add(coll);
-        graph.close();   graph.open(getGraphLocation());
-        coll = graph.get(collH);
-        coll1 = graph.get(collH1);
+        graph.close();   
+        graph.open(getGraphLocation());
+        coll = graph.get(collH.getPersistent());
+        coll1 = graph.get(collH1.getPersistent());
         Assert.assertEquals(coll.size(), coll1.size());
         Iterator it = coll1.iterator();
         for(Object obj : coll)
         {
             Assert.assertEquals(obj, it.next());
         }
-        graph.remove(collH); graph.remove(collH1);
+        graph.remove(collH.getPersistent()); 
+        graph.remove(collH1.getPersistent());
 
     }
 
@@ -139,11 +143,13 @@ public class TypeInferenceTests extends HGTestBase
                 false, false, true);
         HGHandle beanH = graph.add(bean);
         HGHandle beanH1 = graph.add(bean);
-        graph.close();   graph.open(getGraphLocation());
-        bean = graph.get(beanH);
-        bean1 = graph.get(beanH1);
+        graph.close();   
+        graph.open(getGraphLocation());
+        bean = graph.get(beanH.getPersistent());
+        bean1 = graph.get(beanH1.getPersistent());
         Assert.assertEquals(bean, bean1);
-        graph.remove(beanH); graph.remove(beanH1);
+        graph.remove(beanH.getPersistent()); 
+        graph.remove(beanH1.getPersistent());
     }
 
     @Test
@@ -153,10 +159,11 @@ public class TypeInferenceTests extends HGTestBase
        new BasicOperations(graph).executeAndVerify(new AtomOperation[] {
                new AtomOperation(add, c)},  false, false, true);
        HGHandle colorH = graph.add(c);
-       graph.close();   graph.open(getGraphLocation());
-       c = graph.get(colorH);
+       graph.close();   
+       graph.open(getGraphLocation());
+       c = graph.get(colorH.getPersistent());
        Assert.assertEquals(c, new Color(128, 128, 128));
-       graph.remove(colorH);
+       graph.remove(colorH.getPersistent());
     }
     
     @Test
@@ -216,8 +223,8 @@ public class TypeInferenceTests extends HGTestBase
         
         reopenDb();
         
-        BeanIgnoreFieldVariants xread = graph.get(hx);
-        BeanIgnoreFieldVariants yread = graph.get(hy);
+        BeanIgnoreFieldVariants xread = graph.get(hx.getPersistent());
+        BeanIgnoreFieldVariants yread = graph.get(hy.getPersistent());
         Assert.assertFalse(xread.equals(x));
         Assert.assertEquals(yread, y);
     }

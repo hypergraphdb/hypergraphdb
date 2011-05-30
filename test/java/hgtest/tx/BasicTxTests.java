@@ -3,7 +3,6 @@ package hgtest.tx;
 import hgtest.HGTestBase;
 
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.*;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
@@ -19,16 +18,14 @@ public class BasicTxTests extends HGTestBase
     @Test
     public void addAbort()
     {
-        HGLiveHandle live = null;
-        HGPersistentHandle persistent = null;
+        HGHandle live = null;
         Object x = "txAtomAddFail";
         graph.getTransactionManager().beginTransaction();
-        live = (HGLiveHandle)graph.add(x);
-        persistent = graph.getPersistentHandle(live);
+        live = graph.add(x);
         graph.getTransactionManager().abort();
         assertNull(graph.getHandle(x));
         assertEquals(hg.count(graph, hg.eq(x)), 0);
-        assertNull(graph.getCache().get(persistent));        
+        assertNull(graph.getCache().get(live.getPersistent()));        
         assertNull(graph.get(live));        
     }
     
