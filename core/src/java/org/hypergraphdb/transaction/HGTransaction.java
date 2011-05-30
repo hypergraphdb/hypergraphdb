@@ -8,8 +8,12 @@
 package org.hypergraphdb.transaction;
 
 import java.util.HashMap;
+
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
 import org.hypergraphdb.util.Cons;
@@ -44,6 +48,7 @@ public final class HGTransaction implements HGStorageTransaction
     private long number;
     private boolean readonly = false;
     private ActiveTransactionsRecord activeTxRecord;
+    private Set<Runnable> abortActions = new HashSet<Runnable>();
     
     long getNumber()
     {
@@ -274,6 +279,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     private void privateAbort() throws HGTransactionException
     {
+        for (Runnable r : abortActions)
+            r.run();
         if (stran != null)
             stran.abort();                
         finish();
@@ -310,5 +317,10 @@ public final class HGTransaction implements HGStorageTransaction
     public boolean isReadOnly()
     {
         return this.readonly;
-    }    
+    }
+    
+    public void addAbortAction(Runnable r)
+    {
+        this.abortActions.add(r);
+    }
 }

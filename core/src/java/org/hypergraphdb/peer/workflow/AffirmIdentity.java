@@ -32,8 +32,8 @@ public class AffirmIdentity extends FSMActivity
         return struct("uuid", identity.getId(),
                       "hostname", identity.getHostname(),
                       "ipaddress", identity.getIpAddress(),
-                      "graph-location", identity.getGraphLocation(),
-                      "name", identity.getName());
+                      "graph-location", identity.getGraphLocation() /*,
+                      "name", identity.getName() */);
     }
     
     HGPeerIdentity parseIdentity(Map<String, Object> S)
@@ -43,7 +43,7 @@ public class AffirmIdentity extends FSMActivity
         I.setHostname(S.get("hostname").toString());
         I.setIpAddress(S.get("ipaddress").toString());
         I.setGraphLocation(S.get("graph-location").toString());
-        I.setName(S.get("name").toString());
+        //I.setName(S.get("name").toString());
         return I;
     }
      

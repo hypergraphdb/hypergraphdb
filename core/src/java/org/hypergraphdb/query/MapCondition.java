@@ -69,4 +69,9 @@ public class MapCondition implements HGQueryCondition
 				   HGUtils.eq(mapping, c.mapping);
 		}
 	}
+	
+	public String toString()
+	{
+	    return "map(" + this.getMapping() + "," + this.getCondition() + ")";
+	}
 }

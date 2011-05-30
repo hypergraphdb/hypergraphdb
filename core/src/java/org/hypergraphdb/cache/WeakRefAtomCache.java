@@ -101,6 +101,13 @@ public class WeakRefAtomCache implements HGAtomCache
 		}
 	}	
 	
+	private static class ClearHandleAction implements Runnable
+	{
+	    private WeakHandle h;
+	    public ClearHandleAction(WeakHandle h) { this.h = h;}
+	    public void run() { h.clear(); }
+	}
+	
 	private void processRefQueue() throws InterruptedException
 	{
         WeakHandle ref = (WeakHandle)refQueue.remove(phantomQueuePollInterval);
@@ -245,6 +252,8 @@ public class WeakRefAtomCache implements HGAtomCache
         else
             h = new WeakHandle(atom, pHandle, attrib == null ? HGSystemFlags.DEFAULT : attrib.getFlags(), refQueue);
         
+        graph.getTransactionManager().getContext().getCurrent().addAbortAction(new ClearHandleAction(h));
+        
         gcLock.readLock().lock();
         try
         {
@@ -283,6 +292,8 @@ public class WeakRefAtomCache implements HGAtomCache
 		else
 		    h = new WeakHandle(atom, pHandle, attrib == null ? HGSystemFlags.DEFAULT : attrib.getFlags(), refQueue);
 		
+        graph.getTransactionManager().getContext().getCurrent().addAbortAction(new ClearHandleAction(h));
+        
 		// Important to updates the atoms map first to prevent garbage collection
 		// of the liveHandles entry due to previously removed runtime instance of the
 		// same atom.
@@ -326,6 +337,8 @@ public class WeakRefAtomCache implements HGAtomCache
 	                                 handle.getFlags(),
 	                                 refQueue);
 	    
+        graph.getTransactionManager().getContext().getCurrent().addAbortAction(new ClearHandleAction(newLive));
+        
 	    // We are updating two maps here. Because the atoms map is weak-ref-based, the
 	    // correct order is to update it first for otherwise a previously kicked in
 	    // garbage collection of the corresponding 'liveHandles' entry will create a 

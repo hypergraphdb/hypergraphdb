@@ -191,26 +191,26 @@ public class HyperGraphPeer
             id.setGraphLocation(graph.getLocation());
             id.setHostname(localMachine.getHostName());
             id.setIpAddress(localMachine.getHostAddress());
-            id.setName(peerName);
+//            id.setName(peerName);
             System.out.println("DEFINE PEER IDENTITY: " + peerName);
             graph.define(id.getId(), id);
             return identity = id.makePublicIdentity();
         }
         else if (all.size() > 1)
         {
-            for (PrivatePeerIdentity ii : all)
-                System.out.println("IDD : " + ii.getName() + " - " + ii.getId());
+//            for (PrivatePeerIdentity ii : all)
+//                System.out.println("IDD : " + ii.getName() + " - " + ii.getId());
             throw new RuntimeException("More than one identity on peer - a bug or a malicious activity.");
         }
         else
         {
         	final PrivatePeerIdentity pid = all.get(0);
-            if (!HGUtils.eq(pid.getName(), peerName))
-            {
-                pid.setName(peerName);
-                System.out.println("UPDATE PEER IDENTITY: " + peerName);                
-                graph.update(pid);
-            }
+//            if (!HGUtils.eq(pid.getName(), peerName))
+//            {
+//                pid.setName(peerName);
+//                System.out.println("UPDATE PEER IDENTITY: " + peerName);                
+//                graph.update(pid);
+//            }
             identity = pid.makePublicIdentity();
             if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
                 !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||

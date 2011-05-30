@@ -784,7 +784,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (liveHandle != null)
         {
         	T theAtom = (T)liveHandle.getRef();
-        	if (theAtom == null || cache.get(theAtom) == null)
+        	if (theAtom == null /* || cache.get(theAtom) == null */)
         	{
         		//
         		// The atom has been evicted from the cache, so the live reference is no
@@ -803,6 +803,10 @@ public /*final*/ class HyperGraph implements HyperNode
         	}
         	else
         	{
+//        	    if (cache.get(theAtom) == null)
+//        	    {
+//        	        System.out.println("Live atom missing from cache: " + theAtom);
+//        	    }
         		eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, theAtom));
         		return (T)theAtom;
         	}
