@@ -9,6 +9,7 @@ package org.hypergraphdb.type;
 
 import java.util.ArrayList;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -87,7 +88,7 @@ public final class TypeUtils
 									   String [] dimPath,
 									   boolean throwExceptionOnNotFound)
 	{
-		
+		Object topvalue = value;
 		for (int j = 0; j < dimPath.length; j++)
 		{
 			HGAtomType tinstance = (HGAtomType)hg.get(type);
@@ -105,6 +106,9 @@ public final class TypeUtils
 							" does not exist in type " + tinstance);
 				else
 					return null;
+			if (value == null)
+			    throw new IllegalArgumentException("The value " + value + 
+			              " doesn't have a property at " + Arrays.asList(dimPath));
 			value = proj.project(value);
 			type = proj.getType();
 		}

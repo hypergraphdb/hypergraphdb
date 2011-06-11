@@ -61,7 +61,17 @@ public class AtomPartCondition extends SimpleValueCondition
 		if (atom == null)
 			return false;		
 		HGHandle type = hg.getTypeSystem().getTypeHandle(handle);			
-		HGTypedValue projected = TypeUtils.project(hg, type, atom, dimensionPath, false);
+		HGTypedValue projected = null;
+		try
+		{
+		    projected = TypeUtils.project(hg, type, atom, dimensionPath, false);
+		}
+		catch (IllegalArgumentException ex)
+		{
+		    // projected remain null in case we have a problem projecting that value
+		    //System.err.println(ex);
+		}
+		
 		if (projected != null)
 			return compareToValue(hg, projected.getValue());
 		else

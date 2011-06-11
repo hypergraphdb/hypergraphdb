@@ -42,7 +42,7 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     	switch (operator)
     	{
     		case EQ:
-    			return value.equals(x);
+    			return HGUtils.eq(value, x);
     		case LT:
     			return ((Comparable)x).compareTo(value) < 0;
     		case GT:
