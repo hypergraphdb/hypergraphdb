@@ -8,40 +8,34 @@
 package org.hypergraphdb;
 
 import java.io.BufferedReader;
-
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
+import java.net.URI;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.event.HGLoadPredefinedTypeEvent;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
-import org.hypergraphdb.transaction.TxMap;
-import org.hypergraphdb.type.BonesOfBeans;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGTypeConfiguration;
+import org.hypergraphdb.type.HGTypeSchema;
 import org.hypergraphdb.type.JavaTypeMapper;
+import org.hypergraphdb.type.JavaTypeSchema;
 import org.hypergraphdb.type.LinkType;
 import org.hypergraphdb.type.NullType;
-import org.hypergraphdb.type.PlainLinkType;
 import org.hypergraphdb.type.SubsumesType;
 import org.hypergraphdb.type.Top;
 import org.hypergraphdb.util.HGUtils;
-import org.hypergraphdb.util.PredefinedTypesConfig;
 
 /**
  * <p>
@@ -97,9 +91,9 @@ import org.hypergraphdb.util.PredefinedTypesConfig;
 public class HGTypeSystem
 {
 	private static final String TYPE_ALIASES_DB_NAME = "hg_typesystem_type_alias";
-	private static final String JAVA2HG_TYPES_DB_NAME = "hg_typesystem_java2hg_types";
+//	private static final String JAVA2HG_TYPES_DB_NAME = "hg_typesystem_java2hg_types";
 	private static final String JAVA_PREDEFINED_TYPES_DB_NAME = "hg_typesystem_javapredefined_types";
-	private static final int MAX_CLASS_TO_TYPE = 2000;
+	private static final String URI2HG_TYPES_DB_NAME = "hg_typesystem_uri2hg_types";
 
 //	static final HGPersistentHandle TOP_PERSISTENT_HANDLE = null;
 //		// HGHandleFactory.makeHandle("a395bb09-07cd-11da-831d-8d375c1471fe");
@@ -119,27 +113,41 @@ public class HGTypeSystem
 	public static final HGAtomType top = Top.getInstance();
 
 	private HyperGraph graph = null;
-	private Map<Class<?>, HGHandle> classToAtomType = null;
-	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
+	private HGTypeConfiguration config = null;
+    // Useful for the many methods that work on Java Class(es) for backward compatibility.
+	private JavaTypeSchema javaSchema = null;
+//	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
-	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;
-	private JavaTypeMapper javaTypes = null;
-	private ClassLoader classLoader;	
+	private HGBidirectionalIndex<String,  HGPersistentHandle> urisDB = null;
+	private HGIndex<HGPersistentHandle, String> predefinedTypesDB = null;	
 	private HGLiveHandle topHandle;
 	private HGLiveHandle nullTypeHandle;
+
+    private HGBidirectionalIndex<String, HGPersistentHandle> getUriDB()
+    {
+        if (urisDB == null)
+        {
+            urisDB = graph.getStore().getBidirectionalIndex(URI2HG_TYPES_DB_NAME,
+                                                   BAtoString.getInstance(),
+                                                   BAtoHandle.getInstance(graph.getHandleFactory()),
+                                                   null,
+                                                   true);
+        }
+        return urisDB;
+    }
 	
-	private HGBidirectionalIndex<String, HGPersistentHandle> getClassToTypeDB()
-	{
-		if (classToTypeDB == null)
-		{
-			classToTypeDB = graph.getStore().getBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
-			                                       BAtoString.getInstance(),
-			                                       BAtoHandle.getInstance(graph.getHandleFactory()),
-			                                       null,
-			                                       true);
-		}
-		return classToTypeDB;
-	}
+//	private HGBidirectionalIndex<String, HGPersistentHandle> getClassToTypeDB()
+//	{
+//		if (classToTypeDB == null)
+//		{
+//			classToTypeDB = graph.getStore().getBidirectionalIndex(JAVA2HG_TYPES_DB_NAME,
+//			                                       BAtoString.getInstance(),
+//			                                       BAtoHandle.getInstance(graph.getHandleFactory()),
+//			                                       null,
+//			                                       true);
+//		}
+//		return classToTypeDB;
+//	}
 
 	private HGBidirectionalIndex<String, HGPersistentHandle> getAliases()
 	{
@@ -175,49 +183,45 @@ public class HGTypeSystem
 				graph.getHandleFactory().nullHandle()
 			};
 		graph.getStore().store(handle, layout);
-//		if (hg.indexByType.)
 		graph.indexByType.addEntry(topHandle.getPersistent(), handle);
 	}
 
 	void bootstrap(HGTypeConfiguration typeConfiguration)
 	{
-	    PredefinedTypesConfig config = PredefinedTypesConfig.loadFromResource(graph.getHandleFactory(), 
-	                                                                          typeConfiguration.getPredefinedTypes());
+	    this.config = typeConfiguration;
+	    this.javaSchema = config.getSchema("javaclass");	    
+	    
 		top.setHyperGraph(graph);
-		topHandle = graph.cache.atomRead(config.getHandleOf(top.getClass()), 
+		topHandle = graph.cache.atomRead(graph.getHandleFactory().topTypeHandle(), 
 		                                 top, 
 		                                 new HGAtomAttrib());
-		classToAtomType.put(Top.class, topHandle); // TOP is its own type
-		classToAtomType.put(Object.class, topHandle); // TOP also corresponds to the java.lang.Object "top type"
 		graph.cache.freeze(topHandle);
 
-		HGAtomType plainLinktype = new PlainLinkType();
-		plainLinktype.setHyperGraph(graph);
-		HGLiveHandle plainLinkHandle = graph.cache.atomRead(config.getHandleOf(plainLinktype.getClass()), 
-		                                                    plainLinktype, 
-		                                                    new HGAtomAttrib());
-		classToAtomType.put(HGPlainLink.class, plainLinkHandle);
-		graph.cache.freeze(plainLinkHandle);
+//		HGAtomType plainLinktype = new PlainLinkType();
+//		plainLinktype.setHyperGraph(graph);
+//		HGLiveHandle plainLinkHandle = graph.cache.atomRead(config.getHandleOf(plainLinktype.getClass()), 
+//		                                                    plainLinktype, 
+//		                                                    new HGAtomAttrib());
+//		classToAtomType.put(HGPlainLink.class, plainLinkHandle);
+//		graph.cache.freeze(plainLinkHandle);
 
 		HGAtomType linkType = new LinkType();
 		linkType.setHyperGraph(graph);
-		HGLiveHandle linkHandle = graph.cache.atomRead(config.getHandleOf(linkType.getClass()), 
+		HGLiveHandle linkHandle = graph.cache.atomRead(graph.getHandleFactory().linkTypeHandle(), 
 		                                               linkType, 
 		                                               new HGAtomAttrib());
-		classToAtomType.put(HGLink.class, linkHandle);
 		graph.cache.freeze(linkHandle);
 
 		HGAtomType subsumesType = new SubsumesType();
 		subsumesType.setHyperGraph(graph);
-		HGLiveHandle subsumesHandle = graph.cache.atomRead(config.getHandleOf(subsumesType.getClass()), 
+		HGLiveHandle subsumesHandle = graph.cache.atomRead(graph.getHandleFactory().subsumesTypeHandle(), 
 		                                                   subsumesType, 
 		                                                   new HGAtomAttrib());
-		classToAtomType.put(HGSubsumes.class, subsumesHandle);
 		graph.cache.freeze(subsumesHandle);
 
 		HGAtomType nullType = new NullType();
 		nullType.setHyperGraph(graph);
-		nullTypeHandle = graph.cache.atomRead(config.getHandleOf(NullType.class), 
+		nullTypeHandle = graph.cache.atomRead(graph.getHandleFactory().nullTypeHandle(), 
 		                                      nullType,
 		                                      new HGAtomAttrib());
 		graph.cache.freeze(nullTypeHandle);
@@ -228,50 +232,42 @@ public class HGTypeSystem
 		if (graph.getStore().getLink(topHandle.getPersistent()) == null)
 		{
 			addPrimitiveTypeToStore(topHandle.getPersistent());
-			addPrimitiveTypeToStore(plainLinkHandle.getPersistent());
 			addPrimitiveTypeToStore(linkHandle.getPersistent());
 			addPrimitiveTypeToStore(subsumesHandle.getPersistent());
-			graph.add(new HGSubsumes(topHandle.getPersistent(), 
-			                         linkHandle.getPersistent()), 
-			          subsumesHandle.getPersistent());
-			graph.add(new HGSubsumes(linkHandle.getPersistent(), 
-			                         plainLinkHandle.getPersistent()), 
-			                         subsumesHandle.getPersistent());
-			graph.add(new HGSubsumes(plainLinkHandle.getPersistent(), 
-			                         subsumesHandle.getPersistent()), 
-			          subsumesHandle.getPersistent());
-			//storePrimitiveTypes(typeDefResource);
-			for (HGPersistentHandle typeHandle : config.getHandles())
-			{
-			    Class<? extends HGAtomType> cl = config.getTypeImplementation(typeHandle);
-			    if (cl.equals(Top.class) || 
-			        cl.equals(LinkType.class) || 
-			        cl.equals(PlainLinkType.class) || 
-			        cl.equals(SubsumesType.class))
-			        continue;
-			    HGAtomType typeInstance = null;
-			    try { typeInstance = cl.newInstance(); }
-			    catch (Exception ex) { System.err.println("[HYPERGRAPHDB WARNING]: failed to create instance of type '" + 
-			                cl.getName() + "'"); ex.printStackTrace(System.err); }
-			    List<Class<?>> targets = config.getMappedClasses(typeHandle);
-			    if (targets.isEmpty())
-			        addPredefinedType(typeHandle, typeInstance, null);
-			    else for (Class<?> target : targets)
-			        addPredefinedType(typeHandle, typeInstance, target);			    
-			}
+//			graph.add(new HGSubsumes(topHandle.getPersistent(), 
+//			                         linkHandle.getPersistent()), 
+//			          subsumesHandle.getPersistent());
+//			graph.add(new HGSubsumes(linkHandle.getPersistent(), 
+//			                         plainLinkHandle.getPersistent()), 
+//			                         subsumesHandle.getPersistent());
+//			graph.add(new HGSubsumes(plainLinkHandle.getPersistent(), 
+//			                         subsumesHandle.getPersistent()), 
+//			          subsumesHandle.getPersistent());
+//			//storePrimitiveTypes(typeDefResource);
+//			for (HGPersistentHandle typeHandle : config.getHandles())
+//			{
+//			    Class<? extends HGAtomType> cl = config.getTypeImplementation(typeHandle);
+//			    if (cl.equals(Top.class) || 
+//			        cl.equals(LinkType.class) || 
+//			        cl.equals(PlainLinkType.class) || 
+//			        cl.equals(SubsumesType.class))
+//			        continue;
+//			    HGAtomType typeInstance = null;
+//			    try { typeInstance = cl.newInstance(); }
+//			    catch (Exception ex) { System.err.println("[HYPERGRAPHDB WARNING]: failed to create instance of type '" + 
+//			                cl.getName() + "'"); ex.printStackTrace(System.err); }
+//			    List<Class<?>> targets = config.getMappedClasses(typeHandle);
+//			    if (targets.isEmpty())
+//			        addPredefinedType(typeHandle, typeInstance, null);
+//			    else for (Class<?> target : targets)
+//			        addPredefinedType(typeHandle, typeInstance, target);			    
+//			}
 		}
-		javaTypes = typeConfiguration.getJavaTypeMapper();
-		javaTypes.setHyperGraph(graph);
+        this.javaSchema.initialize(graph);
 		
-		// TODO : this is being initialized here because it causes a rather weird issue having to do
-		// with the MVCC implementation if initialized on the spot (the first time it is needed). It 
-		// causes the HGPlainLink.class HGDB type to have a null link pointing to it, presumably 
-		// HGSubsumes that ends up being null (not in the store). There's some self-referentiality 
-		// involved since AtomProjection is a bean, a RecordType and the RecordType implementation
-		// does rely on the AtomProjection type being already defined. But before the MVCC this used
-		// to work without a problem. Anyway, putting the initialization here fixed it, but it might
-		// be just a workaround to a deeper problem that we haven't gotten to the bottom of. --Boris
-		getTypeHandle(AtomProjection.class);
+//		javaTypes = typeConfiguration.getJavaTypeMapper();
+//		javaTypes.setHyperGraph(graph);
+
 	}
 	
 	/**
@@ -334,7 +330,7 @@ public class HGTypeSystem
 				   }
 				}
 			   else
-				   addPredefinedType(pHandle, type, null);
+				   addPredefinedType(pHandle, type, (URI)null);
 		   }
 	   }
 	   catch (IOException ex)
@@ -373,7 +369,7 @@ public class HGTypeSystem
 				Class<?> clazz = loadClass(classname);
 				HGAtomType type = (HGAtomType)clazz.newInstance();
 				type.setHyperGraph(graph);
-				return (HGLiveHandle)addPredefinedType(pHandle, type, null);
+				return (HGLiveHandle)addPredefinedType(pHandle, type, (URI)null);
 			}
 			catch (Throwable ex)
 			{
@@ -383,6 +379,42 @@ public class HGTypeSystem
 		}
 	}
 
+	public HGTypeSchema<?> getSchema()
+	{
+	    // TODO: what about contextual schemas? thread-bound? transaction-bound?
+	    return config.getDefaultSchema();
+	}
+	
+	public void defineTypeAtom(final HGHandle typeHandle, final URI typeUri)
+	{
+	    final HGTypeSchema<?> schema = config.getSchema(typeUri.getScheme());	    
+        if (graph.getTransactionManager().getContext().getCurrent() != null)
+        {
+            schema.defineType(typeUri, typeHandle);
+            getUriDB().addEntry(typeUri.toString(), typeHandle.getPersistent());
+//            HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
+//            if (h == null)
+//                throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");              
+//            else if (!h.equals(handle))
+//                throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
+        }
+        else
+            graph.getTransactionManager().transact(new Callable<HGHandle>() {
+            public HGHandle call()
+            {
+                schema.defineType(typeUri, typeHandle);
+                getUriDB().addEntry(typeUri.toString(), typeHandle.getPersistent());
+                return null; // ignored
+//                HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
+//                if (h == null)
+//                    throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");                  
+//                else if (!h.equals(handle))
+//                    throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
+//                else
+//                    return h;
+            } });	    
+	}
+	
 	/**
 	 * <p>
 	 * Create a HyperGraph type for the specified Java class and store the type
@@ -391,178 +423,13 @@ public class HGTypeSystem
 	 *
 	 * @param handle
 	 * @param clazz
+	 * @deprecated Please use {@link #defineTypeAtom(HGHandle, URI)} instead. 
 	 */
 	public void defineTypeAtom(final HGPersistentHandle handle, final Class<?> clazz)
 	{
-		if (graph.getTransactionManager().getContext().getCurrent() != null)
-		{
-			graph.define(handle, 
-			             nullTypeHandle, 
-			             graph.getHandleFactory().nullHandle(), 
-			             null, 
-			             new Object());
-			classToAtomType.put(clazz, handle);
-			getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
-			HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
-			if (h == null)
-				throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");				
-			else if (!h.equals(handle))
-				throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
-
-		}
-		else
-			graph.getTransactionManager().transact(new Callable<HGHandle>() {
-			public HGHandle call()
-			{
-				graph.define(handle, 
-				             nullTypeHandle, 
-				             graph.getHandleFactory().nullHandle(), 
-				             null, 
-				             new Object());
-				classToAtomType.put(clazz, handle);
-				getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(handle));
-				HGHandle h = defineNewJavaTypeTransaction(handle, clazz);
-				if (h == null)
-					throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");					
-				else if (!h.equals(handle))
-					throw new HGException("The class '" + clazz.getName() + "' already has a HyperGraph Java:"+h);
-				else
-					return h;
-			} });
+	    defineTypeAtom(handle, javaSchema.toTypeURI(clazz));
 	}
 
-//	HGHandle defineNewJavaType(final Class<?> clazz)
-//	{
-//	}
-
-	HGHandle makeNewJavaType(Class<?> clazz)
-	{
-		//
-		// First, create a dummy type for the class, so that recursive type
-		// references don't lead to an infinite recursion here.
-		//
-		HGHandle newHandle = graph.add(new Object(), nullTypeHandle);
-		classToAtomType.put(clazz, newHandle);
-		getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(newHandle));
-		HGHandle inferred = defineNewJavaTypeTransaction(newHandle, clazz);
-		if (inferred == null)
-		{
-			// rollback changes
-			getClassToTypeDB().removeAllEntries(clazz.getName());
-			classToAtomType.remove(clazz);
-			graph.remove(newHandle);
-			return null;
-		}
-		else
-		{
-            classToAtomType.put(clazz, inferred);		    
-			return inferred;
-		}
-	}
-
-	/**
-	 * We need to infer to HG type by introspection. We maintain the
-	 * full inheritence tree of Java class and interfaces. Therefore, for each
-	 * newly added Java type mapping, we navigate to parent classes etc.
-	 */
-	HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class<?> clazz)
-	{
-		//
-		// Create a HyperGraph type matching the Java class.
-		//
-		HGAtomType inferredHGType = javaTypes.defineHGType(clazz, newHandle);
-
-		if (inferredHGType == null)
-			return null;
-			// throw new HGException("Could not create HyperGraph type for class '" + clazz.getName() + "'");
-
-		//
-		// Now, replace the dummy atom that we added at the beginning with the new type.
-		//
-		HGHandle typeConstructor = getTypeHandle(inferredHGType.getClass());
-		if (!typeConstructor.equals(getTop()))
-			graph.replace(newHandle, inferredHGType, typeConstructor);
-		//
-		// TODO: we are assuming here that if the defineHGType call above did not return
-		// a newly created type, but an already existing one, its type constructor can
-		// only be Top. There is no reason this should be true in general. Probably
-		// defineHGType should return multiple values: the resulting type, whether it's new
-		// or not and possibly other things, encapsulated in some sort of type descriptor.
-		//
-		else
-		{
-			// We have a predefined type. We must erase the dummy atom instead of replacing it.
-			graph.remove(newHandle);
-
-			// A predefined type is a frozen atom in the cache, so its live handle is available
-			// from the Java instance.
-			HGHandle result = graph.cache.get(inferredHGType);
-
-			//
-			// Update the Class -> type handle mapping.
-			//
-			classToAtomType.put(clazz, result);
-			getClassToTypeDB().removeEntry(clazz.getName(), graph.getPersistentHandle(newHandle));
-			getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(result));
-			newHandle = result;
-		}
-
-		//
-		// So far, the inferredHGType is platform independent HyperGraph type, e.g.
-		// a RecordType. To make it transparently handle run-time instances of 'clazz',
-		// we need a corresponding Java binding for this type, e.g. a JavaBeanBinding.
-		//
-		HGAtomType type = javaTypes.getJavaBinding(newHandle, inferredHGType, clazz);
-		type.setHyperGraph(graph);
-
-		//
-		// the result of hg.add may or may not be stored in the cache: if it is, replace the run-time
-		// instance of
-		//
-		if (newHandle instanceof HGLiveHandle)
-			newHandle = graph.cache.atomRefresh((HGLiveHandle)newHandle, type, true);
-		else
-			newHandle = graph.cache.atomRead((HGPersistentHandle)newHandle,
-			                                 type, 
-			                                 new HGAtomAttrib());
-
-		// Now, examine the super type and implemented interfaces
-		// First, make sure we've mapped all interfaces
-		Class<?> [] interfaces = clazz.getInterfaces();
-		for (int i = 0; i < interfaces.length; i++)
-		{
-			HGHandle interfaceHandle = getTypeHandle(interfaces[i]);
-			if (interfaceHandle == null)
-				throw new HGException("Unable to infer HG type for interface " +
-				                       interfaces[i].getName());
-			else
-				assertSubtype(interfaceHandle, newHandle);
-		}
-		//
-		// Next, navigate to the superclass.
-		//
-		if (clazz.getSuperclass() != null)
-		{
-			HGHandle superHandle = getTypeHandle(clazz.getSuperclass());
-			// Then proceed recursively to the superclass:
-			if (superHandle == null)
-			{
-				throw new HGException("Unable to infer HG type for class " +
-				                      clazz.getSuperclass().getName() +
-				                      " the superclass of " + clazz.getName());
-			}
-			else
-				assertSubtype(superHandle, newHandle);
-		}
-		// Interfaces don't derive from java.lang.Object, so we need to super-type them with Top explicitly
-		else if (clazz.isInterface())
-			graph.add(new HGSubsumes(getTop(), newHandle));
-
-		//
-		// ouf, we're done
-		//
-		return newHandle;
-	}
 
 	/**
 	 * <p>
@@ -589,16 +456,14 @@ public class HGTypeSystem
 	 *
 	 * @param graph The <code>HyperGraph</code> which the type system is bound.
 	 */
-	@SuppressWarnings("unchecked")
     public HGTypeSystem(HyperGraph graph)
 	{
 		this.graph = graph;
-		this.classToAtomType = new TxMap(graph.getTransactionManager(), new ClassToTypeCache());
 		//
 		// Initialize databases to avoid heaving to synchronize later.
 		//
 		this.getAliases();
-		this.getClassToTypeDB();
+		this.getUriDB();
 		this.getPredefinedTypesDB();
 //		this.javaTypes = new JavaTypeFactory();
 //		javaTypes.setHyperGraph(graph);
@@ -617,10 +482,11 @@ public class HGTypeSystem
 	/** 
 	 * <p>Return the <code>JavaTypeFactory</code> which is responsible for mapping
 	 * Java class to HyperGraph types.</p>
+	 * @deprecated
 	 */
 	public JavaTypeMapper getJavaTypeFactory()
 	{
-		return this.javaTypes;
+		return javaSchema.getJavaTypeFactory();
 	}
 	
 	/**
@@ -639,6 +505,42 @@ public class HGTypeSystem
 		return topHandle;
 	}
 
+    /**
+     * <p>
+     * Return the HyperGraphDB type handle corresponding to the given Java class if
+     * a type for this class was previously defined. Return <code>null</code> otherwise.
+     * </p>
+     */
+    public HGHandle getTypeHandleIfDefined(URI uri)
+    {
+        HGTypeSchema<?> schema = this.config.getSchema(uri.getScheme());
+        if (schema == null)
+            throw new HGException("Couldn't find schema for type " + uri);
+        return schema.findType(uri);
+    }
+
+    public HGHandle getHandleForIdentifier(URI typeId)
+    {
+        return getUriDB().findFirst(typeId.toString());
+    }
+    
+	public Set<URI> getIdentifiersForHandle(HGHandle typeHandle)
+	{
+	    HGSearchResult<String> rs = this.getUriDB().findByValue(typeHandle.getPersistent());
+	    HashSet<URI> S = new HashSet<URI>();
+	    try
+	    {
+	        while (rs.hasNext())
+	            try { S.add(new URI(rs.next())); }
+	            catch (Exception ex) { throw new HGException(ex); }
+	        return S;
+	    }
+	    finally
+	    {
+	        rs.close();
+	    }
+	}
+	
 	/**
 	 * <p>
 	 * Load a class with the given name the way the <code>HGTypeSystem</code> would try 
@@ -653,7 +555,9 @@ public class HGTypeSystem
 	public Class<?> loadClass(String classname)
 	{
 		Class<?> clazz;
-		ClassLoader loader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+		ClassLoader loader = graph.getConfig().getClassLoader();
+		if (loader == null)
+		    loader = Thread.currentThread().getContextClassLoader();
 		if (loader == null)
 		    loader = this.getClass().getClassLoader();
 		try
@@ -683,21 +587,9 @@ public class HGTypeSystem
 	 *
 	 * @param type
 	 */
-	HGAtomType toJavaBinding(HGPersistentHandle handle, HGAtomType type)
+	HGAtomType toRuntimeInstance(HGPersistentHandle handle, HGAtomType type)
 	{
-		String classname = getClassToTypeDB().findFirstByValue(handle);
-		if (classname != null)
-		{		  
-			Class<?> clazz = loadClass(classname);
-			type = javaTypes.getJavaBinding(handle, type, clazz);
-			classToAtomType.put(clazz, handle);
-//			if (refreshInCache)
-//			{
-//				graph.cache.atomRefresh(handle, type, true);
-//				classToAtomType.put(clazz, handle);
-//			}
-		}
-		return type;
+	    return getSchema().toRuntimeType(handle, type);
 	}
 	
 	/**
@@ -744,16 +636,25 @@ public class HGTypeSystem
 	 * type should not be mapped to a Java class.
 	 * @return A run-time handle for the newly added type.
 	 */
-	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class<?> clazz)
+	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final URI typeId)
 	{
 		if (graph.getTransactionManager().getContext().getCurrent() != null)
-			return addPredefinedTypeTransaction(handle, type, clazz);
+			return addPredefinedTypeTransaction(handle, type, typeId);
 		else
 			return graph.getTransactionManager().transact(new Callable<HGHandle>()
-				{ public HGHandle call() { return addPredefinedTypeTransaction(handle, type, clazz); } });
+				{ public HGHandle call() { return addPredefinedTypeTransaction(handle, type, typeId); } });
 	}
-	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, Class<?> clazz)
+	
+	/**
+	 * @deprecated Use {@link #addPredefinedType(HGPersistentHandle, HGAtomType, URI) instead;
+	 */
+	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class<?> clazz)
 	{
+	    return addPredefinedType(handle, type, javaSchema.toTypeURI(clazz));
+	}
+	
+	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, final URI typeId)
+	{	    
 	    type.setHyperGraph(graph);
 	    
 		//
@@ -778,13 +679,28 @@ public class HGTypeSystem
 
 		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());
 		graph.cache.freeze(typeHandle);
-		classToAtomType.put(type.getClass(), classToAtomType.get(Top.class));
-		if (clazz != null)
+
+		if (typeId != null)
 		{
-			if (getClassToTypeDB().findFirst(clazz.getName()) != null)
-			    classToTypeDB.removeAllEntries(clazz.getName());
-			classToTypeDB.addEntry(clazz.getName(), handle);
-			classToAtomType.put(clazz, typeHandle);
+//            HGTypeSchema<?> schema = config.getSchema(typeId.getScheme());
+//            if (schema == null)
+//                throw new NullPointerException("No schema installed with name " + typeId.getScheme());
+    		
+    		if (getUriDB().findFirst(typeId.toString()) != null)
+    		    getUriDB().removeAllEntries(typeId.toString());
+    		getUriDB().addEntry(typeId.toString(), handle);
+    
+    		
+    		// TODO: is this important? do we really need to state that the Java class of the predefined
+    		// type has type top? Perhaps it's even wrong...that class may well be a primitive type in some
+    		// type schema, yet be stored as a Java bean or something else in another type schema.
+    //		classToAtomType.put(type.getClass(), classToAtomType.get(Top.class));
+    		
+    		// This shouldn't be needed, because it's just a caching thing, now specific to the JavaTypeSchema...
+    //		if (clazz != null)
+    //		{
+    //			classToAtomType.put(clazz, typeHandle);
+    //		}
 		}
 		return typeHandle;
 	}
@@ -802,9 +718,14 @@ public class HGTypeSystem
 	 * if there's no such correspondence.
 	 */
 	public Class<?> getClassForType(HGHandle typeHandle)
-	{
-		String classname = getClassNameForType(typeHandle);
-		return classname != null ? loadClass(classname) : null;
+	{	    
+	    Set<URI> ids = getIdentifiersForHandle(typeHandle);
+	    for (URI u : ids)
+	        if (u.getScheme().equals(javaSchema.getName()))
+	            return javaSchema.getTypeDescriptor(u);
+	    return null;
+//		String classname = getClassNameForType(typeHandle);
+//		return classname != null ? loadClass(classname) : null;
 	}
 
 	/**
@@ -821,10 +742,11 @@ public class HGTypeSystem
         graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
         { 
             public HGHandle call() 
-            {                        		
-				classToAtomType.put(clazz, typeHandle);
-				getClassToTypeDB().removeAllEntries(clazz.getName());
-				getClassToTypeDB().addEntry(clazz.getName(), graph.getPersistentHandle(typeHandle));
+            {               
+                URI uri = JavaTypeSchema.classToURI(clazz);
+                javaSchema.removeType(uri);
+                getUriDB().removeAllEntries(uri.toString());
+                getUriDB().addEntry(uri.toString(), typeHandle.getPersistent());
 				return null;
             }
         });		
@@ -845,7 +767,16 @@ public class HGTypeSystem
      */	
 	public String getClassNameForType(HGHandle typeHandle)
     {
-        return getClassToTypeDB().findFirstByValue(graph.getPersistentHandle(typeHandle));
+	    Class<?> cl = null;
+	    Set<URI> uris = getIdentifiersForHandle(typeHandle);
+	    for (URI u : uris)
+	        if (u.getScheme().equals(javaSchema.getName()))
+	        {
+	            cl = javaSchema.getTypeDescriptor(u);
+	            break;
+	        }
+	    return cl == null ? null : cl.getName();
+        //return getClassToTypeDB().findFirstByValue(graph.getPersistentHandle(typeHandle));
     }
 	
 	/**
@@ -917,61 +848,24 @@ public class HGTypeSystem
 	/**
 	 * <p>Return <code>true</code> if there is a HyperGraph type corresponding to the given
 	 * class and <code>false</code> otherwise.</p>
+	 * 
+	 * @deprecated Please call the more general {@link #getHandleForIdentifier(URI)} instead.
+	 * This method <strong>will</strong> be removed in future versions.
 	 */
 	public boolean hasType(Class<?> clazz)
 	{
-		if (classToAtomType.containsKey(clazz))
-			return true;
-		else if (getClassToTypeDB().findFirst(clazz.getName()) != null)
-			return true;
-		else
-			return false;
+	    return this.getTypeHandleIfDefined(clazz) != null;
 	}
 
 	/**
-	 * <p>
-	 * Return the HyperGraphDB type handle corresponding to the given Java class if
-	 * a type for this class was previously defined. Return <code>null</code> otherwise.
-	 * </p>
+	 * @deprecated Please call the more general {@link #getHandleForIdentifier(URI)} instead.
+	 * This method <strong>will</strong> be removed in future versions.
 	 */
 	public HGHandle getTypeHandleIfDefined(Class<?> clazz)
 	{
-		if (clazz.isPrimitive())
-			clazz = BonesOfBeans.wrapperEquivalentOf(clazz);
-
-		//
-		// First check cache of class to HG type mappings:
-		//
-		HGHandle typeHandle = classToAtomType.get(clazz);
-		if (typeHandle != null)
-			return typeHandle;
-
-		//
-		// Then check the database of inferred types:
-		//
-		HGPersistentHandle hgTypeHandle = getClassToTypeDB().findFirst(clazz.getName());
-		if (hgTypeHandle != null)
-			return hgTypeHandle;
-
-		//
-		// No HG type defined specifically for this concrete clazz. First check
-		// the "built in" array case.
-		//
-//		if (clazz.isArray())
-//		{
-//			Class<?> clazz1 = (new Object[0]).getClass();
-//			typeHandle = classToAtomType.get(clazz1);
-//			if (typeHandle != null)
-//				return typeHandle;
-//			hgTypeHandle = getClassToTypeDB().findFirst(clazz1.getName());
-//			if (hgTypeHandle != null)
-//				return hgTypeHandle;
-//			 return defineNewJavaType(clazz);
-//			//throw new HGException("Could not handle array type for " + clazz.getComponentType().getName() +
-//			//		" since there is no HyperGraph neither for this array type, nor for the generic Object[].");
-//		}
-		return null;
+	    return getTypeHandleIfDefined(JavaTypeSchema.classNameToURI(clazz.getName()));
 	}
+	
 	
 	/**
 	 * <p>Return the <code>HGHandle</code> of the HyperGraph type representing a given
@@ -982,6 +876,8 @@ public class HGTypeSystem
 	 * @return The <code>HGHandle</code> for that class. If the Java class hasn't been previously
 	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
 	 * will be returned.
+     * @deprecated Please call the more general {@link #getTypeHandle(URI)} instead. This 
+     * method <strong>will</strong> be removed in future versions. 
 	 */
 	public HGHandle getTypeHandle(final Class<?> clazz)
 	{
@@ -991,11 +887,31 @@ public class HGTypeSystem
             {
                 
                 HGHandle h = getTypeHandleIfDefined(clazz);
-                return h != null ? h : makeNewJavaType(clazz);
+                return h != null ? h : createNewType(javaSchema.toTypeURI(clazz));
             } 
         });
 	}
 
+	public HGHandle getTypeHandle(final URI typeIdentifier)
+	{
+        return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
+       { 
+           public HGHandle call() 
+           {
+               
+               HGHandle h = getTypeHandleIfDefined(typeIdentifier);
+               return h != null ? h : createNewType(typeIdentifier);
+           } 
+       });	    
+	}
+	
+	private HGHandle createNewType(final URI typeIdentifier)
+	{
+	    HGPersistentHandle typeHandle = graph.getHandleFactory().makeHandle();
+	    defineTypeAtom(typeHandle, typeIdentifier);    
+	    return typeHandle;              	    
+	}
+	
 	/**
 	 * <p>Return the handle of the type corresponding to the given alias.</p>
 	 *
@@ -1023,6 +939,8 @@ public class HGTypeSystem
 	 * </p>
 	 * 
 	 * @param atomHandle The handle of the atom whose type is desired.
+     * @deprecated Please call {@link #HyperGraph.getType(HGHandle)} instead. This method 
+     * <strong>will</strong> be removed in future versions. 
 	 */
 	public HGHandle getTypeHandle(HGHandle atomHandle)
 	{
@@ -1155,18 +1073,14 @@ public class HGTypeSystem
 	}
 
 	/**
-	 * <p>Permanently delete the type referred by the passed in persistent handle.</p>
+	 * <p>Permanently delete the type referred to by the passed in persistent handle.</p>
 	 *
 	 * <p>Should be called only by HyperGraph when removing an atom that is also a type.</p>
 	 *
 	 * @param typeHandle
+	 * @param type the type instance
 	 */
 	void remove(final HGPersistentHandle typeHandle, final HGAtomType type)
-	{
-		graph.getTransactionManager().ensureTransaction(new Callable<Object>()
-			{ public Object call() { removeTransaction(typeHandle, type); return null; } });
-	}
-	private void removeTransaction(HGPersistentHandle typeHandle, HGAtomType type)
 	{
 		//
 		// Remove subsumes relationships.
@@ -1205,16 +1119,25 @@ public class HGTypeSystem
 		//		
 		try
 		{
-			HGBidirectionalIndex<String, HGPersistentHandle> idx = getClassToTypeDB();
-			rs = idx.findByValue(typeHandle);
-			while (rs.hasNext())
-			{
-				String classname = rs.next();
-				idx.removeEntry(classname, typeHandle);
-				// Remove from class->atom cache if there.
-				Class<?> clazz = loadClass(classname);
-				classToAtomType.remove(clazz);
-			}
+		    HGBidirectionalIndex<String, HGPersistentHandle> idx = getUriDB();
+		    Set<URI> uris = this.getIdentifiersForHandle(typeHandle);
+		    for (URI u : uris)
+		    {
+                idx.removeEntry(u.toString(), typeHandle);		        
+		        HGTypeSchema<?> schema = config.getSchema(u.getScheme());
+		        if (schema != null)
+		            schema.removeType(u);
+		    }
+			
+//			rs = idx.findByValue(typeHandle);
+//			while (rs.hasNext())
+//			{
+//				String classname = rs.next();
+//				idx.removeEntry(classname, typeHandle);
+//				// Remove from class->atom cache if there.
+//				Class<?> clazz = loadClass(classname);
+//				classToAtomType.remove(clazz);
+//			}
 		}
 		catch (Throwable t)
 		{
@@ -1223,73 +1146,6 @@ public class HGTypeSystem
 		finally
 		{
 			if (rs != null) try { rs.close(); } catch (Throwable _) { }
-		}
-	}
-	
-	/**
-	 * <p>
-	 * Return the user specified {@link ClassLoader} or <code>null</code> if no class loader was
-	 * set.
-	 * </p>
-	 */
-	public ClassLoader getClassLoader()
-    {
-        return classLoader;
-    }
-
-	/**
-	 * <p>
-	 * Specify a custom {@link ClassLoader} for the <code>HGTypeSystem</code> to use when loading
-	 * Java classes based on the <code>classname<->HGDB type</code> mapping. By default, the 
-	 * type system will use the current thread's context class loader. Setting a custom
-	 * class loader overrides this behavior. 
-	 * </p>
-	 * 
-	 * @param classLoader
-	 */
-    public void setClassLoader(ClassLoader classLoader)
-    {
-        this.classLoader = classLoader;
-    }
-
-
-
-    private class ClassToTypeCache extends LinkedHashMap<Class<?>, HGHandle>
-	{
-		static final long serialVersionUID = -1;
-
-		public ClassToTypeCache()
-		{
-			super(1000, 0.75f, true);
-		}
-		protected boolean removeEldestEntry(Map.Entry<Class<?>, HGHandle> eldest)
-		{
-			if (size() > MAX_CLASS_TO_TYPE)
-			{
-				if (eldest.getValue() instanceof HGLiveHandle)
-				{
-					HGLiveHandle h = (HGLiveHandle)eldest.getValue();
-					if (h.getRef() == null)
-						return true; //if it has been evicted from the atom cache, removed it from here too
-					else if (graph.cache.isFrozen(h))
-						return get(eldest.getKey()) == null; // this will return false and put the element on top of the list
-					else
-						return false; // simply return false, but don't remove since it's still in the cache
-				}
-				else
-				{
-					HGLiveHandle h = graph.cache.get((HGPersistentHandle)eldest.getValue());
-					if (h != null)
-					{
-						eldest.setValue(h);
-						return false;
-					}
-					else
-						return true;
-				}
-			}
-			else
-				return false;
 		}
 	}
 }

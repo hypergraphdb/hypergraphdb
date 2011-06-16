@@ -17,6 +17,10 @@ import org.hypergraphdb.HGPersistentHandle;
 public class UUIDHandleFactory implements HGHandleFactory
 {
     private final HGPersistentHandle anyHandle = makeHandle("332c5a05-37c2-11dc-b44d-8884da7d2355");
+    private final HGPersistentHandle topType = makeHandle("bb8854fb-0d34-11da-ac60-932fd7ea200d");
+    private final HGPersistentHandle linkType = makeHandle("db8854fb-0d34-11da-ac60-932fd7ea200d");
+    private final HGPersistentHandle nullType = makeHandle("db733325-19d5-11db-8b55-23bc8177d6ec");
+    private final HGPersistentHandle subsumesType = makeHandle("eb8854fb-0d34-11da-ac60-932fd7ea200d");
 
     public static final UUIDHandleFactory I = new UUIDHandleFactory();
     
@@ -50,4 +54,24 @@ public class UUIDHandleFactory implements HGHandleFactory
     {
         return UUIDPersistentHandle.nullHandle();
     }
+    
+    public HGPersistentHandle topTypeHandle()
+    {
+        return topType;
+    }
+
+    public HGPersistentHandle nullTypeHandle()
+    {
+        return nullType;
+    }
+
+    public HGPersistentHandle linkTypeHandle()
+    {
+        return linkType;
+    }
+
+    public HGPersistentHandle subsumesTypeHandle()
+    {
+        return subsumesType;
+    }    
 }

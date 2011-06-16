@@ -80,5 +80,10 @@ public interface HGHandleFactory
      * to always return true.
      * </p>
      */        
-    HGPersistentHandle anyHandle();    
+    HGPersistentHandle anyHandle();
+    
+    HGPersistentHandle topTypeHandle();
+    HGPersistentHandle nullTypeHandle();
+    HGPersistentHandle linkTypeHandle();
+    HGPersistentHandle subsumesTypeHandle();
 }

@@ -68,7 +68,7 @@ public class SerializableType implements HGAtomType
             }
             catch (Exception ex)
             {
-                ClassLoader cl = graph == null ? null : graph.getTypeSystem().getClassLoader(); 
+                ClassLoader cl = graph == null ? null : graph.getConfig().getClassLoader(); 
                 if (cl == null)
                     cl = Thread.currentThread().getContextClassLoader();
                 if (cl != null)

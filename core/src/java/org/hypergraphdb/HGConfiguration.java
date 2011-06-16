@@ -37,6 +37,7 @@ public final class HGConfiguration
 	private boolean useSystemAtomAttributes;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	private HGEventManager eventManager = new HGDefaultEventManager();
+	private ClassLoader classLoader;
 	
 	public HGConfiguration()
 	{
@@ -326,5 +327,30 @@ public final class HGConfiguration
 	public void setEventManager(HGEventManager eventManager)
 	{
 		this.eventManager = eventManager;
-	}    
+	}
+
+	/**
+	 * <p>Return the configured Java class loader for use by this HyperGraphDB instance or
+	 * <code>null</code> if no loader was configured.</p> 
+	 */
+    public ClassLoader getClassLoader()
+    {
+        return classLoader;
+    }
+
+    /**
+     * <p>
+     * Configure a {@link ClassLoader} for this HyperGraphDB instance. The class loader is most
+     * importantly used by {@link HGTypeSystem} when loading
+     * Java classes based on the <code>classname<->HGDB type</code> mapping. By default, the 
+     * type system will use the current thread's context class loader. Setting a custom
+     * class loader overrides this behavior. 
+     * </p>
+     * 
+     * @param classLoader
+     */
+    public void setClassLoader(ClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
+    }	
 }

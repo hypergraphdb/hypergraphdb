@@ -9,6 +9,10 @@ public class LongHandleFactory implements HGHandleFactory
 {
     private static final LongPersistentHandle any = new LongPersistentHandle(1);
     private static final LongPersistentHandle nil = new LongPersistentHandle(0);
+    private static final LongPersistentHandle topType = new LongPersistentHandle(100);
+    private static final LongPersistentHandle linkType = new LongPersistentHandle(101);
+    private static final LongPersistentHandle nullType = new LongPersistentHandle(102);
+    private static final LongPersistentHandle subsumesType = new LongPersistentHandle(103);
     
     private AtomicLong next = new AtomicLong(1000);
      
@@ -51,4 +55,24 @@ public class LongHandleFactory implements HGHandleFactory
     {
         return nil;
     }
+    
+    public HGPersistentHandle topTypeHandle()
+    {
+        return topType;
+    }
+
+    public HGPersistentHandle nullTypeHandle()
+    {
+        return nullType;
+    }
+
+    public HGPersistentHandle linkTypeHandle()
+    {
+        return linkType;
+    }
+
+    public HGPersistentHandle subsumesTypeHandle()
+    {
+        return subsumesType;
+    }    
 }

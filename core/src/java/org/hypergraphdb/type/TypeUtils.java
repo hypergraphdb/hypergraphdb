@@ -106,9 +106,9 @@ public final class TypeUtils
 							" does not exist in type " + tinstance);
 				else
 					return null;
-			if (value == null)
-			    throw new IllegalArgumentException("The value " + value + 
-			              " doesn't have a property at " + Arrays.asList(dimPath));
+            if (value == null)
+                throw new IllegalArgumentException("The value " + value + 
+                          " doesn't have a property at " + Arrays.asList(dimPath));			
 			value = proj.project(value);
 			type = proj.getType();
 		}

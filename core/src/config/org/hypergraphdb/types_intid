@@ -1,8 +1,4 @@
-100 org.hypergraphdb.type.Top         
-101 org.hypergraphdb.type.PlainLinkType
-102 org.hypergraphdb.type.LinkType
-103 org.hypergraphdb.type.SubsumesType
-104 org.hypergraphdb.type.NullType
+104 org.hypergraphdb.type.PlainLinkType org.hypergraphdb.HGPlainLink
 105 org.hypergraphdb.type.HGHandleType org.hypergraphdb.HGHandle org.hypergraphdb.HGPersistentHandle org.hypergraphdb.handle.HGLiveHandle org.hypergraphdb.handle.UUIDPersistentHandle org.hypergraphdb.handle.PhantomHandle org.hypergraphdb.handle.PhantomManagedHandle org.hypergraphdb.handle.WeakHandle org.hypergraphdb.handle.WeakManagedHandle
 106 org.hypergraphdb.type.javaprimitive.ByteType java.lang.Byte
 107 org.hypergraphdb.type.javaprimitive.CharType java.lang.Character

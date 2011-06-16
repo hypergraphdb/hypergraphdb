@@ -1703,7 +1703,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        	TypeUtils.releaseThreadLocals(topCall);
 	        }
             if (instance instanceof HGAtomType)
-                instance = typeSystem.toJavaBinding(persistentHandle, (HGAtomType)instance);
+                instance = typeSystem.toRuntimeInstance(persistentHandle, (HGAtomType)instance);
 	        
 	        HGLiveHandle result = null;
 	        if (liveHandle == null)
@@ -1967,7 +1967,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (targetSet.length > 0 && ! (result instanceof HGLink))
             result = new HGValueLink(result, targetSet);
         if (result instanceof HGAtomType)
-        	result = typeSystem.toJavaBinding(atomHandle, (HGAtomType)result);
+        	result = typeSystem.toRuntimeInstance(atomHandle, (HGAtomType)result);
         return result;    	
     }
 
