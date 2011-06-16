@@ -187,7 +187,7 @@ public class TxMap<K, V> implements Map<K, V>
 
     public Set<K> keySet()
     {
-        return null;
+        return M.keySet();
     }
         
     public Collection<V> values()

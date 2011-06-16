@@ -37,13 +37,16 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     // database. But the purpose of this is not only caching since different
     // class loaders may yield different versions of the same class (as identified
     // by its fully qualified name).
-    private Map<Class<?>, HGHandle> classToAtomType = new ClassToTypeCache();
+    private Map<Class<?>, HGHandle> classToAtomType = null; //new ClassToTypeCache();
 
     // per transaction map using during type construction to avoid
     // circularity in recursive types
+    private static final Map<Class<?>, HGHandle> emptyMap = new HashMap<Class<?>, HGHandle>();
     Map<Class<?>, HGHandle> getLocalIdMap()
     {
         HGTransaction tx = graph.getTransactionManager().getContext().getCurrent();
+        if (tx == null)
+            return emptyMap;
         Map<Class<?>, HGHandle> m = tx.getAttribute(JavaTypeSchema.class.getName() + ".idmap");
         if (m == null)
         {
@@ -59,8 +62,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     
     public JavaTypeSchema(HyperGraph graph)
     {
-        this.graph = graph;
-        this.classToAtomType = new TxMap<Class<?>, HGHandle>(graph.getTransactionManager(), new ClassToTypeCache());        
+        initialize(graph);
     }
     
     public JavaTypeMapper getJavaTypeFactory() { return javaTypes; }
@@ -106,6 +108,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     public void initialize(HyperGraph graph)
     {
         this.graph = graph;
+        this.classToAtomType = new TxMap(graph.getTransactionManager(), new ClassToTypeCache());        
         classToAtomType.put(Top.class, graph.getHandleFactory().topTypeHandle()); // TOP is its own type
         classToAtomType.put(Object.class, graph.getHandleFactory().topTypeHandle()); // TOP also corresponds to the java.lang.Object "top type"
         classToAtomType.put(HGLink.class, graph.getHandleFactory().linkTypeHandle());
