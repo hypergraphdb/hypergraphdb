@@ -1,5 +1,6 @@
 package hgtest.atomref;
 
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.annotation.AtomReference;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.*;
@@ -45,6 +46,23 @@ public class TestHGAtomRef extends HGTestBase
 	{
 		this.other = other;
 	}
+	
+    @Test 
+    public void testNullRef()
+    {
+        Car car = new Car();
+        car.setOwner(null);
+        HGHandle carHandle = graph.add(car);
+        Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("make", null))), carHandle);
+        Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner", null))), carHandle);
+        Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", "blabla"))));
+        Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", null))));
+        this.reopenDb();
+        Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("make", null))), carHandle);        
+        Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner", null))), carHandle);
+        Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", "blabla"))));
+        Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", null))));        
+    }
 	
 	@Test
 	public void testRefInParentType()
