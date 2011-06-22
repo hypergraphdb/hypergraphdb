@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.indexing.ByPartIndexer;
@@ -384,10 +385,45 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         {            
             return addUnique(graph, instance, graph.getTypeSystem().getTypeHandle(javaClass), condition);
         }        
+       
+        /**
+         * <p>
+         * Return a condition that matches a regular expression pattern against the string value of an atom. 
+         * </p>
+         * 
+         * @param pattern The pattern following the syntax of {@link java.util.regex.Pattern}.
+         */
+        public static AtomValueRegExPredicate matches(String pattern) { return new AtomValueRegExPredicate(Pattern.compile(pattern)); }
         
         /**
          * <p>
-         * An "identity" condition that evaluates to true for a specific handle. It
+         * Return a condition that matches a regular expression pattern against the string value of an atom. 
+         * </p>
+         * 
+         */
+        public static AtomValueRegExPredicate matches(Pattern pattern) { return new AtomValueRegExPredicate(pattern); }
+        
+        /**
+         * <p>
+         * Return a condition that matches a regular expression pattern against the string value of 
+         * an atom's projection (property) along the given path. 
+         * </p>
+         * 
+         * @param pattern The pattern following the syntax of {@link java.util.regex.Pattern}.
+         */
+        public static AtomPartRegExPredicate matches(String path, String pattern) { return new AtomPartRegExPredicate(path.split("\\."), Pattern.compile(pattern)); }
+        
+        /**
+         * <p>
+         * Return a condition that matches a regular expression pattern against the string value of 
+         * an atom's projection (property) along the given path. 
+         * </p>
+         */
+        public static AtomPartRegExPredicate matches(String path, Pattern pattern) { return new AtomPartRegExPredicate(path.split("\\."), pattern); }        
+        
+        /**
+         * <p>
+         * Return the "identity" condition that evaluates to true for a specific handle. It
          * translates to a result set containing the specified atom handle. 
          * </p>
          * 
