@@ -15,6 +15,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGSubsumes;
@@ -101,14 +102,13 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
 
     public boolean isPresent(HyperGraph graph)
     {
-        // TODO..
-        return false;
+        return graph.getTypeSystem().getHandleForIdentifier(this.toTypeURI(HGPlainLink.class)) != null;
     }
     
     public void initialize(HyperGraph graph)
     {
         this.graph = graph;
-        this.classToAtomType = new TxMap(graph.getTransactionManager(), new ClassToTypeCache());        
+        this.classToAtomType = new TxMap<Class<?>, HGHandle>(graph.getTransactionManager(), new ClassToTypeCache());        
         classToAtomType.put(Top.class, graph.getHandleFactory().topTypeHandle()); // TOP is its own type
         classToAtomType.put(Object.class, graph.getHandleFactory().topTypeHandle()); // TOP also corresponds to the java.lang.Object "top type"
         classToAtomType.put(HGLink.class, graph.getHandleFactory().linkTypeHandle());

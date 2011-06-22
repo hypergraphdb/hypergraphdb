@@ -297,7 +297,6 @@ public class RecordType implements HGCompositeType
             	if (!TypeUtils.isValueReleased(graph, layout[j]))
             	{
             		TypeUtils.releaseValue(graph, type, layout[j]);
-            		type.release(layout[j]);
             	}
         }        
         graph.getStore().removeLink(handle);

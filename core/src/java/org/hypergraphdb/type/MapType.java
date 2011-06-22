@@ -119,7 +119,7 @@ public class MapType implements HGAtomType
 			{
 			    HGAtomType type = ts.getType(hType); 
 				TypeUtils.releaseValue(hg, type, hValue);
-				type.release(hValue);
+				//type.release(hValue);
 			}
 			hType = layout[i++];
 			hValue = layout[i++];
@@ -128,7 +128,7 @@ public class MapType implements HGAtomType
 			{
 			    HGAtomType type = ts.getType(hType);
 				TypeUtils.releaseValue(hg, type, hValue);
-				type.release(hValue);
+				//type.release(hValue);
 			}
 		}
 		hg.getStore().removeLink(handle);

@@ -79,7 +79,7 @@ public class AtomPartCondition extends SimpleValueCondition
 	
 	public String toString()
 	{
-		StringBuffer result = new StringBuffer("valufOf(");
+		StringBuffer result = new StringBuffer("valueOf(");
 		for (int i = 0; i < dimensionPath.length; i++)
 		{
 			result.append(dimensionPath[i]);

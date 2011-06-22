@@ -1050,7 +1050,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        // Remove the atom record from the store and cache.
 	        //
 	        TypeUtils.releaseValue(HyperGraph.this, type, valueHandle);
-	        type.release(valueHandle);         
+	        //type.release(valueHandle);         
 	        store.removeLink(pHandle);
 	        
 	        //
@@ -2058,7 +2058,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        }
 	        
 	        TypeUtils.releaseValue(HyperGraph.this, oldType, layout[1]);
-	        oldType.release(layout[1]);
+	        //oldType.release(layout[1]);
 	        layout[1] = TypeUtils.storeValue(this, newValue, type);
 	        layout[0] = getPersistentHandle(typeHandle);
 	    	indexByValue.removeEntry(oldValueHandle, pHandle);

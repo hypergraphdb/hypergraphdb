@@ -41,6 +41,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 import org.hypergraphdb.query.IndexCondition;
 import org.hypergraphdb.query.IndexedPartCondition;
+import org.hypergraphdb.query.IsCondition;
 import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.MapCondition;
 import org.hypergraphdb.query.Nothing;
@@ -68,6 +69,7 @@ import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.query.impl.UnionQuery;
 //import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.type.HGAtomType;
+import org.hypergraphdb.util.ArrayBasedSet;
 
 @SuppressWarnings("unchecked")
 public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
@@ -627,7 +629,29 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
                     }
                 };              
             }           
-        });		
+        });
+        instance.put(IsCondition.class, new ConditionToQuery()
+        {
+	        public QueryMetaData getMetaData(HyperGraph graph,
+	                HGQueryCondition condition)
+			{
+	        	return QueryMetaData.ORACCESS.clone(condition);
+			}
+		
+			public HGQuery<?> getQuery(final HyperGraph graph,
+			          final HGQueryCondition condition)
+			{
+				return new HGQuery<HGPersistentHandle>()
+				{
+					public HGSearchResult<HGPersistentHandle> execute() 
+					{
+						HGHandle h = ((IsCondition)condition).getAtomHandle();					
+						ArrayBasedSet A = new ArrayBasedSet(new HGHandle[] {h});
+						return A.getSearchResult();
+					}
+				};
+			}
+		});
 	}
 	
 	public static ToQueryMap getInstance() { return instance; }
@@ -643,6 +667,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		else
 		{
 			HGQuery<ResultType> q = (HGQuery<ResultType>)transformer.getQuery(hg, condition);
+			if (q == null)
+				throw new IllegalArgumentException("Unable to convert query condition " +
+						condition + " to a query. Try constraining further, e.g. by atom type.");
 			q.setHyperGraph(hg);
 			return q;
 		}

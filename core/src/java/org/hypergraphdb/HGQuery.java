@@ -386,6 +386,17 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         }        
         
         /**
+         * <p>
+         * An "identity" condition that evaluates to true for a specific handle. It
+         * translates to a result set containing the specified atom handle. 
+         * </p>
+         * 
+         * @param atomHandle
+         * @return
+         */
+        public static IsCondition is(HGHandle atomHandle) { return new IsCondition(atomHandle); }
+        
+        /**
          * <p>Return a {@link HGQueryCondition} constraining the type of the result
          * to the type identified by <code>typeHandle</code>.</p>
          * @see AtomTypeCondition

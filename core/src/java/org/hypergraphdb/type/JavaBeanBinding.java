@@ -186,6 +186,7 @@ public class JavaBeanBinding extends JavaAbstractBinding
 
     public void release(HGPersistentHandle handle)
     {
+    //	System.out.println("Release " + handle + " of type " + this.getJavaClass().getName());
     	hgType.release(handle);
     }
     

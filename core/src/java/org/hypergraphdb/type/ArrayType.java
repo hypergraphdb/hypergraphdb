@@ -147,7 +147,7 @@ public class ArrayType implements HGAtomType
 			{
 			    HGAtomType type = graph.get(typeHandle);
 				TypeUtils.releaseValue(graph, type, valueHandle);
-				type.release(valueHandle);
+				//type.release(valueHandle);
 			}
 		}
 		graph.getStore().removeLink(handle);

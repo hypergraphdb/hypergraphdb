@@ -28,9 +28,9 @@ import org.hypergraphdb.HGSearchResult;
  */
 public class HandleArrayResultSet implements HGSearchResult<HGHandle>
 {
-	private HGHandle [] A;
-	private int start, end;
-	private int pos = -1;
+	protected HGHandle [] A;
+	protected int start, end;
+	protected int pos = -1;
 	
 	public HandleArrayResultSet(HGHandle [] array)
 	{

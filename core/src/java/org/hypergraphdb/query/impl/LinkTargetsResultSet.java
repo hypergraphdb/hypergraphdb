@@ -17,7 +17,7 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * <p>
  * This is the same as {@link HandleArrayResultSet}, but it uses a loaded link atom instance
- * instead of a <code>HGHandle</code>.
+ * instead of a <code>HGHandle[]</code>.
  * </p>
  *
  * @author Borislav Iordanov

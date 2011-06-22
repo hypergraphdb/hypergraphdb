@@ -581,7 +581,7 @@ public class HGTypeSystem
 	 * <p>HyperGraph internal method to handle the loading of a type. A type can be
 	 * loaded in one of two ways: either through the <code>getType(HGHandle)</code>
 	 * of this class or directly by calling <code>HyperGraph.get</code>. In both cases,
-	 * the type system should be explicitely made aware that a new type has been loaded
+	 * the type system should be explicitly made aware that a new type has been loaded
 	 * and be given the possibility to decorate the HGAtomType instance....
 	 * </p>
 	 *

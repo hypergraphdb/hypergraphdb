@@ -293,6 +293,7 @@ public final class TypeUtils
     			JAVA_REF_MAP.get().remove(instance);
     		if (! (type instanceof HGRefCountedType))
     		    HANDLE_REF_SET.get().add(h);
+    		type.release(h);
 	    }
 	    finally
 	    {

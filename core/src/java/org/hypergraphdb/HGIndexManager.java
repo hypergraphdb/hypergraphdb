@@ -139,9 +139,10 @@ public class HGIndexManager
 		List<HGHandle> indexerTypes = hg.findAll(graph, hg.subsumed(indexerBaseType));
 		for (HGHandle indexerType : indexerTypes)
 		{
-			List<HGIndexer> indexerAtoms = hg.getAll(graph, hg.type(indexerType));
-			for (HGIndexer indexer : indexerAtoms)
+			List<HGHandle> indexerAtoms = hg.findAll(graph, hg.type(indexerType));
+			for (HGHandle hindexer : indexerAtoms)
 			{
+				HGIndexer indexer = graph.get(hindexer);
 			    // While an indexer is defined for a specific type T, we have
 			    // to also index all atoms with a subtype of T. 
 			    for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
