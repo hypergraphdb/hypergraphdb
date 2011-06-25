@@ -179,8 +179,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 			And in = (And)cond;
 			And out = new And();
-			out.addAll(in);
-/*			for (HGQueryCondition c : in)
+			//out.addAll(in);
+			for (HGQueryCondition c : in)
 			{
 				c = simplify(c);
 				if (c instanceof And)
@@ -189,7 +189,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					return c;
 				else
 					out.add(c);
-			} */
+			} 
 			
 			// At the end of the following step, the conjunction will have
 			// either a single TypedValueCondition or at most one AtomTypeCondition
@@ -390,7 +390,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						}
 					}
 				}
-			return out;
+			return out.size() > 1 ? out : out.iterator().next();
 		}
 		else if (cond instanceof Or)
 		{
@@ -404,7 +404,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				else if (c != Nothing.Instance)
 					out.add(c);
 			}
-			return out;
+			return out.size() > 1 ? out : out.iterator().next();
 		}
 		else if (cond instanceof MapCondition)
 		{
