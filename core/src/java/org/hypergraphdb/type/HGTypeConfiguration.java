@@ -1,7 +1,9 @@
 package org.hypergraphdb.type;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -22,6 +24,11 @@ public class HGTypeConfiguration
     {
         setDefaultSchema(defaultSchema);
     }    
+    
+    public Collection<HGTypeSchema<?>> getSchemas()
+    {
+        return schemas.values();
+    }
     
     /**
      * <p>Return the instance responsible for creating HyperGraphDB type from Java classes.</p>

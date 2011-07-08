@@ -637,14 +637,14 @@ public /*final*/ class HyperGraph implements HyperNode
             Object value = link;
             if (link instanceof HGValueLink)
                 value = ((HGValueLink)link).getValue();            
-            HGHandle type = typeSystem.getTypeHandle(value.getClass());
+            HGHandle type = typeSystem.getTypeHandle(value);
             if (type == null)
             	throw new HGException("Unable to create HyperGraph type for class " + value.getClass().getName());
             result = addLink(value, type, link, (byte)flags);
         }
         else
         {
-        	HGHandle type = typeSystem.getTypeHandle(atom.getClass());
+        	HGHandle type = typeSystem.getTypeHandle(atom);
             if (type == null)
             	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
             result = addNode(atom, type, (byte)flags);

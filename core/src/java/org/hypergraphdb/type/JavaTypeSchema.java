@@ -30,7 +30,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     private static final int MAX_CLASS_TO_TYPE = 2000;    
     private String predefinedTypes = "/org/hypergraphdb/types";
     private HyperGraph graph;
-    private JavaTypeMapper javaTypes = new DefaultJavaTypeMapper();
+    private JavaTypeMapper javaTypes = new JavaTypeFactory(); // new DefaultJavaTypeMapper();
     
     // Associates Java class and their corresponding HGDB types. Classes can be 
     // see as identifiers for HGDB Java types and this cache is populated
@@ -200,7 +200,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
 
     public URI toTypeURI(Object object)
     {
-        return null;
+        return object == null ? null : toTypeURI(object.getClass());
     }
 
     public HGHandle findType(URI typeId)

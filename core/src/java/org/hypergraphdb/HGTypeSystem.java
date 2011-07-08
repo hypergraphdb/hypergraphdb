@@ -263,7 +263,8 @@ public class HGTypeSystem
 //			        addPredefinedType(typeHandle, typeInstance, target);			    
 //			}
 		}
-        this.javaSchema.initialize(graph);
+		for (HGTypeSchema<?> schema : config.getSchemas())
+		    schema.initialize(graph);
 		
 //		javaTypes = typeConfiguration.getJavaTypeMapper();
 //		javaTypes.setHyperGraph(graph);
@@ -975,7 +976,10 @@ public class HGTypeSystem
 		if (atom != null)
 			return getTypeHandle(atom);
 		else
-			return getTypeHandle(x.getClass());
+		{
+			return getTypeHandle(config.getDefaultSchema().toTypeURI(x));
+		}
+			
 	}
 
 	/**
