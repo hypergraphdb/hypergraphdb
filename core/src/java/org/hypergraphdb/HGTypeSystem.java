@@ -849,9 +849,6 @@ public class HGTypeSystem
 	/**
 	 * <p>Return <code>true</code> if there is a HyperGraph type corresponding to the given
 	 * class and <code>false</code> otherwise.</p>
-	 * 
-	 * @deprecated Please call the more general {@link #getHandleForIdentifier(URI)} instead.
-	 * This method <strong>will</strong> be removed in future versions.
 	 */
 	public boolean hasType(Class<?> clazz)
 	{
@@ -859,8 +856,8 @@ public class HGTypeSystem
 	}
 
 	/**
-	 * @deprecated Please call the more general {@link #getHandleForIdentifier(URI)} instead.
-	 * This method <strong>will</strong> be removed in future versions.
+	 * Return the handle of the type associated with the specified class. The name of 
+	 * the class is first converted to a type URI. See {@link #getHandleForIdentifier(URI)}.
 	 */
 	public HGHandle getTypeHandleIfDefined(Class<?> clazz)
 	{
@@ -877,8 +874,6 @@ public class HGTypeSystem
 	 * @return The <code>HGHandle</code> for that class. If the Java class hasn't been previously
 	 * mapped to a HyperGraph atom type, a new HyperGraph type will be created and the new handle
 	 * will be returned.
-     * @deprecated Please call the more general {@link #getTypeHandle(URI)} instead. This 
-     * method <strong>will</strong> be removed in future versions. 
 	 */
 	public HGHandle getTypeHandle(final Class<?> clazz)
 	{

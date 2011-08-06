@@ -7,7 +7,12 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Comparator;
+
+import org.hypergraphdb.HGException;
 
 
 /**
@@ -45,7 +50,50 @@ public final class StringType extends PrimitiveTypeBase<String>
 {
     public static final String INDEX_NAME = "hg_string_value_index";
     
-    private static final StringComparator comp = new StringComparator();
+    private Comparator<byte[]> comp = new StringComparator();
+    
+    public static class CaseInsensitiveStringComparator implements Comparator<byte[]>
+    {
+        public int compare(byte [] left, byte [] right)
+        {            
+            if (left[dataOffset] < 2)
+                if (right[dataOffset] < 2)
+                {
+                    // null is considered < "" for the purpose of ordering
+                    if (left[dataOffset] < right[dataOffset])
+                        return -1;
+                    else if (left[dataOffset] == right[dataOffset])
+                        return 0;
+                    else
+                        return 1;
+                }
+                else
+                    return -1;
+            else if (right[dataOffset] < 2)
+                return 1;
+            else 
+            {
+                int i = dataOffset + 1;
+                InputStreamReader leftReader = new InputStreamReader(
+                            new ByteArrayInputStream(left, i, left.length - i));
+                InputStreamReader rightReader = new InputStreamReader(
+                            new ByteArrayInputStream(right, i, right.length - i));
+                try { while (true) {
+                    int cl = leftReader.read();
+                    int cr = rightReader.read();
+                    if (cl == -1)
+                        return (cr == -1) ? 0 : -1;
+                    else if (cr == -1)
+                        return 1;
+                    int c = Character.toUpperCase(cl) - Character.toUpperCase(cr);
+                    if (c != 0)
+                        return c;
+                    }
+                }
+                catch (IOException ex) { throw new HGException(ex); }
+            }
+        }
+    }
     
     public static class StringComparator implements Comparator<byte[]>
     {
@@ -132,5 +180,18 @@ public final class StringType extends PrimitiveTypeBase<String>
             case 1: return "";
             default: return new String(data, offset + 1, data.length - offset - 1);
         }
+    }
+    
+    public boolean isCaseSensitive()
+    {
+        return comp instanceof StringComparator;
+    }
+    
+    public void setCaseSensitive(boolean caseSensitive)
+    {
+        if (caseSensitive)
+            comp = new StringComparator();
+        else
+            comp = new CaseInsensitiveStringComparator();
     }
 }

@@ -20,6 +20,6 @@ public interface HyperNode
     <T> HGSearchResult<T> find(HGQueryCondition condition);
     <T> T getOne(HGQueryCondition condition);
     <T> List<T> getAll(HGQueryCondition condition);
-    List<HGHandle> findAll(HGQueryCondition condition);
+    <T> List<T> findAll(HGQueryCondition condition);
     long count(HGQueryCondition condition);
 }
