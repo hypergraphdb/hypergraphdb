@@ -151,7 +151,13 @@ public class HGEnvironment
 	 */	
 	public synchronized static boolean exists(String location)
 	{
-		return new File(location, "hgstore_idx_HGATOMTYPE").exists();
+		// This filename is pretty unique to HGDB, so if a directory has it, chances
+		// are it's a HGDB database.
+		String testfile = "hgstore_idx_HGATOMTYPE";
+		File dir = new File(location);
+		return dir.isDirectory() &&
+			( new File(dir, testfile).exists() ||
+			  Arrays.asList(dir.list()).contains(testfile));
 	}
 	
 	/**

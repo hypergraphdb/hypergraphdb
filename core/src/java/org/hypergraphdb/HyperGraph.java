@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb;
 
+
 import java.util.ArrayList;
 
 
@@ -815,7 +816,8 @@ public /*final*/ class HyperGraph implements HyperNode
             persistentHandle = (HGPersistentHandle)handle;
         
         Pair<HGLiveHandle, Object> loaded = loadAtom(persistentHandle, liveHandle);                
-        
+//        if (loaded.getSecond() instanceof CompositeIndexer)
+//        	update(loaded.getSecond());
         if (loaded == null)
         	return null; // TODO: perhaps we should throw an exception here, but a new type, e.g. HGInvalidHandleException?
         
@@ -926,7 +928,7 @@ public /*final*/ class HyperGraph implements HyperNode
      */
     public boolean remove(final HGHandle handle)
     {
-    	return remove(handle, false);
+    	return remove(handle, config.isKeepIncidentLinksOnRemoval());
     }
     
     /**

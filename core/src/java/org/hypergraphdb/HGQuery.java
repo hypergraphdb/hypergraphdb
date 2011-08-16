@@ -22,6 +22,7 @@ import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGCompositeType;
 import org.hypergraphdb.type.HGTypedValue;
@@ -1036,35 +1037,36 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 */
     	public static <T> List<T> findAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		final ArrayList<T> result = new ArrayList<T>();
-    		HGQuery<T> query = HGQuery.make(graph, condition);
-    		HGUtils.queryBatchProcess(query,
-    				new Mapping<T, Boolean>()
-    				{
-    					public Boolean eval(T x) { result.add(x); return Boolean.TRUE; }
-    				},
-    				500,
-					null,
-					1);
-    		return result;    		
-//        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
-//            	public List<T> call()
-//            	{
-//            		ArrayList<T> result = new ArrayList<T>();
-//            		HGSearchResult<T> rs = null;
-//            		try
-//            		{
-//            			rs = graph.find(condition);
-//            			while (rs.hasNext())
-//            				result.add(rs.next());
-//            			return result;
-//            		}
-//            		finally
-//            		{
-//            			if (rs != null) rs.close();
-//            		}	
-//            	}
-//            	});    		      		
+//    		final ArrayList<T> result = new ArrayList<T>();
+//    		HGQuery<T> query = HGQuery.make(graph, condition);
+//    		HGUtils.queryBatchProcess(query,
+//    				new Mapping<T, Boolean>()
+//    				{
+//    					public Boolean eval(T x) { result.add(x); return Boolean.TRUE; }
+//    				},
+//    				500,
+//					null,
+//					1);
+//    		return result;    		
+        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+            		ArrayList<T> result = new ArrayList<T>();
+            		HGSearchResult<T> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			while (rs.hasNext())
+            				result.add(rs.next());
+            			return result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}	
+            	}
+            	}, 
+            	HGTransactionConfig.READONLY);    		      		
     	}
 
     	/**
@@ -1080,35 +1082,36 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 */
     	public static <T> List<T> getAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		final ArrayList<T> result = new ArrayList<T>();
-    		HGQuery<HGHandle> query = HGQuery.make(graph, condition);
-    		HGUtils.queryBatchProcess(query,
-    				new Mapping<HGHandle, Boolean>()
-    				{
-    					public Boolean eval(HGHandle x) { result.add((T)graph.get(x)); return Boolean.TRUE; }
-    				},
-    				500,
-					null,
-					1);
-    		return result;
-//        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
-//            	public List<T> call()
-//            	{
-//            		ArrayList<Object> result = new ArrayList<Object>();
-//            		HGSearchResult<HGHandle> rs = null;
-//            		try
-//            		{
-//            			rs = graph.find(condition);
-//            			while (rs.hasNext())
-//            				result.add(graph.get(rs.next()));
-//            			return (List<T>)result;
-//            		}
-//            		finally
-//            		{
-//            			if (rs != null) rs.close();
-//            		}	
-//            	}
-//            	});    		     		
+//    		final ArrayList<T> result = new ArrayList<T>();
+//    		HGQuery<HGHandle> query = HGQuery.make(graph, condition);
+//    		HGUtils.queryBatchProcess(query,
+//    				new Mapping<HGHandle, Boolean>()
+//    				{
+//    					public Boolean eval(HGHandle x) { result.add((T)graph.get(x)); return Boolean.TRUE; }
+//    				},
+//    				500,
+//					null,
+//					1);
+//    		return result;
+        	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+            		ArrayList<Object> result = new ArrayList<Object>();
+            		HGSearchResult<HGHandle> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			while (rs.hasNext())
+            				result.add(graph.get(rs.next()));
+            			return (List<T>)result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}	
+            	}
+            	}, 
+            	HGTransactionConfig.READONLY);    		     		
     	}
     	
     	/**
@@ -1119,35 +1122,36 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 */
     	public static <T> List<T> findAll(final HGQuery<T> query)
     	{
-    		final ArrayList<T> result = new ArrayList<T>();
-    		HGUtils.queryBatchProcess(query,
-    				new Mapping<T, Boolean>()
-    				{
-    					public Boolean eval(T x) { result.add(x); return Boolean.TRUE; }
-    				},
-    				500,
-					null,
-					1);
-    		return result;    		
-//        	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<T>>() {
-//            	public List<T> call()
-//            	{
-//                	
-//            		ArrayList<T> result = new ArrayList<T>();
-//            		HGSearchResult<T> rs = null;
-//            		try
-//            		{
-//            			rs = query.execute();
-//            			while (rs.hasNext())
-//            				result.add(rs.next());
-//            			return result;
-//            		}
-//            		finally
-//            		{
-//            			if (rs != null) rs.close();
-//            		}      	
-//            	}
-//            	});		
+//    		final ArrayList<T> result = new ArrayList<T>();
+//    		HGUtils.queryBatchProcess(query,
+//    				new Mapping<T, Boolean>()
+//    				{
+//    					public Boolean eval(T x) { result.add(x); return Boolean.TRUE; }
+//    				},
+//    				500,
+//					null,
+//					1);
+//    		return result;    		
+        	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+                	
+            		ArrayList<T> result = new ArrayList<T>();
+            		HGSearchResult<T> rs = null;
+            		try
+            		{
+            			rs = query.execute();
+            			while (rs.hasNext())
+            				result.add(rs.next());
+            			return result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}      	
+            	}
+            	}, 
+            	HGTransactionConfig.READONLY);		
     	}    	
     }
 }

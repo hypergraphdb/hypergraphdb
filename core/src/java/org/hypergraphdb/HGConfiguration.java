@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.event.HGDefaultEventManager;
+
 import org.hypergraphdb.event.HGEventManager;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.type.HGTypeConfiguration;
@@ -35,6 +36,7 @@ public final class HGConfiguration
 	private boolean preventDanglingAtomReferences = true; 
 	private int maxCachedIncidenceSetSize; 
 	private boolean useSystemAtomAttributes;
+	private boolean keepIncidentLinksOnRemoval = false;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	private HGEventManager eventManager = new HGDefaultEventManager();
 	private ClassLoader classLoader;
@@ -328,6 +330,29 @@ public final class HGConfiguration
 	{
 		this.eventManager = eventManager;
 	}
+
+	/**
+	 * <p>
+	 * Return <code>true</code> if links incident to an atom are kept in the database
+	 * when that atom is being removed through the {@link HyperGraph.remove(HGHandle)} method
+	 * and <code>false</code>otherwise.
+	 * </p>
+	 */
+	public boolean isKeepIncidentLinksOnRemoval()
+	{
+		return keepIncidentLinksOnRemoval;
+	}
+
+	/**
+	 * <p>
+	 * Specify whether links incident to an atom are kept in the database
+	 * when that atom is being removed through the {@link HyperGraph.remove(HGHandle)} method.
+	 * </p>
+	 */
+	public void setKeepIncidentLinksOnRemoval(boolean keepIncidentLinksOnRemoval)
+	{
+		this.keepIncidentLinksOnRemoval = keepIncidentLinksOnRemoval;
+	}	
 
 	/**
 	 * <p>Return the configured Java class loader for use by this HyperGraphDB instance or

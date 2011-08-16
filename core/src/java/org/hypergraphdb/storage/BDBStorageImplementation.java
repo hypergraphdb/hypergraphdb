@@ -49,8 +49,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
         // it all works out fine.
         if (System.getProperty("os.name").toLowerCase().indexOf("win") > -1)
         {
-            System.loadLibrary("libdb50");
-            System.loadLibrary("libdb_java50");
+          System.loadLibrary("libdb50");
+          System.loadLibrary("libdb_java50");
+        	
+//            System.loadLibrary("libdb51");
+//            System.loadLibrary("libdb_java51");
         }
     }
     
