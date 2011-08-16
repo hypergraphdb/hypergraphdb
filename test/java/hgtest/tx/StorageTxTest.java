@@ -228,5 +228,4 @@ public class StorageTxTest extends HGTestBase
             System.out.println("Done with iteration " + i);
         }
     }
-
 }

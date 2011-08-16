@@ -205,6 +205,10 @@ public class TxCacheTest extends HGTestBase
             for (int i = 0; i < 100; i++)
             {
                 test.runMe();
+//                System.out.println("" + i + "th done, CONFLICTS="
+//                        + test.graph.getTransactionManager().conflicted.get()
+//                        + ", SUCCESSFUL="
+//                        + test.graph.getTransactionManager().successful.get());
             }
         }
         catch (Throwable t)
