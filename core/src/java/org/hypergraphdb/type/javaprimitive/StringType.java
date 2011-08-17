@@ -46,11 +46,11 @@ import org.hypergraphdb.HGException;
  * 
  * @author Borislav Iordanov
  */
-public final class StringType extends PrimitiveTypeBase<String>
+public class StringType extends PrimitiveTypeBase<String>
 {
     public static final String INDEX_NAME = "hg_string_value_index";
     
-    private Comparator<byte[]> comp = new StringComparator();
+    private Comparator<byte[]> comp = new CaseInsensitiveStringComparator();
     
     public static class CaseInsensitiveStringComparator implements Comparator<byte[]>
     {
@@ -74,6 +74,11 @@ public final class StringType extends PrimitiveTypeBase<String>
             else 
             {
                 int i = dataOffset + 1;
+                String lefts = new String(left, i, left.length - i);
+                String rights = new String(right, i, right.length - i);
+                //System.out.println(lefts + " -- " + rights);
+                return lefts.compareToIgnoreCase(rights);
+                /*
                 InputStreamReader leftReader = new InputStreamReader(
                             new ByteArrayInputStream(left, i, left.length - i));
                 InputStreamReader rightReader = new InputStreamReader(
@@ -90,7 +95,7 @@ public final class StringType extends PrimitiveTypeBase<String>
                         return c;
                     }
                 }
-                catch (IOException ex) { throw new HGException(ex); }
+                catch (IOException ex) { throw new HGException(ex); } */ 
             }
         }
     }

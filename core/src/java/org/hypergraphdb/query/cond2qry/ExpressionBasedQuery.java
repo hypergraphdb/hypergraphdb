@@ -395,6 +395,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		else if (cond instanceof Or)
 		{
 			Or in = (Or)cond;
+			if (in.isEmpty())
+			    return Nothing.Instance;
 			Or out = new Or();
 			for (HGQueryCondition c : in)
 			{
