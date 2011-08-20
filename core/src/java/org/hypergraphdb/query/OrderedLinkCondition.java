@@ -114,7 +114,8 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 			int i = 0, j = 0;
 			while (i < link.getArity() && j < targetSet.length)
 			{
-				if (targetSet[j].equals(link.getTargetAt(i)))
+				if (targetSet[j].equals(link.getTargetAt(i))
+				    || targetSet[j].equals(hg.getHandleFactory().anyHandle())) 
 					j++;
 				i++;
 			}

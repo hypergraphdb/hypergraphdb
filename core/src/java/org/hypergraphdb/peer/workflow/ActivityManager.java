@@ -251,7 +251,7 @@ public class ActivityManager implements MessageHandler
                     else
                     {
                         //System.out.println("Running transition " + transition + " on msg " + msg);
-                        Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getConfig().getClassLoader());
+//                        Thread.currentThread().setContextClassLoader(thisPeer.getGraph().getConfig().getClassLoader());
                         WorkflowStateConstant result = transition.apply(activity, msg);
 //                        System.out.println("Transition finished with " + result);
                         if (result != null)
@@ -383,8 +383,8 @@ public class ActivityManager implements MessageHandler
         // HyperGraph instance? Classes are loaded either by the type systems within
         // the core of HGDB, or in the P2P Structs classes that does serialization/deserialization
         // of beans.
-        if (thisPeer.getGraph() != null)
-        	schedulerThread.setContextClassLoader(thisPeer.getGraph().getConfig().getClassLoader());
+//        if (thisPeer.getGraph() != null)
+//        	schedulerThread.setContextClassLoader(thisPeer.getGraph().getConfig().getClassLoader());
         schedulerThread.start();
     }
 

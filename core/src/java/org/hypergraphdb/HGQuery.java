@@ -924,6 +924,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * <p>Return a special handle indicating a "don't care" in a condition expression (e.g.
          * when specifying the form of a link in a <code>hg.orderedLink(hg.anyHandle(), x, y)</code>
          * condition.</p>
+         * @deprecated Please use {@link org.hypergraphdb.HGHandleFactory.}
          */
         public static HGHandle anyHandle() { return the_any_handle; }
         
