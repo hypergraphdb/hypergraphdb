@@ -125,12 +125,13 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             if (mapImplementation == null)
             {
                 this.M = new ConcurrentHashMap<K, Box>();
+                this.writeMap = new RefCountedMap<K, Box>(new HashMap());
             }
             else
             {
                 this.M = mapImplementation.newInstance();
-            }
-            this.writeMap = new RefCountedMap<K, Box>(new HashMap());            
+                this.writeMap = new RefCountedMap<K, Box>(mapImplementation.newInstance());
+            }                        
         }
         catch (Exception e)
         {
