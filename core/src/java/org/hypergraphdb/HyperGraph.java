@@ -1320,7 +1320,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param instance The handle of the atom's value. May be <code>null</code> in which case the default
      * HyperGraph <code>NullType</code> is used. 
      */
-    public void define(final HGPersistentHandle atomHandle, final Object instance, final int flags)
+    public void define(final HGHandle atomHandle, final Object instance, final int flags)
     {
     	HGHandle typeHandle = null;
     	if (instance == null)
@@ -1375,7 +1375,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param atomHandle The handle of the atom to define.
      * @param instance The atom's runtime instance.
      */
-    public void define(final HGPersistentHandle atomHandle, final Object instance)
+    public void define(final HGHandle atomHandle, final Object instance)
     {
     	define(atomHandle, instance, (byte)0);
     }

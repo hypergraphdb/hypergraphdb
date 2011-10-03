@@ -50,7 +50,7 @@ public class StringType extends PrimitiveTypeBase<String>
 {
     public static final String INDEX_NAME = "hg_string_value_index";
     
-    private Comparator<byte[]> comp = new CaseInsensitiveStringComparator();
+    private Comparator<byte[]> comp = new StringComparator();
     
     public static class CaseInsensitiveStringComparator implements Comparator<byte[]>
     {
