@@ -193,8 +193,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     public void commit() throws HGTransactionException
     {
-        assert !(isReadOnly() && isWriteTransaction()) : 
-               "Transaction configured as read-only was used to modify data!";
+//        assert !(isReadOnly() && isWriteTransaction()) : 
+//               "Transaction configured as read-only was used to modify data!";
         
         // If this is a nested transaction, everything is much simpler
         if (parent != null)
