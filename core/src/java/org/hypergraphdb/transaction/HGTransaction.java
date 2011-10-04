@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
 import org.hypergraphdb.util.Cons;
@@ -193,6 +194,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     public void commit() throws HGTransactionException
     {
+    	if (isReadOnly() && isWriteTransaction())
+    		throw new HGException("Transaction configured as read-only was used to modify data!");
 //        assert !(isReadOnly() && isWriteTransaction()) : 
 //               "Transaction configured as read-only was used to modify data!";
         

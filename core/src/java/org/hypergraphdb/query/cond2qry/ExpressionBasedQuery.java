@@ -405,8 +405,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					out.addAll((Or)c);				
 				else if (c != Nothing.Instance)
 					out.add(c);
-			}
-			return out.size() > 1 ? out : out.iterator().next();
+			}			
+			return out.isEmpty() ? Nothing.Instance : 
+					out.size() > 1 ? out : out.iterator().next();
 		}
 		else if (cond instanceof MapCondition)
 		{
@@ -444,11 +445,20 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (ac.getJavaClass() == null)
 				ac.setJavaClass(graph.getTypeSystem().getClassForType(ac.getBaseType()));
 			else if (ac.getBaseType() == null)
-				ac.setBaseType(graph.getTypeSystem().getTypeHandle(ac.getJavaClass()));
-			Or orCondition = new Or();
-            for (HGHandle h : ac.getSubTypes(graph))
-            	orCondition.add(new AtomTypeCondition(h));
-            cond = orCondition;
+			{
+				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass());
+				if (typeHandle != null)
+					ac.setBaseType(typeHandle);
+				else 
+					cond = Nothing.Instance;
+			}
+			if (cond != Nothing.Instance)
+			{
+				Or orCondition = new Or();
+	            for (HGHandle h : ac.getSubTypes(graph))
+	            	orCondition.add(new AtomTypeCondition(h));
+	            cond = orCondition;
+			}
 		}
 		else if (cond instanceof AtomTypeCondition)
 		{
@@ -456,7 +466,13 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (tc.getJavaClass() == null)
 				tc.setJavaClass(graph.getTypeSystem().getClassForType(tc.getTypeHandle()));
 			else if (tc.getTypeHandle() == null)
-				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));			
+			{
+				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass());
+				if (typeHandle != null)				
+					tc.setTypeHandle(typeHandle);
+				else 
+					cond = Nothing.Instance;
+			}
 		}
 		else if (cond instanceof TypedValueCondition && ((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)
 		{
@@ -464,14 +480,23 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (tc.getJavaClass() == null)
 				tc.setJavaClass(graph.getTypeSystem().getClassForType(tc.getTypeHandle()));
 			else if (tc.getTypeHandle() == null)
-				tc.setTypeHandle(graph.getTypeSystem().getTypeHandle(tc.getJavaClass()));
-			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, tc.getTypeHandle(), tc.getValue());
-			if (!indexedParts.isEmpty())
 			{
-				And and = hg.and(cond);
-				for (AtomPartCondition pc : indexedParts)
-					and.add(pc);
-				cond = and;
+				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass());
+				if (typeHandle != null)				
+					tc.setTypeHandle(typeHandle);
+				else 
+					cond = Nothing.Instance;
+			}
+			if (cond != Nothing.Instance)
+			{
+				List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, tc.getTypeHandle(), tc.getValue());
+				if (!indexedParts.isEmpty())
+				{
+					And and = hg.and(cond);
+					for (AtomPartCondition pc : indexedParts)
+						and.add(pc);
+					cond = and;
+				}
 			}
 		}
 		else if (cond instanceof AtomValueCondition && ((AtomValueCondition)cond).getOperator() == ComparisonOperator.EQ)
@@ -499,10 +524,15 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				if (sub instanceof AtomTypeCondition || sub instanceof TypedValueCondition)
 					statedType = sub;
 				HGQueryCondition expanded = expand(graph, sub);
-				if (expanded instanceof And)
-					result.addAll((And)expanded);
+				if (expanded == Nothing.Instance)
+					cond = Nothing.Instance;
 				else
-					result.add(expanded);
+				{
+					if (expanded instanceof And)
+						result.addAll((And)expanded);
+					else
+						result.add(expanded);
+				}
 			}
 			if (statedType != null) // filter out any (possibly wrongly) inferred type conditions during the expansion process
 				for (Iterator<HGQueryCondition> i = result.iterator(); i.hasNext(); )
@@ -511,14 +541,19 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					if (curr != statedType && curr instanceof AtomTypeCondition)
 						i.remove();
 				}
-			cond = result;
+			if (cond != Nothing.Instance)
+				cond = result;
 		}
 		else if (cond instanceof Or)
 		{
 			Or result = new Or();
 			for (HGQueryCondition sub : (Or)cond)
-				result.add(expand(graph, sub));
-			cond = result;			
+			{
+				HGQueryCondition subexp = expand(graph, sub);
+				if (subexp != Nothing.Instance)
+					result.add(subexp);
+			}			
+			cond = result.isEmpty() ? Nothing.Instance : result;			
 		}
 		else if (cond instanceof OrderedLinkCondition)
 		{

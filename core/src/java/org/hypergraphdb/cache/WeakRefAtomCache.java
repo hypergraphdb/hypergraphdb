@@ -75,10 +75,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
-	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
-    private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
-	private PhantomCleanup cleanupThread = new PhantomCleanup();
-	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
+	final private ReadWriteLock gcLock = new ReentrantReadWriteLock();
+    final private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+	final private PhantomCleanup cleanupThread = new PhantomCleanup();
+	final private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
 	

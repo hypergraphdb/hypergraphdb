@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.util;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
@@ -18,7 +19,7 @@ import java.util.NoSuchElementException;
  *
  * @param <T>
  */
-public class SimpleStack<T>
+public class SimpleStack<T> implements Iterable<T>
 {
     private static class Node<T>
     {
@@ -84,4 +85,31 @@ public class SimpleStack<T>
     
     public boolean isEmpty() { return top == null; }
     public int size() { return size; }
+    
+    public Iterator<T> iterator()
+    {    	
+    	return new Iterator<T>()
+    	{
+    		Node<T> curr = top;
+			@Override
+			public boolean hasNext()
+			{
+				return curr != null;
+			}
+
+			@Override
+			public T next()
+			{
+				T result = curr.data;
+				curr = curr.next;
+				return result;
+			}
+
+			@Override
+			public void remove()
+			{
+				throw new UnsupportedOperationException();
+			}    		
+    	};
+    }
 }
