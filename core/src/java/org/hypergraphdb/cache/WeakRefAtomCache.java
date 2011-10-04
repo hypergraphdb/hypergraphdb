@@ -404,8 +404,8 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 	    if (handle == null)
 	        return;
-		((WeakHandle)handle).clear();	    
 		atoms.remove(handle.getRef());
+		((WeakHandle)handle).clear();	    
 		liveHandles.remove(handle.getPersistent());
 	}
 
