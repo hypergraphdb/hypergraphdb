@@ -4,6 +4,7 @@ import java.lang.ref.WeakReference;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -111,7 +112,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     }
     
     @SuppressWarnings("unchecked")
-    public TxCacheMap(HGTransactionManager tManager, Class<? extends Map> mapImplementation)
+    public TxCacheMap(HGTransactionManager tManager, Class<? extends Map> mapImplementation, Object outer)
     {
         this.txManager = tManager;
         this.sizebox = new VBox<Integer>(txManager);
@@ -128,9 +129,11 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                 this.writeMap = new RefCountedMap<K, Box>(new HashMap());
             }
             else
-            {
-                this.M = mapImplementation.newInstance();
-                this.writeMap = new RefCountedMap<K, Box>(mapImplementation.newInstance());
+            {                
+                this.M = outer == null ? mapImplementation.newInstance() : 
+                    mapImplementation.getConstructor(outer.getClass()).newInstance(outer);
+                this.writeMap = new RefCountedMap<K, Box>(outer == null ? mapImplementation.newInstance() : 
+                    mapImplementation.getConstructor(outer.getClass()).newInstance(outer));
             }                        
         }
         catch (Exception e)
@@ -376,5 +379,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     public void clear()
     {
         M.clear();
-    }    
+    }
+    
+    public Set<K> keySet() { return M.keySet(); }
 }
