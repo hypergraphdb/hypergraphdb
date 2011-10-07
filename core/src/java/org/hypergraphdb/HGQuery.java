@@ -948,11 +948,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	return graph.getTransactionManager().ensureTransaction(new Callable<Long>() {
         	public Long call()
         	{
-            	ResultSizeEstimation.Counter counter = ResultSizeEstimation.countersMap.get(cond.getClass());
+        		ExpressionBasedQuery<?> q = (ExpressionBasedQuery<?>)HGQuery.make(graph, cond);
+            	ResultSizeEstimation.Counter counter = ResultSizeEstimation.countersMap.get(q.getCondition().getClass());
             	if (counter == null)
-            		return ResultSizeEstimation.countResultSet(graph, cond);
+            		return ResultSizeEstimation.countResultSet(q);
             	else
-            		return counter.count(graph, cond);        		
+            		return counter.count(graph, q.getCondition());        		
         	}
         	});
         }
