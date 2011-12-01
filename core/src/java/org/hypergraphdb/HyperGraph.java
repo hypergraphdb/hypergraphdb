@@ -510,9 +510,9 @@ public /*final*/ class HyperGraph implements HyperNode
     public boolean isLoaded(HGHandle handle)
     {
     	if (handle instanceof HGPersistentHandle)
-    		return cache.get(handle) != null;
+    		return cache.get(handle.getPersistent()) != null;
     	else
-    		return true;
+    		return ((HGLiveHandle)handle).getRef() != null;
     }
     
     /**
