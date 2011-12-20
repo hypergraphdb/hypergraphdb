@@ -48,8 +48,13 @@ public class TransactionBDBImpl implements HGStorageTransaction
 	{
 		try
 		{
-			for (BDBTxCursor c : bdbCursors)
-				c.close();
+			// Since 'close' removes from the set, we need to clone first to
+			// avoid a ConcurrentModificationException
+			Set<BDBTxCursor> tmp = new HashSet<BDBTxCursor>();
+			tmp.addAll(bdbCursors);
+			for (BDBTxCursor c : tmp)
+				try { c.close(); }
+				catch (Throwable t) { System.err.println(t); }
 			if (t != null)
 				t.commit();
 		}
@@ -64,7 +69,11 @@ public class TransactionBDBImpl implements HGStorageTransaction
 		try
 		{
 			aborting = true;
-			for (BDBTxCursor c : bdbCursors)
+			// Since 'close' removes from the set, we need to clone first to
+			// avoid a ConcurrentModificationException
+			Set<BDBTxCursor> tmp = new HashSet<BDBTxCursor>();
+			tmp.addAll(bdbCursors);
+			for (BDBTxCursor c : tmp)
 				try { c.close(); }
 				catch (Throwable t) { System.err.println(t); }
 			if (t != null)
