@@ -422,7 +422,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 		Object atom = handle.getRef();
 		if (atom != null)
-			frozenAtoms.load(handle, atom);
+			frozenAtoms.put(handle, atom);
 	}	
 
 	public void unfreeze(HGLiveHandle handle) 
