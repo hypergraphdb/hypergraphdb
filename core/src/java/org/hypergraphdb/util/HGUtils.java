@@ -180,10 +180,14 @@ public class HGUtils
 	
 	/**
 	 * <p>
-	 * Contextually load a class the same way the {@link HGTypeSystem} would: 
-	 * try the thread-bound class loader and if that fails, try the user-specified
-	 * ClassLoader in the type system of the passed in graph; finally, try the ClassLoader
-	 * of this (<code>HGUtils</code>) class.
+	 * Load a class using the class loader configured for the passed in {@link HyperGraph} instance, if
+	 * such a loader was configured. If no class loader specific to the DB instance was configured, try
+	 * the thread context class loader. Finally, fall back to <code>HGUtils.class.getClassLoader()</code>.
+	 * </p>
+	 *
+	 * <p>
+	 * If you have a DB configured class loader that you need to override with a thread context
+	 * class loader, you'd need to implement the delegating yourself.  
 	 * </p>
 	 * 
 	 * @param <T>
@@ -195,32 +199,18 @@ public class HGUtils
 	@SuppressWarnings("unchecked")
 	public static <T> Class<T> loadClass(HyperGraph graph, String classname) throws ClassNotFoundException
 	{
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        ClassLoader loader = graph.getConfig().getClassLoader();
         if (loader == null)
-            loader = graph.getConfig().getClassLoader();
-        Class<T> clazz = null;
-        if (loader != null)
-            try
-            {
-                if(classname.startsWith("[L"))
-                    clazz = (Class<T>)Array.newInstance(loader.loadClass(
-                          classname.substring(2, classname.length() - 1)), 0).getClass();
-                else if (classname.startsWith("["))
-                    clazz = (Class<T>)Class.forName(classname);
-                else
-                   clazz = (Class<T>)loader.loadClass(classname);
-                return clazz;
-            }
-            catch (ClassNotFoundException ex) { }
-        if (clazz == null)
-            if(classname.startsWith("[L"))
-                clazz = (Class<T>)Array.newInstance(loader.loadClass(
-                      classname.substring(2, classname.length() - 1)), 0).getClass();
-            else if (classname.startsWith("["))
-                clazz = (Class<T>)Class.forName(classname);
-            else
-               clazz = (Class<T>)loader.loadClass(classname);
-        return clazz;
+            loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null)
+        	loader = HGUtils.class.getClassLoader();
+        if(classname.startsWith("[L"))
+            return (Class<T>)Array.newInstance(loader.loadClass(
+                  classname.substring(2, classname.length() - 1)), 0).getClass();
+        else if (classname.startsWith("["))
+            return (Class<T>)Class.forName(classname);
+        else
+           return (Class<T>)loader.loadClass(classname);
 	}
 	
 	public static HGHandle [] toHandleArray(HGLink link)
