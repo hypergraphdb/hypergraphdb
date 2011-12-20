@@ -555,27 +555,35 @@ public class HGTypeSystem
 	 */
 	public Class<?> loadClass(String classname)
 	{
-		Class<?> clazz;
-		ClassLoader loader = graph.getConfig().getClassLoader();
-		if (loader == null)
-		    loader = Thread.currentThread().getContextClassLoader();
-		if (loader == null)
-		    loader = this.getClass().getClassLoader();
 		try
 		{
-			if(classname.startsWith("[L"))
-			{
-				classname = classname.substring(2, classname.length() - 1); //remove ending ";"
-				clazz = Array.newInstance(loader.loadClass(classname), 0).getClass();
-			}
-			else
-			   clazz = loader.loadClass(classname);
-			return clazz;
+			return HGUtils.loadClass(this.getHyperGraph(), classname);
 		}
-		catch (Throwable t)
+		catch (Exception t)
 		{
 			throw new HGException("Could not load class " + classname, t);
 		}
+//		Class<?> clazz;
+//		ClassLoader loader = graph.getConfig().getClassLoader();
+//		if (loader == null)
+//		    loader = Thread.currentThread().getContextClassLoader();
+//		if (loader == null)
+//		    loader = this.getClass().getClassLoader();
+//		try
+//		{
+//			if(classname.startsWith("[L"))
+//			{
+//				classname = classname.substring(2, classname.length() - 1); //remove ending ";"
+//				clazz = Array.newInstance(loader.loadClass(classname), 0).getClass();
+//			}
+//			else
+//			   clazz = loader.loadClass(classname);
+//			return clazz;
+//		}
+//		catch (Throwable t)
+//		{
+//			throw new HGException("Could not load class " + classname, t);
+//		}
 	}
 	
 	/**
@@ -675,7 +683,11 @@ public class HGTypeSystem
 				if (type.getClass().getConstructor(new Class[0]) != null)
 					getPredefinedTypesDB().addEntry(handle, type.getClass().getName());
 			}
-			catch (NoSuchMethodException e) { /* TODO Log this some day when we have logging. */}
+			catch (NoSuchMethodException e) { 
+				/* TODO Log this some day when we have logging. */
+				//hilpold 2011.10.11
+				System.out.println("No default constructor for: " + type.getClass());	
+			}
 		}
 
 		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());
