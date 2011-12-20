@@ -354,6 +354,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
             typeSystem.bootstrap(config.getTypeConfiguration());                 
             getTransactionManager().endTransaction(true);
+            System.out.println("TOP HANDLE: " + typeSystem.getTop());
             
             idx_manager.loadIndexers();
     		            
@@ -530,7 +531,7 @@ public /*final*/ class HyperGraph implements HyperNode
 
     /**
      * <p>
-     * Freeze an atom into the HyperGraph cache.Frozen atoms are guarantueed to NOT be evicted
+     * Freeze an atom into the HyperGraph cache.Frozen atoms are guaranteed to NOT be evicted
      * from the cache. If the atom is not already currently loaded, it will be loaded. If it is
      * already frozen, nothing will be done - so, it's safe to call this method multiple times.
      * Because the atom instance is returned, this method may be called instead of <code>get</code>
@@ -540,13 +541,13 @@ public /*final*/ class HyperGraph implements HyperNode
      * 
      * <p>
      * This method should be called with care since it is a possible source of memory leaks. The
-     * <code>unfreeze</code> method should be called at appropriate times when you no longer need
+     * <code>un-freeze</code> method should be called at appropriate times when you no longer need
      * an object to absolutely remain in main memory. Typically, freezing an atom is desirable in
      * the following situations:
      * 
      * <ul>
      * <li>You need to retrieve a <code>HGHandle</code> from a Java instance reference by a call
-     * to the <code>getHandle</code>. This is only guarantueed to work when the atom is in the cache.</li>
+     * to the <code>getHandle</code>. This is only guaranteed to work when the atom is in the cache.</li>
      * <li>The atom is a very large object, expansive to re-construct from permanent storage and even
      * though used relatively rarely, it's better is it remain in memory. The cache will normally
      * evict atoms based on used, not on they memory footprint which would be too much overhead
@@ -557,20 +558,25 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param handle The handle of the atom.
      * @return The instance of the atom that was frozen.
      */
-    public Object freeze(HGHandle handle)
+    public Object freeze(final HGHandle handle)
     {
-        if (handle == null)
-            throw new NullPointerException("Trying to freeze null atom handle.");
-        get(handle);
-        HGLiveHandle lHandle =  (handle instanceof HGPersistentHandle) ? cache.get((HGPersistentHandle)handle) : (HGLiveHandle)handle;
-        while (lHandle == null)
-        {
-            get(handle);
-            lHandle = cache.get((HGPersistentHandle)handle);
-        }
-        if (!cache.isFrozen(lHandle))
-            cache.freeze(lHandle);
-        return lHandle.getRef();
+    	return this.getTransactionManager().ensureTransaction(new Callable<Object>() {
+    		public Object call() {
+    	        if (handle == null)
+    	            throw new NullPointerException("Trying to freeze null atom handle.");
+    	        get(handle);
+    	        HGLiveHandle lHandle =  (handle instanceof HGPersistentHandle) ? cache.get((HGPersistentHandle)handle) : (HGLiveHandle)handle;
+    	        while (lHandle == null)
+    	        {
+    	            get(handle);
+    	            lHandle = cache.get((HGPersistentHandle)handle);
+    	        }
+    	        if (!cache.isFrozen(lHandle))
+    	            cache.freeze(lHandle);
+    	        return lHandle.getRef();
+    			
+    		}
+    	});
     }
     
     /**

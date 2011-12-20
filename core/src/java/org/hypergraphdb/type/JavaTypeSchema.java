@@ -207,16 +207,20 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
 
     public HGHandle findType(URI typeId)
     {
-        Class<?> clazz = this.getTypeDescriptor(typeId);
+        return findType(getTypeDescriptor(typeId));
+    }
+
+    public HGHandle findType(Class<?> clazz)
+    {
         Map<Class<?>, HGHandle> m = getLocalIdMap();        
         HGHandle typeHandle = m.get(clazz);
         if (typeHandle == null)
             typeHandle = classToAtomType.get(clazz);
         if (typeHandle == null)
-            typeHandle = graph.getTypeSystem().getHandleForIdentifier(typeId);
-        return typeHandle;
+            typeHandle = graph.getTypeSystem().getHandleForIdentifier(classNameToURI(clazz.getName()));
+        return typeHandle;    	
     }
-
+    
     public void removeType(URI typeId)
     {
         // We may have different version of the class being loaded by

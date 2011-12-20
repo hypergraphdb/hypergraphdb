@@ -8,9 +8,7 @@
 package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
-
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -26,7 +24,6 @@ import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.transaction.TxCacheMap;
-import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.transaction.VBoxBody;
 import org.hypergraphdb.util.CloseMe;
@@ -69,7 +66,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	private CacheMap<Object, HGLiveHandle> atoms = null;
 	private TxCacheMap<Object, HGLiveHandle> atomsTx = null;
 	
-	private Map<HGLiveHandle, Object> frozenAtoms =	null;
+	private CacheMap<HGLiveHandle, Object> frozenAtoms =	null;
 	
 	private ColdAtoms coldAtoms = new ColdAtoms();
 	
@@ -207,13 +204,13 @@ public class WeakRefAtomCache implements HGAtomCache
                                         graph.getTransactionManager(), 
                                         HashMap.class,
                                         null); 	        
-	        frozenAtoms = new TxMap<HGLiveHandle, Object>(graph.getTransactionManager(), null);
+	        frozenAtoms = new TxCacheMap<HGLiveHandle, Object>(graph.getTransactionManager(), null, null);
 	    }
 	    else
 	    {
 	        atoms = new HashCacheMap<Object, HGLiveHandle>(); // need a weak hash cache map?
 	        liveHandles = new HashCacheMap<HGPersistentHandle, WeakHandle>();
-	        frozenAtoms = new HashMap<HGLiveHandle, Object>();
+	        frozenAtoms = new HashCacheMap<HGLiveHandle, Object>();
 	    }
 		cleanupThread.setPriority(Thread.MAX_PRIORITY);
 		cleanupThread.setDaemon(true);		
@@ -418,28 +415,19 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public boolean isFrozen(HGLiveHandle handle) 
 	{
-		synchronized (frozenAtoms)
-		{
-			return frozenAtoms.containsKey(handle);
-		}
+		return frozenAtoms.get(handle) != null;
 	}
 
 	public void freeze(HGLiveHandle handle) 
 	{
 		Object atom = handle.getRef();
 		if (atom != null)
-			synchronized (frozenAtoms)
-			{
-				frozenAtoms.put(handle, atom);
-			}
+			frozenAtoms.load(handle, atom);
 	}	
 
 	public void unfreeze(HGLiveHandle handle) 
 	{
-		synchronized (frozenAtoms)
-		{		
-			frozenAtoms.remove(handle);
-		}
+		frozenAtoms.remove(handle);
 	}
 	
 	// for debugging purposes

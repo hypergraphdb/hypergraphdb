@@ -861,7 +861,7 @@ public class HGTypeSystem
 	 */
 	public HGHandle getTypeHandleIfDefined(Class<?> clazz)
 	{
-	    return getTypeHandleIfDefined(JavaTypeSchema.classNameToURI(clazz.getName()));
+	    return javaSchema.findType(clazz);
 	}
 	
 	
