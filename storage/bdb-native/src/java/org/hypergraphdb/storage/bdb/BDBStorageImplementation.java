@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import java.io.File;
 
@@ -15,12 +15,15 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGStore;
+import org.hypergraphdb.storage.BAtoHandle;
+import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.transaction.HGTransactionFactory;
-import org.hypergraphdb.transaction.TransactionBDBImpl;
+import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.transaction.VanillaTransaction;
 
 import com.sleepycat.db.Cursor;
@@ -29,6 +32,7 @@ import com.sleepycat.db.Database;
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DeadlockException;
 import com.sleepycat.db.Environment;
 import com.sleepycat.db.EnvironmentConfig;
 import com.sleepycat.db.LockMode;
@@ -401,6 +405,12 @@ public class BDBStorageImplementation implements HGStoreImplementation
 //                  System.exit(-1);
                     throw new HGException("Failed to create BerkeleyDB transaction object.", ex);
                 }
+            }
+            
+            public boolean canRetryAfter(Throwable t)
+            {
+                return t instanceof TransactionConflictException ||
+                       t instanceof DeadlockException;
             }
         };
     }

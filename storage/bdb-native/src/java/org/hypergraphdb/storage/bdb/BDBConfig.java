@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseType;

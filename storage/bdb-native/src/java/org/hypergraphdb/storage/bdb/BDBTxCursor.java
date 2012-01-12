@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.transaction;
+package org.hypergraphdb.storage.bdb;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.util.CloseMe;

@@ -2,7 +2,7 @@ package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGSearchResult;
 
-final class SearchResultWrapper<T> implements HGSearchResult<T>
+public final class SearchResultWrapper<T> implements HGSearchResult<T>
 {
 	private HGSearchResult<T> rs = null;
 	

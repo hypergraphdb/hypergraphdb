@@ -9,6 +9,7 @@ package org.hypergraphdb.maintenance;
 
 import java.util.ArrayList;
 
+
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
@@ -19,10 +20,7 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.HGIndexer;
-import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.util.HGUtils;
-
-import com.sleepycat.db.DeadlockException;
 
 /**
  * 
@@ -56,7 +54,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
 	}
 	
 	private void indexAtomsTypedWith(HyperGraph graph,
-	                                 HGIndex idx,
+	                                 HGIndex<?,?> idx,
 	                                 HGIndexer indexer, 
 	                                 HGHandle typeHandle) throws MaintenanceException
 	{
@@ -67,7 +65,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
             graph.getTransactionManager().beginTransaction();           
             try
             {
-                rs = (HGRandomAccessResult<HGPersistentHandle>)(HGRandomAccessResult)
+                rs = (HGRandomAccessResult<HGPersistentHandle>)(HGRandomAccessResult<?>)
                         graph.find(hg.type(typeHandle));
                 if (txLastProcessed == null)
                 {
@@ -119,7 +117,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
             catch (Throwable t)
             {
                 Throwable cause = HGUtils.getRootCause(t);
-                if (cause instanceof TransactionConflictException || cause instanceof DeadlockException)
+                if (graph.getStore().getTransactionFactory().canRetryAfter(cause))
                     continue;                
                 try { graph.getTransactionManager().endTransaction(false); }
                 catch (Throwable tt) { tt.printStackTrace(System.err); }
@@ -151,7 +149,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
 		HGIndexer indexer = graph.get(hindexer);
 		if (indexer == null)
 			return;
-		HGIndex idx = graph.getIndexManager().getIndex(indexer);
+		HGIndex<?,?> idx = graph.getIndexManager().getIndex(indexer);
 		if (idx == null)
 			throw new MaintenanceException(false,"Indexer " + indexer + " with handle " + hindexer + 
 												 " present in graph, but no actual index has been created.");

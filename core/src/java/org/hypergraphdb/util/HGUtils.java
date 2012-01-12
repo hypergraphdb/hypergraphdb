@@ -8,6 +8,7 @@
 package org.hypergraphdb.util;
 
 import java.beans.BeanInfo;
+
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
@@ -30,9 +31,6 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGRandomAccessResult.GotoResult;
-import org.hypergraphdb.transaction.TransactionConflictException;
-
-import com.sleepycat.db.DeadlockException;
 
 /**
  * 
@@ -247,7 +245,6 @@ public class HGUtils
 	 * @param first A 1-based index of the first element to process.
 	 * @return The total number of elements processed. 
 	 */
-	@SuppressWarnings("unchecked")
     public static <T> long queryBatchProcess(HGQuery<T> query, 
 											 Mapping<T, Boolean> F, 
 											 int batchSize,
@@ -349,7 +346,7 @@ public class HGUtils
 			catch (Throwable t)
 			{
 			    Throwable cause = getRootCause(t);
-			    if (cause instanceof TransactionConflictException || cause instanceof DeadlockException)
+			    if (query.getHyperGraph().getStore().getTransactionFactory().canRetryAfter(cause))
 			        continue;
 				try { query.getHyperGraph().getTransactionManager().endTransaction(false); }
 				catch (Throwable tt) { tt.printStackTrace(System.err); }
@@ -449,7 +446,7 @@ public class HGUtils
         else if (p.getClass().isArray())
         {
             Object [] A = (Object[])p;
-            Class type = p.getClass(); 
+            Class<?> type = p.getClass(); 
             Object [] ac = (Object[])Array.newInstance(type.getComponentType(), A.length);
             for (int i = 0; i < A.length; i++)
                 ac[i] = cloneObject(A[i], propertyFilter);
@@ -461,7 +458,7 @@ public class HGUtils
         //
         // Need to implement cloning ourselves. We do this by copying bean properties.
         //
-        Constructor cons = null;
+        Constructor<?> cons = null;
         
         try
         {
@@ -476,15 +473,15 @@ public class HGUtils
         
         if (p instanceof Collection)
         {
-            Collection cc = (Collection)copy;
-            for (Object el : (Collection)p)
+            Collection<Object> cc = (Collection<Object>)copy;
+            for (Object el : (Collection<?>)p)
                 cc.add(cloneObject(el, propertyFilter));            
         }
         else if (p instanceof Map)
         {
-            Map cm = (Map)copy;
-            for (Object key : ((Map)p).keySet())
-                cm.put(key, cloneObject(((Map)p).get(key), propertyFilter));
+            Map<Object, Object> cm = (Map<Object, Object>)copy;
+            for (Object key : ((Map<Object, Object>)p).keySet())
+                cm.put(key, cloneObject(((Map<Object, Object>)p).get(key), propertyFilter));
         }
         else
         {

@@ -5,11 +5,14 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.transaction;
+package org.hypergraphdb.storage.bdb;
 
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hypergraphdb.transaction.HGStorageTransaction;
+import org.hypergraphdb.transaction.HGTransactionException;
 
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseException;

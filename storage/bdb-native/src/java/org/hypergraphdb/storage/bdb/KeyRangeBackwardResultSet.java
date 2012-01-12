@@ -5,10 +5,10 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.transaction.BDBTxCursor;
+import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.db.DatabaseEntry;

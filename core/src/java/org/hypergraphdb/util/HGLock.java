@@ -12,9 +12,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.transaction.BDBTxLock;
-import org.hypergraphdb.transaction.HGTransaction;
-import org.hypergraphdb.transaction.TransactionBDBImpl;
 
 /**
  * 
@@ -29,28 +26,32 @@ import org.hypergraphdb.transaction.TransactionBDBImpl;
  *
  * @author Borislav Iordanov
  *
+ * @deprecated This class hasn't been in use since the introduction of MVCC which is
+ * now how concurrent access to RAM data structures is handled.
  */
 public class HGLock implements ReadWriteLock
 {
 	private ReentrantReadWriteLock defaultLock = null;
-	private BDBTxLock txLock = null;
+//	private BDBTxLock txLock = null;
 	
 	ReadWriteLock getApplicableLock()
 	{
-		HGTransaction tx = txLock.getGraph().getTransactionManager().getContext().getCurrent(); 
-		if (tx == null || ! (tx.getStorageTransaction() instanceof TransactionBDBImpl))
-		{
-			if (defaultLock == null)
-				defaultLock = new ReentrantReadWriteLock();
-			return defaultLock;
-		}
-		else
-			return txLock;
+//		HGTransaction tx = txLock.getGraph().getTransactionManager().getContext().getCurrent(); 
+//		if (tx == null || ! (tx.getStorageTransaction() instanceof TransactionBDBImpl))
+//		{
+//			if (defaultLock == null)
+//				defaultLock = new ReentrantReadWriteLock();
+//			return defaultLock;
+//		}
+//		else
+//			return txLock;
+	    return defaultLock;
 	}
 	
 	public HGLock(HyperGraph graph, byte [] objectId)
 	{
-		txLock = new BDBTxLock(graph, objectId);
+//		txLock = new BDBTxLock(graph, objectId);
+	    throw new UnsupportedOperationException("The HGLock is deprecated and will be removed very soon - use the BDBTxLock directly from the refactored storage package if you need it.");
 	}
 	
 	public Lock readLock()

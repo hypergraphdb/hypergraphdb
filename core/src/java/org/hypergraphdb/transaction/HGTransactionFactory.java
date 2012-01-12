@@ -10,4 +10,5 @@ package org.hypergraphdb.transaction;
 public interface HGTransactionFactory
 {
 	HGStorageTransaction createTransaction(HGTransactionContext context, HGTransactionConfig config, HGTransaction parent);
+	boolean canRetryAfter(Throwable t);
 }

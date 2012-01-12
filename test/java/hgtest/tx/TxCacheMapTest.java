@@ -189,7 +189,7 @@ public class TxCacheMapTest extends HGTestBase
         test.setUp();        
         try
         {
-            test.theMap = new TxCacheMap<Integer, SimpleData>(test.graph.getTransactionManager(), HashMap.class);
+            test.theMap = new TxCacheMap<Integer, SimpleData>(test.graph.getTransactionManager(), HashMap.class, null);
             //test.localMap = new TxMap<Integer, SimpleData>(test.graph.getTransactionManager(), null);
             test.runMe();
         }

@@ -83,7 +83,7 @@ public final class HGConfiguration
     {
         if (storeImplementation == null)
             storeImplementation = HGUtils.getImplementationOf(HGStoreImplementation.class.getName(), 
-                    "org.hypergraphdb.storage.BDBStorageImplementation");
+                    "org.hypergraphdb.storage.bdb.BDBStorageImplementation");
         return storeImplementation;
     }
 

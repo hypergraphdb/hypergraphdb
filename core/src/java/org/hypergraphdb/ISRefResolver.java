@@ -8,11 +8,12 @@
 package org.hypergraphdb;
 
 import org.hypergraphdb.handle.HGLiveHandle;
-import org.hypergraphdb.storage.IndexResultSet;
+
 import org.hypergraphdb.storage.StorageBasedIncidenceSet;
 import org.hypergraphdb.transaction.TxCacheSet;
 import org.hypergraphdb.transaction.TxSet.SetTxBox;
 import org.hypergraphdb.util.ArrayBasedSet;
+import org.hypergraphdb.util.CountMe;
 import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.HGSortedSet;
 import org.hypergraphdb.util.RefCountedMap;
@@ -43,7 +44,7 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
                 HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
                 try
                 {                  
-                    int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
+                    int size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
                     HGPersistentHandle [] A = new HGPersistentHandle[size];
                     for (int i = 0; i < A.length; i++)
                         A[i] = rs.next();                
@@ -71,7 +72,7 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 		HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
 		try
 		{
-			int size = rs == HGSearchResult.EMPTY ? 0 : ((IndexResultSet<HGPersistentHandle>)rs).count();
+			int size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
 			if (size < keepInMemoryThreshold)
 			{
 				HGPersistentHandle [] A = new HGPersistentHandle[size];

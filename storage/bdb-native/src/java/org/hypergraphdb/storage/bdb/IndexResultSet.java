@@ -5,13 +5,14 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import java.util.NoSuchElementException;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.hypergraphdb.transaction.BDBTxCursor;
+import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.util.CountMe;
 import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.db.DatabaseException;
@@ -29,7 +30,7 @@ import com.sleepycat.db.OperationStatus;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>
+public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {        
 	private static final Object UNKNOWN = new Object();
 	

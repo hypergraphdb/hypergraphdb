@@ -8,7 +8,6 @@
 package org.hypergraphdb;
 
 import java.util.Comparator;
-import org.hypergraphdb.storage.BDBStorageImplementation;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.storage.StorageGraph;
@@ -44,7 +43,7 @@ public class HGStore
     private String databaseLocation;
     private HGConfiguration config;
     private HGTransactionManager transactionManager = null;    
-    private HGStoreImplementation impl = new BDBStorageImplementation();    
+    private HGStoreImplementation impl = null;    
     
     private ThreadLocal<StorageGraph> overlayGraph = new ThreadLocal<StorageGraph>();
       
@@ -58,6 +57,7 @@ public class HGStore
     {
         databaseLocation = database;
         this.config = config;
+        this.impl = config.getStoreImplementation();
         impl.startup(this, config);
         transactionManager = new HGTransactionManager(impl.getTransactionFactory());
         if (!config.isTransactional())

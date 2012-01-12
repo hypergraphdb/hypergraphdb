@@ -15,20 +15,20 @@ public class TxMonitor
 {
 	public static class Info
 	{
-		int id = 0;
+		long id = 0;
 		String threadName = null;
 		String beginTrace = null;
 		String endTrace = null;
 	}
 	
-	public Map<Integer, Info> txMap = Collections.synchronizedMap(new HashMap<Integer, Info>());
+	public Map<Long, Info> txMap = Collections.synchronizedMap(new HashMap<Long, Info>());
 	
 	public void transactionCreated(HGTransaction tx)
 	{
 		try
 		{
 			Info txInfo = new Info();
-			txInfo.id = ((TransactionBDBImpl)tx.getStorageTransaction()).getBDBTransaction().getId();
+			txInfo.id = tx.getNumber();
 			txInfo.threadName = Thread.currentThread().getName();
 			StringBuffer b = new StringBuffer();
 			for (StackTraceElement el : Thread.currentThread().getStackTrace())
@@ -43,10 +43,8 @@ public class TxMonitor
 	{
 		try
 		{
-			int id;
-			id = ((TransactionBDBImpl)tx.getStorageTransaction()).getBDBTransaction().getId();
+			long id = tx.getNumber();
 			txMap.remove(id);
-			if ( 1 == 1) return;
 			Info txInfo = txMap.get(id);
 			if (txInfo == null)
 				throw new NullPointerException("No transaction with ID " + id + " was recorded to start.");

@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import java.util.Comparator;
 
@@ -22,8 +22,8 @@ import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.hypergraphdb.transaction.TransactionBDBImpl;
 
 @SuppressWarnings("unchecked")
 public class DefaultBiIndexImpl<KeyType, ValueType> 

@@ -8,11 +8,11 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
-import com.sleepycat.db.DeadlockException;
 
 /**
  * 
@@ -329,8 +329,7 @@ public class HGTransactionManager
         // the transaction and try again.               
         boolean retry = false;
         for (Throwable cause = t; cause != null; cause = cause.getCause())                   
-            if (cause instanceof DeadlockException || 
-                cause instanceof TransactionConflictException)
+            if (factory.canRetryAfter(cause))
             {
                 retry = true;
                 break;

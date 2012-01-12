@@ -18,7 +18,6 @@ public interface HGStoreImplementation
     
     HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle [] link);
     HGPersistentHandle [] getLink(HGPersistentHandle handle);
-    //byte [] getLinkData(HGPersistentHandle handle);
     void removeLink(HGPersistentHandle handle);
     boolean containsLink(HGPersistentHandle handle);
     

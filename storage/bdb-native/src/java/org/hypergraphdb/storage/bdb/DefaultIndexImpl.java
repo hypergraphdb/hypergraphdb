@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage;
+package org.hypergraphdb.storage.bdb;
 
 import java.util.Comparator;
 
@@ -13,9 +13,10 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.hypergraphdb.transaction.TransactionBDBImpl;
 import org.hypergraphdb.transaction.VanillaTransaction;
 
 import com.sleepycat.db.BtreeStats;

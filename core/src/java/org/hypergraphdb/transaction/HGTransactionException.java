@@ -40,17 +40,17 @@ public class HGTransactionException extends Exception
 {
     static final long serialVersionUID = -1;
     
-    HGTransactionException(String msg)
+    public HGTransactionException(String msg)
     {
         super(msg);
     }
     
-    HGTransactionException(String msg, Throwable cause)
+    public HGTransactionException(String msg, Throwable cause)
     {
         super(msg, cause);
     }
     
-    HGTransactionException(Throwable cause)
+    public HGTransactionException(Throwable cause)
     {
         super(cause);
     }
