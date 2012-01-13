@@ -87,8 +87,7 @@ public class TxCacheTest extends HGTestBase
             this.value.incrementAndGet();
         }        
         
-        @SuppressWarnings("unchecked")
-        public SimpleData clone()
+        public SimpleData duplicate()
         {
             return new SimpleData(idx, value.get());
         }
@@ -129,7 +128,7 @@ public class TxCacheTest extends HGTestBase
                     x = new SimpleData(idx, value);
                     lHandle = cache.atomRead(handle, x, new HGAtomAttrib());
                 }
-                SimpleData newBean = x.clone();
+                SimpleData newBean = x.duplicate();
                 newBean.incrementValue();                
                 cache.atomRefresh(lHandle, newBean, true);
                 data.put(handle, newBean.getValue());
