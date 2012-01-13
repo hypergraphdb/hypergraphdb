@@ -410,7 +410,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 		}
 	}
 
-	public ArrayBasedSet<E> clone()
+	public ArrayBasedSet<E> duplicate()
 	{
 	    try
 	    {

@@ -11,5 +11,5 @@ package org.hypergraphdb.util;
  */
 public interface CloneMe extends Cloneable
 {
-    <T> T clone();    
+    <T> T duplicate();    
 }

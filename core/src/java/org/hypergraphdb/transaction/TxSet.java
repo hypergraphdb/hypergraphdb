@@ -86,7 +86,7 @@ public class TxSet<E> implements HGSortedSet<E>
     HGSortedSet<E> cloneSet(HGSortedSet<E> S)
     {
         if (S instanceof CloneMe)
-            return ((CloneMe)S).clone();
+            return ((CloneMe)S).duplicate();
         else
         {
             try
