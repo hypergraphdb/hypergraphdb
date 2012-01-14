@@ -33,16 +33,15 @@ import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.DeadlockException;
 import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.LockConflictException;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
 import com.sleepycat.je.TransactionConfig;
 
-@SuppressWarnings("deprecation")
 public class BJEStorageImplementation implements HGStoreImplementation {
 	private static final String DATA_DB_NAME = "datadb";
 	private static final String PRIMITIVE_DB_NAME = "primitivedb";
@@ -62,7 +61,7 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 
 	private TransactionBJEImpl txn() {
 		HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
-		;
+
 		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
 			return TransactionBJEImpl.nullTransaction();
 		else
@@ -103,6 +102,8 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 			incConfig.setSortedDuplicates(true);
 			incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, incConfig);
 
+			openIndices = new HashMap<String, HGIndex<?,?>>();  //force reset since startup can follow a shutdown on same opened class
+      
 			if (config.isTransactional()) {
 				CheckpointConfig ckptConfig = new CheckpointConfig();
 				System.out.println("checkpoint kbytes:" + ckptConfig.getKBytes());
@@ -414,7 +415,7 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 			
 			public boolean canRetryAfter(Throwable ex) {
                 return ex instanceof TransactionConflictException ||
-                ex instanceof DeadlockException;
+                ex instanceof LockConflictException; //DeadlockException;
 
 			}
 		};
@@ -547,12 +548,11 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public void removeIndex(String name) {
 		indicesLock.writeLock().lock();
 		
 		try {
-			HGIndex idx = openIndices.get(name);
+			HGIndex<?, ?> idx = openIndices.get(name);
 			
 			if (idx != null) {
 				idx.close();

@@ -122,7 +122,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		
 		try {
 			TransactionBJEImpl tx = txn();
-			cursor = secondaryDb.openSecondaryCursor(tx.getBJETransaction(), cursorConfig);
+			cursor = secondaryDb.openCursor(tx.getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
 				result = new SingleValueResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
@@ -161,7 +161,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		SecondaryCursor cursor = null;
 		
 		try {
-			cursor = secondaryDb.openSecondaryCursor(txn().getBJETransaction(), cursorConfig);
+			cursor = secondaryDb.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
 				result = keyConverter.fromByteArray(valueEntry.getData());
@@ -187,7 +187,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		SecondaryCursor cursor = null;
 		
 		try {
-			cursor = secondaryDb.openSecondaryCursor(txn().getBJETransaction(), cursorConfig);
+			cursor = secondaryDb.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
 				return cursor.count();

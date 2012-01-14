@@ -52,7 +52,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	protected String name;
 	protected Database db;
 	private boolean owndb;
-	protected Comparator comparator;
+	protected Comparator<?> comparator;
 	protected boolean sort_duplicates = true;
 	protected ByteArrayConverter<KeyType> keyConverter;
 	protected ByteArrayConverter<ValueType> valueConverter;
@@ -91,7 +91,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 	public DefaultIndexImpl(String indexName, BJEStorageImplementation storage,
 			HGTransactionManager transactionManager, ByteArrayConverter<KeyType> keyConverter,
-			ByteArrayConverter<ValueType> valueConverter, Comparator comparator) {
+			ByteArrayConverter<ValueType> valueConverter, Comparator<?> comparator) {
 		this.name = indexName;
 		this.storage = storage;
 		this.transactionManager = transactionManager;
@@ -112,7 +112,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	public Comparator<byte[]> getComparator() {
 		try {
 			if (comparator != null) {
-				return comparator;
+				return (Comparator<byte[]>)comparator;
 			}
 			else { 
 				return db.getConfig().getBtreeComparator();
@@ -125,11 +125,11 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 	public void open() {
 		try {
-			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().cloneConfig();
+			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().clone();
 			dbConfig.setSortedDuplicates(sort_duplicates);
 			
 			if (comparator != null) {
-				dbConfig.setBtreeComparator(comparator);
+				dbConfig.setBtreeComparator((Comparator<byte[]>)comparator);
 			}
 			
 			db = storage.getBerkleyEnvironment().openDatabase(null, DB_NAME_PREFIX + name, dbConfig);
@@ -161,7 +161,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		checkOpen();
 		DatabaseEntry keyEntry = new DatabaseEntry();
 		DatabaseEntry value = new DatabaseEntry();
-		HGRandomAccessResult result = null;
+		HGRandomAccessResult<ValueType> result = null;
 		Cursor cursor = null;
 		
 		try {
@@ -170,14 +170,14 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
 			
 			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
-				result = new KeyRangeForwardResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
+				result = new KeyRangeForwardResultSet<ValueType>(tx.attachCursor(cursor), keyEntry, valueConverter);
 			else {
 				try {
 					cursor.close();
 				}
 				catch (Throwable t) {
 				}
-				result = HGSearchResult.EMPTY;
+				result = (HGRandomAccessResult<ValueType>)HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex) {
@@ -197,7 +197,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		checkOpen();
 		DatabaseEntry keyEntry = new DatabaseEntry();
 		DatabaseEntry value = new DatabaseEntry();
-		HGRandomAccessResult result = null;
+		HGRandomAccessResult<KeyType> result = null;
 		Cursor cursor = null;
 		
 		try {
@@ -206,14 +206,14 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
 			
 			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
-				result = new KeyScanResultSet(tx.attachCursor(cursor), keyEntry, keyConverter);
+				result = new KeyScanResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
 			else {
 				try {
 					cursor.close();
 				}
 				catch (Throwable t) {
 				}
-				result = HGSearchResult.EMPTY;
+				result = (HGRandomAccessResult<KeyType>)HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex) {
@@ -379,7 +379,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		checkOpen();
 		DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
 		DatabaseEntry value = new DatabaseEntry();
-		HGRandomAccessResult result = null;
+		HGRandomAccessResult<ValueType> result = null;
 		Cursor cursor = null;
 		
 		try {
@@ -388,7 +388,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
 		
 			if (status == OperationStatus.SUCCESS && cursor.count() > 0) {
-				result = new SingleKeyResultSet(tx.attachCursor(cursor), keyEntry, valueConverter);
+				result = new SingleKeyResultSet<ValueType>(tx.attachCursor(cursor), keyEntry, valueConverter);
 			}
 			else {
 				try {
@@ -396,7 +396,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 				}
 				catch (Throwable t) {
 				}
-				result = HGSearchResult.EMPTY;
+				result = (HGRandomAccessResult<ValueType>)HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex) {
@@ -453,11 +453,11 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 			if (status == OperationStatus.SUCCESS) {
 				if (lower_range) {
-					return new SearchResultWrapper(new KeyRangeBackwardResultSet(tx.attachCursor(cursor), keyEntry,
+					return new SearchResultWrapper<ValueType>(new KeyRangeBackwardResultSet<ValueType>(tx.attachCursor(cursor), keyEntry,
 							valueConverter));
 				}
 				else {
-					return new SearchResultWrapper(new KeyRangeForwardResultSet(tx.attachCursor(cursor), keyEntry,
+					return new SearchResultWrapper<ValueType>(new KeyRangeForwardResultSet<ValueType>(tx.attachCursor(cursor), keyEntry,
 							valueConverter));
 				}
 			}

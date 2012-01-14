@@ -17,10 +17,8 @@ import org.hypergraphdb.HyperGraph;
 
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.Environment;
 import com.sleepycat.je.LockNotAvailableException;
 import com.sleepycat.je.txn.Locker;
-import com.sleepycat.je.txn.LockerFactory;
 
 /**
  * 
@@ -41,20 +39,20 @@ public class BJETxLock implements ReadWriteLock {
 	private BJEReadLock readLock = new BJEReadLock();
 	private BJEWriteLock writeLock = new BJEWriteLock();
 
-	private int getLockerId() {
-		try {
-			return (int)((TransactionBJEImpl)graph.getTransactionManager().getContext().getCurrent()
-					.getStorageTransaction()).getBJETransaction().getId();
-		}
-		catch (DatabaseException ex) {
-			throw new HGException(ex);
-		}
-	}
-
-	private Environment getEnv() {
-		return ((TransactionBJEImpl)graph.getTransactionManager().getContext().getCurrent()
-				.getStorageTransaction()).getBJEEnvironment();
-	}
+//	private int getLockerId() {
+//		try {
+//			return (int)((TransactionBJEImpl)graph.getTransactionManager().getContext().getCurrent()
+//					.getStorageTransaction()).getBJETransaction().getId();
+//		}
+//		catch (DatabaseException ex) {
+//			throw new HGException(ex);
+//		}
+//	}
+//
+//	private Environment getEnv() {
+//		return ((TransactionBJEImpl)graph.getTransactionManager().getContext().getCurrent()
+//				.getStorageTransaction()).getBJEEnvironment();
+//	}
 
 	private class BJEReadLock implements Lock {
 		Locker lock = null;
