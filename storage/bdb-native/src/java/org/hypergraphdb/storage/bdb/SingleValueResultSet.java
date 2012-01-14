@@ -34,7 +34,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
         //
     	// The following is bit hacky because we want to avoid some of the default behavior
     	// of the super constructor, which is incorrect when the "values" we are interested in 
-    	// are the DB's primary keys. So we duplicate its bebavior and override instantiation
+    	// are the DB's primary keys. So we duplicate its behavior and override instantiation
     	// of the current value.
         this.converter = converter;
         this.cursor = cursor;
