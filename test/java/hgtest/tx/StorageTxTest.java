@@ -18,8 +18,6 @@ import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.util.HGUtils;
 
-import com.sleepycat.db.DeadlockException;
-
 public class StorageTxTest extends HGTestBase
 {
     private int itemCount = 200;
@@ -73,7 +71,7 @@ public class StorageTxTest extends HGTestBase
             catch (Throwable t)
             {
                 t = HGUtils.getRootCause(t);
-                if (! (t instanceof TransactionConflictException) && ! (t instanceof DeadlockException))
+      			    if (!graph.getStore().getTransactionFactory().canRetryAfter(t))
                 {
                     System.err.println("Exception during transaction!");
                     throw new RuntimeException(t);
@@ -102,7 +100,7 @@ public class StorageTxTest extends HGTestBase
             catch (Throwable t)
             {
                 t = HGUtils.getRootCause(t);
-                if (! (t instanceof TransactionConflictException) && ! (t instanceof DeadlockException))
+      			    if (!graph.getStore().getTransactionFactory().canRetryAfter(t))
                 {
                     System.err.println("Exception during commit!");
                     throw new RuntimeException(t);
