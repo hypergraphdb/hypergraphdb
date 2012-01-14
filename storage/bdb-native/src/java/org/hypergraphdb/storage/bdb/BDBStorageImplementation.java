@@ -75,7 +75,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
     
     private TransactionBDBImpl txn()
     {
-        HGTransaction tx = store.getTransactionManager().getContext().getCurrent();;
+        HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
         if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
             return TransactionBDBImpl.nullTransaction();
         else
@@ -116,6 +116,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
             DatabaseConfig incConfig = configuration.getDatabaseConfig().cloneConfig();
             incConfig.setSortedDuplicates(true);
             incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, incConfig);
+            
+            openIndices = new HashMap<String, HGIndex<?,?>>();  //force reset since startup can follow a shutdown on same opened class
             
             if (config.isTransactional())
             {
@@ -320,7 +322,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 return (HGRandomAccessResult<HGPersistentHandle>)HGSearchResult.EMPTY;
             }
             else
-                return new SingleKeyResultSet(tx.attachCursor(cursor), 
+                return new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), 
                                               key, 
                                               BAtoHandle.getInstance(handleFactory));            
         }
@@ -556,13 +558,12 @@ public class BDBStorageImplementation implements HGStoreImplementation
     }
 
     
-    @SuppressWarnings("unchecked")
     public void removeIndex(String name)
     {
         indicesLock.writeLock().lock();
         try
         {
-            HGIndex idx = openIndices.get(name);
+            HGIndex<?, ?> idx = openIndices.get(name);
             if (idx != null)
             {
                 idx.close();
