@@ -45,7 +45,7 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
     void removeEntry(KeyType key, ValueType value);
 
     /**
-     * <p>Remove all entries in the index with a geven key. If an entry
+     * <p>Remove all entries in the index with a given key. If an entry
      * with this key does not exist, the method does not nothing.
      * </p>
      * 
@@ -57,7 +57,7 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
      * <p>
      * Find the first indexed entry corresponding to the given key. The first
      * entry will generally be the one that was firstly added for that key. However,
-     * this is by no means guarantueed. This method is meant for indices where
+     * this is by no means guaranteed. This method is meant for indices where
      * only a single value corresponds to a key. That is, in mathematical terms, indices
      * that can be seen as functions.
      * </p>

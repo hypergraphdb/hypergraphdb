@@ -8,7 +8,6 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import org.hypergraphdb.HGException;
@@ -27,18 +26,18 @@ import org.hypergraphdb.HyperGraph;
  */
 public class HGTransactionManager
 {
-    private HyperGraph graph;    
+	private HyperGraph graph;    
 	private HGTransactionFactory factory;	
 	private ThreadLocal<HGTransactionContext> tcontext =  new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
 	
-    volatile ActiveTransactionsRecord mostRecentRecord = new ActiveTransactionsRecord(0, null);
+	volatile ActiveTransactionsRecord mostRecentRecord = new ActiveTransactionsRecord(0, null);
     
-    final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
+	final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
         
 	TxMonitor txMonitor = null;
-    AtomicInteger conflicted = new AtomicInteger(0);
-    AtomicInteger successful = new AtomicInteger(0);
+	AtomicInteger conflicted = new AtomicInteger(0);
+	AtomicInteger successful = new AtomicInteger(0);
 	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>

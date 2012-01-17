@@ -352,11 +352,11 @@ public /*final*/ class HyperGraph implements HyperNode
 	        // Now, bootstrap the type system.
 	        //
 	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
-            typeSystem.bootstrap(config.getTypeConfiguration());                 
-            getTransactionManager().endTransaction(true);
-            System.out.println("TOP HANDLE: " + typeSystem.getTop());
+	        typeSystem.bootstrap(config.getTypeConfiguration());                 
+	        getTransactionManager().endTransaction(true);
+          System.out.println("TOP HANDLE: " + typeSystem.getTop());
             
-            idx_manager.loadIndexers();
+	        idx_manager.loadIndexers();
     		            
 	        // Initialize atom access statistics, purging and the like. 
 	        initAtomManagement();    
@@ -518,7 +518,7 @@ public /*final*/ class HyperGraph implements HyperNode
     
     /**
      * <p>Return <code>true</code> if a given is currently frozen in the cache
-     * and <code>false</code> otherwise. Frozen atoms are guarantueed to NOT be evicted
+     * and <code>false</code> otherwise. Frozen atoms are guaranteed to NOT be evicted
      * from the cache.</p>
      * 
      * @param handle The handle of the atom.
@@ -547,7 +547,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * 
      * <ul>
      * <li>You need to retrieve a <code>HGHandle</code> from a Java instance reference by a call
-     * to the <code>getHandle</code>. This is only guaranteed to work when the atom is in the cache.</li>
+     * to the <code>getHandle</code>. This is only guarantueed to work when the atom is in the cache.</li>
      * <li>The atom is a very large object, expansive to re-construct from permanent storage and even
      * though used relatively rarely, it's better is it remain in memory. The cache will normally
      * evict atoms based on used, not on they memory footprint which would be too much overhead
@@ -652,9 +652,9 @@ public /*final*/ class HyperGraph implements HyperNode
         else
         {
         	HGHandle type = typeSystem.getTypeHandle(atom);
-            if (type == null)
-            	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
-            result = addNode(atom, type, (byte)flags);
+        	if (type == null)
+        		throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
+        	result = addNode(atom, type, (byte)flags);
         }
         eventManager.dispatch(this, new HGAtomAddedEvent(result));
         return result;
@@ -687,7 +687,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (eventManager.dispatch(this, 
                new HGAtomProposeEvent(atom, type, flags)) == HGListener.Result.cancel)
             return null;
-    	HGHandle result;
+        HGHandle result;
         if (atom instanceof HGLink)
         {
             HGLink link = (HGLink)atom;
@@ -868,7 +868,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * 
      * @param atom The atom whose handle is desired.
      * @return The <code>HGHandle</code> of the passed in atom, or <code>null</code>
-     * if the atom is not in HyperGraph.
+     * if the atom is not in HyperGraph cache at the moment.
      */
     public HGHandle getHandle(Object atom)
     {
@@ -876,9 +876,9 @@ public /*final*/ class HyperGraph implements HyperNode
     }
 
     /**
-     * <p>Retrieve the handle of the type of the atom refered to by <code>handle</code>.</p>
+     * <p>Retrieve the handle of the type of the atom referred to by <code>handle</code>.</p>
      * 
-     * <p><strong>FIXME:</strong> Instances of the same run-time Java type are not guarantueed
+     * <p><strong>FIXME:</strong> Instances of the same run-time Java type are not guaranteed
      * to have the same HyperGraph type. For instance, a Java <code>String</code> may be mapped
      * either to a HyperGraph indexed and reference counted strings, or to long text blobs. Therefore,
      * the correct way of getting the actual HG type of an atom is by reading of off storage. We 
@@ -1039,7 +1039,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        	{
 	        		if (instances != null) instances.close();
 	        	}
-	            idx_manager.unregisterAll(pHandle);
+	        	idx_manager.unregisterAll(pHandle);
 	        	typeSystem.remove(pHandle, (HGAtomType)atom);	        	
 	        }
 	        
@@ -1369,7 +1369,7 @@ public /*final*/ class HyperGraph implements HyperNode
               define(atomHandle, typeHandle, valueHandle, link, instance);
               HyperGraph.this.atomAdded(atomHandle.getPersistent(), instance, flags);
               if (instance instanceof HGTypeHolder)
-              	((HGTypeHolder)instance).setAtomType(type);
+              	((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
               return null;
           }});        
     }
@@ -1555,7 +1555,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        layout[1] = valueHandle;
 	        final HGLiveHandle lHandle = atomAdded(store.store(layout), payload, flags);
 	        if (payload instanceof HGTypeHolder)
-	        	((HGTypeHolder)payload).setAtomType(type);    	        	        	        
+	        	((HGTypeHolder<HGAtomType>)payload).setAtomType(type);    	        	        	        
 	        indexByType.addEntry(pTypeHandle, lHandle.getPersistent());
 	        indexByValue.addEntry(valueHandle, lHandle.getPersistent());
 	        idx_manager.maybeIndex(pTypeHandle, type, lHandle.getPersistent(), payload);	        
@@ -1594,7 +1594,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        HGPersistentHandle pHandle = store.store(layout);	        
 	        HGLiveHandle lHandle = atomAdded(pHandle, outgoingSet, flags);
 	        if (payload instanceof HGTypeHolder)
-	        	((HGTypeHolder)payload).setAtomType(type);    	        	        	        
+	        	((HGTypeHolder<HGAtomType>)payload).setAtomType(type);    	        	        	        
 	        indexByType.addEntry(pTypeHandle, pHandle);
 	        indexByValue.addEntry(valueHandle, pHandle);
 	        idx_manager.maybeIndex(pTypeHandle, type, pHandle, payload);	
@@ -1610,29 +1610,30 @@ public /*final*/ class HyperGraph implements HyperNode
     {
     	if (instance instanceof HGGraphHolder)
     		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
+    	
     	HGLiveHandle lHandle;
-        if (config.isUseSystemAtomAttributes())
-        {
-        	HGAtomAttrib attribs = new HGAtomAttrib();
-        	attribs.flags = (byte)flags;
-        	attribs.retrievalCount = 1;
-        	attribs.lastAccessTime = System.currentTimeMillis();
-        	setAtomAttributes(pHandle, attribs);        	
-        	lHandle = cache.atomAdded(pHandle, instance, attribs);
-        }        
-        else
-        {
-            HGAtomAttrib attribs = new HGAtomAttrib();            
-        	if (config.isUseSystemAtomAttributes() && flags != 0)
-        	{
-        		attribs.flags = (byte)flags;
-        		setAtomAttributes(pHandle, attribs);
-        	}
-        	lHandle = cache.atomAdded(pHandle, instance, attribs);
-        }
-        if (instance instanceof HGHandleHolder)
-        	((HGHandleHolder)instance).setAtomHandle(lHandle);
-        return lHandle;
+			if (config.isUseSystemAtomAttributes())
+      {
+       	HGAtomAttrib attribs = new HGAtomAttrib();
+       	attribs.flags = (byte)flags;
+       	attribs.retrievalCount = 1;
+       	attribs.lastAccessTime = System.currentTimeMillis();
+       	setAtomAttributes(pHandle, attribs);        	
+       	lHandle = cache.atomAdded(pHandle, instance, attribs);
+      }        
+			else
+			{
+				HGAtomAttrib attribs = new HGAtomAttrib();            
+				if (config.isUseSystemAtomAttributes() && flags != 0)
+				{
+					attribs.flags = (byte)flags;
+					setAtomAttributes(pHandle, attribs);
+				}
+				lHandle = cache.atomAdded(pHandle, instance, attribs);
+			}
+			if (instance instanceof HGHandleHolder)
+				((HGHandleHolder)instance).setAtomHandle(lHandle);
+			return lHandle;
     }
     
     /**
@@ -1723,12 +1724,14 @@ public /*final*/ class HyperGraph implements HyperNode
 	        {
 	        	result = cache.atomRefresh(liveHandle, instance, false);
 	        }
-	    	if (instance instanceof HGGraphHolder)
-	    		((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
-	    	if (instance instanceof HGHandleHolder)
-	    		((HGHandleHolder)instance).setAtomHandle(result);
-	    	if (instance instanceof HGTypeHolder)
-	    		((HGTypeHolder)instance).setAtomType(type);
+	        
+	        if (instance instanceof HGGraphHolder)
+	        	((HGGraphHolder)instance).setHyperGraph(HyperGraph.this);
+	        if (instance instanceof HGHandleHolder)
+	        	((HGHandleHolder)instance).setAtomHandle(result);
+	        if (instance instanceof HGTypeHolder)
+	        	((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
+	    	
 	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));  
 	        return new Pair<HGLiveHandle, Object>(result, instance);
     	}});
@@ -2012,26 +2015,26 @@ public /*final*/ class HyperGraph implements HyperNode
     							 	final Object atom, 
     							 	final HGHandle typeHandle)
     {        
-	        Object newValue = atom;
-	        if (atom instanceof HGValueLink)
-	        	newValue = ((HGValueLink)atom).getValue();
-	
-	        HGPersistentHandle [] layout = store.getLink(pHandle);
-	        HGPersistentHandle oldValueHandle = layout[1];        
-	        HGPersistentHandle oldTypeHandle = layout[0];
-	        HGAtomType oldType = (HGAtomType)get(oldTypeHandle);
-	        HGAtomType type = (HGAtomType)get(typeHandle);        
-	        
-	    	Object oldValue;
-	        if (lHandle != null && (oldValue = lHandle.getRef()) != null)
-	        	;
-	        else
-	        	oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
-	        
-	        idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, oldValue, pHandle);
-	        
-	    	if (oldValue instanceof HGValueLink)
-	    		oldValue = ((HGValueLink)oldValue).getValue();
+        Object newValue = atom;
+        if (atom instanceof HGValueLink)
+        	newValue = ((HGValueLink)atom).getValue();
+
+        HGPersistentHandle [] layout = store.getLink(pHandle);
+        HGPersistentHandle oldValueHandle = layout[1];        
+        HGPersistentHandle oldTypeHandle = layout[0];
+        HGAtomType oldType = (HGAtomType)get(oldTypeHandle);
+        HGAtomType type = (HGAtomType)get(typeHandle);        
+        
+        Object oldValue;
+        if (lHandle != null && (oldValue = lHandle.getRef()) != null)
+        	;
+        else
+        	oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
+        
+        idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, oldValue, pHandle);
+        
+        if (oldValue instanceof HGValueLink)
+        	oldValue = ((HGValueLink)oldValue).getValue();
 	        
 	    	//
 	    	// If the atom is a type, we need to morph all its values to the new
@@ -2072,44 +2075,45 @@ public /*final*/ class HyperGraph implements HyperNode
 	    	indexByValue.removeEntry(oldValueHandle, pHandle);
 	    	indexByValue.addEntry(layout[1], pHandle);
 	    	
-	        HGPersistentHandle [] newLayout;
+        HGPersistentHandle [] newLayout;
 	        
 	    	if (atom instanceof HGLink)
 	    	{
 	    		HGLink newLink = (HGLink)atom;
 	    		newLayout = new HGPersistentHandle[newLink.getArity() + 2];
 	    		
-				// If we are replacing a link by a link. We need to compute the
-				// delta of the target sets and remove the link from incidence
-				// sets where it no longer belongs.    		
+	    		// If we are replacing a link by a link. We need to compute the
+	    		// delta of the target sets and remove the link from incidence
+	    		// sets where it no longer belongs.    		
 	    		HashSet<HGPersistentHandle> newTargets = new HashSet<HGPersistentHandle>();
-				for (int i = 0; i < newLink.getArity(); i++)
-				{
-					HGPersistentHandle target = getPersistentHandle(newLink.getTargetAt(i)); 
-					newLayout[2 + i] = target;
-					newTargets.add(target);
-				}    		
-				for (int i = 2; i < layout.length; i++)
-					if (!newTargets.remove(layout[i])) // remove targets that were there before, so we don't touch them below
-						removeFromIncidenceSet(layout[i], pHandle);
-				for (HGPersistentHandle newTarget : newTargets)
-					updateTargetIncidenceSet(newTarget, pHandle);
+	    		for (int i = 0; i < newLink.getArity(); i++)
+	    		{
+	    			HGPersistentHandle target = getPersistentHandle(newLink.getTargetAt(i)); 
+	    			newLayout[2 + i] = target;
+	    			newTargets.add(target);
+	    		}    		
+	    		for (int i = 2; i < layout.length; i++)
+	    			if (!newTargets.remove(layout[i])) // remove targets that were there before, so we don't touch them below
+	    				removeFromIncidenceSet(layout[i], pHandle);
+	    		for (HGPersistentHandle newTarget : newTargets)
+	    			updateTargetIncidenceSet(newTarget, pHandle);
 	    	}
 	    	else 
-	        {
+	    	{
 	    		newLayout = new HGPersistentHandle[2];
-				for (int i = 2; i < layout.length; i++)
-					removeFromIncidenceSet(layout[i], pHandle);
-	        }
-			newLayout[0] = layout[0];
-			newLayout[1] = layout[1];    	
+	    		for (int i = 2; i < layout.length; i++)
+	    			removeFromIncidenceSet(layout[i], pHandle);
+	    	}
+	    	
+	    	newLayout[0] = layout[0];
+	    	newLayout[1] = layout[1];    	
 	    	store.store(pHandle, newLayout);
 	    	
 	    	idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
-            if (atom instanceof HGGraphHolder)
-                ((HGGraphHolder)atom).setHyperGraph(this);
-            if (atom instanceof HGHandleHolder)
-                ((HGHandleHolder)atom).setAtomHandle(lHandle);	    	
+	    	if (atom instanceof HGGraphHolder)
+	    		((HGGraphHolder)atom).setHyperGraph(this);
+	    	if (atom instanceof HGHandleHolder)
+	    		((HGHandleHolder)atom).setAtomHandle(lHandle);	    	
 	    	if (lHandle != null)
 	    		cache.atomRefresh(lHandle, atom, true);
     }

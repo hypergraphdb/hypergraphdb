@@ -7,9 +7,6 @@
  */
 package org.hypergraphdb.transaction;
 
-import java.util.HashMap;
-import java.util.Iterator;
-
 /**
  * 
  * <p>

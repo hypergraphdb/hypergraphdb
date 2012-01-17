@@ -8,7 +8,6 @@
 package org.hypergraphdb.handle;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGPersistentHandle;
 
 /**
  * <p>
