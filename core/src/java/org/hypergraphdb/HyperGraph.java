@@ -308,7 +308,7 @@ public /*final*/ class HyperGraph implements HyperNode
     		close();
     	is_open = true;
     	try
-    	{    		
+    	{
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
             eventManager = config.getEventManager();	 
@@ -484,8 +484,8 @@ public /*final*/ class HyperGraph implements HyperNode
     
     /**
      * <p>Return the persistent handle of a given atom. Generally, when working
-     * with atom handles, one needn't worry wether they are in-memory or not. However,
-     * some low-level APIs dealing with permanent storage explicitely require 
+     * with atom handles, one needn't worry whether they are in-memory or not. However,
+     * some low-level APIs dealing with permanent storage explicitly require 
      * a <code>HGPersistentHandle</code> and, in addition, applications may not to record
      * the permanent handle of an atom somewhere else. 
      * </p>
@@ -547,7 +547,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * 
      * <ul>
      * <li>You need to retrieve a <code>HGHandle</code> from a Java instance reference by a call
-     * to the <code>getHandle</code>. This is only guarantueed to work when the atom is in the cache.</li>
+     * to the <code>getHandle</code>. This is only guaranteed to work when the atom is in the cache.</li>
      * <li>The atom is a very large object, expansive to re-construct from permanent storage and even
      * though used relatively rarely, it's better is it remain in memory. The cache will normally
      * evict atoms based on used, not on they memory footprint which would be too much overhead
@@ -625,7 +625,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * mechanism and the set of specified system flags. The atom to be added will be 
      * treated as a Java bean with appropriate getter and setter methods used as 
      * property accessors. The type of the atom will be inferred using the Java 
-     * instrospection mechanism.
+     * introspection mechanism.
      * </p>
      * 
      * @param atom The <code>Object</code> instance to be stored as a hypergraph atom.
@@ -1166,7 +1166,7 @@ public /*final*/ class HyperGraph implements HyperNode
      *  
      * @param handle The handle of the atom to be replaced.
      * @param atom An arbitrary Java <code>Object</code> representing the new atom. The
-     * type of the atom will be inferred using the Java instrospection mechanism.
+     * type of the atom will be inferred using the Java introspection mechanism.
      */
     public boolean replace(HGHandle handle, Object atom)
     {
@@ -1387,7 +1387,7 @@ public /*final*/ class HyperGraph implements HyperNode
     }
     
     /**
-     * <p>Return the <code>IncidenceSet</code>, that is the set ofall <code>HGLink</code>s pointing 
+     * <p>Return the <code>IncidenceSet</code>, that is the set of all <code>HGLink</code>s pointing 
      * to, the atom referred by the passed in handle.</p>
      * 
      * @param handle The handle of the atom whose incidence set is desired.
@@ -2062,16 +2062,16 @@ public /*final*/ class HyperGraph implements HyperNode
 	    		}
 	    	}
 	    	
-	        if (!oldTypeHandle.equals(typeHandle))
-	        {        	
-	        	indexByType.removeEntry(getPersistentHandle(oldTypeHandle), pHandle);
-	        	indexByType.addEntry(getPersistentHandle(typeHandle), pHandle);
-	        }
-	        
-	        TypeUtils.releaseValue(HyperGraph.this, oldType, layout[1]);
-	        //oldType.release(layout[1]);
-	        layout[1] = TypeUtils.storeValue(this, newValue, type);
-	        layout[0] = getPersistentHandle(typeHandle);
+	    	if (!oldTypeHandle.equals(typeHandle))
+	    	{        	
+	    		indexByType.removeEntry(getPersistentHandle(oldTypeHandle), pHandle);
+	    		indexByType.addEntry(getPersistentHandle(typeHandle), pHandle);
+	    	}
+
+	    	TypeUtils.releaseValue(HyperGraph.this, oldType, layout[1]);
+	    	//oldType.release(layout[1]);
+	    	layout[1] = TypeUtils.storeValue(this, newValue, type);
+	    	layout[0] = getPersistentHandle(typeHandle);
 	    	indexByValue.removeEntry(oldValueHandle, pHandle);
 	    	indexByValue.addEntry(layout[1], pHandle);
 	    	
@@ -2132,20 +2132,20 @@ public /*final*/ class HyperGraph implements HyperNode
     private void morph(HGPersistentHandle instanceHandle, HGAtomType oldType, HGAtomType newType)
     {
     	HGPersistentHandle [] layout = store.getLink(instanceHandle);
-		Object oldInstance = rawMake(layout, oldType, instanceHandle);
-		TypeUtils.releaseValue(this, oldType, layout[1]);
-		oldType.release(layout[1]);
-		indexByValue.removeEntry(layout[1], instanceHandle);
-		layout[1] = TypeUtils.storeValue(this, oldInstance, newType);
-		indexByValue.addEntry(layout[1], instanceHandle);
-		Object newInstance = rawMake(layout, newType, instanceHandle);
+    	Object oldInstance = rawMake(layout, oldType, instanceHandle);
+    	TypeUtils.releaseValue(this, oldType, layout[1]);
+    	oldType.release(layout[1]);
+    	indexByValue.removeEntry(layout[1], instanceHandle);
+    	layout[1] = TypeUtils.storeValue(this, oldInstance, newType);
+    	indexByValue.addEntry(layout[1], instanceHandle);
+    	Object newInstance = rawMake(layout, newType, instanceHandle);
 		
-		HGLiveHandle instanceLiveHandle = cache.get(instanceHandle);
-		if (instanceLiveHandle != null && instanceLiveHandle.getRef() != null)
-			cache.atomRefresh(instanceLiveHandle, newInstance, true);
+    	HGLiveHandle instanceLiveHandle = cache.get(instanceHandle);
+    	if (instanceLiveHandle != null && instanceLiveHandle.getRef() != null)
+    		cache.atomRefresh(instanceLiveHandle, newInstance, true);
 		
-		if (oldInstance instanceof HGAtomType)
-		{
+    	if (oldInstance instanceof HGAtomType)
+    	{
     		HGSearchResult<HGPersistentHandle> rs = null;
     		
     		try
@@ -2165,9 +2165,9 @@ public /*final*/ class HyperGraph implements HyperNode
     		{
     			if (rs != null) rs.close();
     		}
-		}
-		// if newInstance is a type, but not oldInstance, we're ok...
-	}
+    	}
+    	// if newInstance is a type, but not oldInstance, we're ok...
+    }
     
     private void initAtomManagement()
     {        
