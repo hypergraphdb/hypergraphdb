@@ -6,9 +6,16 @@
   <groupId>org.hypergraphdb</groupId>
   <artifactId>hgdbfull</artifactId>
   <name>HyperGraphDB Core</name>
-  <version>1.0</version>  
-  <url>http://code.google.com/p/hypergraphdb</url>
-    
+  <version>1.2</version>  
+  <url>http://hypergraphdb.org</url>
+
+ <repositories>
+    <repository>
+      <id>hypergraphdb</id>
+      <url>http://hypergraphdb.org/maven</url>
+    </repository>
+ </repositories>
+ 
   <dependencies>
 	<dependency>
 	  <groupId>jivesoftware</groupId>
@@ -20,16 +27,6 @@
 	  <artifactId>smackx</artifactId>
 	  <version>3.1.0</version>
 	</dependency>
-	<dependency>
-		<groupId>berkeleydb</groupId>
-		<artifactId>berkeleydb</artifactId>
-		<version>4.7.25</version>
-	</dependency>
-	<dependency>
-		<groupId>net.jxta</groupId>
-		<artifactId>jxta</artifactId>
-		<version>2.5</version>
-	</dependency>
   </dependencies>
   
   <build>
@@ -39,9 +36,9 @@
     <testOutputDirectory>target/test-classes</testOutputDirectory>
     <sourceDirectory>src/java</sourceDirectory>
     <!--
-    <scriptSourceDirectory>src/config</scriptSourceDirectory>
-    -->
+    <scriptSourceDirectory>src/config</scriptSourceDirectory>       
     <testSourceDirectory>../test/java</testSourceDirectory>
+    -->
     <resources>
       <resource>
         <directory>src/config</directory>
