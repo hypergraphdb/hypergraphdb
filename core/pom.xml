@@ -3,8 +3,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-  <groupId>org.hypergraphdb</groupId>
-  <artifactId>hgdbfull</artifactId>
+  <groupId>hypergraphdb</groupId>
+  <artifactId>hgdb</artifactId>
   <name>HyperGraphDB Core</name>
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
@@ -16,19 +16,6 @@
     </repository>
  </repositories>
  
-  <dependencies>
-	<dependency>
-	  <groupId>jivesoftware</groupId>
-	  <artifactId>smack</artifactId>
-	  <version>3.1.0</version>
-	</dependency>  
-	<dependency>
-	  <groupId>jivesoftware</groupId>
-	  <artifactId>smackx</artifactId>
-	  <version>3.1.0</version>
-	</dependency>
-  </dependencies>
-  
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
