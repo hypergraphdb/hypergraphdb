@@ -25,7 +25,8 @@ public class PairType extends HGAtomTypeBase
 		if (!layout[2].equals(graph.getHandleFactory().nullHandle()))
 		{
 			HGAtomType type = graph.getTypeSystem().getType(layout[2]);
-			first = TypeUtils.makeValue(graph, layout[3], type);			
+			//2012.01.24 hilpold BUGFIX old: first = TypeUtils.makeValue(graph, layout[3], type);			
+			second = TypeUtils.makeValue(graph, layout[3], type);
 		}		
 		result = new Pair<Object,Object>(first, second);
 		return result;
@@ -44,7 +45,7 @@ public class PairType extends HGAtomTypeBase
 			{
 			    HGAtomType type = graph.get(typeHandle);
 				TypeUtils.releaseValue(graph, type, valueHandle);
-				type.release(valueHandle);
+				//2012.01.25 hilpold Bugfix removed: type.release(valueHandle);
 			}
 		}
 		graph.getStore().removeLink(handle);		
