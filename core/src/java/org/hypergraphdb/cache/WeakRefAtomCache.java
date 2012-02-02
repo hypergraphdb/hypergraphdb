@@ -422,7 +422,12 @@ public class WeakRefAtomCache implements HGAtomCache
 	{
 		Object atom = handle.getRef();
 		if (atom != null)
-			frozenAtoms.put(handle, atom);
+		{
+			if (graph.getTransactionManager().getContext().getCurrent().isReadOnly())
+				frozenAtoms.load(handle, atom);
+			else
+				frozenAtoms.put(handle, atom);
+		}
 	}	
 
 	public void unfreeze(HGLiveHandle handle) 

@@ -2,19 +2,19 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-  <groupId>hypergraphdb</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.hypergraphdb</groupId>
   <artifactId>hgdb</artifactId>
   <name>HyperGraphDB Core</name>
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
 
- <repositories>
+  <repositories>
     <repository>
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
- </repositories>
+  </repositories>
  
   <build>
     <directory>target</directory>
@@ -24,8 +24,8 @@
     <sourceDirectory>src/java</sourceDirectory>
     <!--
     <scriptSourceDirectory>src/config</scriptSourceDirectory>       
-    <testSourceDirectory>../test/java</testSourceDirectory>
     -->
+    <testSourceDirectory>test/java</testSourceDirectory>
     <resources>
       <resource>
         <directory>src/config</directory>
@@ -50,4 +50,12 @@
     </testResources>
     -->
   </build>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.testng</groupId>
+  		<artifactId>testng</artifactId>
+  		<version>6.3.1</version>
+  		<scope>test</scope>
+  	</dependency>
+  </dependencies>
 </project>

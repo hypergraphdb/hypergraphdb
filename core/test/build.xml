@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir="." name="HyperGraphDB Applications" default="all">
+	<description>HyperGraphDB Applications Build File</description>
+    
+    <property name="build" value="build"/>
+    <property name="jars" value="."/>
+    <property name="debug" value="on"/>
+	
+	<!-- classpath for compiling-->
+	<path id="test-classpath">
+        <pathelement location="../core/build"/>
+        <pathelement location="build"/>
+        <fileset dir="../core/jars/.">
+            <include name="**/*.jar"/>
+        </fileset>                
+        <fileset dir="jars/.">
+            <include name="**/*.jar"/>
+        </fileset>        
+		<pathelement path="${java.class.path}" />
+	</path>
+<!--
+    <taskdef name="testng" classpathref="test-classpath" classname="org.testng.TestNGAntTask" />
+-->
+    <taskdef resource="testngtasks" classpathref="test-classpath"/>
+    
+    <target name="init">
+		<mkdir dir="${build}"/>
+    </target>
+
+	<target name="compile" depends="init" description="Compile HGDB Tests">
+		<javac source="1.5" classpathref="test-classpath" debug="${debug}" destdir="${build}" srcdir="java"/>
+	</target>
+
+    
+     <target name="test" description="Perform all tests">
+       <testng classpathref="test-classpath" verbose="2">
+         <jvmarg value="-Djava.library.path=../core/native/linux/x86_64"/>
+         <classfileset dir="build">
+            <include name="hgtest/**/*.class"/>
+         </classfileset>
+       </testng>
+     </target>
+     
+     <target name="all" depends="compile, test"/>
+     
+	<target description="clean up" name="clean">
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}" />
+	</target>
+
+</project>
