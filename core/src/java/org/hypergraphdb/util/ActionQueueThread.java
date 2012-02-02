@@ -42,7 +42,9 @@ public class ActionQueueThread extends Thread
 	 * The percentage of actions of a filled up queue that must be
 	 * completed before we unblock a calling thread.
 	 */
-	private double freeFactor = 1.0 - 1.0/DEFAULT_FREE_PERCENT_ON_BLOCK;
+	// 2012.02.01 hilpold Bugfix private double freeFactor = 1.0 - 1.0/DEFAULT_FREE_PERCENT_ON_BLOCK;
+	// 
+	private double freeFactor = 1.0 - DEFAULT_FREE_PERCENT_ON_BLOCK / 100.0;
 	
 	/**
 	 * A flag indicating whether the thread is currently running. Set by clients
@@ -100,7 +102,10 @@ public class ActionQueueThread extends Thread
 	{
 		this(name);
 		this.nonBlockingSize = maxSizeBeforeBlock;
-		this.freeFactor = 1.0 - 1.0/completePercentUponBlocking;
+		// 2012.02.01 hilpold BugFix freefactor calculation wrong, values were too high.
+		// Observed low processor load on long tasks. 
+		// this.freeFactor = 1.0 - 1.0/completePercentUponBlocking;
+		this.freeFactor = 1.0 - completePercentUponBlocking / 100.0;
 	}
 	
 	public void run()
