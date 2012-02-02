@@ -307,26 +307,34 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	
 	public Value get(Key key)
 	{
+		// The action to modify the MRU list is added outside the lock boundaries since
+		// some actions also use the same lock in their implementation and will
+		// not complete (and therefore free space in the ActionQueueThread.actionList) until
+		// we release the lock from here....and we end up deadlocking.
+		//
+		// There's also a subtle interplay b/w the readwrite lock of the cache map here and the
+		// pause-actions mutex in the ActionQueue: when memory is low, we want to stop action execution
+		// and free space from the MRU list, which in turn acquires the write lock, leading to a
+		// situation similar to the one described above.
+		Runnable action = null;
+		
 		lock.readLock().lock();
 		try
 		{
 			Entry<Key, Value> e = map.get(key);
 			if (e != null)
 			{
-				CacheActionQueueSingleton.get().addAction(new PutOnTop(e));
+				action = new PutOnTop(e);
 				return e.value;
 			}
 		}
 		finally
 		{
-			lock.readLock().unlock();
+			lock.readLock().unlock();			
+			if (action != null)
+				CacheActionQueueSingleton.get().addAction(action);
 		}
 		
-		// The action to modify the MRU list is added outside the lock boundaries since
-		// because some actions also use the same lock in their implementation and will
-		// not complete (and therefore free space in the ActionQueueThread.actionList) until
-		// we release the lock from here....and we end up deadlocking.
-		Runnable action = null;
 		lock.writeLock().lock();
 		try
 		{
