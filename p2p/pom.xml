@@ -40,15 +40,7 @@
     <finalName>${artifactId}-${version}</finalName>
     <testOutputDirectory>target/test-classes</testOutputDirectory>
     <sourceDirectory>src/java</sourceDirectory>
-    <!--
-    <scriptSourceDirectory>src/config</scriptSourceDirectory>       
-    <testSourceDirectory>../test/java</testSourceDirectory>
-    -->
-    <resources>
-      <resource>
-        <directory>src/config</directory>
-      </resource>
-    </resources>
+    <testSourceDirectory>test/java</testSourceDirectory>    
     <plugins>
     	<plugin>
     		<groupId>org.apache.maven.plugins</groupId>
