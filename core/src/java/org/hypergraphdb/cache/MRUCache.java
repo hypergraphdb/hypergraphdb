@@ -228,19 +228,24 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	{
 		public void memoryUsageLow(long usedMemory, long maxMemory)
 		{
-			//System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
+			System.out.println("FREE INCIDENCE CACHE START " + Runtime.getRuntime().freeMemory() + " - " + map.size());
+			System.out.println("MEMUSAGE:" + Thread.currentThread().getName() + " id: " + Thread.currentThread().getId());			
 			CacheActionQueueSingleton.get().pauseActions();
 			try
 			{			    
 				new EvictAction().run();
 			    //new ClearAction().run();
 			}
+			catch (Throwable t)
+			{
+				t.printStackTrace();
+			}
 			finally
 			{
 				CacheActionQueueSingleton.get().resumeActions();
 			}
 			//System.gc();
-			//System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
+			System.out.println("FREE INCIDENCE END " + Runtime.getRuntime().freeMemory() + " - " + map.size());			
 		}
 	};
 	
@@ -317,6 +322,11 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			lock.readLock().unlock();
 		}
 		
+		// The action to modify the MRU list is added outside the lock boundaries since
+		// because some actions also use the same lock in their implementation and will
+		// not complete (and therefore free space in the ActionQueueThread.actionList) until
+		// we release the lock from here....and we end up deadlocking.
+		Runnable action = null;
 		lock.writeLock().lock();
 		try
 		{
@@ -326,7 +336,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 				Value v = resolver.resolve(key);
 				e = new Entry<Key, Value>(key, v, null, null);
 				map.put(key, e);
-				CacheActionQueueSingleton.get().addAction(new AddElement(e));
+				action = new AddElement(e);
 				return v;
 			}
 			else
@@ -334,7 +344,9 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		}
 		finally
 		{
-			lock.writeLock().unlock();			
+			lock.writeLock().unlock();		
+			if (action != null)
+				CacheActionQueueSingleton.get().addAction(action);
 		}
 	}
 
