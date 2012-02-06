@@ -7,12 +7,12 @@
   <artifactId>hypergraphdb</artifactId>
   <packaging>pom</packaging>
   <name>HyperGraphDB Parent Project</name>
-  <version>${version}</version>  
+  <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
 
   <properties>
     <version>1.2</version>
-    <bdb.version>5.0</bdb.version>    
+    <bdb.version>5.3.15</bdb.version>    
   </properties>
   
   <repositories>
@@ -118,18 +118,24 @@
   		<version>1.2</version>
   		<scope>test</scope>
   	</dependency>
+  	<dependency>
+  		<groupId>org.testng</groupId>
+  		<artifactId>testng</artifactId>
+  		<version>6.3.1</version>
+  		<scope>test</scope>  		
+  	</dependency>  	
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>bdb-native</artifactId>
       <version>${bdb.version}</version>
       <classifier>${build.type}</classifier>
-      <scope>runtime</scope>
+      <scope>test</scope>
     </dependency>  	
   	<dependency>
   		<groupId>org.hypergraphdb</groupId>
   		<artifactId>hgbdbnative</artifactId>
   		<version>1.2</version>
-  		<scope>runtime</scope>
+  		<scope>test</scope>
   	</dependency>
   </dependencies>    
   
@@ -139,6 +145,12 @@
       <id>win32</id>
       <properties>
         <build.type>win32</build.type>
+      </properties>
+    </profile>
+    <profile>
+      <id>win64</id>
+      <properties>
+        <build.type>win64</build.type>
       </properties>
     </profile>
     <profile>

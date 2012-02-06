@@ -18,12 +18,12 @@
  
   <dependencies>
 	<dependency>
-	  <groupId>berkeleydb</groupId>
+	  <groupId>com.sleepycat</groupId>
 	  <artifactId>je</artifactId>
 	  <version>5.0.34</version>
 	</dependency>
 	<dependency>
-	  <groupId>hypergraphdb</groupId>
+	  <groupId>org.hypergraphdb</groupId>
 	  <artifactId>hgdb</artifactId>
 	  <version>1.2</version>
 	</dependency>	

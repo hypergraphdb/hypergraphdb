@@ -6,9 +6,9 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>${version}</version>  
+    <version>1.2</version>  
   </parent>  
   <artifactId>hgdb</artifactId>
-  <name>HyperGraphDB Core</name>
- 
+  <name>HyperGraphDB Core</name>    
+
 </project>
