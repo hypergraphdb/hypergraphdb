@@ -107,7 +107,20 @@ public class FilteredSortedSet<E> implements HGSortedSet<E>
 
     public boolean isEmpty()
     {
-        return size() == 0;
+        //2012.02.09 hilpold old: return size() == 0;
+    	// we can conclude false more efficient by looking for a first.
+        HGRandomAccessResult<E> rs = delegate.getSearchResult();
+        try
+        {
+            while (rs.hasNext())
+                if (predicate.eval(rs.next()))
+                    return false;
+        }
+        finally
+        {
+            rs.close();
+        }
+        return true;
     }
 
     public Iterator<E> iterator()
