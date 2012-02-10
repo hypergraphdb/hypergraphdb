@@ -42,7 +42,7 @@ public class ColdAtoms
 				while (cnt-- > 0)
 					buckets.fetch();
 			}				
-			System.gc();
+			//2012.02.02 System.gc();
 //			System.out.println("FREE COLD ATOMS END " + Runtime.getRuntime().freeMemory() + " - " + buckets.size());
 		}
 	};
