@@ -50,7 +50,7 @@
 	</target>
 
 	<target name="peer-compile" depends="init" description="Compile the peer-to-peer code">
-		<javac source="1.5" classpathref="all-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}/${peer-path}">
+		<javac source="1.6" classpathref="all-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}/${peer-path}">
 		</javac>
 	</target>
 	
