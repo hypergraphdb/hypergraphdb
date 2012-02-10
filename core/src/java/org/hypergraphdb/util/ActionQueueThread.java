@@ -23,8 +23,14 @@ import java.util.concurrent.Semaphore;
  */
 public class ActionQueueThread extends Thread 
 {
-	public static final int DEFAULT_NON_BLOCKING_SIZE = 1000;
-	public static final int DEFAULT_FREE_PERCENT_ON_BLOCK = 30;
+	public static final int DEFAULT_NON_BLOCKING_SIZE = 100000;
+	public static final int DEFAULT_FREE_PERCENT_ON_BLOCK = 50;
+	
+	/**
+	 * Thread can be paused every n actions.
+	 */
+	public static final int PAUSE_GRANULARITY_ACTIONS = 100;
+	
 	
 	private HGLogger logger = new HGLogger();
 	
@@ -59,8 +65,8 @@ public class ActionQueueThread extends Thread
 	private long completedCount = 0;
 	
 	/**
-	 * The thread can be paused and resumed at the granularity of a single
-	 * action.
+	 * The thread can be paused and resumed at the granularity of PAUSE_GRANULARITY_ACTIONS
+	 * actions.
 	 */
 	private Semaphore pauseMutex = new Semaphore(1);	
 	
@@ -110,10 +116,10 @@ public class ActionQueueThread extends Thread
 	
 	public void run()
 	{
+		int pauseActionCounter = 0;
 		for (running = true; running; )
 		{			
 			Runnable action = null;
-			
 			synchronized (actionList)
 			{
 				while (actionList.isEmpty() && running)
@@ -126,8 +132,12 @@ public class ActionQueueThread extends Thread
 			
 			try
 			{	
-				pauseMutex.acquire();
+				if (pauseActionCounter == 0) {
+					// acquiring mutex is slow
+					pauseMutex.acquire();
+				}
 				action.run();
+				pauseActionCounter ++;
 			}
 			catch (InterruptedException ex)
 			{
@@ -140,7 +150,10 @@ public class ActionQueueThread extends Thread
 			finally
 			{
 				completedCount++;
-				pauseMutex.release();
+				if (pauseActionCounter == PAUSE_GRANULARITY_ACTIONS) {
+					pauseMutex.release();
+					pauseActionCounter = 0;
+				}
 			}
 		}
 		
@@ -156,7 +169,8 @@ public class ActionQueueThread extends Thread
 		
 	/**
 	 * <p>Suspend the execution of actions until the <code>resumeActions</code> method is
-	 * called. Block until the current action completes execution.</p>
+	 * called. Blocks until all current actions (@see PAUSE_GRANULARITY_ACTIONS)
+	 * complete execution.</p>
 	 */
 	public void pauseActions()
 	{		
@@ -190,7 +204,10 @@ public class ActionQueueThread extends Thread
 			{
 				try
 				{
-					Thread.sleep(50);
+					//2012.02.06 hilpold decreaesed sleep after profiling Thread.sleep(50);
+					//2012.02.06 11:30 Thread.sleep(SLEEP_TIME);
+					//2012.02.06 12:00 Thread.yield();
+					Thread.sleep(0, 100);
 				}
 				catch (InterruptedException ex)
 				{
@@ -201,7 +218,8 @@ public class ActionQueueThread extends Thread
 		synchronized (actionList)
 		{
 			actionList.addLast(action);
-			actionList.notify();
+			//2012.02.06 actionList.notify();
+			actionList.notifyAll();
 		}
 	}
 	
