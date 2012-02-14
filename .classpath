@@ -3,18 +3,13 @@
 	<classpathentry kind="src" output="core/build" path="core/src/config"/>
 	<classpathentry kind="src" output="apps/build/tm" path="apps/tm/src/java"/>
 	<classpathentry kind="src" output="apps/build/management" path="apps/management/src/java"/>
-	<classpathentry kind="src" output="viewer/build" path="viewer/src/java"/>
-	<classpathentry kind="src" output="apps/build/wordnet" path="apps/wordnet/src/java"/>
 	<classpathentry kind="src" output="core/build" path="core/src/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="core/jars/db.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/commons-logging.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/jwnl.jar"/>
 	<classpathentry kind="lib" path="apps/wordnet/jars/utilities.jar"/>
 	<classpathentry kind="lib" path="apps/tm/jars/tmapi-1_0SP1.jar"/>
 	<classpathentry kind="lib" path="apps/xsd/jars/asm-3.0.jar"/>
-	<classpathentry kind="lib" path="viewer/jars/antlr.jar"/>
-	<classpathentry kind="lib" path="viewer/jars/bsh.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/com-nerius-math-xform.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/freehep-base.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/freehep-graphics2d.jar"/>
@@ -24,11 +19,8 @@
 	<classpathentry kind="lib" path="viewer/jars/freehep-graphicsio-ps.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/freehep-graphicsio-svg.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/freehep-graphicsio-swf.jar"/>
-	<classpathentry kind="lib" path="viewer/jars/jhall.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/l2fprod-common-sheet.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolo.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolox.jar"/>
-	<classpathentry kind="lib" path="core/jars/jxta.jar"/>
-	<classpathentry kind="lib" path="core/jars/jxtashell.jar"/>
 	<classpathentry kind="output" path="core/build"/>
 </classpath>
