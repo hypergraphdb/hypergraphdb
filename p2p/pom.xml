@@ -40,7 +40,7 @@
   	</dependency>
   	<dependency>
   		<groupId>org.hypergraphdb</groupId>
-  		<artifactId>hgdbnative</artifactId>
+  		<artifactId>hgbdbnative</artifactId>
   		<version>1.2</version>
   		<scope>test</scope>
   	</dependency>  	
