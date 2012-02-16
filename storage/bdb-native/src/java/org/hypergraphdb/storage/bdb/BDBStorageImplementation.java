@@ -56,8 +56,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
 //          System.loadLibrary("libdb50");
 //          System.loadLibrary("libdb_java50");
         	
-//            System.loadLibrary("libdb51");
-//            System.loadLibrary("libdb_java51");
+            System.loadLibrary("libdb53");
+            System.loadLibrary("libdb_java53");
         }
     }
     
