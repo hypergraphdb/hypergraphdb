@@ -25,7 +25,7 @@ import org.hypergraphdb.util.Pair;
  * </p>
  * 
  * <p>
- * Note that because two atoms may be linked in more than way, it is possible for
+ * Note that because two atoms may be linked in more than one way, it is possible for
  * the iterator returned by <code>generate</code> to produce the same target atom more
  * than once. Usually however, an <code>HGALGenerator</code> implementation will consider
  * only links of interest in a particular context and such duplication will not occur. 

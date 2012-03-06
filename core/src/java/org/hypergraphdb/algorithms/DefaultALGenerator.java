@@ -23,11 +23,11 @@ import org.hypergraphdb.util.TempLink;
  * <p>
  * A default implementation of the <code>HGALGenerator</code> that should cover most
  * common cases. In the description below, the term <em>focus atom</em> is used to refer
- * to the atom whose adjency list is being generated. 
+ * to the atom whose adjacency list is being generated. 
  * </p>
  * 
  * <p>
- * The adjency list generation process is conceptually split into two main steps:
+ * The adjacency list generation process is conceptually split into two main steps:
  * 
  * <ol>
  * <li>Get the relevant links for the atom.</li>
@@ -72,7 +72,7 @@ import org.hypergraphdb.util.TempLink;
  */
 public class DefaultALGenerator implements HGALGenerator, CloseMe
 {
-	private HyperGraph hg;
+	protected HyperGraph hg;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);
 	private HGAtomPredicate linkPredicate;
 	private HGAtomPredicate siblingPredicate;
@@ -82,7 +82,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 				    returnSource = false;
 	private AdjIterator currIterator = null;
 	
-	private class AdjIterator implements HGSearchResult<Pair<HGHandle, HGHandle>>
+	protected class AdjIterator implements HGSearchResult<Pair<HGHandle, HGHandle>>
 	{
 		HGHandle src;
 		Iterator<HGHandle> linksIterator;
@@ -314,8 +314,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 			}
 		}
 				
-		
-		AdjIterator(HGHandle src, Iterator<HGHandle> linksIterator, boolean closeResultSet)
+		public AdjIterator(HGHandle src, Iterator<HGHandle> linksIterator, boolean closeResultSet)
 		{
 			this.src = src;
 			this.linksIterator = linksIterator;
@@ -387,7 +386,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	
 	/**
 	 * <p>
-	 * Construct a default adjency list generator where links are considered <strong>unordered</strong>.
+	 * Construct a default adjacency list generator where links are considered <strong>unordered</strong>.
 	 * </p>
 	 * 
 	 * @param hg The HyperGraph instance from where incidence sets are fetched.
@@ -395,7 +394,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	 * this predicate will be considered. If this parameter is <code>null</code>, all links
 	 * from the incidence set will be considered.
 	 * @param siblingPredicate The predicate by which sibling atoms are filtered from the
-	 * adjency list. Only atoms satisfying this predicate will be returned. If this parameter
+	 * adjacency list. Only atoms satisfying this predicate will be returned. If this parameter
 	 * is <code>null</code>, all sibling atoms will be considered. 
 	 */
 	public DefaultALGenerator(HyperGraph hg, 
@@ -409,12 +408,12 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 
 	/**
 	 * <p>
-	 * Construct a default adjency list generator where links are considered <strong>ordered</strong>.
+	 * Construct a default adjacency list generator where links are considered <strong>ordered</strong>.
 	 * </p>
 	 *
 	 * <p>
 	 * The constructor does NOT allow both <code>returnSucceeding</code> and <code>returnPreceeding</code>
-	 * to be set to <code>false</code>. This will always return empty adjency lists and does not make
+	 * to be set to <code>false</code>. This will always return empty adjacency lists and does not make
 	 * any sense. Even, in a more complex situation where those parameters are determined at run-time 
 	 * following some unforeseen logic, the caller must make sure that not both of those parameters are
 	 * false.
@@ -425,7 +424,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	 * this predicate will be considered. If this parameter is <code>null</code>, all links
 	 * from the incidence set will be considered.
 	 * @param siblingPredicate The predicate by which sibling atoms are filtered from the
-	 * adjency list. Only atoms satisfying this predicate will be returned. If this parameter
+	 * adjacency list. Only atoms satisfying this predicate will be returned. If this parameter
 	 * is <code>null</code>, all sibling atoms will be considered.
 	 * @param returnPreceeding Whether or not to return siblings that appear before the focus 
 	 * atom in an ordered link.
@@ -455,12 +454,12 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 
 	/**
 	 * <p>
-	 * Construct a default adjency list generator where links are considered <strong>ordered</strong>.
+	 * Construct a default adjacency list generator where links are considered <strong>ordered</strong>.
 	 * </p>
 	 *
 	 * <p>
 	 * The constructor does NOT allow both <code>returnSucceeding</code> and <code>returnPreceeding</code>
-	 * to be set to <code>false</code>. This will always return empty adjency lists and does not make
+	 * to be set to <code>false</code>. This will always return empty adjacency lists and does not make
 	 * any sense. Even, in a more complex situation where those parameters are determined at run-time 
 	 * following some unforeseen logic, the caller must make sure that not both of those parameters are
 	 * false.
@@ -471,7 +470,7 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 	 * this predicate will be considered. If this parameter is <code>null</code>, all links
 	 * from the incidence set will be considered.
 	 * @param siblingPredicate The predicate by which sibling atoms are filtered from the
-	 * adjency list. Only atoms satisfying this predicate will be returned. If this parameter
+	 * adjacency list. Only atoms satisfying this predicate will be returned. If this parameter
 	 * is <code>null</code>, all sibling atoms will be considered.
 	 * @param returnPreceeding Whether or not to return siblings that appear before the focus 
 	 * atom in an ordered link.

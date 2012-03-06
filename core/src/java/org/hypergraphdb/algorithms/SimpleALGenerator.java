@@ -26,11 +26,11 @@ import org.hypergraphdb.util.TempLink;
  */
 public class SimpleALGenerator implements HGALGenerator 
 {
-	private HyperGraph graph;
+	protected HyperGraph graph;
 	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);	
 	private AdjIterator currIterator = null;
 	
-	private class AdjIterator implements HGSearchResult<Pair<HGHandle,HGHandle>>
+	protected class AdjIterator implements HGSearchResult<Pair<HGHandle,HGHandle>>
 	{
 		HGHandle src;
 		Iterator<HGHandle> linksIterator;
@@ -67,7 +67,7 @@ public class SimpleALGenerator implements HGALGenerator
 				currLinkPos = 0;
 		}
 				
-		AdjIterator(HGHandle src, Iterator<HGHandle> linksIterator, boolean closeResultSet)
+		public AdjIterator(HGHandle src, Iterator<HGHandle> linksIterator, boolean closeResultSet)
 		{
 			this.src = src;
 			this.linksIterator = linksIterator;
