@@ -289,7 +289,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     
     /**
      * We need to infer to HG type by introspection. We maintain the
-     * full inheritence tree of Java class and interfaces. Therefore, for each
+     * full inheritance tree of Java class and interfaces. Therefore, for each
      * newly added Java type mapping, we navigate to parent classes etc.
      */
     HGHandle defineNewJavaTypeTransaction(HGHandle newHandle, Class<?> clazz)
