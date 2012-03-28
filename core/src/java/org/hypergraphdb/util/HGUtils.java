@@ -197,11 +197,7 @@ public class HGUtils
 	@SuppressWarnings("unchecked")
 	public static <T> Class<T> loadClass(HyperGraph graph, String classname) throws ClassNotFoundException
 	{
-        ClassLoader loader = graph.getConfig().getClassLoader();
-        if (loader == null)
-            loader = Thread.currentThread().getContextClassLoader();
-        if (loader == null)
-        	loader = HGUtils.class.getClassLoader();
+        ClassLoader loader =  getClassLoader(graph);
         if(classname.startsWith("[L"))
             return (Class<T>)Array.newInstance(loader.loadClass(
                   classname.substring(2, classname.length() - 1)), 0).getClass();
@@ -209,6 +205,21 @@ public class HGUtils
             return (Class<T>)Class.forName(classname);
         else
            return (Class<T>)loader.loadClass(classname);
+	}
+	
+	/**
+	 * Returns the configured, the context or the class's classloader.
+	 *  
+	 * @param graph
+	 * @return never null.
+	 */
+	public static ClassLoader getClassLoader(HyperGraph graph) {
+        ClassLoader loader = graph.getConfig().getClassLoader();
+        if (loader == null)
+            loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null)
+        	loader = HGUtils.class.getClassLoader();
+        return loader;
 	}
 	
 	public static HGHandle [] toHandleArray(HGLink link)
