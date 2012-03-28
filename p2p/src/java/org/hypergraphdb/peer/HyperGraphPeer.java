@@ -362,7 +362,10 @@ public class HyperGraphPeer
                         Map<String, Object> config = getPart(x, "config");
                         if (config == null)
                             config = new HashMap<String, Object>();
-                        BootstrapPeer boot = (BootstrapPeer)Thread.currentThread().getContextClassLoader().loadClass(classname).newInstance();
+                        //2012.03.28 Use HGUtils to get classloader so we can configure one.
+                        ClassLoader cl = HGUtils.getClassLoader(graph);
+                        BootstrapPeer boot = (BootstrapPeer)cl.loadClass(classname).newInstance();
+                        //BootstrapPeer boot = (BootstrapPeer)Thread.currentThread().getContextClassLoader().loadClass(classname).newInstance();
                         boot.bootstrap(HyperGraphPeer.this, config);
                     }       
                 
