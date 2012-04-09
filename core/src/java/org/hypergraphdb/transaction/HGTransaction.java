@@ -167,10 +167,15 @@ public final class HGTransaction implements HGStorageTransaction
        
         // We'll also just print it out in case it gets swallowed by application code
         // and nobody can find the actual reason for the crash.
+        t.printStackTrace();
         if (t instanceof Error)
             throw (Error)t;
-        else
-            throw (RuntimeException)t;
+        else {
+        	if (t instanceof RuntimeException) 
+        		throw (RuntimeException)t;
+        	else 
+        		throw new HGException(t);
+        }
     }
     
     HGTransaction(HGTransactionContext context, 
