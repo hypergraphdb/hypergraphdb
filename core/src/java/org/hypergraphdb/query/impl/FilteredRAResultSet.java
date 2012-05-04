@@ -23,9 +23,18 @@ public class FilteredRAResultSet<T> extends FilteredResultSet<T> implements HGRa
             return r == GotoResult.found && predicate.eval(value) ? GotoResult.found : GotoResult.nothing;
         if (predicate.eval(value))
             return r;
-        while (rs.hasNext())
-            if (predicate.eval(rs.next()))
-                return GotoResult.close;
+        
+        if (hasNext()) 
+        {  //Replaced AP
+            next();
+            return GotoResult.close;
+        }
+        
+        //would cause infinite loops
+//        while (rs.hasNext())
+//          if (predicate.eval(rs.next()))
+//              return GotoResult.close;        
+//        
         return GotoResult.nothing;
     }
     

@@ -611,7 +611,4 @@ public class ResultSets extends HGTestBase
                 .add("Other"), linkH));
         return linkH;
     }
-
-   
-
 }

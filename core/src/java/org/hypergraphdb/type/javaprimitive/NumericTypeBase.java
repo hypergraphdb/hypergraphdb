@@ -17,7 +17,7 @@ public abstract class NumericTypeBase<T> extends PrimitiveTypeBase<T>
 {
 	public static final NumericComparator COMPARATOR = new NumericComparator();
 	
-    public static class NumericComparator implements Comparator<byte[]>
+    public static class NumericComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte[] left, byte [] right)
         {           

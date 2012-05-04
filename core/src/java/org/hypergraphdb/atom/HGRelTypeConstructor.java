@@ -78,23 +78,22 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
     	);
     }
     
+    private static class ByteComparator implements Comparator<byte[]>, java.io.Serializable
+    {
+		public int compare(byte [] left, byte [] right)
+		{
+			return new String(left).compareTo(new String(right));
+		}    	
+    }
+    
     private final HGSortIndex<byte[], HGPersistentHandle> getIndex()
     {
         if (valueIndex == null)
         {
-            Comparator<byte[]> comparator = 
-            	new Comparator<byte[]>()
-            	{
-            		public int compare(byte [] left, byte [] right)
-            		{
-            			return new String(left).compareTo(new String(right));
-            		}
-            	};
-            
             valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().getIndex(INDEX_NAME, 
             																			 BAtoBA.getInstance(), 
             																			 BAtoHandle.getInstance(graph.getHandleFactory()),
-            																			 comparator,
+            																			 new ByteComparator(),
             																			 true);
         }
         return valueIndex;

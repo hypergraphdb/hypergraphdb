@@ -19,6 +19,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.type.AtomRefType;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGCompositeType;
+import org.hypergraphdb.type.HGPrimitiveType;
 import org.hypergraphdb.type.HGProjection;
 import org.hypergraphdb.util.HGUtils;
 
@@ -115,7 +116,7 @@ public class ByPartIndexer extends HGKeyIndexer
 		if (projectionType.getClass().equals(AtomRefType.class))
 			return null;
 		else
-			return (Comparator<?>)projectionType;
+			return ((HGPrimitiveType<?>)projectionType).getComparator();
 	}
 
 	

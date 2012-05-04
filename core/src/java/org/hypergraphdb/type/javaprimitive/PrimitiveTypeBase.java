@@ -56,7 +56,7 @@ import org.hypergraphdb.type.HGRefCountedType;
  */
 public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<JavaType>, 
 	                                                         HGOrderedSearchable<JavaType, HGPersistentHandle>, 
-	                                                         Comparator<byte[]>,
+	                                                         //Comparator<byte[]>,
 	                                                         HGRefCountedType
 {
     protected HyperGraph graph = null;

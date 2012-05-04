@@ -20,7 +20,7 @@ public class DoubleType extends PrimitiveTypeBase<Double>
  
     private static final DoubleComparator comp = new DoubleComparator();
     
-    public static class DoubleComparator implements Comparator<byte[]>
+    public static class DoubleComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {

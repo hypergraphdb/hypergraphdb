@@ -19,7 +19,7 @@ public class FloatType extends PrimitiveTypeBase<Float>
  
     private static final FloatComparator comp = new FloatComparator();
     
-    public static class FloatComparator implements Comparator<byte[]>
+    public static class FloatComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {

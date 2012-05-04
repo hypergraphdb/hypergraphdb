@@ -112,7 +112,7 @@ public class GraphClassics
 	 * @param weight The function that computes that weight of a link for the purposes
 	 * of measuring the distance between nodes. If <code>null</code>, the constant 
 	 * function 1 will be used.
-	 * @param distanceMatrix The data structure holding the computing distances between
+	 * @param distanceMatrix The data structure holding the computed distances between
 	 * the <code>start</code> atom and all other atoms encountered during the search. Only
 	 * <code>put</code> and <code>get</code> are used so you can provide an implementation
 	 * that only implements those two methods. If <code>null</code> is passed, a new

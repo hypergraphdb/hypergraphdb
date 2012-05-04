@@ -19,7 +19,7 @@ public class HGHandleType extends PrimitiveTypeBase<HGHandle>
 {
 	private static final HandleComparator comp = new HandleComparator();
 	
-    public static class HandleComparator implements Comparator<byte[]>
+    public static class HandleComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {

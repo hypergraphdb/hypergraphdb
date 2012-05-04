@@ -52,7 +52,7 @@ public class StringType extends PrimitiveTypeBase<String>
     
     private Comparator<byte[]> comp = new StringComparator();
     
-    public static class CaseInsensitiveStringComparator implements Comparator<byte[]>
+    public static class CaseInsensitiveStringComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {            
@@ -100,7 +100,7 @@ public class StringType extends PrimitiveTypeBase<String>
         }
     }
     
-    public static class StringComparator implements Comparator<byte[]>
+    public static class StringComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {            

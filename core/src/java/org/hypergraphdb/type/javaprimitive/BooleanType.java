@@ -20,7 +20,7 @@ public class BooleanType extends PrimitiveTypeBase<Boolean>
     
     private static final BoolComparator comp = new BoolComparator();
     
-    public static class BoolComparator implements Comparator<byte[]>
+    public static class BoolComparator implements Comparator<byte[]>, java.io.Serializable
     {
         public int compare(byte [] left, byte [] right)
         {
