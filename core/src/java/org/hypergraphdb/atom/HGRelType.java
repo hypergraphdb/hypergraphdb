@@ -36,7 +36,7 @@ public class HGRelType extends HGAtomTypeBase implements HGLink
 	{
 		this.name = name;
 		if (targetTypes == null)
-			targetTypes = HyperGraph.EMTPY_HANDLE_SET;
+			targetTypes = HyperGraph.EMPTY_HANDLE_SET;
 		this.targetTypes = targetTypes;		
 	}
 	
