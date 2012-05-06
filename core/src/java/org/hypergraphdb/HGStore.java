@@ -97,7 +97,7 @@ public class HGStore
      * @return The newly created <code>HGPersistentHandle</code>.
      */
     public HGPersistentHandle store(HGPersistentHandle [] link)
-    {        
+    {
         return store(config.getHandleFactory().makeHandle(), link);
     }
     
@@ -238,7 +238,7 @@ public class HGStore
     }
     
     /**
-     * <p>Return the number of atoms in the incidence set of a given atoms. That is,
+     * <p>Return the number of atoms in the incidence set of a given atom. That is,
      * return the number of links pointing to the atom.</p>
      */
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
@@ -256,14 +256,14 @@ public class HGStore
      * again.
      * </p>
      * 
-     * @param handle The <code>HGPersistentHandle</code> of the atom whose incidence set
+     * @param targetHandle The <code>HGPersistentHandle</code> of the atom whose incidence set
      * is to be updated.
-     * @param newLink The <code>HGPersistentHandle</code> of the new link pointing to that 
+     * @param linkHandle The <code>HGPersistentHandle</code> of the new link pointing to that 
      * atom.
      */
-    public void addIncidenceLink(HGPersistentHandle handle, HGPersistentHandle newLink)
+    public void addIncidenceLink(HGPersistentHandle targetHandle, HGPersistentHandle linkHandle)
     {
-        impl.addIncidenceLink(handle, newLink);
+        impl.addIncidenceLink(targetHandle, linkHandle);
     }
 
     /**
@@ -312,7 +312,7 @@ public class HGStore
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
 																	 ByteArrayConverter<KeyType> keyConverter, 
 																	 ByteArrayConverter<ValueType> valueConverter,
-																	 Comparator<?> comparator,
+																	 Comparator<byte[]> comparator,
 																	 boolean allowCreate)
     {
         return impl.getIndex(name, keyConverter, valueConverter, comparator, false, allowCreate);
@@ -324,11 +324,10 @@ public class HGStore
      *  @throws ClassCastException is the index with the specified name is not
      *  bidirectional.
      */
-    @SuppressWarnings("unchecked")    
     public <KeyType, ValueType> HGBidirectionalIndex<KeyType, ValueType> getBidirectionalIndex(String name,
 																							   ByteArrayConverter<KeyType> keyConverter, 
 																							   ByteArrayConverter<ValueType> valueConverter,
-																							   Comparator comparator,
+																							   Comparator<byte[]> comparator,
 																							   boolean allowCreate)
     {
         return (HGBidirectionalIndex<KeyType, ValueType>)
@@ -376,7 +375,7 @@ public class HGStore
     {
         overlayGraph.set(null);
     }
-
+    
     /**
      * <p>
      * Reserved to internal use.
