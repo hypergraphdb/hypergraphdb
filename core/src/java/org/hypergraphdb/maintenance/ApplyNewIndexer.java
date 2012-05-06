@@ -167,7 +167,7 @@ public class ApplyNewIndexer implements MaintenanceOperation
 		    else
 		    {
 		        typesAdded.add(currentType);
-                lastProcessed = null;
+		        lastProcessed = null;
 		    }
 		    indexAtomsTypedWith(graph, idx, indexer, currentType);		    
 		}
