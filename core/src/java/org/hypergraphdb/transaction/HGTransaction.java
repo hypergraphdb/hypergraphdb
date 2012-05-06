@@ -199,9 +199,12 @@ public final class HGTransaction implements HGStorageTransaction
 
     public void commit() throws HGTransactionException
     {
-    	if (isReadOnly() && isWriteTransaction())
+    	if (isReadOnly() && isWriteTransaction()) {
+    		for (Object obj : boxesWritten.values()) {
+    			System.out.println("written object:" + obj);
+    		}
     		throw new HGException("Transaction configured as read-only was used to modify data!");
-        
+    	}
         // If this is a nested transaction, everything is much simpler
         if (parent != null)
         {
