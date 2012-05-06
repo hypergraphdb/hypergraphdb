@@ -8,20 +8,12 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
-
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
-
-//import jrefs.NamedVar;
-//import jrefs.Ref;
-//import jrefs.Var;
-//import jrefs.refs;
 
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.indexing.ByPartIndexer;
@@ -38,6 +30,7 @@ import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.CompositeMapping;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.RelativePosition;
 
 /**
  * <p>
@@ -53,18 +46,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 {  	
 	protected HyperGraph graph;	
 	
-//	Map<String, NamedVar<?>> vars = new HashMap<String, NamedVar<?>>();
-	
-//	public <T> HGQuery<SearchResult> set(String name, T value)
-//	{
-//		@SuppressWarnings("rawtypes")
-//		NamedVar<T> var = (NamedVar)vars.get(name);
-//		if (var == null)
-//			throw new IllegalArgumentException("Unknown query variable : " + name);
-//		var.set(value);
-//		return this;
-//	}
-		
 	/**
 	 * A query that return the empty result set.
 	 */
@@ -543,7 +524,20 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see IncidentCondition
          */
         public static IncidentCondition incident(HGHandle atomHandle) { return new IncidentCondition(atomHandle); }
-        //public static IncidentCondition incident(Ref<HGHandle> atomHandle) { return new IncidentCondition(atomHandle); }
+        
+    		/**
+    		 * <p>
+    		 * Return a condition constraining the query result set to links pointing to a target atom
+    		 * positioned in a predetermined way in the target set. 
+    		 * </p>
+    		 * 
+    		 * @param target
+    		 *          The target atom specified as a {@link HGHandle}. 
+    		 * @param position 
+    		 *          The position of the target atom within the target set. 
+    		 * @see PositionedIncidentCondition
+    		 */
+        public static PositionedIncidentCondition positionedLink(HGHandle target, RelativePosition position) { return new PositionedIncidentCondition(target, position); }
         
         /**
          * <p>Return a condition constraining the query result set to links pointing to a target set 
@@ -867,7 +861,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         /**
          * <p>
          * Return a condition whose result set is the depth first traversal of the graph
-         * starting a given atom.
+         * starting with a given atom.
          * </p>
          * @param start The starting atom.
          * @see DFSCondition
@@ -877,7 +871,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         /**
          * <p>
          * Return a condition whose result set is the depth first traversal of the graph
-         * starting a given atom.
+         * starting with a given atom.
          * </p>
          * @param start The starting atom.
          * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
@@ -952,11 +946,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          */
         public static HGHandle anyHandle() { return the_any_handle; }
         
-//        public static <T> Var<T> var(String name, T initialValue) 
-//        {
-//        	return refs.var(name, initialValue);
-//        }
-
+        
         /**
          * <p>
          * Count the number of atoms that match the query condition parameter. Retrieving
