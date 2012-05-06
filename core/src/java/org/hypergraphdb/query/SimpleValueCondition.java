@@ -60,31 +60,34 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
 	{
 		
 	}
+	
 	public SimpleValueCondition(Object value)
 	{
 		this.value = value;
-        this.operator = ComparisonOperator.EQ;
+		this.operator = ComparisonOperator.EQ;
 	}
 
-    public SimpleValueCondition(Object value, ComparisonOperator operator)
-    {
-        this.value = value;
-        this.operator = operator;
-    }
+	public SimpleValueCondition(Object value, ComparisonOperator operator)
+	{
+		this.value = value;
+		this.operator = operator;
+	}
     
-    public Object getValue()
-    {
-        return value;
-    }
+	public Object getValue()
+	{
+		return value;
+	}
+	
 	public void setValue(Object value)
 	{
 		this.value = value;
 	}
 
-    public ComparisonOperator getOperator()
-    {
-        return operator;
-    }
+	public ComparisonOperator getOperator()
+	{
+		return operator;
+	}
+	
 	public void setOperator(ComparisonOperator operator)
 	{
 		this.operator = operator;

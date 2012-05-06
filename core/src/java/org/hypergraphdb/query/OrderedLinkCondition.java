@@ -33,7 +33,7 @@ import org.hypergraphdb.util.HGUtils;
  */
 public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private HGHandle [] targetSet = HyperGraph.EMTPY_HANDLE_SET;
+	private HGHandle [] targetSet = HyperGraph.EMPTY_HANDLE_SET;
 	private byte [] targetsBuffer = null;
 	
 //	private byte [] getTargetsBuffer(HyperGraph graph)

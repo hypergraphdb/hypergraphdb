@@ -62,8 +62,10 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 	
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
 	{
+		HGHandle tpHdl = graph.getType(handle);
+		
 		for (HGHandle t : getSubTypes(graph))
-			if (graph.getType(handle).equals(t))
+			if (tpHdl.equals(t))
 				return true;
 		return false;
 	}
@@ -110,4 +112,36 @@ public class TypePlusCondition implements HGQueryCondition, HGAtomPredicate
 			return clazz == null ? HGUtils.eq(baseType, c.baseType) : HGUtils.eq(clazz, c.clazz);
 		}
 	}	
+	
+	public String toString()
+	{
+		StringBuffer result = new StringBuffer();
+		result.append("TypePlusCondition, ");
+		
+		if (clazz != null) {
+			result.append("clazz:");
+			result.append(clazz.getName());
+			result.append(", ");
+		}
+		
+		result.append("baseType:");
+		result.append(baseType);
+		result.append(", subTypes(");
+
+		if (subTypes == null) {
+			result.append("<null>");
+		}
+		else {
+			boolean first = true;
+			for (HGHandle t : subTypes) {
+				if (!first) {
+					result.append(",");
+				}
+				result.append(t);
+				first = false;
+			}
+		}
+		result.append(")");
+		return result.toString();
+	}
 }

@@ -7,9 +7,6 @@
  */
 package org.hypergraphdb.query;
 
-//import jrefs.*;
-
-
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGPersistentHandle;
@@ -26,7 +23,6 @@ import org.hypergraphdb.HGPersistentHandle;
  */
 public class IncidentCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	//private Ref<HGHandle> target;
 	private HGHandle target;
 	
 	public IncidentCondition()
@@ -35,24 +31,16 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 	}
 	public IncidentCondition(HGHandle target)
 	{
-		this.target = target; // refs.constant(target);
+		this.target = target;
 	}
-//	public IncidentCondition(Ref<HGHandle> target)
-//	{
-//		this.target = target;
-//	}	
 	
 	public HGHandle getTarget()
 	{
-		return target;//target.get();
+		return target;
 	}
 	
 	public void setTarget(HGHandle target)
 	{
-//		if (this.target instanceof Var)
-//			((Var<HGHandle>)this.target).set(target);
-//		else
-//			this.target = refs.constant(target);
 		this.target = target;
 	}
 

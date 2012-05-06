@@ -35,10 +35,10 @@ public class AtomValueCondition extends SimpleValueCondition
 		super(value);
 	}
 
-    public AtomValueCondition(Object value, ComparisonOperator operator)
-    {
-    	super(value, operator);
-    }
+	public AtomValueCondition(Object value, ComparisonOperator operator)
+	{
+		super(value, operator);
+	}
 
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
