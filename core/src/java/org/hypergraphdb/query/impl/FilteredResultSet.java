@@ -91,18 +91,33 @@ public class FilteredResultSet<T> implements HGSearchResult<T>
 
 	public boolean hasNext() 
 	{
-		if (lookahead > 0)
-			return predicate.eval(searchResult.current());
+		if (lookahead > 0) {
+//			System.out.println("Evaluating with LA current:" + searchResult.current());
+			boolean res = predicate.eval(searchResult.current()); 
+			if (res) {
+//				System.out.println("Evaluating with LA current was valid");
+				return true;
+			}
+//			System.out.println("Evaluating with LA current was invalid, so trying further");
+		}
 		
 		while (true)
 		{
-			if (!searchResult.hasNext())
+			if (!searchResult.hasNext()) {
+//				System.out.println("No more next");
 				return false;
+			}
 			lookahead++;				
-			if (!predicate.eval(searchResult.next()))
+
+			T next2 = searchResult.next();
+//			System.out.println("Evaluating with for next:" + next2);
+			
+			if (!predicate.eval(next2))
 				continue;
-			else
+			else {
+//				System.out.println("Has next is true for next of:" + next2);
 				return true;
+			}
 		} 			
 	}
 

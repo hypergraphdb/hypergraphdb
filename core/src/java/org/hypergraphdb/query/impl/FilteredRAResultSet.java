@@ -21,13 +21,16 @@ public class FilteredRAResultSet<T> extends FilteredResultSet<T> implements HGRa
         GotoResult r = rs.goTo(value, exactMatch);
         if (exactMatch)
             return r == GotoResult.found && predicate.eval(value) ? GotoResult.found : GotoResult.nothing;
-        if (predicate.eval(value))
-            return r;
-        
-        if (hasNext()) 
-        {  //Replaced AP
-            next();
-            return GotoResult.close;
+
+        if (predicate.eval(value)) { //would happen on result of found
+//    			System.out.println("FRARS matched the value, We have a match for:" + value);
+          return r;
+				}
+
+        if (hasNext()) {  //Replaced AP
+//    			System.out.println("FRARS goto checked for next, got it, so moving to next and returning close");
+        	next();
+        	return GotoResult.close;
         }
         
         //would cause infinite loops
