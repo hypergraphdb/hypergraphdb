@@ -41,7 +41,7 @@ public final class PredicateBasedFilter<T> extends HGQuery<T>
 	                            final HGQuery<T> query, 
 	                            final HGAtomPredicate atomPredicate)
 	{
-        this.graph = graph;
+		this.graph = graph;
 		this.query = query;
 		this.predicate = new Mapping<T, Boolean>() {
 		    public Boolean eval(T h)
@@ -51,14 +51,14 @@ public final class PredicateBasedFilter<T> extends HGQuery<T>
 		};
 	}
 
-    public PredicateBasedFilter(final HyperGraph graph, 
-                                final HGQuery<T> query, 
-                                final Mapping<T, Boolean> predicate)
-    {
-        this.graph = graph;
-        this.query = query;
-        this.predicate = predicate;
-    }
+  public PredicateBasedFilter(final HyperGraph graph, 
+                              final HGQuery<T> query, 
+                              final Mapping<T, Boolean> predicate)
+  {
+      this.graph = graph;
+      this.query = query;
+      this.predicate = predicate;
+  }
     
 	@SuppressWarnings("unchecked")
     public HGSearchResult<T> execute() 

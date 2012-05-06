@@ -42,7 +42,7 @@ public class SortedIntersectionResult<T> implements HGSearchResult<T>, RSCombine
 				if (!right.hasNext())
 					return null;
 				else
-					rnext = (Comparable)right.next();
+					rnext = (Comparable<T>)right.next();
 			int comp = lnext.compareTo((T)rnext);
 			if (comp == 0)
 				return (T)lnext;
