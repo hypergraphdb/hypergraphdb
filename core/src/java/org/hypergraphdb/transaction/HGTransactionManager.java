@@ -396,30 +396,31 @@ public class HGTransactionManager
 			}
 			catch (HGUserAbortException ex)
 			{
-                try { endTransaction(false); }
-                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
-                return null;
+				try { endTransaction(false); }
+				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
+				return null;
 			}
 			catch (Throwable t)
 			{
-                try { endTransaction(false); }
-                catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
-			    handleTxException(t); // will re-throw if we can't retry the transaction
-			    conflicted.incrementAndGet();
-//			    System.out.println("Retrying transaction");
-			    continue;
+				try { endTransaction(false); }
+				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
+			  
+				handleTxException(t); // will re-throw if we can't retry the transaction
+				conflicted.incrementAndGet();
+//				    System.out.println("Retrying transaction");
+				continue;
 			}
 			try
 			{
-			    endTransaction(true);
-                successful.incrementAndGet(); // "successful" means not conflicting with other transactions				
+				endTransaction(true);
+				successful.incrementAndGet(); // "successful" means not conflicting with other transactions				
 				return result;
 			}  
 			catch (Throwable t)
 			{
-                handleTxException(t); // will re-throw if we can't retry the transaction
-                conflicted.incrementAndGet();
-//                System.out.println("Retrying transaction");
+				handleTxException(t); // will re-throw if we can't retry the transaction
+				conflicted.incrementAndGet();
+//      	          System.out.println("Retrying transaction");
 			}
 		}
 	}

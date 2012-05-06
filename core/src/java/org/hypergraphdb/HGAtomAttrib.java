@@ -16,7 +16,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  */
 public final class HGAtomAttrib 
 {
-    byte flags = HGSystemFlags.DEFAULT;
+	byte flags = HGSystemFlags.DEFAULT;
 	long retrievalCount;
 	long lastAccessTime;
 

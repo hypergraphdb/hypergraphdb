@@ -16,7 +16,7 @@ import org.hypergraphdb.HGLink;
  * graph traversal activities. It is just a <code>HGLink</code> wrapper around
  * an array of <code>HGHandle</code>s. It is needed by APIs that rely solely on
  * the <code>HGLink</code> interface, but need to work with temporary link
- * representations in the frorm of <code>HGHandle[]</code>.
+ * representations in the form of <code>HGHandle[]</code>.
  * </p>
  * 
  * <p>

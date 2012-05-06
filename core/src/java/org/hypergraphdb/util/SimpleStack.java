@@ -91,11 +91,13 @@ public class SimpleStack<T> implements Iterable<T>
     	return new Iterator<T>()
     	{
     		Node<T> curr = top;
+			@Override
 			public boolean hasNext()
 			{
 				return curr != null;
 			}
 
+			@Override
 			public T next()
 			{
 				T result = curr.data;
@@ -103,6 +105,7 @@ public class SimpleStack<T> implements Iterable<T>
 				return result;
 			}
 
+			@Override
 			public void remove()
 			{
 				throw new UnsupportedOperationException();
