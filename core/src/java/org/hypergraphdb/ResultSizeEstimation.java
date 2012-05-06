@@ -102,7 +102,7 @@ class ResultSizeEstimation
 				while (rs.hasNext())
 					// TODO: this is actually stupid because that we have to create another cursor
 					// and position it on the same key as our rs.current...but can't break
-					// information hiding bounderies!
+					// information hiding boundaries!
 					result += graph.indexByType.count(rs.next()); 
 				return result;
 			}
@@ -155,7 +155,6 @@ class ResultSizeEstimation
 	
 	countersMap.put(TypedValueCondition.class, new Counter()
 	{
-		@SuppressWarnings("unchecked")
 		public long count(HyperGraph graph, HGQueryCondition x)
 		{
 			TypedValueCondition cond = (TypedValueCondition)x;
@@ -285,7 +284,7 @@ class ResultSizeEstimation
 
 	countersMap.put(IndexCondition.class, new Counter()
 	{ 
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("rawtypes")
 		public long count(HyperGraph graph, HGQueryCondition x)
 		{
 			IndexCondition ic = (IndexCondition)x;
@@ -295,6 +294,7 @@ class ResultSizeEstimation
 				return countResultSet(graph, ic);
 		}
 		
+		@SuppressWarnings("rawtypes")
 		public long cost(HyperGraph graph, HGQueryCondition x)
 		{
 			IndexCondition ic = (IndexCondition)x;
@@ -304,7 +304,6 @@ class ResultSizeEstimation
 	
 	countersMap.put(IndexedPartCondition.class, new Counter()
 	{ 
-		@SuppressWarnings("unchecked")
 		public long count(HyperGraph graph, HGQueryCondition x)
 		{
 			IndexedPartCondition ip = (IndexedPartCondition)x;
