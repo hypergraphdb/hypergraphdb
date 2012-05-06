@@ -35,4 +35,8 @@ public class IncidenceSetRef implements LazyRef<IncidenceSet>
 			set = graph.getIncidenceSet(atomHandle);
 		return set;
 	}
+
+	public HGHandle getAtomHandle() {
+		return atomHandle;
+	}
 }
