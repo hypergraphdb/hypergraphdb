@@ -8,7 +8,6 @@
 package org.hypergraphdb.util;
 
 import java.beans.BeanInfo;
-
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
@@ -43,7 +42,7 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult;
  */
 public class HGUtils
 {
-    public static final HGPersistentHandle [] EMPTY_HANDLE_ARRAY = new HGPersistentHandle[0];
+	public static final HGPersistentHandle [] EMPTY_HANDLE_ARRAY = new HGPersistentHandle[0];
     
 	public static boolean isEmpty(String s)
 	{
@@ -120,12 +119,9 @@ public class HGUtils
 	 */
 	public static int hashIt(Object o)
 	{
-	    if (o == null)
-	        return 0;
-	    else
-	        return o.hashCode();
+		return HashCodeUtil.hash(0, o);
 	}
-
+	
 	/**
 	 * <p>Return a composite hash code of two objects.</p>
 	 */
@@ -279,8 +275,8 @@ public class HGUtils
 					{
 						if (!rs.hasNext())
 						{
-						    rs.close();
-						    rs = null;
+							rs.close();
+							rs = null;
 							query.getHyperGraph().getTransactionManager().endTransaction(false);
 							return totalProcessed;
 						}
@@ -413,36 +409,34 @@ public class HGUtils
     @SuppressWarnings("unchecked")
     public static <T> Class<T> getImplementationClass(String interfaceClassName, String defaultImplementation)
     {
-        try
-        {
-            String className = System.getProperty(interfaceClassName);
-            if (className == null)
-                className = defaultImplementation;
-            return (Class<T>)Class.forName(className);
-                
-        }
-        catch (Exception ex)
-        {
-            throw new HGException(ex);
-        }
+      try
+      {
+      	String className = System.getProperty(interfaceClassName);
+      	if (className == null)
+      		className = defaultImplementation;
+      	return (Class<T>)Class.forName(className);
+      }
+      catch (Exception ex)
+      {
+      	throw new HGException(ex);
+      }
     }
     
     public static <T> T getImplementationOf(String interfaceClassName, String defaultImplementation)
     {
-        Class<T> cl = getImplementationClass(interfaceClassName, defaultImplementation);
-        try
-        {            
-            return cl.newInstance();
-        }
-        catch (Exception e)
-        {
-            throw new HGException(e);
-        }
+      Class<T> cl = getImplementationClass(interfaceClassName, defaultImplementation);
+      try
+      {            
+      	return cl.newInstance();
+      }
+      catch (Exception e)
+      {
+      	throw new HGException(e);
+      }
     }
     
     @SuppressWarnings("unchecked")
-    public static <T> T cloneObject(T p, 
-                                    Mapping<Pair<Object, String>, Boolean> propertyFilter) throws Exception
+    public static <T> T cloneObject(T p, Mapping<Pair<Object, String>, Boolean> propertyFilter) throws Exception
     {
         if (p == null)
             return null;
@@ -527,5 +521,5 @@ public class HGUtils
         identityCloneClasses.add(Double.class);
         identityCloneClasses.add(Boolean.class);
         identityCloneClasses.add(Character.class);        
-    }    
+    }
 }
