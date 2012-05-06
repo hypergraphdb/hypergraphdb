@@ -16,7 +16,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * 
  * <p>
  * An indexer that not only determines the key in an index entry, but the value
- * as well. By default, <code>HGIndexer</code> implementation  provide a key by
+ * as well. By default, <code>HGKeyIndexer</code> implementation  provide a key by
  * which to index hypergraph atoms. In other words, atoms are the "default" values
  * for index entries. A <code>HGValueIndexer</code> provides also the value in an
  * index entry in cases where it is not the atom itself. 
@@ -25,10 +25,15 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  *
  */
-public abstract class HGValueIndexer extends HGKeyIndexer
+public abstract class HGValueIndexer<KeyType, ValueType> extends HGKeyIndexer<KeyType, ValueType>
 {
 	public HGValueIndexer()
 	{		
+	}
+	
+	public HGValueIndexer(String name, HGHandle type)
+	{
+		super(name, type);
 	}
 	
 	public HGValueIndexer(HGHandle type)
@@ -36,15 +41,13 @@ public abstract class HGValueIndexer extends HGKeyIndexer
 		super(type);
 	}
 	
-    @SuppressWarnings("unchecked")
-    public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
+    public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
     {
         index.addEntry(getKey(graph, atom), getValue(graph, atom));        
     }
 
     
-    @SuppressWarnings("unchecked")
-    public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
+    public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
     {
         index.removeEntry(getKey(graph, atom), getValue(graph, atom));        
     }
@@ -54,7 +57,7 @@ public abstract class HGValueIndexer extends HGKeyIndexer
 	 * Return the value of an index entry based on the passed in atom. 
 	 * </p>
 	 */
-	public abstract Object getValue(HyperGraph graph, Object atom);
+	public abstract ValueType getValue(HyperGraph graph, Object atom);
 	
 	/**
 	 * <p>
@@ -65,5 +68,5 @@ public abstract class HGValueIndexer extends HGKeyIndexer
 	 * @param graph
 	 * @return
 	 */
-	public abstract ByteArrayConverter<?> getValueConverter(HyperGraph graph);
+	public abstract ByteArrayConverter<ValueType> getValueConverter(HyperGraph graph);
 }

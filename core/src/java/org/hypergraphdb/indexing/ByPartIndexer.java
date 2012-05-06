@@ -11,15 +11,14 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.type.AtomRefType;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGCompositeType;
-import org.hypergraphdb.type.HGPrimitiveType;
 import org.hypergraphdb.type.HGProjection;
 import org.hypergraphdb.util.HGUtils;
 
@@ -32,7 +31,7 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public class ByPartIndexer extends HGKeyIndexer
+public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType, HGPersistentHandle>
 {
 	private String [] dimensionPath;
 	private HGProjection [] projections = null;
@@ -92,9 +91,30 @@ public class ByPartIndexer extends HGKeyIndexer
 		this(type, dimensionPath.split("\\."));
 	}
 	
+	/**
+	 * <p>
+	 * Convenience constructor that allows passing a dot separated dimension path
+	 * that is converted to a <code>String[]</code>. 
+	 * </p>
+	 * 
+	 * @param name The name of the index.
+	 * @param type The type of the atoms to be indexed.
+	 * @param dimensionPath The dimension path in dot format (e.g. "person.address.street")
+	 */
+	public ByPartIndexer(String name, HGHandle type, String dimensionPath)
+	{
+		this(name, type, dimensionPath.split("\\."));
+	}
+	
 	public ByPartIndexer(HGHandle type, String [] dimensionPath)
 	{
 		super(type);
+		this.dimensionPath = dimensionPath;
+	}
+
+	public ByPartIndexer(String name, HGHandle type, String [] dimensionPath)
+	{
+		super(name, type);
 		this.dimensionPath = dimensionPath;
 	}
 
@@ -108,48 +128,50 @@ public class ByPartIndexer extends HGKeyIndexer
 		this.dimensionPath = dimensionPath;
 	}
 
+	public Comparator<byte[]> getComparator(HyperGraph graph)
+	{
+		return null;  //is this Ok???
+//		if (projectionType == null)
+//			getProjections(graph);
+//		if (projectionType.getClass().equals(AtomRefType.class))
+//			return null;
+//		else
+//			return ((HGPrimitiveType<?>)projectionType).getComparator();
+	}
 	
-	public Comparator<?> getComparator(HyperGraph graph)
+	@SuppressWarnings("unchecked")
+	public ByteArrayConverter<KeyType> getConverter(HyperGraph graph)
 	{
 		if (projectionType == null)
 			getProjections(graph);
-		if (projectionType.getClass().equals(AtomRefType.class))
-			return null;
-		else
-			return ((HGPrimitiveType<?>)projectionType).getComparator();
+		return (ByteArrayConverter<KeyType>)projectionType;
 	}
-
 	
-	public ByteArrayConverter<?> getConverter(HyperGraph graph)
-	{
-		if (projectionType == null)
-			getProjections(graph);
-		return (ByteArrayConverter<?>)projectionType;
-	}
-
-	
-	public Object getKey(HyperGraph graph, Object atom)
+	@SuppressWarnings("unchecked")
+	public KeyType getKey(HyperGraph graph, Object atom)
 	{
 		Object result = atom;
 		for (HGProjection p : getProjections(graph))
 			result = p.project(result);
-		return result;
+		return (KeyType)result;
 	}
-
 	
+	@SuppressWarnings("unchecked")
 	public boolean equals(Object other)
 	{
 		if (other == this)
 			return true;
 		if (! (other instanceof ByPartIndexer))
 			return false;
-		ByPartIndexer idx = (ByPartIndexer)other;
+		ByPartIndexer<KeyType> idx = (ByPartIndexer<KeyType>)other;
 		return getType().equals(idx.getType()) && HGUtils.eq(dimensionPath, idx.dimensionPath);
 	}
-
 	
 	public int hashCode()
 	{
-		return getType().hashCode();
+		int hash = 7;
+		hash = 31 * hash + HGUtils.hashIt(dimensionPath);
+		hash = 31 * hash + getType().hashCode();
+    return hash;
 	}	
 }

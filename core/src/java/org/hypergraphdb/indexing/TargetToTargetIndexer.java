@@ -24,7 +24,7 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  * 
  */
-public class TargetToTargetIndexer extends HGValueIndexer
+public class TargetToTargetIndexer extends HGValueIndexer<HGHandle, HGHandle>
 {
     private int fromTarget, toTarget;
 
@@ -35,6 +35,13 @@ public class TargetToTargetIndexer extends HGValueIndexer
     public TargetToTargetIndexer(HGHandle type, int fromTarget, int toTarget)
     {
         super(type);
+        this.fromTarget = fromTarget;
+        this.toTarget = toTarget;
+    }
+
+    public TargetToTargetIndexer(String name, HGHandle type, int fromTarget, int toTarget)
+    {
+        super(name, type);
         this.fromTarget = fromTarget;
         this.toTarget = toTarget;
     }
@@ -59,12 +66,12 @@ public class TargetToTargetIndexer extends HGValueIndexer
         this.toTarget = toTarget;
     }
 
-    public Object getKey(HyperGraph graph, Object atom)
+    public HGHandle getKey(HyperGraph graph, Object atom)
     {
         return ((HGLink) atom).getTargetAt(fromTarget);
     }
 
-    public Object getValue(HyperGraph graph, Object atom)
+    public HGHandle getValue(HyperGraph graph, Object atom)
     {
         return ((HGLink) atom).getTargetAt(toTarget);
     }
@@ -85,12 +92,12 @@ public class TargetToTargetIndexer extends HGValueIndexer
         };
     }
 
-    public Comparator<?> getComparator(HyperGraph graph)
+    public Comparator<byte[]> getComparator(HyperGraph graph)
     {
         return null;
     }
 
-    public ByteArrayConverter<?> getConverter(final HyperGraph graph)
+    public ByteArrayConverter<HGHandle> getConverter(final HyperGraph graph)
     {
         return new ByteArrayConverter<HGHandle>()
         {

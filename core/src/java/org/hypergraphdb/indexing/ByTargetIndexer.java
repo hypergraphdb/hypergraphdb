@@ -25,7 +25,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  * 
  */
-public class ByTargetIndexer extends HGKeyIndexer
+public class ByTargetIndexer extends HGKeyIndexer<HGPersistentHandle, HGPersistentHandle>
 {
     private int target;
 
@@ -39,6 +39,12 @@ public class ByTargetIndexer extends HGKeyIndexer
         this.target = target;
     }
 
+    public ByTargetIndexer(String name, HGHandle type, int target)
+    {
+        super(name, type);
+        this.target = target;
+    }
+
     public int getTarget()
     {
         return target;
@@ -49,7 +55,7 @@ public class ByTargetIndexer extends HGKeyIndexer
         this.target = target;
     }
 
-    public Comparator<?> getComparator(HyperGraph graph)
+    public Comparator<byte[]> getComparator(HyperGraph graph)
     {
         return null;
     }
@@ -59,7 +65,7 @@ public class ByTargetIndexer extends HGKeyIndexer
         return BAtoHandle.getInstance(graph.getHandleFactory());
     }
 
-    public Object getKey(HyperGraph graph, Object atom)
+    public HGPersistentHandle getKey(HyperGraph graph, Object atom)
     {
         return graph.getPersistentHandle(((HGLink) atom).getTargetAt(target));
     }
@@ -76,6 +82,9 @@ public class ByTargetIndexer extends HGKeyIndexer
 
     public int hashCode()
     {
-        return getType().hashCode();
+    		int hash = 7;
+    		hash = 31 * hash + target;
+    		hash = 31 * hash + getType().hashCode();
+        return hash;
     }
 }

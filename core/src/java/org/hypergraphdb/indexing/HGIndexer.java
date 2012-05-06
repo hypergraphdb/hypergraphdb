@@ -39,7 +39,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  *
  */
-public interface HGIndexer
+public interface HGIndexer<KeyType, ValueType>
 {
     /**
      * <p>
@@ -52,7 +52,7 @@ public interface HGIndexer
      * @param atom
      * @param index The storage index where the atom should be added.
      */
-    void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<?, ?> index);
+    void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index);
     
     /**
      * <p>
@@ -64,7 +64,7 @@ public interface HGIndexer
      * @param atom
      * @param index The storage index from the atom should be removed.
      */
-    void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<?, ?> index);
+    void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index);
     
     /**
      * <p>Return a <code>ByteArrayConverter</code> capable of translating keys
@@ -74,7 +74,7 @@ public interface HGIndexer
      * @return The <code>ByteArrayConverter</code> for type of index keys 
      * return by this indexer or <code>null</code> if keys are of type <code>byte[]</code>. 
      */
-    ByteArrayConverter<?> getConverter(HyperGraph graph);
+    ByteArrayConverter<KeyType> getConverter(HyperGraph graph);
     
     /**
      * <p>
@@ -94,26 +94,37 @@ public interface HGIndexer
      * @return A comparator used to compare key values return by this indexer or 
      * <code>null</code> to use a default byte-by-byte comparison of keys. 
      */
-    Comparator<?> getComparator(HyperGraph graph);
+    Comparator<byte[]> getComparator(HyperGraph graph);
+    
+    /**
+     * <p>Return the name of the index.</p>  
+     */
+    String getName();
     
     /**
      * <p>Return the handle of the atom type all of whose instances should be indexed
      * by this indexer.</p>  
      */
-	HGHandle getType();
+    HGHandle getType();
+    
     /**
      * <p>Set the handle of the atom type all of whose instances should be indexed
      * by this indexer.</p>  
      */
-	void setType(HGHandle type);
+    void setType(HGHandle type);
 	
-	/**
-	 * <p>Declared to enforce implementation.</p> 
-	 */
-	int hashCode();
+    /**
+     * <p>Set the name of the index.</p>  
+     */
+    void setName(String name);
 	
-	/**
-	 * <p>Declared to enforce implementation.</p> 
-	 */
-	boolean equals(Object other);
+		/**
+		 * <p>Declared to enforce implementation.</p> 
+		 */
+		int hashCode();
+		
+		/**
+		 * <p>Declared to enforce implementation.</p> 
+		 */
+		boolean equals(Object other);
 }

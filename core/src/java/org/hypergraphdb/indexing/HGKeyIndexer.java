@@ -26,17 +26,34 @@ import org.hypergraphdb.HyperGraph;
  * @author Borislav Iordanov
  *
  */
-public abstract class HGKeyIndexer implements HGIndexer
+public abstract class HGKeyIndexer<KeyType, ValueType> implements HGIndexer<KeyType, ValueType>
 {
+  	private String name = null;
     private HGHandle type;
     
     public HGKeyIndexer()
     {       
     }
     
+    public HGKeyIndexer(String name, HGHandle type)
+    {
+      	this.name = name;
+        this.type = type;
+    }
+
     public HGKeyIndexer(HGHandle type)
     {
         this.type = type;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
     }
 
     public HGHandle getType()
@@ -49,16 +66,16 @@ public abstract class HGKeyIndexer implements HGIndexer
         this.type = type;
     }
 
-    @SuppressWarnings("unchecked")
-    public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
+		@SuppressWarnings("unchecked")
+		public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
     {
-        index.addEntry(getKey(graph, atom), graph.getPersistentHandle(atomHandle));        
+        index.addEntry(getKey(graph, atom), (ValueType)atomHandle.getPersistent());        
     }
     
-    @SuppressWarnings("unchecked")
-    public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex index)
+		@SuppressWarnings("unchecked")
+		public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
     {
-        index.removeEntry(getKey(graph, atom), graph.getPersistentHandle(atomHandle));        
+        index.removeEntry(getKey(graph, atom), (ValueType)atomHandle.getPersistent());        
     }
     
     /**
@@ -72,5 +89,5 @@ public abstract class HGKeyIndexer implements HGIndexer
      * a non-null <code>ByteArrayConverter</code> must be provided by the
      * <code>getConverter</code> method.
      */
-    public abstract Object getKey(HyperGraph graph, Object atom);
+    public abstract KeyType getKey(HyperGraph graph, Object atom);
 }

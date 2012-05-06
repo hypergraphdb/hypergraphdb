@@ -10,24 +10,29 @@ package org.hypergraphdb.indexing;
 import java.util.Comparator;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
 
-@SuppressWarnings("unchecked")
-public class CompositeIndexer extends HGKeyIndexer
+public class CompositeIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
 {
-    private HGKeyIndexer[] indexerParts = null;
+    private HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts = null;
 
     public CompositeIndexer()
     {
     }
 
-    public CompositeIndexer(HGHandle type, HGKeyIndexer[] indexerParts)
+    public CompositeIndexer(HGHandle type, HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
     {
-        super(type);
+    	this(null, type, indexerParts);
+    }
+
+    public CompositeIndexer(String name, HGHandle type, HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
+    {
+        super(name, type);
         if (indexerParts == null || indexerParts.length == 0)
             throw new IllegalArgumentException(
                     "Attempt to construct CompositeIndexer with null or empty parts.");
@@ -38,30 +43,31 @@ public class CompositeIndexer extends HGKeyIndexer
     {
         if (!(other instanceof CompositeIndexer))
             return false;
-        return HGUtils
-                .eq(indexerParts, ((CompositeIndexer) other).indexerParts);
+        return HGUtils.eq(indexerParts, ((CompositeIndexer) other).indexerParts);
     }
 
-    public Comparator<?> getComparator(HyperGraph graph)
+    public Comparator<byte[]> getComparator(HyperGraph graph)
     {
         return null;
     }
 
-    public ByteArrayConverter<?> getConverter(HyperGraph graph)
+    public ByteArrayConverter<byte[]> getConverter(HyperGraph graph)
     {
         return BAtoBA.getInstance();
     }
 
-    public Object getKey(HyperGraph graph, Object atom)
+    public byte[] getKey(HyperGraph graph, Object atom)
     {
         byte[][] keys = new byte[indexerParts.length][];
         int size = 1;
         for (int i = 0; i < indexerParts.length; i++)
         {
-            HGKeyIndexer ind = indexerParts[i];
+            HGKeyIndexer<Object, HGPersistentHandle> ind = indexerParts[i];
             Object key = ind.getKey(graph, atom);
-            keys[i] = ((ByteArrayConverter<Object>) ind.getConverter(graph))
-                    .toByteArray(key);
+            if (key == null)
+            	keys[i] = new byte[]{};
+            else 
+            	keys[i] = ind.getConverter(graph).toByteArray(key);
             size += keys[i].length + 4;
         }
         byte[] B = new byte[size];
@@ -82,17 +88,17 @@ public class CompositeIndexer extends HGKeyIndexer
         if (indexerParts == null)
             return 0;
         int x = indexerParts.length;
-        for (HGIndexer ind : indexerParts)
+        for (HGIndexer<Object, HGPersistentHandle> ind : indexerParts)
             x ^= ind.hashCode() >> 16;
         return x;
     }
 
-    public HGKeyIndexer[] getIndexerParts()
+    public HGKeyIndexer<Object, HGPersistentHandle>[] getIndexerParts()
     {
         return indexerParts;
     }
 
-    public void setIndexerParts(HGKeyIndexer[] indexerParts)
+    public void setIndexerParts(HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
     {
         this.indexerParts = indexerParts;
     }

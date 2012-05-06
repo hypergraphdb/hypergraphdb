@@ -11,6 +11,7 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -25,10 +26,15 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  * 
  */
-public class LinkIndexer extends HGKeyIndexer
+public class LinkIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
 {
     public LinkIndexer()
     {
+    }
+
+    public LinkIndexer(String name, HGHandle type)
+    {
+        super(name, type);
     }
 
     public LinkIndexer(HGHandle type)
@@ -51,26 +57,33 @@ public class LinkIndexer extends HGKeyIndexer
         return getType().hashCode();
     }
 
-    public Comparator<?> getComparator(HyperGraph graph)
+    public Comparator<byte[]> getComparator(HyperGraph graph)
     {
         return null; // use default byte-by-byte comparator
     }
 
-    public ByteArrayConverter<?> getConverter(HyperGraph graph)
+    public ByteArrayConverter<byte[]> getConverter(HyperGraph graph)
     {
         return BAtoBA.getInstance();
     }
 
-    public Object getKey(HyperGraph graph, Object atom)
+    public byte[] getKey(HyperGraph graph, Object atom)
     {
-        HGLink link = (HGLink) atom;
-        byte[] result = new byte[16 * link.getArity()];
-        for (int i = 0; i < link.getArity(); i++)
-        {
-            byte[] src = graph.getPersistentHandle(link.getTargetAt(i))
-                    .toByteArray();
-            System.arraycopy(src, 0, result, i * 16, 16);
-        }
-        return result;
+    	HGLink link = (HGLink) atom;
+        
+    	if (link.getArity() == 0) {
+    		return new byte[0];
+    	}
+    	else {
+    		int handleSize = graph.getPersistentHandle(link.getTargetAt(0)).toByteArray().length;
+    		byte[] result = new byte[handleSize * link.getArity()];
+    		
+    		for (int i = 0; i < link.getArity(); i++)
+    		{
+    			byte[] src = graph.getPersistentHandle(link.getTargetAt(i)).toByteArray();
+    			System.arraycopy(src, 0, result, i * handleSize, handleSize);
+    		}
+    		return result;
+    	}
     }
 }
