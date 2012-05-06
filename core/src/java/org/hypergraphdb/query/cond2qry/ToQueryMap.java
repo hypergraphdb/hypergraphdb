@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
@@ -47,6 +46,7 @@ import org.hypergraphdb.query.MapCondition;
 import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
+import org.hypergraphdb.query.PositionedIncidentCondition;
 import org.hypergraphdb.query.SubgraphContainsCondition;
 import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.query.SubsumedCondition;
@@ -75,22 +75,22 @@ import org.hypergraphdb.util.ArrayBasedSet;
 public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 {
 	private static final long serialVersionUID = -1;
-	private static final ToQueryMap instance = new ToQueryMap();
+	protected static final ToQueryMap instance = new ToQueryMap();
 	
 	static
 	{
-	    instance.put(Nothing.class, new ConditionToQuery()
-        { 
-            public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
-            {
-                return HGQuery.NOP;                     
-            }
+		instance.put(Nothing.class, new ConditionToQuery()
+		{ 
+			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+			{
+				return HGQuery.NOP;                     
+			}
             
-            public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
-            {
-                return QueryMetaData.EMPTY;
-            }           
-        });
+			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			{
+				return QueryMetaData.EMPTY;
+			}           
+		});
 		instance.put(AnyAtomCondition.class, new ConditionToQuery()
 		{ 
 			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
@@ -110,10 +110,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			private HGPersistentHandle getTypeHandle(HyperGraph graph, HGQueryCondition c)
 			{
 				AtomTypeCondition ac = (AtomTypeCondition)c;
-                HGHandle h = ac.getTypeHandle();
-                if (h == null)
-                    h = graph.getTypeSystem().getTypeHandle(ac.getJavaClass());
-                return graph.getPersistentHandle(h);
+				HGHandle h = ac.getTypeHandle();
+				if (h == null)
+					h = graph.getTypeSystem().getTypeHandle(ac.getJavaClass());
+				return graph.getPersistentHandle(h);
 			}
 			
 			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
@@ -155,78 +155,78 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		{
 			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
-                //
-                // TODO: how to we deal with null values? For the String
-                // primitive type at least, nulls are possible.
-                //
+        //
+        // TODO: how to we deal with null values? For the String
+        // primitive type at least, nulls are possible.
+        //
 				TypedValueCondition vc = (TypedValueCondition)c;
-                Object value = vc.getValue();
-                HGHandle typeHandle = vc.getTypeHandle();
-                if (typeHandle == null)
-                	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
-                HGAtomType type = hg.getTypeSystem().getType(typeHandle);
-                if (type == null)
-                    throw new HGException("Cannot search by value " + value + 
-                    		" of unknown HGAtomType with handle " + typeHandle);
-                
-                if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
-                	type instanceof HGOrderedSearchable)
-                	//
-                	// Find value handle by value and pipe into 'indexByValue' search, then filter
-                	// by the expected type to make sure that it matches the actual type of the atoms
-                	// so far obtained. 
-                	//
-                	return new PredicateBasedFilter(hg,
-                			new PipeQuery(new SearchableBasedQuery((HGSearchable<?,?>)type, value, vc.getOperator()),
-                						  new SearchableBasedQuery(hg.getIndexManager().getIndexByValue(), 
-                         										  null,
-                         										  ComparisonOperator.EQ)),
-                         	new AtomTypeCondition(typeHandle));     	
-                else // else, we need to scan all atoms of the given type 
-                	return new PredicateBasedFilter(hg,
-                			new IndexBasedQuery(hg.getIndexManager().getIndexByType(), 
-                								hg.getPersistentHandle(typeHandle)),
-                			new AtomValueCondition(vc.getValue(), vc.getOperator()));
+        Object value = vc.getValue();
+        HGHandle typeHandle = vc.getTypeHandle();
+        if (typeHandle == null)
+        	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
+        HGAtomType type = hg.getTypeSystem().getType(typeHandle);
+        if (type == null)
+            throw new HGException("Cannot search by value " + value + 
+            		" of unknown HGAtomType with handle " + typeHandle);
+        
+        if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
+        	type instanceof HGOrderedSearchable)
+        	//
+        	// Find value handle by value and pipe into 'indexByValue' search, then filter
+        	// by the expected type to make sure that it matches the actual type of the atoms
+        	// so far obtained. 
+        	//
+        	return new PredicateBasedFilter(hg,
+        			new PipeQuery(new SearchableBasedQuery((HGSearchable<?,?>)type, value, vc.getOperator()),
+        						  new SearchableBasedQuery(hg.getIndexManager().getIndexByValue(), 
+                 										  null,
+                 										  ComparisonOperator.EQ)),
+                 	new AtomTypeCondition(typeHandle));     	
+        else // else, we need to scan all atoms of the given type 
+        	return new PredicateBasedFilter(hg,
+        			new IndexBasedQuery(hg.getIndexManager().getIndexByType(), 
+        								hg.getPersistentHandle(typeHandle)),
+        			new AtomValueCondition(vc.getValue(), vc.getOperator()));
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
 				TypedValueCondition vc = (TypedValueCondition)c;
-                HGHandle typeHandle = vc.getTypeHandle();
-                if (typeHandle == null)
-                	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
-                HGAtomType type = hg.getTypeSystem().getType(typeHandle);
-                if (type == null)
-                    throw new HGException("Cannot search by value" + 
-                    		" of unknown HGAtomType with handle " + typeHandle);
-                QueryMetaData qmd;
-                if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
-                	type instanceof HGOrderedSearchable)
-                {
-                	 qmd = QueryMetaData.MISTERY.clone(c);
-                }
-                else
-                {
-                	qmd = QueryMetaData.ORDERED.clone(c);
-                }
-                qmd.predicateCost = 2.5;
-                return qmd;
+        HGHandle typeHandle = vc.getTypeHandle();
+        if (typeHandle == null)
+        	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
+        HGAtomType type = hg.getTypeSystem().getType(typeHandle);
+        if (type == null)
+            throw new HGException("Cannot search by value" + 
+            		" of unknown HGAtomType with handle " + typeHandle);
+        QueryMetaData qmd;
+        if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
+        	type instanceof HGOrderedSearchable)
+        {
+        	 qmd = QueryMetaData.MISTERY.clone(c);
+        }
+        else
+        {
+        	qmd = QueryMetaData.ORDERED.clone(c);
+        }
+        qmd.predicateCost = 2.5;
+        return qmd;
 			}	
 		}); 
 		instance.put(AtomValueCondition.class, new ConditionToQuery()
 		{
 			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
-                //
-                // TODO: how to we deal with null values? For the String
-                // primitive type at least, nulls are possible. We can only deal
+        //
+        // TODO: how to we deal with null values? For the String
+        // primitive type at least, nulls are possible. We can only deal
 				// with nulls if the type is know in which case a TypedValueCondition
 				// must have been used.
-                //
-                AtomValueCondition vc = (AtomValueCondition)c;
-                Object value = vc.getValue();
-                if (value == null)
-                    throw new HGException("Search by null values is not supported yet.");
-                HGHandle type = hg.getTypeSystem().getTypeHandle(value);
+        //
+        AtomValueCondition vc = (AtomValueCondition)c;
+        Object value = vc.getValue();
+        if (value == null)
+            throw new HGException("Search by null values is not supported yet.");
+        HGHandle type = hg.getTypeSystem().getTypeHandle(value);
                 
 				return instance.get(TypedValueCondition.class).
 					getQuery(hg, new TypedValueCondition(type, 
@@ -235,17 +235,16 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-                AtomValueCondition vc = (AtomValueCondition)c;
-                Object value = vc.getValue();
-                if (value == null)
-                    throw new HGException("Search by null values is not supported yet.");
-                HGHandle type = hg.getTypeSystem().getTypeHandle(value);
+        AtomValueCondition vc = (AtomValueCondition)c;
+        Object value = vc.getValue();
+        if (value == null)
+            throw new HGException("Search by null values is not supported yet.");
+        HGHandle type = hg.getTypeSystem().getTypeHandle(value);
                 
 				return instance.get(TypedValueCondition.class).
 					getMetaData(hg, new TypedValueCondition(type, 
 														    vc.getValue(), 
 															vc.getOperator()));               
-				
 			}
 		});
 		instance.put(ValueAsPredicateOnly.class, new ConditionToQuery()
@@ -291,9 +290,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});		
 		instance.put(IncidentCondition.class, new IncidentToQuery());
+		instance.put(PositionedIncidentCondition.class, new PositionedIncidentToQuery());
 		instance.put(LinkCondition.class, new LinkToQuery());
 		instance.put(SubsumesCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumesCondition sc = (SubsumesCondition)c;
@@ -325,7 +325,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});
 		instance.put(BFSCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				BFSCondition cc = (BFSCondition)c;
@@ -340,7 +340,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});
 		instance.put(DFSCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				DFSCondition cc = (DFSCondition)c;
@@ -352,7 +352,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});			
 		instance.put(SubsumedCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumedCondition sc = (SubsumedCondition)c;
@@ -384,7 +384,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});		
 		instance.put(OrderedLinkCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				OrderedLinkCondition lc = (OrderedLinkCondition)c;
@@ -422,7 +422,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});		
 		instance.put(MapCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				MapCondition mc = (MapCondition)c;
@@ -441,7 +441,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});
 		instance.put(IndexCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
 			{				
 				IndexCondition ic = (IndexCondition)c;
@@ -469,7 +469,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});		
 		instance.put(IndexedPartCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				IndexedPartCondition ip = (IndexedPartCondition)c;
@@ -487,7 +487,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		});		
 		instance.put(And.class, new AndToQuery());
 		instance.put(Or.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				Or or = (Or)c;
@@ -498,7 +498,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				
 				// TODO - we need to do better, even for this sloppy algorithm, we can
 				// can try to factor out common conditions in conjunctions, make sure 
-				// all conjuction end up in a treatable form (ordered or randomAccess) etc.
+				// all conjunction end up in a treatable form (ordered or randomAccess) etc.
 				
 				HGQuery q1 = toQuery(hg, or.get(0));
 				if (q1 == null)
@@ -549,7 +549,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 		});
 		instance.put(AtomPartCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 //				AtomPartCondition apc = (AtomPartCondition)c;
@@ -566,7 +566,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}			
 		});
 		instance.put(AtomProjectionCondition.class, new ConditionToQuery()
-        {
+		{
 			public HGQuery getQuery(final HyperGraph graph, final HGQueryCondition c)
 			{
 				final AtomProjectionCondition apc = (AtomProjectionCondition)c;
@@ -616,30 +616,30 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				};				
 			}			
 		});
-        instance.put(SubgraphContainsCondition.class, new ConditionToQuery()
-        {
-            public QueryMetaData getMetaData(HyperGraph graph,
-                                             HGQueryCondition condition)
-            {
-                return QueryMetaData.ORACCESS.clone(condition);
-            }
+		instance.put(SubgraphContainsCondition.class, new ConditionToQuery()
+		{
+      public QueryMetaData getMetaData(HyperGraph graph,
+                                       HGQueryCondition condition)
+      {
+          return QueryMetaData.ORACCESS.clone(condition);
+      }
 
-            public HGQuery<?> getQuery(final HyperGraph graph,
-                                       final HGQueryCondition condition)
-            {
-                return new HGQuery<HGPersistentHandle>()
-                {
-                    public HGSearchResult<HGPersistentHandle> execute() 
-                    {
-                        HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getReverseIndex(graph);
-                        return idx.find(((SubgraphContainsCondition)condition).getAtom().getPersistent());
-                    }
-                };              
-            }           
-        });
-        instance.put(IsCondition.class, new ConditionToQuery()
-        {
-	        public QueryMetaData getMetaData(HyperGraph graph,
+      public HGQuery<?> getQuery(final HyperGraph graph,
+                                 final HGQueryCondition condition)
+      {
+          return new HGQuery<HGPersistentHandle>()
+          {
+              public HGSearchResult<HGPersistentHandle> execute() 
+              {
+                  HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getReverseIndex(graph);
+                  return idx.find(((SubgraphContainsCondition)condition).getAtom().getPersistent());
+              }
+          };              
+      }           
+		});
+		instance.put(IsCondition.class, new ConditionToQuery()
+		{
+			public QueryMetaData getMetaData(HyperGraph graph,
 	                HGQueryCondition condition)
 			{
 	        	return QueryMetaData.ORACCESS.clone(condition);
@@ -682,7 +682,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		}
 	}
 
-	static QueryMetaData toMetaData(HyperGraph hg, HGQueryCondition condition)
+	protected static QueryMetaData toMetaData(HyperGraph hg, HGQueryCondition condition)
 	{
 		ConditionToQuery transformer = (ConditionToQuery)instance.get(condition.getClass());
 		if (transformer == null)

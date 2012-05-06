@@ -10,7 +10,7 @@ package org.hypergraphdb.query.cond2qry;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.query.HGQueryCondition;
 
-class QueryMetaData implements Cloneable
+public class QueryMetaData implements Cloneable
 {
 	public final static QueryMetaData EMPTY = new QueryMetaData(true, true, 0, 0);
 	public final static QueryMetaData MISTERY = new QueryMetaData(false, false);
