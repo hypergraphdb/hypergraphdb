@@ -180,7 +180,7 @@ public interface HGAtomCache
 	 * @param handle The <code>HGLiveHandle</code> of the atom to be removed. If the atom is
 	 * currently not in the cache, nothing should be done.
 	 */
-	void remove(final HGLiveHandle handle);
+	void remove(final HGHandle handle);
     
 	/**
 	 * <p>Freezing an atom in the cache would prevent it from ever being removed.</p>
@@ -218,7 +218,7 @@ public interface HGAtomCache
 	 * </p>
 	 * 
 	 * <p>
-	 * This method is normally invoked by HyperGraph only. The method is not guarantueed
+	 * This method is normally invoked by HyperGraph only. The method is not guaranteed
 	 * to be thread-safe. It can rely on the fact that no other threads are accessing 
 	 * the cache while it is executing.
 	 * </p>

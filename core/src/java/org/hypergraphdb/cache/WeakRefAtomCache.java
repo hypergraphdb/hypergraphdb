@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
@@ -72,10 +73,10 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
-	final private ReadWriteLock gcLock = new ReentrantReadWriteLock();
-    final private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
-	final private PhantomCleanup cleanupThread = new PhantomCleanup();
-	final private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
+	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
+  private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+	private PhantomCleanup cleanupThread = new PhantomCleanup();
+	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
 	
@@ -136,7 +137,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		        {
 		            // body.value can be null here if the atom got garbage collected before 
 		            // a transaction committed 
-		            if (body.value != null)
+		            if (body.value != null && body.value.getRef() != null) //2nd test added AP 2012-01-31
 		             {
 		                VBox<?> bb = atomsTx.boxOf(body.value.getRef());
 		                if (bb != null)
@@ -349,6 +350,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	    
 	    Object curr = handle.getRef();
 	    ((WeakHandle)handle).clear();
+	    
 	    // If we have some other Java instance as the atom, we need to force a replace
 	    // even if strictly speaking we don't need to (e.g. this happens with type wrappers)
 	    // because in case of a roll back the obligatory atoms.remove will be reversed.
@@ -403,15 +405,21 @@ public class WeakRefAtomCache implements HGAtomCache
         return atoms.get(atom);
 	}
 
-	public void remove(HGLiveHandle handle) 
+	public void remove(HGHandle handle) 
 	{
-	    if (handle == null)
-	        return;
-		atoms.remove(handle.getRef());
-		((WeakHandle)handle).clear();	    
-		liveHandles.remove(handle.getPersistent());
+		HGLiveHandle lhdl = null;
+		
+		if (handle instanceof HGLiveHandle)
+			lhdl = (HGLiveHandle)handle;
+		else 
+			lhdl = get(handle.getPersistent());
+		
+		if (lhdl != null)
+		{
+			atoms.remove(lhdl.getRef());
+			liveHandles.remove(lhdl.getPersistent());
+		}
 	}
-
 	
 	public boolean isFrozen(HGLiveHandle handle) 
 	{

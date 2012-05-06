@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
@@ -32,8 +33,8 @@ import org.hypergraphdb.event.HGAtomEvictEvent;
  * (access count and last time of access), calculates an importance function based on
  * those statistics and maintains a priority queue based on that importance. This incurs
  * a significant memory overhead on a per atom basis. But the importance-based eviction
- * policy is quite accurate. This implementation makes more sense when atoms a relatively
- * large, but we need to come up and experiment with other schemas for cache maintanance. 
+ * policy is quite accurate. This implementation makes more sense when atoms are relatively
+ * large, but we need to come up and experiment with other schemas for cache maintenance. 
  * Something based on Java weak reference might work well, for example.
  * </p>
  *
@@ -299,22 +300,31 @@ public final class DefaultAtomCache implements HGAtomCache
     }
     
 
-	/**
+    /**
      * <p>Remove a live handle and all its associations from the cache.</p>
      */
-    public void remove(HGLiveHandle handle)
+    public void remove(HGHandle handle)
     {
-    	incidenceSets.remove(handle.getPersistent());
-        atoms.remove(handle.getRef());
-        liveHandles.remove(handle.getPersistent());
-    	queueThread.addAction(new AtomDetachAction((LiveHandle)handle));        
-        ((LiveHandle)handle).setRef(null);
+			HGLiveHandle lhdl = null;
+			
+  		if (handle instanceof HGLiveHandle)
+  			lhdl = (HGLiveHandle)handle;
+  		else 
+  			lhdl = get(handle.getPersistent());
+    	
+  		if (lhdl != null)
+  		{
+	    	incidenceSets.remove(lhdl.getPersistent());
+	    	atoms.remove(lhdl.getRef());
+	    	liveHandles.remove(lhdl.getPersistent());
+	    	queueThread.addAction(new AtomDetachAction((LiveHandle)lhdl));        
+	    	((LiveHandle)lhdl).setRef(null);
+  		}
     }
     
     //
     // Actions for queue maintenance
     //
-       
     private class AtomAccessedAction implements Runnable
     {
     	LiveHandle atom;

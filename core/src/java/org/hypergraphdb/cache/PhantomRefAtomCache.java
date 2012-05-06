@@ -17,6 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGAtomAttrib;
 import org.hypergraphdb.HGAtomCache;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
@@ -297,16 +298,26 @@ public class PhantomRefAtomCache implements HGAtomCache
         }
     }
 
-    public void remove(HGLiveHandle handle) 
+    public void remove(HGHandle handle) 
     {
         lock.writeLock().lock();
         try
         {
-            atoms.remove(handle.getRef());
+      		HGLiveHandle lhdl = null;
+      		
+      		if (handle instanceof HGLiveHandle)
+      			lhdl = (HGLiveHandle)handle;
+      		else 
+      			lhdl = get(handle.getPersistent());
+      		
+      		if (lhdl != null)
+      		{
+      			atoms.remove(lhdl.getRef());
             // Shouldn't use clear here, since we might be gc-ing the ref!
-            if (handle instanceof PhantomHandle)
-                ((PhantomHandle)handle).storeRef(null);
-            liveHandles.remove(handle.getPersistent());           
+            if (lhdl instanceof PhantomHandle)
+                ((PhantomHandle)lhdl).storeRef(null);
+      			liveHandles.remove(lhdl.getPersistent());
+      		}
         }
         finally
         {
