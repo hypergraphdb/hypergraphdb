@@ -92,4 +92,26 @@ public class HGPlainLink implements HGLink, Iterable<HGHandle>
     		public HGHandle next() { return outgoingSet[curr++]; }
     	};
     }
+    
+  	public String toString() {
+  		StringBuffer result = new StringBuffer();
+  		result.append("PlainLink([");
+  		result.append(getArity());
+  		result.append(']');
+  		result.append(',');
+  		result.append(toStringHdlArr(outgoingSet));
+  		result.append(")");
+  		return result.toString();
+  	}
+  	
+  	protected String toStringHdlArr(HGHandle[] hdls) {
+  		StringBuffer result = new StringBuffer();
+  		for (int i = 0; i < hdls.length; i++) {
+  			if (i > 0)
+      		result.append(',');
+  				
+    		result.append(hdls[i]);
+  		}
+  		return result.toString();
+  	}
 }
