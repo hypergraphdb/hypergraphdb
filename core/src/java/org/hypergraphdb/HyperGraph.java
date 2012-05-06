@@ -93,8 +93,8 @@ import org.hypergraphdb.util.Pair;
 @SuppressWarnings("unchecked")
 public /*final*/ class HyperGraph implements HyperNode
 {
-    public static final HGHandle [] EMTPY_HANDLE_SET = new HGHandle[0];
-    public static final LazyRef<HGHandle[]> EMTPY_HANDLE_SET_REF = new ReadyRef<HGHandle[]>(new HGHandle[0]);
+    public static final HGHandle [] EMPTY_HANDLE_SET = new HGHandle[0];
+    public static final LazyRef<HGHandle[]> EMPTY_HANDLE_SET_REF = new ReadyRef<HGHandle[]>(new HGHandle[0]);
     public static final HGPersistentHandle [] EMPTY_PERSISTENT_HANDLE_SET = new HGPersistentHandle[0];
     
     /**
@@ -311,8 +311,8 @@ public /*final*/ class HyperGraph implements HyperNode
     	{
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
-            eventManager = config.getEventManager();	 
-            eventManager.setHyperGraph(this);
+          eventManager = config.getEventManager();	 
+          eventManager.setHyperGraph(this);
 	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
@@ -412,7 +412,7 @@ public /*final*/ class HyperGraph implements HyperNode
             return;
         ArrayList<Throwable> problems = new ArrayList<Throwable>();
         try { eventManager.dispatch(this, new HGClosingEvent()); } catch (Throwable t) { problems.add(t); }
-    	try { replace(statsHandle, stats);  					 } catch (Throwable t) { problems.add(t); }        
+    	try { replace(statsHandle, stats);  					 } catch (Throwable t) { problems.add(t); }     
         try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
     	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
     	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
@@ -1678,7 +1678,7 @@ public /*final*/ class HyperGraph implements HyperNode
 		        if (type == null)
 		            throw new HGException("Unable to find type with handle " + typeHandle + " in database.");
 		        if (link.length == 2)	        	
-		            instance = type.make(valueHandle, EMTPY_HANDLE_SET_REF, isref);
+		            instance = type.make(valueHandle, EMPTY_HANDLE_SET_REF, isref);
 		        else
 		        {
 		            //
