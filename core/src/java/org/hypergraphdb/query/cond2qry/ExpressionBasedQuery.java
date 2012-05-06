@@ -330,22 +330,22 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						Pair<HGHandle, HGIndex> p = findIndex(new ByPartIndexer(typeHandle, pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
 						if (p != null)
 						{
-						    if (typeHandle.equals(p.getFirst()))
-						    {
-    							if (byType != null)
-    							{
-    								out.remove(byType);
-    								byType = null;
-    							}
-    							else if (byTypedValue != null)
-    							{
-    								out.remove(byTypedValue);
-    								out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
-    															     byTypedValue.getOperator()));
-    								byTypedValue = null;
-    							}
-						    }
-                            out.remove(pc);						    
+							if (typeHandle.equals(p.getFirst()))
+							{
+								if (byType != null)
+								{
+									out.remove(byType);
+									byType = null;
+								}
+								else if (byTypedValue != null)
+								{
+									out.remove(byTypedValue);
+									out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
+											byTypedValue.getOperator()));
+									byTypedValue = null;
+								}
+							}
+							out.remove(pc);						    
 							out.add(new IndexedPartCondition(p.getFirst(), 
 							                                 p.getSecond(), 
 							                                 pc.getValue(), 
@@ -353,6 +353,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						}
 					}
 			}
+			
 			// Check for "by-target" indices within an OrderedLinkConditions and replace
 			// the corresponding 'incident' condition with one based on the index.
 			// Here would be an opportunity to use HGTypeStructuralInfo on a link type and

@@ -20,7 +20,6 @@ import org.hypergraphdb.query.impl.IntersectionQuery;
 //import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 
-@SuppressWarnings("unchecked")
 public class LinkToQuery implements ConditionToQuery
 {
 
@@ -42,7 +41,7 @@ public class LinkToQuery implements ConditionToQuery
 	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
 	{
 		LinkCondition lc = (LinkCondition)c;
-		ArrayList<HGQuery> L = new ArrayList<HGQuery>();
+		ArrayList<HGQuery<?>> L = new ArrayList<HGQuery<?>>();
 		for (HGHandle t : lc.targets())
 			L.add(ToQueryMap.toQuery(graph, new IncidentCondition(t)));
 		if (L.isEmpty())
@@ -51,7 +50,7 @@ public class LinkToQuery implements ConditionToQuery
 			return L.get(0);
 		else
 		{
-			Iterator<HGQuery> i = L.iterator();
+			Iterator<HGQuery<?>> i = L.iterator();
 			IntersectionQuery result = new IntersectionQuery(i.next(), 
 															 i.next(), 
 															 new ZigZagIntersectionResult());
