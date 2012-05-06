@@ -26,5 +26,5 @@ import org.hypergraphdb.HGHandle;
 public interface HGLiveHandle extends HGHandle
 {
 	byte getFlags(); 
-    Object getRef();
+	Object getRef();
 }
