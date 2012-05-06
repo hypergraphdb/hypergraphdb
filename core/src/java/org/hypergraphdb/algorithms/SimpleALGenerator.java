@@ -27,7 +27,7 @@ import org.hypergraphdb.util.TempLink;
 public class SimpleALGenerator implements HGALGenerator 
 {
 	protected HyperGraph graph;
-	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);	
+	private TempLink tempLink = new TempLink(HyperGraph.EMPTY_HANDLE_SET);	
 	private AdjIterator currIterator = null;
 	
 	protected class AdjIterator implements HGSearchResult<Pair<HGHandle,HGHandle>>

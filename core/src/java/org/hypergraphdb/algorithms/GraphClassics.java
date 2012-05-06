@@ -86,7 +86,7 @@ public class GraphClassics
 	 * <p>
 	 * Implements Dijkstra's algorithm for finding the shortest path between two
 	 * nodes (i.e. atoms). The method returns the distance between <code>start</code>
-	 * <code>goal</code> or <code>null</code> if the two atoms are not connected.  
+	 * and <code>goal</code> or <code>null</code> if the two atoms are not connected.  
 	 * </p>
 	 * 
 	 * <p>
@@ -99,7 +99,7 @@ public class GraphClassics
 	 * </p>
 	 * 
 	 * <p>
-	 * The <code>weight</code> mapping argument represents a function the computes
+	 * The <code>weight</code> mapping argument represents a function that computes
 	 * the weight of a given link. If you pass <code>null</code>, a weight of 1
 	 * will be used for all links. Note that this mapping cannot return negative 
 	 * values. Dijkstra's algorithms assumes non-negative weights. If the weights
@@ -108,7 +108,7 @@ public class GraphClassics
 	 * 
 	 * @param start
 	 * @param goal
-	 * @param adjencyGenerator
+	 * @param adjacencyGenerator
 	 * @param weight The function that computes that weight of a link for the purposes
 	 * of measuring the distance between nodes. If <code>null</code>, the constant 
 	 * function 1 will be used.
@@ -123,9 +123,9 @@ public class GraphClassics
 	 * @return The distance between <code>start</code> and <code>goal</code> or
 	 * <code>null</code> if <code>start</code> is unreachable from <code>goal</code>.
 	 */
-	public 	static Double dijkstra(final HGHandle start, 
+	public static Double dijkstra(final HGHandle start, 
 				 			       final HGHandle goal, 
-				 			       final HGALGenerator adjencyGenerator,
+				 			       final HGALGenerator adjacencyGenerator,
 				 			       Mapping<HGHandle, Double> weight,
 				 			       Map<HGHandle, Double> distanceMatrix,
 				 			       Map<HGHandle, HGHandle> predecessorMatrix)
@@ -177,11 +177,11 @@ public class GraphClassics
 			if (a.equals(goal))
 				return dm.get(goal);
 			settled.add(a);
-			HGSearchResult<Pair<HGHandle, HGHandle>> neighbors = adjencyGenerator.generate(a);
+			HGSearchResult<Pair<HGHandle, HGHandle>> neighbors = adjacencyGenerator.generate(a);
 			double weightCurrent = dm.get(a).doubleValue();
 			while (neighbors.hasNext())
 			{
-			    Pair<HGHandle, HGHandle> n = neighbors.next();
+				Pair<HGHandle, HGHandle> n = neighbors.next();
 				if (settled.contains(n.getSecond()))
 					continue;
 				Double weightN = dm.get(n.getSecond());

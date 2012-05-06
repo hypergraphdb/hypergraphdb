@@ -73,7 +73,7 @@ import org.hypergraphdb.util.TempLink;
 public class DefaultALGenerator implements HGALGenerator, CloseMe
 {
 	protected HyperGraph hg;
-	private TempLink tempLink = new TempLink(HyperGraph.EMTPY_HANDLE_SET);
+	private TempLink tempLink = new TempLink(HyperGraph.EMPTY_HANDLE_SET);
 	private HGAtomPredicate linkPredicate;
 	private HGAtomPredicate siblingPredicate;
 	private boolean returnPreceeding = true, 
