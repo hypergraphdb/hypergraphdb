@@ -32,7 +32,7 @@ import org.hypergraphdb.type.HGAtomTypeBase;
  * @author Borislav Iordanov
  *
  */
-public class EnumTypeConstructor extends  HGAtomTypeBase
+public class EnumTypeConstructor extends HGAtomTypeBase
 {
 //    public static final HGPersistentHandle HGHANDLE =
 //        HGHandleFactory.makeHandle("4e3c44ec-da21-11db-84d5-cf67a5f089dc");
@@ -46,7 +46,7 @@ public class EnumTypeConstructor extends  HGAtomTypeBase
 		// We are pretty sure that this is an atom, so we can find its handle with the by value
 		// index. And we use that to get Java class of the enum, instead of the stored one
 		// so we can gracefully handle class name changes.
-		HGPersistentHandle typeHandle = graph.getIndexManager().getIndexByValue().findFirst(handle);
+		HGPersistentHandle typeHandle = (HGPersistentHandle)graph.getIndexManager().getIndexByValue().findFirst(handle);
 		Class<Enum> cl = (Class<Enum>)graph.getTypeSystem().getClassForType(typeHandle);
 		result.setEnumType(cl);		
 //		HGPersistentHandle [] layout = graph.getStore().getLink(handle);		
