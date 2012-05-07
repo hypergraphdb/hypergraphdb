@@ -39,4 +39,9 @@ public interface HGPersistentHandle extends HGHandle, Serializable, Comparable<H
      * or 16 for UUID based handles.
      */
     byte [] toByteArray();
+    
+    /**
+     * <p>Return a value representation of the handle as a String. </p>
+     */
+    String toStringValue();
 }
