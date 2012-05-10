@@ -1,4 +1,4 @@
-package hgtest;
+package hgtest.beans;
 
 import java.io.File;
 

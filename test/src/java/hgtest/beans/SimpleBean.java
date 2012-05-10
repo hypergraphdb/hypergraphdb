@@ -1,4 +1,4 @@
-package hgtest;
+package hgtest.beans;
 
 /**
  * A simple bean with a property for each of the primitive Java types.

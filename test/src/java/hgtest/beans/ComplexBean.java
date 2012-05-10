@@ -1,7 +1,5 @@
 package hgtest.beans;
 
-import hgtest.SimpleBean;
-
 public class ComplexBean
 {
 	private String stableField;

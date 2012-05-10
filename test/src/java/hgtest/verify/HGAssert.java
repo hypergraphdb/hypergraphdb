@@ -1,9 +1,6 @@
 package hgtest.verify;
 
 import java.util.HashSet;
-
-import hgtest.links.LinkConsistency;
-
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;

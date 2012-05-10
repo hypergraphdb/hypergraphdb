@@ -1,7 +1,5 @@
 package hgtest.beans;
 
-import hgtest.SimpleBean;
-
 public class DerivedBean extends SimpleBean
 {
     private String derivedProperty = "";

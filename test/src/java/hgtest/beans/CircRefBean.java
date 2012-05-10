@@ -1,4 +1,4 @@
-package hgtest;
+package hgtest.beans;
 
 /**
  * <p>

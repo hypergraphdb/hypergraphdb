@@ -1,4 +1,4 @@
-package hgtest.links;
+package hgtest.verify;
 
 import hgtest.TestException;
 
