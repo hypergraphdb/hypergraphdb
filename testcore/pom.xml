@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hypergraphdb</artifactId>
+    <version>1.2</version>  
+  </parent>  
+  <artifactId>hgdbtestcore</artifactId>
+  <name>HyperGraphDB Core Test Project</name>    
+
+  <build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-dependency-plugin</artifactId>
+      <executions>
+	<execution>
+	  <id>unpack</id>
+	  <phase>compile</phase>
+	  <goals>
+	    <goal>unpack</goal>
+	  </goals>
+	  <configuration>
+	    <artifactItems>
+	      <artifactItem>
+		<groupId>org.hypergraphdb</groupId>
+		<artifactId>bdb-native</artifactId>
+		<version>${bdb.version}</version>
+		<classifier>${build.type}</classifier>
+		<type>jar</type>
+		<overWrite>true</overWrite>
+		<outputDirectory>${project.build.directory}/lib</outputDirectory>
+	      </artifactItem>
+	    </artifactItems>
+	  </configuration>
+	</execution>
+      </executions>
+    </plugin>
+  </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdbtest</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbnative</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>bdb-native</artifactId>
+      <version>${bdb.version}</version>
+      <classifier>${build.type}</classifier>
+      <scope>test</scope>
+    </dependency>  	
+  </dependencies>
+
+</project>
