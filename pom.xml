@@ -64,79 +64,34 @@
   </plugins>
 </pluginManagement>
     
-    <plugins>
-    	<plugin>
-    		<groupId>org.apache.maven.plugins</groupId>
-    		<artifactId>maven-compiler-plugin</artifactId>
-    		<version>2.0.2</version>
-	        <configuration>
-	          <source>1.6</source>
-	          <target>1.6</target>
-	        </configuration>    		
-    	</plugin>
-  	  <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-           <forkMode>once</forkMode> 
-           <argLine>-Djava.library.path=${project.build.directory}/lib</argLine>        
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>unpack</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>unpack</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.hypergraphdb</groupId>
-                  <artifactId>bdb-native</artifactId>
-                  <version>${bdb.version}</version>
-                  <classifier>${build.type}</classifier>
-                  <type>jar</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                </artifactItem>
-              </artifactItems>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
+<plugins>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>2.0.2</version>
+    <configuration>
+      <source>1.6</source>
+      <target>1.6</target>
+    </configuration>    		
+  </plugin>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <configuration>
+      <forkMode>once</forkMode> 
+      <argLine>-Djava.library.path=${project.build.directory}/lib</argLine>        
+    </configuration>
+  </plugin>
+</plugins>
   </build>
   
   <dependencies>
-  	<dependency>
-  		<groupId>org.hypergraphdb</groupId>
-  		<artifactId>hgdbtest</artifactId>
-  		<version>1.2</version>
-  		<scope>test</scope>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.testng</groupId>
-  		<artifactId>testng</artifactId>
-  		<version>6.3.1</version>
-  		<scope>test</scope>  		
-  	</dependency>  	
     <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>bdb-native</artifactId>
-      <version>${bdb.version}</version>
-      <classifier>${build.type}</classifier>
-      <scope>test</scope>
-    </dependency>  	
-  	<dependency>
-  		<groupId>org.hypergraphdb</groupId>
-  		<artifactId>hgbdbnative</artifactId>
-  		<version>1.2</version>
-  		<scope>test</scope>
-  	</dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.3.1</version>
+      <scope>test</scope>  		
+    </dependency>	
   </dependencies>    
   
   <!-- Build Type -->
@@ -155,15 +110,15 @@
     </profile>
     <profile>
       <id>lin32</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
       <properties>
         <build.type>lin32</build.type>
       </properties>
     </profile>
     <profile>
       <id>lin64</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
         <build.type>lin64</build.type>
       </properties>
