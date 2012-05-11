@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.util.CountMe;
 import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.je.DatabaseEntry;
@@ -28,7 +29,7 @@ import com.sleepycat.je.OperationStatus;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public abstract class IndexResultSet<T> implements HGRandomAccessResult<T> {
+public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, CountMe {
 	private static final Object UNKNOWN = new Object();
 
 	protected BJETxCursor cursor;
@@ -314,5 +315,5 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T> {
 		catch (DatabaseException ex) {
 			throw new HGException(ex);
 		}
-	}
+	}	
 }
