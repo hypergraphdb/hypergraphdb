@@ -8,8 +8,11 @@
 package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.util.Ref;
+import org.hypergraphdb.util.Var;
 
 /**
  * <p>
@@ -23,7 +26,7 @@ import org.hypergraphdb.HGPersistentHandle;
  */
 public class IncidentCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private HGHandle target;
+	private Ref<HGHandle> target;
 	
 	public IncidentCondition()
 	{
@@ -31,17 +34,30 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 	}
 	public IncidentCondition(HGHandle target)
 	{
-		this.target = target;
+		this.target = hg.constant(target);
 	}
 	
-	public HGHandle getTarget()
+	public IncidentCondition(Ref<HGHandle> target)
+	{
+		this.target = target;
+	}	
+	
+	public Ref<HGHandle> getTargetRef()
 	{
 		return target;
 	}
 	
+	public HGHandle getTarget()
+	{
+		return target.get();
+	}
+	
 	public void setTarget(HGHandle target)
 	{
-		this.target = target;
+		if (this.target instanceof Var)
+			((Var<HGHandle>)this.target).set(target);
+		else
+			this.target = hg.constant(target);
 	}
 
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
@@ -51,7 +67,7 @@ public class IncidentCondition implements HGQueryCondition, HGAtomPredicate
 		// So we simply fetch the target set of 'handle' and check whether
 		// 'target' is part of it.
 		//
-		HGPersistentHandle targetPHandle = hg.getPersistentHandle(target);
+		HGPersistentHandle targetPHandle = hg.getPersistentHandle(target.get());
 		HGPersistentHandle [] targetSet = hg.getStore().getLink(hg.getPersistentHandle(handle));
 		for (int i = 2; i < targetSet.length; i++)
 			if (targetPHandle.equals(targetSet[i]))

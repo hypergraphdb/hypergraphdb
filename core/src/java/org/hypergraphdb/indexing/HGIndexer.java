@@ -99,7 +99,7 @@ public interface HGIndexer<KeyType, ValueType>
     /**
      * <p>Return the name of the index.</p>  
      */
-    String getName();
+ //   String getName();
     
     /**
      * <p>Return the handle of the atom type all of whose instances should be indexed
@@ -116,15 +116,15 @@ public interface HGIndexer<KeyType, ValueType>
     /**
      * <p>Set the name of the index.</p>  
      */
-    void setName(String name);
+//    void setName(String name);
 	
-		/**
-		 * <p>Declared to enforce implementation.</p> 
-		 */
-		int hashCode();
-		
-		/**
-		 * <p>Declared to enforce implementation.</p> 
-		 */
-		boolean equals(Object other);
+	/**
+	 * <p>Declared to enforce implementation.</p> 
+	 */
+	int hashCode();
+	
+	/**
+	 * <p>Declared to enforce implementation.</p> 
+	 */
+	boolean equals(Object other);
 }

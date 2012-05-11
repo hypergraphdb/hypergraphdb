@@ -24,6 +24,7 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.VarContext;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
@@ -43,7 +44,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 {
 	private HGQuery<ResultType> query = null; 
 	private HGQueryCondition condition;
-		
+	private boolean hasVarContext = false;
 	private Pair<HGHandle, HGIndex> findIndex(HGKeyIndexer indexer)
 	{
 	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
@@ -620,20 +621,46 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
             preprocess(((MapCondition)c).getCondition());
         }
 	}
-	 
+	
+	public ExpressionBasedQuery(final HyperGraph graph, boolean withVarContext)
+	{
+		this.graph = graph;
+		if (this.hasVarContext = withVarContext)
+			this.ctx = VarContext.pushFrame();		
+	}
+	
 	public ExpressionBasedQuery(final HyperGraph graph, final HGQueryCondition condition)
 	{
-		this.graph = graph;	
-		// this is temporary, to deal with the 'hg.anyHandle' issue 
-		// and the handle factory no longer being static		
-		preprocess(condition);  
-		this.condition = graph.getTransactionManager().ensureTransaction(new Callable<HGQueryCondition>() {
-			public HGQueryCondition call()
-			{
-				return simplify(toDNF(expand(graph, condition))); 
-			}
-		});
-		query = ToQueryMap.toQuery(graph, this.condition);
+		this.graph = graph;
+		compile(condition);
+	}
+	
+	public HGQuery<ResultType> compile(final HGQueryCondition condition)
+	{
+		// The condition was constructed before the make method is called and all variables have been
+		// added to the current top-level context. The make method takes ownership of that context
+		// and removes from the stack at the end. The correct way to use variables in query
+		// conditions is calling the varContext() method before calling HGQuery.make
+		try
+		{
+			// this is temporary, to deal with the 'hg.anyHandle' issue 
+			// and the handle factory no longer being static		
+			preprocess(condition);  
+			this.condition = graph.getTransactionManager().ensureTransaction(new Callable<HGQueryCondition>() {
+				public HGQueryCondition call()
+				{
+					return simplify(toDNF(expand(graph, condition))); 
+				}
+			});
+			query = ToQueryMap.toQuery(graph, this.condition);		
+			return this;
+		}
+		finally
+		{
+			// Cleanup thread-bound variable context
+			if (hasVarContext)
+				VarContext.popFrame();
+		}		
 	}
 	
     public HGSearchResult<ResultType> execute()

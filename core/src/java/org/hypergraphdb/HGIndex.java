@@ -66,7 +66,6 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
      * @return The first entry for that key.
      */
     ValueType findFirst(KeyType key);
-    ValueType getData(KeyType key);
     
     /**
      * <p>

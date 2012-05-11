@@ -12,29 +12,38 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 
 public class IncidentToQuery implements ConditionToQuery
 {
-
 	public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
 	{
 		QueryMetaData x = QueryMetaData.ORACCESS.clone(c);
 		x.predicateCost = 1;
-		final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());		
-		x.sizeLB = x.sizeExpected = x.sizeUB = graph.getIncidenceSet(handle).size();
+		IncidentCondition ic = (IncidentCondition)c;
+		if (hg.isVar(ic.getTargetRef()))
+		{
+			x.sizeExpected = 1000; // incidence sets are usually small...
+		}
+		else
+		{
+			final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());		
+			x.sizeLB = x.sizeExpected = x.sizeUB = graph.getIncidenceSet(handle).size();
+		}
 		return x;
 	}
 
 	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
 	{
-		final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());
+		final IncidentCondition ic = (IncidentCondition)c;
+//		final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());
 		return new HGQuery<HGHandle>()
 		{
 			public HGSearchResult<HGHandle> execute()
 			{
-				return graph.getIncidenceSet(handle).getSearchResult();
+				return graph.getIncidenceSet(ic.getTarget()).getSearchResult();
 			}
 		};
 	}

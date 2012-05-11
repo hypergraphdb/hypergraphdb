@@ -354,7 +354,6 @@ public /*final*/ class HyperGraph implements HyperNode
 	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
 	        typeSystem.bootstrap(config.getTypeConfiguration());                 
 	        getTransactionManager().endTransaction(true);
-          System.out.println("TOP HANDLE: " + typeSystem.getTop());
             
 	        idx_manager.loadIndexers();
     		            

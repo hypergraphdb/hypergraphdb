@@ -12,13 +12,42 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
-
+import org.hypergraphdb.atom.HGSubgraph;
+import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
-import org.hypergraphdb.query.*;
+import org.hypergraphdb.query.And;
+import org.hypergraphdb.query.AnyAtomCondition;
+import org.hypergraphdb.query.ArityCondition;
+import org.hypergraphdb.query.AtomPartCondition;
+import org.hypergraphdb.query.AtomPartRegExPredicate;
+import org.hypergraphdb.query.AtomTypeCondition;
+import org.hypergraphdb.query.AtomValueCondition;
+import org.hypergraphdb.query.AtomValueRegExPredicate;
+import org.hypergraphdb.query.BFSCondition;
+import org.hypergraphdb.query.ComparisonOperator;
+import org.hypergraphdb.query.DFSCondition;
+import org.hypergraphdb.query.DisconnectedPredicate;
+import org.hypergraphdb.query.HGAtomPredicate;
+import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.query.IncidentCondition;
+import org.hypergraphdb.query.IsCondition;
+import org.hypergraphdb.query.LinkCondition;
+import org.hypergraphdb.query.MapCondition;
+import org.hypergraphdb.query.Not;
+import org.hypergraphdb.query.Or;
+import org.hypergraphdb.query.OrderedLinkCondition;
+import org.hypergraphdb.query.PositionedIncidentCondition;
+import org.hypergraphdb.query.SubgraphContainsCondition;
+import org.hypergraphdb.query.SubgraphMemberCondition;
+import org.hypergraphdb.query.SubsumedCondition;
+import org.hypergraphdb.query.SubsumesCondition;
+import org.hypergraphdb.query.TargetCondition;
+import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.DerefMapping;
 import org.hypergraphdb.query.impl.LinkProjectionMapping;
@@ -28,8 +57,12 @@ import org.hypergraphdb.type.HGCompositeType;
 import org.hypergraphdb.type.HGTypedValue;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.CompositeMapping;
+import org.hypergraphdb.util.Constant;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.Ref;
+import org.hypergraphdb.util.Var;
+import org.hypergraphdb.util.VarContext;
 import org.hypergraphdb.util.RelativePosition;
 
 /**
@@ -46,6 +79,19 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 {  	
 	protected HyperGraph graph;	
 	
+	protected VarContext ctx = VarContext.ctx();
+	
+	public <T> Var<T> var(String name)
+	{
+		return ctx.get(name);
+	}
+	
+	public <T> HGQuery<SearchResult> var(String name, T value)
+	{
+		ctx.get(name).set(value);
+		return this;
+	}
+		
 	/**
 	 * A query that return the empty result set.
 	 */
@@ -80,6 +126,21 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 		return (HGQuery<SearchResult>)new ExpressionBasedQuery(graph, condition);
 	}
 	
+	public HGQuery<SearchResult> compile(HGQueryCondition condition)
+	{
+		return this;		
+	}
+	
+	public static <SearchResult> HGQuery<SearchResult> make(Class<SearchResult> type, HyperGraph graph)
+	{
+		return new ExpressionBasedQuery(graph, true);
+	}
+
+	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph graph)
+	{
+		return new ExpressionBasedQuery(graph, true);
+	}
+	
 	/**
 	 * <p>Return the {@link HyperGraph} instance against which this query is executed.</p>
 	 */
@@ -110,6 +171,62 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	 */
 	public abstract HGSearchResult<SearchResult> execute();
     
+	/**
+	 * <p>
+	 * Execute the query and accumulate the results in a <code>List</code>.
+	 * </p>
+	 */
+	public List<SearchResult> executeInList()
+	{
+    	return getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<SearchResult>>() {
+        	public List<SearchResult> call()
+        	{        	
+        		ArrayList<SearchResult> result = new ArrayList<SearchResult>();
+        		HGSearchResult<SearchResult> rs = null;
+        		try
+        		{
+        			rs = execute();
+        			while (rs.hasNext())
+        				result.add(rs.next());
+        			return result;
+        		}
+        		finally
+        		{
+        			if (rs != null) rs.close();
+        		}
+        	}
+        	},
+        	HGTransactionConfig.READONLY);				
+	}
+	
+	/**
+	 * <p>
+	 * Execute the query and accumulate the results in a <code>List</code>.
+	 * </p>
+	 */
+	public Set<SearchResult> executeInSet()
+	{
+    	return getHyperGraph().getTransactionManager().ensureTransaction(new Callable<Set<SearchResult>>() {
+        	public Set<SearchResult> call()
+        	{            	
+        		HashSet<SearchResult> result = new HashSet<SearchResult>();
+        		HGSearchResult<SearchResult> rs = null;
+        		try
+        		{
+        			rs = execute();
+        			while (rs.hasNext())
+        				result.add(rs.next());
+        			return result;
+        		}
+        		finally
+        		{
+        			if (rs != null) rs.close();
+        		}      	
+        	}
+        	}, 
+        	HGTransactionConfig.READONLY);						
+	}
+	
     /**
      * <p>
      * This class serves as a namespace to a set of syntactically concise functions
@@ -524,20 +641,22 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see IncidentCondition
          */
         public static IncidentCondition incident(HGHandle atomHandle) { return new IncidentCondition(atomHandle); }
+        public static IncidentCondition incident(Ref<?> atomHandle) { return new IncidentCondition((Ref<HGHandle>)atomHandle); }
         
-    		/**
-    		 * <p>
-    		 * Return a condition constraining the query result set to links pointing to a target atom
-    		 * positioned in a predetermined way in the target set. 
-    		 * </p>
-    		 * 
-    		 * @param target
-    		 *          The target atom specified as a {@link HGHandle}. 
-    		 * @param position 
-    		 *          The position of the target atom within the target set. 
-    		 * @see PositionedIncidentCondition
-    		 */
-        public static PositionedIncidentCondition positionedLink(HGHandle target, RelativePosition position) { return new PositionedIncidentCondition(target, position); }
+		/**
+		 * <p>
+		 * Return a condition constraining the query result set to links pointing to a target atom
+		 * positioned in a predetermined way in the target set. 
+		 * </p>
+		 * 
+		 * @param target
+		 *          The target atom specified as a {@link HGHandle}. 
+		 * @param position 
+		 *          The position of the target atom within the target set. 
+		 * @see PositionedIncidentCondition
+		 */
+        public static PositionedIncidentCondition positionedLink(HGHandle target, RelativePosition position) 
+        	{ return new PositionedIncidentCondition(target, position); }
         
         /**
          * <p>Return a condition constraining the query result set to links pointing to a target set 
@@ -777,6 +896,19 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
         /**
          * <p>
+         * Short for <code>hg.apply(hg.deref(graph), condition)</code> - assuming the <code>condition</code>
+         * parameter yields a result set of {@link HGHandle}s, the returned condition will yield a result set
+         * of atoms loaded from the <code>graph</code> parameter. 
+         * </p>
+         * 
+         * @param graph
+         * @param condition
+         * @return
+         */
+        public static HGQueryCondition deref(HyperGraph graph, HGQueryCondition condition) { return apply(deref(graph), condition); }
+        
+        /**
+         * <p>
          * Return a {@link Mapping} that given a handle to a link will return the target (handle) at the specified
          * target position. This is a {@link CompositeMapping} of <code>deref(graph)</code> and <code>linkProjection(targetPosition)</code>.
          * </p>
@@ -946,6 +1078,53 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          */
         public static HGHandle anyHandle() { return the_any_handle; }
         
+        /**
+         * <p>Create a new variable with an initial value and attach it to the current variable context.</p>
+         * 
+         * @param name The name of the variable. Any previous variable with that name in the current context will
+         * be overriden.
+         * @param initialValue The initial value of the variable.
+         * @return The {@link Var} instance.
+         */
+        public static <T> Var<T> var(String name, T initialValue) 
+        {
+        	Var<T> v = VarContext.ctx().get(name);
+        	v.set(initialValue);
+        	return v;
+        }
+
+        /**
+         * <p>Create a new variable and attach it to the current variable context.</p>
+         * 
+         * @param name The name of the variable. Any previous variable with that name in the current context will
+         * be overriden.
+         * @return The {@link Var} instance.
+         */
+        public static <T> Var<T> var(String name) 
+        {
+        	return VarContext.ctx().get(name);
+        }
+  
+        /**
+         * <p>Create a new constant reference. The value of this reference cannot be changed.</p>
+         * 
+         * @param value The value of the constant.
+         * @return An instance of {@link Constant} whose {@link Constant#get()} method will return
+         * the passed in value.
+         */
+        public static <T> Ref<T> constant(T value)
+        {
+        	return new Constant<T>(value);
+        }
+        
+        /**
+         * <p>Return <code>true</code> if the passed in {@link Ref} is a {@link Var} and
+         * <code>false</code> otherwise.
+         */
+        public static <T> boolean isVar(Ref<T> ref)
+        {
+        	return ref instanceof Var;
+        }
         
         /**
          * <p>

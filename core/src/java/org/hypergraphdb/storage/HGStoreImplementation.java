@@ -35,7 +35,7 @@ public interface HGStoreImplementation
     <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
                                                               ByteArrayConverter<KeyType> keyConverter, 
                                                               ByteArrayConverter<ValueType> valueConverter,
-                                                              Comparator<byte[]> comparator,
+                                                              Comparator<?> comparator,
                                                               boolean isBidirectional,
                                                               boolean createIfNecessary);
     void removeIndex(String name);    
