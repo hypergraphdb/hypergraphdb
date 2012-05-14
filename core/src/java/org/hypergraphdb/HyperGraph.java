@@ -1182,8 +1182,10 @@ public /*final*/ class HyperGraph implements HyperNode
     	}
     	else
     	{
-    		atomType = typeSystem.getTypeHandle(atom.getClass());
+    		atomType = typeSystem.getTypeHandle(atom);
             if (atomType == null)
+            	atomType = typeSystem.getTypeHandle(atom.getClass());
+            if (atomType == null)            	
             	throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());    		
     	}
         return replace(handle, atom, atomType);        
@@ -2069,12 +2071,18 @@ public /*final*/ class HyperGraph implements HyperNode
 
 	    	TypeUtils.releaseValue(HyperGraph.this, oldType, layout[1]);
 	    	//oldType.release(layout[1]);
-	    	layout[1] = TypeUtils.storeValue(this, newValue, type);
+	    	if (newValue instanceof HGAtomType)
+	    		layout[1] = TypeUtils.storeValue(
+	    				this, 
+	    				typeSystem.getSchema().fromRuntimeType(pHandle, (HGAtomType)newValue), 
+	    				type);
+	    	else
+	    		layout[1] = TypeUtils.storeValue(this, newValue, type);
 	    	layout[0] = getPersistentHandle(typeHandle);
 	    	indexByValue.removeEntry(oldValueHandle, pHandle);
 	    	indexByValue.addEntry(layout[1], pHandle);
 	    	
-        HGPersistentHandle [] newLayout;
+	    	HGPersistentHandle [] newLayout;
 	        
 	    	if (atom instanceof HGLink)
 	    	{
@@ -2137,6 +2145,8 @@ public /*final*/ class HyperGraph implements HyperNode
     	indexByValue.removeEntry(layout[1], instanceHandle);
     	layout[1] = TypeUtils.storeValue(this, oldInstance, newType);
     	indexByValue.addEntry(layout[1], instanceHandle);
+    	store.store(instanceHandle, layout);
+    	
     	Object newInstance = rawMake(layout, newType, instanceHandle);
 		
     	HGLiveHandle instanceLiveHandle = cache.get(instanceHandle);

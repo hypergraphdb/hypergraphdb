@@ -200,6 +200,14 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
         return result;
     }
 
+    public HGAtomType fromRuntimeType(HGHandle typeHandle, HGAtomType typeInstance)
+    {
+    	if (typeInstance instanceof JavaBeanBinding)
+    		return ((JavaBeanBinding)typeInstance).getHGType();
+    	else
+    		return typeInstance;
+    }
+    
     public URI toTypeURI(Object object)
     {
         return object == null ? null : toTypeURI(object.getClass());

@@ -69,7 +69,35 @@ public interface HGTypeSchema<TypeDescriptor>
      */
     TypeDescriptor getTypeDescriptor(URI typeId);    
     
+    /**
+     * <p>
+     * The type schema may wrap a given HyperGraphDB type into a different
+     * runtime instance. This is useful when atoms, and therefore in all likelihood
+     * their types as well, have different runtime representations depending on 
+     * the current type schema in effect. Every time a type is loaded by the type
+     * system, the <code>toRuntimeType</code> of the current type schema is called 
+     * to give it a change to provide a different representation. 
+     * </p>
+     * 
+     * @param typeHandle The {@link HGHandle} of the type.
+     * @param typeInstance The type instance constructed by default from the 
+     * type system.
+     * @return A (possibly) different runtime representation of the type.
+     */
     HGAtomType toRuntimeType(HGHandle typeHandle, HGAtomType typeInstance);
+    
+    /**
+     * <p>
+     * If a given type is wrapped under a different runtime representation by 
+     * the {@link #toRuntimeType(HGHandle, HGAtomType)} method, this method 
+     * retrieves the underlying default representation as constructed by the 
+     * type system.
+     * </p>
+     * @param typeHandle The {@link HGHandle} of the type.
+     * @param typeInstance A modified runtime representation of the type.
+     * @return
+     */
+    HGAtomType fromRuntimeType(HGHandle typeHandle, HGAtomType typeInstance);
     
     URI toTypeURI(Object object);
     URI toTypeURI(Class<?> javaClass);
