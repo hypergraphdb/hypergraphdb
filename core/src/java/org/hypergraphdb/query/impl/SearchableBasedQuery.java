@@ -12,6 +12,7 @@ import org.hypergraphdb.HGOrderedSearchable;
 import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.query.ComparisonOperator;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -24,7 +25,7 @@ import org.hypergraphdb.query.ComparisonOperator;
 public class SearchableBasedQuery<Key, Value> extends KeyBasedQuery<Key, Value>
 {
     protected HGSearchable<Key, Value> searchable;
-    protected Key key;    
+    protected Ref<Key> key;    
     private ComparisonOperator operator = ComparisonOperator.EQ;
     
     /**
@@ -42,39 +43,53 @@ public class SearchableBasedQuery<Key, Value> extends KeyBasedQuery<Key, Value>
      */
     public SearchableBasedQuery(HGSearchable<Key, Value> searchable, Key key, ComparisonOperator operator)
     {
-        this.searchable = searchable;
-        this.key = key;
-        this.operator = operator;
+        this(searchable, hg.constant(key), operator);
     }
     
+    public SearchableBasedQuery(HGSearchable<Key, Value> searchable, Ref<Key> key, ComparisonOperator operator)
+    {
+        this.searchable = searchable;
+        this.key = key;
+        this.operator = operator;    	
+    }
     
     public HGSearchResult<Value> execute()
     {
         switch (operator)
         {
             case EQ:
-                return searchable.find(key);
+                return searchable.find(key.get());
             case LT:
-                return ((HGOrderedSearchable<Key, Value>)searchable).findLT(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findLT(key.get());
             case GT:
-                return ((HGOrderedSearchable<Key, Value>)searchable).findGT(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findGT(key.get());
             case LTE:
-                return ((HGOrderedSearchable<Key, Value>)searchable).findLTE(key);
+                return ((HGOrderedSearchable<Key, Value>)searchable).findLTE(key.get());
             case GTE:
-                return ((HGOrderedSearchable<Key, Value>)searchable).findGTE(key);   
+                return ((HGOrderedSearchable<Key, Value>)searchable).findGTE(key.get());   
             default:
                 throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
         }
     }
     
-    public void setKey(Key key)
+    public void setKeyReference(Ref<Key> key)
     {
     	this.key = key;
     }
     
-    public Key getKey()
+    public Ref<Key> getKeyReference()
     {
     	return key;
+    }
+    
+    public void setKey(Key key)
+    {
+    	this.key = hg.constant(key);
+    }
+    
+    public Key getKey()
+    {
+    	return key.get();
     }
     
     public void setOperator(ComparisonOperator operator)

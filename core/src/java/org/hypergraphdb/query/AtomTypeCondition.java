@@ -10,7 +10,9 @@ package org.hypergraphdb.query;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -24,60 +26,95 @@ import org.hypergraphdb.util.HGUtils;
  * <p>
  * The type can be specified either as a HyperGraph handle or as a Java class.
  * In the latter, the corresponding HyperGraph will be retrieved at appropriate
- * times.
+ * times. However, those two properties overlap each other, in the sense the you
+ * can set one or the other, but not both at the same time. If you set the type
+ * as a Java class, the corresponding {@link HGHandle} will be retrieved every time
+ * it is needed. In particular, if this is used as a filtering condition applied
+ * iteratively over a large result set, performance will be hurt by the extra step.
  * </p>
  * 
  * @author Borislav Iordanov
  */
-public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate 
+public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate, TypeCondition 
 {
-    private Class<?> c;
-	private HGHandle handle;
+    private Ref<?> type;
 	
 	public AtomTypeCondition()
 	{
 		
 	}
 	
+	/**
+	 * <p>Construct a new atom type condition.</p>
+	 *  
+	 * @param typeRef A {@link Ref} to a Java <code>Class</code> or a {@link HGHandle}.
+	 */
+	public AtomTypeCondition(Ref<?> typeRef)
+	{
+		this.type = typeRef;
+	}
+	
     public AtomTypeCondition(Class<?> javaClass)
     {
-        if (javaClass == null)
-            throw new NullPointerException();
-        this.c = javaClass;
+    	this(hg.constant(javaClass));
     }
     
 	public AtomTypeCondition(HGHandle typeHandle)
 	{
-        if (typeHandle == null)
-            throw new NullPointerException("Type handle is null.");
-		this.handle = typeHandle;
+		this(hg.constant(typeHandle));
 	}
 	
 	public void setJavaClass(Class<?> c)
 	{
-		this.c = c;
+		this.type = hg.constant(c);
 	}
 	
     public Class<?> getJavaClass()
     {
-        return c;
+        Object t = type.get();
+        return t instanceof Class ? (Class<?>)t : null;
     }
     
     public void setTypeHandle(HGHandle handle)
     {
-    	this.handle = handle;
+    	this.type = hg.constant(handle); 
     }
     
 	public HGHandle getTypeHandle()
 	{
-		return handle;
+        Object t = type.get();
+        return t instanceof HGHandle ? (HGHandle)t : null;
+	}
+
+	public HGHandle getTypeHandle(HyperGraph graph)
+	{
+		Object t = type.get();
+		if (t instanceof HGHandle)
+			return (HGHandle)t;
+		else
+			return graph.getTypeSystem().getTypeHandle((Class<?>)t);
+	}
+	
+	public Ref<?> getTypeReference() 
+	{
+		return type;
+	}
+	
+	public void setTypeReference(Ref<?> type)
+	{
+		this.type = type;
 	}
 	
 	public boolean satisfies(HyperGraph hg, HGHandle  value)
 	{
-        HGHandle h = handle;
-        if (h == null)
-            h = hg.getTypeSystem().getTypeHandle(c);
+        HGHandle h = null;
+        Object t = type.get();
+        if (t == null)
+        	throw new NullPointerException("AtomTypeCondition with null type.");
+        else if (t instanceof HGHandle)
+        	h = (HGHandle)t;
+        else
+        	h = hg.getTypeSystem().getTypeHandle((Class)t);
         HGHandle typeOfValue = hg.getType(value);
         if (typeOfValue == null)
         	throw new HGException("Could not get type of atom " + value);
@@ -86,7 +123,7 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
 	
 	public int hashCode() 
 	{ 
-		return  c == null ? handle.hashCode() : c.hashCode();  
+		return  type == null ? 0 : HGUtils.hashIt(type.get());  
 	}
 	
 	public boolean equals(Object x)
@@ -96,14 +133,15 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate
 		else
 		{
 			AtomTypeCondition cond = (AtomTypeCondition)x;
-			return c == null ? HGUtils.eq(handle, cond.handle) : HGUtils.eq(c, cond.c);
+			return type == null ? cond.type == null : 
+				cond.type == null ? false : HGUtils.eq(type.get(), cond.type.get());
 		}
 	}
 	
 	public String toString()
 	{
 		StringBuffer result = new StringBuffer("typeIs(");
-		result.append(c != null ? c.getName() : handle);
+		result.append(getJavaClass() != null ? getJavaClass().getName() : getTypeHandle().getPersistent());
 		result.append(")");
 		return result.toString();
 	}

@@ -22,6 +22,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.atom.HGSubgraph;
@@ -70,6 +71,7 @@ import org.hypergraphdb.query.impl.UnionQuery;
 //import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.ArrayBasedSet;
+import org.hypergraphdb.util.Ref;
 
 @SuppressWarnings("unchecked")
 public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
@@ -116,21 +118,38 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				return graph.getPersistentHandle(h);
 			}
 			
-			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
-			{
+			public HGQuery<?> getQuery(final HyperGraph graph, HGQueryCondition c)
+			{				
+				final AtomTypeCondition ac = (AtomTypeCondition)c;
 				return new SearchableBasedQuery(graph.getIndexManager().getIndexByType(), 
-												getTypeHandle(graph, c),
+												new Ref<HGPersistentHandle>() {
+												public HGPersistentHandle get()
+												{
+													return ac.getTypeHandle(graph).getPersistent();
+												}},
 												ComparisonOperator.EQ);									
 			}
 			public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
 			{
+				AtomTypeCondition ac = (AtomTypeCondition)c;
 				QueryMetaData x = QueryMetaData.ORACCESS.clone(c);
 				x.predicateCost = 1;
-				x.sizeExpected = 
-				x.sizeLB = 
-				x.sizeUB = graph.getIndexManager().getIndexByType().count(getTypeHandle(graph, c));
+				if (hg.isVar(ac.getTypeReference()))
+				{
+					// TODO: maybe we can get better estimates here if we collect some global
+					// database statistics, e.g. in the HGStats bean
+//					x.sizeExpected = ...
+//					x.sizeLB = ...
+//					x.sizeUB = ..
+				}
+				else
+				{
+					x.sizeExpected = 
+							x.sizeLB = 
+							x.sizeUB = graph.getIndexManager().getIndexByType().count(ac.getTypeHandle(graph).getPersistent());
+				}
 				return x;
-			}			
+			}
 		});
 		instance.put(TypePlusCondition.class, new ConditionToQuery()
 		{
@@ -151,67 +170,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
                 return toMetaData(hg, orCondition); //instance.get(Or.class).getMetaData(hg, orCondition);
 			}			
 		});		
-		instance.put(TypedValueCondition.class, new ConditionToQuery()
-		{
-			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
-			{
-        //
-        // TODO: how to we deal with null values? For the String
-        // primitive type at least, nulls are possible.
-        //
-				TypedValueCondition vc = (TypedValueCondition)c;
-        Object value = vc.getValue();
-        HGHandle typeHandle = vc.getTypeHandle();
-        if (typeHandle == null)
-        	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
-        HGAtomType type = hg.getTypeSystem().getType(typeHandle);
-        if (type == null)
-            throw new HGException("Cannot search by value " + value + 
-            		" of unknown HGAtomType with handle " + typeHandle);
-        
-        if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
-        	type instanceof HGOrderedSearchable)
-        	//
-        	// Find value handle by value and pipe into 'indexByValue' search, then filter
-        	// by the expected type to make sure that it matches the actual type of the atoms
-        	// so far obtained. 
-        	//
-        	return new PredicateBasedFilter(hg,
-        			new PipeQuery(new SearchableBasedQuery((HGSearchable<?,?>)type, value, vc.getOperator()),
-        						  new SearchableBasedQuery(hg.getIndexManager().getIndexByValue(), 
-                 										  null,
-                 										  ComparisonOperator.EQ)),
-                 	new AtomTypeCondition(typeHandle));     	
-        else // else, we need to scan all atoms of the given type 
-        	return new PredicateBasedFilter(hg,
-        			new IndexBasedQuery(hg.getIndexManager().getIndexByType(), 
-        								hg.getPersistentHandle(typeHandle)),
-        			new AtomValueCondition(vc.getValue(), vc.getOperator()));
-			}
-			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
-			{
-				TypedValueCondition vc = (TypedValueCondition)c;
-        HGHandle typeHandle = vc.getTypeHandle();
-        if (typeHandle == null)
-        	typeHandle = hg.getTypeSystem().getTypeHandle(vc.getJavaClass());
-        HGAtomType type = hg.getTypeSystem().getType(typeHandle);
-        if (type == null)
-            throw new HGException("Cannot search by value" + 
-            		" of unknown HGAtomType with handle " + typeHandle);
-        QueryMetaData qmd;
-        if (type instanceof HGSearchable && vc.getOperator() == ComparisonOperator.EQ ||
-        	type instanceof HGOrderedSearchable)
-        {
-        	 qmd = QueryMetaData.MISTERY.clone(c);
-        }
-        else
-        {
-        	qmd = QueryMetaData.ORDERED.clone(c);
-        }
-        qmd.predicateCost = 2.5;
-        return qmd;
-			}	
-		}); 
+		instance.put(TypedValueCondition.class, new TypedValueToQuery()); 
 		instance.put(AtomValueCondition.class, new ConditionToQuery()
 		{
 			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)

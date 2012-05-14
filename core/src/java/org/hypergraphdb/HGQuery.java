@@ -116,6 +116,13 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	 * complex one involving some structural pattern will burn valuable extra cycles in building a query plan.  
 	 * </p>
 	 * 
+	 * <p>
+	 * <b>IMPORTANT NOTE:</b> This method does not support variables in the query condition. If your
+	 * condition contains variables created by one of the {@link #var(String)} methods, please use
+	 * the {@link #make(Class, HyperGraph)} to create the query and then invoke its {@link #compile(HGQueryCondition)}
+	 * method to specify the condition.
+	 * </p>
+	 * 
 	 * @param <SearchResult> The type of the return result. 
 	 * @param graph The {@link HyperGraph} instance against which the query will be executed.
 	 * @param condition The {@link HGQueryCondition} specifying which atoms to return from the graph.
@@ -126,17 +133,26 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 		return (HGQuery<SearchResult>)new ExpressionBasedQuery(graph, condition);
 	}
 	
+	/**
+	 * <p>
+	 * Compile the passed in condition as <code>this</code> query object and return <code>this</code>. 
+	 * </p>
+	 */
 	public HGQuery<SearchResult> compile(HGQueryCondition condition)
 	{
 		return this;		
 	}
-	
-	public static <SearchResult> HGQuery<SearchResult> make(Class<SearchResult> type, HyperGraph graph)
-	{
-		return new ExpressionBasedQuery(graph, true);
-	}
 
-	public static <SearchResult> HGQuery<SearchResult> make(HyperGraph graph)
+	/**
+	 * <p>
+	 * Create a new query with the given result type and bound to the given {@link HyperGraph} instance.
+	 * </p>
+	 * @param type The type of the result objects. This parameter is only necessary to avoid type casts.
+	 * @param graph The database instance.
+	 * @return A new, empty <code>HGQuery</code> object. The returned query doesn't have a condition yet. 
+	 * Please call its {@link #compile(HGQueryCondition)} method in order to specify a condition. 
+	 */
+	public static <SearchResult> HGQuery<SearchResult> make(Class<SearchResult> type, HyperGraph graph)
 	{
 		return new ExpressionBasedQuery(graph, true);
 	}
@@ -557,12 +573,22 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomTypeCondition
          */
         public static AtomTypeCondition type(HGHandle typeHandle) { return new AtomTypeCondition(typeHandle); }
+        
+        /**
+         * <p>Return a {@link HGQueryCondition} constraining the type of the result
+         * to the type identified by <code>type</code> {@link Ref}. The content of the reference
+         * can be a <code>Class</code> or a {@HGLink} and you can use a variable reference in a
+         * compiled query. </p>
+         */
+        public static AtomTypeCondition type(Ref<?> type) { return new AtomTypeCondition(type); }
+        
         /**
          * <p>Return a {@link HGQueryCondition} constraining the type of the result
          * to the type corresponding to the Java class <code>clazz</code>.</p>
          * @see AtomTypeCondition
          */
         public static AtomTypeCondition type(Class<?> clazz) { return new AtomTypeCondition(clazz); }
+
         /**
          * <p>Return a {@link HGQueryCondition} constraining the type of the result
          * to the type identified by <code>typeHandle</code> and all its sub-types. The set

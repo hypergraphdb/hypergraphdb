@@ -8,8 +8,10 @@
 package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * 
@@ -27,35 +29,44 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public class TypedValueCondition extends AtomValueCondition
+public class TypedValueCondition extends AtomValueCondition implements TypeCondition
 {
-	private Class<?> javaClass;
-	private HGHandle typeHandle;
+	private Ref<?> type;
 
 	public TypedValueCondition()
 	{
 		
 	}
+	
+	public TypedValueCondition(Ref<?> type, Object value)
+	{
+		this(type, value, ComparisonOperator.EQ);
+	}
+	
 	public TypedValueCondition(HGHandle typeHandle, Object value)
 	{
-		this(typeHandle, value, ComparisonOperator.EQ);
+		this(hg.constant(typeHandle), value, ComparisonOperator.EQ);
 	}
 	
 	public TypedValueCondition(Class<?> javaClass, Object value)
 	{
-		this(javaClass, value, ComparisonOperator.EQ);
+		this(hg.constant(javaClass), value, ComparisonOperator.EQ);
+	}
+	
+	public TypedValueCondition(Ref<?> type, Object value, ComparisonOperator op)
+	{
+		super(value, op);
+		this.type = type;
 	}
 	
 	public TypedValueCondition(HGHandle typeHandle, Object value, ComparisonOperator op)
 	{
-		super(value, op);
-		this.typeHandle = typeHandle;
+		this(hg.constant(typeHandle), value, op);
 	}
 
 	public TypedValueCondition(Class<?> javaClass, Object value, ComparisonOperator op)
 	{
-		super(value, op);
-		this.javaClass = javaClass;
+		this(hg.constant(javaClass), value, op);
 	}
 	
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
@@ -64,29 +75,58 @@ public class TypedValueCondition extends AtomValueCondition
 		atom = hg.get(handle);		
 		if (atom == null)
 			return false;
-		HGHandle type = hg.getTypeSystem().getTypeHandle(handle);
-		return type.equals(typeHandle) && compareToValue(hg, atom); 
+		HGHandle atomType = hg.getTypeSystem().getTypeHandle(handle);		
+        HGHandle typeHandle = null;
+        Object t = type.get();
+        if (t == null)
+        	throw new NullPointerException("AtomTypeCondition with null type.");
+        else if (t instanceof HGHandle)
+        	typeHandle = (HGHandle)t;
+        else
+        	typeHandle = hg.getTypeSystem().getTypeHandle((Class)t);		
+		return atomType.equals(typeHandle) && compareToValue(hg, atom); 
 	}
 		
-	public void setTypeHandle(HGHandle typeHandle)
+	public Ref<?> getTypeReference() 
 	{
-		this.typeHandle = typeHandle;
+		return type;
 	}
 	
+	public void setTypeReference(Ref<?> type)
+	{
+		this.type = type;
+	}
+	
+	public void setJavaClass(Class<?> c)
+	{
+		this.type = hg.constant(c);
+	}
+	
+    public Class<?> getJavaClass()
+    {
+        Object t = type.get();
+        return t instanceof Class ? (Class<?>)t : null;
+    }
+    
+    public void setTypeHandle(HGHandle handle)
+    {
+    	this.type = hg.constant(handle); 
+    }
+    
 	public HGHandle getTypeHandle()
 	{
-		return typeHandle;
+        Object t = type.get();
+        return t instanceof HGHandle ? (HGHandle)t : null;
 	}
 	
-	public void setJavaClass(Class<?> javaClass)
+	public HGHandle getTypeHandle(HyperGraph graph)
 	{
-		this.javaClass = javaClass;
-	}
-	
-	public Class<?> getJavaClass()
-	{
-		return javaClass;
-	}
+		Object t = type.get();
+		if (t instanceof HGHandle)
+			return (HGHandle)t;
+		else
+			return graph.getTypeSystem().getTypeHandle((Class<?>)t);
+	}	
 	
 	public String toString()
 	{
@@ -95,28 +135,29 @@ public class TypedValueCondition extends AtomValueCondition
 		result.append(",");
 		result.append(String.valueOf(getValue()));
 		result.append(" with type ");
-		result.append(typeHandle);
+		result.append(getJavaClass() != null ? getJavaClass().getName() : getTypeHandle().getPersistent());
 		result.append(")");
 		return result.toString();
 	}
 	
 	public int hashCode() 
 	{ 
-		return  super.hashCode() + 
-				(javaClass == null ? typeHandle.hashCode() : javaClass.hashCode());  
+		return  super.hashCode() +
+				(type == null ? 0 : HGUtils.hashIt(type.get()));  
 	}
 	
 	public boolean equals(Object x)
 	{
 		if (! (x instanceof TypedValueCondition))
 			return false;
+		else if (!super.equals(x))
+			return false;
 		else
 		{
+			
 			TypedValueCondition c = (TypedValueCondition)x;
-			return (javaClass == null ? 
-					HGUtils.eq(typeHandle, c.typeHandle) : 
-					HGUtils.eq(javaClass, c.javaClass)) &&
-					super.equals(x);
+			return type == null ? c.type == null : 
+				c.type == null ? false : HGUtils.eq(type.get(), c.type.get());
 		}
 	}	
 }
