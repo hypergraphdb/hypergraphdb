@@ -173,35 +173,48 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		instance.put(TypedValueCondition.class, new TypedValueToQuery()); 
 		instance.put(AtomValueCondition.class, new ConditionToQuery()
 		{
-			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
+			HGQuery<Object> makeQuery(HyperGraph graph, Object value, ComparisonOperator op)
 			{
-        //
-        // TODO: how to we deal with null values? For the String
-        // primitive type at least, nulls are possible. We can only deal
-				// with nulls if the type is know in which case a TypedValueCondition
-				// must have been used.
-        //
-        AtomValueCondition vc = (AtomValueCondition)c;
-        Object value = vc.getValue();
-        if (value == null)
-            throw new HGException("Search by null values is not supported yet.");
-        HGHandle type = hg.getTypeSystem().getTypeHandle(value);
-                
-				return instance.get(TypedValueCondition.class).
-					getQuery(hg, new TypedValueCondition(type, 
-														 vc.getValue(), 
-														 vc.getOperator()));                
+		        if (value == null)
+		            throw new HGException("Search by null values is not supported yet.");
+		        HGHandle type = graph.getTypeSystem().getTypeHandle(value);
+    			return (HGQuery<Object>)instance.get(TypedValueCondition.class).
+						getQuery(graph, new TypedValueCondition(type, 
+															 value, 
+															 op));                		        							
 			}
-			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
+			
+			public HGQuery<?> getQuery(final HyperGraph graph, final HGQueryCondition c)
 			{
-        AtomValueCondition vc = (AtomValueCondition)c;
-        Object value = vc.getValue();
-        if (value == null)
-            throw new HGException("Search by null values is not supported yet.");
-        HGHandle type = hg.getTypeSystem().getTypeHandle(value);
-                
+		        //
+		        // TODO: how to we deal with null values? For the String
+		        // primitive type at least, nulls are possible. We can only deal
+						// with nulls if the type is know in which case a TypedValueCondition
+						// must have been used.
+		        //
+		        final AtomValueCondition vc = (AtomValueCondition)c;
+		        if (hg.isVar(vc.getValueReference()))
+		        	return new HGQuery<Object>() {
+		        		public HGSearchResult<Object> execute()
+		        		{
+		        			return makeQuery(graph, vc.getValue(), vc.getOperator()).execute();
+		        		}
+		        	};
+		        else
+		        	return makeQuery(graph, vc.getValue(), vc.getOperator());
+			}
+			
+			public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
+			{
+				AtomValueCondition vc = (AtomValueCondition)c;
+				if (hg.isVar(vc.getValueReference()))
+					return QueryMetaData.MISTERY;
+		        Object value = vc.getValue();
+		        if (value == null)
+		            throw new HGException("Search by null values is not supported yet.");
+		        HGHandle type = graph.getTypeSystem().getTypeHandle(value);		                
 				return instance.get(TypedValueCondition.class).
-					getMetaData(hg, new TypedValueCondition(type, 
+					getMetaData(graph, new TypedValueCondition(type, 
 														    vc.getValue(), 
 															vc.getOperator()));               
 			}
@@ -224,11 +237,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
         {
 			public HGQuery<HGHandle> getQuery(final HyperGraph graph, final HGQueryCondition c)
 			{
-				final HGPersistentHandle handle = graph.getPersistentHandle(((TargetCondition)c).getLink());
 				return new HGQuery<HGHandle>()
 				{
 					public HGSearchResult<HGHandle> execute()
 					{
+						final HGPersistentHandle handle = ((TargetCondition)c).getLink().getPersistent();						
 						if (graph.isLoaded(handle))
 							return new LinkTargetsResultSet((HGLink)graph.get(handle));
 						else
@@ -434,10 +447,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				IndexedPartCondition ip = (IndexedPartCondition)c;
 				if (ip.getIndex() instanceof HGSortIndex)						
 					return new IndexBasedQuery((HGSortIndex)ip.getIndex(), 
-											   ip.getPartValue(), 
+											   ip.getPartValueReference(), 
 											   ip.getOperator());
 				else
-					return new IndexBasedQuery(ip.getIndex(), ip.getPartValue());
+					return new IndexBasedQuery(ip.getIndex(), ip.getPartValueReference());
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
@@ -598,14 +611,12 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		});
 		instance.put(IsCondition.class, new ConditionToQuery()
 		{
-			public QueryMetaData getMetaData(HyperGraph graph,
-	                HGQueryCondition condition)
+			public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition condition)
 			{
 	        	return QueryMetaData.ORACCESS.clone(condition);
 			}
 		
-			public HGQuery<?> getQuery(final HyperGraph graph,
-			          final HGQueryCondition condition)
+			public HGQuery<?> getQuery(final HyperGraph graph, final HGQueryCondition condition)
 			{
 				return new HGQuery<HGPersistentHandle>()
 				{

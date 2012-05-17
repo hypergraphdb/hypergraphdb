@@ -38,22 +38,22 @@ public class TypedValueCondition extends AtomValueCondition implements TypeCondi
 		
 	}
 	
-	public TypedValueCondition(Ref<?> type, Object value)
+	public TypedValueCondition(Ref<?> type, Ref<Object> value)
 	{
 		this(type, value, ComparisonOperator.EQ);
 	}
 	
 	public TypedValueCondition(HGHandle typeHandle, Object value)
 	{
-		this(hg.constant(typeHandle), value, ComparisonOperator.EQ);
+		this(hg.constant(typeHandle), hg.constant(value), ComparisonOperator.EQ);
 	}
 	
 	public TypedValueCondition(Class<?> javaClass, Object value)
 	{
-		this(hg.constant(javaClass), value, ComparisonOperator.EQ);
+		this(hg.constant(javaClass), hg.constant(value), ComparisonOperator.EQ);
 	}
 	
-	public TypedValueCondition(Ref<?> type, Object value, ComparisonOperator op)
+	public TypedValueCondition(Ref<?> type, Ref<Object> value, ComparisonOperator op)
 	{
 		super(value, op);
 		this.type = type;
@@ -61,12 +61,12 @@ public class TypedValueCondition extends AtomValueCondition implements TypeCondi
 	
 	public TypedValueCondition(HGHandle typeHandle, Object value, ComparisonOperator op)
 	{
-		this(hg.constant(typeHandle), value, op);
+		this(hg.constant(typeHandle), hg.constant(value), op);
 	}
 
 	public TypedValueCondition(Class<?> javaClass, Object value, ComparisonOperator op)
 	{
-		this(hg.constant(javaClass), value, op);
+		this(hg.constant(javaClass), hg.constant(value), op);
 	}
 	
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 

@@ -152,7 +152,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	private boolean checkConsistent(AtomTypeCondition c1, AtomTypeCondition c2)
 	{
-		if (c1.getTypeReference().get() == null || c2.getTypeReference() == null)
+		if (c1.getTypeReference().get() == null || c2.getTypeReference() == null ||
+			hg.isVar(c1.getTypeReference()) || hg.isVar(c2.getTypeReference()))
 			return true;
 		HGHandle h1 = (c1.getTypeHandle() != null) ? 
 						c1.getTypeHandle() : 
@@ -165,7 +166,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	private boolean checkConsistent(TypedValueCondition c1, AtomTypeCondition c2)
 	{
-		if (c2.getTypeReference() == null || c1.getTypeReference() == null)
+		if (c2.getTypeReference() == null || c1.getTypeReference() == null ||
+				hg.isVar(c1.getTypeReference()) || hg.isVar(c2.getTypeReference()))
 			return true;
 		HGHandle h1 = (c1.getTypeHandle() != null) ? 
 				c1.getTypeHandle() : 
@@ -178,6 +180,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	private boolean checkConsistent(TypedValueCondition tc, AtomValueCondition vc)
 	{
+		if (tc.getValueReference() == null || vc.getValueReference() == null ||
+			hg.isVar(tc.getValueReference()) || hg.isVar(vc.getValueReference()))
+			return true;
 		return HGUtils.eq(tc.getValue(), vc.getValue()) && tc.getOperator() == vc.getOperator();
 	}
 
@@ -315,17 +320,22 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					else
 						typeHandle = graph.getTypeSystem().getTypeHandle(byTypedValue.getJavaClass());
 			}
-			else if (byType != null && !hg.isVar(byType.getTypeReference()))
+			else if (byType != null)
 			{
-				if (byType.getTypeHandle() != null)
-					typeHandle  = byType.getTypeHandle();
-				else
-					typeHandle = graph.getTypeSystem().getTypeHandle(byType.getJavaClass());
+				if (!hg.isVar(byType.getTypeReference()))
+				{
+					if (byType.getTypeHandle() != null)
+						typeHandle  = byType.getTypeHandle();
+					else
+						typeHandle = graph.getTypeSystem().getTypeHandle(byType.getJavaClass());
+				}
 				if (byValue != null)
 				{
-					out.add(byTypedValue = new TypedValueCondition(typeHandle, byValue.getValue(), byValue.getOperator()));
+					out.add(byTypedValue = new TypedValueCondition(byType.getTypeReference(), 
+																   byValue.getValueReference(), 
+																   byValue.getOperator()));
 					out.remove(byType);
-					out.remove(byValue);					
+					out.remove(byValue);
 					byType = null;
 					byValue = null;
 				}
@@ -345,7 +355,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						return Nothing.Instance;
 					else
 					{
-						Pair<HGHandle, HGIndex> p = findIndex(new ByPartIndexer(typeHandle, pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
+						Pair<HGHandle, HGIndex> p = findIndex(new ByPartIndexer(typeHandle, 
+														pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
 						if (p != null)
 						{
 							if (typeHandle.equals(p.getFirst()))
@@ -358,15 +369,15 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 								else if (byTypedValue != null)
 								{
 									out.remove(byTypedValue);
-									out.add(new ValueAsPredicateOnly(byTypedValue.getValue(), 
-											byTypedValue.getOperator()));
+									out.add(new ValueAsPredicateOnly(byTypedValue.getValueReference(), 
+																	 byTypedValue.getOperator()));
 									byTypedValue = null;
 								}
 							}
 							out.remove(pc);						    
 							out.add(new IndexedPartCondition(p.getFirst(), 
 							                                 p.getSecond(), 
-							                                 pc.getValue(), 
+							                                 pc.getValueReference(), 
 							                                 pc.getOperator()));
 						}
 					}
@@ -398,7 +409,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
     							else if (byTypedValue != null)
     							{
     								out.remove(byTypedValue);
-    								out.add(new AtomValueCondition(byTypedValue.getValue(), 
+    								out.add(new AtomValueCondition(byTypedValue.getValueReference(), 
     															   byTypedValue.getOperator()));
     								byTypedValue = null;
     							}							
@@ -498,7 +509,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass());
 				if (typeHandle == null)
 					cond = Nothing.Instance;
-				else
+				else if (!hg.isVar(tc.getValueReference()))
 				{
 					List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, typeHandle, tc.getValue());
 					if (!indexedParts.isEmpty())
@@ -511,7 +522,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				}
 			}
 		}
-		else if (cond instanceof AtomValueCondition && ((AtomValueCondition)cond).getOperator() == ComparisonOperator.EQ)
+		else if (cond instanceof AtomValueCondition && 
+				 ((AtomValueCondition)cond).getOperator() == ComparisonOperator.EQ &&
+				 !hg.isVar(((AtomValueCondition)cond).getValueReference()))
 		{
 			AtomValueCondition vc = (AtomValueCondition)cond;
             Object value = vc.getValue();

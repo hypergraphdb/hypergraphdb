@@ -7,9 +7,11 @@
  */
 package org.hypergraphdb.query;
 
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.type.HGTypedValue;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGHandle;
 
@@ -40,10 +42,17 @@ public class AtomPartCondition extends SimpleValueCondition
 						     Object value, 
 						     ComparisonOperator operator)
 	{
+		this(dimensionPath, hg.constant(value), operator);
+	}
+
+	public AtomPartCondition(String [] dimensionPath, 
+		     				 Ref<Object> value, 
+		     				 ComparisonOperator operator)
+	{
 		super(value, operator);
 		this.dimensionPath = dimensionPath;
 	}
-
+	
 	public String[] getDimensionPath()
 	{
 		return dimensionPath;

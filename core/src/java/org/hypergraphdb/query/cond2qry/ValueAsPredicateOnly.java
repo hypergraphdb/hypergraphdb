@@ -9,9 +9,15 @@ package org.hypergraphdb.query.cond2qry;
 
 import org.hypergraphdb.query.AtomValueCondition;
 import org.hypergraphdb.query.ComparisonOperator;
+import org.hypergraphdb.util.Ref;
 
 public class ValueAsPredicateOnly extends AtomValueCondition
 {
+	public ValueAsPredicateOnly(Ref<Object> value, ComparisonOperator operator)
+	{
+		super(value, operator);
+	}
+	
     public ValueAsPredicateOnly(Object value, ComparisonOperator operator)
     {
     	super(value, operator);

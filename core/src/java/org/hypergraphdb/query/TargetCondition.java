@@ -11,6 +11,9 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * 
@@ -24,40 +27,55 @@ import org.hypergraphdb.HyperGraph;
  */
 public class TargetCondition implements HGQueryCondition, HGAtomPredicate
 {
-	private HGHandle link;
+	private Ref<HGHandle> link;
 
 	public TargetCondition()
 	{
 		
 	}
 	
-	public TargetCondition(HGHandle link)
+	public TargetCondition(Ref<HGHandle> link)
 	{
 		this.link = link;
 	}
+	
+	public TargetCondition(HGHandle link)
+	{
+		this.link = hg.constant(link);
+	}
 
-	public HGHandle getLink()
+	public Ref<HGHandle> getLinkReference()
 	{
 		return link;
 	}
 	
-	public void setLink(HGHandle link)
+	public void setLinkReference(Ref<HGHandle> link)
 	{
 		this.link = link;
+	}
+	
+	public HGHandle getLink()
+	{
+		return link.get();
+	}
+	
+	public void setLink(HGHandle link)
+	{
+		this.link = hg.constant(link);
 	}
 
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
 	{
-		if (graph.isLoaded(link))
+		if (graph.isLoaded(link.get()))
 		{
-			HGLink l = (HGLink)graph.get(link);
+			HGLink l = (HGLink)graph.get(link.get());
 			for (int i = 0; i < l.getArity(); i++)
 				if (l.getTargetAt(i).equals(handle))
 					return true;
 		}
 		else
 		{
-			HGPersistentHandle [] l = graph.getStore().getLink(graph.getPersistentHandle(link));
+			HGPersistentHandle [] l = graph.getStore().getLink(graph.getPersistentHandle(link.get()));
 			if (l != null) for (HGHandle h : l)
 				if (h.equals(handle))
 					return true;
@@ -77,7 +95,7 @@ public class TargetCondition implements HGQueryCondition, HGAtomPredicate
 		else
 		{
 			TargetCondition c = (TargetCondition)x;
-			return link.equals(c.link);
+			return HGUtils.eq(link.get(), c.link.get());
 		}
 	}	
 }

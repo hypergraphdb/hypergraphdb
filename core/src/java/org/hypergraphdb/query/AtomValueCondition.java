@@ -10,6 +10,7 @@ package org.hypergraphdb.query;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -35,6 +36,11 @@ public class AtomValueCondition extends SimpleValueCondition
 		super(value);
 	}
 
+	public AtomValueCondition(Ref<Object> value, ComparisonOperator operator)
+	{
+		super(value, operator);
+	}
+	
 	public AtomValueCondition(Object value, ComparisonOperator operator)
 	{
 		super(value, operator);

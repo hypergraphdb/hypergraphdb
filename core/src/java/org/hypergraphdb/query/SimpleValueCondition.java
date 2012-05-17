@@ -8,9 +8,11 @@
 package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -22,7 +24,7 @@ import org.hypergraphdb.util.HGUtils;
 @SuppressWarnings("unchecked")
 public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	protected Object value;
+	protected Ref<Object> value;
 	protected ComparisonOperator operator;
  	
 	/**
@@ -42,15 +44,15 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
     	switch (operator)
     	{
     		case EQ:
-    			return HGUtils.eq(value, x);
+    			return HGUtils.eq(value.get(), x);
     		case LT:
-    			return ((Comparable)x).compareTo(value) < 0;
+    			return ((Comparable)x).compareTo(value.get()) < 0;
     		case GT:
-    			return ((Comparable)x).compareTo(value) > 0;
+    			return ((Comparable)x).compareTo(value.get()) > 0;
     		case LTE:
-    			return ((Comparable)x).compareTo(value) <= 0;
+    			return ((Comparable)x).compareTo(value.get()) <= 0;
     		case GTE:
-    			return ((Comparable)x).compareTo(value) >= 0;   
+    			return ((Comparable)x).compareTo(value.get()) >= 0;   
     		default:
     			throw new HGException("Wrong operator code [" + operator + "] passed to SimpleValueCondition.");
     	}
@@ -63,16 +65,31 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
 	
 	public SimpleValueCondition(Object value)
 	{
-		this.value = value;
-		this.operator = ComparisonOperator.EQ;
+		this(value, ComparisonOperator.EQ);
 	}
 
 	public SimpleValueCondition(Object value, ComparisonOperator operator)
 	{
-		this.value = value;
+		this.value = hg.constant(value);
 		this.operator = operator;
 	}
     
+	public SimpleValueCondition(Ref<Object> value, ComparisonOperator operator)
+	{
+		this.value = value;
+		this.operator = operator;
+	}
+	
+	public Ref<Object> getValueReference()
+	{
+		return value;
+	}
+	
+	public void setValueReference(Ref<Object> value)
+	{
+		this.value = value;
+	}
+	
 	public Object getValue()
 	{
 		return value;
@@ -80,7 +97,7 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
 	
 	public void setValue(Object value)
 	{
-		this.value = value;
+		this.value = hg.constant(value);
 	}
 
 	public ComparisonOperator getOperator()

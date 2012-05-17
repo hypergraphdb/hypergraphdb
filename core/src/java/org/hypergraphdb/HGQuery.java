@@ -661,6 +661,17 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
         /**
          * <p>
+         * Return a query condition that constraints the result set to atoms that are targets to a specific link as
+         * specified by the {@link HGHandle} {@link Ref} parameter. 
+         * </p> 
+         * @param linkHandle A (possibly {@link Var}) reference to the handle of the {@link HGLink} whose target 
+         * the resulting atom should be.
+         * @see TargetCondition 
+         */
+        public static TargetCondition target(Ref<HGHandle> linkHandle) { return new TargetCondition(linkHandle); }
+        
+        /**
+         * <p>
          * Return a condition constraining the result to links to a specific atom.
          * </p>         
          * @param atomHandle The atom to which resulting links should point to.
@@ -779,12 +790,33 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static AtomValueCondition value(Object value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
         
         /**
+         * <p>
+         * Return a condition that constraints resulting atoms by a specific value 
+         * {@link Ref} and {@link ComparisonOperator}.
+         * </p>
+         * 
+         * @param value The value reference to compare with.
+         * @param op The {@link ComparisonOperator} to use in the comparison.
+         * @see AtomValueCondition
+         */
+        public static AtomValueCondition value(Ref<Object> value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
+        
+        /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is equal to 
          * the passed in <code>x</code> parameter.
          * </p>
          * @see AtomValueCondition
          */
         public static AtomValueCondition eq(Object x) { return value(x, ComparisonOperator.EQ); }
+
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is equal to 
+         * the passed in <code>x</code> {@link Ref} parameter.
+         * </p>
+         * @see AtomValueCondition
+         */
+        public static AtomValueCondition eq(Ref<Object> x) { return value(x, ComparisonOperator.EQ); }
+        
         /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is less than 
          * the passed in <code>x</code> parameter.
@@ -792,6 +824,15 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomValueCondition 
          */
         public static AtomValueCondition lt(Object x) { return value(x, ComparisonOperator.LT); }        
+
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is less than 
+         * the passed in <code>x</code> {@link Ref} parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
+        public static AtomValueCondition lt(Ref<Object> x) { return value(x, ComparisonOperator.LT); }        
+        
         /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is greater than 
          * the passed in <code>x</code> parameter.
@@ -799,6 +840,15 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomValueCondition 
          */
         public static AtomValueCondition gt(Object x) { return value(x, ComparisonOperator.GT); }
+
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is greater than 
+         * the passed in <code>x</code> {@link Ref} parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
+        public static AtomValueCondition gt(Ref<Object> x) { return value(x, ComparisonOperator.GT); }
+        
         /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is less than or equal to 
          * the passed in <code>x</code> parameter.
@@ -806,6 +856,15 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomValueCondition 
          */
         public static AtomValueCondition lte(Object x) { return value(x, ComparisonOperator.LTE); }
+
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is less than or equal to 
+         * the passed in <code>x</code> {@link Ref} parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
+        public static AtomValueCondition lte(Ref<Object> x) { return value(x, ComparisonOperator.LTE); }
+        
         /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is greater than equal to 
          * the passed in <code>x</code> parameter.
@@ -813,6 +872,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomValueCondition 
          */
         public static AtomValueCondition gte(Object x) { return value(x, ComparisonOperator.GTE); }
+
+        /**
+         * <p>Return a condition constraining resulting atoms to atoms whose value is greater than equal to 
+         * the passed in <code>x</code> {@link Ref} parameter.
+         * </p>
+         * @see AtomValueCondition 
+         */
+        public static AtomValueCondition gte(Ref<Object> x) { return value(x, ComparisonOperator.GTE); }
         
         /**
          * <p>
@@ -830,6 +897,13 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static AtomPartCondition part(String path, Object value, ComparisonOperator op) {  return new AtomPartCondition(path.split("\\."), value, op); }
         
         /**
+         * See {@link #part(String, Object, ComparisonOperator)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition part(String path, Ref<Object> value, ComparisonOperator op) 
+        	{  return new AtomPartCondition(path.split("\\."), value, op); }
+        
+        /**
          * <p>
          * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
          * a part (e.g. a Java property) equal to the specified <code>value</code>.
@@ -841,6 +915,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          */
         public static AtomPartCondition eq(String path, Object x) { return part(path, x, ComparisonOperator.EQ); }
 
+        /**
+         * See {@link #eq(String, Object)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition eq(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.EQ); }
+        
         /**
          * <p>
          * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
@@ -854,6 +934,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static AtomPartCondition lt(String path, Object x) { return part(path, x, ComparisonOperator.LT); }        
 
         /**
+         * See {@link #lt(String, Object)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition lt(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.LT); }        
+        
+        /**
          * <p>
          * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
          * a part (e.g. a Java property) greater than the specified <code>value</code>.
@@ -864,6 +950,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomPartCondition
          */
         public static AtomPartCondition gt(String path, Object x) { return part(path, x, ComparisonOperator.GT); }
+
+        /**
+         * See {@link #gt(String, Object)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition gt(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.LT); }        
         
         /**
          * <p>
@@ -878,6 +970,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static AtomPartCondition lte(String path, Object x) { return part(path, x, ComparisonOperator.LTE); }
         
         /**
+         * See {@link #lte(String, Object)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition lte(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.LT); }        
+        
+        /**
          * <p>
          * Return a condition constraining the result to atoms of some {@link HGCompositeType} and having
          * a part (e.g. a Java property) greater than or equal to the specified <code>value</code>.
@@ -888,6 +986,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see AtomPartCondition
          */
         public static AtomPartCondition gte(String path, Object x) { return part(path, x, ComparisonOperator.GTE); }
+        
+        /**
+         * See {@link #gte(String, Object)}. This method specifying the value as a 
+         * {@link Ref}.
+         */
+        public static AtomPartCondition gte(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.LT); }        
         
         /**
          * <p>

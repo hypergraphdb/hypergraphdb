@@ -9,18 +9,28 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 public class IndexedPartCondition implements HGQueryCondition
 {
 	private HGIndex<?, ?> idx;
-	private Object partValue;
+	private Ref<Object> partValue;
 	private HGHandle type;
 	private ComparisonOperator operator;
+
+	public IndexedPartCondition(HGHandle type, 
+			HGIndex<?, ?> idx, 
+			Object partValue, 
+			ComparisonOperator operator)
+	{
+		this(type, idx, hg.constant(partValue), operator);
+	}
 	
 	public IndexedPartCondition(HGHandle type, 
 								HGIndex<?, ?> idx, 
-								Object partValue, 
+								Ref<Object> partValue, 
 								ComparisonOperator operator)
 	{
 		this.type = type;
@@ -34,6 +44,16 @@ public class IndexedPartCondition implements HGQueryCondition
 		return idx;
 	}
 
+	public Ref<Object> getPartValueReference()
+	{
+		return partValue;
+	}
+	
+	public void setPartValueReference(Ref<Object> partValue)
+	{
+		this.partValue = partValue;
+	}
+	
 	public Object getPartValue()
 	{
 		return partValue;

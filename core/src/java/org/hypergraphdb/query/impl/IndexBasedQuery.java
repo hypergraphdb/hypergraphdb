@@ -13,6 +13,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.query.ComparisonOperator;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -27,7 +28,7 @@ public class IndexBasedQuery extends HGQuery<Object>
     public static enum ScanType { none, keys, values };
     
     private HGIndex<? extends Object, ? extends Object> index;
-    private Object key;
+    private Ref<Object> key;
     private ComparisonOperator operator = ComparisonOperator.EQ;
     private ScanType scanType = ScanType.none;
     
@@ -58,14 +59,19 @@ public class IndexBasedQuery extends HGQuery<Object>
     public IndexBasedQuery(HGIndex<? extends Object, ? extends Object> index, Object key)
     {
         this.index = index;
-        this.key = key;
+        this.key = hg.constant(key);
+    }
+    
+    public IndexBasedQuery(HGIndex<Object, Object> index, Ref<Object> key, ComparisonOperator operator)
+    {
+    	this.index = index;
+    	this.key = key;
+    	this.operator = operator;    	
     }
     
     public IndexBasedQuery(HGIndex<Object, Object> index, Object key, ComparisonOperator operator)
     {
-    	this.index = index;
-    	this.key = key;
-    	this.operator = operator;
+    	this(index, hg.constant(key), operator);
     }
     
     public HGSearchResult<Object> execute()
@@ -78,15 +84,15 @@ public class IndexBasedQuery extends HGQuery<Object>
 		    	switch (operator)
 		    	{
 		    		case EQ:
-		    			return ((HGIndex<Object, Object>)index).find(key);
+		    			return ((HGIndex<Object, Object>)index).find(key.get());
 		    		case LT:
-		    			return ((HGSortIndex<Object, Object>)index).findLT(key);
+		    			return ((HGSortIndex<Object, Object>)index).findLT(key.get());
 		    		case GT:
-		    			return ((HGSortIndex<Object, Object>)index).findGT(key);
+		    			return ((HGSortIndex<Object, Object>)index).findGT(key.get());
 		    		case LTE:
-		    			return ((HGSortIndex<Object, Object>)index).findLTE(key);
+		    			return ((HGSortIndex<Object, Object>)index).findLTE(key.get());
 		    		case GTE:
-		    			return ((HGSortIndex<Object, Object>)index).findGTE(key);   
+		    			return ((HGSortIndex<Object, Object>)index).findGTE(key.get());   
 		    		default:
 		    			throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
 		    	}

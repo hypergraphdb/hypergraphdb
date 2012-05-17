@@ -63,7 +63,7 @@ public class TypedValueToQuery implements ConditionToQuery
 						.getIndexManager().getIndexByType(),
 						typeHandle.getPersistent()),
 						new AtomValueCondition(vc.getValue(), vc.getOperator())).execute();
-		}		
+		}
 	}
 	
 	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)

@@ -2,6 +2,9 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -14,25 +17,40 @@ import org.hypergraphdb.HyperGraph;
  */
 public class IsCondition implements HGQueryCondition, HGAtomPredicate
 {
-	private HGHandle atomHandle;
+	private Ref<HGHandle> atomHandle;
 	
 	public IsCondition()
 	{		
 	}
 	
-	public IsCondition(HGHandle atomHandle)
+	public IsCondition(Ref<HGHandle> atomHandle)
 	{
 		this.atomHandle = atomHandle;
 	}
+	
+	public IsCondition(HGHandle atomHandle)
+	{
+		this.atomHandle = hg.constant(atomHandle);
+	}
 		
-	public HGHandle getAtomHandle()
+	public Ref<HGHandle> getAtomHandleReference()
 	{
 		return atomHandle;
+	}
+	
+	public void setAtomHandleReference(Ref<HGHandle> atomHandle)
+	{
+		this.atomHandle = atomHandle;
+	}
+	
+	public HGHandle getAtomHandle()
+	{
+		return atomHandle.get();
 	}
 
 	public void setAtomHandle(HGHandle atomHandle)
 	{
-		this.atomHandle = atomHandle;
+		this.atomHandle = hg.constant(atomHandle);
 	}
 
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
@@ -45,7 +63,7 @@ public class IsCondition implements HGQueryCondition, HGAtomPredicate
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((atomHandle == null) ? 0 : atomHandle.hashCode());
+		result = prime * result + ((atomHandle == null || atomHandle.get() == null) ? 0 : atomHandle.get().hashCode());
 		return result;
 	}
 
@@ -59,12 +77,6 @@ public class IsCondition implements HGQueryCondition, HGAtomPredicate
 		if (getClass() != obj.getClass())
 			return false;
 		IsCondition other = (IsCondition) obj;
-		if (atomHandle == null)
-		{
-			if (other.atomHandle != null)
-				return false;
-		} else if (!atomHandle.equals(other.atomHandle))
-			return false;
-		return true;
+		return HGUtils.eq(atomHandle.get(), other.atomHandle.get());
 	}	
 }
