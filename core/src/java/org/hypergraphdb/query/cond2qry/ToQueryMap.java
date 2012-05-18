@@ -269,12 +269,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumesCondition sc = (SubsumesCondition)c;
-				HGHandle startAtom = sc.getSpecificHandle();
+				Ref<HGHandle> startAtom = sc.getSpecificHandleReference();
 				if (startAtom == null && sc.getSpecificValue() != null)
 				{
-					startAtom = hg.getHandle(sc.getSpecificValue());
-					if (startAtom == null)
-						throw new HGException("Unable to translate 'subsumed' condition into a query since it is not based on an existing HyperGraph atom.");
+					throw new HGException("Unable to translate 'subsumed' condition into a query, please a handle for the specific entity.");
 				}				
 				return new TraversalBasedQuery(
 						new HGBreadthFirstTraversal(
@@ -284,7 +282,8 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 												   null,
 												   false,
 												   true,
-												   true)
+												   true),
+							Integer.MAX_VALUE
 						), TraversalBasedQuery.ReturnType.targets);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
@@ -328,12 +327,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumedCondition sc = (SubsumedCondition)c;
-				HGHandle startAtom = sc.getGeneralHandle();
+				Ref<HGHandle> startAtom = sc.getGeneralHandleReference();
 				if (startAtom == null && sc.getGeneralValue() != null)
 				{
-					startAtom = hg.getHandle(sc.getGeneralValue());
-					if (startAtom == null)
-						throw new HGException("Unable to translate 'subsumed' condition into a query since it is not based on an existing HyperGraph atom.");
+					throw new HGException("Unable to translate 'subsumed' condition into a query, please use a valid handle for the general entity.");
 				}
 				return new TraversalBasedQuery(
 						new HGBreadthFirstTraversal(
@@ -343,7 +340,8 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 												   null,
 												   false,
 												   true,
-												   false)
+												   false),
+							Integer.MAX_VALUE
 						), TraversalBasedQuery.ReturnType.targets);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
@@ -357,11 +355,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		});		
 		instance.put(OrderedLinkCondition.class, new ConditionToQuery()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<?> getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				OrderedLinkCondition lc = (OrderedLinkCondition)c;
-				ArrayList<HGQuery> L = new ArrayList<HGQuery>();
-				for (HGHandle t : lc.targets())
+				ArrayList<HGQuery<?>> L = new ArrayList<HGQuery<?>>();
+				for (Ref<HGHandle> t : lc.targets())
 					L.add(toQuery(hg, new IncidentCondition(t)));
 				if (L.isEmpty())
 					return HGQuery.NOP;
@@ -369,17 +367,17 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 					return L.get(0);
 				else
 				{
-					Iterator<HGQuery> i = L.iterator();
+					Iterator<HGQuery<?>> i = L.iterator();
 					IntersectionQuery result = new IntersectionQuery(i.next(), 
 																	 i.next(),
-																	 new SortedIntersectionResult());
+																	 new SortedIntersectionResult<HGHandle>());
 					while (i.hasNext())
 						result = new IntersectionQuery(i.next(), 
 													   result,
-													   new SortedIntersectionResult());
+													   new SortedIntersectionResult<HGHandle>());
 					// the following will find all links (unordered) with the given target
 					// set and then filter to insure that the targets are properly ordered.
-					return new PredicateBasedFilter(hg, result, lc);				
+					return new PredicateBasedFilter<HGHandle>(hg, result, lc);				
 				}				
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
@@ -392,7 +390,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				qmd.predicateCost = 0.5;
 				return qmd;
 			}
-		});		
+		});
 		instance.put(MapCondition.class, new ConditionToQuery()
 		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)

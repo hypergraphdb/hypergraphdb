@@ -19,6 +19,7 @@ import org.hypergraphdb.query.LinkCondition;
 import org.hypergraphdb.query.impl.IntersectionQuery;
 //import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
+import org.hypergraphdb.util.Ref;
 
 public class LinkToQuery implements ConditionToQuery
 {
@@ -38,11 +39,11 @@ public class LinkToQuery implements ConditionToQuery
 		return qmd;
 	}
 
-	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+	public HGQuery<?> getQuery(final HyperGraph graph, final HGQueryCondition c)
 	{
-		LinkCondition lc = (LinkCondition)c;
+		final LinkCondition lc = (LinkCondition)c;
 		ArrayList<HGQuery<?>> L = new ArrayList<HGQuery<?>>();
-		for (HGHandle t : lc.targets())
+		for (Ref<HGHandle> t : lc.targets())
 			L.add(ToQueryMap.toQuery(graph, new IncidentCondition(t)));
 		if (L.isEmpty())
 			return HGQuery.NOP;
@@ -53,13 +54,12 @@ public class LinkToQuery implements ConditionToQuery
 			Iterator<HGQuery<?>> i = L.iterator();
 			IntersectionQuery result = new IntersectionQuery(i.next(), 
 															 i.next(), 
-															 new ZigZagIntersectionResult());
+															 new ZigZagIntersectionResult<HGHandle>());
 			while (i.hasNext())
 				result = new IntersectionQuery(i.next(), 
 											   result,
-											   new ZigZagIntersectionResult());
+											   new ZigZagIntersectionResult<HGHandle>());
 			return result;
 		}
 	}
-
 }

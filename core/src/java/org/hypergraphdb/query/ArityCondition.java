@@ -12,6 +12,9 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -24,13 +27,17 @@ import org.hypergraphdb.HGLink;
  */
 public class ArityCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private int arity;
+	private Ref<Integer> arity;
 	
 	public ArityCondition()
 	{
-		arity = 0;
+		arity = hg.constant(0);
 	}
 	public ArityCondition(int arity)
+	{
+		this.arity = hg.constant(arity);
+	}
+	public ArityCondition(Ref<Integer> arity)
 	{
 		this.arity = arity;
 	}
@@ -45,9 +52,9 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 		{
 			Object atom = hg.get(handle);
 			if (! (atom instanceof HGLink))
-				return arity == 0;
+				return arity.get() == 0;
 			else
-				return ((HGLink)atom).getArity() == arity;
+				return ((HGLink)atom).getArity() == arity.get();
 		}
 		else
 		{
@@ -55,13 +62,13 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 			if (layout == null)
 				throw new HGException("Cound not find atom refered to by " + handle + " in HyperGraph store.");
 			else
-				return layout.length == arity + 2;
+				return layout.length == arity.get() + 2;
 		}
 	}
 	
 	public int hashCode() 
 	{ 
-		return arity; 
+		return arity.get(); 
 	}
 	
 	public boolean equals(Object x)
@@ -69,7 +76,7 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 		if (! (x instanceof ArityCondition))
 			return false;
 		else
-			return arity == ((ArityCondition)x).arity;
+			return HGUtils.eq(arity, ((ArityCondition)x).arity);
 	}
 	
 	public String toString()
@@ -83,12 +90,20 @@ public class ArityCondition implements HGQueryCondition, HGAtomPredicate
 
 	public int getArity()
 	{
-		return arity;
+		return arity.get();
 	}
 
 	public void setArity(int arity)
 	{
+		this.arity = hg.constant(arity);
+	}
+	public Ref<Integer> getArityReference()
+	{
+		return arity;
+	}
+
+	public void setArityReference(Ref<Integer> arity)
+	{
 		this.arity = arity;
 	}
-	
 }

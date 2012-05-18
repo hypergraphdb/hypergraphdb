@@ -11,6 +11,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
+import org.hypergraphdb.util.Ref;
 
 /**
  * 
@@ -27,7 +28,13 @@ public class BFSCondition extends TraversalCondition
 	{
 		
 	}
+	
 	public BFSCondition(HGHandle startAtom)
+	{
+		super(startAtom);
+	}
+	
+	public BFSCondition(Ref<HGHandle> startAtom)
 	{
 		super(startAtom);
 	}
@@ -35,6 +42,6 @@ public class BFSCondition extends TraversalCondition
 	@Override
 	public HGTraversal getTraversal(HyperGraph graph)
 	{
-		return new HGBreadthFirstTraversal(getStartAtom(), makeGenerator(graph));
+		return new HGBreadthFirstTraversal(getStartAtomReference(), makeGenerator(graph));
 	}
 }

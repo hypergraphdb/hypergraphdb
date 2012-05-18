@@ -12,10 +12,13 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.util.Ref;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * <p>
@@ -28,7 +31,7 @@ import java.util.Iterator;
  */
 public class LinkCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private HashSet<HGHandle> targetSet = null;
+	private HashSet<Ref<HGHandle>> targetSet = null;
 	
 	public LinkCondition()
 	{
@@ -37,16 +40,23 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 	
 	public LinkCondition(HGLink link)
 	{
-		targetSet = new HashSet<HGHandle>();
+		targetSet = new HashSet<Ref<HGHandle>>();
 		for (int i = 0; i < link.getArity(); i++)
-			targetSet.add(link.getTargetAt(i));
+			targetSet.add(hg.constant(link.getTargetAt(i)));
 	}
 	
-	public LinkCondition(HGHandle [] targets)
+	public LinkCondition(HGHandle...targets)
 	{
 		if (targets == null)
 			throw new HGException("LinkCondition instantiated with a null target set.");
-        this.targetSet = new HashSet<HGHandle>();
+        this.targetSet = new HashSet<Ref<HGHandle>>();
+        for (int i = 0; i < targets.length; i++)
+			targetSet.add(hg.constant(targets[i]));
+	}
+	
+	public LinkCondition(Ref<HGHandle>...targets)
+	{
+        this.targetSet = new HashSet<Ref<HGHandle>>();
         for (int i = 0; i < targets.length; i++)
 			targetSet.add(targets[i]);
 	}
@@ -55,54 +65,74 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 	{
         if (targets == null)
             throw new HGException("LinkCondition instantiated with a null target set.");
-        this.targetSet = new HashSet<HGHandle>();
-        targetSet.addAll(targets);
+        this.targetSet = new HashSet<Ref<HGHandle>>();
+        for (HGHandle h : targets)
+        targetSet.add(hg.constant(h));
 	}
 	
-	public HashSet<HGHandle> targets()
+	public boolean contains(HGHandle h)
+	{
+		for (Ref<HGHandle> r : targetSet)
+			if (h.equals(r.get()))
+				return true;
+		return false;
+	}
+	
+	public Set<Ref<HGHandle>> targets()
 	{
 		return targetSet;
 	}
 	
 	
-	public HashSet<HGHandle> getTargetSet()
+	public Set<Ref<HGHandle>> getTargetSet()
 	{
 		return targetSet;
 	}
-	public void setTargetSet(HashSet<HGHandle> targetSet)
+	
+	public void setTargetSet(HashSet<Ref<HGHandle>> targetSet)
 	{
 		this.targetSet = targetSet;
 	}
+	
 	/**
 	 * <p>Return <code>true</code> if <code>handle</code> points to a link whose
 	 * target set is a superset of this condition's <code>targetSet</code>.</p>
 	 */
-	public boolean satisfies(HyperGraph hg, HGHandle handle) 
+	public boolean satisfies(HyperGraph graph, HGHandle handle) 
 	{
-		int count = 0;		
+		int count = 0;
+		
+		// Since we have a set of references here, a simple 'contains' check won't work
+		// so we need to loop through the target to check for each element of the link
+		// under consideration. This is probably fast enough for small sets, but for larger
+		// sets it may be performance issue. One option if the build a set of handles
+		// if targetSet is large, each time satisfies is called. For this to be justified,
+		// targetSet has to be especially large, say > 100. So far, I have never seen
+		// a case like this.
+		
 		// If the atom corresponding to 'handle' is already in the cache, there
 		// is no point fetching it from permanent storage. Otherwise, there's no point
 		// caching the actual atom...
-		if (hg.isLoaded(handle))
+		if (graph.isLoaded(handle))
 		{
-			Object atom = hg.get(handle);
+			Object atom = graph.get(handle);
 			if (! (atom instanceof HGLink))
 				return false;
 			HGLink link = (HGLink)atom;
 			for (int i = 0; i < link.getArity(); i++)
-				if (targetSet.contains(link.getTargetAt(i)))
+				if (contains(link.getTargetAt(i)))
 					count++;
 		}
 		else
 		{
-			HGPersistentHandle [] A = hg.getStore().getLink(hg.getPersistentHandle(handle));
+			HGPersistentHandle [] A = graph.getStore().getLink(handle.getPersistent());
 			// TODO: this assumes that there are no duplicates in A. Not sure whether
 			// it should be forbidden in HyperGraph for a link to contains duplicates.
 			// Surely, it doesn't make sense for unordered links - they are just sets. 
 			// However, ordered ones might be tricky since they are essentially lists
 			// (<=> sets of [position, element] pairs).
 			for (int i = 2; i < A.length; i++)
-				if (targetSet.contains(A[i]))
+				if (contains(A[i]))
 					count++;
 		}
 		return count == targetSet.size();		
@@ -124,9 +154,9 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 	public String toString()
 	{
 		StringBuffer result = new StringBuffer("links(");
-		for (Iterator<HGHandle> i = targetSet.iterator(); i.hasNext(); )
+		for (Iterator<Ref<HGHandle>> i = targetSet.iterator(); i.hasNext(); )
 		{
-			result.append(i.next().toString());
+			result.append(i.next().get().toString());
 			if (i.hasNext())
 				result.append(",");
 		}

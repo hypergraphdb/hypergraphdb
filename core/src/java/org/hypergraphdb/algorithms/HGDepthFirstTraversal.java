@@ -13,7 +13,9 @@ import java.util.Stack;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -25,7 +27,7 @@ import org.hypergraphdb.util.Pair;
  */
 public class HGDepthFirstTraversal implements HGTraversal 
 {
-	private HGHandle startAtom;
+	private Ref<HGHandle> startAtom;
     // The following maps contains all atoms that have been reached: if they have
     // been actually visited (i.e. returned by the 'next' method), they map to 
     // Boolean.TRUE, otherwise they map to Boolean.FALSE.
@@ -36,8 +38,8 @@ public class HGDepthFirstTraversal implements HGTraversal
 	
 	private void init()
 	{
-	    examined.put(startAtom, Boolean.TRUE);
-        advance(startAtom);     	    
+	    examined.put(startAtom.get(), Boolean.TRUE);
+        advance(startAtom.get());     	    
         initialized = true;
 	}
 	
@@ -62,19 +64,34 @@ public class HGDepthFirstTraversal implements HGTraversal
 	
 	public HGDepthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator)
 	{
-		this.startAtom = startAtom;
-		this.adjListGenerator = adjListGenerator;
-		init();
+		this(hg.constant(startAtom), adjListGenerator);
 	}
 
-	public void setStartAtom(HGHandle startAtom)
+	public HGDepthFirstTraversal(Ref<HGHandle> startAtom, HGALGenerator adjListGenerator)
+	{
+		this.startAtom = startAtom;
+		this.adjListGenerator = adjListGenerator;
+		init();		
+	}
+	
+	public Ref<HGHandle> getStartAtomReference()
+	{
+		return startAtom;
+	}
+	
+	public void setStartAtomReference(Ref<HGHandle> startAtom)
 	{
 		this.startAtom = startAtom;
 	}
 	
+	public void setStartAtom(HGHandle startAtom)
+	{
+		this.startAtom = hg.constant(startAtom);
+	}
+	
 	public HGHandle getStartAtom()
 	{
-		return startAtom;
+		return startAtom == null ? null : startAtom.get();
 	}
 	
 	public HGALGenerator getAdjListGenerator()

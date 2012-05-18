@@ -114,6 +114,27 @@ public class HGUtils
 		return true;
 	}
 	
+	public static boolean eq(Ref<?> r1, Ref<?> r2)
+	{
+		if (r1 == null) return r2 == null;
+		else if (r2 == null) return false;
+		else return HGUtils.eq(r1.get(), r2.get());
+	}
+
+	public static boolean eq(Ref<?> [] left, Ref<?> [] right)
+	{
+        if (left == right)
+                return true;
+        else if (left == null || right == null)
+                return false;
+        else if (left.length != right.length)
+                return false;
+        for (int i = 0; i < left.length; i++)
+                if (!eq(left[i], right[i]))
+                        return false;
+        return true;                    
+	}
+	
 	/**
 	 * <p>Return an object's hash code or 0 if the object is <code>null</code>.</p>
 	 */

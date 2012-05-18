@@ -9,10 +9,12 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGALGenerator;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * 
@@ -30,7 +32,7 @@ import org.hypergraphdb.util.HGUtils;
  */
 public abstract class TraversalCondition implements HGQueryCondition
 {
-	private HGHandle startAtom;
+	private Ref<HGHandle> startAtom;
 	private HGAtomPredicate linkPredicate = null;
 	private HGAtomPredicate siblingPredicate = null;
 	private boolean returnPreceeding = true, 
@@ -42,11 +44,17 @@ public abstract class TraversalCondition implements HGQueryCondition
 	{
 		
 	}
+	
 	public TraversalCondition(HGHandle startAtom)
+	{
+		this.startAtom = hg.constant(startAtom);
+	}
+
+	public TraversalCondition(Ref<HGHandle> startAtom)
 	{
 		this.startAtom = startAtom;
 	}
-
+	
 	public HGALGenerator makeGenerator(HyperGraph graph)
 	{
 		return new DefaultALGenerator(graph, 
@@ -60,14 +68,24 @@ public abstract class TraversalCondition implements HGQueryCondition
 	
 	public abstract HGTraversal getTraversal(HyperGraph graph);
 	
-	public HGHandle getStartAtom()
+	public Ref<HGHandle> getStartAtomReference()
 	{
 		return startAtom;
+	}
+	
+	public void setStartAtomReference(Ref<HGHandle> startAtom)
+	{
+		this.startAtom = startAtom;
+	}
+	
+	public HGHandle getStartAtom()
+	{
+		return startAtom == null ? null : startAtom.get();
 	}
 
 	public void setStartAtom(HGHandle startAtom)
 	{
-		this.startAtom = startAtom;
+		this.startAtom = hg.constant(startAtom);
 	}
 
 	public HGAtomPredicate getLinkPredicate()
@@ -144,7 +162,7 @@ public abstract class TraversalCondition implements HGQueryCondition
 		else
 		{
 			TraversalCondition c = (TraversalCondition)x;
-			return startAtom.equals(c.startAtom) &&
+			return HGUtils.eq(startAtom, c.startAtom) &&
 				   HGUtils.eq(linkPredicate, c.linkPredicate) &&
 				   HGUtils.eq(siblingPredicate, c.siblingPredicate) &&
 				   returnSucceeding == c.returnSucceeding &&

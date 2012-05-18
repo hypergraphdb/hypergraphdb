@@ -8,14 +8,15 @@
 package org.hypergraphdb.query;
 
 import java.util.List;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.handle.HGLiveHandle;
-//import org.hypergraphdb.storage.BAUtils;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -33,71 +34,59 @@ import org.hypergraphdb.util.HGUtils;
  */
 public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private HGHandle [] targetSet = HyperGraph.EMPTY_HANDLE_SET;
-	private byte [] targetsBuffer = null;
-	
-//	private byte [] getTargetsBuffer(HyperGraph graph)
-//	{
-//		if (targetsBuffer == null)
-//		{
-//			targetsBuffer = new byte[16*targetSet.length];
-//			for (int i = 0; i < targetSet.length; i++)
-//			{
-//				byte [] src = graph.getPersistentHandle(targetSet[i]).toByteArray();
-//				System.arraycopy(src, 0, targetsBuffer, i*16, 16);
-//			}
-//		}
-//		return targetsBuffer;
-//	}
+	@SuppressWarnings("unchecked")
+	static Ref<HGHandle> [] EMPTY_TUPLE = new Ref[0];
+	private Ref<HGHandle> [] targetSet = EMPTY_TUPLE;
 	
 	public OrderedLinkCondition()
 	{
 		
 	}
 	
-	public OrderedLinkCondition(HGHandle [] targetSet)
+	@SuppressWarnings("unchecked")
+	public OrderedLinkCondition(HGHandle...targetSet)
 	{
 		if (targetSet == null)
 			throw new HGException("OrderedLinkCondition instantiated with a null target set.");
-        this.targetSet = new HGHandle[targetSet.length];		
-        System.arraycopy(targetSet, 0, this.targetSet, 0, targetSet.length);
+        this.targetSet = new Ref[targetSet.length];
+        for (int i = 0; i < targetSet.length; i++)
+        	this.targetSet[i] = hg.constant(targetSet[i]);
 	}
 
-    public OrderedLinkCondition(List<HGHandle> targetSet)
+	public OrderedLinkCondition(Ref<HGHandle>...targetSet)
+	{
+		this.targetSet = targetSet;
+	}
+	
+    @SuppressWarnings("unchecked")
+	public OrderedLinkCondition(List<HGHandle> targetSet)
     {
         if (targetSet == null)
             throw new HGException("OrderedLinkCondition instantiated with a null target set.");
-        this.targetSet = new HGHandle[targetSet.size()];
+        this.targetSet = new Ref[targetSet.size()];
         int i = 0;
         for (HGHandle h : targetSet)
-            this.targetSet[i++] = h; 
+            this.targetSet[i++] = hg.constant(h); 
     }
 	
-	public HGHandle [] targets()
+	public Ref<HGHandle> [] targets()
 	{
 		return targetSet;
 	}
 	
-	public HGHandle[] getTargets()
+	public Ref<HGHandle> [] getTargets()
 	{
 		return targetSet;
 	}
 
-	public void setTargets(HGHandle[] targetSet)
+	public void setTargets(Ref<HGHandle>[] targetSet)
 	{
 		this.targetSet = targetSet;
 	}
 
 	public void setTarget(int pos, HGHandle newTarget)
 	{
-		targetSet[pos] = newTarget;
-		byte [] B;
-		if (newTarget instanceof HGPersistentHandle)
-			B = ((HGPersistentHandle)newTarget).toByteArray();
-		else
-			B = ((HGLiveHandle)newTarget).getPersistent().toByteArray();
-		if (targetsBuffer != null)
-			System.arraycopy(B, 0, targetsBuffer, B.length*pos, B.length);
+		targetSet[pos] = hg.constant(newTarget);
 	}
 	
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
@@ -114,8 +103,8 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 			int i = 0, j = 0;
 			while (i < link.getArity() && j < targetSet.length)
 			{
-				if (targetSet[j].equals(link.getTargetAt(i))
-				    || targetSet[j].equals(hg.getHandleFactory().anyHandle())) 
+				if (targetSet[j].get().equals(link.getTargetAt(i))
+				    || targetSet[j].get().equals(hg.getHandleFactory().anyHandle())) 
 					j++;
 				i++;
 			}
@@ -123,23 +112,11 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		}
 		else
 		{
-//			byte [] A = hg.getStore().getLinkData(hg.getPersistentHandle(handle));
-//			byte [] B = getTargetsBuffer(hg);
-//			byte [] anyBuffer = HGHandleFactory.anyHandle.toByteArray();
-//			int i = 32, j = 0;
-//			while (i < A.length && j < B.length)
-//			{
-//				if (BAUtils.eq(A, i, B, j, 16) || BAUtils.eq(B, j, anyBuffer, 0, 16))
-//					j += 16;
-//				i += 16;
-//			}
-//			return j == B.length;
-			
  			HGPersistentHandle [] A = hg.getStore().getLink(hg.getPersistentHandle(handle));			
 			int i = 2, j = 0;
 			while (i < A.length && j < targetSet.length)
 			{
-				if (targetSet[j].equals(A[i]) || targetSet[j].equals(hg.getHandleFactory().anyHandle()))
+				if (targetSet[j].get().equals(A[i]) || targetSet[j].get().equals(hg.getHandleFactory().anyHandle()))
 					j++;
 				i++;
 			}
@@ -152,7 +129,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 		StringBuffer result = new StringBuffer("orderedLinks(");
 		for (int i = 0; i < targetSet.length; i++)
 		{
-			result.append(targetSet[i]);
+			result.append(targetSet[i].get());
 			if (i < targetSet.length - 1)
 				result.append(",");
 		}
@@ -163,7 +140,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 	public int hashCode() 
 	{ 
 		int x = 0;
-		for (HGHandle h : targetSet) x += h.hashCode();
+		for (Ref<HGHandle> h : targetSet) x += h.get().hashCode();
 		return x;
 	}
 	

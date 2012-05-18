@@ -36,7 +36,7 @@ public class TypedValueToQuery implements ConditionToQuery
 			//
 			
 			HGHandle typeHandle = vc.getTypeHandle(graph);
-			HGAtomType type = graph.getTypeSystem().getType(typeHandle);
+			HGAtomType type = graph.get(typeHandle);
 			if (type == null)
 				throw new HGException("Cannot search by value " + vc.getValue()
 						+ " of unknown HGAtomType with handle " + typeHandle);

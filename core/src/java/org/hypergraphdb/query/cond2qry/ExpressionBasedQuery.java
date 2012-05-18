@@ -393,10 +393,10 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{					
 					for (int ti = 0; ti < c.targets().length; ti++)
 					{					
-						HGHandle targetHandle = c.targets()[ti];
-						if (targetHandle.equals(graph.getHandleFactory().anyHandle()))
+						Ref<HGHandle> targetHandle = c.targets()[ti];
+						if (hg.isVar(targetHandle) || targetHandle.equals(hg.constant(graph.getHandleFactory().anyHandle())))
 							continue;
-						Pair<HGHandle, HGIndex> p = findIndex(new ByTargetIndexer(typeHandle, ti)); //graph.getIndexManager().getIndex(indexer);
+						Pair<HGHandle, HGIndex> p = findIndex(new ByTargetIndexer(typeHandle, ti));
 						if (p != null)
 						{
 						    if (typeHandle.equals(p.getFirst()))
@@ -416,7 +416,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						    }
                             out.remove(new IncidentCondition(targetHandle));						    
 							out.add(new IndexCondition<HGPersistentHandle, HGPersistentHandle>(
-										p.getSecond(), graph.getPersistentHandle(targetHandle)));
+										p.getSecond(), targetHandle.get().getPersistent()));
 						}
 					}
 				}
@@ -585,7 +585,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 			And result = new And();
 			result.add(cond);
-			for (HGHandle h : ((OrderedLinkCondition)cond).targets())
+			for (Ref<HGHandle> h : ((OrderedLinkCondition)cond).targets())
 				if (!h.equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
@@ -593,7 +593,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		else if (cond instanceof LinkCondition)
 		{
 			And result = new And();
-			for (HGHandle h : ((LinkCondition)cond).targets())
+			for (Ref<HGHandle> h : ((LinkCondition)cond).targets())
 				if (!h.equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
@@ -619,18 +619,18 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	    if (c instanceof LinkCondition)
 	    {
 	        LinkCondition lc = (LinkCondition)c;
-	        if (lc.getTargetSet().contains(hg.anyHandle()))
+	        if (lc.getTargetSet().contains(hg.constant(hg.anyHandle())))
 	        {
-	            lc.getTargetSet().remove(hg.anyHandle());
-	            lc.getTargetSet().add(graph.getHandleFactory().anyHandle());
+	            lc.getTargetSet().remove(hg.constant(hg.anyHandle()));
+	            lc.getTargetSet().add(hg.constant((HGHandle)graph.getHandleFactory().anyHandle()));
 	        }
 	    }
 	    else if (c instanceof OrderedLinkCondition)
 	    {
 	        OrderedLinkCondition lc = (OrderedLinkCondition)c;
 	        for (int i = 0; i < lc.getTargets().length; i++)
-	            if (lc.getTargets()[i] == hg.anyHandle())
-	                lc.getTargets()[i] = graph.getHandleFactory().anyHandle();
+	            if (lc.getTargets()[i].equals(hg.constant(hg.anyHandle())))
+	                lc.getTargets()[i] = hg.constant((HGHandle)graph.getHandleFactory().anyHandle());
 	    }
 	    else if (c instanceof Not)
 	    {

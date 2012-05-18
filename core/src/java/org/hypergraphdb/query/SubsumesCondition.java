@@ -9,7 +9,10 @@ package org.hypergraphdb.query;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.type.HGAtomType;
+import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -21,8 +24,8 @@ import org.hypergraphdb.type.HGAtomType;
  */
 public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition, HGAtomPredicate 
 {
-	private HGHandle specific;
-	private Object specificValue;
+	private Ref<HGHandle> specific;
+	private Ref<Object> specificValue;
 	private HGAtomPredicate impl;
 	
 	private final class AtomBased implements HGAtomPredicate
@@ -31,16 +34,16 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 		{
 			HGHandle generalType = graph.getType(general);
 			
-			if (specificValue == null)
+			if (specificValue.get() == null)
 			{
 				return ((HGAtomType)graph.get(graph.getType(general))).subsumes(graph.get(general), null);
 			}
 			else
 			{
-				HGHandle h = graph.getHandle(specificValue);
+				HGHandle h = graph.getHandle(specificValue.get());
 				HGHandle specificType;
 				if (h == null)
-					 specificType = graph.getTypeSystem().getTypeHandle(specificValue.getClass());
+					 specificType = graph.getTypeSystem().getTypeHandle(specificValue.get().getClass());
 				else
 				{
 					specificType = graph.getType(h);
@@ -50,7 +53,7 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 				if (!specificType.equals(generalType))
 					return false;
 				else
-					return ((HGAtomType)graph.get(graph.getType(general))).subsumes(graph.get(general), specificValue);
+					return ((HGAtomType)graph.get(graph.getType(general))).subsumes(graph.get(general), specificValue.get());
 			}
 		}
 	}
@@ -59,14 +62,14 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 	{
 		public boolean satisfies(HyperGraph graph, HGHandle general)
 		{
-			if (declaredSubsumption(graph, general, specific))
+			if (declaredSubsumption(graph, general, specific.get()))
 				return true;
-			HGHandle specificType = graph.getType(specific);
+			HGHandle specificType = graph.getType(specific.get());
 			HGHandle generalType = graph.getType(general);
 			if (!generalType.equals(specificType))
 				return false;
 			else
-				return ((HGAtomType)graph.get(generalType)).subsumes(graph.get(general), graph.get(specific));
+				return ((HGAtomType)graph.get(generalType)).subsumes(graph.get(general), graph.get(specific.get()));
 		}
 	}
 	
@@ -84,24 +87,40 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 		setSpecificHandle(specific);
 	}
 	
-	public HGHandle getSpecificHandle()
+	public Ref<HGHandle> getSpecificHandleReference()
 	{
 		return specific;
 	}
-	public void setSpecificHandle(HGHandle specific)
+	
+	public void setSpecificHandleReference(Ref<HGHandle> specific)
 	{
 		this.specific = specific;
-		if(this.specific != null) impl = new HandleBased();
+	}
+	
+	public HGHandle getSpecificHandle()
+	{
+		return specific == null ? null : specific.get();
+	}
+	
+	public void setSpecificHandle(HGHandle specific)
+	{
+		this.specific = hg.constant(specific);
+		this.specificValue = null;
+		if(specific != null) 
+			impl = new HandleBased();
 	}
 	
 	public Object getSpecificValue()
 	{
-		return specificValue;
+		return specificValue == null ? null : specificValue.get();
 	}
+	
 	public void setSpecificValue(Object specificValue)
 	{
-		this.specificValue = specificValue;
-		if (this.specificValue != null) impl = new AtomBased();
+		this.specificValue = hg.constant(specificValue);
+		this.specific = null;
+		if (specificValue != null) 
+			impl = new AtomBased();
 
 	}
 	public final boolean satisfies(HyperGraph hg, HGHandle general) 
@@ -121,7 +140,13 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 		else
 		{
 			SubsumesCondition c = (SubsumesCondition)x;
-			return specific.equals(c.specific);
+			if (specific != null)
+				return c.specific == null ? false : HGUtils.eq(specific.get(), c.specific.get());
+			else if (specificValue != null)
+				return c.specificValue == null ? false : HGUtils.eq(specificValue.get(), c.specificValue.get());
+			else
+				return c.specific == null && c.specificValue == null;
+
 		}
-	}	
+	}
 }

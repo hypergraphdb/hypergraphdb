@@ -92,7 +92,7 @@ public abstract class SimpleValueCondition implements HGQueryCondition, HGAtomPr
 	
 	public Object getValue()
 	{
-		return value;
+		return value == null ? null : value.get();
 	}
 	
 	public void setValue(Object value)

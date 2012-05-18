@@ -14,7 +14,9 @@ import java.util.Queue;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
@@ -26,7 +28,7 @@ import org.hypergraphdb.util.Pair;
  */
 public class HGBreadthFirstTraversal implements HGTraversal 
 {
-	private HGHandle startAtom;
+	private Ref<HGHandle> startAtom;
 	private int maxDistance = Integer.MAX_VALUE; // the maximum reachable distance from the starting node
 	// The following maps contains all atoms that have been reached: if they have
 	// been actually visited (i.e. returned by the 'next' method), they map to 
@@ -39,8 +41,8 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	
 	private void init()
 	{
-        examined.put(startAtom, Boolean.TRUE);
-        advance(startAtom, 0);     	    
+        examined.put(startAtom.get(), Boolean.TRUE);
+        advance(startAtom.get(), 0);     	    
         initialized = true;        
 	}
 	
@@ -63,14 +65,24 @@ public class HGBreadthFirstTraversal implements HGTraversal
 		i.close();
 	}
 	
-	public void setStartAtom(HGHandle startAtom)
+	public Ref<HGHandle> getStartAtomReference()
+	{
+		return startAtom;
+	}
+	
+	public void setStartAtomReference(Ref<HGHandle> startAtom)
 	{
 		this.startAtom = startAtom;
 	}
 	
+	public void setStartAtom(HGHandle startAtom)
+	{
+		this.startAtom = hg.constant(startAtom);
+	}
+	
 	public HGHandle getStartAtom()
 	{
-		return startAtom;
+		return startAtom == null ? null : startAtom.get();
 	}
 	
 	public HGALGenerator getAdjListGenerator()
@@ -97,13 +109,24 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	    this(startAtom, adjListGenerator, Integer.MAX_VALUE);
 	}
 	
+	public HGBreadthFirstTraversal(Ref<HGHandle> startAtom, HGALGenerator adjListGenerator)
+	{
+		this(startAtom, adjListGenerator, Integer.MAX_VALUE);
+	}
+	
 	public HGBreadthFirstTraversal(HGHandle startAtom, HGALGenerator adjListGenerator, int maxDistance)
+	{
+		this(hg.constant(startAtom), adjListGenerator, maxDistance);
+	}
+	
+	public HGBreadthFirstTraversal(Ref<HGHandle> startAtom, HGALGenerator adjListGenerator, int maxDistance)
 	{
 	    this.maxDistance = maxDistance;
         this.startAtom = startAtom;
         this.adjListGenerator = adjListGenerator;
-        init();
+        init();		
 	}
+	
 	public boolean hasNext() 
 	{
 		if (!initialized)

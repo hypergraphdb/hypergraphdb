@@ -47,7 +47,7 @@ public class VarContext
 		public VarImpl(String name) { this.name = name; }
 		@SuppressWarnings("unchecked")
 		public T get() { return (T)vars.get(name); }
-		public void set(T value) { vars.put(name, value); }		
+		public void set(T value) { vars.put(name, value); }	
 	}
 
 	public boolean isSameVar(Var<?> v1, Var<?> v2)

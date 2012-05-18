@@ -9,11 +9,13 @@ package org.hypergraphdb.query.impl;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.Ref;
 
 public final class LinkProjectionMapping implements Mapping<HGLink, HGHandle>
 {
-	private int targetPosition;
+	private Ref<Integer> targetPosition;
 	
 	public LinkProjectionMapping()
 	{
@@ -21,21 +23,31 @@ public final class LinkProjectionMapping implements Mapping<HGLink, HGHandle>
 	}
 	public LinkProjectionMapping(int targetPosition)
 	{
+		this.targetPosition = hg.constant(targetPosition);
+	}
+	public LinkProjectionMapping(Ref<Integer> targetPosition)
+	{
 		this.targetPosition = targetPosition;
 	}
 	
 	public HGHandle eval(HGLink x)
 	{
-		return x.getTargetAt(targetPosition);
+		return x.getTargetAt(targetPosition.get());
 	}
 	public int getTargetPosition()
 	{
-		return targetPosition;
+		return targetPosition.get();
 	}
 	public void setTargetPosition(int targetPosition)
 	{
-		this.targetPosition = targetPosition;
+		this.targetPosition = hg.constant(targetPosition);
 	}
-	
-	
+	public Ref<Integer> getTargetPositionReference()
+	{
+		return this.targetPosition;
+	}
+	public void setTargetPositionReference(Ref<Integer> tp)
+	{
+		this.targetPosition = tp;
+	}
 }

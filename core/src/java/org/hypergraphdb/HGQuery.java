@@ -617,6 +617,13 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see SubsumedCondition
          */
         public static SubsumedCondition subsumed(HGHandle general) { return new SubsumedCondition(general); }
+        /**
+         * <p>Return a condition constraining the result set to atoms more specific than the passed in
+         * <code>general</code> reference parameter. This condition is generally useful when searching for types,
+         * but it is applicable to any set atoms interlinked with the {@link HGSubsumes} relation.
+         * @see SubsumedCondition
+         */
+        public static SubsumedCondition subsumed(Ref<HGHandle> general) { return new SubsumedCondition(general); }
         
         /**
          * <p>Return a conjunction (logical <code>and</code>) of conditions - atoms in the result set will have
@@ -717,6 +724,16 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
         /**
          * <p>Return a condition constraining the query result set to links pointing to a target set 
+         * of atoms, as specified by the list of {@link HGHandle} {@link Ref}. 
+         * </p>
+         * @param link The target set specified as an of references to {@link HGHandle}. The order of targets in this
+         * array is ignored - it is treated as a set.
+         * @see LinkCondition
+         */
+        public static LinkCondition link(Ref<HGHandle>...h) { return new LinkCondition(h); }
+        
+        /**
+         * <p>Return a condition constraining the query result set to links pointing to a target set 
          * of atoms. 
          * </p>
          * @param C The target set specified as a Java collection.
@@ -733,6 +750,16 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see OrderedLinkCondition
          */        
         public static OrderedLinkCondition orderedLink(HGHandle...h) { return new OrderedLinkCondition(h); }
+
+        /**
+         * <p>Return a condition constraining the query result set to being ordered links of a certain
+         * form. 
+         * </p>
+         * @param h The target set specified as an of {@link Ref} {@link HGHandle}s. The order of targets in this
+         * array sets the order of targets in the resulting atoms. 
+         * @see OrderedLinkCondition
+         */        
+        public static OrderedLinkCondition orderedLink(Ref<HGHandle>...h) { return new OrderedLinkCondition(h); }
         
         /**
          * <p>Return a condition constraining the query result set to being ordered links of a certain
@@ -752,6 +779,15 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see ArityCondition
          */                
         public static ArityCondition arity(int i) { return new ArityCondition(i); }
+
+        /**
+         * <p>Return a condition constraining the query result set to being links with the specified arity (number
+         * of targets).
+         * </p>
+         * @param i A {@link Ref} to the arity of the atoms in the result set. 
+         * @see ArityCondition
+         */                
+        public static ArityCondition arity(Ref<Integer> i) { return new ArityCondition(i); }
         
         /**
          * <p>Return an atom predicate constraining the result set to atoms that are not connected
@@ -1013,6 +1049,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see LinkProjectionMapping
          */
         public static Mapping<HGLink, HGHandle> linkProjection(int targetPosition) { return new LinkProjectionMapping(targetPosition); }
+        /**
+         * <p>
+         * Return a {@link Mapping} that takes a link atom and returns a target at the given position.
+         * </p>
+         * @param targetPosition A {@link Ref} to the position of the target to be returned.
+         * @see LinkProjectionMapping
+         */
+        public static Mapping<HGLink, HGHandle> linkProjection(Ref<Integer> targetPosition) { return new LinkProjectionMapping(targetPosition); }
         
         /**
          * <p>
@@ -1071,6 +1115,16 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * Return a condition whose result set is the breadth first traversal of the graph
          * starting a given atom.
          * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @see BFSCondition
+         */
+        public static BFSCondition bfs(Ref<HGHandle> start) { return new BFSCondition(start); }
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
          * @param start The starting atom.
          * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
          * links satisfying this predicate will be followed.
@@ -1089,6 +1143,31 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         	c.setSiblingPredicate(sp);
         	return c;
         }
+
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>. 
+         * @see BFSCondition
+         */
+        public static BFSCondition bfs(Ref<HGHandle> start, 
+        							   HGAtomPredicate lp, 
+        							   HGAtomPredicate sp) 
+        { 
+        	BFSCondition c = new BFSCondition(start);
+        	c.setLinkPredicate(lp);
+        	c.setSiblingPredicate(sp);
+        	return c;
+        }
+        
         
         /**
          * <p>
@@ -1119,6 +1198,37 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 			c.setReturnSucceeding(returnSucceeding);
 			return c;
 		}        
+
+        
+        /**
+         * <p>
+         * Return a condition whose result set is the breadth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @param returnPreceding Whether to return siblings preceding the current atom in an ordered link.
+         * @param returnSucceeding Whether to return siblings following the current atom in an ordered link.
+         * @see BFSCondition 
+         */        
+        public static BFSCondition bfs(Ref<HGHandle> start, 
+									   HGAtomPredicate lp, 
+									   HGAtomPredicate sp,
+									   boolean returnPreceding,
+									   boolean returnSucceeding) 
+		{ 
+			BFSCondition c = new BFSCondition(start);
+			c.setLinkPredicate(lp);
+			c.setSiblingPredicate(sp);
+			c.setReturnPreceeding(returnPreceding);
+			c.setReturnSucceeding(returnSucceeding);
+			return c;
+		}        
         
         /**
          * <p>
@@ -1129,6 +1239,16 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DFSCondition
          */        
         public static DFSCondition dfs(HGHandle start) { return new DFSCondition(start); }
+
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting with a given atom.
+         * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @see DFSCondition
+         */        
+        public static DFSCondition dfs(Ref<HGHandle> start) { return new DFSCondition(start); }
         
         /**
          * <p>
@@ -1145,6 +1265,30 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DFSCondition 
          */        
         public static DFSCondition dfs(HGHandle start, 
+        							   HGAtomPredicate lp, 
+        							   HGAtomPredicate sp) 
+        { 
+        	DFSCondition c = new DFSCondition(start);
+        	c.setLinkPredicate(lp);
+        	c.setSiblingPredicate(sp);
+        	return c;
+        }
+
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting with a given atom.
+         * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @see DFSCondition 
+         */        
+        public static DFSCondition dfs(Ref<HGHandle> start, 
         							   HGAtomPredicate lp, 
         							   HGAtomPredicate sp) 
         { 
@@ -1171,6 +1315,36 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DFSCondition 
          */         
         public static DFSCondition dfs(HGHandle start, 
+									   HGAtomPredicate lp, 
+									   HGAtomPredicate sp,
+									   boolean returnPreceeding,
+									   boolean returnSucceeding) 
+		{ 
+			DFSCondition c = new DFSCondition(start);
+			c.setLinkPredicate(lp);
+			c.setSiblingPredicate(sp);
+			c.setReturnPreceeding(returnPreceeding);
+			c.setReturnSucceeding(returnSucceeding);
+			return c;
+		}
+
+        /**
+         * <p>
+         * Return a condition whose result set is the depth first traversal of the graph
+         * starting a given atom.
+         * </p>
+         * @param start A {@link Ref} to the starting atom.
+         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * links satisfying this predicate will be followed.
+         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
+         * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
+         * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
+         * @param returnPreceding Whether to return siblings preceding the current atom in an ordered link.
+         * @param returnSucceeding Whether to return siblings following the current atom in an ordered link.
+         * @see DFSCondition 
+         */         
+        public static DFSCondition dfs(Ref<HGHandle> start, 
 									   HGAtomPredicate lp, 
 									   HGAtomPredicate sp,
 									   boolean returnPreceeding,
