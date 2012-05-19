@@ -91,8 +91,10 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
             return false;
         else if (other instanceof HGLiveHandle)
             return persistentHandle.equals(((HGLiveHandle)other).getPersistent());
-        else
+        else if (other instanceof HGPersistentHandle)
             return persistentHandle.equals((HGPersistentHandle)other);
+        else
+        	return false;
     }
 
     public String toString()

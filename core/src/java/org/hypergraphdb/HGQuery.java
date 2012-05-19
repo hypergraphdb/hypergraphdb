@@ -835,7 +835,8 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @param op The {@link ComparisonOperator} to use in the comparison.
          * @see AtomValueCondition
          */
-        public static AtomValueCondition value(Ref<Object> value, ComparisonOperator op) { return new AtomValueCondition(value, op); }
+        public static AtomValueCondition value(Ref<Object> value, ComparisonOperator op) 
+        	{ return new AtomValueCondition((Ref<Object>)(value == null ? hg.constant(value) : value), op); }
         
         /**
          * <p>Return a condition constraining resulting atoms to atoms whose value is equal to 
@@ -930,14 +931,15 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * atom part must be <code>Comparable</code>.
          * @see AtomPartCondition
          */
-        public static AtomPartCondition part(String path, Object value, ComparisonOperator op) {  return new AtomPartCondition(path.split("\\."), value, op); }
+        public static AtomPartCondition part(String path, Object value, ComparisonOperator op) 
+        	{  return new AtomPartCondition(path.split("\\."), value, op); }
         
         /**
          * See {@link #part(String, Object, ComparisonOperator)}. This method specifying the value as a 
          * {@link Ref}.
          */
         public static AtomPartCondition part(String path, Ref<Object> value, ComparisonOperator op) 
-        	{  return new AtomPartCondition(path.split("\\."), value, op); }
+        	{  return new AtomPartCondition(path.split("\\."), (Ref<Object>)(value == null ? hg.constant(value) : value), op); }
         
         /**
          * <p>
@@ -955,7 +957,8 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * See {@link #eq(String, Object)}. This method specifying the value as a 
          * {@link Ref}.
          */
-        public static AtomPartCondition eq(String path, Ref<Object> x) { return part(path, x, ComparisonOperator.EQ); }
+        public static AtomPartCondition eq(String path, Ref<Object> x) 
+        	{ return part(path, (Ref<Object>)(x == null ? hg.constant(x) : x), ComparisonOperator.EQ); }
         
         /**
          * <p>

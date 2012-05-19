@@ -233,10 +233,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					if (byType == null)
 					{
 						if (byTypedValue != null)
+						{
 							if(!checkConsistent(byTypedValue, (AtomTypeCondition)c))
 								return Nothing.Instance;
 							else if (isSameType(byTypedValue, (AtomTypeCondition)c))
 								i.remove();
+						}
 						else
 							byType = (AtomTypeCondition)c;
 					}
@@ -297,6 +299,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (byTypedValue != null)
 			{
 				if (byType != null)
+				{
 					if (!checkConsistent(byTypedValue, byType))
 						return Nothing.Instance;
 					else if (isSameType(byTypedValue, byType))
@@ -306,6 +309,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							typeHandle = byType.getTypeHandle();
 						byType = null;
 					}
+				}
 				if (byValue != null)
 					if (!checkConsistent(byTypedValue, byValue))
 						return Nothing.Instance;
@@ -586,7 +590,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			And result = new And();
 			result.add(cond);
 			for (Ref<HGHandle> h : ((OrderedLinkCondition)cond).targets())
-				if (!h.equals(graph.getHandleFactory().anyHandle()))
+				if (!hg.isVar(h) && !h.get().equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
 		}
@@ -594,7 +598,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 			And result = new And();
 			for (Ref<HGHandle> h : ((LinkCondition)cond).targets())
-				if (!h.equals(graph.getHandleFactory().anyHandle()))
+				if (!hg.isVar(h) && !h.get().equals(graph.getHandleFactory().anyHandle()))
 					result.add(new IncidentCondition(h));
 			cond = result;
 		}		
