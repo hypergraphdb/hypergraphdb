@@ -100,7 +100,7 @@ public class TestHGAtomRef extends HGTestBase
         car.setCost(cost);
         
         HGHandle hcar = graph.add(car);
-        
+        Assert.assertNotNull(hcar);
         HGHandle hperson = graph.getHandle(person);
         Assert.assertNotNull(hperson);        
         

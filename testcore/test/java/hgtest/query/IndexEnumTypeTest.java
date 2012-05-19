@@ -48,7 +48,8 @@ public class IndexEnumTypeTest extends HGTestBase
 
         HGQueryCondition condition = hg.and(hg.type(BeanWithEnum.class), hg.eq("which", AnEnum.second));
         HGQuery query = HGQuery.make(graph, condition);
-        System.out.println(query.getClass().toString());
+//        System.out.println(query.getClass().toString());
+//        System.out.println(((ExpressionBasedQuery)query).getCompiledQuery().getClass().toString());
         Assert.assertTrue(query instanceof IndexBasedQuery || 
                           (query instanceof ExpressionBasedQuery &&
                            ((ExpressionBasedQuery)query).getCompiledQuery() instanceof IndexBasedQuery));
