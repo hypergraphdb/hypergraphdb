@@ -32,7 +32,7 @@ import org.hypergraphdb.util.Ref;
  *  
  * @author Borislav Iordanov
  */
-public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate 
+public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 {
 	@SuppressWarnings("unchecked")
 	static Ref<HGHandle> [] EMPTY_TUPLE = new Ref[0];

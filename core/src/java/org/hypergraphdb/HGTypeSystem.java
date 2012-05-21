@@ -353,11 +353,11 @@ public class HGTypeSystem
 	HGLiveHandle loadPredefinedType(HGPersistentHandle pHandle)
 	{
 		graph.getEventManager().dispatch(graph, new HGLoadPredefinedTypeEvent(pHandle));
-		HGLiveHandle result = graph.cache.get(pHandle);
-		if (result != null)
-			return result;
-		else
-		{
+//		HGLiveHandle result = graph.cache.get(pHandle);
+//		if (result != null)
+//			return result;
+//		else
+//		{
 			String classname = getPredefinedTypesDB().findFirst(pHandle);
 			if (classname == null)
 			{
@@ -377,7 +377,7 @@ public class HGTypeSystem
 				throw new HGException("Could not create predefined type instance with " +
 				                    classname + " for type " + pHandle + ": " + ex.toString(), ex);
 			}
-		}
+//		}
 	}
 
 	public HGTypeSchema<?> getSchema()
@@ -690,7 +690,11 @@ public class HGTypeSystem
 			}
 		}
 
-		HGLiveHandle typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());
+		HGLiveHandle typeHandle = graph.cache.get(handle);
+		if (typeHandle == null)
+			typeHandle = graph.cache.atomRead(handle, type, new HGAtomAttrib());
+		else
+			typeHandle = graph.cache.atomRefresh(typeHandle, type, false);			
 		graph.cache.freeze(typeHandle);
 
 		if (typeId != null)
