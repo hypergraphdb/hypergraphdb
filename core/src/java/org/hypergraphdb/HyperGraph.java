@@ -1105,7 +1105,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        }
 	        store.removeIncidenceSet(pHandle);   
 	        cache.getIncidenceCache().remove(pHandle);
-	        cache.remove(cache.get(atom));        
+	        cache.remove((HGHandle)cache.get(atom));        
 	        eventManager.dispatch(HyperGraph.this, new HGAtomRemovedEvent(pHandle));
 	        return true;
         }

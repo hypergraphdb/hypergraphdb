@@ -165,7 +165,7 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
 	@Override
   public String toString()
   {
-      return "uuidHandle(" + uuid.toString() + ")";
+      return uuid.toString();
   }
 
   public String toStringValue()

@@ -19,23 +19,23 @@ import org.hypergraphdb.util.Mapping;
  * 
  * @author Borislav Iordanov
  */
-public class MappedResult implements HGSearchResult 
+public class MappedResult<From, To> implements HGSearchResult<To> 
 {
-	private HGSearchResult r;
-	private Mapping f;
+	private HGSearchResult<From> r;
+	private Mapping<From, To> f;
 	
-	public MappedResult(HGSearchResult r, Mapping f)
+	public MappedResult(HGSearchResult<From> r, Mapping<From, To> f)
 	{
 		this.r = r;
 		this.f = f;
 	}
 	
-	public Object current() 			{ return f.eval(r.current()); }
+	public To current() 			    { return f.eval(r.current()); }
 	public void close() 		    	{ r.close(); }
 	public boolean hasPrev() 		    { return r.hasPrev(); }
-	public Object prev() 			    { return f.eval(r.prev()); }
+	public To prev() 			        { return f.eval(r.prev()); }
 	public boolean hasNext() 			{ return r.hasNext(); }
-	public Object next() 				{ return f.eval(r.next()); }
+	public To next() 					{ return f.eval(r.next()); }
 	public void remove() 				{ r.remove(); }
 	public boolean isOrdered()			{ return false; }
 }
