@@ -297,6 +297,11 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
      */
     public static final class hg
     {
+    	public static <T> HGQuery<T> make(Class<T> type, HyperGraph graph)
+    	{
+    		return HGQuery.make(type, graph);
+    	}
+    	
         /**
          * <p>
          * Return <code>assertAtom(graph, instance, false)</code>.

@@ -311,8 +311,8 @@ public /*final*/ class HyperGraph implements HyperNode
     	{
 	        store = new HGStore(location, config);
 	        store.getTransactionManager().setHyperGraph(this);
-          eventManager = config.getEventManager();	 
-          eventManager.setHyperGraph(this);
+	        eventManager = config.getEventManager();	 
+	        eventManager.setHyperGraph(this);
 	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
