@@ -334,6 +334,13 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			if (action != null)
 				CacheActionQueueSingleton.get().addAction(action);
 		}
+
+		// We need to make the resolution outside the write lock because,
+		// at least in the case of reading incidence sets, we can get a deadlock
+		// between two write transactions: one gets the write lock but then blocks
+		// on the storage read of the incidence sets because the other has touched
+		// that page and is not making progress because it's waiting on the read lock.
+		Value v = resolver.resolve(key);
 		
 		lock.writeLock().lock();
 		try
@@ -341,7 +348,6 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 			Entry<Key, Value> e = map.get(key);
 			if (e == null)
 			{				
-				Value v = resolver.resolve(key);
 				e = new Entry<Key, Value>(key, v, null, null);
 				map.put(key, e);
 				action = new AddElement(e);
