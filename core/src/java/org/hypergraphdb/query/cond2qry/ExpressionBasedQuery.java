@@ -20,6 +20,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
@@ -686,7 +687,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					return simplify(toDNF(expand(graph, condition))); 
 				}
-			});
+			}, HGTransactionConfig.READONLY);
 			query = ToQueryMap.toQuery(graph, this.condition);		
 			return this;
 		}
