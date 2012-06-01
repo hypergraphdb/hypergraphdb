@@ -21,6 +21,12 @@ import org.hypergraphdb.util.TempLink;
  * in the condition's constructor. 
  * </p>
  * 
+ * <p>
+ * <b>Note</b> that the lower and upper bound in the range specification are inclusing.
+ * A range of [1, 5] means all positions 1 to 5, included, are examined. Position counting
+ * starts at 0 and, as mentioned above, position -1 means the last element.
+ * </p>
+ * 
  * @author Alain Picard, Borislav Iordanov
  */
 public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPredicate
@@ -141,7 +147,7 @@ public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPred
 		}
 		else
 		{
-			for (int i = lowerBoundRef.get(); i < upperBoundRef.get(); i++)
+			for (int i = lb; i <= ub; i++)
 				if (link.getTargetAt(i).equals(target))
 					return true;
 			return false;
