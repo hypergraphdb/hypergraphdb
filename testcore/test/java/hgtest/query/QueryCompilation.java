@@ -26,7 +26,7 @@ public class QueryCompilation extends HGTestBase
 		HGHandle l3 = graph.add(new HGPlainLink(h1, h2));
 					
 		// Incident condition
-		HGQuery<HGHandle> q = HGQuery.make(HGHandle.class, getGraph()).compile(hg.incident(hg.var("target")));
+		HGQuery<HGHandle> q = hg.make(HGHandle.class, getGraph()).compile(hg.incident(hg.var("target")));
 		Set<HGHandle> S = q.var("target", h1).executeInSet();
 		Assert.assertTrue(S.contains(l1)); 
 		Assert.assertTrue(S.contains(l3));
@@ -35,7 +35,7 @@ public class QueryCompilation extends HGTestBase
 		Assert.assertTrue(S.contains(l3));
 		
 		// Type condition
-		q = HGQuery.make(HGHandle.class, graph).compile(hg.type(hg.var("type")));
+		q = hg.make(HGHandle.class, graph).compile(hg.type(hg.var("type")));
 		Assert.assertTrue(q.var("type", String.class).executeInList().size() > 0);
 		Assert.assertTrue(q.var("type", graph.getTypeSystem().getTypeHandle(HGSubgraph.class)).executeInList().size() == 0);
 		

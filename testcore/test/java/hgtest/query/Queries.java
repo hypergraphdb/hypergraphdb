@@ -1,9 +1,11 @@
 package hgtest.query;
 
 import hgtest.HGTestBase;
+import hgtest.T;
 import hgtest.beans.Folder;
 import hgtest.utils.RSUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
@@ -191,6 +193,21 @@ public class Queries extends HGTestBase
         Assert.assertFalse(cond.satisfies(graph, linkH));
     }
 
+    @Test
+    public void testPositionedLinkCondition()
+    {
+    	HGHandle [] A = new HGHandle[10];
+    	for (int i = 0; i < A.length; i++)
+    		A[i] = graph.add("sdsfd" + T.random(Integer.MAX_VALUE));
+    	ArrayList<HGHandle> links = new ArrayList<HGHandle>();
+    	for (int i = 0; i < 5; i++)
+    		links.add(graph.add(new HGPlainLink(A)));
+    	Assert.assertTrue(hg.findAll(graph, hg.incidentAt(A[0], 0)).containsAll(links));
+    	Assert.assertTrue(hg.findAll(graph, hg.incidentAt(A[A.length-1], -1)).containsAll(links));
+    	Assert.assertTrue(hg.findAll(graph, hg.incidentAt(A[5], 3, 7)).containsAll(links));
+    	Assert.assertTrue(hg.findAll(graph, hg.incidentAt(A[3], -4, -1)).isEmpty());
+    }
+    
     @Test
     public void testAtomTypeCondition()
     {
