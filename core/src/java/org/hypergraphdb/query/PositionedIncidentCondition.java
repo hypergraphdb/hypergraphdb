@@ -1,144 +1,218 @@
 package org.hypergraphdb.query;
 
-import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGLink;
-import org.hypergraphdb.util.RelativePosition;
+import org.hypergraphdb.util.Ref;
+import org.hypergraphdb.util.TempLink;
 
 /**
  * <p>
- * A <code>PositionedLinkCondition</code> constraints the query result set to links pointing to a target set
- * of atoms and whose position is consistent with the request. The target set is specified when the condition
- * is constructed through an array of <code>HGHandle</code>s.
+ * A <code>PositionedLinkCondition</code> constraints the query result set to
+ * links pointing to a target atom positioned within a predetermined range in 
+ * the link tuple. The range is specified with a lower and an upper bound where
+ * negative values mean that position are evaluated from the last target in the link.
+ * For example a value of -1 means the last target in the link tuple, -2 means the 
+ * one before the last etc. In addition, the condition allows you to specify that
+ * the target should be position anywhere else except in the specified range. You can 
+ * do this by passing <code>true</code> as the <code>complement</code> parameter
+ * in the condition's constructor. 
  * </p>
  * 
- * @author Alain Picard
+ * @author Alain Picard, Borislav Iordanov
  */
-public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPredicate {
-	private HGHandle target = null;
-	private RelativePosition position = null;
-
-	public PositionedIncidentCondition() {
+public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPredicate
+{
+	private Ref<HGHandle> targetRef = null;
+	private Ref<Integer> lowerBoundRef, upperBoundRef;
+	private Ref<Boolean> complementRef;
+	
+	public PositionedIncidentCondition()
+	{
 	}
 
-	public PositionedIncidentCondition(HGHandle target, RelativePosition position) {
-		if (target == null)
-			throw new HGException("PositionedLinkCondition instantiated with a null target.");
-		this.target = target;
-		this.position = position;
+	public PositionedIncidentCondition(Ref<HGHandle> target, Ref<Integer> position)
+	{
+		this(target, position, hg.constant(false));
 	}
-
-	public HGHandle getTarget() {
-		return target;
-	}
-
-	public void setTarget(HGHandle target) {
-		this.target = target;
-	}
-
-	public RelativePosition getPosition() {
-		return position;
-	}
-
-	public void setPosition(RelativePosition position) {
-		this.position = position;
-	}
-
-	/**
-	 * <p>
-	 * Return <code>true</code> if <code>handle</code> points to a link whose target set is a superset of this
-	 * condition's <code>targetSet</code>.
-	 * </p>
-	 */
-	// TODO: this assumes that there are no duplicates in A. Not sure whether
-	// it should be forbidden in HyperGraph for a link to contains duplicates.
-	// Surely, it doesn't make sense for unordered links - they are just sets. 
-	// However, ordered ones might be tricky since they are essentially lists
-	// (<=> sets of [position, element] pairs).
-	public boolean satisfies(HyperGraph hg, HGHandle handle) {
-		HGPersistentHandle targetPHandle = hg.getPersistentHandle(target);
-
-//		System.out.println("[" + Thread.currentThread().getName() + "]trying to satisfy " + handle + " for " + target);
 		
-		// If the atom corresponding to 'handle' is already in the cache, there is no point 
-		// fetching it from permanent storage. Otherwise, there's no point caching the actual atom...
-		if (hg.isLoaded(handle)) {
+	public PositionedIncidentCondition(Ref<HGHandle> target, 
+									   Ref<Integer> position,
+									   Ref<Boolean> complement)
+	{
+		this.targetRef = target;
+		this.lowerBoundRef = position;
+		this.upperBoundRef = position;
+		this.complementRef = complement;
+	}
+	
+	public PositionedIncidentCondition(Ref<HGHandle> target, 
+									   Ref<Integer> lowerBound, 
+									   Ref<Integer> upperBound,
+									   Ref<Boolean> complement)
+	{
+		this.targetRef = target;
+		this.lowerBoundRef = lowerBound;
+		this.upperBoundRef = upperBound;
+		this.complementRef = complement;
+	}
+	
+	public Ref<HGHandle> getTargetRef()
+	{
+		return targetRef;
+	}
+
+	public void setTargetRef(Ref<HGHandle> targetRef)
+	{
+		this.targetRef = targetRef;
+	}
+
+	public Ref<Integer> getLowerBoundRef()
+	{
+		return lowerBoundRef;
+	}
+
+	public void setLowerBoundRef(Ref<Integer> lowerBoundRef)
+	{
+		this.lowerBoundRef = lowerBoundRef;
+	}
+
+	public Ref<Integer> getUpperBoundRef()
+	{
+		return upperBoundRef;
+	}
+
+	public void setUpperBoundRef(Ref<Integer> upperBoundRef)
+	{
+		this.upperBoundRef = upperBoundRef;
+	}
+
+	public Ref<Boolean> getComplementRef()
+	{
+		return complementRef;
+	}
+
+	public void setComplementRef(Ref<Boolean> complementRef)
+	{
+		this.complementRef = complementRef;
+	}
+
+	public boolean satisfies(HyperGraph hg, HGHandle handle)
+	{
+		HGPersistentHandle target = targetRef.get().getPersistent();
+		HGLink link = null;
+		// If the atom corresponding to 'handle' is already in the cache, there
+		// is no point
+		// fetching it from permanent storage. Otherwise, there's no point
+		// caching the actual atom...
+		if (hg.isLoaded(handle))
+		{
 			Object atom = hg.get(handle);
 			if (!(atom instanceof HGLink))
 				return false;
-			HGLink link = (HGLink)atom;
-			
-			switch (position) {
-			case FIRST:
-				return link.getTargetAt(0).equals(targetPHandle);
-			case LAST:
-				return link.getTargetAt(link.getArity() -1).equals(targetPHandle);
-			case NOT_FIRST:
-				for (int i = 1; i < link.getArity(); i++) {  //start at 2nd 
-					if (link.getTargetAt(i).equals(targetPHandle))
-						return true;
-				}
-				return false;
-			case NOT_LAST:
-				for (int i = 0; i < (link.getArity() -1); i++) {  //stop 1 short 
-					if (link.getTargetAt(i).equals(targetPHandle))
-						return true;
-				}
-				return false;
-				
-			default:
-				return false;
-			}
+			link = (HGLink) atom;
 		}
-		else {
-			HGPersistentHandle[] A = hg.getStore().getLink(hg.getPersistentHandle(handle));
-			switch (position) {
-			case FIRST:
-				return A[2].equals(targetPHandle);
-			case LAST:
-				return A[A.length-1].equals(targetPHandle);
-			case NOT_FIRST:
-				for (int i = 3; i < A.length; i++) { //start at 2nd (4th slot or 2nd link)
-					if (A[i].equals(targetPHandle))
-						return true;
-				}
-				return false;
-			case NOT_LAST:
-				for (int i = 2; i < (A.length -1); i++) { //stop 1 short
-					if (A[i].equals(targetPHandle))
-						return true;
-				}
-				return false;
-				
-			default:
-				return false;
-			}
+		else
+		{
+			HGPersistentHandle[] A = hg.getStore().getLink(handle.getPersistent());
+			link = new TempLink(A, 2);
 		}
-	}
-
-	public int hashCode() {
-		int hash = 7;
-		hash = 31 * hash + target.hashCode();
-		hash = 31 * hash + position.hashCode();
-    return hash;
-	}
-
-	public boolean equals(Object x) {
-		if (!(x instanceof PositionedIncidentCondition))
+		
+		int ub = upperBoundRef.get();
+		if (ub < 0)
+			ub = link.getArity() + ub;
+		int lb = lowerBoundRef.get();
+		if (lb < 0)
+			lb = link.getArity() + lb;
+		
+		assert lb <= ub;
+		
+		if (complementRef.get())
+		{
+			for (int i = 0; i < lb; i++)
+				if (link.getTargetAt(i).equals(target))
+					return true;
+			for (int i = ub + 1; i < link.getArity(); i++)
+				if (link.getTargetAt(i).equals(target))
+					return true;
 			return false;
-		else {
-			PositionedIncidentCondition other = (PositionedIncidentCondition)x;
-			return other.target.equals(target) && other.position.equals(position);
+		}
+		else
+		{
+			for (int i = lowerBoundRef.get(); i < upperBoundRef.get(); i++)
+				if (link.getTargetAt(i).equals(target))
+					return true;
+			return false;
 		}
 	}
 
-	public String toString() {
-		StringBuffer result = new StringBuffer("linksTo(");
-		result.append(target.toString());
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((complementRef == null) ? 0 : complementRef.hashCode());
+		result = prime * result
+				+ ((lowerBoundRef == null) ? 0 : lowerBoundRef.hashCode());
+		result = prime * result
+				+ ((targetRef == null) ? 0 : targetRef.hashCode());
+		result = prime * result
+				+ ((upperBoundRef == null) ? 0 : upperBoundRef.hashCode());
+		return result;
+	}
+
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		PositionedIncidentCondition other = (PositionedIncidentCondition) obj;
+		if (complementRef == null)
+		{
+			if (other.complementRef != null)
+				return false;
+		}
+		else if (!complementRef.equals(other.complementRef))
+			return false;
+		if (lowerBoundRef == null)
+		{
+			if (other.lowerBoundRef != null)
+				return false;
+		}
+		else if (!lowerBoundRef.equals(other.lowerBoundRef))
+			return false;
+		if (targetRef == null)
+		{
+			if (other.targetRef != null)
+				return false;
+		}
+		else if (!targetRef.equals(other.targetRef))
+			return false;
+		if (upperBoundRef == null)
+		{
+			if (other.upperBoundRef != null)
+				return false;
+		}
+		else if (!upperBoundRef.equals(other.upperBoundRef))
+			return false;
+		return true;
+	}
+
+	public String toString()
+	{
+		StringBuffer result = new StringBuffer("incidentAt(");
+		result.append(targetRef.get().toString());
 		result.append(',');
-		result.append(position.toString());
+		result.append(lowerBoundRef.get().toString());
+		result.append(',');
+		result.append(upperBoundRef.get().toString());
+		result.append(',');
+		result.append(complementRef.get().toString());
 		result.append(")");
 		return result.toString();
 	}

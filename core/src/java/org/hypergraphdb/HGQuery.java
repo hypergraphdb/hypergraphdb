@@ -695,17 +695,51 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 		/**
 		 * <p>
 		 * Return a condition constraining the query result set to links pointing to a target atom
-		 * positioned in a predetermined way in the target set. 
+		 * positioned within a predetermined range in the link tuple. 
 		 * </p>
 		 * 
 		 * @param target
-		 *          The target atom specified as a {@link HGHandle}. 
-		 * @param position 
-		 *          The position of the target atom within the target set. 
+		 *          A {@link Ref} to the target atom specified as a {@link HGHandle}. 
+		 * @param lowerBound 
+		 *          A {@link Ref} to the lower bound of the desired range. If the number is negative, it is
+		 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
+		 *          target etc.). 
+		 * @param upperBound 
+		 *          A {@link Ref} to the upper bound of the desired range. If the number is negative, it is
+		 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
+		 *          target etc.). 
 		 * @see PositionedIncidentCondition
 		 */
-        public static PositionedIncidentCondition positionedLink(HGHandle target, RelativePosition position) 
-        	{ return new PositionedIncidentCondition(target, position); }
+        public static PositionedIncidentCondition incidentAt(Ref<HGHandle> target, Ref<Integer> lowerBound, Ref<Integer> upperBound) 
+        	{ return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(false)); }
+        /**
+         * @see {@link #incidentAt(Ref, Ref, Ref)}.
+         */
+        public static PositionedIncidentCondition incidentAt(HGHandle target, int lowerBound, int upperBound) 
+    		{ return hg.incidentAt(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound)); }
+        /**
+         * @see {@link #incidentAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
+         */
+        public static PositionedIncidentCondition incidentAt(HGHandle target, int position) 
+    		{ return hg.incidentAt(hg.constant(target), hg.constant(position), hg.constant(position)); }
+        /**
+         * Same as {@link hg#incidentAt(Ref, Ref, Ref) except uses the complement of the specified range. 
+         * That is, if you specify a range of [2,4], it will match links that do point to the desired target,
+         * but not at positions 2-4. 
+         * @see {@link PositionedIncidentCondition}
+         */
+        public static PositionedIncidentCondition incidentNotAt(Ref<HGHandle> target, Ref<Integer> lowerBound, Ref<Integer> upperBound) 
+    	{ return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(true)); }
+        /**
+         * @see {@link #incidentNotAt(Ref, Ref, Ref)}.
+         */
+        public static PositionedIncidentCondition incidentNotAt(HGHandle target, int lowerBound, int upperBound) 
+    		{ return hg.incidentAt(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound)); }
+        /**
+         * @see {@link #incidentNotAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
+         */
+        public static PositionedIncidentCondition incidentNotAt(HGHandle target, int position) 
+    		{ return hg.incidentAt(hg.constant(target), hg.constant(position), hg.constant(position)); }
         
         /**
          * <p>Return a condition constraining the query result set to links pointing to a target set 
