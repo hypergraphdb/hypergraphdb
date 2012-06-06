@@ -20,6 +20,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
@@ -472,6 +473,18 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		return L;
 	}
 	
+	private HGHandle classToHandle(Class<?> cl)
+	{
+		HGHandle h = graph.getTypeSystem().getTypeHandleIfDefined(cl);
+		if (h == null)
+		{
+			 HGTransaction tx = graph.getTransactionManager().getContext().getCurrent();
+			 if (tx == null || !tx.isReadOnly())
+				 h = graph.getTypeSystem().getTypeHandleIfDefined(cl);
+		}
+		return h;
+	}
+	
 	private HGQueryCondition expand(HyperGraph graph, HGQueryCondition cond)
 	{
 		if (cond instanceof TypePlusCondition)
@@ -480,30 +493,33 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (ac.getJavaClass() == null)
 				ac.setJavaClass(graph.getTypeSystem().getClassForType(ac.getBaseType()));
 			else if (ac.getBaseType() == null)
-			{
-				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass());
-				if (typeHandle != null)
-					ac.setBaseType(typeHandle);
-				else 
-					cond = Nothing.Instance;
-			}
-			if (cond != Nothing.Instance)
+				ac.setBaseType(classToHandle(ac.getJavaClass()));
+//			{
+//				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass());
+//				if (typeHandle != null)
+//					ac.setBaseType(typeHandle);
+//				else 
+//					cond = Nothing.Instance;
+//			}
+			if (ac.getBaseType() != null)
 			{
 				Or orCondition = new Or();
 	            for (HGHandle h : ac.getSubTypes(graph))
 	            	orCondition.add(new AtomTypeCondition(h));
 	            cond = orCondition;
 			}
+			else
+				return Nothing.Instance;
 		}
-		else if (cond instanceof AtomTypeCondition)
-		{
-			AtomTypeCondition tc = (AtomTypeCondition)cond;
-			if (tc.getJavaClass() != null && 
-				!hg.isVar(tc.getTypeReference()) && 
-				graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
-				
-					cond = Nothing.Instance;
-		}
+//		else if (cond instanceof AtomTypeCondition)
+//		{
+//			AtomTypeCondition tc = (AtomTypeCondition)cond;
+//			if (tc.getJavaClass() != null && 
+//				!hg.isVar(tc.getTypeReference()) && 
+//				graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
+//				
+//					cond = Nothing.Instance;
+//		}
 		else if (cond instanceof TypedValueCondition && ((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)
 		{
 			TypedValueCondition tc = (TypedValueCondition)cond;
@@ -511,10 +527,11 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			{
 				HGHandle typeHandle = tc.getTypeHandle();
 				if (typeHandle == null)
-					typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass());
-				if (typeHandle == null)
-					cond = Nothing.Instance;
-				else if (!hg.isVar(tc.getValueReference()))
+					typeHandle = classToHandle(tc.getJavaClass());
+//				if (typeHandle == null)
+//					cond = Nothing.Instance;
+//				else 
+				if (!hg.isVar(tc.getValueReference()))
 				{
 					List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, typeHandle, tc.getValue());
 					if (!indexedParts.isEmpty())
@@ -668,10 +685,24 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	public ExpressionBasedQuery(final HyperGraph graph, final HGQueryCondition condition)
 	{
 		this.graph = graph;
-		compile(condition);
+		compileProcess(condition);
 	}
 	
 	public HGQuery<ResultType> compile(final HGQueryCondition condition)
+	{
+		// This is separate pre-compilation where we want a write-transaction in effect
+		// in case types need to be generated from Java classes and the likes
+		return graph.getTransactionManager().transact(new Callable<HGQuery<ResultType>>() {
+			public HGQuery<ResultType> call()
+			{
+				return compileProcess(condition);
+			}
+		});
+	}
+	
+	// private version that runs within the parent transaction whatever that is..(possibly
+	// a read-only transaction of a regular in-place query)
+	private HGQuery<ResultType> compileProcess(final HGQueryCondition condition)
 	{
 		// The condition was constructed before the make method is called and all variables have been
 		// added to the current top-level context. The make method takes ownership of that context
@@ -687,7 +718,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					return simplify(toDNF(expand(graph, condition))); 
 				}
-			}, HGTransactionConfig.READONLY);
+			}); // this tx can't be read-only more because of pre-compiled queries...
 			query = ToQueryMap.toQuery(graph, this.condition);		
 			return this;
 		}

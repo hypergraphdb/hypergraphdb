@@ -63,13 +63,29 @@ import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Ref;
 import org.hypergraphdb.util.Var;
 import org.hypergraphdb.util.VarContext;
-import org.hypergraphdb.util.RelativePosition;
 
 /**
  * <p>
  * The <code>HGQuery</code> class represents an arbitrary query to the {@link HyperGraph}
  * database. Queries can be constructed out of {@link HGQueryCondition}s via the static {@link make}
  * method and then executed through the {@link execute} method. 
+ * </p>
+ * 
+ * <p>
+ * Queries can be parametarized by a set of variables. You can get and set variables for a
+ * given query execution with the {@link #var(String)} and {@link #var(String, Object)} methods. 
+ * Queries that used variables must be "pre-compiled" by first calling the {@link #make(Class, HyperGraph)}
+ * method and then {@link #compile(HGQueryCondition)} with the query condition right away. Multiple
+ * calls to {@link #compile(HGQueryCondition)} on the same <code>HGQuery</code> instance are not
+ * advised. 
+ * </p>
+ * 
+ * <p>
+ * To ensure thread-safety and allow a single <code>HGQuery</code> instance to be pre-compiled and
+ * reused from multiple threads, each thread of execution will get its own copy of the set of 
+ * variables, cloned from the initial set that was created during the compilation of the query. 
+ * This initial set of variables remains untouched by the <code>var</code> methods, but can be modified
+ * by the analogous {@link #initialVar(String)} and {@link #initialVar(String, Object)}.   
  * </p>
  * 
  * @author Borislav Iordanov
@@ -81,17 +97,41 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	
 	protected VarContext ctx = VarContext.ctx();
 	
+    /**
+     * <p>
+     * Return the thread-local copy of a given variable. Use this method to 
+     * obtain the value of a variable that will be used when executing this query
+     * in the current thread.
+     * </p>
+     */
 	public <T> Var<T> var(String name)
 	{
-		return ctx.get(name);
+		return (Var<T>)ctx.get(name);
 	}
-	
+
+	/**
+	 * <p>Modify the thread-local copy of a given variable. Use this method to 
+     * modify the value of a variable that will be used when executing this query
+     * in the current thread.
+	 * </p>
+	 */
 	public <T> HGQuery<SearchResult> var(String name, T value)
 	{
 		ctx.get(name).set(value);
 		return this;
 	}
-		
+
+	public <T> T initialValue(String name)
+	{
+		return (T)ctx.getGlobalValue(name);
+	}
+	
+	public <T> HGQuery<SearchResult> initialVar(String name, T value)
+	{
+		ctx.setGlobalValue(name, value);
+		return this;
+	}
+	
 	/**
 	 * A query that return the empty result set.
 	 */
@@ -189,10 +229,35 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     
 	/**
 	 * <p>
+	 * Execute the query and return the first result, if any. Otherwise return <code>null</code>.
+	 * </p>
+	 */
+	public SearchResult findOne()
+	{
+    	return getHyperGraph().getTransactionManager().ensureTransaction(new Callable<SearchResult>() {
+        	public SearchResult call()
+        	{        	
+        		HGSearchResult<SearchResult> rs = null;
+        		try
+        		{
+        			rs = execute();
+        			return rs.hasNext() ? rs.next() : null;
+        		}
+        		finally
+        		{
+        			if (rs != null) rs.close();
+        		}
+        	}
+        	},
+        	HGTransactionConfig.READONLY);						
+	}
+	
+	/**
+	 * <p>
 	 * Execute the query and accumulate the results in a <code>List</code>.
 	 * </p>
 	 */
-	public List<SearchResult> executeInList()
+	public List<SearchResult> findAll()
 	{
     	return getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<SearchResult>>() {
         	public List<SearchResult> call()
@@ -217,10 +282,10 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	
 	/**
 	 * <p>
-	 * Execute the query and accumulate the results in a <code>List</code>.
+	 * Execute the query and accumulate the results in a <code>Set</code>.
 	 * </p>
 	 */
-	public Set<SearchResult> executeInSet()
+	public Set<SearchResult> findInSet()
 	{
     	return getHyperGraph().getTransactionManager().ensureTransaction(new Callable<Set<SearchResult>>() {
         	public Set<SearchResult> call()
@@ -1435,7 +1500,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static <T> Var<T> var(String name, T initialValue) 
         {
         	Var<T> v = VarContext.ctx().get(name);
-        	v.set(initialValue);
+        	VarContext.ctx().setGlobalValue(name, initialValue);
         	return v;
         }
 
