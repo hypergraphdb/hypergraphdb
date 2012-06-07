@@ -451,7 +451,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         
         private static HGHandle assertAtomImpl(final HyperGraph graph, final Object instance, final HGHandle type, final boolean ignoreValue)
         {
-            return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+            return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>() {
                 public HGHandle call()
                 {
                     And and = new And();
@@ -544,7 +544,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         								 final Object instance, 
         								 final HGQueryCondition condition)
         {
-        	return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+        	return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>() {
         		public HGHandle call()
         		{
                     HGHandle h = findOne(graph, condition);
@@ -566,7 +566,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         								 final HGHandle typeHandle, 
         								 final HGQueryCondition condition)
         {
-        	return graph.getTransactionManager().transact(new Callable<HGHandle>() {
+        	return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>() {
         		public HGHandle call()
         		{		        	
 		            HGHandle h = findOne(graph, and(type(typeHandle), condition));
