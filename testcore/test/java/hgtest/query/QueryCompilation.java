@@ -3,6 +3,8 @@ package hgtest.query;
 import java.util.Set;
 
 import hgtest.HGTestBase;
+import hgtest.beans.Car;
+import hgtest.beans.Transport;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
@@ -15,6 +17,13 @@ import org.testng.annotations.Test;
 
 public class QueryCompilation extends HGTestBase
 {
+	@Test
+	public void testNonExistingTypeQuery()
+	{
+		Assert.assertTrue(hg.findAll(getGraph(), hg.typePlus(Transport.class)).isEmpty());
+		Assert.assertTrue(hg.findAll(getGraph(), hg.type(Car.class)).isEmpty());
+	}
+	
     @Test
     public void testVariableReplacement()
     {
@@ -27,17 +36,22 @@ public class QueryCompilation extends HGTestBase
 					
 		// Incident condition
 		HGQuery<HGHandle> q = hg.make(HGHandle.class, getGraph()).compile(hg.incident(hg.var("target")));
-		Set<HGHandle> S = q.var("target", h1).executeInSet();
+		Set<HGHandle> S = q.var("target", h1).findInSet();
 		Assert.assertTrue(S.contains(l1)); 
 		Assert.assertTrue(S.contains(l3));
-		S = q.var("target", h2).executeInSet();
+		S = q.var("target", h2).findInSet();
 		Assert.assertTrue(S.contains(l2)); 
 		Assert.assertTrue(S.contains(l3));
 		
 		// Type condition
 		q = hg.make(HGHandle.class, graph).compile(hg.type(hg.var("type")));
-		Assert.assertTrue(q.var("type", String.class).executeInList().size() > 0);
-		Assert.assertTrue(q.var("type", graph.getTypeSystem().getTypeHandle(HGSubgraph.class)).executeInList().size() == 0);
+		Assert.assertTrue(q.var("type", String.class).findAll().size() > 0);
+		Assert.assertTrue(q.var("type", graph.getTypeSystem().getTypeHandle(HGSubgraph.class)).findAll().size() == 0);
+		
+		// Equals
+		HGHandle nameHandle = graph.add("krokus");
+		HGQuery<HGHandle> findName = HGQuery.make(HGHandle.class, graph).compile(hg.and(hg.type(String.class), hg.eq(hg.var("name"))));
+		Assert.assertEquals(nameHandle, findName.var("name", "krokus").findOne());
 		
 		graph.remove(h1);
 		graph.remove(h2);

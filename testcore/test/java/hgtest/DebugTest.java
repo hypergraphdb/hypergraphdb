@@ -12,16 +12,17 @@ import hgtest.beans.Person;
 import hgtest.query.IndexEnumTypeTest;
 import hgtest.query.Queries;
 import hgtest.query.QueryCompilation;
+import hgtest.tx.NestedTxTests;
 
 public class DebugTest
 {
 	public static void main(String []argv)
 	{
-		Queries test = new Queries();
+		NestedTxTests test = new NestedTxTests();
 		test.setUp();
 		try
 		{
-			test.testPositionedLinkCondition();
+			test.testISChange();
 		}
 		finally
 		{
