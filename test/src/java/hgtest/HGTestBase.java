@@ -1,5 +1,6 @@
 package hgtest;
 
+
 import java.io.File;
 
 import org.hypergraphdb.HGConfiguration;
@@ -13,6 +14,7 @@ import org.testng.annotations.BeforeClass;
 public class HGTestBase
 {
     protected HyperGraph graph;
+    protected HGConfiguration config = new HGConfiguration();
     
     public void reopenDb()
     {
@@ -34,7 +36,7 @@ public class HGTestBase
     public void setUp()
     {
         HGUtils.dropHyperGraphInstance(getGraphLocation());
-        graph = HGEnvironment.get(getGraphLocation(), new HGConfiguration());
+        graph = HGEnvironment.get(getGraphLocation(), config);
     }
     
     @AfterClass    

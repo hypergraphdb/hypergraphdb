@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="core/build" path="core/src/config"/>
+	<classpathentry kind="src" path="apps/wordnet/src/java"/>
 	<classpathentry kind="src" output="apps/build/tm" path="apps/tm/src/java"/>
 	<classpathentry kind="src" output="apps/build/management" path="apps/management/src/java"/>
 	<classpathentry kind="src" output="core/build" path="core/src/java"/>
@@ -22,5 +23,8 @@
 	<classpathentry kind="lib" path="viewer/jars/l2fprod-common-sheet.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolo.jar"/>
 	<classpathentry kind="lib" path="viewer/jars/piccolox.jar"/>
+	<classpathentry kind="lib" path="apps/wordnet/jars/jwnl-1.4_rc3.jar"/>
+	<classpathentry kind="lib" path="storage/bdb-native/target/hgbdbnative-1.2.jar"/>
+	<classpathentry kind="lib" path="storage/bdb-native/jars/db.jar"/>
 	<classpathentry kind="output" path="core/build"/>
 </classpath>

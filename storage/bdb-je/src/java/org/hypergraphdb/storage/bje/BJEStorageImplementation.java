@@ -85,7 +85,7 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 		this.handleFactory = config.getHandleFactory();
 		this.linkBinding = new LinkBinding(handleFactory);
 		EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
-		
+		envConfig.setConfigParam(EnvironmentConfig.CLEANER_THREADS, "5");
 		if (config.isTransactional()) {
 			configuration.configureTransactional();
 		}

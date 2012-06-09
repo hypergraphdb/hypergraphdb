@@ -121,6 +121,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public HGQuery<?> getQuery(final HyperGraph graph, HGQueryCondition c)
 			{				
 				final AtomTypeCondition ac = (AtomTypeCondition)c;
+				if (!hg.isVar(ac.getTypeReference()) && ac.getTypeHandle() == null &&
+						graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass()) == null)
+					return HGQuery.NOP;
 				return new SearchableBasedQuery(graph.getIndexManager().getIndexByType(), 
 												new Ref<HGPersistentHandle>() {
 												public HGPersistentHandle get()

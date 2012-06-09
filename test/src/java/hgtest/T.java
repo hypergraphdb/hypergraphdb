@@ -3,6 +3,7 @@ package hgtest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -199,4 +200,36 @@ public class T
         }
         return logger;        
     }
+    
+    public static void writeToFile(String filename, String data)
+    {
+    	try
+    	{
+    		FileWriter out = new FileWriter(filename);
+    		out.write(data);
+    		out.close();
+    	}
+    	catch (Exception ex)
+    	{
+    		throw new RuntimeException(ex);
+    	}
+    }
+    
+    public static String readFromFile(String filename)
+    {
+    	try
+    	{
+    		StringBuilder sb = new StringBuilder();
+    		FileReader in = new FileReader(filename);
+    		char [] buf = new char[1024];
+    		for (int c = in.read(buf); c > 0; c = in.read(buf))
+    			sb.append(buf, 0, c);
+    		in.close();
+    		return sb.toString();
+    	}
+    	catch (Exception ex)
+    	{
+    		throw new RuntimeException(ex);
+    	}
+    }    	
 }

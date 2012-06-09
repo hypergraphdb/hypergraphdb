@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.storage.bje;
 
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
@@ -60,6 +61,7 @@ public class LinkBinding extends TupleBinding<HGPersistentHandle[]> {
 	}
 
 	public void objectToEntry(HGPersistentHandle[] link, TupleOutput output) {
+		//HGPersistentHandle[] link = (HGPersistentHandle[])x;
 		byte[] buffer = new byte[link.length * handleSize];
 		for (int i = 0; i < link.length; i++) {
 			HGPersistentHandle handle = (HGPersistentHandle)link[i];

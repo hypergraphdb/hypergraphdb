@@ -153,11 +153,15 @@ public class HGEnvironment
 	{
 		// This filename is pretty unique to HGDB, so if a directory has it, chances
 		// are it's a HGDB database.
-		String testfile = "hgstore_idx_HGATOMTYPE";
+		String [] testfiles = new String[] {"hgstore_idx_HGATOMTYPE", "je.lck" };
 		File dir = new File(location);
-		return dir.isDirectory() &&
-			( new File(dir, testfile).exists() ||
-			  Arrays.asList(dir.list()).contains(testfile));
+		if (!dir.isDirectory())
+			return false;
+		List<String> all = Arrays.asList(dir.list());
+		for (String testfile : testfiles)
+			if (new File(dir, testfile).exists() || all.contains(testfile))
+				return true;
+		return false;
 	}
 	
 	/**

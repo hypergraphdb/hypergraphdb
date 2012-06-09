@@ -58,11 +58,11 @@ public class TxSet<E> implements HGSortedSet<E>
         LogEntry entry = new LogEntry();
         entry.op = op;
         entry.el = el;
-        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(S);
+        List<LogEntry> log = txManager.getContext().getCurrent().getTopLevel().getAttribute(S);
         if (log == null)
         {
             log = new ArrayList<LogEntry>();
-            txManager.getContext().getCurrent().setAttribute(S, log);
+            txManager.getContext().getCurrent().getTopLevel().setAttribute(S, log);
         }
         log.add(entry);
     }
@@ -109,7 +109,7 @@ public class TxSet<E> implements HGSortedSet<E>
     
     HGSortedSet<E> write()
     {
-        List<LogEntry> log = txManager.getContext().getCurrent().getAttribute(S);
+        List<LogEntry> log = txManager.getContext().getCurrent().getTopLevel().getAttribute(S);
         if (log == null) // should we copy-on-write?
         {
             HGSortedSet<E> readOnly = S.get(); // S.getForWrite();
@@ -300,7 +300,7 @@ public class TxSet<E> implements HGSortedSet<E>
             if (tx != null)
             {                                    
                 HGSortedSet<E> lastCommitted = getLastCommitted(tx);                
-                List<LogEntry> log = tx.getAttribute(this);
+                List<LogEntry> log = tx.getTopLevel().getAttribute(this);
                 if (log != null) // did we do any modifications to the set?
                 {
                     lastCommitted = thisSet.cloneSet(lastCommitted);

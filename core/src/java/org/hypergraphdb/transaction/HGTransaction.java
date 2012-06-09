@@ -332,4 +332,24 @@ public final class HGTransaction implements HGStorageTransaction
     {
         this.abortActions.add(r);
     }
+    
+    /**
+     * <p>Return the parent transaction of this transaction or <code>null</code> is this is not a nested
+     * transaction.</p>
+     */
+    public HGTransaction getParent()
+    {
+    	return this.parent;
+    }
+    
+    /**
+     * <p>Return the top-level transaction of which this is a nested transaction, or <code>this</code> in case
+     * this is already a top-level transaction.</p>
+     */
+    public HGTransaction getTopLevel()
+    {
+    	HGTransaction t = this;
+    	while (t.parent != null) t = t.parent;
+    	return t;
+    }
 }
