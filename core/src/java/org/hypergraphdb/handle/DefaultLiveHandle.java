@@ -44,10 +44,7 @@ public class DefaultLiveHandle implements HGLiveHandle
 	{
     if (other == null || ! (other instanceof HGHandle))
 			return false;
-		else if (other instanceof HGLiveHandle)
-			return persistentHandle.equals(((HGLiveHandle)other).getPersistent());
-		else
-			return persistentHandle.equals((HGPersistentHandle)other);
+		return persistentHandle.equals(((HGHandle)other).getPersistent());
 	}
     
 	public final int hashCode()
@@ -59,5 +56,4 @@ public class DefaultLiveHandle implements HGLiveHandle
   {
       return "defLiveHandle(" + persistentHandle.toString() + ")";
   }
-	
 }
