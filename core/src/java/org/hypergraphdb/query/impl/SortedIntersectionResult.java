@@ -101,6 +101,13 @@ public class SortedIntersectionResult<T> implements HGSearchResult<T>, RSCombine
 		init(left, right);
 	}
 	
+	public void reset() {
+		current = null;
+		next = null;
+		prev = null;
+		lookahead = 0;
+	}
+	
 	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
 	{
 		this.left = left;

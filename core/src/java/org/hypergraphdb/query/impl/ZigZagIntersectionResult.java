@@ -140,6 +140,12 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		this.right = (HGRandomAccessResult<T>)right;
 	}
 	
+	public void reset() {
+		current = UNKNOWN;
+		next = UNKNOWN;
+		prev = UNKNOWN;
+	}
+
 	public void goBeforeFirst()
 	{
 	    left.goBeforeFirst();

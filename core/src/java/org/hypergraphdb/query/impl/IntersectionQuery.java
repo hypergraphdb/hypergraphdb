@@ -22,7 +22,7 @@ import org.hypergraphdb.HGSearchResult;
 @SuppressWarnings("unchecked")
 public class IntersectionQuery extends HGQuery 
 {	
-    private HGQuery left, right;
+  private HGQuery left, right;
 	private RSCombiner combiner;
 	
 	/**
@@ -40,6 +40,7 @@ public class IntersectionQuery extends HGQuery
 	
 	public HGSearchResult execute()
 	{
+		combiner.reset();
 		HGSearchResult leftResult = left.execute();
 		HGSearchResult rightResult = right.execute();
 		if (!leftResult.hasNext() || !rightResult.hasNext())

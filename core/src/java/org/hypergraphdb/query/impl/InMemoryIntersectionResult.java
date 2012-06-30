@@ -102,4 +102,8 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 		this.left = (HGRandomAccessResult<T>)l;
 		this.right = (HGRandomAccessResult<T>)r;
 	}
+	
+	public void reset() {
+		intersection = null;
+	}
 }
