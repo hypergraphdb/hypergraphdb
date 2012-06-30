@@ -757,36 +757,45 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         public static IncidentCondition incident(HGHandle atomHandle) { return new IncidentCondition(atomHandle); }
         public static IncidentCondition incident(Ref<?> atomHandle) { return new IncidentCondition((Ref<HGHandle>)atomHandle); }
         
-		/**
-		 * <p>
-		 * Return a condition constraining the query result set to links pointing to a target atom
-		 * positioned within a predetermined range in the link tuple. 
-		 * </p>
-		 * 
-		 * @param target
-		 *          A {@link Ref} to the target atom specified as a {@link HGHandle}. 
-		 * @param lowerBound 
-		 *          A {@link Ref} to the lower bound of the desired range. If the number is negative, it is
-		 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
-		 *          target etc.). 
-		 * @param upperBound 
-		 *          A {@link Ref} to the upper bound of the desired range. If the number is negative, it is
-		 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
-		 *          target etc.). 
-		 * @see PositionedIncidentCondition
-		 */
+				/**
+				 * <p>
+				 * Return a condition constraining the query result set to links pointing to a target atom
+				 * positioned within a predetermined range in the link tuple. 
+				 * </p>
+				 * 
+				 * @param target
+				 *          A {@link Ref} to the target atom specified as a {@link HGHandle}. 
+				 * @param lowerBound 
+				 *          A {@link Ref} to the lower bound of the desired range. If the number is negative, it is
+				 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
+				 *          target etc.). 
+				 * @param upperBound 
+				 *          A {@link Ref} to the upper bound of the desired range. If the number is negative, it is
+				 *          counted from the last target in the tuple (e.g. -1 means the last target, -2 the penultimate 
+				 *          target etc.). 
+				 * @see PositionedIncidentCondition
+				 */
         public static PositionedIncidentCondition incidentAt(Ref<HGHandle> target, Ref<Integer> lowerBound, Ref<Integer> upperBound) 
-        	{ return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(false)); }
+        { return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(false)); }
+        
         /**
          * @see {@link #incidentAt(Ref, Ref, Ref)}.
          */
         public static PositionedIncidentCondition incidentAt(HGHandle target, int lowerBound, int upperBound) 
     		{ return hg.incidentAt(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound)); }
+        
+        /**
+         * @see {@link #incidentAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
+         */
+        public static PositionedIncidentCondition incidentAt(Ref<HGHandle> target, int position) 
+    		{ return hg.incidentAt(target, hg.constant(position), hg.constant(position)); }
+        
         /**
          * @see {@link #incidentAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
          */
         public static PositionedIncidentCondition incidentAt(HGHandle target, int position) 
     		{ return hg.incidentAt(hg.constant(target), hg.constant(position), hg.constant(position)); }
+
         /**
          * Same as {@link hg#incidentAt(Ref, Ref, Ref) except uses the complement of the specified range. 
          * That is, if you specify a range of [2,4], it will match links that do point to the desired target,
@@ -794,17 +803,25 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see {@link PositionedIncidentCondition}
          */
         public static PositionedIncidentCondition incidentNotAt(Ref<HGHandle> target, Ref<Integer> lowerBound, Ref<Integer> upperBound) 
-    	{ return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(true)); }
+        { return new PositionedIncidentCondition(target, lowerBound, upperBound, hg.constant(true)); }
+        
         /**
          * @see {@link #incidentNotAt(Ref, Ref, Ref)}.
          */
         public static PositionedIncidentCondition incidentNotAt(HGHandle target, int lowerBound, int upperBound) 
-    		{ return hg.incidentAt(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound)); }
+    		{ return hg.incidentNotAt(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound)); }
+        
         /**
          * @see {@link #incidentNotAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
          */
         public static PositionedIncidentCondition incidentNotAt(HGHandle target, int position) 
-    		{ return hg.incidentAt(hg.constant(target), hg.constant(position), hg.constant(position)); }
+    		{ return hg.incidentNotAt(hg.constant(target), hg.constant(position), hg.constant(position)); }
+        
+        /**
+         * @see {@link #incidentNotAt(Ref, Ref, Ref)} - <code>position</code> is used both as lower and upper bound.
+         */
+        public static PositionedIncidentCondition incidentNotAt(Ref<HGHandle> target, int position) 
+    		{ return hg.incidentNotAt(target, hg.constant(position), hg.constant(position)); }
         
         /**
          * <p>Return a condition constraining the query result set to links pointing to a target set 
@@ -1762,6 +1779,35 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
             	}
             	}, 
             	HGTransactionConfig.READONLY);		
-    	}    	
-    }
+    	}
+    	
+    	/**
+    	 * <p>
+    	 * Execute the given query, put all atom instances
+    	 * from the result set into a <code>java.util.List</code>. 
+    	 * </p>
+    	 */
+    	public static <T> List<T> getAll(final HGQuery<HGHandle> query)
+    	{
+        	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<T>>() {
+            	public List<T> call()
+            	{
+            		ArrayList<Object> result = new ArrayList<Object>();
+            		HGSearchResult<HGHandle> rs = null;
+            		try
+            		{
+            			rs = query.execute();
+            			while (rs.hasNext())
+            				result.add(query.getHyperGraph().get(rs.next()));
+            			return (List<T>)result;
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}	
+            	}
+            	}, 
+            	HGTransactionConfig.READONLY);    		     		
+    	}
+   }
 }
