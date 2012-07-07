@@ -203,7 +203,6 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 			And in = (And)cond;
 			And out = new And();
-			//out.addAll(in);
 			for (HGQueryCondition c : in)
 			{
 				c = simplify(c);
@@ -232,21 +231,30 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				HGQueryCondition c = i.next();
 				if (c instanceof AtomTypeCondition)
 				{
+					AtomTypeCondition tc = (AtomTypeCondition)c;					
+					// if the condition is on a Java class with no HG type currently defined,
+					// clearly there can't be atoms of that type
+					if (!hg.isVar(tc.getTypeReference()) && 
+						tc.getTypeHandle() == null && 
+						graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
+						
+						return Nothing.Instance;
+						
 					if (byType == null)
 					{
 						if (byTypedValue != null)
 						{
-							if(!checkConsistent(byTypedValue, (AtomTypeCondition)c))
+							if(!checkConsistent(byTypedValue, tc))
 								return Nothing.Instance;
-							else if (isSameType(byTypedValue, (AtomTypeCondition)c))
+							else if (isSameType(byTypedValue, tc))
 								i.remove();
 						}
 						else
-							byType = (AtomTypeCondition)c;
+							byType = tc;
 					}
-					else if (isSameType(byType, (AtomTypeCondition)c))
+					else if (isSameType(byType, tc))
 						i.remove();
-					else if (!checkConsistent(byType, (AtomTypeCondition)c))
+					else if (!checkConsistent(byType, tc))
 						return Nothing.Instance;							
 				}
 				else if (c instanceof AtomValueCondition)
@@ -274,7 +282,13 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 							isSameType(byTypedValue, (TypedValueCondition)c))
 						i.remove();
 					else
-						return Nothing.Instance;					
+						return Nothing.Instance;			
+					// if the condition is on a Java class with no HG type currently defined,
+					// clearly there can't be atoms of that type
+					if (!hg.isVar(byTypedValue.getTypeReference()) && 
+							byTypedValue.getTypeHandle() == null && 
+						graph.getTypeSystem().getTypeHandleIfDefined(byTypedValue.getJavaClass()) == null)						
+						return Nothing.Instance;
 				}
 				else if (c instanceof AtomPartCondition)
 				{
