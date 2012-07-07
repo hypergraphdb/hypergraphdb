@@ -10,5 +10,4 @@
   </parent>  
   <artifactId>hgdb</artifactId>
   <name>HyperGraphDB Core</name>    
-
 </project>

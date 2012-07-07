@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." name="HyperGraphDB Core" default="all">
+<project basedir="." 
+         name="HyperGraphDB Core" 
+         default="all">
+         
 	<description>HyperGraphDB Core Build File</description>
     <property name="version" value="1.1"/>
     <property name="distfilename" value="hypergraphdb-${version}"/>    
@@ -80,42 +83,7 @@
 	<target name="docgen" depends="init" description="Generate JavaDocs for HGDB core, including the P2P module">
 	    <javadoc sourcepath="${core-path}" destdir="${javadoc}" classpathref="core-classpath"/>
 	</target>
-	
-    <target name="dist-common" depends="full-jar, peer-jar, core-jar, docgen" description="Create common files for all platform distributions.">
-        <delete dir="${distfilename}"/>
-        <mkdir dir="${distfilename}"/>
-        <copydir src="${javadoc}" dest="${distfilename}/javadoc"/>
-        <copydir src="src" dest="${distfilename}/src" excludes="**/.svn"/>
-        <copydir src="jars" dest="${distfilename}/jars" excludes="**/.svn"/>
-        <copydir src="ThirdPartyLicensing" dest="${distfilename}/ThirdPartyLicensing" excludes="**/.svn"/>
-        <copy file="LicensingInformation" todir="${distfilename}"/>
-        <copy file="readme.html" todir="${distfilename}"/>
-        <copy file="build.xml" todir="${distfilename}"/>        
-        <copy file="${jars}/${jar-name}" todir="${distfilename}"/>
-        <copy file="${jars}/${peer-jar-name}" todir="${distfilename}"/>
-        <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
-    </target>
-    
-	<target name="dist-win" depends="dist-common" description="Create MS Windows distribution.">
-        <delete dir="${distfilename}/native"/>    
-        <mkdir dir="${distfilename}/native"/>
-        <copydir src="native/windows" dest="${distfilename}/native"/>
-        <zip destfile="${dist}/${distfilename}.zip" basedir="." includes="${distfilename}/**"/>
-   	</target>
-
-	<target name="dist-lin" depends="dist-common" description="Create Linux distribution">
-        <delete dir="${distfilename}/native"/>    
-        <mkdir dir="${distfilename}/native"/>
-        <copydir src="native/linux" dest="${distfilename}/native"/>
-        <tar destfile="${dist}/${distfilename}.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
-   	</target>
-
-	<target name="dist-mac" depends="dist-common" description="Create MacOS distribution">
-        <delete dir="${distfilename}/native"/>    
-        <mkdir dir="${distfilename}/native"/>
-        <copydir src="native/macos" dest="${distfilename}/native"/>
-        <tar destfile="${dist}/${distfilename}-macos.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
-   	</target>
+		
 
 	<target name="all" depends="core-jar, peer-jar, full-jar, dist-win, dist-lin, dist-mac"/>
 	

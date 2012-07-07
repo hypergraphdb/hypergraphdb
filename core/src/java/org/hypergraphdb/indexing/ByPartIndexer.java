@@ -17,8 +17,10 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.type.AtomRefType;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGCompositeType;
+import org.hypergraphdb.type.HGPrimitiveType;
 import org.hypergraphdb.type.HGProjection;
 import org.hypergraphdb.util.HGUtils;
 
