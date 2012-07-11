@@ -1612,10 +1612,26 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 * @param graph The HyperGraph database to query.
     	 * @param condition The query condition.
     	 */
-    	public static <T> T getOne(HyperGraph graph, HGQueryCondition condition)
+    	public static <T> T getOne(final HyperGraph graph, final HGQueryCondition condition)
     	{
-    		HGHandle h = findOne(graph, condition);
-    		return h == null ? null : (T)graph.get(h);
+        	return graph.getTransactionManager().ensureTransaction(new Callable<T>() {
+            	public T call()
+            	{    		
+		    		HGHandle h = null;
+            		HGSearchResult<HGHandle> rs = null;
+            		try
+            		{
+            			rs = graph.find(condition);
+            			if (rs.hasNext())
+            				h = rs.next();
+            		}
+            		finally
+            		{
+            			if (rs != null) rs.close();
+            		}
+		    		return h == null ? null : (T)graph.get(h);
+            	}
+            });
     	}
     	
     	/**
