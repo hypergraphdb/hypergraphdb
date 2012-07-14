@@ -1,9 +1,14 @@
 package hgtest.types;
 
 import java.util.Calendar;
+
+import org.hypergraphdb.HGQuery.hg;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import hgtest.AtomOperation;
 import hgtest.HGTestBase;
+import hgtest.RandomStringUtils;
+import hgtest.T;
 import static hgtest.AtomOperationKind.*;
 
 public class TestPrimitives extends HGTestBase
@@ -145,10 +150,34 @@ public class TestPrimitives extends HGTestBase
               new AtomOperation(add, "a"),
               new AtomOperation(add, "alkgdfgh3pq85gqinga;sga\3\ngdf" + '\0' + "gs93qlugagsg"),
               new AtomOperation(add, new String[] {"fdsg", "\0", "gsdfgsdsg", "", null})              
-          }, 
+          },
           false,
           false,
           true);        
+    }
+    
+    @Test
+    public void testStringIndex()
+    {
+    	String [] A = new String[] {
+    	    "abc",
+    	    "bca",
+    	    "cba",
+    	    RandomStringUtils.random(10 + T.random(10)),
+    	    RandomStringUtils.random(10 + T.random(10)),
+    	    RandomStringUtils.random(10 + T.random(10)),
+    	    RandomStringUtils.random(10 + T.random(10))
+    	};
+    	 
+    	for (String s : A)
+    	{
+    		graph.add(s);
+    		if (T.random(10) % 2 == 0)
+    			graph.add(s);
+    	}
+    	
+    	for (String s : A)
+    		Assert.assertNotNull(hg.findOne(graph, hg.eq(s)));
     }
     
     @Test 

@@ -388,7 +388,7 @@ public class Queries extends HGTestBase
         DFSCondition rs = hg.dfs(needH);
         TraversalBasedQuery tbs = new TraversalBasedQuery(rs
                 .getTraversal(graph), TraversalBasedQuery.ReturnType.both);
-        int both = RSUtils.countRS(tbs.execute(), true);
+         int both = RSUtils.countRS(tbs.execute(), true);
          tbs = new TraversalBasedQuery(rs.getTraversal(graph),
          TraversalBasedQuery.ReturnType.links);
          int links = RSUtils.countRS(tbs.execute(), true);

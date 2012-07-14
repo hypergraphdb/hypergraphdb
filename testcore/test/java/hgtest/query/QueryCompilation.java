@@ -1,10 +1,15 @@
 package hgtest.query;
 
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import hgtest.HGTestBase;
 import hgtest.beans.Car;
+import hgtest.beans.SimpleBean;
 import hgtest.beans.Transport;
+import hgtest.utils.DataSets;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
@@ -12,6 +17,7 @@ import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.HGSubgraph;
+import org.hypergraphdb.util.Ref;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -58,5 +64,50 @@ public class QueryCompilation extends HGTestBase
 		graph.remove(l1);
 		graph.remove(l2);
 		graph.remove(l3);
+    }
+    
+    @Test
+    public void testRepeatedConcurrentQueries()
+    {
+    	DataSets.populate(graph, 100*100);
+    	ExecutorService eservice = Executors.newFixedThreadPool(20);
+    	
+    	final HGHandle nodeHandle = hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 50)));
+    	Assert.assertNotNull(nodeHandle);
+    	
+    	final HGQuery<HGHandle> q1 = hg.make(HGHandle.class, graph).compile(
+    			hg.and(hg.typePlus(HGPlainLink.class), hg.incidentNotAt(hg.var("firstTarget", HGHandle.class), 1)));
+    	
+    	final HGQuery<SimpleBean> q2 = HGQuery.make(SimpleBean.class, graph).compile(
+    					hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 3)));
+    	
+    	for (int i = 0; i < 100; i++)
+    	{
+    		final int ii = i;
+    		eservice.submit(new Runnable(){
+    			public void run()
+    			{
+    				try
+    				{
+    					q1.var("firstTarget", nodeHandle);
+    					Assert.assertNotNull(q1.findOne());
+    					System.out.println("Done with " + ii);
+    				}
+    				catch (Throwable t)
+    				{
+    					t.printStackTrace(System.err);
+    				}
+    			}
+    		});
+    	}
+    	try
+    	{
+    		eservice.shutdown();
+    		eservice.awaitTermination(Long.MAX_VALUE, TimeUnit.HOURS);    		
+    	}
+    	catch (Throwable t)
+    	{
+    		t.printStackTrace();
+    	}
     }
 }

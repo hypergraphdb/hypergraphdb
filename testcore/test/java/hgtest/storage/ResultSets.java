@@ -26,6 +26,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.impl.HandleArrayResultSet;
 import org.hypergraphdb.query.impl.InMemoryIntersectionResult;
 import org.hypergraphdb.query.impl.LinkTargetsResultSet;
+import org.hypergraphdb.query.impl.RSCombiner;
 import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
@@ -143,16 +144,14 @@ public class ResultSets extends HGTestBase
     private void zigzag_or_in_memory_test(boolean zigzag_or_in_memory)
     {
         if(!fix_random_acces_result_sets) return;
-        HGRandomAccessResult<HGHandle> res = (zigzag_or_in_memory) ? new ZigZagIntersectionResult<HGHandle>()
-                : new InMemoryIntersectionResult<HGHandle>();
+        HGRandomAccessResult<HGHandle> res = null;
+        RSCombiner<HGHandle> combiner = (zigzag_or_in_memory) ? new ZigZagIntersectionResult.Combiner<HGHandle>()
+                : new InMemoryIntersectionResult.Combiner<HGHandle>();
         try
         {
             HGSearchResult<HGHandle> left = index.findGTE(9);
             HGSearchResult<HGHandle> right = index.findGTE(8);
-            if (zigzag_or_in_memory) ((ZigZagIntersectionResult) res).init(
-                    left, right);
-            else
-                ((InMemoryIntersectionResult) res).init(left, right);
+            res = (HGRandomAccessResult<HGHandle>)combiner.combine(left, right);
 //             List<Integer> left_list = result__list(graph, left);
 //             List<Integer> right_list = result__list(graph, right);
             // left.goBeforeFirst(); right.goBeforeFirst();

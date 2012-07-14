@@ -1,5 +1,6 @@
 package hgtest.indexing;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -8,6 +9,7 @@ import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.ByPartIndexer;
+import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.IndexBasedQuery;
 import org.hypergraphdb.query.impl.IntersectionQuery;
@@ -15,6 +17,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import hgtest.HGTestBase;
+import hgtest.RandomStringUtils;
+import hgtest.T;
 import hgtest.beans.SimpleBean;
 import hgtest.beans.DerivedBean;
 
@@ -22,29 +26,50 @@ public class PropertyIndexingTests extends HGTestBase
 {
     @SuppressWarnings("unchecked")
     @Test
-    void simplePropertyIndexing()
+    public void simplePropertyIndexing()
     {
         HGHandle simpleTypeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
         HGIndex<?,?> idx = graph.getIndexManager().register(new ByPartIndexer(simpleTypeHandle, "intProp"));
-        
+        HGIndex<?,?> sidx = graph.getIndexManager().register(new ByPartIndexer(simpleTypeHandle, "strProp"));
+        for (HGIndexer I : graph.getIndexManager().getIndexersForType(simpleTypeHandle))
+        	System.out.println("Comp: " + I.getComparator(graph));
+        int totalAdded = 0;
+        ArrayList<String> strings = new ArrayList<String>();
         for (int i = 0; i < 100; i++)
         {
             SimpleBean bean = new SimpleBean();
             bean.setIntProp(i);
+            
+            // The random string property of the SimpleBean is also added
+            // a few times as a separate atom to bump up the string reference
+            // counting. This tests the String comparator that must be in effect
+            // in the index by 'strProp'. 
+            String sprop = RandomStringUtils.random(10 + T.random(10));
+            int cnt = T.random(20);
+            for (int j = 0; j < cnt; j++)
+            {
+            	graph.add(sprop);
+            }
+        	strings.add(sprop);            
+           	bean.setStrProp(sprop);                 
             graph.add(bean);
+            totalAdded++;
         }
 
         try
         {
-            Assert.assertEquals(idx.count(), 100);
+            Assert.assertEquals(idx.count(), totalAdded);
             reopenDb();
             idx = graph.getIndexManager().getIndex(new ByPartIndexer(simpleTypeHandle, "intProp"));
-            Assert.assertEquals(idx.count(), 100);
+            Assert.assertEquals(idx.count(), totalAdded);
     
             // check that an index will be used if querying by that property:
             ExpressionBasedQuery<HGHandle> query = 
-                (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 2)));
+                (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 56)));
             Assert.assertTrue(query.getCompiledQuery() instanceof IndexBasedQuery, "Compiled query using index.");
+            Assert.assertEquals(hg.count(query), 1);
+            for (String s : strings)
+            	Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.eq("strProp", s))));
         }
         finally
         {
@@ -57,7 +82,7 @@ public class PropertyIndexingTests extends HGTestBase
     
     @SuppressWarnings("unchecked")
     @Test
-    void derivedPropertyIndexing()
+    public void derivedPropertyIndexing()
     {
         HGHandle simpleTypeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
         HGHandle derivedTypeHandle = graph.getTypeSystem().getTypeHandle(DerivedBean.class);
