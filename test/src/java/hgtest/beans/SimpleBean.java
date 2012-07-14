@@ -156,6 +156,4 @@ public class SimpleBean
             return false;
         return true;
     }	
-	
-	
 }
