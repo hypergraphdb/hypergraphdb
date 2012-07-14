@@ -20,7 +20,7 @@ import org.hypergraphdb.HGSearchResult;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSCombiner<T>
+public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T> // , RSCombiner<T>
 {
 	private static final Object UNKNOWN = new Object();
 	
@@ -125,26 +125,35 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T>, RSC
 		}
 	}
 		
-	public ZigZagIntersectionResult()
-	{		
+	public final static class Combiner<T> implements RSCombiner<T>
+	{
+		public HGSearchResult<T> combine(HGSearchResult<T> left, HGSearchResult<T> right)
+		{
+			return new ZigZagIntersectionResult<T>((HGRandomAccessResult<T>)left, (HGRandomAccessResult<T>)right);
+		}
 	}
+	
+//	public ZigZagIntersectionResult()
+//	{		
+//	}
 	
 	public ZigZagIntersectionResult(HGRandomAccessResult<T> left, HGRandomAccessResult<T> right)
 	{
-		init(left, right);
+		this.left = left;
+		this.right = right;
 	}
 
-	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
-	{
-		this.left = (HGRandomAccessResult<T>)left;
-		this.right = (HGRandomAccessResult<T>)right;
-	}
+//	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
+//	{
+//		this.left = (HGRandomAccessResult<T>)left;
+//		this.right = (HGRandomAccessResult<T>)right;
+//	}
 	
-	public void reset() {
-		current = UNKNOWN;
-		next = UNKNOWN;
-		prev = UNKNOWN;
-	}
+//	public void reset() {
+//		current = UNKNOWN;
+//		next = UNKNOWN;
+//		prev = UNKNOWN;
+//	}
 
 	public void goBeforeFirst()
 	{

@@ -13,7 +13,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.util.ArrayBasedSet;
 
 @SuppressWarnings("unchecked")
-public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, RSCombiner<T>
+public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>//, RSCombiner<T>
 {
 	private HGRandomAccessResult<T> left, right;
 	private HGRandomAccessResult<T> intersection = null;
@@ -23,13 +23,19 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 		if (intersection != null)
 			return;
 		ArrayBasedSet<Object> set = new ArrayBasedSet<Object>(new Object[0]);
-		ZigZagIntersectionResult zigzag = new ZigZagIntersectionResult(left, right);
+		ZigZagIntersectionResult<T> zigzag = new ZigZagIntersectionResult<T>(left, right);
 		while (zigzag.hasNext())
 			set.add(zigzag.next());
 		intersection = (HGRandomAccessResult<T>)set.getSearchResult();		
 		left.close();
 		right.close();
 		left = right = null;		
+	}
+	
+	public InMemoryIntersectionResult(HGRandomAccessResult<T> left, HGRandomAccessResult<T> right)
+	{
+		this.left = left;
+		this.right = right;
 	}
 	
 	public void goBeforeFirst()
@@ -97,13 +103,21 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>, R
 		intersection.remove();
 	}
 
-	public void init(HGSearchResult<T> l, HGSearchResult<T> r)
+	public final static class Combiner<T> implements RSCombiner<T>
 	{
-		this.left = (HGRandomAccessResult<T>)l;
-		this.right = (HGRandomAccessResult<T>)r;
+		public HGSearchResult<T> combine(HGSearchResult<T> left, HGSearchResult<T> right)
+		{
+			return new InMemoryIntersectionResult<T>((HGRandomAccessResult<T>)left, (HGRandomAccessResult<T>)right);
+		}
 	}
 	
-	public void reset() {
-		intersection = null;
-	}
+//	public void init(HGSearchResult<T> l, HGSearchResult<T> r)
+//	{
+//		this.left = (HGRandomAccessResult<T>)l;
+//		this.right = (HGRandomAccessResult<T>)r;
+//	}
+	
+//	public void reset() {
+//		intersection = null;
+//	}
 }

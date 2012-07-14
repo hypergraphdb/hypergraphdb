@@ -8,7 +8,6 @@
 package org.hypergraphdb.query.impl;
 
 import java.util.NoSuchElementException;
-
 import org.hypergraphdb.HGSearchResult;
 
 /**
@@ -20,7 +19,7 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
-public class SortedIntersectionResult<T> implements HGSearchResult<T>, RSCombiner<T>
+public class SortedIntersectionResult<T> implements HGSearchResult<T> //, RSCombiner<T>
 {
 	private HGSearchResult<T> left, right;
 	private T current = null, next = null, prev = null;
@@ -92,29 +91,41 @@ public class SortedIntersectionResult<T> implements HGSearchResult<T>, RSCombine
 		}		
 	}
 	
-	public SortedIntersectionResult()
-	{		
+//	public SortedIntersectionResult()
+//	{		
+//	}
+
+	public final static class Combiner<T> implements RSCombiner<T>
+	{
+		public HGSearchResult<T> combine(HGSearchResult<T> left, HGSearchResult<T> right)
+		{
+			return new SortedIntersectionResult<T>(left, right);
+		}
 	}
 	
 	public SortedIntersectionResult(HGSearchResult<T> left, HGSearchResult<T> right)
 	{
-		init(left, right);
-	}
-	
-	public void reset() {
-		current = null;
-		next = null;
-		prev = null;
-		lookahead = 0;
-	}
-	
-	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
-	{
+		//init(left, right);
 		this.left = left;
 		this.right = right;
 		next = advance();
-		lookahead = 1;
+		lookahead = 1;		
 	}
+	
+//	public void reset() {
+//		current = null;
+//		next = null;
+//		prev = null;
+//		lookahead = 0;
+//	}
+//	
+//	public void init(HGSearchResult<T> left, HGSearchResult<T> right)
+//	{
+//		this.left = left;
+//		this.right = right;
+//		next = advance();
+//		lookahead = 1;
+//	}
 	
 	public T current() 
 	{

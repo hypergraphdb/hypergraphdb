@@ -39,26 +39,27 @@ public class LinkToQuery implements ConditionToQuery
 		return qmd;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public HGQuery<?> getQuery(final HyperGraph graph, final HGQueryCondition c)
 	{
 		final LinkCondition lc = (LinkCondition)c;
-		ArrayList<HGQuery<?>> L = new ArrayList<HGQuery<?>>();
+		ArrayList<HGQuery<HGHandle>> L = new ArrayList<HGQuery<HGHandle>>();
 		for (Ref<HGHandle> t : lc.targets())
-			L.add(ToQueryMap.toQuery(graph, new IncidentCondition(t)));
+			L.add((HGQuery<HGHandle>)(HGQuery)ToQueryMap.toQuery(graph, new IncidentCondition(t)));
 		if (L.isEmpty())
 			return HGQuery.NOP;
 		else if (L.size() == 1)
 			return L.get(0);
 		else
 		{
-			Iterator<HGQuery<?>> i = L.iterator();
-			IntersectionQuery result = new IntersectionQuery(i.next(), 
+			Iterator<HGQuery<HGHandle>> i = L.iterator();
+			IntersectionQuery result = new IntersectionQuery<HGHandle>(i.next(), 
 															 i.next(), 
-															 new ZigZagIntersectionResult<HGHandle>());
+															 new ZigZagIntersectionResult.Combiner<HGHandle>());
 			while (i.hasNext())
 				result = new IntersectionQuery(i.next(), 
 											   result,
-											   new ZigZagIntersectionResult<HGHandle>());
+											   new ZigZagIntersectionResult.Combiner<HGHandle>());
 			return result;
 		}
 	}

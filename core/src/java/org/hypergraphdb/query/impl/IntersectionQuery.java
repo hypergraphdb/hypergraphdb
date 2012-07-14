@@ -20,10 +20,10 @@ import org.hypergraphdb.HGSearchResult;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class IntersectionQuery extends HGQuery 
+public class IntersectionQuery<T> extends HGQuery<T> 
 {	
-  private HGQuery left, right;
-	private RSCombiner combiner;
+	private HGQuery<T> left, right;
+	private RSCombiner<T> combiner;
 	
 	/**
 	 * <p>Construct an intersection of two queries.</p>
@@ -31,55 +31,56 @@ public class IntersectionQuery extends HGQuery
 	 * @param left One of the two queries. May not be <code>null</code>.
 	 * @param right The other of the two queries. May not be <code>null</code>.
 	 */
-	public IntersectionQuery(HGQuery left, HGQuery right, RSCombiner combiner)
+	public IntersectionQuery(HGQuery<T> left, HGQuery<T> right, RSCombiner<T> combiner)
 	{
 		this.left = left;
 		this.right = right;
 		this.combiner = combiner;
 	}
 	
-	public HGSearchResult execute()
+	public HGSearchResult<T> execute()
 	{
-		combiner.reset();
-		HGSearchResult leftResult = left.execute();
-		HGSearchResult rightResult = right.execute();
+		//combiner.reset();
+		HGSearchResult<T> leftResult = left.execute();
+		HGSearchResult<T> rightResult = right.execute();
 		if (!leftResult.hasNext() || !rightResult.hasNext())
 		{
 			leftResult.close();
 			rightResult.close();
-			return HGSearchResult.EMPTY;
+			return (HGSearchResult<T>)HGSearchResult.EMPTY;
 		}
 	//	return new SortedIntersectionResult(leftResult, rightResult);
-		combiner.init(leftResult, rightResult);
-		return combiner;
+//		combiner.init(leftResult, rightResult);
+//		return combiner;
+		return combiner.combine(leftResult, rightResult);
 	}
 
-    public HGQuery getLeft()
+    public HGQuery<T> getLeft()
     {
         return left;
     }
 
-    public void setLeft(HGQuery left)
+    public void setLeft(HGQuery<T> left)
     {
         this.left = left;
     }
 
-    public HGQuery getRight()
+    public HGQuery<T> getRight()
     {
         return right;
     }
 
-    public void setRight(HGQuery right)
+    public void setRight(HGQuery<T> right)
     {
         this.right = right;
     }
 
-    public RSCombiner getCombiner()
+    public RSCombiner<T> getCombiner()
     {
         return combiner;
     }
 
-    public void setCombiner(RSCombiner combiner)
+    public void setCombiner(RSCombiner<T> combiner)
     {
         this.combiner = combiner;
     } 

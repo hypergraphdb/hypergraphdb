@@ -373,11 +373,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 					Iterator<HGQuery<?>> i = L.iterator();
 					IntersectionQuery result = new IntersectionQuery(i.next(), 
 																	 i.next(),
-																	 new SortedIntersectionResult<HGHandle>());
+																	 new SortedIntersectionResult.Combiner<HGHandle>());
 					while (i.hasNext())
 						result = new IntersectionQuery(i.next(), 
 													   result,
-													   new SortedIntersectionResult<HGHandle>());
+													   new SortedIntersectionResult.Combiner<HGHandle>());
 					// the following will find all links (unordered) with the given target
 					// set and then filter to insure that the targets are properly ordered.
 					return new PredicateBasedFilter<HGHandle>(hg, result, lc);				

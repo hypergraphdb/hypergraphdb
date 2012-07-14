@@ -108,7 +108,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	{
 		return (Var<T>)ctx.get(name);
 	}
-
+	
 	/**
 	 * <p>Modify the thread-local copy of a given variable. Use this method to 
      * modify the value of a variable that will be used when executing this query
@@ -1532,7 +1532,21 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
         {
         	return VarContext.ctx().get(name);
         }
-  
+
+        /**
+         * <p>Create a new variable and attach it to the current variable context.</p>
+         * 
+         * @param name The name of the variable. Any previous variable with that name in the current context will
+         * be overriden.
+         * @param t A class parameter allowing to specify the type of the variable without providing an initial
+         * value. Use this to avoid ugly type casts.
+         * @return The {@link Var} instance.
+         */
+        public static <T> Var<T> var(String name, Class<T> t) 
+        {
+        	return VarContext.ctx().get(name);
+        }
+        
         /**
          * <p>Create a new constant reference. The value of this reference cannot be changed.</p>
          * 

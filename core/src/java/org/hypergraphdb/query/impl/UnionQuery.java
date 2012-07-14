@@ -36,10 +36,10 @@ public class UnionQuery extends HGQuery
 		this.right = right;
 	}
 	
-	public HGSearchResult execute()
+	public HGSearchResult<?> execute()
 	{
-		HGSearchResult leftResult = left.execute();
-		HGSearchResult rightResult = right.execute();		
+		HGSearchResult<?> leftResult = left.execute();
+		HGSearchResult<?> rightResult = right.execute();		
 		if (!leftResult.hasNext() && !rightResult.hasNext())
 		{
 			leftResult.close();

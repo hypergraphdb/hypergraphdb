@@ -97,6 +97,7 @@ public class AndToQuery implements ConditionToQuery
 		return x;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition condition)
 	{
 		And and = (And)condition;
@@ -167,13 +168,13 @@ public class AndToQuery implements ConditionToQuery
 			c2 = i.next().cond;
 			result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 										   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
-										   new ZigZagIntersectionResult());
+										   new ZigZagIntersectionResult.Combiner());
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
-											   new ZigZagIntersectionResult());
+											   new ZigZagIntersectionResult.Combiner());
 			}
 		}
 		else if (ORA.size() == 1)
@@ -193,14 +194,14 @@ public class AndToQuery implements ConditionToQuery
 				c2 = i.next().cond;
 				result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 											   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
-											   new SortedIntersectionResult()); 
+											   new SortedIntersectionResult.Combiner()); 
 			}
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-											   new SortedIntersectionResult());					
+											   new SortedIntersectionResult.Combiner());					
 			}						
 		}
 		else if (O.size() == 1)
@@ -211,7 +212,7 @@ public class AndToQuery implements ConditionToQuery
 			else
 				result = new IntersectionQuery(result, 
 											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
-											   new SortedIntersectionResult());
+											   new SortedIntersectionResult.Combiner());
 		}
 		
 		if (result == null)
