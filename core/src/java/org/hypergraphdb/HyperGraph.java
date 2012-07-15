@@ -790,7 +790,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (liveHandle != null)
         {
         	T theAtom = (T)liveHandle.getRef();
-        	if (theAtom == null /* || cache.get(theAtom) == null */)
+        	if (theAtom == null)
         	{
         		//
         		// The atom has been evicted from the cache, so the live reference is no
@@ -809,10 +809,6 @@ public /*final*/ class HyperGraph implements HyperNode
         	}
         	else
         	{
-//        	    if (cache.get(theAtom) == null)
-//        	    {
-//        	        System.out.println("Live atom missing from cache: " + theAtom);
-//        	    }
         		eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, theAtom));
         		return (T)theAtom;
         	}
@@ -821,12 +817,14 @@ public /*final*/ class HyperGraph implements HyperNode
             persistentHandle = (HGPersistentHandle)handle;
         
         Pair<HGLiveHandle, Object> loaded = loadAtom(persistentHandle, liveHandle);                
-//        if (loaded.getSecond() instanceof CompositeIndexer)
-//        	update(loaded.getSecond());
+
         if (loaded == null)
         	return null; // TODO: perhaps we should throw an exception here, but a new type, e.g. HGInvalidHandleException?
         
         liveHandle = loaded.getFirst();
+
+        if (liveHandle.getRef() != loaded.getSecond())
+        	return get(liveHandle);
         
         //
         // If the incidence set of the newly fetched atom is already loaded,
@@ -857,8 +855,7 @@ public /*final*/ class HyperGraph implements HyperNode
             }
         } */
         
-        eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));
-        
+        eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));        
         return (T)loaded.getSecond();
     }
 

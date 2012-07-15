@@ -130,15 +130,20 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType, HGPersistentHa
 		this.dimensionPath = dimensionPath;
 	}
 
+	@SuppressWarnings("unchecked")
 	public Comparator<byte[]> getComparator(HyperGraph graph)
 	{
-		return null;  //is this Ok???
-//		if (projectionType == null)
-//			getProjections(graph);
-//		if (projectionType.getClass().equals(AtomRefType.class))
-//			return null;
-//		else
-//			return ((HGPrimitiveType<?>)projectionType).getComparator();
+//		return null;  //is this Ok???
+		if (projectionType == null)
+			getProjections(graph);
+		if (projectionType.getClass().equals(AtomRefType.class))
+			return null;
+		else if (projectionType instanceof HGPrimitiveType)
+			return ((HGPrimitiveType<?>)projectionType).getComparator();
+		else if (projectionType instanceof Comparator)
+			return (Comparator<byte[]>)projectionType;
+		else
+			return null;
 	}
 	
 	@SuppressWarnings("unchecked")

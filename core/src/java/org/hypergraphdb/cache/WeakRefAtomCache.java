@@ -9,6 +9,7 @@ package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
+import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -74,7 +75,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public static final long DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL = 500;
 	
 	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
-  private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
+	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
 	private PhantomCleanup cleanupThread = new PhantomCleanup();
 	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
