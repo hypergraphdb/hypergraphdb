@@ -1719,7 +1719,16 @@ public /*final*/ class HyperGraph implements HyperNode
 	        if (liveHandle == null)
 	        {
 	        	HGAtomAttrib attribs = config.isUseSystemAtomAttributes() ? getAtomAttributes(persistentHandle) : new HGAtomAttrib();
-       			result = cache.atomRead(persistentHandle, instance, attribs);        			
+       			result = cache.atomRead(persistentHandle, instance, attribs);
+       			// The method could return an existing live handle, already in the cache
+       			// we detect this by finding that the reference that handle holds is != from 
+       			// the instance we just loaded from disk
+       			Object existing = result.getRef();
+       			if (existing != instance)
+       				if (existing != null)
+       					instance = existing;
+       				else
+       					result = cache.atomRefresh(result, instance, false);
 	        }
 	        else
 	        {
