@@ -22,6 +22,21 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     protected RefResolver<Object, Box> boxGetter = null;
     protected VBox<Integer> sizebox = null;
     
+    // Indicates whether the latest available version of a value should be returned.
+    // This TxCacheMap is mainly designed to cache objects that are otherwise persisted
+    // on this. So when something is loaded from disk in a transaction that is not the 
+    // latest running transaction, it is not stored as the latest version of the value
+    // (since there's no way to know if a more recent transaction has modified it). 
+    // In such situations, the version element of the version linked list is set to null
+    // and when somebody asks for the latest version, they will get null forcing a re-load
+    // from disk. That's the correct strategy for disk-based values. But it doesn't work
+    // for the reverse Object->HGHandle map in the HGDB cache because runtime instances cannot be
+    // used as keys in disk lookups. For this map, we want to always return the latest available
+    // version when a 'get' is made outside of a transaction or the current transaction is more recent
+    // than the last version in the box linked list.
+    
+    private boolean returnLatestAvailable = false; 
+    
     public abstract class Box extends VBox<V>
     {
         public Box(HGTransactionManager txManager)
@@ -218,7 +233,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
             Box box = boxGetter.resolve(key);
             HGTransaction tx = txManager.getContext().getCurrent();
             VBoxBody<V> read = null;
-            if (box.body.version == -1)
+            if (box.body.version == -1) // version==-1 indicates latest version is not loaded
             {
                 // We don't have the latest version loaded currently, so if this transaction is
                 // a most recent one, set the passed in value as the latest 
@@ -255,7 +270,7 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                     VBoxBody<V> curr = box.body;
                     while (curr.next != null && curr.next.version > tx.getNumber())
                         curr = curr.next;
-                    if (curr.next.version == tx.getNumber())
+                    if (curr.next != null && curr.next.version == tx.getNumber())
                     {
                         curr.next.value = value;
                         read = curr.next;
@@ -295,14 +310,21 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
         // have committed an intermediate version. We don't know - version 3 might be the correct
         // one or not. So, we must force a load and tag it with version 5. In other words, we
         // must return null in this case so that the upper layers (using the cache) perform
-        // a load operation.
+        // a load operation. That is, unless the returnLatestAvailable flag is set in which
+    	// case we just have to return the latest available version.
 
         Box box = boxGetter.resolve(key);
                
         HGTransaction tx = txManager.getContext().getCurrent();
         
         if (tx == null)
+        {
+        	if (returnLatestAvailable)
+        		for (VBoxBody<V> body = box.body; body != null; body = body.next)
+        			if (body.value != null)
+        				return body.value;
             return box.body.value;
+        }
         
         V value = tx.getLocalValue(box);
         
@@ -348,8 +370,17 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                     }
                 }                
             }
-        }        
-        return value == HGTransaction.NULL_VALUE ? null : value;        
+        }
+        if (value == HGTransaction.NULL_VALUE)
+        {
+        	if (returnLatestAvailable)
+        		for (VBoxBody<V> body = box.body; body != null; body = body.next)
+        			if (body.value != null)
+        				return body.value;
+        	return null;
+        }
+        else 
+        	return value;
     }
 
     @SuppressWarnings("unchecked")
@@ -382,4 +413,14 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
     }
     
     public Set<K> keySet() { return M.keySet(); }
+
+	public boolean isReturnLatestAvailable()
+	{
+		return returnLatestAvailable;
+	}
+
+	public void setReturnLatestAvailable(boolean returnLatestAvailable)
+	{
+		this.returnLatestAvailable = returnLatestAvailable;
+	}   
 }

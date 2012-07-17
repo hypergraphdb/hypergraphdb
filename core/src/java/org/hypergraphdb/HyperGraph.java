@@ -776,8 +776,11 @@ public /*final*/ class HyperGraph implements HyperNode
      * the right cast. The actual type of the atom may be obtained via a call
      * to <code>HyperGraph.getTypeSystem().getAtomType(Object)</code>.
      */
-    public <T> T get(HGHandle handle)
+    public <T> T get(final HGHandle handle)
     {
+//return getTransactionManager().ensureTransaction(new Callable<T>() 
+//    	 	    { public T call() {
+    	
     	stats.atomAccessed();
     	
     	HGLiveHandle liveHandle = null;
@@ -801,7 +804,7 @@ public /*final*/ class HyperGraph implements HyperNode
         			theAtom = (T)existing.getRef();
         			if (theAtom != null)
         			{
-        				eventManager.dispatch(this, new HGAtomAccessedEvent(existing, theAtom));
+        				eventManager.dispatch(HyperGraph.this, new HGAtomAccessedEvent(existing, theAtom));
         				return (T)theAtom;
         			}
         		}
@@ -809,7 +812,7 @@ public /*final*/ class HyperGraph implements HyperNode
         	}
         	else
         	{
-        		eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, theAtom));
+        		eventManager.dispatch(HyperGraph.this, new HGAtomAccessedEvent(liveHandle, theAtom));
         		return (T)theAtom;
         	}
         }
@@ -821,10 +824,18 @@ public /*final*/ class HyperGraph implements HyperNode
         if (loaded == null)
         	return null; // TODO: perhaps we should throw an exception here, but a new type, e.g. HGInvalidHandleException?
         
+//        HGLiveHandle temp = cache.get(loaded.getSecond());
+//        if (temp == null ) // || loaded.getSecond() != temp.getRef())
+//        {
+//        	System.out.println("oops, just loaded not same as in cache " + persistentHandle);
+//        	//return get(persistentHandle);
+//        }
+//
+        
         liveHandle = loaded.getFirst();
 
-        if (liveHandle.getRef() != loaded.getSecond())
-        	return get(liveHandle);
+//        if (liveHandle.getRef() != loaded.getSecond())
+//        	return get(liveHandle);
         
         //
         // If the incidence set of the newly fetched atom is already loaded,
@@ -832,7 +843,7 @@ public /*final*/ class HyperGraph implements HyperNode
         //
         IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(persistentHandle);
         if (incidenceSet != null)
-        	this.updateLinksInIncidenceSet(incidenceSet, liveHandle);
+        	updateLinksInIncidenceSet(incidenceSet, liveHandle);
         
         //
         // If the newly fetched atom is a link, update all loaded incidence
@@ -855,8 +866,9 @@ public /*final*/ class HyperGraph implements HyperNode
             }
         } */
         
-        eventManager.dispatch(this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));        
+        eventManager.dispatch(HyperGraph.this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));        
         return (T)loaded.getSecond();
+//}});        
     }
 
     /**
@@ -866,7 +878,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @return The <code>HGHandle</code> of the passed in atom, or <code>null</code>
      * if the atom is not in HyperGraph cache at the moment.
      */
-    public HGHandle getHandle(Object atom)
+    public HGHandle getHandle(final Object atom)
     {
         return cache.get(atom);
     }
@@ -1722,10 +1734,16 @@ public /*final*/ class HyperGraph implements HyperNode
        			// the instance we just loaded from disk
        			Object existing = result.getRef();
        			if (existing != instance)
+       			{       				
        				if (existing != null)
+       				{
        					instance = existing;
+       				}
        				else
+       				{
        					result = cache.atomRefresh(result, instance, false);
+       				}
+       			}
 	        }
 	        else
 	        {
@@ -1739,9 +1757,9 @@ public /*final*/ class HyperGraph implements HyperNode
 	        if (instance instanceof HGTypeHolder)
 	        	((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
 	    	
-	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));  
+	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance)); 
 	        return new Pair<HGLiveHandle, Object>(result, instance);
-    	}});
+    	}}, HGTransactionConfig.READONLY);
     }
     
 //    private void unloadAtom(final HGLiveHandle lHandle, final Object instance)

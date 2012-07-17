@@ -9,7 +9,6 @@ package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
 import java.util.HashMap;
-import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -138,12 +137,16 @@ public class WeakRefAtomCache implements HGAtomCache
 		        {
 		            // body.value can be null here if the atom got garbage collected before 
 		            // a transaction committed 
-		            if (body.value != null && body.value.getRef() != null) //2nd test added AP 2012-01-31
-		             {
-		                VBox<?> bb = atomsTx.boxOf(body.value.getRef());
-		                if (bb != null)
-		                    keep = true;
-		             }		                
+		        	if (body.value != null /* && body.value.getRef() != null */) //2nd test added AP 2012-01-31
+		            {
+		        		Object x = body.value.getRef();
+		        		if (x != null)
+		        		{
+			                VBox<?> bb = atomsTx.boxOf(x);
+			                if (bb != null)
+			                    keep = true;
+		        		}
+		            }		                
 		        }
 		        if (!keep)
 		            liveHandles.drop(h);		       
@@ -202,6 +205,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	                                    graph.getTransactionManager(), 
 	                                    WeakIdentityHashMap.class,
 	                                    null);
+	        atomsTx.setReturnLatestAvailable(true);
             liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(
                                         graph.getTransactionManager(), 
                                         HashMap.class,
