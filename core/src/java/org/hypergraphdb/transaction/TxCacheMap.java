@@ -371,16 +371,12 @@ public class TxCacheMap<K, V>  implements CacheMap<K, V>
                 }                
             }
         }
-        if (value == HGTransaction.NULL_VALUE)
-        {
-        	if (returnLatestAvailable)
-        		for (VBoxBody<V> body = box.body; body != null; body = body.next)
-        			if (body.value != null)
-        				return body.value;
-        	return null;
-        }
-        else 
-        	return value;
+        
+        if (value == null && returnLatestAvailable)
+    		for (VBoxBody<V> body = box.body; body != null; body = body.next)
+    			if (body.value != null)
+    				value = body.value;
+       	return value == HGTransaction.NULL_VALUE ? null : value;
     }
 
     @SuppressWarnings("unchecked")
