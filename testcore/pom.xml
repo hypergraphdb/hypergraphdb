@@ -9,7 +9,12 @@
     <version>1.2</version>  
   </parent>  
   <artifactId>hgdbtestcore</artifactId>
-  <name>HyperGraphDB Core Test Project</name>    
+  <name>HyperGraphDB Core Test Project</name>
+
+  <properties>
+      <powermock.version>1.4.12</powermock.version>
+  </properties>
+
 
   <build>
   <plugins>
@@ -54,6 +59,41 @@
     	<artifactId>hgbdbje</artifactId>
     	<version>1.2</version>
     </dependency>
+
+    <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-testng</artifactId>
+        <version>${powermock.version}</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-easymock</artifactId>
+        <version>${powermock.version}</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.easymock</groupId>
+        <artifactId>easymock</artifactId>
+        <version>3.1</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>cglib</groupId>
+        <artifactId>cglib</artifactId>
+        <version>2.2</version>
+        <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.objenesis</groupId>
+        <artifactId>objenesis</artifactId>
+        <version>1.2</version>
+        <scope>test</scope>
+    </dependency>
+      
   </dependencies>
 
 </project>
