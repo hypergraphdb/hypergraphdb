@@ -117,7 +117,7 @@ public class HGIndexManager
         }
 	}
 	
-	public void deleteIndex(HGIndexer indexer)
+	private void deleteIndex(HGIndexer indexer)
 	{
 		indexer = toAtomIndexer(indexer);
 		if (indexer == null)

@@ -679,7 +679,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param flags A combination of system-level bit flags. Available flags that can 
      * be <em>or-ed</em> together are listed in the <code>HGSystemFlags</code> interface.   
      * @return The HyperGraph handle of the newly added atom or <code>null</code> if
-     * the addition was refused by a listener to the {@HGAtomProposedEvent}.
+     * the addition was refused by a listener to the {@link HGAtomProposeEvent}.
      */
     public HGHandle add(Object atom, HGHandle type, int flags)
     {
