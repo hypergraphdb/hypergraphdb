@@ -43,7 +43,8 @@ public class TransactionBJEImpl implements HGStorageTransaction {
 
 	public void commit() throws HGTransactionException {
 		try {
-			for (BJETxCursor c : bdbCursors)
+			Set<BJETxCursor> S = new HashSet<BJETxCursor>(bdbCursors);
+			for (BJETxCursor c : S)
 				c.close();
 			if (t != null)
 				t.commit();
@@ -56,8 +57,9 @@ public class TransactionBJEImpl implements HGStorageTransaction {
 	public void abort() throws HGTransactionException {
 		try {
 			aborting = true;
-
-			for (BJETxCursor c : bdbCursors) {
+			Set<BJETxCursor> S = new HashSet<BJETxCursor>(bdbCursors);
+			for (BJETxCursor c : S)
+			{
 				try {
 					c.close();
 				}
@@ -65,7 +67,6 @@ public class TransactionBJEImpl implements HGStorageTransaction {
 					System.err.println(t);
 				}
 			}
-			
 			if (t != null) {
 				t.abort();
 			}
