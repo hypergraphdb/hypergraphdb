@@ -44,7 +44,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
     private String testDatabaseLocation;
 
     /**
-     * Deletes temporary directory used during tests if it exists
+     * Deletes temporary directory used during tests
      */
     @BeforeMethod
     @AfterMethod
@@ -52,10 +52,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
     {
         testDatabaseLocation = System.getProperty("user.home") + File.separator + "hgtest.tmp";
         File testDatabaseDir = new File(testDatabaseLocation);
-        if (testDatabaseDir.exists())
-        {
-            testDatabaseDir.delete();
-        }
+        testDatabaseDir.delete();
     }
 
     // @Test
@@ -102,7 +99,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
         assertTrue(actualEnvironment.isValid(), "Environment is not valid");
         String actualDatabaseLocation = actualEnvironment.getHome().getPath();
         assertEquals(actualDatabaseLocation, TEMP_DATABASE_DIRECTORY,
-                String.format("Database location should be %s but %s found", TEMP_DATABASE_DIRECTORY, actualDatabaseLocation));
+                String.format("Database location should be %s but %s is", TEMP_DATABASE_DIRECTORY, actualDatabaseLocation));
         System.out.println("testStartup :: OK");
     }
     // @Test
