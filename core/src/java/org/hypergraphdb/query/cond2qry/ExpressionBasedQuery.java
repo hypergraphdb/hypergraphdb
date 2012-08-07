@@ -277,7 +277,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				else if (c instanceof TypedValueCondition)
 				{
 					if (byTypedValue ==  null)
-						byTypedValue = (TypedValueCondition)byTypedValue;
+						byTypedValue = (TypedValueCondition)c;
 					else if (byTypedValue.equals((TypedValueCondition)c) && 
 							isSameType(byTypedValue, (TypedValueCondition)c))
 						i.remove();
