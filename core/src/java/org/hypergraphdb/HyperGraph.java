@@ -2165,7 +2165,7 @@ public /*final*/ class HyperGraph implements HyperNode
     	HGPersistentHandle [] layout = store.getLink(instanceHandle);
     	Object oldInstance = rawMake(layout, oldType, instanceHandle);
     	TypeUtils.releaseValue(this, oldType, layout[1]);
-    	oldType.release(layout[1]);
+    	//2012.08.07 hilpold already called in previous method: oldType.release(layout[1]);
     	indexByValue.removeEntry(layout[1], instanceHandle);
     	layout[1] = TypeUtils.storeValue(this, oldInstance, newType);
     	indexByValue.addEntry(layout[1], instanceHandle);
