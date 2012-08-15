@@ -110,7 +110,7 @@ public class ResultSets extends HGTestBase
         List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(
                 graph.getTypeSystem().getTypeHandle(TestInt.class));
         if (indexers != null) for (HGIndexer indexer : indexers)
-            graph.getIndexManager().deleteIndex(indexer);
+            graph.getIndexManager().unregister(indexer);
         super.tearDown();
     }
 

@@ -18,6 +18,8 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.util.HGUtils;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class DataTxTests extends HGTestBase
 {
@@ -172,7 +174,36 @@ public class DataTxTests extends HGTestBase
         }
     }
 
-    // @Test
+    @Test
+    public void testConcurrentAtomLoad()
+    {
+    	final HGPersistentHandle handle = graph.add("testConcurrentAtomLoad").getPersistent();
+    	int nthreads = 100;
+    	this.reopenDb();
+    	ExecutorService pool = Executors.newFixedThreadPool(nthreads);
+    	final ArrayList<Object> failedIfNotEmpty = new ArrayList<Object>();
+    	for (int i = 0; i < nthreads; i++)
+    		pool.submit(new Runnable(){
+    			public void run()
+    			{
+    				if (graph.getHandle(graph.get(handle)) == null)
+    					failedIfNotEmpty.add(Boolean.TRUE);
+    			}
+    		});
+    	pool.shutdown();
+    	try
+		{
+			pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+		}
+		catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	Assert.assertEquals(failedIfNotEmpty.size(), 0);
+    }
+    
+    @Test
     public void testConcurrentLinkCreation()
     {
         graph.getStore().getIndex("temptest", BAtoBA.getInstance(), BAtoBA.getInstance(), null, true);

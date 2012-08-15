@@ -19,6 +19,7 @@ import hgtest.indexing.PropertyIndexingTests;
 import hgtest.query.IndexEnumTypeTest;
 import hgtest.query.Queries;
 import hgtest.query.QueryCompilation;
+import hgtest.tx.DataTxTests;
 import hgtest.tx.NestedTxTests;
 import hgtest.types.TestPrimitives;
 
@@ -56,12 +57,12 @@ public class DebugTest
 	public static void main(String[] argv)
 	{
 //		TestQuery.go("/tmp/alain");
-		QueryCompilation test = new QueryCompilation();
+		TestHGAtomRef test = new TestHGAtomRef();
 		test.setUp();
 		try
 		{
-			test.testRepeatedConcurrentQueries();
-			// test.testStringIndex();
+			test.testDanglingDetect();
+			test.testNullRef();
 		}
 		finally
 		{
