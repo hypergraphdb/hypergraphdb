@@ -167,7 +167,7 @@ public class HyperGraphPeer
 	
 	public static HGPeerIdentity getIdentity(final HyperGraph graph, final String peerName)
 	{
-	    return graph.getTransactionManager().transact(new Callable<HGPeerIdentity>() { public HGPeerIdentity call() {
+	    return graph.getTransactionManager().ensureTransaction(new Callable<HGPeerIdentity>() { public HGPeerIdentity call() {
 	    HGPeerIdentity identity = null;	    
         java.net.InetAddress localMachine = null;
         try
@@ -218,20 +218,29 @@ public class HyperGraphPeer
             {
                 // Need to create a new identity.
             	final java.net.InetAddress machine = localMachine;
-            	identity = graph.getTransactionManager().transact(new Callable<HGPeerIdentity>() {
-            	public HGPeerIdentity call()
-            	{
-	                graph.remove(pid.getId());
-	                HGPersistentHandle newId = graph.getHandleFactory().makeHandle();
-	                pid.setId(newId);
-	                pid.setGraphLocation(graph.getLocation());
-	                pid.setHostname(machine.getHostName());
-	                pid.setIpAddress(machine.getHostAddress());
-	                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
-	                graph.define(newId, pid);
-	                return pid.makePublicIdentity();
-            	}}, 
-            	HGTransactionConfig.DEFAULT);
+//            	identity = graph.getTransactionManager().ensureTransaction(new Callable<HGPeerIdentity>() {
+//            	public HGPeerIdentity call()
+//            	{
+//	                graph.remove(pid.getId());
+//	                HGPersistentHandle newId = graph.getHandleFactory().makeHandle();
+//	                pid.setId(newId);
+//	                pid.setGraphLocation(graph.getLocation());
+//	                pid.setHostname(machine.getHostName());
+//	                pid.setIpAddress(machine.getHostAddress());
+//	                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
+//	                graph.define(newId, pid);
+//	                return pid.makePublicIdentity();
+//            	}}, 
+//            	HGTransactionConfig.DEFAULT);
+                graph.remove(pid.getId());
+                HGPersistentHandle newId = graph.getHandleFactory().makeHandle();
+                pid.setId(newId);
+                pid.setGraphLocation(graph.getLocation());
+                pid.setHostname(machine.getHostName());
+                pid.setIpAddress(machine.getHostAddress());
+                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
+                graph.define(newId, pid);
+                identity = pid.makePublicIdentity();
             }
             return identity;
         }
