@@ -397,8 +397,10 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 					Transaction tx = null;
 					
 					if (parent != null) {
-//						tx = env.beginTransaction(((TransactionBJEImpl)parent.getStorageTransaction()).getBJETransaction(), tconfig);
-						tx = env.beginTransaction(null, tconfig);
+						//Nested transaction are not supported by JE Berkeley DB.
+						throw new IllegalStateException("Nested transaction detected. Not supported by JE Berkeley DB.");
+						//tx = env.beginTransaction(((TransactionBJEImpl)parent.getStorageTransaction()).getBJETransaction(), tconfig);
+						//tx = env.beginTransaction(null, tconfig);
 					}
 					else {
 						tx = env.beginTransaction(null, tconfig);
