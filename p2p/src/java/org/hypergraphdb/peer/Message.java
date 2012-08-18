@@ -8,104 +8,111 @@
 package org.hypergraphdb.peer;
 
 import java.util.Collection;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import mjson.Json;
 
-public class Message implements Map<String, Object>
+
+public class Message // extends Json
 {
-    private Map<String, Object> map;
-
+    //private Map<String, Object> map;
+	Json json;
+	
     public Message()
     {
-        map = new HashMap<String, Object>();
+        json = Json.object();
     }
 
     public Message(Map<String, Object> map)
     {
-        this.map = map;
+        json = Json.make(map);
     }
 
-    public Performative getPerformative()
-    {
-        return Performative.toConstant((String)get(Messages.PERFORMATIVE));
-    }
+    @Override
+    public Map<String, Json> asJsonMap() { return json.asJsonMap(); }
     
-    public UUID getConversationId()
-    {
-        return (UUID)get(Messages.CONVERSATION_ID);
-    }
+//    public Performative getPerformative()
+//    {
+//        return Performative.toConstant(json.at(Messages.PERFORMATIVE).asString());
+//    }
     
-    @SuppressWarnings("unchecked")
-    public <T> T getContent()
-    {
-        return (T)get(Messages.CONTENT);
-    }
+//    public UUID getConversationId()
+//    {
+//        return (UUID)get(Messages.CONVERSATION_ID);
+//    }
     
-    public void clear()
-    {
-        map.clear();
-    }
+//    @SuppressWarnings("unchecked")
+//    public <T> T getContent()
+//    {
+//        return (T)get(Messages.CONTENT);
+//    }
+    
+//    public void clear()
+//    {
+//        map.clear();
+//    }
 
-    public boolean containsKey(Object key)
-    {
-        return map.containsKey(key);
-    }
+//    public boolean containsKey(Object key)
+//    {
+//        return map.containsKey(key);
+//    }
+//
+//    public boolean containsValue(Object value)
+//    {
+//        return map.containsValue(value);
+//    }
+//
+//    public Set<java.util.Map.Entry<String, Object>> entrySet()
+//    {
+//        return map.entrySet();
+//    }
 
-    public boolean containsValue(Object value)
-    {
-        return map.containsValue(value);
-    }
+//    public Object get(String key)
+//    {
+//        return json.at(key);
+//    }
 
-    public Set<java.util.Map.Entry<String, Object>> entrySet()
-    {
-        return map.entrySet();
-    }
+//    public boolean isEmpty()
+//    {
+//        return map.isEmpty();
+//    }
 
-    public Object get(Object key)
-    {
-        return map.get(key);
-    }
+//    public Set<String> keySet()
+//    {
+//        return map.keySet();
+//    }
 
-    public boolean isEmpty()
-    {
-        return map.isEmpty();
-    }
+//    public Object put(String key, Object value)
+//    {
+//        return json.set(key, value);
+//    }
 
-    public Set<String> keySet()
-    {
-        return map.keySet();
-    }
+//    public void putAll(Map<? extends String, ? extends Object> m)
+//    {
+//        map.putAll(m);
+//    }
 
-    public Object put(String key, Object value)
-    {
-        return map.put(key, value);
-    }
+//    public Object remove(Object key)
+//    {
+//        return map.remove(key);
+//    }
 
-    public void putAll(Map<? extends String, ? extends Object> m)
-    {
-        map.putAll(m);
-    }
+//    public int size()
+//    {
+//        return json.asJsonMap().size();
+//    }
 
-    public Object remove(Object key)
-    {
-        return map.remove(key);
-    }
-
-    public int size()
-    {
-        return map.size();
-    }
-
-    public Collection<Object> values()
-    {
-        return map.values();
-    }
+//    public Collection<Object> values()
+//    {
+//        return map.values();
+//    }
     
     public String toString()
     {
-        return map.toString();
+        return json.toString();
     }
 }

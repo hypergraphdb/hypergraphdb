@@ -25,6 +25,8 @@ import java.util.Map.Entry;
 //import net.jxta.id.IDFactory;
 //import net.jxta.protocol.PipeAdvertisement;
 
+import mjson.Json;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
@@ -948,7 +950,7 @@ public class Structs
 
     public static Message combine(Message msg, Map<String, Object> s)
     {
-        msg.putAll(s);
+        msg.with(Json.object(s)); // msg.putAll(s);
         return msg;
     }
 

@@ -237,7 +237,7 @@ public class ActivityManager implements MessageHandler
                 {
                     Transition transition = 
                         type.getTransitionMap().getTransition(activity.getState().getConst(), 
-                                                              msg);
+                                                              msg.asJsonMap());
                     if (transition == null)
                     {
                         Performative perf = Performative.toConstant((String)getPart(msg, PERFORMATIVE));

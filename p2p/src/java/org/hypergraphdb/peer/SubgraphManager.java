@@ -712,11 +712,14 @@ public class SubgraphManager
               {
                 public Boolean eval(Pair<HGPersistentHandle, Object> n)
                 {
+                	// We might not have the atom here...which may be all right with a distributed DB
+                	if (n == null) 
+                		return false;
                     return n.getSecond() instanceof HGPersistentHandle[] && 
                            shouldIgnore(n.getFirst(), (HGPersistentHandle[])n.getSecond()); 
-                }                                        
+                }
               }
-            );            
+            );
         }
 
         public HGPersistentHandle store(HGPersistentHandle handle,

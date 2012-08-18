@@ -24,6 +24,35 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
 
+/**
+ * <p>
+ * This {@link HyperNode} implementation lets you access a remote HyperGraph instance in 
+ * client-server way. All {@link HyperNode} methods send the operations to the remote peer and
+ * wait for the response in a synchronous way before returning. 
+ * </p>
+ * 
+ * <p>
+ * The implementation uses the "common activities" provided by {@link CACTBootstrap}. Therefore,
+ * make sure you include that initialization class in the list of bootstrap classes invoked during
+ * peer startup. For example, your peer configuration file should look like this:
+ * 
+ * <code><pre>
+ * { ...,
+ *	"bootstrap" : [ {"class" : "org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap", "config" : {}},
+ *               {"class" : "org.hypergraphdb.peer.bootstrap.CACTBootstrap", "config" : {}},
+ *   etc...              
+ * }
+ * </pre></code>
+ * </p>
+ * 
+ * <p>
+ * If you want to perform the operations
+ * asynchronously, you would have to trigger the activities 
+ * </p>
+ * 
+ * @author Borislav Iordanov
+ *
+ */
 public class PeerHyperNode implements HyperNode
 {
     private HyperGraphPeer thisPeer;

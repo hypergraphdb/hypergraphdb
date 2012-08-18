@@ -206,7 +206,16 @@ public class XMPPPeerInterface implements PeerInterface
                 		handlePresence((Presence)packet);
                     return;
                 }
-                processMessage((Message)packet);
+                try
+                {
+                	processMessage((Message)packet);
+                }
+                catch (Throwable t)
+                {
+                	// Maybe we should do a reply here? If an exception is thrown here,
+                	// it means a framework/infrastructure bug...
+                	t.printStackTrace(System.err);
+                }
             }                
             },
            new PacketFilter() { public boolean accept(Packet p)               
