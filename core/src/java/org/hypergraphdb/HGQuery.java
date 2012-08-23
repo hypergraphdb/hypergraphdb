@@ -1537,7 +1537,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * <p>Create a new variable and attach it to the current variable context.</p>
          * 
          * @param name The name of the variable. Any previous variable with that name in the current context will
-         * be overriden.
+         * be overridden.
          * @param t A class parameter allowing to specify the type of the variable without providing an initial
          * value. Use this to avoid ugly type casts.
          * @return The {@link Var} instance.
