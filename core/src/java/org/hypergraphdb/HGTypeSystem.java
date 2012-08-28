@@ -7,11 +7,11 @@
  */
 package org.hypergraphdb;
 
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +29,7 @@ import org.hypergraphdb.storage.BAtoString;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.type.HGTypeSchema;
+import org.hypergraphdb.type.JavaTypeFactory;
 import org.hypergraphdb.type.JavaTypeMapper;
 import org.hypergraphdb.type.JavaTypeSchema;
 import org.hypergraphdb.type.LinkType;
@@ -115,7 +116,7 @@ public class HGTypeSystem
 	private HyperGraph graph = null;
 	private HGTypeConfiguration config = null;
     // Useful for the many methods that work on Java Class(es) for backward compatibility.
-	private JavaTypeSchema javaSchema = null;
+	private HGTypeSchema<Class<?>> javaSchema = null;
 //	private HGBidirectionalIndex<String, HGPersistentHandle> classToTypeDB = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> aliases = null;
 	private HGBidirectionalIndex<String,  HGPersistentHandle> urisDB = null;
@@ -428,7 +429,7 @@ public class HGTypeSystem
 	 */
 	public void defineTypeAtom(final HGPersistentHandle handle, final Class<?> clazz)
 	{
-	    defineTypeAtom(handle, javaSchema.toTypeURI(clazz));
+	    defineTypeAtom(handle, config.getDefaultSchema().toTypeURI(clazz));//javaSchema.toTypeURI(clazz));
 	}
 
 
@@ -438,9 +439,12 @@ public class HGTypeSystem
 	 * call this method for sub-typing relationships that are automatically inferred
 	 * from a Java class hierarchy. However, custom types and type constructors can use
 	 * this method for sub-type bookkeeping, which is important for querying and indexing.
-	 * A sub-type is represented by a {@link HGSubsumes} link. In addition, the {@link HGIndexManager}
+	 * A sub-type is represented by a {@link HGSubsumes} link.
+	 * </p>
+	 * <p>
+	 * In addition, the {@link HGIndexManager}
 	 * must be informed about a sub-typing relationships in order to maintain indices
-	 * appropriately.  
+	 * appropriately.   
 	 * </p>
 	 * 
 	 * @param superType The parent type.
@@ -487,7 +491,11 @@ public class HGTypeSystem
 	 */
 	public JavaTypeMapper getJavaTypeFactory()
 	{
-		return javaSchema.getJavaTypeFactory();
+		if (javaSchema instanceof JavaTypeSchema)  
+			return ((JavaTypeSchema)javaSchema).getJavaTypeFactory();
+		JavaTypeFactory f = new JavaTypeFactory();
+		f.setHyperGraph(this.graph);
+		return f;
 	}
 	
 	/**
@@ -659,7 +667,7 @@ public class HGTypeSystem
 	 */
 	public HGHandle addPredefinedType(final HGPersistentHandle handle, final HGAtomType type, final Class<?> clazz)
 	{
-	    return addPredefinedType(handle, type, javaSchema.toTypeURI(clazz));
+	    return addPredefinedType(handle, type, config.getDefaultSchema().toTypeURI(clazz));
 	}
 	
 	private HGHandle addPredefinedTypeTransaction(HGPersistentHandle handle, HGAtomType type, final URI typeId)
@@ -859,7 +867,7 @@ public class HGTypeSystem
 	 */
 	public HGAtomType getAtomType(HGHandle handle)
 	{
-		return (HGAtomType)getTypeHandle(handle);
+		return getType(getTypeHandle(handle));
 	}
 
 	/**
@@ -877,7 +885,10 @@ public class HGTypeSystem
 	 */
 	public HGHandle getTypeHandleIfDefined(Class<?> clazz)
 	{
-	    return javaSchema.findType(clazz);
+		if (javaSchema instanceof JavaTypeSchema)
+			return ((JavaTypeSchema)javaSchema).findType(clazz);
+		else 
+			return javaSchema.findType(javaSchema.toTypeURI(clazz));
 	}
 	
 	
@@ -899,7 +910,7 @@ public class HGTypeSystem
             {
                 
                 HGHandle h = getTypeHandleIfDefined(clazz);
-                return h != null ? h : createNewType(javaSchema.toTypeURI(clazz));
+                return h != null ? h : createNewType(config.getDefaultSchema().toTypeURI(clazz));
             } 
         });
 	}
