@@ -1,14 +1,8 @@
 package org.hypergraphdb.peer.cact;
 
 import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Messages.createMessage;
 import static org.hypergraphdb.peer.Messages.getReply;
 import static org.hypergraphdb.peer.Messages.getSender;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,12 +10,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import mjson.Json;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.ActivityListener;
@@ -107,24 +103,23 @@ public class GetAtom extends FSMActivity
     @Override
     public void initiate()
     {
-        Message msg = createMessage(Performative.QueryRef, this);
-        combine(msg, 
-                struct(CONTENT, handles)); 
+    	Json msg = createMessage(Performative.QueryRef, this);
+        msg.set(CONTENT, handles); 
         send(target, msg);
     }
 
     @FromState("Started")
     @OnMessage(performative="QueryRef")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onGetAtoms(Message msg) throws Throwable
+    public WorkflowStateConstant onGetAtoms(Json msg) throws Throwable
     {
-        Collection C = getPart(msg, CONTENT);
+        Json C = msg.at(CONTENT);
         handles = new HashSet<HGHandle>();
-        handles.addAll(C);
-        Message reply = getReply(msg, Performative.InformRef);
-        combine(reply, 
-                struct(CONTENT, 
-                       SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), handles))); 
+        for (Json x : C.asJsonList())
+        	handles.add((HGHandle)Messages.fromJson(x));
+        Json reply = getReply(msg, Performative.InformRef);
+        reply.set(CONTENT, 
+                  SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), handles)); 
         send(getSender(msg), reply);
         return WorkflowState.Completed;
     }
@@ -132,12 +127,12 @@ public class GetAtom extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="InformRef")
     @PossibleOutcome("Completed")        
-    public WorkflowStateConstant onAtomsReceived(Message msg)
+    public WorkflowStateConstant onAtomsReceived(Json msg)
     {
         HyperGraph graph = getThisPeer().getGraph();
-        Object A = getPart(msg, CONTENT);
-        final RAMStorageGraph subgraph = getPart(A, "storage-graph");
-        final Map<String, String>  typeClasses = getPart(A, "type-classes");
+        Json A = msg.at(CONTENT);
+        final RAMStorageGraph subgraph = Messages.fromJson(A.at("storage-graph"));
+        final Map<String, String>  typeClasses = Messages.fromJson(A.at("type-classes"));
         
         final Map<HGHandle, HGHandle> typeMap = 
             SubgraphManager.getLocalTypes(graph, typeClasses);

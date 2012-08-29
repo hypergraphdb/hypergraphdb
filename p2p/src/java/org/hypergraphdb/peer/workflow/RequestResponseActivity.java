@@ -1,20 +1,15 @@
 package org.hypergraphdb.peer.workflow;
 
+
 import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Messages.createMessage;
 import static org.hypergraphdb.peer.Messages.getReply;
 import static org.hypergraphdb.peer.Messages.getSender;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-
 import java.util.UUID;
-
+import mjson.Json;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
-import org.hypergraphdb.peer.SubgraphManager;
 
 /**
  * <p>
@@ -51,22 +46,20 @@ public abstract class RequestResponseActivity<Request, Response> extends FSMActi
     @Override
     public void initiate()
     {
-        Message msg = createMessage(Performative.Request, this);
-        combine(msg, 
-                struct(CONTENT, request)); 
+    	Json msg = createMessage(Performative.Request, this);
+        msg.set(CONTENT, request); 
         send(target, msg);        
     }
 
-    @SuppressWarnings("unchecked")
 	@FromState("Started")
     @OnMessage(performative="Request")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onRequest(Message msg) throws Throwable
+    public WorkflowStateConstant onRequest(Json msg) throws Throwable
     {
-        Request request = (Request)getPart(msg, CONTENT);
+        Request request = Messages.fromJson(msg.at(CONTENT));
         Response response = doRequest(request);
 //        Performative.
-        Message reply = getReply(msg, Performative.Agree);
+        Json reply = getReply(msg, Performative.Agree);
         send(getSender(msg), reply);
         return WorkflowState.Completed;
     }

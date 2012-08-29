@@ -1,19 +1,11 @@
 package org.hypergraphdb.peer.cact;
 
 import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Messages.createMessage;
-import static org.hypergraphdb.peer.Messages.getReply;
-import static org.hypergraphdb.peer.Messages.getSender;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.list;
-import static org.hypergraphdb.peer.Structs.object;
-import static org.hypergraphdb.peer.Structs.struct;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import mjson.Json;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
@@ -22,7 +14,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.FSMActivity;
@@ -75,7 +67,7 @@ public class AddAtom extends FSMActivity
     public void initiate()
     {
         HyperGraph graph = getThisPeer().getGraph();
-        Message msg = createMessage(Performative.Request, this);
+        Json msg = createMessage(Performative.Request, this);
         if (typeHandle == null)
             typeHandle = getThisPeer().getGraph().getTypeSystem().getTypeHandle(atom);
         HGAtomType  type = getThisPeer().getGraph().get(typeHandle);
@@ -102,12 +94,11 @@ public class AddAtom extends FSMActivity
                 if (clname != null)
                     types.put(p.getFirst().getPersistent().toString(), clname);
             }                 
-            combine(msg, 
-                    struct(CONTENT,             
-                           struct("storage-graph", object(sgraph),
-                                  "type-handle", typeHandle, 
-                                  "type-classes", types,
-                                  "targets", list((Object[])getAtomTargets()))));
+            msg.set(CONTENT,             
+                   Json.object("storage-graph", SubgraphManager.encodeSubgraph(sgraph),
+                          "type-handle", typeHandle, 
+                          "type-classes", types,
+                          "targets", getAtomTargets()));
             send(target, msg);
         }
         finally
@@ -119,14 +110,14 @@ public class AddAtom extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="Request")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onAddAtom(Message msg) throws Throwable
+    public WorkflowStateConstant onAddAtom(Json msg) throws Throwable
     {
         HyperGraph graph = getThisPeer().getGraph();
-        Object A = getPart(msg, CONTENT);
-        final RAMStorageGraph subgraph = getPart(A, "storage-graph");        
-        final Map<String, String>  typeClasses = getPart(A, "type-classes");
-        final HGHandle typeHandle = getPart(A, "type-handle");
-        final List<Object> targets = getPart(A, "targets");
+        Json content = msg.at(CONTENT);
+        final RAMStorageGraph subgraph = SubgraphManager.decodeSubgraph(content.at("storage-graph").asString());        
+        final Map<String, String>  typeClasses = Messages.fromJson(content.at("type-classes"));
+        final HGHandle typeHandle = Messages.fromJson(content.at("type-handle"));
+        final HGHandle [] targets = Messages.fromJson(content.at("targets"));
         Map<HGHandle, HGHandle> localTypes = SubgraphManager.getLocalTypes(graph, typeClasses); 
         subgraph.translateHandles(localTypes);
         HGHandle ltype = localTypes.get(typeHandle);
@@ -135,10 +126,9 @@ public class AddAtom extends FSMActivity
         graph.getStore().attachOverlayGraph(subgraph);
         try
         {    
-            HGHandle [] targetSet = targets.toArray(HGUtils.EMPTY_HANDLE_ARRAY);
             HGAtomType type = graph.get(ltype);                    
             atom = type.make(subgraph.getRoots().iterator().next(), 
-                             new ReadyRef<HGHandle[]>(targetSet), 
+                             new ReadyRef<HGHandle[]>(targets), 
                              null);                       
         }
         finally
@@ -146,16 +136,16 @@ public class AddAtom extends FSMActivity
             graph.getStore().detachOverlayGraph();
         }         
         this.atomHandle = graph.add(atom, ltype);
-        reply(msg, Performative.Agree, struct("atom-handle", atomHandle));
+        reply(msg, Performative.Agree, Json.object("atom-handle", atomHandle));
         return WorkflowStateConstant.Completed;
     }
      
     @FromState("Started")
     @OnMessage(performative="Agree")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onAtomAdded(Message msg) throws Throwable
+    public WorkflowStateConstant onAtomAdded(Json msg) throws Throwable
     {
-        this.atomHandle = getPart(msg, CONTENT, "atom-handle");
+        this.atomHandle = Messages.fromJson(msg.at(CONTENT).at("atom-handle"));
         return WorkflowStateConstant.Completed;
     }
     

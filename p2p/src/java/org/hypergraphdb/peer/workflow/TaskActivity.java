@@ -7,19 +7,21 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
 import java.lang.reflect.InvocationTargetException;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.util.Pair;
-import static org.hypergraphdb.peer.Structs.*;
 
 /**
  * Base class for tasks. A task is an <code>AbstractActivity</code> that
@@ -90,9 +92,9 @@ public abstract class TaskActivity<StateType>
 //        thisPeer.getPeerInterface().registerTask(taskId, this);
     }
     
-    protected void sendReply(Object originalMsg, Message reply)
+    protected void sendReply(Json originalMsg, Json reply)
     {
-        getPeerInterface().send(getPart(originalMsg, Messages.REPLY_TO), reply);
+        getPeerInterface().send(originalMsg.at(Messages.REPLY_TO).getValue(), reply);
     }
     
     /**
@@ -205,11 +207,11 @@ public abstract class TaskActivity<StateType>
      * @param msg The message just received.
      * 
      */
-    public void handleMessage(Message msg)
+    public void handleMessage(Json msg)
     {
         System.out.println("TaskActivity: handleMessage ");
         Conversation<?> conversation = null;
-        UUID conversationId = getPart(msg, Messages.CONVERSATION_ID);
+        UUID conversationId = Messages.fromJson(msg.at(Messages.CONVERSATION_ID));
         if (conversationId != null)
             conversation = conversations.get(conversationId);            
         if (conversation == null)
@@ -318,7 +320,7 @@ public abstract class TaskActivity<StateType>
      * @return A newly created <code>Conversation</code>. The default implementation
      * returns <code>null</code>.
      */
-    protected Conversation<?> createNewConversation(Message msg)
+    protected Conversation<?> createNewConversation(Json msg)
     {
         return null;
     }

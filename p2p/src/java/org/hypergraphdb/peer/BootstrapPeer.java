@@ -7,7 +7,7 @@
  */
 package org.hypergraphdb.peer;
 
-import java.util.Map;
+import mjson.Json;
 
 
 /**
@@ -42,5 +42,5 @@ public interface BootstrapPeer
 	 * @param peer
 	 * @param config
 	 */
-	void bootstrap(HyperGraphPeer peer, Map<String, Object> config);
+	void bootstrap(HyperGraphPeer peer, Json config);
 }

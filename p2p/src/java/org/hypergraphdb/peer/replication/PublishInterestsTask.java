@@ -7,11 +7,14 @@
  */
 package org.hypergraphdb.peer.replication;
 
+
+
 import java.util.Iterator;
 import java.util.UUID;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -19,8 +22,6 @@ import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.Activity;
 import org.hypergraphdb.query.HGAtomPredicate;
-import static org.hypergraphdb.peer.Structs.*;
-import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 /**
@@ -73,9 +74,9 @@ public class PublishInterestsTask extends Activity
 	}
 	
 	@Override
-	public void handleMessage(Message msg)
+	public void handleMessage(Json msg)
 	{
-		Object sendToTarget = getPart(msg, Messages.REPLY_TO);
+		Object sendToTarget = Messages.getSender(msg);
 		//send only to this peer
 		sendMessage(getPeerInterface().newSendActivityFactory(), sendToTarget);
         getState().setCompleted();
@@ -83,8 +84,8 @@ public class PublishInterestsTask extends Activity
 	
 	private void sendMessage(PeerRelatedActivityFactory activityFactory, Object target)
 	{
-	    Message msg = Messages.createMessage(Performative.Inform, ATOM_INTEREST, getId());
-		combine(msg, struct(Messages.CONTENT, pred));
+		Json msg = Messages.createMessage(Performative.Inform, ATOM_INTEREST, getId());
+		msg.set(Messages.CONTENT, pred);
 		
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 		activity.setTarget(target);

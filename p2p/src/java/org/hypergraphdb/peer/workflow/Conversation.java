@@ -7,15 +7,17 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.hypergraphdb.peer.Message;
+import mjson.Json;
+
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.util.Pair;
-import static org.hypergraphdb.peer.Structs.*;
 
 /**
  * Superclass for conversation activities. The state transitions in a
@@ -58,7 +60,7 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
     /**
      * The last message sent or received.
      */
-    private Message msg;
+    private Json msg;
 
     private Map<Pair<StateType, Performative>, StateType> performativeTransitions = 
         new HashMap<Pair<StateType, Performative>, StateType>();
@@ -88,16 +90,16 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
                 fromState, performative), toState);
     }
 
-    public void handleIncomingMessage(Message msg)
+    public void handleIncomingMessage(Json msg)
     {
         compareAndSetState(null, startState);
 
         StateType state = getState();
 
-        Object x = getPart(msg, Messages.PERFORMATIVE); // variable needed because of
+        String x = msg.at(Messages.PERFORMATIVE).asString(); // variable needed because of
                                                // Java 5 compiler bug
         Pair<StateType, Performative> key = new Pair<StateType, Performative>(
-                state, Performative.toConstant(x.toString()));
+                state, Performative.toConstant(x));
         StateType newState = performativeTransitions.get(key);
 
         if ((newState != null) && compareAndSetState(state, newState))
@@ -118,13 +120,13 @@ public class Conversation<StateType> extends AbstractActivity<StateType>
      * 
      * @param msg
      */
-    protected void say(Message msg)
+    protected void say(Json msg)
     {
-        combine(msg, struct(Messages.CONVERSATION_ID, getId()));
+        msg.set(Messages.CONVERSATION_ID, getId());
         task.getPeerInterface().send(peer, msg);
     }
 
-    public Message getMessage()
+    public Json getMessage()
     {
         return msg;
     }

@@ -1,10 +1,7 @@
 package org.hypergraphdb.peer.cact;
 
-import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
 
+import static org.hypergraphdb.peer.Messages.CONTENT;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,12 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-
+import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.FSMActivity;
@@ -58,40 +54,49 @@ public class RemoveAtom extends FSMActivity
     
     public void initiate()
     {
-        Message msg = createMessage(Performative.Request, this);
-        combine(msg, 
-                struct(CONTENT, handles)); 
+    	Json msg = createMessage(Performative.Request, this);
+        msg.set(CONTENT, handles); 
         send(target, msg);
     }
 
     @FromState("Started")
     @OnMessage(performative="Request")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onRemoveAtoms(Message msg) throws Throwable
+    public WorkflowStateConstant onRemoveAtoms(Json msg) throws Throwable
     {
-        Collection<HGHandle> C = getPart(msg, CONTENT);
+        Json C = msg.at(CONTENT);
         handles = new HashSet<HGHandle>();
-        handles.addAll(C);
+        for (Json x : C.asJsonList())
+        	handles.add((HGHandle)Messages.fromJson(x));
         final HyperGraph graph = getThisPeer().getGraph();
         removed = new HashMap<HGHandle, Boolean>();
+        final Json response = Json.object();
         graph.getTransactionManager().ensureTransaction(new Callable<Object>() {
         public Object call()
         {
             for (HGHandle h : handles)
-                removed.put(h, getThisPeer().getGraph().remove(h));            
+            {
+            	boolean b = getThisPeer().getGraph().remove(h);
+                removed.put(h, b);
+                response.set(h.getPersistent().toString(), b);
+            }
             return null;
         }
         });
-        reply(msg, Performative.Agree, removed);
+        reply(msg, Performative.Agree, response);
         return WorkflowState.Completed;                    
     }
  
     @FromState("Started")
     @OnMessage(performative="Agree")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onAtomsRemoved(Message msg) throws Throwable
+    public WorkflowStateConstant onAtomsRemoved(Json msg) throws Throwable
     {
-        removed = getPart(msg, CONTENT);
+        Json R = msg.at(CONTENT);
+        removed = new HashMap<HGHandle, Boolean>();
+        for (Map.Entry<String, Json> j : R.asJsonMap().entrySet())
+        	removed.put(getThisPeer().getGraph().getHandleFactory().makeHandle(j.getKey()), 
+        				j.getValue().asBoolean());
         return WorkflowState.Completed;
     }
     

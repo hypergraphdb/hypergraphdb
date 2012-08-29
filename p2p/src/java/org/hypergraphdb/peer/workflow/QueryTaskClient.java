@@ -7,20 +7,15 @@
  */
 package org.hypergraphdb.peer.workflow;
 
-import static org.hypergraphdb.peer.HGDBOntology.*;
-import static org.hypergraphdb.peer.Messages.createMessage;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
 
+import static org.hypergraphdb.peer.HGDBOntology.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerFilterEvaluator;
@@ -136,10 +131,10 @@ public class QueryTaskClient extends Activity
     {
         count.incrementAndGet();
 
-        Message msg = Messages.createMessage(Performative.Request, QUERY, getId());
-        combine(msg, struct(Messages.CONTENT, struct(SLOT_QUERY,
+        Json msg = Messages.createMessage(Performative.Request, QUERY, getId());
+        msg.set(Messages.CONTENT, Json.object(SLOT_QUERY,
                                             (handle == null) ? cond : handle,
-                                            SLOT_GET_OBJECT, getObject)));
+                                            SLOT_GET_OBJECT, getObject));
 
         PeerRelatedActivity activity = (PeerRelatedActivity) activityFactory.createActivity();
         activity.setTarget(target);
@@ -148,15 +143,15 @@ public class QueryTaskClient extends Activity
         getThisPeer().getExecutorService().submit(activity); // TODO: what about the result??
     }
 
-    public void handleMessage(Message msg)
+    public void handleMessage(Json msg)
     {
         // get result
-        ArrayList<?> reply = (ArrayList<?>) getPart(msg, Messages.CONTENT);
+        Json reply = msg.at(Messages.CONTENT);
         result = new ArrayList<Object>();
 
-        for (int i = 0; i < reply.size(); i++)
+        for (Json j : reply.asJsonList())
         {
-            Object elem = getPart(reply, i);
+        	Object elem = Messages.fromJson(j); 
             if (elem instanceof StorageGraph)
             {
                 result.add(SubgraphManager.get((StorageGraph) elem, tempGraph));

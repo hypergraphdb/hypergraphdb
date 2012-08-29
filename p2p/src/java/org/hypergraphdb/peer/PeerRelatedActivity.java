@@ -9,6 +9,8 @@ package org.hypergraphdb.peer;
 
 import java.util.concurrent.Callable;
 
+import mjson.Json;
+
 /**
  * <p>
  * A callable object that executes a task against a given peer with a 
@@ -20,7 +22,7 @@ import java.util.concurrent.Callable;
 public abstract class PeerRelatedActivity implements Callable<Boolean>
 {
 	protected Object target;
-	protected Message msg;
+	protected Json msg;
 	
 	public PeerRelatedActivity()
 	{
@@ -36,12 +38,12 @@ public abstract class PeerRelatedActivity implements Callable<Boolean>
 		this.target = target;
 	}
 
-	public Message getMessage()
+	public Json getMessage()
 	{
 		return msg;
 	}
 
-	public void setMessage(Message msg)
+	public void setMessage(Json msg)
 	{
 		this.msg = msg;
 	}	

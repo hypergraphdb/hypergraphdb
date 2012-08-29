@@ -9,12 +9,14 @@ package org.hypergraphdb.peer.workflow;
 
 import java.util.UUID;
 
+
+
+import mjson.Json;
+
 import org.hypergraphdb.peer.ExceptionAtPeer;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import static org.hypergraphdb.peer.Messages.*;
-import static org.hypergraphdb.peer.Structs.*;
 
 /**
  * <p>
@@ -43,11 +45,11 @@ public abstract class FSMActivity extends Activity
      * 
      * @param msg The message that is reporting the peer failure.
      */
-    protected void onPeerFailure(Message msg)
+    protected void onPeerFailure(Json msg)
     {
         HGPeerIdentity id = getThisPeer().getIdentity(getSender(msg));
         this.future.result.exception = new ExceptionAtPeer(id,
-                                                           (String)getPart(msg, CONTENT));
+                                                           msg.at(CONTENT).asString());
         getState().assign(WorkflowState.Failed);
     }
 
@@ -67,13 +69,13 @@ public abstract class FSMActivity extends Activity
      * 
      * @param msg The message that is reporting the peer failure.
      */    
-    protected void onPeerNotUnderstand(Message msg)
+    protected void onPeerNotUnderstand(Json msg)
     {
         HGPeerIdentity id = getThisPeer().getIdentity(getSender(msg));
         this.future.result.exception = new ExceptionAtPeer(id,
                                                            "Peer did not understand last message:" +
-                                                           getPart(msg, CONTENT) + ", because " +
-                                                           getPart(msg, WHY_NOT_UNDERSTOOD));
+                                                           msg.at(CONTENT).toString() + ", because " +
+                                                           msg.at(WHY_NOT_UNDERSTOOD).asString());
         getState().assign(WorkflowState.Failed);        
     }
     
@@ -96,5 +98,5 @@ public abstract class FSMActivity extends Activity
      * <p>Empty method - can't override because message handling for
      * <code>FSMActivity</code> is automated by the framework.</p>
      */
-    public final void handleMessage(Message message) { }
+    public final void handleMessage(Json message) { }
 }

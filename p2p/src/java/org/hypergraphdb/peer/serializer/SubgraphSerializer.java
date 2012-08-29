@@ -8,6 +8,7 @@
 package org.hypergraphdb.peer.serializer;
 
 import java.io.IOException;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
@@ -19,24 +20,11 @@ import org.hypergraphdb.storage.RAMStorageGraph;
 import org.hypergraphdb.storage.StorageGraph;
 import org.hypergraphdb.util.Pair;
 
-public class SubgraphSerializer implements SerializerMapper, HGSerializer
+public class SubgraphSerializer
 {
     private static byte OBJECT_DATA = 0;
     private static byte LINK_DATA = 1;
     private static byte END = 2;
-
-    public HGSerializer accept(Class<?> clazz)
-    {
-        if (StorageGraph.class.isAssignableFrom(clazz))
-            return this;
-        else
-            return null;
-    }
-
-    public HGSerializer getSerializer()
-    {
-        return this;
-    }
 
     public Object readData(InputStream in) throws IOException
     {
@@ -48,7 +36,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
         
         Set<HGPersistentHandle> roots = new HashSet<HGPersistentHandle>();
         while (rootCount-- > 0)
-            roots.add(PersistentHandlerSerializer.deserializePersistentHandle(in));
+            roots.add(SerializationUtils.deserializePersistentHandle(in));
         
         result = new RAMStorageGraph(roots);
         
@@ -57,7 +45,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
             type = (byte) in.read();
             if (type != END)
             {
-                HGPersistentHandle handle = PersistentHandlerSerializer.deserializePersistentHandle(in);
+                HGPersistentHandle handle = SerializationUtils.deserializePersistentHandle(in);
                 int length = SerializationUtils.deserializeInt(in);
 
                 if (type == OBJECT_DATA)
@@ -72,7 +60,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
                     HGPersistentHandle[] link = new HGPersistentHandle[length];
                     for (int i = 0; i < length; i++)
                     {
-                        link[i] = PersistentHandlerSerializer.deserializePersistentHandle(in);
+                        link[i] = SerializationUtils.deserializePersistentHandle(in);
                     }
                     result.put(handle, link);
 
@@ -90,7 +78,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
         SerializationUtils.serializeInt(out, subgraph.getRoots().size());
         
         for (HGPersistentHandle root : subgraph.getRoots())
-            PersistentHandlerSerializer.serializePersistentHandle(out, root);
+            SerializationUtils.serializePersistentHandle(out, root);
         
         while (iter.hasNext())
         {
@@ -113,8 +101,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
             }
 
             // write data
-            PersistentHandlerSerializer.serializePersistentHandle(out,
-                                                                  item.getFirst());
+            SerializationUtils.serializePersistentHandle(out, item.getFirst());
             if (byteValue != null)
             {
                 SerializationUtils.serializeInt(out, byteValue.length);
@@ -127,8 +114,7 @@ public class SubgraphSerializer implements SerializerMapper, HGSerializer
                 // write data
                 for (HGPersistentHandle handle : link)
                 {
-                    PersistentHandlerSerializer.serializePersistentHandle(out,
-                                                                          handle);
+                	SerializationUtils.serializePersistentHandle(out, handle);
                 }
             }
         }

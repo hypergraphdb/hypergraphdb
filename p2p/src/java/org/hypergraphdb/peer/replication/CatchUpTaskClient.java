@@ -7,12 +7,11 @@
  */
 package org.hypergraphdb.peer.replication;
 
+
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
-
-
+import mjson.Json;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -20,8 +19,6 @@ import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.TaskActivity;
-
-import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
@@ -78,10 +75,10 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 	{
 		count.incrementAndGet();
 
-		Message msg = createMessage(Performative.Request, CATCHUP, getTaskId());
-		combine(msg, struct(Messages.CONTENT, 
-				struct(SLOT_LAST_VERSION, thisPeer.getLog().getLastFrom(target), 
-						SLOT_INTEREST, Replication.get(thisPeer).getAtomInterests())));
+		Json msg = createMessage(Performative.Request, CATCHUP, getTaskId());
+		msg.set(Messages.CONTENT, 
+				Json.object(SLOT_LAST_VERSION, thisPeer.getLog().getLastFrom(target), 
+						SLOT_INTEREST, Replication.get(thisPeer).getAtomInterests()));
 				
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
 		activity.setTarget(target);

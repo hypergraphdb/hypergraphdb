@@ -1,23 +1,19 @@
 package org.hypergraphdb.peer.cact;
 
+
 import static org.hypergraphdb.peer.Messages.CONTENT;
 import static org.hypergraphdb.peer.Messages.getReply;
 import static org.hypergraphdb.peer.Messages.getSender;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Future;
-
+import mjson.Json;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.ActivityResult;
@@ -180,21 +176,21 @@ public class RemoteQueryExecution<T> extends FSMActivity
         
         public void initiate()
         {
-            Message msg = createMessage(Performative.QueryRef, op);
+            Json msg = createMessage(Performative.QueryRef, op);
             send(getParent().target, msg);
         }
 
         @FromState("Started")
         @OnMessage(performative = "QueryRef")
-        public WorkflowStateConstant onResultIterate(Message msg)
+        public WorkflowStateConstant onResultIterate(Json msg)
                 throws Throwable
         {
             HyperGraph graph = getThisPeer().getGraph();
             getParent().bindTxContext();
             try
             {
-                String op = getPart(msg, CONTENT);
-                Message reply;
+                String op = msg.at(CONTENT).asString();
+                Json  reply;
                 if ("next".equals(op) || "prev".equals(op))
                 {
                     Object x = "next".equals(op) ? getParent().rs.next() : getParent().rs.prev();
@@ -206,14 +202,13 @@ public class RemoteQueryExecution<T> extends FSMActivity
                     try { hasprev = getParent().rs.hasPrev(); }
                     catch (UnsupportedOperationException ex) { } // traversals, for example, don't support prev even though they should...
                     reply = getReply(msg, Performative.InformRef);
-                    combine(reply,
-                            struct(CONTENT,
-                                   struct("has-next",
+                    reply.set(CONTENT,
+                                   Json.object("has-next",
                                           hasnext,
                                           "has-prev",
                                           hasprev,
                                           "current",
-                                          current)));
+                                          current));
                 }
                 else
                     reply = getReply(msg, Performative.NotUnderstood);
@@ -229,15 +224,15 @@ public class RemoteQueryExecution<T> extends FSMActivity
         @SuppressWarnings("unchecked")
 		@FromState("Started")
         @OnMessage(performative = "InformRef")
-        public WorkflowStateConstant onIterateResult(Message msg)
+        public WorkflowStateConstant onIterateResult(Json  msg)
                 throws Throwable
         {
-            Map<String, Object> C = getPart(msg, CONTENT);
+            Json C = msg.at(CONTENT);
             RemoteQueryExecution.RemoteSearchResult rs = 
             	(RemoteQueryExecution.RemoteSearchResult)getParent().rs;
-            rs.hasnext = getPart(C, "has-next");
-            rs.hasprev = getPart(C, "has-prev");
-            rs.current = getPart(C, "current");
+            rs.hasnext = C.at("has-next").asBoolean();
+            rs.hasprev = C.at("has-prev").asBoolean();
+            rs.current = Messages.fromJson(C.at("current"));
             return WorkflowStateConstant.Completed;
         }
     }
@@ -258,17 +253,17 @@ public class RemoteQueryExecution<T> extends FSMActivity
 
     public void initiate()
     {
-        Message msg = createMessage(Performative.Request, this);
-        combine(msg, struct(CONTENT, queryExpression));
+    	Json msg = createMessage(Performative.Request, this);
+        msg.set(CONTENT, queryExpression);
         send(target, msg);
 
     }
 
     @FromState("Started")
     @OnMessage(performative = "Request")
-    public WorkflowStateConstant onQuery(Message msg) throws Throwable
+    public WorkflowStateConstant onQuery(Json msg) throws Throwable
     {
-        queryExpression = getPart(msg, CONTENT);
+        queryExpression = Messages.fromJson(msg.at(CONTENT));
         HyperGraph graph = getThisPeer().getGraph();
         bindTxContext();
         try
@@ -276,13 +271,12 @@ public class RemoteQueryExecution<T> extends FSMActivity
             graph.getTransactionManager().beginTransaction(HGTransactionConfig.READONLY);
             tx = graph.getTransactionManager().getContext().getCurrent();
             rs = getThisPeer().getGraph().find(queryExpression);
-            Message reply = getReply(msg, Performative.Agree);
-            combine(reply,
-                    struct(CONTENT,
-                           struct("has-next",
+            Json reply = getReply(msg, Performative.Agree);
+            reply.set(CONTENT,
+                           Json.object("has-next",
                                   rs.hasNext(),
                                   "is-ordered",
-                                  rs.isOrdered())));
+                                  rs.isOrdered()));
             send(getSender(msg), reply);
             return ResultSetOpen;
         }
@@ -294,10 +288,10 @@ public class RemoteQueryExecution<T> extends FSMActivity
 
     @FromState("Started")
     @OnMessage(performative = "Agree")
-    public WorkflowStateConstant onQueryPerformed(Message msg) throws Throwable
+    public WorkflowStateConstant onQueryPerformed(Json msg) throws Throwable
     {
-        Boolean hasnext = getPart(msg, CONTENT, "has-next");
-        Boolean isordered = getPart(msg, CONTENT, "is-ordered");
+        Boolean hasnext = msg.at(CONTENT).at("has-next").asBoolean();
+        Boolean isordered = msg.at(CONTENT).at("is-ordered").asBoolean();
         rs = new RemoteSearchResult(hasnext, isordered);
         return ResultSetOpen;
     }
@@ -305,7 +299,7 @@ public class RemoteQueryExecution<T> extends FSMActivity
     @FromState("ResultSetOpen")
     @OnMessage(performative = "Cancel")
     @PossibleOutcome("Completed")
-    public WorkflowStateConstant onClose(Message msg) throws Throwable
+    public WorkflowStateConstant onClose(Json msg) throws Throwable
     {
         bindTxContext();
         try
@@ -323,7 +317,7 @@ public class RemoteQueryExecution<T> extends FSMActivity
 
     @FromState("ResultSetOpen")
     @OnMessage(performative = "Confirm")
-    public WorkflowStateConstant onClosed(Message msg)
+    public WorkflowStateConstant onClosed(Json msg)
     {
         return WorkflowStateConstant.Completed;
     }

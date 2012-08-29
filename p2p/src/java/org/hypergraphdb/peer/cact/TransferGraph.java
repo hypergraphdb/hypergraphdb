@@ -7,16 +7,13 @@
  */
 package org.hypergraphdb.peer.cact;
 
+
 import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Messages.createMessage;
+
 import static org.hypergraphdb.peer.Messages.getReply;
 import static org.hypergraphdb.peer.Messages.getSender;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-
 import java.util.UUID;
-
+import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
@@ -24,7 +21,7 @@ import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.algorithms.HyperTraversal;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.FSMActivity;
@@ -71,8 +68,8 @@ public class TransferGraph extends FSMActivity
     @Override
     public void initiate()
     { 
-        Message msg = createMessage(Performative.QueryRef, this);
-        combine(msg, struct(CONTENT, traversal)); 
+    	Json msg = createMessage(Performative.QueryRef, this);
+        msg.set(CONTENT, traversal); 
         send(target, msg);
         if (trace)
         	getThisPeer().getGraph().getLogger().trace("Query graph transfer for : " + traversal);
@@ -81,9 +78,9 @@ public class TransferGraph extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="QueryRef")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onQueryRef(Message msg) throws Throwable
+    public WorkflowStateConstant onQueryRef(Json msg) throws Throwable
     {
-        traversal = getPart(msg, CONTENT); 
+        traversal = Messages.content(msg); 
         CopyGraphTraversal copyTraversal = null;
         if (traversal instanceof CopyGraphTraversal)
             copyTraversal = (CopyGraphTraversal)traversal;
@@ -97,9 +94,9 @@ public class TransferGraph extends FSMActivity
         if (trace)
         	getThisPeer().getGraph().getLogger().trace("Recevied request for traversal : " + copyTraversal);
         ((DefaultALGenerator)copyTraversal.getAdjListGenerator()).setGraph(getThisPeer().getGraph());
-        Message reply = getReply(msg, Performative.InformRef);
+        Json reply = getReply(msg, Performative.InformRef);
         Object subgraph = SubgraphManager.getTransferGraphRepresentation(getThisPeer().getGraph(), traversal);
-        combine(reply, struct(CONTENT, subgraph));
+        reply.set(CONTENT, subgraph);
         send(getSender(msg), reply);
         if (trace)
         	getThisPeer().getGraph().getLogger().trace("Sent response to traversal : " + copyTraversal);
@@ -109,11 +106,11 @@ public class TransferGraph extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="InformRef")
     @PossibleOutcome("Completed")        
-    public WorkflowStateConstant onInformRef(Message msg) throws ClassNotFoundException
+    public WorkflowStateConstant onInformRef(Json msg) throws ClassNotFoundException
     {
     	if (trace)
     		getThisPeer().getGraph().getLogger().trace("Received response for traversal : " + traversal);
-        SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), 
+        SubgraphManager.writeTransferedGraph(msg.at(CONTENT), 
                                              getThisPeer().getGraph(),
                                              atomFinder);
         if (trace)

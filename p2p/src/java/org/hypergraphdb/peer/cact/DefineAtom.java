@@ -7,19 +7,14 @@
  */
 package org.hypergraphdb.peer.cact;
 
-import static org.hypergraphdb.peer.Messages.*;
-import static org.hypergraphdb.peer.Structs.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.hypergraphdb.peer.Messages.*;
 import java.util.UUID;
+import mjson.Json;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGLink;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.FSMActivity;
@@ -28,11 +23,6 @@ import org.hypergraphdb.peer.workflow.OnMessage;
 import org.hypergraphdb.peer.workflow.PossibleOutcome;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.peer.workflow.WorkflowStateConstant;
-import org.hypergraphdb.storage.RAMStorageGraph;
-import org.hypergraphdb.storage.StorageGraph;
-import org.hypergraphdb.type.HGAtomType;
-import org.hypergraphdb.util.HGUtils;
-import org.hypergraphdb.util.Pair;
 
 /**
  * <p>
@@ -81,21 +71,15 @@ public class DefineAtom extends FSMActivity
     public void initiate()
     {
         HyperGraph graph = getThisPeer().getGraph();
-        Message msg = createMessage(Performative.Request, this);
+        Json msg = createMessage(Performative.Request, this);
         if (graph.get(atomHandle) != null)
         {
-            combine(msg, 
-                    struct(CONTENT, 
-                           SubgraphManager.getTransferAtomRepresentation(
-                                 graph, atomHandle)));
+            msg.set(CONTENT, SubgraphManager.getTransferAtomRepresentation(graph, atomHandle));
             send(target, msg);            
         }
         else
         {
-            combine(msg,
-                    struct(CONTENT, 
-                           SubgraphManager.getTransferObjectRepresentation(
-                                graph, atomHandle, atom, typeHandle)));
+            msg.set(CONTENT, SubgraphManager.getTransferObjectRepresentation( graph, atomHandle, atom, typeHandle));
             send(target, msg);            
         }        
     }
@@ -103,11 +87,11 @@ public class DefineAtom extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="Request")
     @PossibleOutcome("Completed")    
-    public WorkflowStateConstant onRequestDefine(Message msg) throws Throwable
+    public WorkflowStateConstant onRequestDefine(Json msg) throws Throwable
     {
-        SubgraphManager.writeTransferedGraph(getPart(msg, CONTENT), getThisPeer().getGraph());
+        SubgraphManager.writeTransferedGraph(msg.at(CONTENT), getThisPeer().getGraph());
         // If we got here, all went well
-        Message reply = getReply(msg, Performative.Agree);
+        Json reply = getReply(msg, Performative.Agree);
         send(getSender(msg), reply);
         return WorkflowState.Completed;
     }
@@ -115,7 +99,7 @@ public class DefineAtom extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="Agree")
     @PossibleOutcome("Completed")        
-    public WorkflowStateConstant onAgree(Message msg)
+    public WorkflowStateConstant onAgree(Json msg)
     {
         return WorkflowStateConstant.Completed;
     }

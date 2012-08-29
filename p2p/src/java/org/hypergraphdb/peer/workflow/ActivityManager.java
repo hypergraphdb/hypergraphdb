@@ -7,8 +7,9 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
+
 import static org.hypergraphdb.peer.workflow.WorkflowState.*;
-import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 
 import java.lang.reflect.Method;
@@ -26,11 +27,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
+import org.hypergraphdb.peer.serializer.HGPeerJsonFactory;
 import org.hypergraphdb.util.HGUtils;
 
 
@@ -144,7 +147,7 @@ public class ActivityManager implements MessageHandler
     
     private ActivitySchedulingThread schedulerThread = null;
     
-    private void handleActivityException(Activity activity, Throwable exception, Message msg)
+    private void handleActivityException(Activity activity, Throwable exception, Json msg)
     {
         activity.future.result.exception = exception;
         // TODO: what if already in ending state? is that possible?
@@ -165,14 +168,14 @@ public class ActivityManager implements MessageHandler
         return root;
     }
     
-    private void notUnderstood(final Message msg, final String explanation)
+    private void notUnderstood(final Json msg, final String explanation)
     {
         try 
         { 
-            Message reply = combine(Messages.getReply(msg), 
-                                   struct(PERFORMATIVE, Performative.NotUnderstood,
-                                          CONTENT, msg,
-                                          WHY_NOT_UNDERSTOOD, explanation));
+        	Json reply = Messages.getReply(msg) 
+                                   .set(PERFORMATIVE, Performative.NotUnderstood)
+                                   .set(CONTENT, msg)
+                                   .set(WHY_NOT_UNDERSTOOD, explanation);
             thisPeer.getPeerInterface().send(getSender(msg), reply);
             //System.out.println("Sending not understood on " + msg + " because " + exlanation);
         }
@@ -227,7 +230,7 @@ public class ActivityManager implements MessageHandler
 
     private Runnable makeTransitionAction(final ActivityType type,
                                           final FSMActivity activity, 
-                                          final Message msg)
+                                          final Json msg)
     {
         return new Runnable() {
             public void run()
@@ -235,12 +238,13 @@ public class ActivityManager implements MessageHandler
                 Activity rootActivity = findRootActivity(activity);                
                 try 
                 {
+                	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(thisPeer.getGraph()));
                     Transition transition = 
                         type.getTransitionMap().getTransition(activity.getState().getConst(), 
-                                                              msg.asJsonMap());
+                                                              msg);
                     if (transition == null)
                     {
-                        Performative perf = Performative.toConstant((String)getPart(msg, PERFORMATIVE));
+                        Performative perf = Performative.toConstant(msg.at(PERFORMATIVE).asString());
                         if (perf == Performative.Failure)
                             activity.onPeerFailure(msg);
                         else if (perf == Performative.NotUnderstood)
@@ -264,6 +268,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
+                	Json.dettachFactory();
                     // Reschedule root only if it hasn't failed - in particular when
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
@@ -284,7 +289,7 @@ public class ActivityManager implements MessageHandler
     }    
     
     private Runnable makeMessageHandleAction(final Activity activity, 
-                                             final Message msg)
+                                             final Json msg)
     {
         return new Runnable() {
             public void run()
@@ -292,6 +297,7 @@ public class ActivityManager implements MessageHandler
                 Activity rootActivity = findRootActivity(activity);                
                 try 
                 {
+                	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(thisPeer.getGraph()));
                     activity.handleMessage(msg);                   
                 }
                 catch (Throwable t)
@@ -300,6 +306,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
+                	Json.dettachFactory();
                     // Reschedule root only if it hasn't failed - in particular when
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
@@ -538,10 +545,18 @@ public class ActivityManager implements MessageHandler
                                                    final Activity parentActivity,
                                                    final ActivityListener listener)
     {
-        ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
-        activity.getState().compareAndAssign(Limbo, Started);        
-        activity.initiate();                       
-        return future;
+    	try
+    	{
+    		Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(thisPeer.getGraph()));
+	        ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
+	        activity.getState().compareAndAssign(Limbo, Started);        
+	        activity.initiate();                       
+	        return future;
+    	}
+    	finally
+    	{
+    		Json.dettachFactory();
+    	}
     }
     
     private ActivityFuture insertNewActivity(final Activity activity, 
@@ -614,10 +629,10 @@ public class ActivityManager implements MessageHandler
         return future;
     }
     
-    public void handleMessage(final Message msg)
+    public void handleMessage(final Json msg)
     {
         //System.out.println("Received message " + msg);    	
-        UUID activityId = getPart(msg,  Messages.CONVERSATION_ID);
+        UUID activityId = Messages.fromJson(msg.at(Messages.CONVERSATION_ID));
         if (activityId == null)
         {
             notUnderstood(msg, " missing conversation-id in message");
@@ -630,7 +645,7 @@ public class ActivityManager implements MessageHandler
         if (activity == null)
         {
             Activity parentActivity = null;            
-            UUID parentId = getPart(msg, Messages.PARENT_SCOPE);
+            UUID parentId = Messages.fromJson(msg.at(Messages.PARENT_SCOPE));
             if (parentId != null)
             {
                 parentActivity = activities.get(parentId);
@@ -644,7 +659,7 @@ public class ActivityManager implements MessageHandler
                     return;
                 }
             }
-            type = activityTypes.get(getPart(msg, Messages.ACTIVITY_TYPE));
+            type = activityTypes.get(msg.at(Messages.ACTIVITY_TYPE).asString());
             if (type == null)
             {
                 notUnderstood(msg, " unkown activity type '" + type + "'");

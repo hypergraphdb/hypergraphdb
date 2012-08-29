@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import mjson.Json;
+
 /**
  * <p>
  * Holds the definition of the FSM (Finite State Machine) associated with a
@@ -77,13 +79,15 @@ public class TransitionMap
      * @return
      */
     public Transition getTransition(WorkflowStateConstant fromState, 
-                                    Map<String, ? extends Object> messageAttributes)
+                                    Json messageAttributes)
     {
         Set<Transition> candidates = null;
         Set<String> foundKeys = null;
-        for (Map.Entry<String, ? extends Object> e : messageAttributes.entrySet())
+        for (Map.Entry<String, Json> e : messageAttributes.asJsonMap().entrySet())
         {
-            String key = fromState.toString() + "&" + e.getKey() + "=" + e.getValue();
+        	if (e.getValue().isNull())
+        		continue;
+            String key = fromState.toString() + "&" + e.getKey() + "=" + e.getValue().getValue();
             Set<Transition> S = map.get(key);
             if (S == null)
                 continue;

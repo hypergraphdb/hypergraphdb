@@ -7,11 +7,14 @@
  */
 package org.hypergraphdb.peer.replication;
 
+
 import java.util.ArrayList;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import mjson.Json;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
@@ -20,16 +23,15 @@ import static org.hypergraphdb.peer.HGDBOntology.*;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.InterestEvaluator;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.StorageService;
+import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.log.LogEntry;
-import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.Messages.*;
 import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.Conversation;
@@ -179,17 +181,16 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	{
 		count.incrementAndGet();
 		
-		Message msg = createMessage(Performative.CallForProposal, REMEMBER_ACTION, getTaskId());
+		Json msg = createMessage(Performative.CallForProposal, REMEMBER_ACTION, getTaskId());
 		
 		LogEntry firstEntry = entries.get(0);
 		LogEntry lastEntry = entries.get(entries.size() - 1);
 		
-		combine(msg, struct(
-				Messages.CONTENT, struct(
+		msg.set(
+				Messages.CONTENT, Json.object(
 						SLOT_LAST_VERSION, firstEntry.getLastTimestamp(getPeerInterface().getThisPeer().getIdentity(target)),
 						SLOT_CURRENT_VERSION, lastEntry.getTimestamp()
 					)
-				)
 		);
 
 		PeerRelatedActivity activity = (PeerRelatedActivity)activityFactory.createActivity();
@@ -200,7 +201,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 
 	}
 
-	protected Conversation<?> createNewConversation(Message msg)
+	protected Conversation<?> createNewConversation(Json msg)
 	{
 		return new ProposalConversation(this, getSender(msg));
 	}
@@ -222,18 +223,20 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		//decide to accept or not ... for now just accept
 		if (true)
 		{
-		    org.hypergraphdb.peer.Message reply = getReply(conversation.getMessage());
+			Json reply = getReply(conversation.getMessage());
 			
 			ArrayList<Object> contents = new ArrayList<Object>();
 
 			for(LogEntry entry : entries)
 			{
 				contents.add(
-					struct(Messages.OPERATION, entry.getOperation(),
-						Messages.CONTENT, (entry.getOperation() == StorageService.Operation.Remove) ? entry.getHandle() : object(entry.getData()))
+					Json.object(Messages.OPERATION, entry.getOperation(),
+						Messages.CONTENT, (entry.getOperation() == StorageService.Operation.Remove) ? 
+							entry.getHandle() : 
+							SubgraphManager.encodeSubgraph(entry.getData()))
 				);
 			}
-			combine(reply, struct(Messages.CONTENT, contents));
+			reply.set(Messages.CONTENT, contents);
 						
 /*			if (rememberEntity.getOperation() == StorageService.Operation.Remove)
 			{
@@ -260,11 +263,11 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	@SuppressWarnings("unchecked")
 	public State handleConfirm(AbstractActivity<?> fromActivity)
 	{
-		Object msg = ((ProposalConversation)(AbstractActivity<ProposalConversation.State>)fromActivity).getMessage();	
+		Json msg = ((ProposalConversation)(AbstractActivity<ProposalConversation.State>)fromActivity).getMessage();	
 		
-		results = (ArrayList<HGHandle>)getPart(msg, Messages.CONTENT);
+		results = Messages.content(msg);
 
-		HGPeerIdentity peerId = getPeerInterface().getThisPeer().getIdentity(getPart(msg, Messages.REPLY_TO));
+		HGPeerIdentity peerId = getPeerInterface().getThisPeer().getIdentity(Messages.getSender(msg));
 		log.confirmFromPeer(peerId, entries.get(entries.size() - 1).getTimestamp());
 		
 		if (count.decrementAndGet() == 0) return State.Done;

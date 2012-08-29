@@ -7,17 +7,11 @@
  */
 package org.hypergraphdb.peer;
 
-import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Structs.getPart;
-
-
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.list;
-import static org.hypergraphdb.peer.Structs.object;
-import static org.hypergraphdb.peer.Structs.struct;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-
+import mjson.Json;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
@@ -39,6 +33,7 @@ import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.algorithms.CopyGraphTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.algorithms.HyperTraversal;
+import org.hypergraphdb.peer.serializer.SubgraphSerializer;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.RAMStorageGraph;
@@ -51,6 +46,7 @@ import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.RefResolver;
+import org.jivesoftware.smack.util.StringUtils;
 
 /**
  * @author ciprian.costa
@@ -60,6 +56,35 @@ import org.hypergraphdb.util.RefResolver;
  */
 public class SubgraphManager
 {
+	
+	public static String encodeSubgraph(StorageGraph sgraph)
+	{
+		SubgraphSerializer ser = new SubgraphSerializer();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try
+		{
+			ser.writeData(out, sgraph);
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+		return StringUtils.encodeBase64(out.toByteArray());
+	}
+	
+	public static RAMStorageGraph decodeSubgraph(String sgraphString)
+	{
+		try
+		{
+			ByteArrayInputStream in = new ByteArrayInputStream(StringUtils.decodeBase64(sgraphString));
+			return (RAMStorageGraph)new SubgraphSerializer().readData(in);
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException(e);
+		}
+	}
+	
     /**
      * Debugging method: will write the complete StorageGraph in a File where lines
      * are sorted by the graph's key handles.
@@ -240,8 +265,8 @@ public class SubgraphManager
                 }                      
             }
         }
-        return struct("storage-graph", object(atomGraph),
-                      "type-classes", types);                   
+        return Json.object("storage-graph", encodeSubgraph(atomGraph),
+                      	   "type-classes", types);                   
     }
     
     /**
@@ -292,7 +317,7 @@ public class SubgraphManager
                 if (clname != null)
                     types.put(p.getFirst().getPersistent().toString(), clname);
             }
-            return struct("storage-graph", object(sgraph),
+            return Json.object("storage-graph", encodeSubgraph(sgraph),
                           "type-handle", typeHandle, 
                           "type-classes", types);            
         }
@@ -339,8 +364,8 @@ public class SubgraphManager
             if (clname != null)
                 types.put(p.getFirst().toString(), clname);
         }
-        return struct("storage-graph", object(atomGraph),
-                      "type-classes", types);         
+        return Json.object("storage-graph", encodeSubgraph(atomGraph),
+                      	   "type-classes", types);         
     }
     
     public static Object readAtom(HGHandle handle, 
@@ -489,7 +514,7 @@ public class SubgraphManager
      * @return
      * @throws ClassNotFoundException
      */
-    public static Set<HGHandle> writeTransferedGraph(final Object atom, 
+    public static Set<HGHandle> writeTransferedGraph(final Json atom, 
                                                      final HyperGraph graph)
         throws ClassNotFoundException
     {
@@ -560,7 +585,7 @@ public class SubgraphManager
      * @return The set of atoms that where stored.
      * @throws ClassNotFoundException
      */
-    public static Set<HGHandle> writeTransferedGraph(final Object atom, 
+    public static Set<HGHandle> writeTransferedGraph(final Json atom, 
                                                      final HyperGraph graph,
                                                      final Mapping<Pair<HGHandle, Object>, 
                                                                   HGHandle> atomFinder)
@@ -572,9 +597,9 @@ public class SubgraphManager
         // an atom, the following will just throw an exception and the framework
         // will reply with failure.
         
-        final RAMStorageGraph subgraph = getPart(atom, "storage-graph");        
-        final Map<String, String>  typeClasses = getPart(atom, "type-classes");        
-        subgraph.translateHandles(getLocalTypes(graph, typeClasses));        
+        final RAMStorageGraph subgraph = decodeSubgraph(atom.at("storage-graph").asString());        
+        final Map<String, String>  typeClasses = Messages.fromJson(atom.at("type-classes"));        
+        subgraph.translateHandles(getLocalTypes(graph, typeClasses));
          
         Map<HGHandle, Object> objects = new HashMap<HGHandle, Object>();
         Set<HGHandle> ignoreAtoms =  translateAtoms(graph, subgraph, objects, atomFinder);

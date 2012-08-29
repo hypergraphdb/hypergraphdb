@@ -7,11 +7,13 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
 import java.lang.reflect.Constructor;
 import java.util.UUID;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 
 /**
  * <p>
@@ -36,7 +38,7 @@ public class DefaultActivityFactory implements ActivityFactory
         this.activityClass = activityClass;
         try
         {
-            constructor = activityClass.getConstructor(HyperGraphPeer.class, UUID.class, Message.class);
+            constructor = activityClass.getConstructor(HyperGraphPeer.class, UUID.class, Json.class);
         }         
         catch (NoSuchMethodException e) { }
         
@@ -63,7 +65,7 @@ public class DefaultActivityFactory implements ActivityFactory
         }
     }
     
-    public Activity make(HyperGraphPeer thisPeer, UUID id, Message msg)
+    public Activity make(HyperGraphPeer thisPeer, UUID id, Json msg)
     {
         try
         {            

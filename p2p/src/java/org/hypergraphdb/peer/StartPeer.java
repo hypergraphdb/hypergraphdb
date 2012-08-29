@@ -7,8 +7,9 @@
  */
 package org.hypergraphdb.peer;
 
+
 import java.io.File;
-import java.util.Map;
+import mjson.Json;
 
 public class StartPeer
 {
@@ -45,13 +46,13 @@ public class StartPeer
 		    else
 		        die("Invalid parameter name " + A[0]);
 		}
-		Map<String, Object> configuration = HyperGraphPeer.loadConfiguration(new File(filename));
+		Json configuration = HyperGraphPeer.loadConfiguration(new File(filename));
 		if (db != null)
-		    configuration.put("localDB", db);
+		    configuration.set("localDB", db);
 		if (name != null)
-		    configuration.put("peerName", name);
+		    configuration.set("peerName", name);
 		if (port != null)
-		    Structs.getStruct(configuration, "jxta", "tcp").put("port", Integer.parseInt(port));
+		    configuration.at("jxta").at("tcp").set("port", Integer.parseInt(port));
         HyperGraphPeer server = new HyperGraphPeer(configuration);
         server.start();
         while (true)

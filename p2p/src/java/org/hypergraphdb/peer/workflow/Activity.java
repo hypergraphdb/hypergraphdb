@@ -7,19 +7,21 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
+
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.hypergraphdb.peer.Messages.*;
+import mjson.Json;
+
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.Performative;
-import org.hypergraphdb.peer.Structs;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -99,13 +101,13 @@ public abstract class Activity
         return thisPeer.getPeerInterface();
     }
 
-    protected Message createMessage(Performative performative, Object content)
+    protected Json createMessage(Performative performative, Object content)
     {
-        Message msg = Messages.createMessage(performative, this);
+        Json msg = Messages.createMessage(performative, this);
         Activity parent = thisPeer.getActivityManager().getParent(this);
         if (parent != null)
-            Structs.combine(msg, Structs.struct(PARENT_SCOPE, parent.getId()));
-        Structs.combine(msg, Structs.struct(CONTENT, content));
+            msg.set(PARENT_SCOPE, parent.getId());
+        msg.set(CONTENT, content);
         return msg;
     }
     
@@ -115,7 +117,7 @@ public abstract class Activity
      * @param target The message recipient.
      * @param msg The message.
      */
-    protected void send(HGPeerIdentity target, Message msg)
+    protected void send(HGPeerIdentity target, Json msg)
     {
         Object networkTarget = thisPeer.getNetworkTarget(target);
         if (networkTarget == null)
@@ -132,7 +134,7 @@ public abstract class Activity
         }
     }
 
-    protected Future<Boolean> post(HGPeerIdentity target, Message msg)
+    protected Future<Boolean> post(HGPeerIdentity target, Json msg)
     {
         Object networkTarget = thisPeer.getNetworkTarget(target);
         if (networkTarget == null)
@@ -155,7 +157,7 @@ public abstract class Activity
      * or a transport-dependent network target.
      * @param msg The message.
      */
-    protected void send(Object target, Message msg)
+    protected void send(Object target, Json msg)
     {
         if (target instanceof HGPeerIdentity)
             send((HGPeerIdentity)target, msg);
@@ -163,7 +165,7 @@ public abstract class Activity
             getPeerInterface().send(target, msg);
     }
     
-    protected Future<Boolean> post(Object target, Message msg)
+    protected Future<Boolean> post(Object target, Json msg)
     {
         if (target instanceof HGPeerIdentity)
             return post((HGPeerIdentity)target, msg);
@@ -171,7 +173,7 @@ public abstract class Activity
             return getPeerInterface().send(target, msg);
     }
     
-    protected Future<Boolean> reply(Message msg, Performative perf, Object content)
+    protected Future<Boolean> reply(Json msg, Performative perf, Object content)
     {
         return post(getSender(msg), getReply(msg, perf, content));
     }
@@ -240,7 +242,7 @@ public abstract class Activity
      * 
      * @param message The full message.
      */
-    public abstract void handleMessage(Message message);
+    public abstract void handleMessage(Json message);
     
     /**
      * <p>Return this activity's workflow state.</p>

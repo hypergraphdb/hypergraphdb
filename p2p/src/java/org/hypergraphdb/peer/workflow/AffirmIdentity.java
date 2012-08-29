@@ -7,17 +7,17 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.Performative.*;
-import static org.hypergraphdb.peer.Structs.*;
-
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import mjson.Json;
+
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 
 public class AffirmIdentity extends FSMActivity
@@ -27,22 +27,22 @@ public class AffirmIdentity extends FSMActivity
     Object target = null;
     AtomicInteger count = null;
     
-    Object makeIdentityStruct(HGPeerIdentity identity)
+    Json makeIdentityStruct(HGPeerIdentity identity)
     {
-        return struct("uuid", identity.getId(),
+        return Json.object("uuid", identity.getId(),
                       "hostname", identity.getHostname(),
                       "ipaddress", identity.getIpAddress(),
                       "graph-location", identity.getGraphLocation() /*,
                       "name", identity.getName() */);
     }
     
-    HGPeerIdentity parseIdentity(Map<String, Object> S)
+    HGPeerIdentity parseIdentity(Json j)
     {
         HGPeerIdentity I = new HGPeerIdentity();
-        I.setId((HGPersistentHandle)getPart(S, "uuid"));
-        I.setHostname(S.get("hostname").toString());
-        I.setIpAddress(S.get("ipaddress").toString());
-        I.setGraphLocation(S.get("graph-location").toString());
+        I.setId((HGPersistentHandle)Messages.fromJson(j.at("uuid")));
+        I.setHostname(j.at("hostname").asString());
+        I.setIpAddress(j.at("ipaddress").asString());
+        I.setGraphLocation(j.at("graph-location").asString());
         //I.setName(S.get("name").toString());
         return I;
     }
@@ -70,10 +70,9 @@ public class AffirmIdentity extends FSMActivity
     
     public void initiate()
     {
-        Message inform = combine(createMessage(Inform,
-                                              this),                                              
-                                struct(Messages.CONTENT, 
-                                       makeIdentityStruct(getThisPeer().getIdentity())));
+    	Json inform = createMessage(Inform, this)         
+                                .set(Messages.CONTENT, 
+                                     makeIdentityStruct(getThisPeer().getIdentity()));
         if (target == null)
             getPeerInterface().broadcast(inform);
         else
@@ -83,19 +82,18 @@ public class AffirmIdentity extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="Inform")
     @PossibleOutcome("Completed")
-    public WorkflowState onInform(Message msg)
+    public WorkflowState onInform(Json msg)
     {
         HGPeerIdentity thisId = getThisPeer().getIdentity();
-        HGPeerIdentity id = parseIdentity(getStruct(msg, Messages.CONTENT));
-        Message reply = getReply(msg);        
+        HGPeerIdentity id = parseIdentity(msg.at(Messages.CONTENT));
+        Json reply = getReply(msg);        
         if (id.getId().equals(thisId.getId()))
-            combine(reply, struct(Messages.PERFORMATIVE, Disconfirm));
+            reply.set(Messages.PERFORMATIVE, Disconfirm);
         else
         {
-            combine(reply, combine(struct(Messages.PERFORMATIVE, Confirm),
-                                   struct(Messages.CONTENT, 
-                                          makeIdentityStruct(getThisPeer().getIdentity()))));
-            getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, Messages.REPLY_TO));
+            reply.set(Messages.PERFORMATIVE, Confirm)
+                 .set(Messages.CONTENT, makeIdentityStruct(getThisPeer().getIdentity()));
+            getThisPeer().bindIdentityToNetworkTarget(id, msg.at(Messages.REPLY_TO).getValue());
         }
         getPeerInterface().send(getSender(msg), reply);
         return WorkflowState.Completed;
@@ -104,17 +102,17 @@ public class AffirmIdentity extends FSMActivity
     @FromState("Started")
     @OnMessage(performative="Confirm")
     @PossibleOutcome("Completed")    
-    public WorkflowState onConfirm(Message msg)
+    public WorkflowState onConfirm(Json msg)
     {
-        HGPeerIdentity id = parseIdentity(getStruct(msg, Messages.CONTENT));
-        getThisPeer().bindIdentityToNetworkTarget(id, getPart(msg, Messages.REPLY_TO));
+        HGPeerIdentity id = parseIdentity(msg.at(Messages.CONTENT));
+        getThisPeer().bindIdentityToNetworkTarget(id, msg.at(Messages.REPLY_TO).getValue());
         return WorkflowState.Completed;
     }
     
     @FromState("Started")
     @OnMessage(performative="Disconfirm")
     @PossibleOutcome("Failed")    
-    public WorkflowState onDisconfirm(Message msg)
+    public WorkflowState onDisconfirm(Json msg)
     {
         return WorkflowState.Failed;
     }

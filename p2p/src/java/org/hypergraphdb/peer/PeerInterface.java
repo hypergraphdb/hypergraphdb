@@ -7,8 +7,8 @@
  */
 package org.hypergraphdb.peer;
 
-import java.util.Map;
 import java.util.concurrent.Future;
+import mjson.Json;
 
 /**
  *
@@ -39,7 +39,7 @@ public interface PeerInterface
 	 * @throws RuntimeException This method may throw an unchecked exception if the configuration
 	 * is not correct.
 	 */
-	void configure(Map<String, Object> configuration);
+	void configure(Json configuration);
 	
 	/**
 	 * <p>
@@ -95,9 +95,19 @@ public interface PeerInterface
 	 * 
 	 * @param msg
 	 */
-	void broadcast(Message msg);
+	void broadcast(Json msg);
 
-	Future<Boolean> send(Object networkTarget, Message msg);
+	/**
+	 * <p>
+	 * Send a message to a specific peer as identified by the
+	 * <code>networkTarget</code> parameter.
+	 * </p>
+	 * 
+	 * @param networkTarget
+	 * @param msg
+	 * @return
+	 */
+	Future<Boolean> send(Object networkTarget, Json msg);
 	
     void addPeerPresenceListener(NetworkPeerPresenceListener listener);
     void removePeerPresenceListener(NetworkPeerPresenceListener listener);

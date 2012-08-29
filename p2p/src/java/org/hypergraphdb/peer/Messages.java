@@ -6,11 +6,11 @@
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.peer;
-import static org.hypergraphdb.peer.Structs.*;
-
-import java.util.Map;
+import static mjson.Json.*;
 import java.util.UUID;
+import mjson.Json;
 
+import org.hypergraphdb.peer.serializer.HGPeerJsonFactory;
 import org.hypergraphdb.peer.workflow.Activity;
 
 
@@ -21,50 +21,55 @@ import org.hypergraphdb.peer.workflow.Activity;
  */
 public class Messages
 {
-    public static Message createMessage(Performative performative, Activity activity)
+	public static <T> T fromJson(Json j)
+	{
+		return HGPeerJsonFactory.getInstance().value(j);
+	}
+
+	public static <T> T content(Json j)
+	{
+		return HGPeerJsonFactory.getInstance().value(j.at(CONTENT));
+	}
+	
+    public static Json createMessage(Performative performative, Activity activity)
     {
         return createMessage(performative, activity.getType(), activity.getId());
     }
     
-	public static Message createMessage(Performative performative, String type, UUID activityId)
+	public static Json createMessage(Performative performative, String type, UUID activityId)
 	{
-		return new Message(struct(PERFORMATIVE, performative, 
-		                          ACTIVITY_TYPE, type, 
-		                          CONVERSATION_ID, activityId));
+		return object(PERFORMATIVE, performative.toString(), 
+		              ACTIVITY_TYPE, type, 
+		              CONVERSATION_ID, activityId);
 	}
 
-    public static Message getReply(Message msg, Performative performative, Object content)
+    public static Json getReply(Json msg, Performative performative, Object content)
     {
-        return (Message)combine(getReply(msg, performative), struct(CONTENT, content));
+        return getReply(msg, performative).set(CONTENT, content);
     }
 	
-	public static Message getReply(Message msg, Performative performative)
+	public static Json getReply(Json msg, Performative performative)
 	{
-	    return (Message)combine(getReply(msg), struct(PERFORMATIVE, performative));
+	    return getReply(msg).set(PERFORMATIVE, performative.toString());
 	}
 	
-	public static Message makeReply(Activity activity, Performative performative, String replyWith)
+	public static Json makeReply(Activity activity, Performative performative, String replyWith)
 	{
-        Map<String, Object> s = struct(ACTIVITY_TYPE, activity.getType(),
-                                       CONVERSATION_ID, activity.getId(),
-                                       PERFORMATIVE, performative);        
+		Json s = object(ACTIVITY_TYPE, activity.getType(),
+                        CONVERSATION_ID, activity.getId(),
+                        PERFORMATIVE, performative.toString());        
         if (replyWith != null)
-            return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
+            return s.set(IN_REPLY_TO, replyWith);
         else
-            return new Message(s);	    
+            return s;	    
 	}
 	
-	public static Message getReply(Message msg)
+	public static Json getReply(Json msg)
 	{
-		Map<String, Object> s = struct(ACTIVITY_TYPE, getPart(msg, ACTIVITY_TYPE),
-		                               CONVERSATION_ID, getPart(msg, CONVERSATION_ID),
-		                               PARENT_SCOPE, getPart(msg, PARENT_SCOPE));
-		
-		String replyWith = getPart(msg, REPLY_WITH);
-		if (replyWith != null)
-		    return new Message(combine(s, struct(IN_REPLY_TO, replyWith)));
-		else
-		    return new Message(s);
+		Json s = object(ACTIVITY_TYPE, msg.at(ACTIVITY_TYPE),
+		                CONVERSATION_ID, msg.at(CONVERSATION_ID),
+		                PARENT_SCOPE, msg.at(PARENT_SCOPE));
+		return msg.has(REPLY_WITH) ? s.set(IN_REPLY_TO, msg.at(REPLY_WITH)) : s;
 	}
 	
 	/**
@@ -74,9 +79,9 @@ public class Messages
 	 * @param msg
 	 * @return
 	 */
-	public static Object getSender(Message msg)
+	public static Object getSender(Json msg)
 	{
-	    return getPart(msg, Messages.REPLY_TO);	  
+	    return msg.at(Messages.REPLY_TO).getValue();	  
 	}
 
     public static final String PERFORMATIVE = "performative";

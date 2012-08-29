@@ -1,22 +1,20 @@
 package hgtest.p2p;
 
 import java.io.File;
+import java.net.InetAddress;
+
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
-
-import hgtest.HGTestBase;
-import hgtest.SimpleBean;
+import hgtest.beans.SimpleBean;
 import hgtest.T;
 import hgtest.beans.ComplexBean;
 import hgtest.beans.PlainBean;
-
+import mjson.Json;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery.hg;
@@ -27,14 +25,12 @@ import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerConfig;
 import org.hypergraphdb.peer.PeerHyperNode;
-import org.hypergraphdb.peer.Structs;
+import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap;
 import org.hypergraphdb.peer.bootstrap.CACTBootstrap;
 import org.hypergraphdb.peer.cact.DefineAtom;
 import org.hypergraphdb.peer.cact.RemoteQueryExecution;
 import org.hypergraphdb.peer.cact.RunRemoteQuery;
-import org.hypergraphdb.peer.workflow.AffirmIdentity;
-import org.hypergraphdb.peer.workflow.StateListener;
 import org.hypergraphdb.peer.cact.GetAtom;
 import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.query.HGQueryCondition;
@@ -47,6 +43,8 @@ import org.testng.annotations.Test;
 
 public class TestCACT
 {
+	boolean both = true;
+	private boolean which = false; // true for peer 1, falsefor peer 2
     private HyperGraph graph1, graph2;
     private HyperGraphPeer peer1, peer2;
     private File locationBase = new File(T.getTmpDirectory());
@@ -56,28 +54,28 @@ public class TestCACT
     private HyperGraphPeer startPeer(String dblocation, String username,
                                      String hostname)
     {
-        Map<String, Object> config = new HashMap<String, Object>();
-        config.put(PeerConfig.INTERFACE_TYPE,
+        Json config = Json.object();
+        config.set(PeerConfig.INTERFACE_TYPE,
                    "org.hypergraphdb.peer.xmpp.XMPPPeerInterface");
-        config.put(PeerConfig.LOCAL_DB, dblocation);
-        Map<String, Object> interfaceConfig = new HashMap<String, Object>();
-        interfaceConfig.put("user", username);
-        interfaceConfig.put("password", "hgpassword");
-        interfaceConfig.put("serverUrl", hostname);
-        interfaceConfig.put("room", "hgtest@conference." + hostname);
-        interfaceConfig.put("autoRegister", true);
-        config.put(PeerConfig.INTERFACE_CONFIG, interfaceConfig);
+        config.set(PeerConfig.LOCAL_DB, dblocation);
+        Json interfaceConfig = Json.object();
+        interfaceConfig.set("user", username);
+        interfaceConfig.set("password", "hgpassword");
+        interfaceConfig.set("serverUrl", hostname);
+        interfaceConfig.set("room", "hgtest@conference." + hostname);
+        interfaceConfig.set("autoRegister", true);
+        config.set(PeerConfig.INTERFACE_CONFIG, interfaceConfig);
 
         // bootstrap activities
-        config.put(PeerConfig.BOOTSTRAP,
-                   Structs.list(Structs.struct("class",
-                                               AffirmIdentityBootstrap.class.getName(),
-                                               "config",
-                                               Structs.struct()),
-                                Structs.struct("class",
-                                               CACTBootstrap.class.getName(),
-                                               "config",
-                                               Structs.struct())));
+        config.set(PeerConfig.BOOTSTRAP,
+                   Json.array(Json.object("class",
+                                          AffirmIdentityBootstrap.class.getName(),
+                                          "config",
+                                           Json.object()),
+                              Json.object("class",
+                                          CACTBootstrap.class.getName(),
+                                          "config",
+                                          Json.object())));
 
         HyperGraphPeer peer = new HyperGraphPeer(config);
         Future<Boolean> startupResult = peer.start();
@@ -96,6 +94,7 @@ public class TestCACT
         }
         catch (Exception e)
         {
+        	peer.stop();
             throw new RuntimeException(e);
         }
         return peer;
@@ -104,23 +103,38 @@ public class TestCACT
     @BeforeClass
     public void setUp()
     {
-        HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath());
-        HGUtils.dropHyperGraphInstance(locationGraph2.getAbsolutePath());
-        graph1 = HGEnvironment.get(locationGraph1.getAbsolutePath());
-        graph2 = HGEnvironment.get(locationGraph2.getAbsolutePath());
-        peer1 = startPeer(locationGraph1.getAbsolutePath(), "cact1", "samizdat");
-        peer2 = startPeer(locationGraph2.getAbsolutePath(), "cact2", "samizdat");
+    	String localhost = "localhost";
+    	try { localhost = InetAddress.getLocalHost().getHostName(); }
+    	catch (Throwable t) { }
+    	if (which || both)
+    	{
+	        HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath());
+	        graph1 = HGEnvironment.get(locationGraph1.getAbsolutePath());
+	        peer1 = startPeer(locationGraph1.getAbsolutePath(), "cact1", localhost);
+    	}
+    	if (!which || both)
+    	{
+	        HGUtils.dropHyperGraphInstance(locationGraph2.getAbsolutePath());
+	        graph2 = HGEnvironment.get(locationGraph2.getAbsolutePath());        
+	        peer2 = startPeer(locationGraph2.getAbsolutePath(), "cact2", localhost);
+    	}
     }
 
     @AfterClass
     public void tearDown()
     {
-        peer1.stop();
-        peer2.stop();
-        graph1.close();
-        graph2.close();
-        HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath());
-        HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath());
+    	if (which || both)
+    	{
+	        try { peer1.stop(); } catch (Throwable t) {}
+	        try { graph1.close(); } catch (Throwable t) {}
+	        try { HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath()); } catch (Throwable t) {}
+    	}
+    	if (!which || both)
+    	{
+	        try { peer2.stop(); } catch (Throwable t) {}
+	        try { graph2.close(); } catch (Throwable t) {}
+	        try { HGUtils.dropHyperGraphInstance(locationGraph1.getAbsolutePath()); } catch (Throwable t) {}
+    	}
     }
 
     @Test
@@ -316,7 +330,10 @@ public class TestCACT
         try
         {
             test.setUp();
-            test.testHyperNode();
+            if (test.which || test.both)
+            	test.testHyperNode();
+            else
+            	T.sleep(1000*60*60*5);
             System.out.println("test passed successfully");
         }
         catch (Throwable t)

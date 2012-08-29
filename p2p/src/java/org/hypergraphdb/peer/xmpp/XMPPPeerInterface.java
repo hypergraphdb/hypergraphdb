@@ -7,14 +7,12 @@
  */
 package org.hypergraphdb.peer.xmpp;
 
-import static org.hypergraphdb.peer.Structs.*;
-
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.Future;
+import mjson.Json;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.MessageHandler;
@@ -25,14 +23,12 @@ import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
-import org.hypergraphdb.peer.protocol.Protocol;
 import org.hypergraphdb.util.CompletedFuture;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.filetransfer.FileTransferListener;
 import org.jivesoftware.smackx.filetransfer.FileTransferManager;
 import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
@@ -79,17 +75,17 @@ public class XMPPPeerInterface implements PeerInterface
     MultiUserChat room = null;
     FileTransferManager fileTransfer;
     
-    public void configure(Map<String, Object> configuration)
+    public void configure(Json configuration)
     {
-        serverName = getPart(configuration, "serverUrl");
-        port = getOptPart(configuration, 5222, "port");
-        user = getPart(configuration, "user");
-        password = getPart(configuration, "password");
-        roomId = getOptPart(configuration, null, "room");
-        ignoreRoster = getOptPart(configuration, false, "ignoreRoster");
-        autoRegister = getOptPart(configuration, false, "autoRegister");
-        anonymous = getOptPart(configuration, false, "anonymous");
-        fileTransferThreshold = getOptPart(configuration, 100*1024, "fileTransferThreshold");
+        serverName = configuration.at("serverUrl").asString();
+        port = configuration.at("port", 5222).asInteger();
+        user = configuration.at("user").asString();
+        password = configuration.at("password").asString();
+        roomId = configuration.has("room") ? configuration.at("room").asString() : null;
+        ignoreRoster = configuration.at("ignoreRoster", false).asBoolean();
+        autoRegister = configuration.at("autoRegister", false).asBoolean();
+        anonymous = configuration.at("anonymous", false).asBoolean();
+        fileTransferThreshold = configuration.at("fileTransferThreshold", 100*1024).asInteger();
         config = new ConnectionConfiguration(serverName, port.intValue());
         config.setRosterLoadedAtLogin(true);
         config.setReconnectionAllowed(true);
@@ -123,13 +119,15 @@ public class XMPPPeerInterface implements PeerInterface
         // Encapsulate message deserialization into a transaction because the HGDB might
         // be accessed during this process.
         // 
-        org.hypergraphdb.peer.Message M = null;
+        Json M = null;
         if (thisPeer != null)
         	thisPeer.getGraph().getTransactionManager().beginTransaction();
         try
         {
-            ByteArrayInputStream in = new ByteArrayInputStream(StringUtils.decodeBase64(msg.getBody()));                        
-            M = new org.hypergraphdb.peer.Message((Map<String, Object>)new Protocol().readMessage(in));                        
+//            ByteArrayInputStream in = new ByteArrayInputStream(StringUtils.decodeBase64(msg.getBody()));                        
+//            M = Json.object((Map<String, Object>)new Protocol().readMessage(in));
+            
+            M = Json.read(msg.getBody());
         }
         catch (Exception t)
         {
@@ -357,43 +355,45 @@ public class XMPPPeerInterface implements PeerInterface
                     public Boolean call() throws Exception
                     {
                         
-                        org.hypergraphdb.peer.Message msg = getMessage();
-                        if (getPart(msg, Messages.REPLY_TO) == null)
+                        Json msg = getMessage();
+                        if (!msg.has(Messages.REPLY_TO))
                         {
-                            combine(msg, struct(Messages.REPLY_TO, connection.getUser()));
+                            msg.set(Messages.REPLY_TO, connection.getUser());
                         }
                         
-                        Protocol protocol = new Protocol();
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();                        
-                        //
-                        // Encapsulate message serialization into a transaction because the HGDB might
-                        // be accessed during this process.
-                        //                   
-                        thisPeer.getGraph().getTransactionManager().beginTransaction();
-                        try
-                        {
-                            protocol.writeMessage(out, msg);
-                        }
-                        catch (Throwable t)
-                        {
-                        	System.err.println("Failed to serialize message " + msg);
-                        	t.printStackTrace(System.err);
-                        }
-                        finally
-                        {
-                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
-                            catch (Throwable t) { t.printStackTrace(System.err); }
-                        }  
-                        
-                        byte [] data = out.toByteArray();
-                        if (data.length > fileTransferThreshold)
+//                        Protocol protocol = new Protocol();
+//                        ByteArrayOutputStream out = new ByteArrayOutputStream();                        
+//                        //
+//                        // Encapsulate message serialization into a transaction because the HGDB might
+//                        // be accessed during this process.
+//                        //                   
+//                        thisPeer.getGraph().getTransactionManager().beginTransaction();
+//                        try
+//                        {
+//                            protocol.writeMessage(out, msg);
+//                        }
+//                        catch (Throwable t)
+//                        {
+//                        	System.err.println("Failed to serialize message " + msg);
+//                        	t.printStackTrace(System.err);
+//                        }
+//                        finally
+//                        {
+//                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
+//                            catch (Throwable t) { t.printStackTrace(System.err); }
+//                        }  
+//                      
+                        String msgAsString = msg.toString();
+                        //byte [] data = out.toByteArray();
+                        if (msgAsString.length() > fileTransferThreshold)
                         {
 //                            System.out.println("Sending " + data.length + " byte of data as a file.");
                             OutgoingFileTransfer outFile = 
                                 fileTransfer.createOutgoingFileTransfer((String)getTarget());
-                            outFile.sendStream(new ByteArrayInputStream(data), 
+                            byte [] B = msgAsString.getBytes();
+                            outFile.sendStream(new ByteArrayInputStream(B), 
                                                "", 
-                                               data.length, 
+                                               B.length, 
                                                "");
                             return true;
                         }
@@ -402,7 +402,7 @@ public class XMPPPeerInterface implements PeerInterface
                             try
                             {
                                 Message xmpp = new Message((String)getTarget());                            
-                                xmpp.setBody(StringUtils.encodeBase64(out.toByteArray()));
+                                xmpp.setBody(msgAsString);
                                 xmpp.setProperty("hypergraphdb", Boolean.TRUE);
                                 connection.sendPacket(xmpp);                            
                                 return true;
@@ -419,7 +419,7 @@ public class XMPPPeerInterface implements PeerInterface
         };
     }
     
-    public Future<Boolean> send(Object networkTarget,org.hypergraphdb.peer.Message msg)
+    public Future<Boolean> send(Object networkTarget, Json msg)
     {
         PeerRelatedActivityFactory activityFactory = newSendActivityFactory();
         PeerRelatedActivity act = activityFactory.createActivity(); 
@@ -440,7 +440,7 @@ public class XMPPPeerInterface implements PeerInterface
         }
     }
     
-    public void broadcast(org.hypergraphdb.peer.Message msg)
+    public void broadcast(Json msg)
     {
         for (HGPeerIdentity peer : thisPeer.getConnectedPeers())
             send(thisPeer.getNetworkTarget(peer), msg);
@@ -560,12 +560,12 @@ public class XMPPPeerInterface implements PeerInterface
             if (thisPeer.getIdentity(request.getRequestor()) != null)
             {
                 IncomingFileTransfer inFile = request.accept();
-                org.hypergraphdb.peer.Message M = null;
-                java.io.InputStream in = null;
+                Json M = null;
+                java.io.InputStreamReader in = null;
                 thisPeer.getGraph().getTransactionManager().beginTransaction();
                 try
                 {
-                    in = inFile.recieveFile();
+                    in = new InputStreamReader(inFile.recieveFile());
                     // TODO - sometime in the presence of a firewall (happened in VISTA)
                     // the file is silently truncated. Here we can read the whole thing
                     // into a byte[] and compare the size to inFile.getFileSize() to
@@ -574,11 +574,13 @@ public class XMPPPeerInterface implements PeerInterface
                     if (inFile.getFileSize() > Integer.MAX_VALUE)
                         throw new Exception("Message from " + request.getRequestor() + 
                                             " to long with " + inFile.getFileSize() + " bytes.");
-                    byte [] B = new byte[(int)inFile.getFileSize()];
-                    for (int count = 0; count < inFile.getFileSize(); )
-                        count += in.read(B, count, (int)inFile.getFileSize() - count);
-                    M = new org.hypergraphdb.peer.Message((Map<String, Object>)
-                                  new Protocol().readMessage(new ByteArrayInputStream(B)));                        
+                    StringBuilder sb = new StringBuilder();
+                    char [] buf = new char[4096];
+                    for (int count = in.read(buf); count != -1; count = in.read(buf))
+                        sb.append(buf,  0, count);
+//                    M = new org.hypergraphdb.peer.Message((Map<String, Object>)
+//                                  new Protocol().readMessage(new ByteArrayInputStream(B)));
+                    M = Json.read(sb.toString());
                 }
                 catch (Throwable t)
                 {

@@ -7,9 +7,8 @@
  */
 package org.hypergraphdb.peer.workflow;
 
-import static org.hypergraphdb.peer.Structs.*;
 
-import org.hypergraphdb.peer.Message;
+import mjson.Json;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 
@@ -49,11 +48,11 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * @param msg
 	 * @return
 	 */
-	public boolean propose(Message msg)
+	public boolean propose(Json msg)
 	{		
 		if (compareAndSetState(State.Started, State.Proposed))
 		{
-			combine(msg, struct(Messages.PERFORMATIVE, Performative.Propose));
+			msg.set(Messages.PERFORMATIVE, Performative.Propose);
 
 //			setMessage(msg);
 			say(msg);
@@ -66,11 +65,11 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * called by client task when accepting
 	 * @param msg
 	 */
-	public boolean accept(Message msg)
+	public boolean accept(Json msg)
 	{
 		if (compareAndSetState(State.Proposed, State.Accepted))
 		{
-			combine(msg, struct(Messages.PERFORMATIVE, Performative.AcceptProposal));
+			msg.set(Messages.PERFORMATIVE, Performative.AcceptProposal);
 
 //			setMessage(msg);
 			say(msg);
@@ -98,12 +97,12 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 	 * called by server when confirming
 	 * @param msg
 	 */
-	public boolean confirm(Message msg)
+	public boolean confirm(Json msg)
 	{
 		System.out.println("ProposalConversation: confirm");
 		if (compareAndSetState(State.Accepted, State.Confirmed))
 		{
-			combine(msg, struct(Messages.PERFORMATIVE, Performative.Confirm));
+			msg.set(Messages.PERFORMATIVE, Performative.Confirm);
 
 //			setMessage(msg);
 			say(msg);
@@ -123,7 +122,5 @@ public class ProposalConversation extends Conversation<ProposalConversation.Stat
 		{
 			//send acceptance
 		}
-	}
-	
-	
+	}	
 }

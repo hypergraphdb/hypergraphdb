@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.peer;
 
+
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 //import java.net.URI;
@@ -42,7 +43,6 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.peer.log.Timestamp;
-import org.hypergraphdb.peer.serializer.CustomSerializedValue;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AnyAtomCondition;
 import org.hypergraphdb.query.ArityCondition;
@@ -97,7 +97,7 @@ public class Structs
      * to create an appropriate representation.
      * </p>
      */
-    public static Object svalue(Object x)
+    private static Object svalue(Object x)
     {
         return svalue(x, false, true, null);
     }
@@ -107,10 +107,10 @@ public class Structs
      * Use reflection to create a map of the bean properties of the argument.
      * </p>
      */
-    public static Map<String, Object> struct(Object bean)
-    {
-        return struct(bean, false);
-    }
+//    public static Map<String, Object> struct(Object bean)
+//    {
+//        return struct(bean, false);
+//    }
 
     /**
      * <p>
@@ -125,7 +125,7 @@ public class Structs
      * <code>struct("personName", "Adriano Celentano", "age", 245)</code>.
      * </p>
      */
-    public static Map<String, Object> struct(Object... args)
+    private static Map<String, Object> struct(Object... args)
     {
         if (args == null)
             return null;
@@ -149,16 +149,16 @@ public class Structs
      * Create a Java list out of a list of arguments.
      * </p>
      */
-    public static List<Object> list(Object... args)
-    {
-        List<Object> l = new ArrayList<Object>();
-        if (args == null)
-            return l;
-        else
-            for (Object x : args)
-                l.add(svalue(x));
-        return l;
-    }
+//    public static List<Object> list(Object... args)
+//    {
+//        List<Object> l = new ArrayList<Object>();
+//        if (args == null)
+//            return l;
+//        else
+//            for (Object x : args)
+//                l.add(svalue(x));
+//        return l;
+//    }
 
     /**
      * Creates an object that will be serialized via the custom mechanism.
@@ -166,10 +166,10 @@ public class Structs
      * @param value
      * @return
      */
-    public static Object object(Object value)
-    {
-        return new CustomSerializedValue(value);
-    }
+//    public static Object object(Object value)
+//    {
+//        return new CustomSerializedValue(value);
+//    }
 
     private static Class<?> loadClass(String name)
     {
@@ -202,10 +202,10 @@ public class Structs
             return hgQueryOrPredicate(x);
         else if (x instanceof Performative)
             return x.toString();
-        else if (x instanceof byte[])
-            return new CustomSerializedValue(x);
-        else if (x instanceof CustomSerializedValue)
-            return x;
+//        else if (x instanceof byte[])
+//            return new CustomSerializedValue(x);
+//        else if (x instanceof CustomSerializedValue)
+//            return x;
         else if (x == null || x instanceof Boolean || x instanceof String)
             return x;
         else if (x instanceof Map)
@@ -216,57 +216,57 @@ public class Structs
                 m.put(svalue(e.getKey()), svalue(e.getValue()));
             return m;
         }
-        else if (x instanceof Number)
-        {
-            // might be a property that gives no information on what needs to be
-            // created.
-            if ((propertyType != null)
-                    && (!x.getClass().isAssignableFrom(propertyType)))
-            {
-                String typeName = getNumberType(x.getClass());
-                if (typeName == null)
-                    return x;
-                else
-                    return list(OBJECT_TOKEN, typeName, x);
-            }
-            else
-                return x;
-        }
-        else if (hgMappers.containsKey(x.getClass()))
-        {
-            // certain objects do not expose bean like interfaces but still need
-            // to be serialized.
-            Pair<StructsMapper, String> mapper = hgMappers.get(x.getClass());
-            return list(OBJECT_TOKEN, mapper.getSecond(), mapper.getFirst()
-                    .getStruct(x));
-        }
-        else if (hgClassNames.containsKey(x.getClass()))
-        {
-            // beans with short names for their type
-            if (!addClassName)
-            {
-                if (x instanceof List)
-                    return x;
-                else
-                    return struct(x, false);
-            }
-            else
-            {
-                if (x instanceof List)
-                {
-                    ArrayList<Object> l = new ArrayList<Object>();
-                    for (Object i : (List<?>) x)
-                    {
-                        l.add(svalue(i, false, addClassName, null));
-                    }
-                    return list(OBJECT_TOKEN, getClassName(x.getClass()), l);
-                }
-                else
-                    return list(OBJECT_TOKEN,
-                                getClassName(x.getClass()),
-                                struct(x, true));
-            }
-        }
+//        else if (x instanceof Number)
+//        {
+//            // might be a property that gives no information on what needs to be
+//            // created.
+//            if ((propertyType != null)
+//                    && (!x.getClass().isAssignableFrom(propertyType)))
+//            {
+//                String typeName = getNumberType(x.getClass());
+//                if (typeName == null)
+//                    return x;
+//                else
+//                    return list(OBJECT_TOKEN, typeName, x);
+//            }
+//            else
+//                return x;
+//        }
+//        else if (hgMappers.containsKey(x.getClass()))
+//        {
+//            // certain objects do not expose bean like interfaces but still need
+//            // to be serialized.
+//            Pair<StructsMapper, String> mapper = hgMappers.get(x.getClass());
+//            return list(OBJECT_TOKEN, mapper.getSecond(), mapper.getFirst()
+//                    .getStruct(x));
+//        }
+//        else if (hgClassNames.containsKey(x.getClass()))
+//        {
+//            // beans with short names for their type
+//            if (!addClassName)
+//            {
+//                if (x instanceof List)
+//                    return x;
+//                else
+//                    return struct(x, false);
+//            }
+//            else
+//            {
+//                if (x instanceof List)
+//                {
+//                    ArrayList<Object> l = new ArrayList<Object>();
+//                    for (Object i : (List<?>) x)
+//                    {
+//                        l.add(svalue(i, false, addClassName, null));
+//                    }
+//                    return list(OBJECT_TOKEN, getClassName(x.getClass()), l);
+//                }
+//                else
+//                    return list(OBJECT_TOKEN,
+//                                getClassName(x.getClass()),
+//                                struct(x, true));
+//            }
+//        }
         else if (x.getClass().isArray())
         {
             ArrayList<Object> l = new ArrayList<Object>();
@@ -300,12 +300,12 @@ public class Structs
         }
         else
         {
-            if (!addClassName)
+//            if (!addClassName)
                 return struct(x, false);
-            else
-                return list(OBJECT_TOKEN,
-                            getClassName(x.getClass()),
-                            struct(x, true));
+//            else
+//                return list(OBJECT_TOKEN,
+//                            getClassName(x.getClass()),
+//                            struct(x, true));
         }
 
     }
@@ -421,10 +421,10 @@ public class Structs
         // "performative");
         // addMapper(Performative.class, new PerformativeMapper(),
         // "performative");
-        addMapper(UUID.class, new UUIDStructsMapper(), "uuid");
-        addMapper(UUIDPersistentHandle.class,
-                  new HandleMapper(),
-                  "persistent-handle");
+//        addMapper(UUID.class, new UUIDStructsMapper(), "uuid");
+//        addMapper(UUIDPersistentHandle.class,
+//                  new HandleMapper(),
+//                  "persistent-handle");
         addMapper(PhantomManagedHandle.class,
                   new HandleMapper(),
                   "live-managed-handle");
@@ -476,7 +476,7 @@ public class Structs
                   "java-sql-date");
     }
 
-    public static String getClassName(Class<?> clazz)
+    private static String getClassName(Class<?> clazz)
     {
         String name = hgClassNames.get(clazz);
         return (name == null) ? clazz.getName() : name;
@@ -490,19 +490,19 @@ public class Structs
      * @param mapper
      * @param name
      */
-    public static synchronized void addMapper(Class<?> clazz,
+    private static synchronized void addMapper(Class<?> clazz,
                                               StructsMapper mapper, String name)
     {
         hgMappers.put(clazz, new Pair<StructsMapper, String>(mapper, name));
         hgInvertedMappers.put(name, mapper);
     }
 
-    public static synchronized Pair<StructsMapper, String> getMapper(Class<?> clazz)
+    private static synchronized Pair<StructsMapper, String> getMapper(Class<?> clazz)
     {
         return hgMappers.get(clazz);
     }
 
-    public static HGQueryCondition getHGQueryCondition(Object value,
+    private static HGQueryCondition getHGQueryCondition(Object value,
                                                        Object... args)
     {
         Object result = getPart(value, args);
@@ -512,7 +512,7 @@ public class Structs
             return null;
     }
 
-    public static HGAtomPredicate getHGAtomPredicate(Object value,
+    private static HGAtomPredicate getHGAtomPredicate(Object value,
                                                      Object... args)
     {
         Object result = getPart(value, args);
@@ -532,7 +532,7 @@ public class Structs
      * @param args
      * @return
      */
-    public static <T> T getPart(Object source, Object... args)
+    private static <T> T getPart(Object source, Object... args)
     {
         if (args == null)
             return null;
@@ -551,12 +551,12 @@ public class Structs
         }
     }
 
-    public static Map<String, Object> getStruct(Object source, Object... args)
+    private static Map<String, Object> getStruct(Object source, Object... args)
     {
         return (Map<String, Object>) getPart(source, args);
     }
 
-    public static boolean hasPart(Object source, Object... args)
+    private static boolean hasPart(Object source, Object... args)
     {
         if ((args == null) || (source == null))
             return false;
@@ -575,7 +575,7 @@ public class Structs
         }
     }
 
-    public static <T> T getOptPart(Object source, T defaultValue,
+    private static <T> T getOptPart(Object source, T defaultValue,
                                    Object... args)
     {
         if (source == null)
@@ -676,11 +676,12 @@ public class Structs
         if (source == null)
             return null;
 
-        if (source instanceof CustomSerializedValue)
-        {
-            return ((CustomSerializedValue) source).get();
-        }
-        else if (source instanceof List)
+//        if (source instanceof CustomSerializedValue)
+//        {
+//            return ((CustomSerializedValue) source).get();
+//        }
+        //else 
+        	if (source instanceof List)
         {
             List<Object> data = (List<Object>) source;
 
@@ -772,7 +773,7 @@ public class Structs
         return result;
     }
 
-    public static void loadListValues(List<Object> destination,
+    private static void loadListValues(List<Object> destination,
                                       List<Object> source)
     {
         for (Object x : source)
@@ -781,7 +782,7 @@ public class Structs
         }
     }
 
-    public static void loadMapValues(Object bean, Map<String, Object> properties)
+    private static void loadMapValues(Object bean, Map<String, Object> properties)
     {
         for (Entry<String, Object> entry : properties.entrySet())
         {
@@ -902,7 +903,7 @@ public class Structs
 
     }
 
-    public static List<Object> hgQueryOrPredicate(Object x)
+    private static List<Object> hgQueryOrPredicate(Object x)
     {
         if (x == null)
             return null;
@@ -917,17 +918,17 @@ public class Structs
         return (List<Object>) svalue(x, true, true, null);
     }
 
-    public static List<Object> hgQuery(HGQueryCondition condition)
+    private static List<Object> hgQuery(HGQueryCondition condition)
     {
         return hgQueryOrPredicate(condition);
     }
 
-    public static List<Object> hgPredicate(HGAtomPredicate predicate)
+    private static List<Object> hgPredicate(HGAtomPredicate predicate)
     {
         return hgQueryOrPredicate(predicate);
     }
 
-    public static Map<String, Object> merge(Map<String, Object> m1,
+    private static Map<String, Object> merge(Map<String, Object> m1,
                                             Map<String, Object> m2)
     {
         Map<String, Object> m = new HashMap<String, Object>();
@@ -938,7 +939,7 @@ public class Structs
         return m;
     }
 
-    public List<Object> append(List<Object> l1, List<Object> l2)
+    private List<Object> append(List<Object> l1, List<Object> l2)
     {
         List<Object> l = new ArrayList<Object>();
         if (l1 != null)
@@ -948,7 +949,7 @@ public class Structs
         return l;
     }
 
-    public static Message combine(Message msg, Map<String, Object> s)
+    private static Json combine(Json msg, Map<String, Object> s)
     {
         msg.with(Json.object(s)); // msg.putAll(s);
         return msg;
@@ -967,7 +968,7 @@ public class Structs
      *            The source of the merge.
      * @return The possibly modified <code>o1</code>.
      */
-    public static <T> T combine(T o1, T o2)
+    private static <T> T combine(T o1, T o2)
     {
         if (o1 instanceof Map)
         {
@@ -995,7 +996,7 @@ public class Structs
      *         from an object and an object from a struct.
      * 
      */
-    public static interface StructsMapper
+    private static interface StructsMapper
     {
         Object getStruct(Object value);
 
@@ -1017,23 +1018,23 @@ public class Structs
      * 
      *         Mapper for UUID
      */
-    public static class UUIDStructsMapper implements StructsMapper
-    {
-        public Object getObject(Object struct)
-        {
-            ArrayList<Object> data = (ArrayList<Object>) struct;
-            return new UUID((Long) data.get(0), (Long) data.get(1));
-        }
+//    public static class UUIDStructsMapper implements StructsMapper
+//    {
+//        public Object getObject(Object struct)
+//        {
+//            ArrayList<Object> data = (ArrayList<Object>) struct;
+//            return new UUID((Long) data.get(0), (Long) data.get(1));
+//        }
+//
+//        public Object getStruct(Object value)
+//        {
+//            UUID uuid = (UUID) value;
+//            return list(uuid.getMostSignificantBits(),
+//                        uuid.getLeastSignificantBits());
+//        }
+//    }
 
-        public Object getStruct(Object value)
-        {
-            UUID uuid = (UUID) value;
-            return list(uuid.getMostSignificantBits(),
-                        uuid.getLeastSignificantBits());
-        }
-    }
-
-    public static class HandleMapper implements StructsMapper
+    private static class HandleMapper implements StructsMapper
     {
         public Object getObject(Object struct)
         {
@@ -1086,7 +1087,7 @@ public class Structs
      * }
      */
 
-    public static class BeanMapper implements StructsMapper
+    private static class BeanMapper implements StructsMapper
     {
         String[] props;
 
@@ -1161,7 +1162,7 @@ public class Structs
         }
     }
 
-    public static class PerformativeMapper implements StructsMapper
+    private static class PerformativeMapper implements StructsMapper
     {
         public Object getObject(Object struct)
         {

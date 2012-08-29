@@ -1,16 +1,14 @@
 package org.hypergraphdb.peer.cact;
 
+
 import static org.hypergraphdb.peer.Messages.CONTENT;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-
 import java.util.UUID;
-
+import mjson.Json;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.FSMActivity;
 import org.hypergraphdb.peer.workflow.FromState;
@@ -45,17 +43,17 @@ public class QueryCount extends FSMActivity
     
     public void initiate()
     {
-        Message msg = createMessage(Performative.QueryRef,
-                                    struct("condition", expression));
+    	Json msg = createMessage(Performative.QueryRef,
+    			Json.object("condition", expression));
         send(target, msg);
     }
 
     @FromState("Started")
     @OnMessage(performative = "QueryRef")
-    public WorkflowStateConstant onQuery(Message msg)
+    public WorkflowStateConstant onQuery(Json msg)
     {
         HyperGraph graph = getThisPeer().getGraph();
-        expression = getPart(msg, CONTENT, "condition");
+        expression = Messages.fromJson(msg.at(CONTENT).at("condition"));
         reply(msg, 
               Performative.InformRef, hg.count(graph, expression));
         return WorkflowState.Completed;
@@ -63,9 +61,9 @@ public class QueryCount extends FSMActivity
     
     @FromState("Started")
     @OnMessage(performative = "InformRef")
-    public WorkflowStateConstant onResponse(Message msg)
+    public WorkflowStateConstant onResponse(Json msg)
     {
-        result = getPart(msg, CONTENT);
+        result = msg.at(CONTENT).asLong();
         return WorkflowState.Completed;
     }
 

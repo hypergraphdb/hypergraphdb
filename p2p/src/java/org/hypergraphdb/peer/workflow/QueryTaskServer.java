@@ -7,23 +7,22 @@
  */
 package org.hypergraphdb.peer.workflow;
 
+
 import static org.hypergraphdb.peer.HGDBOntology.SLOT_GET_OBJECT;
+
 import static org.hypergraphdb.peer.HGDBOntology.SLOT_QUERY;
-import static org.hypergraphdb.peer.Structs.combine;
-import static org.hypergraphdb.peer.Structs.getPart;
-import static org.hypergraphdb.peer.Structs.struct;
-import static org.hypergraphdb.peer.Structs.object;
-import static org.hypergraphdb.peer.Structs.list;
 import static org.hypergraphdb.peer.Messages.*;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
+import mjson.Json;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
+import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.storage.StorageGraph;
 
@@ -39,19 +38,16 @@ public class QueryTaskServer extends Activity
     }
 
     @Override
-    public void handleMessage(Message msg)
+    public void handleMessage(Json msg)
     {
-        boolean getObject = (Boolean) getPart(msg,
-                                              Messages.CONTENT,
-                                              SLOT_GET_OBJECT);
-        Object query = getPart(msg, Messages.CONTENT, SLOT_QUERY);
-        Message reply = getReply(msg);
+        boolean getObject = msg.at(Messages.CONTENT).at(SLOT_GET_OBJECT).asBoolean();
+        Object query = Messages.fromJson(msg.at(Messages.CONTENT).at(SLOT_QUERY));
+        Json reply = getReply(msg);
 
         if (query instanceof HGHandle)
         {
             StorageGraph subgraph = getThisPeer().getSubgraph((HGHandle) query);
-
-            combine(reply, struct(Messages.CONTENT, list(object(subgraph))));
+            reply.set(Messages.CONTENT, subgraph);
         }
         else if (query instanceof HGQueryCondition)
         {
@@ -65,7 +61,7 @@ public class QueryTaskServer extends Activity
 
                 if (getObject)
                 {
-                    resultingContent.add(object(getThisPeer().getSubgraph(handle)));
+                    resultingContent.add(SubgraphManager.encodeSubgraph(getThisPeer().getSubgraph(handle)));
                 }
                 else
                 {
@@ -73,12 +69,11 @@ public class QueryTaskServer extends Activity
                             .getPersistentHandle(handle));
                 }
             }
-
-            combine(reply, struct(Messages.CONTENT, resultingContent));
+            reply.set(Messages.CONTENT, resultingContent);
         }
         else
         {
-            combine(reply, struct(Messages.CONTENT, null));
+            reply.set(Messages.CONTENT, null);
         }
         getPeerInterface().send(getSender(msg), reply);
     }

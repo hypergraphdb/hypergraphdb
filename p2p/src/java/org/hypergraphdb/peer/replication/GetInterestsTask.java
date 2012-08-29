@@ -7,13 +7,15 @@
  */
 package org.hypergraphdb.peer.replication;
 
+
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
@@ -21,8 +23,6 @@ import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.Activity;
 import org.hypergraphdb.query.HGAtomPredicate;
-import static org.hypergraphdb.peer.Structs.*;
-import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 /**
@@ -69,7 +69,7 @@ public class GetInterestsTask extends Activity
     private void sendMessage(PeerRelatedActivityFactory activityFactory,
                              Object target)
     {
-        Message msg = Messages.createMessage(Performative.Request, ATOM_INTEREST, getId());
+    	Json msg = Messages.createMessage(Performative.Request, ATOM_INTEREST, getId());
         PeerRelatedActivity activity = (PeerRelatedActivity) activityFactory.createActivity();
         activity.setTarget(target);
         activity.setMessage(msg);
@@ -84,11 +84,11 @@ public class GetInterestsTask extends Activity
         }
     }
     
-    public void handleMessage(Message msg)
+    public void handleMessage(Json msg)
     {
-        HGPeerIdentity other = getThisPeer().getIdentity(getPart(msg, Messages.REPLY_TO));
-        Replication.get(getThisPeer()).getOthersInterests().put(other,(HGAtomPredicate) getPart(msg,
-                                                                                                Messages.CONTENT)); 
+        HGPeerIdentity other = getThisPeer().getIdentity(Messages.getSender(msg));
+        Replication.get(getThisPeer()).getOthersInterests().put(other,
+        		(HGAtomPredicate)Messages.fromJson(msg.at(Messages.CONTENT))); 
         if (count.decrementAndGet() == 0)
         {
             getState().setCompleted();

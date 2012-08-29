@@ -7,9 +7,7 @@
  */
 package org.hypergraphdb.peer;
 
-import static org.hypergraphdb.peer.Structs.getPart;
 
-import static org.hypergraphdb.peer.Structs.getOptPart;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -26,6 +24,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import mjson.Json;
+
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
@@ -34,13 +35,11 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.replication.GetInterestsTask;
-import org.hypergraphdb.peer.serializer.JSONReader;
 import org.hypergraphdb.peer.workflow.ActivityManager;
 import org.hypergraphdb.peer.workflow.ActivityResult;
 import org.hypergraphdb.peer.workflow.AffirmIdentity;
 import org.hypergraphdb.storage.HGStoreSubgraph;
 import org.hypergraphdb.storage.StorageGraph;
-import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.TwoWayMap;
 
@@ -55,13 +54,12 @@ import org.hypergraphdb.util.TwoWayMap;
  * 
  * @author Cipri Costa
  */
-@SuppressWarnings("unchecked")
 public class HyperGraphPeer 
 {
 	/**
 	 * The object used to configure the peer.
 	 */
-	private Map<String, Object> configuration;
+	private Json configuration;
 	
 	/**
 	 * Holds any exception that prevents the peer from starting up.
@@ -119,11 +117,11 @@ public class HyperGraphPeer
 	// Assuming 'configuration' is set, initialize the rest of the member variables.
 	private void init()
 	{
-		Number threadPoolSize = (Number)configuration.get(PeerConfig.THREAD_POOL_SIZE);
-		if (threadPoolSize == null || threadPoolSize.intValue() <= 0)
+		Json threadPoolSize = configuration.at(PeerConfig.THREAD_POOL_SIZE);
+		if (threadPoolSize == null || threadPoolSize.asInteger() <= 0)
 			executorService = Executors.newCachedThreadPool();
 		else
-			executorService = Executors.newFixedThreadPool(threadPoolSize.intValue());			
+			executorService = Executors.newFixedThreadPool(threadPoolSize.asInteger());			
 		activityManager = new ActivityManager(this);		
 	}
 	
@@ -131,7 +129,7 @@ public class HyperGraphPeer
 	 * Creates a peer from a JSON object.
 	 * @param configuration
 	 */
-	public HyperGraphPeer(Map<String, Object> configuration)
+	public HyperGraphPeer(Json configuration)
 	{
 		this.configuration = configuration;
 	}
@@ -140,7 +138,7 @@ public class HyperGraphPeer
 	 * Creates a peer from a JSON object and a given local database.
 	 * @param configuration
 	 */
-	public HyperGraphPeer(Map<String, Object> configuration, HyperGraph graph)
+	public HyperGraphPeer(Json configuration, HyperGraph graph)
 	{
 		this(configuration);		
 		this.graph = graph;
@@ -258,7 +256,7 @@ public class HyperGraphPeer
 	        return identity;
 	    if (graph == null)
 	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
-	    return getIdentity(graph, (String)getOptPart(configuration, "HGDBPeer", PeerConfig.PEER_NAME));
+	    return getIdentity(graph, configuration.at(PeerConfig.PEER_NAME, "HGDBPeer").asString());
 	}
 	
 	private void loadConfig(File configFile)
@@ -288,12 +286,11 @@ public class HyperGraphPeer
 	    return contents.toString();
 	}
 		
-	public static Map<String,Object> loadConfiguration(File configFile)	
+	public static Json loadConfiguration(File configFile)	
 	{
-	    JSONReader reader = new JSONReader();
 	    try
 	    {
-	        return (Map<String, Object>)getPart(reader.read(getContents(configFile)));	            
+	        return Json.read(getContents(configFile));	            
 	    } 
 	    catch (IOException e)
 	    {
@@ -339,17 +336,17 @@ public class HyperGraphPeer
 //					GenericSerializer.setTempDB(tempGraph);
 //				}
 
-				String option = getOptPart(configuration, null, PeerConfig.LOCAL_DB);
+				String option = configuration.at(PeerConfig.LOCAL_DB, "").asString();
 				if (graph == null && !HGUtils.isEmpty(option))
 				{
 					graph = HGEnvironment.get(option);					
 				}
 				
 				//load and start interface
-				String peerInterfaceType = getPart(configuration, PeerConfig.INTERFACE_TYPE);
+				String peerInterfaceType = configuration.at(PeerConfig.INTERFACE_TYPE).asString();
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(HyperGraphPeer.this);
-				Map<String, Object> interfaceConfig = getPart(configuration, PeerConfig.INTERFACE_CONFIG);
+				Json interfaceConfig = configuration.at(PeerConfig.INTERFACE_CONFIG);
 				if (interfaceConfig == null)
 				    throw new RuntimeException("Missing interfaceConfig configuration parameter.");
 				peerInterface.configure(interfaceConfig);
@@ -359,24 +356,21 @@ public class HyperGraphPeer
 				boolean managePresence = false; // manage presence only if AffirmIdentity activity is bootstrapped
 				
                 // Call all bootstrapping operations configured:                    
-                List<?> bootstrapOperations = getOptPart(configuration, null, PeerConfig.BOOTSTRAP);                 
-                if (bootstrapOperations != null)
-                    for (Object x : bootstrapOperations)
-                    {
-                        String classname = getPart(x, "class");
-                        if (AffirmIdentityBootstrap.class.getName().equals(classname))
-                            managePresence = true;
-                        if (classname == null)
-                            throw new RuntimeException("No 'class' specified in bootstrap operation.");
-                        Map<String, Object> config = getPart(x, "config");
-                        if (config == null)
-                            config = new HashMap<String, Object>();
-                        //2012.03.28 Use HGUtils to get classloader so we can configure one.
-                        ClassLoader cl = HGUtils.getClassLoader(graph);
-                        BootstrapPeer boot = (BootstrapPeer)cl.loadClass(classname).newInstance();
-                        //BootstrapPeer boot = (BootstrapPeer)Thread.currentThread().getContextClassLoader().loadClass(classname).newInstance();
-                        boot.bootstrap(HyperGraphPeer.this, config);
-                    }       
+                Json bootstrapOperations = configuration.at(PeerConfig.BOOTSTRAP, Json.array());                 
+                for (Json x : bootstrapOperations.asJsonList())
+                {
+                    String classname = x.at("class").asString();
+                    if (AffirmIdentityBootstrap.class.getName().equals(classname))
+                        managePresence = true;
+                    if (classname == null)
+                        throw new RuntimeException("No 'class' specified in bootstrap operation.");
+                    Json config = x.at("config", Json.object());
+                    //2012.03.28 Use HGUtils to get classloader so we can configure one.
+                    ClassLoader cl = HGUtils.getClassLoader(graph);
+                    BootstrapPeer boot = (BootstrapPeer)cl.loadClass(classname).newInstance();
+                    //BootstrapPeer boot = (BootstrapPeer)Thread.currentThread().getContextClassLoader().loadClass(classname).newInstance();
+                    boot.bootstrap(HyperGraphPeer.this, config);
+                }       
                 
                 if (managePresence)
                     peerInterface.addPeerPresenceListener(
@@ -430,20 +424,27 @@ public class HyperGraphPeer
 	    //
 	    // Gives chance to all threads to exit:
 	    //
-        activityManager.stop();	    
-		if (peerInterface != null)
-			peerInterface.stop();
-		
+		try { activityManager.stop(); } catch (Throwable t) { }
+		try 
+		{
+			if (peerInterface != null)
+				peerInterface.stop();
+		}
+		catch (Throwable t) { }
 		//
 		// Force exit of any remaining running threads.
 		//
-		this.executorService.shutdownNow();
+		try { this.executorService.shutdownNow(); } catch (Throwable t) { }
 		
-	    activityManager.clear();	 
-	    this.peerIdentities.clear();
+		try { activityManager.clear();	  } catch (Throwable t) { }
+		try { this.peerIdentities.clear(); } catch (Throwable t) { }
 	    
-		if (tempGraph != null)
-			tempGraph.close();
+		try 
+		{
+			if (tempGraph != null)
+				tempGraph.close();
+		}
+		catch (Throwable t) { }
 	}
 		
 	/**
@@ -606,9 +607,9 @@ public class HyperGraphPeer
         return context;
     }
     
-    public Map<String, Object> getConfiguration()
+    public Json getConfiguration()
     {
-        return  configuration;
+        return configuration;
     }
 
     /**

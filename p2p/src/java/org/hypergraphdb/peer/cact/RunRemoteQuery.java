@@ -4,16 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import static org.hypergraphdb.peer.Messages.*;
-import static org.hypergraphdb.peer.Structs.*;
-
+import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
+import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.workflow.FSMActivity;
@@ -61,19 +59,19 @@ public class RunRemoteQuery extends FSMActivity
     
     public void initiate()
     {
-        Message msg = createMessage(Performative.QueryRef,
-                                    struct("condition", expression,
-                                           "deref", deref));
+    	Json msg = createMessage(Performative.QueryRef,
+    					Json.object("condition", expression,
+                                    "deref", deref));
         send(target, msg);
     }
 
     @FromState("Started")
     @OnMessage(performative = "QueryRef")
-    public WorkflowStateConstant onQuery(Message msg)
+    public WorkflowStateConstant onQuery(Json msg)
     {
         HyperGraph graph = getThisPeer().getGraph();
-        expression = getPart(msg, CONTENT, "condition");
-        deref = getPart(msg, CONTENT, "deref");
+        expression = Messages.fromJson(msg.at(CONTENT).at("condition"));
+        deref = msg.at(CONTENT).at("deref").asBoolean();
         List<Object> L = null;
         switch (limit)
         {
@@ -93,7 +91,7 @@ public class RunRemoteQuery extends FSMActivity
                 L = L.subList(0, limit);
         }
              
-        List<Object> result = new ArrayList<Object>();
+        Json result = Json.array();
         for (Object x : L)
         {
             if (x instanceof HGHandle)
@@ -102,32 +100,34 @@ public class RunRemoteQuery extends FSMActivity
             {
                 HGHandle atomHandle = graph.getHandle(x);
                 if (atomHandle != null)
-                    x = struct("atom-handle", atomHandle, 
-                               "atom", SubgraphManager.getTransferAtomRepresentation(graph, atomHandle));
+                    x = Json.object("atom-handle", atomHandle, 
+                               		"atom", SubgraphManager.getTransferAtomRepresentation(graph, atomHandle));
                 result.add(x);                    
             }
         }
         reply(msg, 
-              Performative.InformRef, result);
+              Performative.InformRef, 
+              result);
         return WorkflowState.Completed;
     }
     
     @FromState("Started")
     @OnMessage(performative = "InformRef")
-    public WorkflowStateConstant onResponse(Message msg)
+    public WorkflowStateConstant onResponse(Json msg)
     {
         HyperGraph graph = getThisPeer().getGraph();
-        List<?> L = getPart(msg, CONTENT);
+        Json L = msg.at(CONTENT);
         result = new ArrayList<Object>();
-        for (Object x : L)
+        for (Json j : L.asJsonList())
         {
+        	Object x = Messages.fromJson(j); 
             if (x instanceof HGHandle)
                 result.add(x);
-            else if (x instanceof Map)
+            else if (j.has("atom-handle"))
             {
-                HGHandle handle = getPart(x, "atom-handle");
-                StorageGraph sgraph = getPart(x, "atom", "storage-graph");
-                Map<String, String> typeClasses = getPart(x, "atom", "type-classes");    
+                HGHandle handle = Messages.fromJson(j.at("atom-handle"));
+                StorageGraph sgraph = Messages.fromJson(j.at("atom").at("storage-graph"));
+                Map<String, String> typeClasses = Messages.fromJson(j.at("atom").at("type-classes"));    
                 final Map<HGHandle, HGHandle> typeMap = 
                     SubgraphManager.getLocalTypes(graph, typeClasses);
                 if (handle != null)

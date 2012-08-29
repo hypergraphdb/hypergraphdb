@@ -7,19 +7,20 @@
  */
 package org.hypergraphdb.peer.replication;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
 
+import mjson.Json;
+
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.Message;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.log.LogEntry;
 import org.hypergraphdb.peer.log.Timestamp;
 import org.hypergraphdb.peer.workflow.TaskActivity;
 import org.hypergraphdb.peer.workflow.TaskFactory;
 import org.hypergraphdb.query.HGAtomPredicate;
-import static org.hypergraphdb.peer.Structs.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 /**
@@ -41,14 +42,11 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
     }
 
     @Override
-    public void handleMessage(Message msg)
+    public void handleMessage(Json msg)
     {
-        Timestamp lastTimestamp = (Timestamp) getPart(msg, Messages.CONTENT,
-                                                      SLOT_LAST_VERSION);
-        HGAtomPredicate interest = (HGAtomPredicate) getPart(msg, Messages.CONTENT,
-                                                             SLOT_INTEREST);
-
-        System.out.println("Catch up request from " + getPart(msg, Messages.REPLY_TO)
+        Timestamp lastTimestamp = new Timestamp(msg.at(Messages.CONTENT).at(SLOT_LAST_VERSION).asInteger());
+        HGAtomPredicate interest = Messages.fromJson(msg.at(Messages.CONTENT).at(SLOT_INTEREST));;
+        System.out.println("Catch up request from " + msg.at(Messages.REPLY_TO)
                            + " starting from " + lastTimestamp
                            + " with interest " + interest);
 
@@ -60,7 +58,7 @@ public class CatchUpTaskServer extends TaskActivity<CatchUpTaskServer.State>
         {
             System.out.println("Should catch up with: " + entry.getTimestamp());
 
-            Object sendToPeer = getPart(msg, Messages.REPLY_TO);
+            Object sendToPeer = Messages.getSender(msg);
             entry.setLastTimestamp(getPeerInterface().getThisPeer().getIdentity(sendToPeer),
                                    lastTimestamp);
 

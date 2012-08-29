@@ -7,8 +7,7 @@
  */
 package org.hypergraphdb.peer.bootstrap;
 
-import java.util.Map;
-
+import mjson.Json;
 import org.hypergraphdb.peer.BootstrapPeer;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.cact.AddAtom;
@@ -25,7 +24,7 @@ import org.hypergraphdb.peer.cact.TransferGraph;
 
 public class CACTBootstrap implements BootstrapPeer
 {
-    public void bootstrap(HyperGraphPeer peer, Map<String, Object> config)
+    public void bootstrap(HyperGraphPeer peer, Json config)
     {
         peer.getActivityManager().registerActivityType(GetClassForType.TYPENAME, GetClassForType.class);
         peer.getActivityManager().registerActivityType(DefineAtom.TYPENAME, DefineAtom.class);
