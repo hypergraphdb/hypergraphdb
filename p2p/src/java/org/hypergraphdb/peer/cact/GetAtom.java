@@ -131,7 +131,7 @@ public class GetAtom extends FSMActivity
     {
         HyperGraph graph = getThisPeer().getGraph();
         Json A = msg.at(CONTENT);
-        final RAMStorageGraph subgraph = Messages.fromJson(A.at("storage-graph"));
+        final RAMStorageGraph subgraph = SubgraphManager.decodeSubgraph(A.at("storage-graph").asString());
         final Map<String, String>  typeClasses = Messages.fromJson(A.at("type-classes"));
         
         final Map<HGHandle, HGHandle> typeMap = 

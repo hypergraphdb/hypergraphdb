@@ -294,9 +294,9 @@ public class TestCACT
         }
         
         node.replace(toBeReplaced, ints, listType);
-        
-        Assert.assertTrue(node.remove(toBeRemoved));        
-        Assert.assertEquals(node.count(hg.eq(10)), 1);
+               
+        Assert.assertTrue(node.remove(toBeRemoved));  
+        Assert.assertEquals(node.count(hg.eq(10)), 1);        
         Assert.assertEquals(node.get(x1), "Hello World");
         Assert.assertEquals(node.get(x2), complexBean);
         

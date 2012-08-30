@@ -85,6 +85,7 @@ public class RunRemoteQuery extends FSMActivity
             case -1:
                 L = deref ? hg.getAll(graph, expression)
                           : hg.findAll(graph, expression);
+                break;
             default:
                 L = deref ? hg.getAll(graph, expression)
                         : hg.findAll(graph, expression);
@@ -126,7 +127,7 @@ public class RunRemoteQuery extends FSMActivity
             else if (j.has("atom-handle"))
             {
                 HGHandle handle = Messages.fromJson(j.at("atom-handle"));
-                StorageGraph sgraph = Messages.fromJson(j.at("atom").at("storage-graph"));
+                StorageGraph sgraph = SubgraphManager.decodeSubgraph(j.at("atom").at("storage-graph").asString());
                 Map<String, String> typeClasses = Messages.fromJson(j.at("atom").at("type-classes"));    
                 final Map<HGHandle, HGHandle> typeMap = 
                     SubgraphManager.getLocalTypes(graph, typeClasses);

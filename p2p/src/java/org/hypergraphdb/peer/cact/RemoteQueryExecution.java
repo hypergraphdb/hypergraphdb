@@ -16,6 +16,7 @@ import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.SubgraphManager;
+import org.hypergraphdb.peer.serializer.HGPeerJsonFactory;
 import org.hypergraphdb.peer.workflow.ActivityResult;
 import org.hypergraphdb.peer.workflow.FSMActivity;
 import org.hypergraphdb.peer.workflow.FromState;
@@ -127,14 +128,19 @@ public class RemoteQueryExecution<T> extends FSMActivity
 
         public void close()
         {
-            send(target, createMessage(Performative.Cancel, RemoteQueryExecution.this));
+        	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(getThisPeer().getGraph()));
             try
             {
+                send(target, createMessage(Performative.Cancel, RemoteQueryExecution.this));
                 RemoteQueryExecution.this.getState().getFuture(WorkflowState.Completed).get();
             }
             catch (Exception ex)
             {
                 throw new HGException(ex);
+            }
+            finally
+            {
+            	Json.dettachFactory();
             }
         }
 

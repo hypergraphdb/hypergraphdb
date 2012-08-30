@@ -10,6 +10,7 @@ import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.ReadyRef;
 import org.hypergraphdb.peer.HGPeerIdentity;
@@ -129,12 +130,12 @@ public class AddAtom extends FSMActivity
             HGAtomType type = graph.get(ltype);                    
             atom = type.make(subgraph.getRoots().iterator().next(), 
                              new ReadyRef<HGHandle[]>(targets), 
-                             null);                       
+                             null);        
         }
         finally
         {
             graph.getStore().detachOverlayGraph();
-        }         
+        }
         this.atomHandle = graph.add(atom, ltype);
         reply(msg, Performative.Agree, Json.object("atom-handle", atomHandle));
         return WorkflowStateConstant.Completed;
