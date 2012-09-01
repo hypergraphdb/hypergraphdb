@@ -128,6 +128,8 @@ public class HGStoreSubgraph implements StorageGraph
                     visited.add(h);
                     result = new Pair<HGPersistentHandle, Object>(h, data);
                 }
+                else
+                	System.err.println("oops, handle not in store " + h);
            }
            else
            {

@@ -47,7 +47,7 @@ public class EnumTypeConstructor extends HGAtomTypeBase
 		// index. And we use that to get Java class of the enum, instead of the stored one
 		// so we can gracefully handle class name changes.
 		HGPersistentHandle typeHandle = (HGPersistentHandle)graph.getIndexManager().getIndexByValue().findFirst(handle);
-		Class<Enum> cl = (Class<Enum>)graph.getTypeSystem().getClassForType(typeHandle);
+		Class<Enum<?>> cl = (Class<Enum<?>>)graph.getTypeSystem().getClassForType(typeHandle);
 		result.setEnumType(cl);		
 //		HGPersistentHandle [] layout = graph.getStore().getLink(handle);		
 //		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);		

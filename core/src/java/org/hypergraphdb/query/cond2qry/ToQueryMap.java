@@ -491,7 +491,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData x = QueryMetaData.ORACCESS.clone(c); // TODO - this is only true in the worst case!
+				QueryMetaData x = QueryMetaData.ORDERED.clone(c);
 				boolean ispredicate = true;
 				x.predicateCost = 0;
 				for (HGQueryCondition sub : ((Or)c))
@@ -500,6 +500,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 						ispredicate = false;					
 					ConditionToQuery transformer = instance.get(sub.getClass());
 					if (transformer == null)
+					{
 						if (! (sub instanceof HGAtomPredicate))
 							throw new HGException("Condition " + sub + " is not query translatable, nor a predicate.");
 						else 
@@ -507,7 +508,8 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 							x.ordered = false;
 							x.randomAccess = false;
 							continue;
-						}					
+						}
+					}
 					QueryMetaData subx = transformer.getMetaData(hg, sub);
 					ispredicate = ispredicate && subx.predicateCost > -1;
 					x.predicateCost += subx.predicateCost;

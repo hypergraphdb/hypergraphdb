@@ -54,6 +54,7 @@ public class StringType extends PrimitiveTypeBase<String>
     
     public static class CaseInsensitiveStringComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;
         public int compare(byte [] left, byte [] right)
         {            
             if (left[dataOffset] < 2)
@@ -102,6 +103,7 @@ public class StringType extends PrimitiveTypeBase<String>
     
     public static class StringComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;    	
         public int compare(byte [] left, byte [] right)
         {            
             if (left[dataOffset] < 2)

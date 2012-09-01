@@ -21,6 +21,7 @@ public class HGHandleType extends PrimitiveTypeBase<HGHandle>
 	
     public static class HandleComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;    	
         public int compare(byte [] left, byte [] right)
         {
             int i = dataOffset;

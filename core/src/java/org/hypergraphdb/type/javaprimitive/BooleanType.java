@@ -22,6 +22,7 @@ public class BooleanType extends PrimitiveTypeBase<Boolean>
     
     public static class BoolComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;    	
         public int compare(byte [] left, byte [] right)
         {
             return left[dataOffset] - right[dataOffset];

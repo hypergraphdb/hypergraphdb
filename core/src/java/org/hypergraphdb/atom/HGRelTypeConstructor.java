@@ -80,8 +80,10 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
     
     private static class ByteComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;
+
 		public int compare(byte [] left, byte [] right)
-		{
+		{ 
 			return new String(left).compareTo(new String(right));
 		}    	
     }

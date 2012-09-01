@@ -21,9 +21,10 @@ public interface HGStoreImplementation
     void removeLink(HGPersistentHandle handle);
     boolean containsLink(HGPersistentHandle handle);
     
-    HGPersistentHandle store(HGPersistentHandle handle, byte [] data);    
-    void removeData(HGPersistentHandle handle);         
+    HGPersistentHandle store(HGPersistentHandle handle, byte [] data);
     byte [] getData(HGPersistentHandle handle);
+    void removeData(HGPersistentHandle handle);         
+    boolean containsData(HGPersistentHandle handle);
     
     HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle);
     void removeIncidenceSet(HGPersistentHandle handle);

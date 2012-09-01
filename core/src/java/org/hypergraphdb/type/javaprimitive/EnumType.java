@@ -9,6 +9,7 @@ package org.hypergraphdb.type.javaprimitive;
 
 import java.util.Comparator;
 
+
 import org.hypergraphdb.HGException;
 
 import org.hypergraphdb.HGHandle;
@@ -19,17 +20,18 @@ import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
+import org.hypergraphdb.type.HGPrimitiveType;
 
 @SuppressWarnings("unchecked")
-public class EnumType extends HGAtomTypeBase implements ByteArrayConverter, Comparator
+public class EnumType extends HGAtomTypeBase implements HGPrimitiveType
 {
-	private Class<Enum> enumType;
+	private Class<Enum<?>> enumType;
 	
 	public EnumType()
 	{		
 	}
 	
-	public EnumType(Class<Enum> enumType)
+	public EnumType(Class<Enum<?>> enumType)
 	{
 		this.enumType = enumType;
 	}
@@ -39,7 +41,7 @@ public class EnumType extends HGAtomTypeBase implements ByteArrayConverter, Comp
 		return enumType;
 	}
 
-	public final void setEnumType(Class<Enum> enumType)
+	public final void setEnumType(Class<Enum<?>> enumType)
 	{
 		this.enumType = enumType;
 	}
@@ -53,7 +55,7 @@ public class EnumType extends HGAtomTypeBase implements ByteArrayConverter, Comp
 			                     handle);
 		HGAtomType stringType = graph.getTypeSystem().getAtomType(String.class);
 		String symbol = (String)stringType.make(layout[0], null, null);
-		return Enum.valueOf((Class<Enum>)enumType, symbol);
+		return Enum.valueOf((Class<Enum>)(Class)enumType, symbol);
 	}
 
 	public HGPersistentHandle store(Object instance)
@@ -92,15 +94,25 @@ public class EnumType extends HGAtomTypeBase implements ByteArrayConverter, Comp
         return B;
     }
     
-    public int compare(Object o1, Object o2)
+    public Comparator<byte[]> getComparator()
     {
-        byte [] left = (byte[])o1;
-        byte [] right = (byte[])o2;
-        for (int i = 0; i < left.length && i < right.length; i++)
-            if (left[i] - right[i] == 0)
-                continue;
-            else 
-                return left[i] - right[i];
-        return 0;        
-    }    
+    	return ENUM_COMPARATOR;
+    }
+    
+    public static final class ENUM_COMPARATOR_IMPL implements Comparator<byte[]>, java.io.Serializable
+    {
+		private static final long serialVersionUID = 1L;
+
+		public int compare(byte[] left, byte [] right)
+	    {
+	        for (int i = 0; i < left.length && i < right.length; i++)
+	            if (left[i] - right[i] == 0)
+	                continue;
+	            else 
+	                return left[i] - right[i];
+	        return 0;        
+	    }
+    }
+    
+    public static final ENUM_COMPARATOR_IMPL ENUM_COMPARATOR = new ENUM_COMPARATOR_IMPL();
 }

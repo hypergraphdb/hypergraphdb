@@ -19,6 +19,7 @@ public abstract class NumericTypeBase<T> extends PrimitiveTypeBase<T>
 	
     public static class NumericComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;
         public int compare(byte[] left, byte [] right)
         {           
             int i = dataOffset;

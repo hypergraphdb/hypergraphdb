@@ -8,6 +8,11 @@ public class Constant<T> implements Ref<T>
 	
 	public T get() { return x; }
 	
+	public String toString()
+	{
+		return x == null ? "null" : x.toString();
+	}
+	
 	public int hashCode()
 	{
 		return x == null ? 0 : x.hashCode();

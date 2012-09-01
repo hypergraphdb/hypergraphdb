@@ -1,7 +1,6 @@
 package org.hypergraphdb.util;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 

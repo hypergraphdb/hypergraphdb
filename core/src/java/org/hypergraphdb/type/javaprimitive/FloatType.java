@@ -21,6 +21,7 @@ public class FloatType extends PrimitiveTypeBase<Float>
     
     public static class FloatComparator implements Comparator<byte[]>, java.io.Serializable
     {
+		private static final long serialVersionUID = 1L;
         public int compare(byte [] left, byte [] right)
         {
             byte [] left_f = new byte[4];

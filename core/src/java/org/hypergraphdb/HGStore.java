@@ -202,6 +202,23 @@ public class HGStore
                 return true;
         return impl.containsLink(handle);
     }
+
+    /**
+     * <p>
+     * Return <code>true</code> if there is a data item bound to the passed in
+     * handle parameter and <code>false</code> otherwise. This may or may not be
+     * any faster then calling the {@link getData} method and checking for null.
+     * It depends no the implementation.
+     * </p>
+     */
+    public boolean containsData(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.getLink called with a null handle.");
+        if (overlayGraph.get() != null && overlayGraph.get().getLink(handle) != null)
+                return true;
+        return impl.containsData(handle);
+    }
     
     /**
      * <p>Retrieve the raw data buffer stored at <code>handle</code>.</p>
