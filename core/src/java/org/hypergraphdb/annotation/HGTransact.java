@@ -22,5 +22,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface HGTransaction
 {
+	/**
+	 * Use "read" to specify that the transaction is read-only or "write" to specify that
+	 * it is read-write.
+	 */
 	String value();
 }
