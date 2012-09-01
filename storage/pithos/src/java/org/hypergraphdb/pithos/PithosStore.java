@@ -52,6 +52,11 @@ public class PithosStore implements HGStoreImplementation
 		return false;
 	}
 
+	public boolean containsData(HGPersistentHandle handle)
+	{
+		return false;
+	}
+	
 	public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
 	{
 		return null;

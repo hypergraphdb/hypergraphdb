@@ -9,6 +9,14 @@
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
 
+  <distributionManagement>
+    <repository>
+      <id>kobrix-repository</id>
+      <url>sftp://kobrix.com/home/tomcat/webapps/hypergraphdb/maven</url>
+    </repository>
+  </distributionManagement>
+  
+
  <repositories>
     <repository>
       <id>hypergraphdb</id>

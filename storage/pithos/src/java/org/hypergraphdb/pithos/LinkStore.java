@@ -99,11 +99,15 @@ public class LinkStore extends FileStore
 	
 	public static void main(String [] argv)
 	{
+		PithosHandleFactory hfactory = new PithosHandleFactory();
 		LinkStore store = new LinkStore(new File("/tmp/linkstore"), new PithosConfig());
 		store.startup();
 		try
 		{
-			
+			UPHandle [] A = new UPHandle[2];
+			A[0] = hfactory.makeHandle();
+			A[1] = hfactory.makeHandle();
+			store.writeLink(hfactory.makeHandle(), A);
 		}
 		catch (Throwable t)
 		{

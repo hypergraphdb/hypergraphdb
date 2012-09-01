@@ -280,6 +280,7 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 	public boolean containsLink(HGPersistentHandle handle) {
 		DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
 		DatabaseEntry value = new DatabaseEntry();
+		value.setPartial(0, 0, true);
 		try {
 			if (data_db.get(txn().getBJETransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
 				//                System.out.println(value.toString());
@@ -293,6 +294,22 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 		return false;
 	}
 
+	public boolean containsData(HGPersistentHandle handle) 
+	{
+		DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+		DatabaseEntry value = new DatabaseEntry();
+		value.setPartial(0, 0, true);
+		try {
+			if (primitive_db.get(txn().getBJETransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+				return true;
+			}
+		}
+		catch (DatabaseException ex) {
+			throw new HGException("Failed to retrieve link with handle " + handle + ": " + ex.toString(), ex);
+		}
+		return false;
+	}
+	
 	public byte[] getData(HGPersistentHandle handle) {
 		try {
 			DatabaseEntry key = new DatabaseEntry(handle.toByteArray());

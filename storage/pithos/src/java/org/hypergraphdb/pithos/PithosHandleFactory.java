@@ -1,69 +1,71 @@
 package org.hypergraphdb.pithos;
 
+import java.util.UUID;
+
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 
 
 public class PithosHandleFactory implements HGHandleFactory
 {
-	public HGPersistentHandle makeHandle()
+	private long global = 1;
+	private long local = 0;
+	
+	public UPHandle makeHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(global, local++);
 	}
 
-	public HGPersistentHandle makeHandle(String handleAsString)
+	public UPHandle makeHandle(String handleAsString)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		UUID uuid = UUID.fromString(handleAsString);
+		return new UPHandle(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
 	}
 
-	public HGPersistentHandle makeHandle(byte[] buffer)
+	public UPHandle makeHandle(byte[] buffer)
 	{
-		// TODO Auto-generated method stub
-		return null;
+		UUID uuid = UUID.nameUUIDFromBytes(buffer);
+		return new UPHandle(uuid.getMostSignificantBits(), uuid.getLeastSignificantBits());
 	}
 
-	public HGPersistentHandle makeHandle(byte[] buffer, int offset)
+	public UPHandle makeHandle(byte[] data, int offset)
 	{
-		// TODO Auto-generated method stub
-		return null;
+        long msb = 0;
+        long lsb = 0;
+        for (int i=offset; i<8+offset; i++)
+            msb = (msb << 8) | (data[i+offset] & 0xff);
+        for (int i=8+offset; i<16+offset; i++)
+            lsb = (lsb << 8) | (data[i+offset] & 0xff);
+        return new UPHandle(msb, lsb);
 	}
 
-	public HGPersistentHandle nullHandle()
+	public UPHandle nullHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0,0);
 	}
 
-	public HGPersistentHandle anyHandle()
+	public UPHandle anyHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0, 1);
 	}
 
-	public HGPersistentHandle topTypeHandle()
+	public UPHandle topTypeHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0,2);		
 	}
 
-	public HGPersistentHandle nullTypeHandle()
+	public UPHandle nullTypeHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0,3);		
 	}
 
-	public HGPersistentHandle linkTypeHandle()
+	public UPHandle linkTypeHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0,4);		
 	}
 
-	public HGPersistentHandle subsumesTypeHandle()
+	public UPHandle subsumesTypeHandle()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		return new UPHandle(0,5);		
 	}
-
 }

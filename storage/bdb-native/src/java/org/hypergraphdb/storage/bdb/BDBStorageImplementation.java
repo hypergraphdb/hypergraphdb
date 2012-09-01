@@ -269,6 +269,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
     {        
         DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
         DatabaseEntry value = new DatabaseEntry();
+        value.setPartial(0, 0, true);
         try
         {
             if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
@@ -285,6 +286,27 @@ public class BDBStorageImplementation implements HGStoreImplementation
         return false;
     }
 
+    public boolean containsData(HGPersistentHandle handle)
+    {        
+        DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+        DatabaseEntry value = new DatabaseEntry();
+        value.setPartial(0, 0, true);
+        try
+        {
+            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            {
+//                System.out.println(value.toString());
+                return true;
+            }
+        } catch (DatabaseException ex)
+        {
+            throw new HGException("Failed to retrieve link with handle " + handle + 
+                    ": " + ex.toString(), ex);
+        }      
+        
+        return false;
+    }
+    
     public byte[] getData(HGPersistentHandle handle)
     {
         try

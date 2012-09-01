@@ -3,6 +3,12 @@
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 			     http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hgdbstorage</artifactId>
+    <version>1.2</version>  
+  </parent>
+    
   <groupId>org.hypergraphdb</groupId>
   <artifactId>pithos</artifactId>
   <name>HyperGraphDB Pithos Storage Engine</name>
@@ -19,26 +25,16 @@
   <dependencies>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdbtest</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
+  
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdb</artifactId>
       <version>1.2</version>
     </dependency>	
   </dependencies>
-  
-  <build>
-    <sourceDirectory>src/java</sourceDirectory>
-    
-    <plugins>
-    	<plugin>
-    		<groupId>org.apache.maven.plugins</groupId>
-    		<artifactId>maven-compiler-plugin</artifactId>
-    		<version>2.0.2</version>
-	        <configuration>
-	          <source>1.5</source>
-	          <target>1.5</target>
-	        </configuration>    		
-    	</plugin>
-    </plugins>
-    
-  </build>
   
 </project>

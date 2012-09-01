@@ -67,7 +67,7 @@ public class BDBConfig
         envConfig.setTxnMaxActive((int)maxActive*10);                   
         envConfig.setRunRecovery(true);
         envConfig.setRegister(true);
-        envConfig.setLogAutoRemove(true);
+        envConfig.setLogAutoRemove(true);        
 //          envConfig.setMaxMutexes(10000);
 //        envConfig.setRunFatalRecovery(true);
         dbConfig.setTransactional(true);            
