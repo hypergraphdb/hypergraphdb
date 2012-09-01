@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface HGTransaction
+public @interface HGTransact
 {
 	/**
 	 * Use "read" to specify that the transaction is read-only or "write" to specify that
