@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
@@ -211,17 +212,40 @@ public class HGUtils
 	 * @return
 	 * @throws ClassNotFoundException
 	 */
-	@SuppressWarnings("unchecked")
 	public static <T> Class<T> loadClass(HyperGraph graph, String classname) throws ClassNotFoundException
 	{
-        ClassLoader loader =  getClassLoader(graph);
-        if(classname.startsWith("[L"))
-            return (Class<T>)Array.newInstance(loader.loadClass(
-                  classname.substring(2, classname.length() - 1)), 0).getClass();
-        else if (classname.startsWith("["))
-            return (Class<T>)Class.forName(classname);
-        else
-           return (Class<T>)loader.loadClass(classname);
+		return loadClass(graph.getConfig(), classname);
+	}
+	
+	/**
+	 * <p>
+	 * Load a class using the class loader configured for the passed in {@link HyperGraph} instance, if
+	 * such a loader was configured. If no class loader specific to the DB instance was configured, try
+	 * the thread context class loader. Finally, fall back to <code>HGUtils.class.getClassLoader()</code>.
+	 * </p>
+	 *
+	 * <p>
+	 * If you have a DB configured class loader that you need to override with a thread context
+	 * class loader, you'd need to implement the delegating yourself.  
+	 * </p>
+	 * 
+	 * @param <T>
+	 * @param graph
+	 * @param classname
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> loadClass(HGConfiguration config, String classname) throws ClassNotFoundException
+	{
+		ClassLoader loader =  getClassLoader(config);
+		if(classname.startsWith("[L"))
+			return (Class<T>)Array.newInstance(loader.loadClass(
+					classname.substring(2, classname.length() - 1)), 0).getClass();
+		else if (classname.startsWith("["))
+			return (Class<T>)Class.forName(classname);
+		else
+			return (Class<T>)loader.loadClass(classname);
 	}
 	
 	/**
@@ -230,13 +254,13 @@ public class HGUtils
 	 * @param graph
 	 * @return never null.
 	 */
-	public static ClassLoader getClassLoader(HyperGraph graph) {
-        ClassLoader loader = graph.getConfig().getClassLoader();
-        if (loader == null)
-            loader = Thread.currentThread().getContextClassLoader();
-        if (loader == null)
-        	loader = HGUtils.class.getClassLoader();
-        return loader;
+	public static ClassLoader getClassLoader(HGConfiguration config) {
+		ClassLoader loader = config.getClassLoader();
+		if (loader == null)
+			loader = Thread.currentThread().getContextClassLoader();
+		if (loader == null)
+			loader = HGUtils.class.getClassLoader();
+		return loader;
 	}
 	
 	public static HGHandle [] toHandleArray(HGLink link)
@@ -404,11 +428,12 @@ public class HGUtils
     
     /**
      * <p>
-     * Delete a {@link HyperGraph} by removing the filesystem directory that holds it.
-     * This method will first make sure to close the HyperGraph if it's currently open.   
+	 * Delete a {@link HyperGraph} by removing the filesystem directory that holds it. This method will first
+	 * make sure to close the HyperGraph if it's currently open.
      * </p>
      * 
-     * @param location The location of the graph instance.
+	 * @param location
+	 *          The location of the graph instance.
      */
     public static void dropHyperGraphInstance(String location)
     {
