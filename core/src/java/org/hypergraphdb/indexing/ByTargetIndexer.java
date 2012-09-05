@@ -25,7 +25,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  * 
  */
-public class ByTargetIndexer extends HGKeyIndexer<HGPersistentHandle, HGPersistentHandle>
+public class ByTargetIndexer extends HGKeyIndexer<HGPersistentHandle>
 {
     private int target;
 

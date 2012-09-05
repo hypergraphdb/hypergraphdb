@@ -17,20 +17,20 @@ import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
 
-public class CompositeIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
+public class CompositeIndexer extends HGKeyIndexer<byte[]>
 {
-    private HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts = null;
+    private HGKeyIndexer<Object>[] indexerParts = null;
 
     public CompositeIndexer()
     {
     }
 
-    public CompositeIndexer(HGHandle type, HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
+    public CompositeIndexer(HGHandle type, HGKeyIndexer<Object>[] indexerParts)
     {
     	this(null, type, indexerParts);
     }
 
-    public CompositeIndexer(String name, HGHandle type, HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
+    public CompositeIndexer(String name, HGHandle type, HGKeyIndexer<Object>[] indexerParts)
     {
         super(name, type);
         if (indexerParts == null || indexerParts.length == 0)
@@ -62,7 +62,7 @@ public class CompositeIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
         int size = 1;
         for (int i = 0; i < indexerParts.length; i++)
         {
-            HGKeyIndexer<Object, HGPersistentHandle> ind = indexerParts[i];
+            HGKeyIndexer<Object> ind = indexerParts[i];
             Object key = ind.getKey(graph, atom);
             if (key == null)
             	keys[i] = new byte[]{};
@@ -93,12 +93,12 @@ public class CompositeIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
         return x;
     }
 
-    public HGKeyIndexer<Object, HGPersistentHandle>[] getIndexerParts()
+    public HGKeyIndexer<Object>[] getIndexerParts()
     {
         return indexerParts;
     }
 
-    public void setIndexerParts(HGKeyIndexer<Object, HGPersistentHandle>[] indexerParts)
+    public void setIndexerParts(HGKeyIndexer<Object>[] indexerParts)
     {
         this.indexerParts = indexerParts;
     }

@@ -17,7 +17,7 @@ import org.hypergraphdb.util.HGUtils;
 /**
  * 
  * <p>
- * A {@link HGValueIndexer} for hypergraph links where the key in the index is
+ * A {@link HGValueIndexer} for HyperGraph links where the key in the index is
  * one of the targets within a link and the value is another one of the targets.
  * </p>
  * 

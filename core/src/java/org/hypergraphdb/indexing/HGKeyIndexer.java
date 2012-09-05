@@ -3,6 +3,7 @@ package org.hypergraphdb.indexing;
 import org.hypergraphdb.HGHandle;
 
 import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 
 /**
@@ -26,7 +27,7 @@ import org.hypergraphdb.HyperGraph;
  * @author Borislav Iordanov
  *
  */
-public abstract class HGKeyIndexer<KeyType, ValueType> implements HGIndexer<KeyType, ValueType>
+public abstract class HGKeyIndexer<KeyType> implements HGIndexer<KeyType, HGPersistentHandle>
 {
   	private String name = null;
     private HGHandle type;
@@ -66,16 +67,14 @@ public abstract class HGKeyIndexer<KeyType, ValueType> implements HGIndexer<KeyT
         this.type = type;
     }
 
-		@SuppressWarnings("unchecked")
-		public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
+	public void index(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, HGPersistentHandle> index)
     {
-        index.addEntry(getKey(graph, atom), (ValueType)atomHandle.getPersistent());        
+        index.addEntry(getKey(graph, atom), atomHandle.getPersistent());        
     }
     
-		@SuppressWarnings("unchecked")
-		public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, ValueType> index)
+	public void unindex(HyperGraph graph, HGHandle atomHandle, Object atom, HGIndex<KeyType, HGPersistentHandle> index)
     {
-        index.removeEntry(getKey(graph, atom), (ValueType)atomHandle.getPersistent());        
+        index.removeEntry(getKey(graph, atom), atomHandle.getPersistent());        
     }
     
     /**

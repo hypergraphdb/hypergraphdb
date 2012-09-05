@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -404,9 +405,16 @@ public class HGTransactionManager
 			{
 				try { endTransaction(false); }
 				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
-			  
-				handleTxException(t); // will re-throw if we can't retry the transaction
-				conflicted.incrementAndGet();
+				if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException && 
+				    config.isWriteUpgradable())
+				{
+				    config = HGTransactionConfig.DEFAULT;
+				}
+				else
+				{
+    				handleTxException(t); // will re-throw if we can't retry the transaction
+    				conflicted.incrementAndGet();
+				}
 //				    System.out.println("Retrying transaction");
 				continue;
 			}
@@ -418,8 +426,16 @@ public class HGTransactionManager
 			}  
 			catch (Throwable t)
 			{
-				handleTxException(t); // will re-throw if we can't retry the transaction
-				conflicted.incrementAndGet();
+                if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException && 
+                        config.isWriteUpgradable())
+                    {
+                        config = HGTransactionConfig.DEFAULT;
+                    }
+                    else
+                    {
+                        handleTxException(t); // will re-throw if we can't retry the transaction
+                        conflicted.incrementAndGet();
+                    }
 //      	          System.out.println("Retrying transaction");
 			}
 		}

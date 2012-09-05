@@ -35,6 +35,7 @@ import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.ByTargetIndexer;
+import org.hypergraphdb.indexing.DirectValueIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.query.*;
@@ -50,7 +51,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	private HGQueryCondition condition;
 	private boolean hasVarContext = false;
 	
-	private Pair<HGHandle, HGIndex> findIndex(HGKeyIndexer indexer)
+	static Pair<HGHandle, HGIndex> findIndex(HyperGraph graph, HGKeyIndexer indexer)
 	{
 	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
 	                    new DefaultALGenerator(graph, 
@@ -361,7 +362,23 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				}
 			}
 			
-			// now, we check for indexing by value parts, if we find an appropriate index
+			// now, we check for availabe indices
+			
+			// The simplest: a direct by-value index 
+			if (byTypedValue != null && 
+			    !hg.isVar(byTypedValue.getTypeReference()))
+			{
+			    Pair<HGHandle, HGIndex> p = findIndex(graph, new DirectValueIndexer<Object>(typeHandle));
+			    if (p != null)
+			    {
+			        out.remove(byTypedValue);
+			        out.add(new IndexCondition(p.getSecond(), 
+			                                   byTypedValue.getValueReference(),
+			                                   ComparisonOperator.EQ));
+			    }
+			}
+			
+			// indexing by value parts, if we find an appropriate index
 			// then we can eliminate the "type" predicate altogether (since bypart indices
 			// are always for a particular atom type) and a "by value" condition is kept
 			// only as a predicate
@@ -375,7 +392,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						return Nothing.Instance;
 					else
 					{
-						Pair<HGHandle, HGIndex> p = findIndex(new ByPartIndexer(typeHandle, 
+						Pair<HGHandle, HGIndex> p = findIndex(graph, new ByPartIndexer(typeHandle, 
 														pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
 						if (p != null)
 						{
@@ -416,7 +433,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						Ref<HGHandle> targetHandle = c.targets()[ti];
 						if (hg.isVar(targetHandle) || targetHandle.equals(hg.constant(graph.getHandleFactory().anyHandle())))
 							continue;
-						Pair<HGHandle, HGIndex> p = findIndex(new ByTargetIndexer(typeHandle, ti));
+						Pair<HGHandle, HGIndex> p = findIndex(graph, new ByTargetIndexer(typeHandle, ti));
 						if (p != null)
 						{
 						    if (typeHandle.equals(p.getFirst()))
@@ -534,47 +551,52 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 //				
 //					cond = Nothing.Instance;
 //		}
-		else if (cond instanceof TypedValueCondition && ((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)
+		else if (cond instanceof TypedValueCondition)
 		{
 			TypedValueCondition tc = (TypedValueCondition)cond;
 			if (!hg.isVar(tc.getTypeReference()))
 			{
-				HGHandle typeHandle = tc.getTypeHandle();
-				if (typeHandle == null)
-					typeHandle = classToHandle(tc.getJavaClass());
-//				if (typeHandle == null)
-//					cond = Nothing.Instance;
-//				else 
-				if (!hg.isVar(tc.getValueReference()))
-				{
-					List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, typeHandle, tc.getValue());
-					if (!indexedParts.isEmpty())
-					{
-						And and = hg.and(cond);
-						for (AtomPartCondition pc : indexedParts)
-							and.add(pc);
-						cond = and;
-					}
-				}
+                Pair<HGHandle, HGIndex> p = findIndex(graph, new DirectValueIndexer<Object>(tc.getTypeHandle()));
+                if (p != null)
+                    cond = new IndexCondition(p.getSecond(), tc.getValueReference(), tc.getOperator());
+                else if (((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)
+                {
+    				HGHandle typeHandle = tc.getTypeHandle();
+    				if (typeHandle == null)
+    					typeHandle = classToHandle(tc.getJavaClass());
+    				if (!hg.isVar(tc.getValueReference()))
+    				{
+    					List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, typeHandle, tc.getValue());
+    					if (!indexedParts.isEmpty())
+    					{
+    						And and = hg.and(cond);
+    						for (AtomPartCondition pc : indexedParts)
+    							and.add(pc);
+    						cond = and;
+    					}
+    				}
+                }
 			}
 		}
 		else if (cond instanceof AtomValueCondition && 
-				 ((AtomValueCondition)cond).getOperator() == ComparisonOperator.EQ &&
 				 !hg.isVar(((AtomValueCondition)cond).getValueReference()))
 		{
 			AtomValueCondition vc = (AtomValueCondition)cond;
             Object value = vc.getValue();
             if (value == null)
                 throw new HGException("Search by null values is not supported yet.");
-            HGHandle type = graph.getTypeSystem().getTypeHandle(value);			
-			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, type, value);
-			if (!indexedParts.isEmpty())
-			{
-				And and = hg.and(cond, new AtomTypeCondition(type));
-				for (AtomPartCondition pc : indexedParts)
-					and.add(pc);
-				cond = and;
-			}
+            HGHandle type = graph.getTypeSystem().getTypeHandle(value);
+            if (vc.getOperator() == ComparisonOperator.EQ)
+            {
+    			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, type, value);
+    			if (!indexedParts.isEmpty())
+    			{
+    				And and = hg.and(cond, new AtomTypeCondition(type));
+    				for (AtomPartCondition pc : indexedParts)
+    					and.add(pc);
+    				cond = and;
+    			}
+            }
 		}		
 		else if (cond instanceof And)
 		{

@@ -7,11 +7,11 @@
  */
 package org.hypergraphdb.indexing;
 
+
 import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
@@ -33,7 +33,7 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType, HGPersistentHandle>
+public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 {
 	private String [] dimensionPath;
 	private HGProjection [] projections = null;

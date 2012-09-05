@@ -27,6 +27,7 @@ import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.atom.HGSubgraph;
 import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.indexing.DirectValueIndexer;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AnyAtomCondition;
 import org.hypergraphdb.query.AtomPartCondition;
@@ -71,6 +72,7 @@ import org.hypergraphdb.query.impl.UnionQuery;
 //import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.ArrayBasedSet;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.Ref;
 
 @SuppressWarnings("unchecked")
@@ -181,7 +183,12 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		        if (value == null)
 		            throw new HGException("Search by null values is not supported yet.");
 		        HGHandle type = graph.getTypeSystem().getTypeHandle(value);
-    			return (HGQuery<Object>)instance.get(TypedValueCondition.class).
+	            Pair<HGHandle, HGIndex> p = ExpressionBasedQuery.findIndex(graph, new DirectValueIndexer<Object>(type));
+	            if (p != null)
+	                return (HGQuery<Object>)instance.get(IndexCondition.class).
+	                    getQuery(graph, new IndexCondition(p.getSecond(), value, op));
+	            else
+	                return (HGQuery<Object>)instance.get(TypedValueCondition.class).
 						getQuery(graph, new TypedValueCondition(type, 
 															 value, 
 															 op));                		        							
@@ -424,10 +431,10 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 						throw new IllegalArgumentException("Invalid operator : " + ic.getOperator() + 
 								" for index " + ic.getIndex() + " and key " + ic.getKey());
 					else
-						return new IndexBasedQuery(ic.getIndex(), ic.getKey(), ic.getOperator());					
+						return new IndexBasedQuery(ic.getIndex(), ic.getKeyReference(), ic.getOperator());					
 				}
 				else
-					return new IndexBasedQuery(ic.getIndex(), ic.getKey());
+					return new IndexBasedQuery(ic.getIndex(), ic.getKeyReference(), ComparisonOperator.EQ);
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{

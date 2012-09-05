@@ -11,7 +11,6 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -26,7 +25,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * @author Borislav Iordanov
  * 
  */
-public class LinkIndexer extends HGKeyIndexer<byte[], HGPersistentHandle>
+public class LinkIndexer extends HGKeyIndexer<byte[]>
 {
     public LinkIndexer()
     {
