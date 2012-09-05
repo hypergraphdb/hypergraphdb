@@ -1,9 +1,9 @@
-/* 
- * This file is part of the HyperGraphDB source distribution. This is copyrighted 
- * software. For permitted uses, licensing options and redistribution, please see  
- * the LicensingInformation file at the root level of the distribution.  
- * 
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+/*
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted
+ * software. For permitted uses, licensing options and redistribution, please see
+ * the LicensingInformation file at the root level of the distribution.
+ *
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
  */
 package org.hypergraphdb.transaction;
 
@@ -20,9 +20,9 @@ public class TxMonitor
 		String beginTrace = null;
 		String endTrace = null;
 	}
-	
+
 	public Map<Long, Info> txMap = Collections.synchronizedMap(new HashMap<Long, Info>());
-	
+
 	public void transactionCreated(HGTransaction tx)
 	{
 		try
@@ -38,7 +38,7 @@ public class TxMonitor
 		}
 		catch (Throwable t) { t.printStackTrace(); }
 	}
-	
+
 	public void transactionFinished(HGTransaction tx)
 	{
 		try
@@ -57,5 +57,5 @@ public class TxMonitor
 		{
 			t.printStackTrace();
 		}
-	}	
+	}
 }
