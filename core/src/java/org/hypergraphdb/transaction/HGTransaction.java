@@ -82,6 +82,8 @@ public final class HGTransaction implements HGStorageTransaction
 
     <T> void setBoxValue(VBox<T> vbox, T value)
     {
+        if (this.isReadOnly())
+            throw new TransactionIsReadonlyException();
         boxesWritten.put(vbox, value == null ? NULL_VALUE : value);
     }
 
@@ -203,7 +205,7 @@ public final class HGTransaction implements HGStorageTransaction
     		for (Object obj : boxesWritten.values()) {
     			System.out.println("written object:" + obj);
     		}
-    		throw new HGException("Transaction configured as read-only was used to modify data!");
+    		throw new TransactionIsReadonlyException();
     	}
         // If this is a nested transaction, everything is much simpler
         if (parent != null)
