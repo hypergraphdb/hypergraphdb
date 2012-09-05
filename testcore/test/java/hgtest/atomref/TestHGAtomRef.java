@@ -93,10 +93,10 @@ public class TestHGAtomRef extends HGTestBase
 	    Integer ten = new Integer(10);	    
 	    HGHandle hten = graph.add(ten);
 	    cleanup.add(hten);
-	    System.out.println("hten=" + hten);
+	   // System.out.println("hten=" + hten);
 	    HGHandle hcost = graph.add(cost);
 	    cleanup.add(hcost);
-	    System.out.println("hcost=" + hcost);
+	    //System.out.println("hcost=" + hcost);
         Car car = new Car();
         car.setMake("Honda");
         car.setYear(1997);
@@ -109,7 +109,7 @@ public class TestHGAtomRef extends HGTestBase
         
         HGHandle hcar = graph.add(car);
         cleanup.add(hcar);
-        System.out.println("hcar=" + hcar);
+        //System.out.println("hcar=" + hcar);
         Assert.assertNotNull(hcar);
         HGHandle hperson = graph.getHandle(person);
         Assert.assertNotNull(hperson);        
@@ -146,7 +146,7 @@ public class TestHGAtomRef extends HGTestBase
         	h = h.getPersistent();
         	if (graph.get(h) != null)
         	{
-        		System.out.println("Remove " + h);
+        		//System.out.println("Remove " + h);
         		graph.remove(h);
         	}
         }
@@ -160,7 +160,7 @@ public class TestHGAtomRef extends HGTestBase
         try
         {
             test.testDanglingDetect();
-            System.out.println("Test completed successfully.");
+            //System.out.println("Test completed successfully.");
         }
         finally
         {
