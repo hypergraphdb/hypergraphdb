@@ -34,18 +34,18 @@ public class UUIDHandleFactory implements HGHandleFactory
         return UUIDPersistentHandle.makeHandle();
     }
 
-    public HGPersistentHandle makeHandle(String handleAsString)
+    public HGPersistentHandle makeHandle(final String handleAsString)
     {
         return UUIDPersistentHandle.makeHandle(handleAsString);
     }
 
 
-    public HGPersistentHandle makeHandle(byte[] buffer)
+    public HGPersistentHandle makeHandle(final byte[] buffer)
     {
         return UUIDPersistentHandle.makeHandle(buffer);
     }
 
-    public HGPersistentHandle makeHandle(byte[] buffer, int offset)
+    public HGPersistentHandle makeHandle(final byte[] buffer, final int offset)
     {
         return UUIDPersistentHandle.makeHandle(buffer, offset);
     }

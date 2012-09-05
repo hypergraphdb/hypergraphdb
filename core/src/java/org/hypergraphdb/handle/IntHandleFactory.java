@@ -36,7 +36,7 @@ public class IntHandleFactory implements HGHandleFactory
         return next.get();
     }
 
-    public void setNext(int next)
+    public void setNext(final int next)
     {
         this.next.set(next);
     }
@@ -51,17 +51,17 @@ public class IntHandleFactory implements HGHandleFactory
         return new IntPersistentHandle(next.getAndIncrement());
     }
 
-    public HGPersistentHandle makeHandle(String handleAsString)
+    public HGPersistentHandle makeHandle(final String handleAsString)
     {
         return new IntPersistentHandle(Integer.parseInt(handleAsString));
     }
 
-    public HGPersistentHandle makeHandle(byte[] buffer)
+    public HGPersistentHandle makeHandle(final byte[] buffer)
     {
         return new IntPersistentHandle(BAUtils.readInt(buffer, 0));
     }
 
-    public HGPersistentHandle makeHandle(byte[] buffer, int offset)
+    public HGPersistentHandle makeHandle(final byte[] buffer, final int offset)
     {
         return new IntPersistentHandle(BAUtils.readInt(buffer, offset));
     }

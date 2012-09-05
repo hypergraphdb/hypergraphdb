@@ -66,7 +66,7 @@ public final class UUIDPersistentHandle implements HGPersistentHandle
 	}
 
 	/**
-	 * <p>Return the representation of a <code>nil</code> handle, that is a handle that does
+	 * <p>Return the representation of a <code>null</code> handle, that is a handle that does
 	 * not refer to anything.</p>
 	 */
 	public static UUIDPersistentHandle nullHandle()
