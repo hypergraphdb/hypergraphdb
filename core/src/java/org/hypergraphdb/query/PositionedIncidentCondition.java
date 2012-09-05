@@ -123,6 +123,8 @@ public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPred
 		else
 		{
 			HGPersistentHandle[] A = hg.getStore().getLink(handle.getPersistent());
+			if (A == null || A.length <=2)  //this indicates that we don't have a link 
+				return false;
 			link = new TempLink(A, 2);
 		}
 		
