@@ -1,9 +1,9 @@
-/* 
- * This file is part of the HyperGraphDB source distribution. This is copyrighted 
- * software. For permitted uses, licensing options and redistribution, please see  
- * the LicensingInformation file at the root level of the distribution.  
- * 
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+/*
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted
+ * software. For permitted uses, licensing options and redistribution, please see
+ * the LicensingInformation file at the root level of the distribution.
+ *
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
  */
 package org.hypergraphdb.atom;
 
@@ -20,34 +20,34 @@ import org.hypergraphdb.HGPlainLink;
  * between types. HyperGraph is also allowed to create such links as part of query
  * processing or other activities.
  * </p>
- * 
+ *
  * @author Borislav Iordanov
  *
  */
-public class HGSubsumes extends HGPlainLink 
+public class HGSubsumes extends HGPlainLink
 {
 	public HGSubsumes(HGHandle [] link)
 	{
-		super(link);		
+		super(link);
 		if (link.length != 2)
 			throw new IllegalArgumentException("The HGHandle [] passed to the HGSubsumes constructor must be of length 2.");
 	}
-	
+
 	public HGSubsumes(HGHandle general, HGHandle specific)
 	{
 		super(new HGHandle[] { general, specific});
 	}
-	
+
 	public HGHandle getGeneral()
 	{
 		return getTargetAt(0);
 	}
-	
+
 	public HGHandle getSpecific()
 	{
 		return getTargetAt(1);
 	}
-	
+
 	public String toString()
 	{
 		StringBuffer result = new StringBuffer();
