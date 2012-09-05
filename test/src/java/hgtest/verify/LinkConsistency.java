@@ -231,4 +231,5 @@ public class LinkConsistency
 			HGUtils.closeNoException(rs);
 		}
 	}
+	
 }
