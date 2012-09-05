@@ -428,13 +428,13 @@ public class HGIndexManager
 	 * 
 	 * @param typeHandle
 	 * @param type
-	 * @param atom
 	 * @param atomHandle
+	 * @param atom
 	 */
 	public void maybeUnindex(HGPersistentHandle typeHandle, 
-					  HGAtomType type,
-	   				  Object atom,
-	   				  HGPersistentHandle atomHandle)
+														HGAtomType type,
+														HGPersistentHandle atomHandle,
+														Object atom)
 	{
 		List<HGIndexer> indList = (List)indexers.get(typeHandle);
 		if (indList == null)
