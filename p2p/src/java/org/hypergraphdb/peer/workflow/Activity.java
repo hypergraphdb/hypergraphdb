@@ -91,6 +91,14 @@ public abstract class Activity
     }
     
     /**
+     * <p>Set the {@link HyperGraphPeer} context of this activity.</p>
+     */
+    void setThisPeer(HyperGraphPeer thisPeer)
+    {
+    	this.thisPeer = thisPeer;
+    }
+    
+    /**
      * <p>Return the <code>PeerInterface</code> instance for communicating
      * with other peers. This is a convenience method that is equivalent to 
      * <code>getThisPeer().getPeerInterface()</code>.
@@ -197,6 +205,14 @@ public abstract class Activity
     }
     
     /**
+     * <p>Default constructor - thisPeer, ID etc must be set separately.</p>
+     */
+    Activity()
+    {    	
+    	this.id = UUID.randomUUID();
+    }
+    
+    /**
      * <p>
      * Constructor for brand new activities - a random UUID is generated to
      * identify the newly constructed activity.
@@ -281,6 +297,11 @@ public abstract class Activity
     public final UUID getId()
     {
         return id; 
+    }
+    
+    void setId(UUID id)
+    {
+    	this.id = id;
     }
     
     public String toString()

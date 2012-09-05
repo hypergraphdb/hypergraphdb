@@ -8,6 +8,11 @@
 package org.hypergraphdb.peer.workflow;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.Callable;
+
+import org.hypergraphdb.annotation.HGTransact;
+import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -27,19 +32,35 @@ public class MethodCallTransition implements Transition
         this.method = method;
     }
     
-    public WorkflowStateConstant apply(Activity activity, Object... args)
+    public WorkflowStateConstant apply(final Activity activity, final Object... args)
     {
+    	HGTransact t = method.getAnnotation(HGTransact.class);
+    	Callable<WorkflowStateConstant> call = new Callable<WorkflowStateConstant>() {
+    	public WorkflowStateConstant call() throws Exception
+    	{
+   			return (WorkflowStateConstant)method.invoke(activity, args);
+    	}};
+    	
         try
         {
-            return (WorkflowStateConstant)method.invoke(activity, args);
-        } 
+        	if (t == null)
+        		return call.call();
+        	else
+        	{
+        		HGTransactionConfig txconfig = HGTransactionConfig.DEFAULT;
+        		if ("read".equals(t.value()))
+        			txconfig = HGTransactionConfig.READONLY;
+        		return activity.getThisPeer().getGraph().getTransactionManager().ensureTransaction(call, txconfig);
+        	}
+        }
         catch (Exception e)
         {
         	System.err.println("Action on transition in activity " + activity + " args:" + args);
         	for (Object x : args) System.err.println(x);
         	e.printStackTrace(System.err);
-            throw new RuntimeException(e);
+        	HGUtils.throwRuntimeException(e);
         } 
+        return null; // unreachable
     }
     
     public Method getMethod()

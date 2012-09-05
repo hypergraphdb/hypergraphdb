@@ -79,6 +79,13 @@ public abstract class FSMActivity extends Activity
         getState().assign(WorkflowState.Failed);        
     }
     
+    /**
+     * <p>Default constructor - thisPeer, ID etc must be set separately.</p>
+     */
+    public FSMActivity()
+    {    	
+    }
+    
     public FSMActivity(HyperGraphPeer thisPeer)
     {
         super(thisPeer);

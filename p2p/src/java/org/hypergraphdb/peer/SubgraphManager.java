@@ -228,7 +228,7 @@ public class SubgraphManager
         return result;
     }
 
-    public static Object getTransferAtomRepresentation(HyperGraph graph, 
+    public static Json getTransferAtomRepresentation(HyperGraph graph, 
                                                        HGHandle atom)
     {
         Set<HGHandle> S = new HashSet<HGHandle>();
@@ -244,7 +244,7 @@ public class SubgraphManager
      * @param graph
      * @param atom 
      */
-    public static Object getTransferAtomRepresentation(HyperGraph graph, 
+    public static Json getTransferAtomRepresentation(HyperGraph graph, 
                                                        Set<HGHandle> S)
     {
         Map<String, String> types = new HashMap<String, String>();

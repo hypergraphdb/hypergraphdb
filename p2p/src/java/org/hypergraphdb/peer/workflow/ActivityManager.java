@@ -173,7 +173,7 @@ public class ActivityManager implements MessageHandler
         try 
         { 
         	Json reply = Messages.getReply(msg) 
-                                   .set(PERFORMATIVE, Performative.NotUnderstood)
+                                   .set(PERFORMATIVE, Performative.NotUnderstood.toString())
                                    .set(CONTENT, msg)
                                    .set(WHY_NOT_UNDERSTOOD, explanation);
             thisPeer.getPeerInterface().send(getSender(msg), reply);
@@ -227,7 +227,6 @@ public class ActivityManager implements MessageHandler
          };  
     }    
     
-
     private Runnable makeTransitionAction(final ActivityType type,
                                           final FSMActivity activity, 
                                           final Json msg)
@@ -548,6 +547,7 @@ public class ActivityManager implements MessageHandler
     	try
     	{
     		Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(thisPeer.getGraph()));
+    		activity.setThisPeer(thisPeer);
 	        ActivityFuture future = insertNewActivity(activity, parentActivity, listener);
 	        activity.getState().compareAndAssign(Limbo, Started);        
 	        activity.initiate();                       
@@ -666,6 +666,8 @@ public class ActivityManager implements MessageHandler
                 return;                
             } 
             activity = type.getFactory().make(thisPeer, activityId, msg);
+            activity.setThisPeer(thisPeer);
+            activity.setId(activityId);
             insertNewActivity(activity, parentActivity, null);
             //System.out.println("inserted new activity in queue " + activity.getId());            
             activity.getState().compareAndAssign(Limbo, Started);            
