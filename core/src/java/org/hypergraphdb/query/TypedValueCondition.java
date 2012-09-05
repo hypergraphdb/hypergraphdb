@@ -71,8 +71,7 @@ public class TypedValueCondition extends AtomValueCondition implements TypeCondi
 	
 	public boolean satisfies(HyperGraph hg, HGHandle handle) 
 	{
-		Object atom = null;
-		atom = hg.get(handle);		
+		Object atom = hg.get(handle);		
 		if (atom == null)
 			return false;
 		HGHandle atomType = hg.getTypeSystem().getTypeHandle(handle);		
