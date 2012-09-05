@@ -254,7 +254,19 @@ public class HGUtils
 	 * @param graph
 	 * @return never null.
 	 */
-	public static ClassLoader getClassLoader(HGConfiguration config) {
+	public static ClassLoader getClassLoader(HyperGraph graph)
+	{
+		return getClassLoader(graph.getConfig());
+	}
+	
+	/**
+	 * Returns the configured, the context or the class's classloader.
+	 *  
+	 * @param graph
+	 * @return never null.
+	 */
+	public static ClassLoader getClassLoader(HGConfiguration config) 
+	{
 		ClassLoader loader = config.getClassLoader();
 		if (loader == null)
 			loader = Thread.currentThread().getContextClassLoader();
