@@ -133,6 +133,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				else if (!orSet.contains(sub))
 					orSet.add(sub);
 			}
+			or = new Or();
+			or.addAll(orSet);
 			return or;
 		}
         else if (C instanceof MapCondition)
@@ -270,7 +272,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						else
 							byValue = (AtomValueCondition)c;						
 					}
-					else if (byValue.equals((AtomValueCondition)c))
+					else if (byValue.equals(c))
 						i.remove();
 					else
 						return Nothing.Instance;
@@ -279,7 +281,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					if (byTypedValue ==  null)
 						byTypedValue = (TypedValueCondition)c;
-					else if (byTypedValue.equals((TypedValueCondition)c) && 
+					else if (byTypedValue.equals(c) && 					
 							isSameType(byTypedValue, (TypedValueCondition)c))
 						i.remove();
 					else
@@ -521,9 +523,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		if (cond instanceof TypePlusCondition)
 		{
 			TypePlusCondition ac = (TypePlusCondition)cond;
-			if (ac.getJavaClass() == null)
-				ac.setJavaClass(graph.getTypeSystem().getClassForType(ac.getBaseType()));
-			else if (ac.getBaseType() == null)
+			if (ac.getBaseType() == null)
 				ac.setBaseType(classToHandle(ac.getJavaClass()));
 //			{
 //				HGHandle typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass());
@@ -754,7 +754,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				{
 					return simplify(toDNF(expand(graph, condition))); 
 				}
-			}); // this tx can't be read-only more because of pre-compiled queries...
+			}); // this tx can't be read-only any more because of pre-compiled queries...
 			query = ToQueryMap.toQuery(graph, this.condition);		
 			return this;
 		}
@@ -780,7 +780,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
     	return condition;
     }
     
-    public HGQuery getCompiledQuery()
+  public HGQuery<ResultType> getCompiledQuery()
     {
         return query;
     }
