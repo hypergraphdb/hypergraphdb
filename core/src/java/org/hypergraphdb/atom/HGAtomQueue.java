@@ -1,31 +1,31 @@
-/* 
- * This file is part of the HyperGraphDB source distribution. This is copyrighted 
- * software. For permitted uses, licensing options and redistribution, please see  
- * the LicensingInformation file at the root level of the distribution.  
- * 
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+/*
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted
+ * software. For permitted uses, licensing options and redistribution, please see
+ * the LicensingInformation file at the root level of the distribution.
+ *
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
  */
 package org.hypergraphdb.atom;
 
 import org.hypergraphdb.HGHandle;
 
 
-public class HGAtomQueue 
-{	
+public class HGAtomQueue
+{
 	U.HandleLink front = null;
 	U.HandleLink tail = null;
 	int size;
-	
+
 	public boolean isEmpty()
 	{
 		return front == null;
 	}
-	
+
 	public HGHandle peek()
 	{
 		return front.handle;
 	}
-	
+
 	public void enqueue(HGHandle handle)
 	{
 		size++;
@@ -37,7 +37,7 @@ public class HGAtomQueue
 			tail = tail.next;
 		}
 	}
-	
+
 	public HGHandle dequeue()
 	{
 		size--;
@@ -45,5 +45,5 @@ public class HGAtomQueue
 		if ( (front = front.next) == null)
 			tail = null;
 		return result;
-	}	
+	}
 }
