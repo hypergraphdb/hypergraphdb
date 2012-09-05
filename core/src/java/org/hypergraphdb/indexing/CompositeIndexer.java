@@ -71,7 +71,7 @@ public class CompositeIndexer extends HGKeyIndexer<byte[]>
             size += keys[i].length + 4;
         }
         byte[] B = new byte[size];
-        B[1] = (byte) keys.length;
+        B[0] = (byte) keys.length;
         int pos = 1;
         for (byte[] curr : keys)
         {
