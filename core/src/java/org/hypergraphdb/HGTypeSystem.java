@@ -26,6 +26,7 @@ import org.hypergraphdb.event.HGLoadPredefinedTypeEvent;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
+import org.hypergraphdb.transaction.HGTransactionConfig;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.type.HGTypeSchema;
@@ -904,6 +905,18 @@ public class HGTypeSystem
 	 */
 	public HGHandle getTypeHandle(final Class<?> clazz)
 	{
+        HGHandle h = graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
+        { 
+            public HGHandle call() 
+            {
+                
+                return getTypeHandleIfDefined(clazz);
+            } 
+        }, HGTransactionConfig.READONLY);
+		
+        if (h != null)
+        	return h;
+        
         return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
         { 
             public HGHandle call() 
@@ -917,6 +930,17 @@ public class HGTypeSystem
 
 	public HGHandle getTypeHandle(final URI typeIdentifier)
 	{
+        HGHandle h = graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
+        { 
+            public HGHandle call() 
+            {                
+                return getTypeHandleIfDefined(typeIdentifier);
+            } 
+        }, HGTransactionConfig.READONLY);
+		
+        if (h != null)
+        	return h;
+		
         return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>()
        { 
            public HGHandle call() 

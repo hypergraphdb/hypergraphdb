@@ -23,15 +23,15 @@ import org.hypergraphdb.util.FilteredSortedSet;
 import org.hypergraphdb.util.Mapping;
 
 /**
- *
+ * 
  * <p>
  * A {@link HyperNode} that encapsulates a set of atoms from the global
- * {@link HyperGraph} database. A subgraph can be thought of as a hyper-edge
- * in the standard set-theoretic formulation of hypergraphs.
+ * {@link HyperGraph} database. A subgraph can be thought of as a hyper-edge in
+ * the standard set-theoretic formulation of hypergraphs.
  * </p>
- *
+ * 
  * @author Borislav Iordanov
- *
+ * 
  */
 public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 {
@@ -58,63 +58,62 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> getIndex()
 	{
 		return graph.getStore().getIndex(IDX_NAME,
-											BAtoHandle.getInstance(graph.getHandleFactory()),
-											BAtoHandle.getInstance(graph.getHandleFactory()),
-											null,
-											true);
+				BAtoHandle.getInstance(graph.getHandleFactory()),
+				BAtoHandle.getInstance(graph.getHandleFactory()), null, true);
 	}
 
 	private HGIndex<HGPersistentHandle, HGPersistentHandle> getReverseIndex()
 	{
 		return graph.getStore().getIndex(REVIDX_NAME,
-																			BAtoHandle.getInstance(graph.getHandleFactory()),
-																			BAtoHandle.getInstance(graph.getHandleFactory()),
-																			null,
-																			true);
-		}
-
-	/**
-	 * DO NOT USE: internal method, implementation dependent, may disappear at any time.
-	 */
-	public static HGIndex<HGPersistentHandle, HGPersistentHandle> getReverseIndex(HyperGraph atGraph)
-	{
-		return atGraph.getStore().getIndex(REVIDX_NAME,
-					BAtoHandle.getInstance(atGraph.getHandleFactory()),
-					BAtoHandle.getInstance(atGraph.getHandleFactory()),
-					null,
-					true);
+				BAtoHandle.getInstance(graph.getHandleFactory()),
+				BAtoHandle.getInstance(graph.getHandleFactory()), null, true);
 	}
 
 	/**
-	 * DO NOT USE: internal method, implementation dependent, may disappear at any time.
+	 * DO NOT USE: internal method, implementation dependent, may disappear at
+	 * any time.
 	 */
-	public static HGIndex<HGPersistentHandle, HGPersistentHandle> getIndex(HyperGraph atGraph)
+	public static HGIndex<HGPersistentHandle, HGPersistentHandle> getReverseIndex(
+			HyperGraph atGraph)
+	{
+		return atGraph.getStore().getIndex(REVIDX_NAME,
+				BAtoHandle.getInstance(atGraph.getHandleFactory()),
+				BAtoHandle.getInstance(atGraph.getHandleFactory()), null, true);
+	}
+
+	/**
+	 * DO NOT USE: internal method, implementation dependent, may disappear at
+	 * any time.
+	 */
+	public static HGIndex<HGPersistentHandle, HGPersistentHandle> getIndex(
+			HyperGraph atGraph)
 	{
 		return atGraph.getStore().getIndex(IDX_NAME,
-							BAtoHandle.getInstance(atGraph.getHandleFactory()),
-							BAtoHandle.getInstance(atGraph.getHandleFactory()),
-							null,
-							true);
-		}
+				BAtoHandle.getInstance(atGraph.getHandleFactory()),
+				BAtoHandle.getInstance(atGraph.getHandleFactory()), null, true);
+	}
 
 	private void index(HGHandle h)
 	{
 		getIndex().addEntry(thisHandle.getPersistent(), h.getPersistent());
-		getReverseIndex().addEntry(h.getPersistent(), thisHandle.getPersistent());
+		getReverseIndex().addEntry(h.getPersistent(),
+				thisHandle.getPersistent());
 	}
 
 	private void unindex(HGHandle h)
 	{
 		getIndex().removeEntry(thisHandle.getPersistent(), h.getPersistent());
-		getReverseIndex().removeEntry(h.getPersistent(), thisHandle.getPersistent());
+		getReverseIndex().removeEntry(h.getPersistent(),
+				thisHandle.getPersistent());
 	}
 
-	@Override
 	public boolean isMember(HGHandle atom)
 	{
-			// it's quicker to lookup the reverse index because we expect fewer subgraphs than
-			// atoms in them
-		HGRandomAccessResult<HGPersistentHandle> rs = getReverseIndex().find(atom.getPersistent());
+		// it's quicker to lookup the reverse index because we expect fewer
+		// subgraphs than
+		// atoms in them
+		HGRandomAccessResult<HGPersistentHandle> rs = getReverseIndex().find(
+				atom.getPersistent());
 		try
 		{
 			return rs.goTo(thisHandle.getPersistent(), true) == GotoResult.found;
@@ -130,29 +129,30 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	 * Add an existing atom to this {@link HyperNode}. The atom may be a member
 	 * of multiple nodes at a time.
 	 * </p>
-	 *
+	 * 
 	 * @param atom
 	 * @return The <code>atom</code> parameter.
 	 */
-	@Override
 	public HGHandle add(final HGHandle atom)
 	{
-		return graph.getTransactionManager().ensureTransaction(new Callable<HGHandle>() {
-			public HGHandle call()
-			{
-				index(atom);
-				return atom;
-			}
-		});
+		return graph.getTransactionManager().ensureTransaction(
+				new Callable<HGHandle>()
+				{
+					public HGHandle call()
+					{
+						index(atom);
+						return atom;
+					}
+				});
 	}
 
-	@Override
-	public HGHandle add(Object atom) {
+	public HGHandle add(Object atom)
+	{
 		return add(atom, 0);
 	}
 
-	@Override
-	public HGHandle add(Object atom, int flags) {
+	public HGHandle add(Object atom, int flags)
+	{
 		return add(graph.add(atom, flags));
 	}
 
@@ -179,11 +179,12 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 
 	public void define(final HGHandle atomHandle, final Object instance)
 	{
-		graph.define(atomHandle, instance, (byte)0);
+		graph.define(atomHandle, instance, (byte) 0);
 		add(atomHandle);
 	}
 
-	public void define(final HGHandle atomHandle, final Object instance, final int flags)
+	public void define(final HGHandle atomHandle, final Object instance,
+			final int flags)
 	{
 		graph.define(atomHandle, instance, flags);
 		add(atomHandle);
@@ -192,7 +193,8 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	/**
 	 * Define in global graph and mark as member of this subgraph.
 	 */
-	public void define(final HGHandle handle, final HGHandle type, final Object instance, final int flags)
+	public void define(final HGHandle handle, final HGHandle type,
+			final Object instance, final int flags)
 	{
 		graph.define(handle, type, instance, flags);
 		add(handle);
@@ -211,13 +213,13 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	@SuppressWarnings("unchecked")
 	public <T> T findOne(HGQueryCondition condition)
 	{
-		return (T)graph.findOne(localizeCondition(condition));
+		return (T) graph.findOne(localizeCondition(condition));
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getOne(HGQueryCondition condition)
 	{
-		return (T)graph.getOne(localizeCondition(condition));
+		return (T) graph.getOne(localizeCondition(condition));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -234,22 +236,22 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	@SuppressWarnings("unchecked")
 	public <T> T get(HGHandle handle)
 	{
-		return isMember(handle) ? (T)graph.get(handle) : null;
+		return isMember(handle) ? (T) graph.get(handle) : null;
 	}
 
 	/**
-	 * Return incidence set where each element is a member of this <code>HGSubgraph</code>.
-	 * The atom itself whose incidence set is returned doesn't have to be a member of the
-	 * subgraph!
+	 * Return incidence set where each element is a member of this
+	 * <code>HGSubgraph</code>. The atom itself whose incidence set is returned
+	 * doesn't have to be a member of the subgraph!
 	 */
 	public IncidenceSet getIncidenceSet(HGHandle handle)
 	{
 		// maybe should return empty set, instead of null?
-			// but if the atom is not here, one shouldn't be asking for incidence set
+		// but if the atom is not here, one shouldn't be asking for incidence
+		// set
 		// so null seems more appropriate
-		return new IncidenceSet(handle,
-														new FilteredSortedSet<HGHandle>(graph.getIncidenceSet(handle),
-																														memberPredicate));
+		return new IncidenceSet(handle, new FilteredSortedSet<HGHandle>(
+				graph.getIncidenceSet(handle), memberPredicate));
 	}
 
 	public HGHandle getType(HGHandle handle)
@@ -258,8 +260,11 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	}
 
 	/**
-	 * Removes the atom globally from the database as well as from the nested graph.
-	 * @param handle The atom to remove.
+	 * Removes the atom globally from the database as well as from the nested
+	 * graph.
+	 * 
+	 * @param handle
+	 *            The atom to remove.
 	 * @return The result of {@link HyperGraph.remove}.
 	 */
 	public boolean remove(HGHandle handle)
@@ -269,10 +274,14 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	}
 
 	/**
-	 * Removes the atom globally from the database as well as from the nested graph.
-	 * @param handle The atom to remove.
-	 * @param keepIncidentLinks - whether to also remove links pointing to the removed
-	 * atom. This parameter applies recursively to the links removed.
+	 * Removes the atom globally from the database as well as from the nested
+	 * graph.
+	 * 
+	 * @param handle
+	 *            The atom to remove.
+	 * @param keepIncidentLinks
+	 *            - whether to also remove links pointing to the removed atom.
+	 *            This parameter applies recursively to the links removed.
 	 * @return The result of {@link HyperGraph.remove}.
 	 */
 	public boolean remove(HGHandle handle, boolean keepIncidentLinks)
@@ -282,39 +291,41 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	}
 
 	/**
-	 * Removes an atom from this scope. The atom is not deleted from the
-	 * global {@link HyperGraph} database. If you wish to delete it globally,
-	 * use {@link HyperGraph.remove}.
-	 *
+	 * Removes an atom from this scope. The atom is not deleted from the global
+	 * {@link HyperGraph} database. If you wish to delete it globally, use
+	 * {@link HyperGraph.remove}.
+	 * 
 	 * @return Return value is unreliable
 	 */
-	@Override
 	public boolean removeLocally(final HGHandle handle)
 	{
-		return graph.getTransactionManager().ensureTransaction(new Callable<Boolean>()
-		{
-		 public Boolean call()
-		 {
-			 boolean ret = isMember(handle);
-			 unindex(handle);
-			 return ret;
-		 }
-		});
+		return graph.getTransactionManager().ensureTransaction(
+				new Callable<Boolean>()
+				{
+					public Boolean call()
+					{
+						boolean ret = isMember(handle);
+						unindex(handle);
+						return ret;
+					}
+				});
 	}
 
 	/**
-	 * Performs the replace in the global database as this only deals with
-	 * an atom's value.
+	 * Performs the replace in the global database as this only deals with an
+	 * atom's value.
 	 */
-	public boolean replace(final HGHandle handle, final Object newValue, final HGHandle newType)
+	public boolean replace(final HGHandle handle, final Object newValue,
+			final HGHandle newType)
 	{
-		return graph.getTransactionManager().ensureTransaction(new Callable<Boolean>()
-		{
-			public Boolean call()
-			{
-				return graph.replace(handle, newValue, newType);
-			}
-		});
+		return graph.getTransactionManager().ensureTransaction(
+				new Callable<Boolean>()
+				{
+					public Boolean call()
+					{
+						return graph.replace(handle, newValue, newType);
+					}
+				});
 	}
 
 	public HGHandle getAtomHandle()

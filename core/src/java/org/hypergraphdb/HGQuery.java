@@ -1597,7 +1597,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 						else
 							return counter.count(graph, q.getCondition());
 				}
-			});
+			}, HGTransactionConfig.READONLY);
 		}
 
 		/**
@@ -1613,7 +1613,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 				{
 					return ResultSizeEstimation.countResultSet(query);
 				}
-			});
+			}, HGTransactionConfig.READONLY);
 		}
 
 			//
@@ -1648,7 +1648,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 					}
 					return h == null ? null : (T)graph.get(h);
 				}
-			});
+			}, HGTransactionConfig.READONLY);
 		}
 
 		/**
@@ -1682,7 +1682,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 						if (rs != null) rs.close();
 					}
 				}
-			});
+			}, HGTransactionConfig.READONLY);
 		}
 
 		/**

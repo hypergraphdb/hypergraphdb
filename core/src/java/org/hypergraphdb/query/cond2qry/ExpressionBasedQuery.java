@@ -721,23 +721,24 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	public ExpressionBasedQuery(final HyperGraph graph, final HGQueryCondition condition)
 	{
 		this.graph = graph;
-		compileProcess(condition);
+		graph.getTransactionManager().ensureTransaction(new Callable<HGQuery<ResultType>>() {
+			public HGQuery<ResultType> call()
+			{
+				return compileProcess(condition);
+			}
+		}, HGTransactionConfig.READONLY);
 	}
 	
 	public HGQuery<ResultType> compile(final HGQueryCondition condition)
 	{
-		// This is separate pre-compilation where we want a write-transaction in effect
-		// in case types need to be generated from Java classes and the likes
 		return graph.getTransactionManager().transact(new Callable<HGQuery<ResultType>>() {
 			public HGQuery<ResultType> call()
 			{
 				return compileProcess(condition);
 			}
-		});
+		}, HGTransactionConfig.READONLY);
 	}
 	
-	// private version that runs within the parent transaction whatever that is..(possibly
-	// a read-only transaction of a regular in-place query)
 	private HGQuery<ResultType> compileProcess(final HGQueryCondition condition)
 	{
 		// The condition was constructed before the make method is called and all variables have been
@@ -746,15 +747,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		// conditions is calling the varContext() method before calling HGQuery.make
 		try
 		{
-			// this is temporary, to deal with the 'hg.anyHandle' issue 
-			// and the handle factory no longer being static		
 			preprocess(condition);  
-			this.condition = graph.getTransactionManager().ensureTransaction(new Callable<HGQueryCondition>() {
-				public HGQueryCondition call()
-				{
-					return simplify(toDNF(expand(graph, condition))); 
-				}
-			}); // this tx can't be read-only any more because of pre-compiled queries...
+			this.condition = simplify(toDNF(expand(graph, condition))); 
 			query = ToQueryMap.toQuery(graph, this.condition);		
 			return this;
 		}
@@ -763,7 +757,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			// Cleanup thread-bound variable context
 			if (hasVarContext)
 				VarContext.popFrame();
-		}		
+		}
 	}
 	
     public HGSearchResult<ResultType> execute()

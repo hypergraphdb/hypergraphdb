@@ -23,7 +23,7 @@ import org.hypergraphdb.util.Ref;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class IndexBasedQuery extends HGQuery<Object>
+public class IndexBasedQuery<T> extends HGQuery<T>
 {
     public static enum ScanType { none, keys, values };
     
@@ -74,25 +74,25 @@ public class IndexBasedQuery extends HGQuery<Object>
     	this(index, hg.constant(key), operator);
     }
     
-    public HGSearchResult<Object> execute()
+    public HGSearchResult<T> execute()
     {
     	switch (scanType)
     	{
-    		case keys: return ((HGIndex<Object, Object>)index).scanKeys();
-    		case values: ((HGIndex<Object, Object>)index).scanValues();
+    		case keys: return ((HGIndex<T, ?>)index).scanKeys();
+    		case values: ((HGIndex<?, T>)index).scanValues();
     		default:
 		    	switch (operator)
 		    	{
 		    		case EQ:
-		    			return ((HGIndex<Object, Object>)index).find(key.get());
+		    			return ((HGIndex<Object, T>)index).find(key.get());
 		    		case LT:
-		    			return ((HGSortIndex<Object, Object>)index).findLT(key.get());
+		    			return ((HGSortIndex<Object, T>)index).findLT(key.get());
 		    		case GT:
-		    			return ((HGSortIndex<Object, Object>)index).findGT(key.get());
+		    			return ((HGSortIndex<Object, T>)index).findGT(key.get());
 		    		case LTE:
-		    			return ((HGSortIndex<Object, Object>)index).findLTE(key.get());
+		    			return ((HGSortIndex<Object, T>)index).findLTE(key.get());
 		    		case GTE:
-		    			return ((HGSortIndex<Object, Object>)index).findGTE(key.get());   
+		    			return ((HGSortIndex<Object, T>)index).findGTE(key.get());   
 		    		default:
 		    			throw new HGException("Wrong operator code [" + operator + "] passed to IndexBasedQuery.");
 		    	}
