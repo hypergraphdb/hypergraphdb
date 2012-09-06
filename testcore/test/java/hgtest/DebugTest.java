@@ -63,6 +63,7 @@ public class DebugTest
 		{
 			test.testDanglingDetect();
 			test.testNullRef();
+			test.testRefInParentType();
 		}
 		finally
 		{
