@@ -357,5 +357,4 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		result.append(")");
 		return result.toString();
 	}
-
 }

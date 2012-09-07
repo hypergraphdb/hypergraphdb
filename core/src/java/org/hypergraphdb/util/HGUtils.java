@@ -274,7 +274,7 @@ public class HGUtils
 			loader = HGUtils.class.getClassLoader();
 		return loader;
 	}
-	
+
 	public static HGHandle [] toHandleArray(HGLink link)
 	{
 		if (link == null)
