@@ -262,7 +262,7 @@ public class HGUtils
 	/**
 	 * Returns the configured, the context or the class's classloader.
 	 *  
-	 * @param graph
+	 * @param config
 	 * @return never null.
 	 */
 	public static ClassLoader getClassLoader(HGConfiguration config) 
