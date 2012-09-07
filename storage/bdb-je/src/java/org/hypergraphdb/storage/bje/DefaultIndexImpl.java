@@ -169,7 +169,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			cursor = db.openCursor(tx.getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
 			
-			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
+			if (status == OperationStatus.SUCCESS /* && cursor.count() > 0 */)
 				result = new KeyRangeForwardResultSet<ValueType>(tx.attachCursor(cursor), keyEntry, valueConverter);
 			else {
 				try {
@@ -205,7 +205,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			cursor = db.openCursor(tx.getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
 			
-			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
+			if (status == OperationStatus.SUCCESS /* && cursor.count() > 0 */)
 				result = new KeyScanResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
 			else {
 				try {
@@ -387,7 +387,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
 		
-			if (status == OperationStatus.SUCCESS && cursor.count() > 0) {
+			if (status == OperationStatus.SUCCESS /*&& cursor.count() > 0*/) {
 				result = new SingleKeyResultSet<ValueType>(tx.attachCursor(cursor), keyEntry, valueConverter);
 			}
 			else {

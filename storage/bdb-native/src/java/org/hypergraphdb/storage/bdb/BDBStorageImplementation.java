@@ -55,7 +55,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         {
 //          System.loadLibrary("libdb50");
 //          System.loadLibrary("libdb_java50");
-        	
+        	System.out.println("Force BerkleyDB DLL load order.");
             System.loadLibrary("libdb53");
             System.loadLibrary("libdb_java53");
         }

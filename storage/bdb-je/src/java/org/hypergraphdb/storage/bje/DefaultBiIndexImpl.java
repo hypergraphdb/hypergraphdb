@@ -124,7 +124,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 			TransactionBJEImpl tx = txn();
 			cursor = secondaryDb.openCursor(tx.getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
-			if (status == OperationStatus.SUCCESS && cursor.count() > 0)
+			if (status == OperationStatus.SUCCESS /* && cursor.count() > 0 */)
 				result = new SingleValueResultSet<KeyType>(tx.attachCursor(cursor), keyEntry, keyConverter);
 			else {
 				try {
