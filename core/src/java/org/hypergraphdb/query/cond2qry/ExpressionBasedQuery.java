@@ -731,7 +731,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	public HGQuery<ResultType> compile(final HGQueryCondition condition)
 	{
-		return graph.getTransactionManager().transact(new Callable<HGQuery<ResultType>>() {
+		return graph.getTransactionManager().ensureTransaction(new Callable<HGQuery<ResultType>>() {
 			public HGQuery<ResultType> call()
 			{
 				return compileProcess(condition);

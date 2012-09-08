@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb;
 
+import java.util.ArrayList;
+
 import org.hypergraphdb.handle.HGLiveHandle;
 
 import org.hypergraphdb.storage.StorageBasedIncidenceSet;
@@ -16,6 +18,7 @@ import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.CountMe;
 import org.hypergraphdb.util.DummyReadWriteLock;
 import org.hypergraphdb.util.HGSortedSet;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.RefCountedMap;
 import org.hypergraphdb.util.RefResolver;
 
@@ -71,23 +74,27 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 		HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
 		try
 		{
-			int size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
-			if (size < keepInMemoryThreshold)
+			int size = keepInMemoryThreshold;
+			if (keepInMemoryThreshold < Integer.MAX_VALUE)
+				size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
+			if (size <= keepInMemoryThreshold)
 			{
-				HGPersistentHandle [] A = new HGPersistentHandle[size];
-				for (int i = 0; i < A.length; i++)
-					A[i] = rs.next();
-
-				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A);
+//				HGPersistentHandle [] A = new HGPersistentHandle[size];
+//				for (int i = 0; i < A.length; i++)
+//					A[i] = rs.next();
+				ArrayList<HGPersistentHandle> A = new ArrayList<HGPersistentHandle>();
+				while (rs.hasNext())
+					A.add(rs.next());
+				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A.toArray(HGUtils.EMPTY_HANDLE_ARRAY));
 //			impl.setLock(new HGLock(graph, key.toByteArray()));
 				impl.setLock(new DummyReadWriteLock());
 
 				IncidenceSet result = new IncidenceSet(key,
-															new TxCacheSet(graph.getTransactionManager(),
-																						 impl,
-																						 key,
-																						 loader,
-																						 writeMap));
+														new TxCacheSet(graph.getTransactionManager(),
+																					 impl,
+																					 key,
+																					 loader,
+																					 writeMap));
 				HGLiveHandle lHandle = graph.cache.get(key);
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);
