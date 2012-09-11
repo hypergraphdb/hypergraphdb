@@ -585,8 +585,13 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
             Object value = vc.getValue();
             if (value == null)
                 throw new HGException("Search by null values is not supported yet.");
-            HGHandle type = graph.getTypeSystem().getTypeHandle(value);
-            if (vc.getOperator() == ComparisonOperator.EQ)
+            HGHandle valueHandle = graph.getHandle(value);
+            HGHandle type = null;
+            if (valueHandle != null)
+            	type = graph.getTypeSystem().getTypeHandle(valueHandle);
+            else if (value != null)
+            	type = graph.getTypeSystem().getTypeHandleIfDefined(value.getClass());            
+            if (type != null && vc.getOperator() == ComparisonOperator.EQ)
             {
     			List<AtomPartCondition> indexedParts = getAtomIndexedPartsConditions(graph, type, value);
     			if (!indexedParts.isEmpty())
