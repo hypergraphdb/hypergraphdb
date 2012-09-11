@@ -1123,31 +1123,31 @@ public/* final */class HyperGraph implements HyperNode
      *            verified.
      * @return True if the handle points to an existing atom, false otherwise.
      */
-    public boolean exist(HGHandle handle)
-    {
-        HGPersistentHandle pHandle;
-        Object atom = null;
-        if (handle instanceof HGLiveHandle)
-        {
-            atom = ((HGLiveHandle) handle).getRef();
-            if (atom != null)
-                return true;
-            pHandle = ((HGLiveHandle) handle).getPersistent();
-        }
-        else
-        {
-            pHandle = (HGPersistentHandle) handle;
-            HGLiveHandle lHandle = cache.get(pHandle);
-            if (lHandle != null)
-                return true;
-        }
-
-        HGPersistentHandle[] link = store.getLink(pHandle);
-        if (link == null || link.length < 2)
-            return false;
-        else
-            return true;
-    }
+//    public boolean exist(HGHandle handle)
+//    {
+//        HGPersistentHandle pHandle;
+//        Object atom = null;
+//        if (handle instanceof HGLiveHandle)
+//        {
+//            atom = ((HGLiveHandle) handle).getRef();
+//            if (atom != null)
+//                return true;
+//            pHandle = ((HGLiveHandle) handle).getPersistent();
+//        }
+//        else
+//        {
+//            pHandle = (HGPersistentHandle) handle;
+//            HGLiveHandle lHandle = cache.get(pHandle);
+//            if (lHandle != null)
+//                return true;
+//        }
+//
+//        HGPersistentHandle[] link = store.getLink(pHandle);
+//        if (link == null || link.length < 2)
+//            return false;
+//        else
+//            return true;
+//    }
 
     /**
      * <p>
@@ -1599,10 +1599,10 @@ public/* final */class HyperGraph implements HyperNode
             public Object call()
             {
 
-                if (exist(atomHandle))
-                    throw new HGException(
-                            "Can't define an existing atom. Use replace instead. Hdl: "
-                                    + atomHandle);
+//                if (exist(atomHandle))
+//                    throw new HGException(
+//                            "Can't define an existing atom. Use replace instead. Hdl: "
+//                                    + atomHandle);
 
                 HGPersistentHandle[] layout = new HGPersistentHandle[outgoingSet == null ? 2
                         : 2 + outgoingSet.getArity()];
