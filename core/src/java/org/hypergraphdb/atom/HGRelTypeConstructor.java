@@ -1,9 +1,9 @@
-/*
- * This file is part of the HyperGraphDB source distribution. This is copyrighted
- * software. For permitted uses, licensing options and redistribution, please see
- * the LicensingInformation file at the root level of the distribution.
- *
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
+/* 
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted 
+ * software. For permitted uses, licensing options and redistribution, please see  
+ * the LicensingInformation file at the root level of the distribution.  
+ * 
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.atom;
 
@@ -29,7 +29,7 @@ import org.hypergraphdb.type.HGProjection;
 
 /**
  * <p>
- * The type of <code>HGRelType</code>. Even though we could have treated
+ * The type of <code>HGRelType</code>. Even though we could have treated 
  * <code>HGRelType</code>, that would have created different <code>RecordType</code>
  * which would have made it harder working purely with <code>HGRel</code>ationships
  * outside of Java (since one would have to get to the <code>RecordType</code> by
@@ -39,15 +39,17 @@ import org.hypergraphdb.type.HGProjection;
  */
 public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersistentHandle>, HGCompositeType
 {
-	public static final String INDEX_NAME = "hg_reltype_value_index";
-	private HyperGraph graph = null;
-	private HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;
-	private Map<String, HGProjection> projections = new HashMap<String, HGProjection>();
+    public static final String INDEX_NAME = "hg_reltype_value_index";
+    
+    private HyperGraph graph = null;
+    private HGSortIndex<byte[], HGPersistentHandle> valueIndex = null;
+    private Map<String, HGProjection> projections = new HashMap<String, HGProjection>();
+    
+    private void initProjections()
+    {
+    	projections.put("name", new HGProjection()
+    	{
 
-	private void initProjections()
-	{
-		projections.put("name", new HGProjection()
-		{
 			public int[] getLayoutPath()
 			{
 				return new int[0];
@@ -71,33 +73,34 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
 			public Object project(Object atomValue)
 			{
 				return ((HGRelType)atomValue).getName();
-			}
-		});
-	}
-
-	private static class ByteComparator implements Comparator<byte[]>, java.io.Serializable
-	{
+			}    		
+    	}
+    	);
+    }
+    
+    private static class ByteComparator implements Comparator<byte[]>, java.io.Serializable
+    {
 		private static final long serialVersionUID = 1L;
 
 		public int compare(byte [] left, byte [] right)
-		{
+		{ 
 			return new String(left).compareTo(new String(right));
-		}
-	}
-
-	private final HGSortIndex<byte[], HGPersistentHandle> getIndex()
-	{
-		if (valueIndex == null)
-		{
-			valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().getIndex(INDEX_NAME,
-																						 BAtoBA.getInstance(),
-																						 BAtoHandle.getInstance(graph.getHandleFactory()),
-																						 new ByteComparator(),
-																						 true);
-		}
-		return valueIndex;
-	}
-
+		}    	
+    }
+    
+    private final HGSortIndex<byte[], HGPersistentHandle> getIndex()
+    {
+        if (valueIndex == null)
+        {
+            valueIndex = (HGSortIndex<byte[], HGPersistentHandle>)graph.getStore().getIndex(INDEX_NAME, 
+            																			 BAtoBA.getInstance(), 
+            																			 BAtoHandle.getInstance(graph.getHandleFactory()),
+            																			 new ByteComparator(),
+            																			 true);
+        }
+        return valueIndex;
+    }
+    
 	public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
 	{
 		HGAtomType sType = graph.getTypeSystem().getAtomType(String.class);
@@ -123,18 +126,18 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
 		getIndex().removeEntry(s.getBytes(), handle);
 	}
 
-
+	
 	/**
 	 * <p>
 	 * A <code>HGRelType</code> <em>X</em> subsumes a <code>HGRelType</code> <em>Y</em>
-	 * if both have the same name and arity and each target atom of <em>X</em> subsumes
-	 * the corresponding target atom of <em>Y</em>.
+	 * iff both have the same name and arity and each target atom of <em>X</em> subsumes
+	 * the corresponding target atom of <em>Y</em>. 
 	 * </p>
 	 * <p>
-	 * In plain language this reflects the logical requirement that each instance
-	 * relationship with type <em>Y</em> be also an instance (logically) of <em>X</em>.
+	 * In plain language this reflects the logical requirement that each instance 
+	 * relationship with type <em>Y</em> be also an instance (logically) of <em>X</em>. 
 	 * </p>
-	 *
+	 * 
 	 */
 	public boolean subsumes(Object general, Object specific)
 	{
@@ -149,7 +152,7 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
 			HGHandle g = grel.getTargetAt(i);
 			HGHandle s = srel.getTargetAt(i);
 			if (g.equals(s))
-				continue;
+				continue;			
 			else
 			{
 				HGAtomType gt = graph.getTypeSystem().getAtomType(g);
@@ -166,7 +169,7 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
 	{
 		if (key == null || key.getName() == null)
 			return (HGSearchResult<HGPersistentHandle>)HGSearchResult.EMPTY;
-
+		
 		return getIndex().find(key.getName().getBytes());
 	}
 
@@ -184,5 +187,5 @@ public class HGRelTypeConstructor implements HGSearchable<HGRelType, HGPersisten
 	{
 		this.graph = graph;
 		initProjections();
-	}
+	}		
 }

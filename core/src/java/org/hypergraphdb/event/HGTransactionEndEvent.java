@@ -2,7 +2,7 @@ package org.hypergraphdb.event;
 
 import org.hypergraphdb.transaction.HGTransaction;
 
-public class HGTransactionEndEvent implements HGEvent
+public class HGTransactionEndEvent extends HGEventBase
 {
     private boolean success;
     private HGTransaction transaction;

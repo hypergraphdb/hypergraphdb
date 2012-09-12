@@ -17,14 +17,30 @@ import org.hypergraphdb.HGHandle;
 public abstract class HGAtomEvent implements HGEvent 
 {
 	private HGHandle handle;
-	
+    private Object source;
+    
 	public HGAtomEvent(HGHandle handle)
 	{
 		this.handle = handle;
 	}
 	
-	public HGHandle getAtomHandle()
+    public HGAtomEvent(HGHandle handle, Object source)
+    {
+        this.handle = handle;
+    }
+
+    public HGHandle getAtomHandle()
 	{
 		return handle;
 	}
+
+    public Object getSource()
+    {
+        return source;
+    }
+
+    public void setSource(Object source)
+    {
+        this.source = source;
+    }    
 }

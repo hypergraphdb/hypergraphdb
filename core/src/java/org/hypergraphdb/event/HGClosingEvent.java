@@ -15,6 +15,6 @@ package org.hypergraphdb.event;
  * 
  * @author boris
  */
-public class HGClosingEvent implements HGEvent
+public class HGClosingEvent extends HGEventBase
 {
 }

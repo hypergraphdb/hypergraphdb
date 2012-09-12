@@ -79,16 +79,11 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
 			if (size <= keepInMemoryThreshold)
 			{
-//				HGPersistentHandle [] A = new HGPersistentHandle[size];
-//				for (int i = 0; i < A.length; i++)
-//					A[i] = rs.next();
 				ArrayList<HGPersistentHandle> A = new ArrayList<HGPersistentHandle>();
 				while (rs.hasNext())
 					A.add(rs.next());
 				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A.toArray(HGUtils.EMPTY_HANDLE_ARRAY));
-//			impl.setLock(new HGLock(graph, key.toByteArray()));
 				impl.setLock(new DummyReadWriteLock());
-
 				IncidenceSet result = new IncidenceSet(key,
 														new TxCacheSet(graph.getTransactionManager(),
 																					 impl,
@@ -102,7 +97,6 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 			}
 			else
 				return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));
-//										new DBKeyedSortedSet(graph.getStore().getIncidenceDbAsIndex(), key));
 		}
 		finally
 		{

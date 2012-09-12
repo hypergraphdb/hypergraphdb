@@ -7,51 +7,46 @@ import org.hypergraphdb.storage.BAUtils;
 
 public class LongHandleFactory implements HGHandleFactory
 {
-	private static final LongPersistentHandle any = new LongPersistentHandle(1);
+    private static final LongPersistentHandle any = new LongPersistentHandle(1);
     private static final LongPersistentHandle nil = new LongPersistentHandle(0);
     private static final LongPersistentHandle topType = new LongPersistentHandle(100);
     private static final LongPersistentHandle linkType = new LongPersistentHandle(101);
     private static final LongPersistentHandle nullType = new LongPersistentHandle(102);
     private static final LongPersistentHandle subsumesType = new LongPersistentHandle(103);
     
-    private final AtomicLong next = new AtomicLong(1000);
+    private AtomicLong next = new AtomicLong(1000);
      
     public long getNext()
     {
         return next.get();
     }
 
-    public void setNext(final long next)
+    public void setNext(long next)
     {
         this.next.set(next);
     }
 
-	@Override
-	public HGPersistentHandle anyHandle()
-  {
-  	return any;
-  }
+    public HGPersistentHandle anyHandle()
+    {
+        return any;
+    }
 
-	@Override
-	public HGPersistentHandle makeHandle()
-	{
-		return new LongPersistentHandle(next.getAndIncrement());
-	}
+    public HGPersistentHandle makeHandle()
+    {
+        return new LongPersistentHandle(next.getAndIncrement());
+    }
 
-	@Override
-	public HGPersistentHandle makeHandle(final String handleAsString)
-	{
-		return new LongPersistentHandle(Long.parseLong(handleAsString));
-	}
+    public HGPersistentHandle makeHandle(String handleAsString)
+    {
+        return new LongPersistentHandle(Long.parseLong(handleAsString));
+    }
 
-	@Override
-    public HGPersistentHandle makeHandle(final byte[] buffer)
+    public HGPersistentHandle makeHandle(byte[] buffer)
     {
         return new LongPersistentHandle(BAUtils.readLong(buffer, 0));
     }
 
-	@Override
-    public HGPersistentHandle makeHandle(final byte[] buffer, final int offset)
+    public HGPersistentHandle makeHandle(byte[] buffer, int offset)
     {
         return new LongPersistentHandle(BAUtils.readLong(buffer, offset));
     }

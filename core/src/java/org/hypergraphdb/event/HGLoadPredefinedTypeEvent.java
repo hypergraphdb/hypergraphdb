@@ -25,7 +25,7 @@ import org.hypergraphdb.HGPersistentHandle;
  * 
  * @author Borislav Iordanov
  */
-public class HGLoadPredefinedTypeEvent implements HGEvent 
+public class HGLoadPredefinedTypeEvent extends HGEventBase 
 {
 	private HGPersistentHandle typeHandle;
 	

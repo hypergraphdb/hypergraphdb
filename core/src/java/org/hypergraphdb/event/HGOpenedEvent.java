@@ -23,6 +23,6 @@ package org.hypergraphdb.event;
  * </p>
  * @author boris
  */
-public class HGOpenedEvent implements HGEvent 
+public class HGOpenedEvent extends HGEventBase 
 {
 }

@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
@@ -219,8 +218,8 @@ public class HGUtils
 	
 	/**
 	 * <p>
-	 * Load a class using the class loader configured for the passed in {@link HyperGraph} instance, if
-	 * such a loader was configured. If no class loader specific to the DB instance was configured, try
+	 * Load a class using the class loader configured in the {@link HGConfiguration} object, if
+	 * such a loader was configured. If there is no class loader in the configuration, try
 	 * the thread context class loader. Finally, fall back to <code>HGUtils.class.getClassLoader()</code>.
 	 * </p>
 	 *
@@ -274,7 +273,7 @@ public class HGUtils
 			loader = HGUtils.class.getClassLoader();
 		return loader;
 	}
-
+	
 	public static HGHandle [] toHandleArray(HGLink link)
 	{
 		if (link == null)
@@ -440,12 +439,11 @@ public class HGUtils
     
     /**
      * <p>
-	 * Delete a {@link HyperGraph} by removing the filesystem directory that holds it. This method will first
-	 * make sure to close the HyperGraph if it's currently open.
+     * Delete a {@link HyperGraph} by removing the filesystem directory that holds it.
+     * This method will first make sure to close the HyperGraph if it's currently open.   
      * </p>
      * 
-	 * @param location
-	 *          The location of the graph instance.
+     * @param location The location of the graph instance.
      */
     public static void dropHyperGraphInstance(String location)
     {

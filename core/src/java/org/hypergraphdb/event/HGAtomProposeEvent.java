@@ -10,60 +10,50 @@ import org.hypergraphdb.HGHandle;
  * from the listener will also stop the atom addition, but without communicating further information
  * upstream to the application.
  * </p>
- *
+ * 
  * @author Borislav Iordanov
  *
  */
-public class HGAtomProposeEvent implements HGEvent
+public class HGAtomProposeEvent extends HGEventBase
 {
-	private Object atom;
-	private HGHandle type;
-	private int flags;
-	private String caller;
+    private Object atom;
+    private HGHandle type;
+    private int flags;
+    
+    public HGAtomProposeEvent(Object atom, HGHandle type, int flags)
+    {
+        this.atom = atom;
+        this.type = type;
+        this.flags = flags;
+    }
 
-	public HGAtomProposeEvent(Object atom, HGHandle type, int flags, String caller)
-	{
-		this.atom = atom;
-		this.type = type;
-		this.flags = flags;
-		this.caller = caller;
-	}
+    public Object getAtom()
+    {
+        return atom;
+    }
 
-	public Object getAtom()
-	{
-		return atom;
-	}
+    public void setAtom(Object atom)
+    {
+        this.atom = atom;
+    }
 
-	public void setAtom(Object atom)
-	{
-		this.atom = atom;
-	}
+    public HGHandle getType()
+    {
+        return type;
+    }
 
-	public HGHandle getType()
-	{
-		return type;
-	}
+    public void setType(HGHandle type)
+    {
+        this.type = type;
+    }
 
-	public void setType(HGHandle type)
-	{
-		this.type = type;
-	}
+    public int getFlags()
+    {
+        return flags;
+    }
 
-	public int getFlags()
-	{
-		return flags;
-	}
-
-	public void setFlags(int flags)
-	{
-		this.flags = flags;
-	}
-
-	public String getCaller() {
-		return caller;
-	}
-
-	public void setCaller(String caller) {
-		this.caller = caller;
-	}
+    public void setFlags(int flags)
+    {
+        this.flags = flags;
+    }    
 }

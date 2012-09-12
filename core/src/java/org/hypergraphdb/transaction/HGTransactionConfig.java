@@ -1,51 +1,52 @@
 package org.hypergraphdb.transaction;
 
 /**
- *
+ * 
  * <p>
- * Encapsulates configuration parameters for a single transaction.
+ * Encapsulates configuration parameters for a single transaction. 
  * </p>
- *
+ * 
  * @author Borislav Iordanov
  *
  */
 public class HGTransactionConfig
 {
-	public static final HGTransactionConfig DEFAULT = new HGTransactionConfig();
-	public static final HGTransactionConfig NO_STORAGE = new HGTransactionConfig();
-	public static final HGTransactionConfig READONLY = new HGTransactionConfig();
-  public static final HGTransactionConfig WRITE_UPGRADABLE = new HGTransactionConfig();
+    public static final HGTransactionConfig DEFAULT = new HGTransactionConfig();
+    public static final HGTransactionConfig NO_STORAGE = new HGTransactionConfig();
+    public static final HGTransactionConfig READONLY = new HGTransactionConfig();
+    public static final HGTransactionConfig WRITE_UPGRADABLE = new HGTransactionConfig();
+    
+    static
+    {
+        NO_STORAGE.setNoStorage(true);
+        READONLY.setReadonly(true);
+        WRITE_UPGRADABLE.setWriteUpgradable(true);
+    }
+    
+    private boolean noStorage = false;
+    private boolean readonly = false;
+    private boolean writeUpgradable = false;
+    
+    public boolean isNoStorage()
+    {
+        return noStorage;
+    }
 
-	static
-	{
-		NO_STORAGE.setNoStorage(true);
-		READONLY.setReadonly(true);
-		WRITE_UPGRADABLE.setWriteUpgradable(true);
-	}
+    public void setNoStorage(boolean noStorage)
+    {
+        this.noStorage = noStorage;
+    }
 
-	private boolean noStorage = false;
-	private boolean readonly = false;
-  private boolean writeUpgradable = false;
+    public boolean isReadonly()
+    {
+        return readonly;
+    }
 
-	public boolean isNoStorage()
-	{
-		return noStorage;
-	}
-
-	public void setNoStorage(boolean noStorage)
-	{
-		this.noStorage = noStorage;
-	}
-
-	public boolean isReadonly()
-	{
-		return readonly;
-	}
-
-	public void setReadonly(boolean readonly)
-	{
-		this.readonly = readonly;
-	}
+    public void setReadonly(boolean readonly)
+    {
+        this.readonly = readonly;
+        writeUpgradable = false;
+    }
 
 	public boolean isWriteUpgradable() 
 	{
@@ -56,6 +57,6 @@ public class HGTransactionConfig
 	{
 		this.writeUpgradable = writeUpgradable;
 		if (writeUpgradable)
-			readonly = true;
+		    readonly = true;
 	}      
 }

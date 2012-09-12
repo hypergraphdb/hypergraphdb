@@ -18,4 +18,5 @@ package org.hypergraphdb.event;
  */
 public interface HGEvent 
 {
+    public Object getSource();
 }

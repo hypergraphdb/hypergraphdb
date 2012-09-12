@@ -1,9 +1,9 @@
-/*
- * This file is part of the HyperGraphDB source distribution. This is copyrighted
- * software. For permitted uses, licensing options and redistribution, please see
- * the LicensingInformation file at the root level of the distribution.
- *
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved.
+/* 
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted 
+ * software. For permitted uses, licensing options and redistribution, please see  
+ * the LicensingInformation file at the root level of the distribution.  
+ * 
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.indexing;
 
@@ -25,7 +25,7 @@ import org.hypergraphdb.type.HGProjection;
 import org.hypergraphdb.util.HGUtils;
 
 /**
- *
+ * 
  * <p>
  * Represents by the value of a part in a composite type.
  * </p>
@@ -38,7 +38,7 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 	private String [] dimensionPath;
 	private HGProjection [] projections = null;
 	private HGAtomType projectionType = null;
-
+ 
 	private synchronized HGProjection [] getProjections(HyperGraph graph)
 	{
 		if (projections == null)
@@ -53,38 +53,38 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 					return null;
 				projections[j] = ((HGCompositeType)type).getProjection(dimensionPath[j]);
 				if (projections[j] == null)
-					throw new HGException("There's no projection '" +
-											dimensionPath[j] +
-											"' in type '" + type + "'");
+					throw new HGException("There's no projection '" + 
+										  dimensionPath[j] + 
+										  "' in type '" + type + "'");
 				type = (HGAtomType)graph.get(projections[j].getType());
-			}
-			HGProjection ours = projections[dimensionPath.length - 1];
+			}	
+			HGProjection ours = projections[dimensionPath.length - 1];						
 			HGHandle enclosingType = dimensionPath.length > 1 ?
 					projections[dimensionPath.length - 2].getType() : getType();
 			// For HGAtomRef's, we want to index by the atom directly:
-			HGHandle atomProj = hg.findOne(graph,
-					hg.and(hg.type(AtomProjection.class),
-					hg.incident(enclosingType),
-					hg.incident(ours.getType()),
-					hg.eq("name", ours.getName())));
-			if (atomProj != null)
-				projectionType = graph.getTypeSystem().getAtomType(HGAtomRef.class);
-			else
-				projectionType = graph.get(ours.getType());
+    		HGHandle atomProj = hg.findOne(graph,
+    				hg.and(hg.type(AtomProjection.class), 
+    					   hg.incident(enclosingType),
+    					   hg.incident(ours.getType()),
+    					   hg.eq("name", ours.getName())));
+    		if (atomProj != null)
+    			projectionType = graph.getTypeSystem().getAtomType(HGAtomRef.class);
+    		else 
+    			projectionType = graph.get(ours.getType());
 		}
 		return projections;
 	}
-
+	
 	public ByPartIndexer()
-	{
+	{		
 	}
-
+	
 	/**
 	 * <p>
 	 * Convenience constructor that allows passing a dot separated dimension path
-	 * that is converted to a <code>String[]</code>.
+	 * that is converted to a <code>String[]</code>. 
 	 * </p>
-	 *
+	 * 
 	 * @param type The type of the atoms to be indexed.
 	 * @param dimensionPath The dimension path in dot format (e.g. "person.address.street")
 	 */
@@ -92,13 +92,13 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 	{
 		this(type, dimensionPath.split("\\."));
 	}
-
+	
 	/**
 	 * <p>
 	 * Convenience constructor that allows passing a dot separated dimension path
-	 * that is converted to a <code>String[]</code>.
+	 * that is converted to a <code>String[]</code>. 
 	 * </p>
-	 *
+	 * 
 	 * @param name The name of the index.
 	 * @param type The type of the atoms to be indexed.
 	 * @param dimensionPath The dimension path in dot format (e.g. "person.address.street")
@@ -107,7 +107,7 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 	{
 		this(name, type, dimensionPath.split("\\."));
 	}
-
+	
 	public ByPartIndexer(HGHandle type, String [] dimensionPath)
 	{
 		super(type);
@@ -145,7 +145,7 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 		else
 			return null;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public ByteArrayConverter<KeyType> getConverter(HyperGraph graph)
 	{
@@ -153,7 +153,7 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 			getProjections(graph);
 		return (ByteArrayConverter<KeyType>)projectionType;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public KeyType getKey(HyperGraph graph, Object atom)
 	{
@@ -162,7 +162,7 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 			result = p.project(result);
 		return (KeyType)result;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public boolean equals(Object other)
 	{
@@ -173,12 +173,12 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 		ByPartIndexer<KeyType> idx = (ByPartIndexer<KeyType>)other;
 		return getType().equals(idx.getType()) && HGUtils.eq(dimensionPath, idx.dimensionPath);
 	}
-
+	
 	public int hashCode()
 	{
 		int hash = 7;
 		hash = 31 * hash + HGUtils.hashIt(dimensionPath);
 		hash = 31 * hash + getType().hashCode();
-		return hash;
-	}
+    return hash;
+	}	
 }
