@@ -22,6 +22,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGDepthFirstTraversal;
@@ -108,7 +109,9 @@ public final class TypeUtils
 					return null;
             if (value == null)
                 throw new IllegalArgumentException("The value " + value + 
-                          " doesn't have a property at " + Arrays.asList(dimPath));			
+                          " doesn't have a property at " + Arrays.asList(dimPath));
+            if (value instanceof HGValueLink)
+                value = ((HGValueLink)value).getValue();
 			value = proj.project(value);
 			type = proj.getType();
 		}
