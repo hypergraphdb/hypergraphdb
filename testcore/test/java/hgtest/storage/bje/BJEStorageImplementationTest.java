@@ -22,6 +22,7 @@ import java.io.File;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertNull;
 
 /**
  * This class contains unit tests for {@link BJEStorageImplementation}. For this
@@ -44,7 +45,8 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	private static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// Location for temporary directory for tests
-	private String testDatabaseLocation = System.getProperty("user.home") + File.separator + "hgtest.tmp";
+	private String testDatabaseLocation = System.getProperty("user.home")
+			+ File.separator + "hgtest.tmp";
 
 	// Mock objects used during tests.
 	// BJEStorageImplementation doesn't require any other dependencies
@@ -73,7 +75,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		// Reset mocks to be sure that them don't affect future calls.
 		PowerMock.reset(mockStore, mockConfiguration);
 		// Delete test directory
-		File testDatabaseDir = new File(testDatabaseLocation);
+		final File testDatabaseDir = new File(testDatabaseLocation);
 		testDatabaseDir.delete();
 	}
 
@@ -86,9 +88,13 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		// Here we use usual EasyMock API, PowerMock is required only for mock
 		// creation.
 		EasyMock.expect(mockConfiguration.getHandleFactory()).andReturn(
-				(HGHandleFactory) Class.forName(HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME).newInstance());
-		EasyMock.expect(mockConfiguration.isTransactional()).andReturn(true).times(2);
-		EasyMock.expect(mockStore.getDatabaseLocation()).andReturn(TEMP_DATABASE_DIRECTORY_SUFFIX);
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(mockConfiguration.isTransactional()).andReturn(true)
+				.times(2);
+		EasyMock.expect(mockStore.getDatabaseLocation()).andReturn(
+				TEMP_DATABASE_DIRECTORY_SUFFIX);
 	}
 
 	// Switches mocks into "replay" state.
@@ -98,7 +104,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		EasyMock.replay(mockStore, mockConfiguration);
 	}
 
-	// Verify mocked objects behaviour.
+	// Verifies mocked objects behaviour.
 	private void verifyMocks() throws Exception
 	{
 		PowerMock.verifyAll();
@@ -112,14 +118,18 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		replayMocks();
 		storage.startup(mockStore, mockConfiguration);
 		// Check whether the tested method performed correctly
-		DatabaseConfig actualDatabaseConfig = storage.getConfiguration().getDatabaseConfig();
-		Environment actualEnvironment = storage.getBerkleyEnvironment();
-		assertTrue(actualDatabaseConfig.getTransactional(), "Storage should be transactional");
-		assertFalse(actualDatabaseConfig.getReadOnly(), "Storage should be not readonly");
+		final DatabaseConfig actualDatabaseConfig = storage.getConfiguration()
+				.getDatabaseConfig();
+		final Environment actualEnvironment = storage.getBerkleyEnvironment();
+		assertTrue(actualDatabaseConfig.getTransactional(),
+				"Storage should be transactional");
+		assertFalse(actualDatabaseConfig.getReadOnly(),
+				"Storage should be not readonly");
 		assertTrue(actualEnvironment.isValid(), "Environment is not valid");
-		String actualDatabaseLocation = actualEnvironment.getHome().getPath();
-		assertEquals(actualDatabaseLocation, TEMP_DATABASE_DIRECTORY_SUFFIX, String.format(
-				"Database location should be %s but %s is", TEMP_DATABASE_DIRECTORY_SUFFIX, actualDatabaseLocation));
+		final String actualDatabaseLocation = actualEnvironment.getHome().getPath();
+		assertEquals(actualDatabaseLocation, TEMP_DATABASE_DIRECTORY_SUFFIX,
+				String.format("Database location should be %s but %s is",
+						TEMP_DATABASE_DIRECTORY_SUFFIX, actualDatabaseLocation));
 		assertTrue(new File(TEMP_DATABASE_DIRECTORY_SUFFIX).exists());
 		storage.shutdown();
 		verifyMocks();
@@ -136,14 +146,15 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 			replayMocks();
 			storage.startup(mockStore, mockConfiguration);
 			storage.shutdown();
-			Environment environment = storage.getBerkleyEnvironment();
+			final Environment environment = storage.getBerkleyEnvironment();
 			// Check that environment is not open.
 			// If environment is not open then IllegalStateException occurs.
 			environment.getHome().getPath();
 		}
 		catch (Exception ex)
 		{
-			assertEquals("java.lang.IllegalStateException", ex.getClass().getName());
+			assertEquals("java.lang.IllegalStateException", ex.getClass()
+					.getName());
 		}
 		finally
 		{
@@ -162,30 +173,27 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	{
 		System.out.println("testStore :: begin");
 		prepareMocksForStartup();
-		HGTransactionManager transactionManager = new HGTransactionManager(storage.getTransactionFactory());
-		EasyMock.expect(mockStore.getTransactionManager()).andReturn(transactionManager).times(2);
+		// Mock the reference to Transaction manager.
+		final HGTransactionManager transactionManager = new HGTransactionManager(
+				storage.getTransactionFactory());
+		EasyMock.expect(mockStore.getTransactionManager())
+				.andReturn(transactionManager).times(2);
 		replayMocks();
 		storage.startup(mockStore, mockConfiguration);
 		// Store the simple array
-		HGPersistentHandle handle = new IntPersistentHandle(1);
-		byte[] data = new byte[] { 1, 2, 3 };
+		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final byte[] data = new byte[] { 1, 2, 3 };
 		storage.store(handle, data);
 		// Get stored data and verify it
-		byte[] storedData = storage.getData(handle);
-		assertEquals(data, storedData);
+		final byte[] actualData = storage.getData(handle);
+		assertEquals(actualData, data);
 		storage.shutdown();
 		verifyMocks();
 		System.out.println("testStore :: OK");
 	}
 
 	// @Test
-	// public void testGetConfiguration() throws Exception
-	// {
-	// throw new IllegalStateException("Not yet implemented");
-	// }
-	//
-	// @Test
-	// public void testGetBerkleyEnvironment() throws Exception
+	// public void testStore2() throws Exception
 	// {
 	// throw new IllegalStateException("Not yet implemented");
 	// }
@@ -196,11 +204,6 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	// throw new IllegalStateException("Not yet implemented");
 	// }
 
-	// @Test
-	// public void testStore2() throws Exception
-	// {
-	// throw new IllegalStateException("Not yet implemented");
-	// }
 	//
 	// @Test
 	// public void testAddIncidenceLink() throws Exception
@@ -214,11 +217,33 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	// throw new IllegalStateException("Not yet implemented");
 	// }
 	//
-	// @Test
-	// public void testGetData() throws Exception
-	// {
-	// throw new IllegalStateException("Not yet implemented");
-	// }
+	@Test
+	public void testGetData() throws Exception
+	{
+		System.out.println("testGetData :: begin");
+		prepareMocksForStartup();
+		// Mock the reference to Transaction manager.
+		final HGTransactionManager transactionManager = new HGTransactionManager(
+				storage.getTransactionFactory());
+		EasyMock.expect(mockStore.getTransactionManager())
+				.andReturn(transactionManager).times(3);
+		replayMocks();
+		storage.startup(mockStore, mockConfiguration);
+		// Case 1: store data and then retrieve it by handle
+		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final byte[] data = new byte[] { 1, 2, 3 };
+		storage.store(handle, data);
+		final byte[] actualData = storage.getData(handle);
+		assertEquals(actualData, data);
+		// Case 2: try to get data which is not stored
+		final HGPersistentHandle nonStoredHandle = new IntPersistentHandle(2);
+		final byte[] nonStoredData = storage.getData(nonStoredHandle);
+		assertNull(nonStoredData);
+		storage.shutdown();
+		verifyMocks();
+		System.out.println("testGetData :: OK");
+	}
+
 	//
 	// @Test
 	// public void testGetIncidenceResultSet() throws Exception
@@ -244,11 +269,28 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	// throw new IllegalStateException("Not yet implemented");
 	// }
 	//
-	// @Test
-	// public void testRemoveData() throws Exception
-	// {
-	// throw new IllegalStateException("Not yet implemented");
-	// }
+	@Test
+	public void testRemoveData() throws Exception
+	{
+		System.out.println("testRemoveData :: begin");
+		prepareMocksForStartup();
+		// Mock the reference to Transaction manager.
+		final HGTransactionManager transactionManager = new HGTransactionManager(
+				storage.getTransactionFactory());
+		EasyMock.expect(mockStore.getTransactionManager())
+				.andReturn(transactionManager).times(3);
+		replayMocks();
+		storage.startup(mockStore, mockConfiguration);
+		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final byte[] data = new byte[] { 1, 2, 3 };
+		storage.store(handle, data);
+		storage.removeData(handle);
+		final byte[] retrievedData = storage.getData(handle);
+		assertNull(retrievedData);
+		storage.shutdown();
+		verifyMocks();
+		System.out.println("testRemoveData :: OK");
+	}
 	//
 	// @Test
 	// public void testRemoveIncidenceLink() throws Exception
@@ -283,6 +325,12 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	// graph = new HyperGraph(databaseLocation);
 	// String text = "This is a test";
 	// graph.add(text);
+	// HGPersistentHandle handle = new IntPersistentHandle(1);
+	// graph.add(handle);
+	// graph.remove(handle);
+	// HGPersistentHandle handle1 = graph.get(handle);
+	// System.out.println(handle1);
+	//
 	// }
 	// catch (Throwable t)
 	// {
