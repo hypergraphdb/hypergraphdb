@@ -7,14 +7,13 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
+import java.util.Comparator;
 
 /**
  *
- * @author  User
  */
-public class CharType extends NumericTypeBase<Character>
-{
-    
+public class CharType extends PrimitiveTypeBase<Character>
+{    
     public static final String INDEX_NAME = "hg_char_value_index";
     
     protected String getIndexName()
@@ -36,5 +35,28 @@ public class CharType extends NumericTypeBase<Character>
     {
         return new Character((char) (((bytes[offset+ 1] & 0xFF) << 0) + 
                 ((bytes[offset]) << 8)));
+    }
+    
+    private Comparator<byte[]> comparator = null;
+    
+    public static class CharComparator implements Comparator<byte[]> 
+    {
+        transient CharType type = null;
+        
+        public CharComparator(CharType type) { this.type = type; }
+        
+        public int compare(byte [] left, byte [] right)
+        {
+            Character l = type.readBytes(left, dataOffset);
+            Character r = type.readBytes(right, dataOffset);
+            return l.compareTo(r);
+        }
+    };
+    
+    public Comparator<byte[]> getComparator()
+    {
+        if (comparator == null)
+            comparator = new CharComparator(this);
+        return comparator;
     }
  }

@@ -1,5 +1,6 @@
 package org.hypergraphdb.type.javaprimitive;
 
+
 import java.util.Comparator;
 import java.util.TimeZone;
 
@@ -43,8 +44,27 @@ public abstract class DateTypeBase<JavaType> extends PrimitiveTypeBase<JavaType>
         return data;
    }
 
+    private Comparator<byte[]> comparator = null;
+    
+    public static class DateComparator<T> implements Comparator<byte[]> 
+    {
+        transient DateTypeBase<T> type = null;
+        
+        public DateComparator(DateTypeBase<T> type) { this.type = type; }
+        
+        @SuppressWarnings("unchecked")
+        public int compare(byte [] left, byte [] right)
+        {
+            T l = type.readBytes(left, dataOffset);
+            T r = type.readBytes(right, dataOffset);
+            return ((Comparable<T>)l).compareTo(r);
+        }
+    };
+    
     public Comparator<byte[]> getComparator()
     {
-        return NumericTypeBase.COMPARATOR;
-    }    
+        if (comparator == null)
+            comparator = new DateComparator<JavaType>(this);
+        return comparator;
+    }
 }

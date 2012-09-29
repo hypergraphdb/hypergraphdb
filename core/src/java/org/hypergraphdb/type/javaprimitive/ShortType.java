@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
+import java.util.Comparator;
 
 /**
  *
@@ -14,8 +15,24 @@ package org.hypergraphdb.type.javaprimitive;
  */
 public class ShortType extends NumericTypeBase<Short>
 {
-    
     public static final String INDEX_NAME = "hg_short_value_index";
+ 
+    private static final ShortComparator comp = new ShortComparator();
+    
+    public static class ShortComparator implements Comparator<byte[]>, java.io.Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        public int compare(byte [] left, byte [] right)
+        {
+            Short l = bytesToShort(left, dataOffset), r = bytesToShort(right, dataOffset);
+            return l.compareTo(r);
+        }
+    }
+     
+    public Comparator<byte[]> getComparator()
+    {
+        return comp;
+    }
     
     protected String getIndexName()
     {
@@ -33,9 +50,12 @@ public class ShortType extends NumericTypeBase<Short>
     
     protected Short readBytes(byte [] b, int offset)
     {
+        return bytesToShort(b, offset);
+    }
+    
+    public static Short bytesToShort(byte [] b, int offset)
+    {
     	return new Short((short) (((b[offset+ 1] & 0xFF) << 0) + 
     			((b[offset]) << 8)));
     }
- }
-
-
+}

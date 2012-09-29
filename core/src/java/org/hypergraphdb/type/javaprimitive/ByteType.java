@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
+import java.util.Comparator;
 
 /**
  *
@@ -16,6 +17,25 @@ public class ByteType extends NumericTypeBase<Byte>
 {
     public static final String INDEX_NAME = "hg_byte_value_index";
   
+    private static final ByteComparator comp = new ByteComparator();
+    
+    public static class ByteComparator implements Comparator<byte[]>, java.io.Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        public int compare(byte [] left, byte [] right)
+        {
+            if (left[dataOffset] == right[dataOffset])
+                return 0;
+            else
+                return left[dataOffset] - right[dataOffset];
+        }
+    }
+     
+    public Comparator<byte[]> getComparator()
+    {
+        return comp;
+    }
+    
     protected String getIndexName()
     {
         return INDEX_NAME;
@@ -33,6 +53,3 @@ public class ByteType extends NumericTypeBase<Byte>
         return new Byte(bytes[offset]);
     } 
 }
-
-
-

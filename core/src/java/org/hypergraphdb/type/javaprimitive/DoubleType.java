@@ -25,13 +25,7 @@ public class DoubleType extends PrimitiveTypeBase<Double>
 		private static final long serialVersionUID = 1L;    	
         public int compare(byte [] left, byte [] right)
         {
-            byte [] left_f = new byte[left.length - dataOffset];
-            System.arraycopy(left, dataOffset, left_f, 0, left_f.length);
-            byte [] right_f = new byte[right.length - dataOffset];
-            System.arraycopy(right, dataOffset, right_f, 0, right_f.length);
-            
-            return Double.compare(bytesToDouble(left_f), bytesToDouble(right_f));
-            
+            return Double.compare(bytesToDouble(left, dataOffset), bytesToDouble(right, dataOffset));            
         }
     }
      
@@ -62,20 +56,19 @@ public class DoubleType extends PrimitiveTypeBase<Double>
     
     protected Double readBytes(byte [] bytes, int offset)
     {
-        return new Double(bytesToDouble(bytes));
+        return new Double(bytesToDouble(bytes, offset));
     }
     
-    private static double bytesToDouble(byte[] bytes)
+    private static double bytesToDouble(byte[] bytes, int offset)
     {
-        int l = bytes.length - 8;
-        return Double.longBitsToDouble((((long)bytes[l] << 56) +
-                ((long)(bytes[l+1] & 255) << 48) +
-                ((long)(bytes[l+2] & 255) << 40) +
-                ((long)(bytes[l+3] & 255) << 32) +
-                ((long)(bytes[l+4] & 255) << 24) +
-                ((bytes[l+5] & 255) << 16) + 
-                ((bytes[l+6] & 255) <<  8) + 
-                ((bytes[l+7] & 255) <<  0)));
+        //int l = bytes.length - 8;
+        return Double.longBitsToDouble((((long)bytes[offset] << 56) +
+                ((long)(bytes[offset+1] & 255) << 48) +
+                ((long)(bytes[offset+2] & 255) << 40) +
+                ((long)(bytes[offset+3] & 255) << 32) +
+                ((long)(bytes[offset+4] & 255) << 24) +
+                ((bytes[offset+5] & 255) << 16) + 
+                ((bytes[offset+6] & 255) <<  8) + 
+                ((bytes[offset+7] & 255) <<  0)));
     }
- 
  }

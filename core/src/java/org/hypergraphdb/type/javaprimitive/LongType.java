@@ -8,14 +8,32 @@
 package org.hypergraphdb.type.javaprimitive;
 
 
+import java.util.Comparator;
+
 /**
  *
  * @author  User
  */
 public class LongType extends NumericTypeBase<Long>
-{
-    
+{    
     public static final String INDEX_NAME = "hg_long_value_index";
+ 
+    private static final LongComparator comp = new LongComparator();
+    
+    public static class LongComparator implements Comparator<byte[]>, java.io.Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        public int compare(byte [] left, byte [] right)
+        {
+            Long l = bytesToLong(left, dataOffset), r = bytesToLong(right, dataOffset);
+            return l.compareTo(r);
+        }
+    }
+     
+    public Comparator<byte[]> getComparator()
+    {
+        return comp;
+    }
     
     protected String getIndexName()
     {
@@ -38,6 +56,11 @@ public class LongType extends NumericTypeBase<Long>
     }
     
     protected Long readBytes(byte [] bytes, int offset)
+    {
+        return bytesToLong(bytes, offset);
+    }
+    
+    public static Long bytesToLong(byte [] bytes, int offset)
     {
         return new Long((((long)bytes[offset] << 56) +
                 ((long)(bytes[offset + 1] & 255) << 48) +

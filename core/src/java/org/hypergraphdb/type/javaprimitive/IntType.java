@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.type.javaprimitive;
 
+import java.util.Comparator;
 
 /**
  * <p>
@@ -32,6 +33,23 @@ public final class IntType extends NumericTypeBase<Integer>
 {
     public static final String INDEX_NAME = "hg_int_value_index";
     
+    private static final IntComparator comp = new IntComparator();
+    
+    public static class IntComparator implements Comparator<byte[]>, java.io.Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        public int compare(byte [] left, byte [] right)
+        {
+            Integer l = bytesToInt(left, dataOffset), r = bytesToInt(right, dataOffset);
+            return l.compareTo(r);
+        }
+    }
+     
+    public Comparator<byte[]> getComparator()
+    {
+        return comp;
+    }
+    
     protected String getIndexName()
     {
         return INDEX_NAME;
@@ -49,6 +67,11 @@ public final class IntType extends NumericTypeBase<Integer>
     }
     
     protected Integer readBytes(byte [] bytes, int offset)
+    {
+        return bytesToInt(bytes, offset);
+    }
+    
+    protected static Integer bytesToInt(byte [] bytes, int offset)
     {
         int ch1 = bytes[offset];
         int ch2 = bytes[offset + 1];

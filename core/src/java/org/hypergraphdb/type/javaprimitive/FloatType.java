@@ -24,11 +24,7 @@ public class FloatType extends PrimitiveTypeBase<Float>
 		private static final long serialVersionUID = 1L;
         public int compare(byte [] left, byte [] right)
         {
-            byte [] left_f = new byte[4];
-            System.arraycopy(left, dataOffset, left_f, 0, 4);
-            byte [] right_f = new byte[4];
-            System.arraycopy(right, dataOffset, right_f, 0, 4);                        
-            return Float.compare(bytesToFloat(left_f), bytesToFloat(right_f));
+            return Float.compare(bytesToFloat(left, dataOffset), bytesToFloat(right, dataOffset));
         }
     }
      
@@ -55,16 +51,16 @@ public class FloatType extends PrimitiveTypeBase<Float>
     
     protected Float readBytes(byte [] bytes, int offset)
     {
-        return new Float(bytesToFloat(bytes));
+        return new Float(bytesToFloat(bytes, offset));
     }
     
-    private static float bytesToFloat(byte[] b)
+    private static float bytesToFloat(byte[] b, int dataOffset)
     {
-    	int l = b.length - 4;    	 
-        int i = ((b[l + 3] & 0xFF) << 0) +
-		((b[l + 2] & 0xFF) << 8) +
-		((b[l+ 1] & 0xFF) << 16) +
-		((b[l + 0]) << 24);
+    	//int l = b.length - 4;    	 
+        int i = ((b[dataOffset + 3] & 0xFF) << 0) +
+		((b[dataOffset + 2] & 0xFF) << 8) +
+		((b[dataOffset + 1] & 0xFF) << 16) +
+		((b[dataOffset + 0]) << 24);
 	    return Float.intBitsToFloat(i);
     }
  }
