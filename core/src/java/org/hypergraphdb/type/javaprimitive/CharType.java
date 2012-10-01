@@ -33,22 +33,23 @@ public class CharType extends PrimitiveTypeBase<Character>
     
     protected Character readBytes(byte [] bytes, int offset)
     {
+        return bytesToCharacter(bytes, offset);
+    }
+    
+    public static Character bytesToCharacter(byte [] bytes, int offset)
+    {
         return new Character((char) (((bytes[offset+ 1] & 0xFF) << 0) + 
                 ((bytes[offset]) << 8)));
     }
     
     private Comparator<byte[]> comparator = null;
     
-    public static class CharComparator implements Comparator<byte[]> 
-    {
-        transient CharType type = null;
-        
-        public CharComparator(CharType type) { this.type = type; }
-        
+    public static class CharComparator implements Comparator<byte[]>, java.io.Serializable 
+    {        
         public int compare(byte [] left, byte [] right)
         {
-            Character l = type.readBytes(left, dataOffset);
-            Character r = type.readBytes(right, dataOffset);
+            Character l = bytesToCharacter(left, dataOffset);
+            Character r = bytesToCharacter(right, dataOffset);
             return l.compareTo(r);
         }
     };
@@ -56,7 +57,7 @@ public class CharType extends PrimitiveTypeBase<Character>
     public Comparator<byte[]> getComparator()
     {
         if (comparator == null)
-            comparator = new CharComparator(this);
+            comparator = new CharComparator();
         return comparator;
     }
  }

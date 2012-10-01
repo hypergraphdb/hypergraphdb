@@ -18,6 +18,11 @@ public abstract class DateTypeBase<JavaType> extends PrimitiveTypeBase<JavaType>
 
     protected JavaType readBytes(byte[] bytes, int offset)
     {
+        return fromLong(bytesToLong(bytes,offset));
+    }
+    
+    private static long bytesToLong(byte[] bytes, int offset)
+    {
         long x = (((long)bytes[offset] << 56) +
                 ((long)(bytes[offset + 1] & 255) << 48) +
                 ((long)(bytes[offset + 2] & 255) << 40) +
@@ -26,7 +31,7 @@ public abstract class DateTypeBase<JavaType> extends PrimitiveTypeBase<JavaType>
                 ((bytes[offset + 5] & 255) << 16) + 
                 ((bytes[offset + 6] & 255) <<  8) + 
                 ((bytes[offset + 7] & 255) <<  0));         
-        return fromLong(x + TimeZone.getDefault().getRawOffset());
+        return x + TimeZone.getDefault().getRawOffset();
     }
 
     protected byte[] writeBytes(JavaType value)
@@ -50,23 +55,18 @@ public abstract class DateTypeBase<JavaType> extends PrimitiveTypeBase<JavaType>
     {
         private static final long serialVersionUID = 1L;
         
-        transient DateTypeBase<T> type = null;
-        
-        public DateComparator(DateTypeBase<T> type) { this.type = type; }
-        
-        @SuppressWarnings("unchecked")
         public int compare(byte [] left, byte [] right)
         {
-            T l = type.readBytes(left, dataOffset);
-            T r = type.readBytes(right, dataOffset);
-            return ((Comparable<T>)l).compareTo(r);
+            long l = bytesToLong(left, dataOffset);
+            long r = bytesToLong(right, dataOffset);
+            return Long.signum(l-r);
         }
     };
     
     public Comparator<byte[]> getComparator()
     {
         if (comparator == null)
-            comparator = new DateComparator<JavaType>(this);
+            comparator = new DateComparator<JavaType>();
         return comparator;
     }
 }
