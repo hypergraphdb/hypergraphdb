@@ -46,8 +46,10 @@ public abstract class DateTypeBase<JavaType> extends PrimitiveTypeBase<JavaType>
 
     private Comparator<byte[]> comparator = null;
     
-    public static class DateComparator<T> implements Comparator<byte[]> 
+    public static class DateComparator<T> implements Comparator<byte[]>, java.io.Serializable 
     {
+        private static final long serialVersionUID = 1L;
+        
         transient DateTypeBase<T> type = null;
         
         public DateComparator(DateTypeBase<T> type) { this.type = type; }
