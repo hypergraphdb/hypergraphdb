@@ -65,6 +65,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     {
         try
         {
+        		pkey = new DatabaseEntry();
             OperationStatus status = ((SecondaryCursor)cursor.cursor()).getNextDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(pkey.getData());
@@ -82,6 +83,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     {
         try
         {
+        		pkey = new DatabaseEntry();
             OperationStatus status = ((SecondaryCursor)cursor.cursor()).getPrevDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
                 return converter.fromByteArray(pkey.getData());
