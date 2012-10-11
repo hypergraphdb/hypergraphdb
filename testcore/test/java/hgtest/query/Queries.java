@@ -3,6 +3,7 @@ package hgtest.query;
 import hgtest.HGTestBase;
 import hgtest.T;
 import hgtest.beans.Folder;
+import hgtest.beans.SimpleBean;
 import hgtest.utils.RSUtils;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import org.hypergraphdb.query.TargetCondition;
 import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.type.Top;
+import org.hypergraphdb.util.HGUtils;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,7 +47,7 @@ public class Queries extends HGTestBase
     final static int ALIAS_COUNT = 5;
     HGSortIndex<Integer, HGHandle> index;
 
-    boolean value_link_or_normal_link = true;    
+    boolean value_link_or_normal_link = true;   
 
     public static void main(String[] args)
     {
@@ -56,8 +58,8 @@ public class Queries extends HGTestBase
     void test()
     {
         setUp();
+        testValueLinkSearch();
         testAtomPartCondition();
-        testAtomProjectionCondition();
         testAtomTypeCondition();
         testAtomValueCondition();
         testSubsumedCondition();
@@ -110,11 +112,6 @@ public class Queries extends HGTestBase
         Assert.assertNotSame(RSUtils.countRS(q.execute(), true), 0);
     }
 
-    @Test
-    public void testAtomProjectionCondition()
-    {
-        // tested in testAtomPartCondition()
-    }
 
     @Test
     public void testIncidentCondition()
@@ -399,6 +396,16 @@ public class Queries extends HGTestBase
          Assert.assertEquals(links, targets);
     }
 
+    @Test
+    public void testValueLinkSearch()
+    {
+        Assert.assertNotNull(hg.findOne(graph, 
+                hg.and(hg.type(SimpleBean.class), hg.eq("strProp", "nestbeansLink"))));
+        HGHandle somenested = hg.findOne(graph, hg.type(NestedBean.class));
+        Assert.assertNotNull(somenested);
+        Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.incident(somenested))));
+    }
+    
     @BeforeClass
     public void setUp()
     {
@@ -411,9 +418,18 @@ public class Queries extends HGTestBase
         index = (HGSortIndex<Integer, HGHandle>) graph.getIndexManager()
                 .<Integer, HGHandle> register(
                         new ByPartIndexer(typeH, "number"));
+        
+        ArrayList<HGHandle> nbeans = new ArrayList<HGHandle>();
         for (int i = 0; i < COUNT - 1; i++)
-            graph.add(NestedBean.create(i));
-
+        {
+            HGHandle h = graph.add(NestedBean.create(i));
+            nbeans.add(h);
+        }
+        
+        SimpleBean sbean = new SimpleBean();
+        sbean.setStrProp("nestbeansLink");
+        graph.add(new HGValueLink(sbean, nbeans.toArray(new HGHandle[0])));
+        
         // duplicated value
         graph.add(NestedBean.create(DUPLICATED_NUM));
 

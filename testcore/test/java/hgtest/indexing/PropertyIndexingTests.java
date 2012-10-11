@@ -7,6 +7,7 @@ import java.util.List;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGQuery;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
@@ -19,11 +20,45 @@ import org.testng.annotations.Test;
 import hgtest.HGTestBase;
 import hgtest.RandomStringUtils;
 import hgtest.T;
+import hgtest.DebugTest.Id;
 import hgtest.beans.SimpleBean;
 import hgtest.beans.DerivedBean;
 
 public class PropertyIndexingTests extends HGTestBase
 {
+    @Test
+    public void testNumberOrder()
+    {
+        HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+        ByPartIndexer<Long> byPartIndexer = new ByPartIndexer<Long>("id_indexer", typeHandle, "longProp");
+        graph.getIndexManager().register(byPartIndexer);
+
+        for (long i = 1l; i < 2000l; i++)
+        {
+            graph.add(new Id(i));
+        }
+        
+        HGIndex index = graph.getIndexManager().getIndex(byPartIndexer);
+        HGRandomAccessResult result = index.scanValues();
+        result.goBeforeFirst();
+        try
+        {
+            ArrayList<Long> numbers = new ArrayList<Long>();
+            while (result.hasNext())
+            {
+                SimpleBean b = graph.get((HGHandle) result.next());
+                numbers.add(b.getLongProp());
+            }
+            for (int i = 0; i < numbers.size() - 1; i++)
+                Assert.assertTrue(numbers.get(i) < numbers.get(i+1));
+        }
+        finally
+        {
+            result.close();
+        }
+        
+    }
+    
     @SuppressWarnings("unchecked")
     @Test
     public void simplePropertyIndexing()

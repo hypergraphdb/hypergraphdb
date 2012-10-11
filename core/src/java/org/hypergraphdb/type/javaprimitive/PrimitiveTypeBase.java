@@ -186,9 +186,9 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
     }
     
     
-    public JavaType fromByteArray(byte[] byteArray) 
+    public JavaType fromByteArray(byte[] byteArray, int offset, int length) 
     {
-		return readBytes(byteArray, dataOffset);
+		return readBytes(byteArray, dataOffset + offset);
 	}
 
 	public byte[] toByteArray(JavaType object) 

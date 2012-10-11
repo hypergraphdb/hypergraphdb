@@ -277,9 +277,9 @@ public class AtomRefType implements HGAtomType,
 									   		   getFloatingIdx().find(referent)));
 	}
 
-	public Object fromByteArray(byte[] byteArray)
+	public Object fromByteArray(byte[] byteArray, int offset, int length)
 	{
-		HGPersistentHandle h = BAtoHandle.getInstance(graph.getHandleFactory()).fromByteArray(byteArray);
+		HGPersistentHandle h = BAtoHandle.getInstance(graph.getHandleFactory()).fromByteArray(byteArray, offset, length);
 		if (h.equals(graph.getHandleFactory().nullHandle()))
 			return null;
 		else

@@ -18,8 +18,8 @@ public class BAtoString implements ByteArrayConverter<String>
 		return object.getBytes();
 	}
 
-	public String fromByteArray(byte[] byteArray) 
+	public String fromByteArray(byte[] byteArray, int offset, int length) 
 	{
-		return new String(byteArray);
+		return new String(byteArray, offset, length);
 	}
 }

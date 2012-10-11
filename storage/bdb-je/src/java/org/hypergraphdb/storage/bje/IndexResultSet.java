@@ -132,7 +132,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		
 		try {
 			cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
-			next = converter.fromByteArray(data.getData());
+			next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			lookahead = 1;
 		}
 		catch (Throwable t) {
@@ -140,8 +140,8 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		}
 	}
 
-	protected void positionToCurrent(byte[] data) {
-		current = converter.fromByteArray(data);
+	protected void positionToCurrent(byte[] data, int offset, int length) {
+		current = converter.fromByteArray(data, offset, length);
 		lookahead = 0;
 		prev = next = UNKNOWN;
 	}
@@ -151,7 +151,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 			if (cursor.cursor().getFirst(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
 				current = UNKNOWN;
 				prev = null;
-				next = converter.fromByteArray(data.getData());
+				next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 				lookahead = 1;
 			}
 			else {
@@ -171,7 +171,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 			if (cursor.cursor().getLast(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
 				current = UNKNOWN;
 				next = null;
-				prev = converter.fromByteArray(data.getData());
+				prev = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 				lookahead = -1;
 			}
 			else {
@@ -194,7 +194,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 			if (exactMatch) {
 				status = cursor.cursor().getSearchBoth(key, data, LockMode.DEFAULT);
 				if (status == OperationStatus.SUCCESS) {
-					positionToCurrent(data.getData());
+					positionToCurrent(data.getData(), data.getOffset(), data.getSize());
 					return GotoResult.found;
 				}
 				else
@@ -204,7 +204,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 				status = cursor.cursor().getSearchBothRange(key, data, LockMode.DEFAULT);
 				if (status == OperationStatus.SUCCESS) {
 					GotoResult result = HGUtils.eq(B, data.getData()) ? GotoResult.found : GotoResult.close;
-					positionToCurrent(data.getData());
+					positionToCurrent(data.getData(), data.getOffset(), data.getSize());
 					return result;
 				}
 				else

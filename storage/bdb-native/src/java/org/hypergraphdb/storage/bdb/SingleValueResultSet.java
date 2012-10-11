@@ -50,7 +50,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
 	    try
 	    {
 	        ((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT);
-	        next = converter.fromByteArray(pkey.getData());
+	        next = converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize());
 	        lookahead = 1;
 	    }
 	    catch (Throwable t)
@@ -65,10 +65,9 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     {
         try
         {
-        		pkey = new DatabaseEntry();
             OperationStatus status = ((SecondaryCursor)cursor.cursor()).getNextDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(pkey.getData());
+                return converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize());
             else
                 return null;
         }
@@ -86,7 +85,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
         		pkey = new DatabaseEntry();
             OperationStatus status = ((SecondaryCursor)cursor.cursor()).getPrevDup(key, pkey, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(pkey.getData());
+                return converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize());
             else
                 return null;
         }
@@ -107,7 +106,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     		{
     			if (((SecondaryCursor)cursor.cursor()).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
-    				positionToCurrent(pkey.getData());
+    				positionToCurrent(pkey.getData(), pkey.getOffset(), pkey.getSize());
     				return GotoResult.found; 
     			}
     			else
@@ -117,7 +116,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T>
     		{
     			if (((SecondaryCursor)cursor.cursor()).getSearchBothRange(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
-    				positionToCurrent(pkey.getData());
+    				positionToCurrent(pkey.getData(), pkey.getOffset(), pkey.getSize());
     				return HGUtils.eq(B, pkey.getData()) ? GotoResult.found : GotoResult.close;
     			}
     			else

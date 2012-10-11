@@ -18,5 +18,5 @@ package org.hypergraphdb.storage;
 public interface ByteArrayConverter<T>
 {
     byte [] toByteArray(T object);
-    T fromByteArray(byte [] byteArray);
+    T fromByteArray(byte [] byteArray, int offset, int length);
 }

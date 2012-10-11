@@ -46,12 +46,12 @@ public final class HGAtomAttrib
 	                ((src[offset + 7] & 255) <<  0));    			
 		}
 		
-		public HGAtomAttrib fromByteArray(byte[] byteArray) 
+		public HGAtomAttrib fromByteArray(byte[] byteArray, int offset, int length) 
 		{
 			HGAtomAttrib result = new HGAtomAttrib();
-			result.flags = byteArray[0];
-			result.retrievalCount = getLong(byteArray, 1);
-			result.lastAccessTime = getLong(byteArray, 9);
+			result.flags = byteArray[offset];
+			result.retrievalCount = getLong(byteArray, 1 + offset);
+			result.lastAccessTime = getLong(byteArray, 9 + offset);
 			return result;
 		}
 

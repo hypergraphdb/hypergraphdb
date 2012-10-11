@@ -25,7 +25,7 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
         {
             OperationStatus status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(data.getData());
+                return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
             else
                 return null;
         }
@@ -44,7 +44,7 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
         {
             OperationStatus status = cursor.cursor().getNext(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(data.getData());
+                return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
             else
                 return null;
         }

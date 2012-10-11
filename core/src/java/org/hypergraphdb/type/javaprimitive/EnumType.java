@@ -80,9 +80,9 @@ public class EnumType extends HGAtomTypeBase implements HGPrimitiveType
 		graph.getStore().removeLink(handle);
 	}
 
-    public Object fromByteArray(byte[] byteArray)
+    public Object fromByteArray(byte[] byteArray, int offset, int length)
     {
-        int ordinal = BAUtils.readInt(byteArray, 0);
+        int ordinal = BAUtils.readInt(byteArray, offset);
         return enumType.getEnumConstants()[ordinal];        
     }
 

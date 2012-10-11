@@ -302,7 +302,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		try {
 			OperationStatus status = db.get(txn().getBJETransaction(), keyEntry, value, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				result = valueConverter.fromByteArray(value.getData());
+				result = valueConverter.fromByteArray(value.getData(), value.getOffset(), value.getSize());
 		}
 		catch (Exception ex) {
 			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);
@@ -321,7 +321,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				result = valueConverter.fromByteArray(value.getData());
+				result = valueConverter.fromByteArray(value.getData(), value.getOffset(), value.getSize());
 		}
 		catch (Exception ex) {
 			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);
@@ -358,7 +358,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				result = valueConverter.fromByteArray(value.getData());
+				result = valueConverter.fromByteArray(value.getData(), value.getOffset(), value.getSize());
 		}
 		catch (Exception ex) {
 			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);

@@ -39,7 +39,7 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T> {
 		try {
 			OperationStatus status = cursor.cursor().getNextDup(key, data, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData());
+				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			else
 				return null;
 		}
@@ -53,7 +53,7 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T> {
 		try {
 			OperationStatus status = cursor.cursor().getPrevDup(key, data, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData());
+				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			else
 				return null;
 		}

@@ -184,7 +184,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
             cursor = secondaryDb.openSecondaryCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                result = keyConverter.fromByteArray(valueEntry.getData());
+                result = keyConverter.fromByteArray(valueEntry.getData(), valueEntry.getOffset(), valueEntry.getSize());
         }
         catch (Exception ex)
         {

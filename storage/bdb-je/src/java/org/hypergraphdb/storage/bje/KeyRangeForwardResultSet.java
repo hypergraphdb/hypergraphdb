@@ -22,7 +22,7 @@ class KeyRangeForwardResultSet<T> extends IndexResultSet<T> {
 		try {
 			OperationStatus status = cursor.cursor().getNext(key, data, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData());
+				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			else
 				return null;
 		}
@@ -38,7 +38,7 @@ class KeyRangeForwardResultSet<T> extends IndexResultSet<T> {
 		try {
 			OperationStatus status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData());
+				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			else
 				return null;
 		}

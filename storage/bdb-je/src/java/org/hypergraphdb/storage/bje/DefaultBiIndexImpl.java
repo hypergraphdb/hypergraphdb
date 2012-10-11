@@ -164,7 +164,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 			cursor = secondaryDb.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
 			if (status == OperationStatus.SUCCESS)
-				result = keyConverter.fromByteArray(valueEntry.getData());
+				result = keyConverter.fromByteArray(valueEntry.getData(), valueEntry.getOffset(), valueEntry.getSize());
 		}
 		catch (Exception ex) {
 			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);

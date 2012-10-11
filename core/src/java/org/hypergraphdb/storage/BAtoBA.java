@@ -21,8 +21,15 @@ public class BAtoBA implements ByteArrayConverter<byte[]>
         return (byte[])object;
     }
 
-    public byte [] fromByteArray(byte[] byteArray)
+    public byte [] fromByteArray(byte[] byteArray, int offset, int length)
     {
-        return byteArray;
+        if (offset == 0 && length == byteArray.length)
+            return byteArray;
+        else
+        {
+            byte [] B = new byte[length];
+            System.arraycopy(byteArray, offset, B, 0, length);
+            return B;
+        }
     }
 }

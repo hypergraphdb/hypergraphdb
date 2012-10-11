@@ -85,9 +85,9 @@ public class TargetToTargetIndexer extends HGValueIndexer<HGHandle, HGHandle>
                 return graph.getPersistentHandle(h).toByteArray();
             }
 
-            public HGHandle fromByteArray(byte[] A)
+            public HGHandle fromByteArray(byte[] A, int offset, int length)
             {
-                return graph.getHandleFactory().makeHandle(A);
+                return graph.getHandleFactory().makeHandle(A, offset);
             }
         };
     }
@@ -106,9 +106,9 @@ public class TargetToTargetIndexer extends HGValueIndexer<HGHandle, HGHandle>
                 return graph.getPersistentHandle(h).toByteArray();
             }
 
-            public HGHandle fromByteArray(byte[] A)
+            public HGHandle fromByteArray(byte[] A, int offset, int length)
             {
-                return graph.getHandleFactory().makeHandle(A);
+                return graph.getHandleFactory().makeHandle(A, offset);
             }
         };
     }

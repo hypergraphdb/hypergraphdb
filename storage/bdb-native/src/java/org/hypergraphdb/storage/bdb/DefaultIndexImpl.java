@@ -335,7 +335,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             cursor = db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-               result = valueConverter.fromByteArray(value.getData());
+               result = valueConverter.fromByteArray(value.getData(), value.getOffset(), value.getSize());
         }
         catch (Exception ex)
         {
@@ -373,7 +373,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
             cursor = db.openCursor(txn().getBDBTransaction(), cursorConfig);            
             OperationStatus status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-               result = valueConverter.fromByteArray(value.getData());
+               result = valueConverter.fromByteArray(value.getData(), value.getOffset(), value.getSize());
         }
         catch (Exception ex)
         {

@@ -35,7 +35,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
         {
             OperationStatus status = cursor.cursor().getNextNoDup(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-            	return converter.fromByteArray(key.getData());
+            	return converter.fromByteArray(key.getData(), key.getOffset(), key.getSize());
             else
                 return null;
         }
@@ -53,7 +53,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
         {
             OperationStatus status = cursor.cursor().getPrevNoDup(key, data, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(key.getData());
+                return converter.fromByteArray(key.getData(), key.getOffset(), key.getSize());
             else
                 return null;
         }
@@ -86,7 +86,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
 	    try
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
-	        next = converter.fromByteArray(key.getData());
+	        next = converter.fromByteArray(key.getData(), key.getOffset(), key.getSize());
 	        lookahead = 1;
 	    }
 	    catch (Throwable t)
@@ -105,7 +105,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     		{
     			if (cursor.cursor().getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
-    				positionToCurrent(key.getData());
+    				positionToCurrent(key.getData(), key.getOffset(), key.getSize());
     				return GotoResult.found;
     			}
     			else
@@ -115,7 +115,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     		{
     			if (cursor.cursor().getSearchKeyRange(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
     			{
-    				positionToCurrent(key.getData());    				
+    				positionToCurrent(key.getData(), key.getOffset(), key.getSize());    				
     				return HGUtils.eq(B, key.getData()) ? GotoResult.found : GotoResult.close;
     			}
     			else

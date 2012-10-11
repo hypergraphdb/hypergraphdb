@@ -14,6 +14,14 @@
     <version>1.2</version>
     <bdb.version>5.3.15</bdb.version>    
   </properties>
+
+
+  <distributionManagement>
+    <repository>
+      <id>kobrix-repository</id>
+      <url>sftp://kobrix.com/home/tomcat/webapps/hypergraphdb/maven</url>
+    </repository>
+  </distributionManagement>
   
   <repositories>
     <repository>
@@ -21,7 +29,14 @@
       <url>http://hypergraphdb.org/maven</url>
     </repository>
   </repositories>
- 
+
+  <modules>
+    <module>core</module>
+    <module>p2p</module>
+    <module>storage/bdb-je</module>
+    <module>storage/bdb-native</module>
+  </modules>
+
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
@@ -34,6 +49,14 @@
         <directory>src/config</directory>
       </resource>
     </resources>
+
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+	<artifactId>wagon-ftp</artifactId>
+	<version>1.0-beta-6</version>
+      </extension>
+    </extensions>
     
   <pluginManagement>
   <plugins>

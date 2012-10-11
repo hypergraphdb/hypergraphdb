@@ -38,9 +38,9 @@ public class BAtoHandle implements ByteArrayConverter<HGPersistentHandle>
         return object.toByteArray();
     }
 
-    public HGPersistentHandle fromByteArray(byte[] byteArray)
+    public HGPersistentHandle fromByteArray(byte[] byteArray, int offset, int length)
     {
-        return handleFactory.makeHandle(byteArray);
+        return handleFactory.makeHandle(byteArray, offset);
 //        return UUIDPersistentHandle.makeHandle(byteArray);
     }
 }

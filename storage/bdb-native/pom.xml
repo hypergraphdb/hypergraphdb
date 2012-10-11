@@ -3,19 +3,16 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hgdbstorage</artifactId>
+    <version>1.2</version>  
+  </parent>  	
   <groupId>org.hypergraphdb</groupId>
   <artifactId>hgbdbnative</artifactId>
   <name>HyperGraphDB BDB-JE Storage</name>
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
-
-  <distributionManagement>
-    <repository>
-      <id>kobrix-repository</id>
-      <url>sftp://kobrix.com/home/tomcat/webapps/hypergraphdb/maven</url>
-    </repository>
-  </distributionManagement>
-  
 
  <repositories>
     <repository>

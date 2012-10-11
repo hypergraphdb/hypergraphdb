@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project basedir="." name="HyperGraphDB" default="all">
+<project basedir="." 
+         name="HyperGraphDB" 
+         default="all"         
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+         
 	<description>HyperGraphDB Top Build File</description>
 
 	<property name="version" value="1.0a" />
@@ -15,25 +19,65 @@
 	<target name="init" depends="timestamp">
 	</target>
 
-	<target name="core" depends="init">
-      <ant dir="core" target="all"/>
-	</target>
-
-	<target name="viewer" depends="init">
-      <ant dir="viewer" target="viewer-jar"/>
-	</target>
-
-	<target name="apps" depends="init">
-      <ant dir="apps" target="all-jars"/>      
+    
+	<target name="build-core">
+        <artifact:mvn pom="core/pom.xml">
+            <arg value="package"/>
+        </artifact:mvn>	
 	</target>
     
-    <target name="all" depends="core, viewer, apps"/>
-    <target name="clean">
-      <ant dir="core" target="clean"/>
-      <ant dir="viewer" target="clean"/>
-      <ant dir="apps" target="clean"/>
-      <delete>
-        <fileset dir="." includes="*.jar"/>
-      </delete>
+	<target name="build-bdbnative">
+        <artifact:mvn pom="storage/bdb-native/pom.xml">
+            <arg value="package"/>
+        </artifact:mvn>	
+	</target>
+    
+	<target name="build-bdbje">
+        <artifact:mvn pom="storage/bdb-je/pom.xml">
+            <arg value="package"/>
+        </artifact:mvn>	
+	</target>
+    
+	<target name="build-p2p">
+        <artifact:mvn pom="storage/bdb-p2p/pom.xml">
+            <arg value="package"/>
+        </artifact:mvn>	
+	</target>
+    
+    <target name="dist-common" depends="build-core, build-p2p, build-bdbnative, build-bdbje" description="Create common files for all platform distributions.">
+        <delete dir="${distfilename}"/>
+        <mkdir dir="${distfilename}"/>
+        <copydir src="${javadoc}" dest="${distfilename}/javadoc"/>
+        <copydir src="src" dest="${distfilename}/src" excludes="**/.svn"/>
+        <copydir src="jars" dest="${distfilename}/jars" excludes="**/.svn"/>
+        <copydir src="ThirdPartyLicensing" dest="${distfilename}/ThirdPartyLicensing" excludes="**/.svn"/>
+        <copy file="LicensingInformation" todir="${distfilename}"/>
+        <copy file="readme.html" todir="${distfilename}"/>
+        <copy file="build.xml" todir="${distfilename}"/>        
+        <copy file="${jars}/${jar-name}" todir="${distfilename}"/>
+        <copy file="${jars}/${peer-jar-name}" todir="${distfilename}"/>
+        <copy file="${jars}/${full-jar-name}" todir="${distfilename}"/>
     </target>
+    
+	<target name="dist-win" depends="dist-common" description="Create MS Windows distribution.">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/windows" dest="${distfilename}/native"/>
+        <zip destfile="${dist}/${distfilename}.zip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+
+	<target name="dist-lin" depends="dist-common" description="Create Linux distribution">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/linux" dest="${distfilename}/native"/>
+        <tar destfile="${dist}/${distfilename}.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+
+	<target name="dist-mac" depends="dist-common" description="Create MacOS distribution">
+        <delete dir="${distfilename}/native"/>    
+        <mkdir dir="${distfilename}/native"/>
+        <copydir src="native/macos" dest="${distfilename}/native"/>
+        <tar destfile="${dist}/${distfilename}-macos.tar.gz" compression="gzip" basedir="." includes="${distfilename}/**"/>
+   	</target>
+    
 </project>

@@ -149,7 +149,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 	    try
 	    {
 	        cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
-	        next = converter.fromByteArray(data.getData());
+	        next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 	        lookahead = 1;
 	    }
 	    catch (Throwable t)
@@ -158,9 +158,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 	    }
     }
 
-    protected void positionToCurrent(byte [] data)
+    protected void positionToCurrent(byte [] data, int offset, int length)
     {
-		current = converter.fromByteArray(data);
+		current = converter.fromByteArray(data, offset, length);
        	lookahead = 0;
         prev = next = UNKNOWN;
     }
@@ -173,7 +173,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
             {
                 current = UNKNOWN;
                 prev = null;
-                next = converter.fromByteArray(data.getData());
+                next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
                 lookahead = 1;
             }
             else
@@ -198,7 +198,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
             {
                 current = UNKNOWN;
                 next = null;
-                prev = converter.fromByteArray(data.getData());
+                prev = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
                 lookahead = -1;
             }
             else
@@ -227,7 +227,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     		    status = cursor.cursor().getSearchBoth(key, data, LockMode.DEFAULT);
     			if (status == OperationStatus.SUCCESS)
     			{
-    				positionToCurrent(data.getData());
+    				positionToCurrent(data.getData(), data.getOffset(), data.getSize());
     				return GotoResult.found; 
     			}
     			else
@@ -239,7 +239,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     			if (status == OperationStatus.SUCCESS)
     			{
     				GotoResult result = HGUtils.eq(B, data.getData()) ? GotoResult.found : GotoResult.close; 
-    				positionToCurrent(data.getData());
+    				positionToCurrent(data.getData(), data.getOffset(), data.getSize());
     				return result;
     			}    				
     			else
