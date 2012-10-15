@@ -2048,13 +2048,13 @@ public /*final*/ class HyperGraph implements HyperNode
         HGPersistentHandle oldTypeHandle = layout[0];
         HGAtomType oldType = (HGAtomType)get(oldTypeHandle);
         HGAtomType type = (HGAtomType)get(typeHandle);        
-        
-        Object oldValue;
-        if (lHandle != null && (oldValue = lHandle.getRef()) != null)
-        	;
-        else
-        	oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
-        
+
+        Object oldValue = null;
+        if (lHandle != null)
+            oldValue = lHandle.getRef();
+        if (oldValue == null || oldValue == atom)
+            oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
+                
         idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, pHandle, oldValue);
         
         if (oldValue instanceof HGValueLink)
