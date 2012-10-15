@@ -27,6 +27,21 @@ import hgtest.beans.DerivedBean;
 public class PropertyIndexingTests extends HGTestBase
 {
     @Test
+    public void testUpdateLiveAtom()
+    {
+        HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+        ByPartIndexer<Long> byPartIndexer = new ByPartIndexer<Long>("id_indexer", typeHandle, "longProp");
+        graph.getIndexManager().register(byPartIndexer);
+        graph.runMaintenance();
+        SimpleBean x = new SimpleBean();
+        x.setLongProp(1l);
+        graph.add(x);
+        x.setLongProp(3l);
+        graph.update(x);
+        Assert.assertEquals(graph.count(hg.and(hg.type(SimpleBean.class), hg.gt("longProp", 0l))), 1);
+    }
+    
+    @Test
     public void testNumberOrder()
     {
         HGHandle typeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
