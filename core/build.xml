@@ -4,36 +4,23 @@
          default="all">
          
 	<description>HyperGraphDB Core Build File</description>
-    <property name="version" value="1.1"/>
-    <property name="distfilename" value="hypergraphdb-${version}"/>    
+    <property name="version" value="1.2"/>
     <property name="build" value="build"/>
     <property name="dist" value="dist"/>
     <property name="javadoc" value="javadoc"/>    
     <property name="jars" value="."/>
     <property name="debug" value="on"/>
 	
-	<property name="jar-name" value="hypergraphdb.jar"/>
-	<property name="peer-jar-name" value="hgpeer.jar"/>
-	<property name="full-jar-name" value="hgdbfull.jar"/>
-
+	<property name="jar-name" value="hgdb-${version}.jar"/>
 	<property name="core-path" value="src/java"/>
-	<property name="peer-path" value="org/hypergraphdb/peer"/>
 		
 	<!-- classpath for compiling-->
 	<path id="core-classpath">
-		<fileset dir="jars">
-			<include name="**/*.jar" />
-			<exclude name="**/jxta*.jar"/>
-		</fileset>
-		<pathelement path="${java.class.path}" />
-	</path>
-	
-	<path id="all-classpath">
-		<fileset dir="jars">
+		<fileset dir="${jars}">
 			<include name="**/*.jar" />
 		</fileset>
 		<pathelement path="${java.class.path}" />
-	</path>
+	</path>	
 	
     <target name="init">
 		<mkdir dir="${build}"/>
@@ -41,9 +28,8 @@
         <mkdir dir="${dist}"/>
     </target>
     
-	<target name="core-compile" depends="init" description="Compile the HyperGraphDB Core Sources">
+	<target name="compile" depends="init" description="Compile the HyperGraphDB Core Sources">
 		<javac classpathref="core-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}">
-			<exclude name="${peer-path}/**"/>
 		</javac>
 		<copy todir="${build}/">
 			<fileset dir="src/config">
@@ -52,31 +38,8 @@
 		</copy>        
 	</target>
 
-	<target name="peer-compile" depends="init" description="Compile the peer-to-peer code">
-		<javac source="1.6" classpathref="all-classpath" debug="${debug}" destdir="${build}" srcdir="${core-path}/${peer-path}">
-		</javac>
-	</target>
-	
-	<target name="core-jar" depends="core-compile" description="Create HyperGraphDB Core Jar file.">
-		<jar basedir="${build}" jarfile="${jars}/${jar-name}">
-			<exclude name="**/*.jar" />
-			<exclude name="**/*.bak" />			
-			<exclude name="${peer-path}/**"/>
-		</jar>
-	</target>
-
-	<target name="peer-jar" depends="peer-compile" description="Create HGDB peer jar file.">
-		<jar basedir="${build}" jarfile="${jars}/${peer-jar-name}">
-			<exclude name="**/*.jar" />
-			<exclude name="**/*.bak" />
-			<include name="${peer-path}/**"/>
-		</jar>
-	</target>
-	
-	<target name="full-jar" depends="core-compile, peer-compile" description="Create HGDB Full jar file (both core and peer).">
-		<jar basedir="${build}" jarfile="${jars}/${full-jar-name}">
-			<exclude name="**/*.jar" />
-			<exclude name="**/*.bak" />
+	<target name="jar" depends="compile" description="Create HyperGraphDB Core Jar file.">
+		<jar basedir="${build}" jarfile="${jar-name}">
 		</jar>
 	</target>
 
@@ -84,8 +47,7 @@
 	    <javadoc sourcepath="${core-path}" destdir="${javadoc}" classpathref="core-classpath"/>
 	</target>
 		
-
-	<target name="all" depends="core-jar, peer-jar, full-jar, dist-win, dist-lin, dist-mac"/>
+	<target name="all" depends="jar,docgen"/>
 	
     <target description="clean up" name="clean">
 	    <!-- Delete the ${build} and ${dist} directory trees -->
@@ -94,8 +56,6 @@
         <delete dir="${distfilename}"/>
         <delete dir="${javadoc}"/>
         <delete file="${jars}/${jar-name}"/>
-		<delete file="${jars}/${peer-jar-name}"/>
-        <delete file="${jars}/${full-jar-name}"/>
 	</target>
 
 </project>
