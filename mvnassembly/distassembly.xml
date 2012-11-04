@@ -1,12 +1,12 @@
-<assembly>
-   <id>beta</id>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0">
+   <id>final</id>
    <formats>
       <format>zip</format>
       <format>tar.gz</format>
    </formats>
    <fileSets>
      <fileSet>
-       <directory>core</directory>
+       <directory>../core</directory>
        <outputDirectory>/</outputDirectory>
        <includes>
 	 <include>readme.html</include>
@@ -15,42 +15,42 @@
        </includes>
      </fileSet>
      <fileSet>
-       <directory>core/target/site/apidocs</directory>
+       <directory>../core/target/site/apidocs</directory>
        <outputDirectory>apidocs/hgdb</outputDirectory>
        <includes>
 	 <include>**</include>
        </includes>
      </fileSet>
      <fileSet>
-       <directory>p2p/target/site/apidocs</directory>
-       <outputDirectory>apidocs/p2p</outputDirectory>
+       <directory>../p2p/target/site/apidocs</directory>
+       <outputDirectory>apidocs/hgdbp2p</outputDirectory>
        <includes>
 	 <include>**</include>
        </includes>
      </fileSet>
      <fileSet>
-       <directory>storage/bdb-je/target/site/apidocs</directory>
+       <directory>../storage/bdb-je/target/site/apidocs</directory>
        <outputDirectory>apidocs/hgbdbje</outputDirectory>
        <includes>
 	 <include>**</include>
        </includes>
      </fileSet>
      <fileSet>
-       <directory>storage/bdb-native/target/site/apidocs</directory>
+       <directory>../storage/bdb-native/target/site/apidocs</directory>
        <outputDirectory>apidocs/hgbdbnative</outputDirectory>
        <includes>
 	 <include>**</include>
        </includes>
      </fileSet>
      <fileSet>
-       <directory>storage/bdb-native/target/site/apidocs</directory>
+       <directory>../storage/bdb-native/target/site/apidocs</directory>
        <outputDirectory>apidocs/hgbdbnative</outputDirectory>
        <includes>
 	 <include>**</include>
        </includes>
      </fileSet>
      <fileSet>
-       <directory>storage/bdb-native/native</directory>
+       <directory>../storage/bdb-native/native</directory>
        <outputDirectory>lib/native</outputDirectory>
      </fileSet>
    </fileSets>
@@ -66,9 +66,11 @@
       <outputDirectory>lib</outputDirectory>
       <unpack>false</unpack>
       <includeDependencies>true</includeDependencies>
+      <!--
       <dependencySets>
-	<dependencySet/>
+	    <dependencySet/>
       </dependencySets>
+      -->
     </binaries>
     <sources>
       <includeModuleDirectory>true</includeModuleDirectory>

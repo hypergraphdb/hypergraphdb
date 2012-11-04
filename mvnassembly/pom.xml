@@ -1,0 +1,73 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hypergraphdb</artifactId>
+    <version>1.2</version>  
+  </parent>  
+  <artifactId>hgdbdist</artifactId>
+  <packaging>pom</packaging>  
+  <name>HGDB Core assembly</name>    
+  
+  <build>
+  <pluginManagement>
+  <plugins>
+    <plugin>
+      <artifactId>maven-assembly-plugin</artifactId>
+      <version>2.3</version>
+      <configuration>
+        <descriptors>
+          <descriptor>distassembly.xml</descriptor>
+        </descriptors>
+      </configuration> 
+      <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>         
+    </plugin>  
+  </plugins>
+  </pluginManagement>  
+  </build>
+
+  <modules>
+    <module>../core</module>
+    <module>../p2p</module>    
+    <module>../storage/bdb-je</module>
+    <module>../storage/bdb-native</module>        
+  </modules>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdb</artifactId>
+      <version>1.2</version>      
+    </dependency>	
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdbp2p</artifactId>
+      <version>1.2</version>
+      <scope>runtime</scope>
+    </dependency>	
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>1.2</version>
+      <scope>runtime</scope>
+    </dependency>	
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbnative</artifactId>
+      <version>1.2</version>
+      <scope>runtime</scope>
+    </dependency>	            
+  </dependencies>    
+  
+</project>

@@ -168,6 +168,9 @@ public class DebugTest
 
     public static void main(String[] argv)
     {
+        byte b1 = 2, b2 = (byte)248;
+        System.out.println(b1 & b2);
+        System.exit(1);
         //anatest();
         // TestQuery.go("/tmp/alain");
         PropertyIndexingTests test = new PropertyIndexingTests();

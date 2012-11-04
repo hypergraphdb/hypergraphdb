@@ -8,7 +8,11 @@
   <name>HyperGraphDB Test Utilities</name>
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
-
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hypergraphdb</artifactId>
+    <version>1.2</version>  
+  </parent>
  <repositories>
     <repository>
       <id>hypergraphdb</id>
