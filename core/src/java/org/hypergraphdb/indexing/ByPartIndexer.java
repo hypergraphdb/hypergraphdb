@@ -12,6 +12,7 @@ import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
@@ -158,6 +159,8 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 	public KeyType getKey(HyperGraph graph, Object atom)
 	{
 		Object result = atom;
+		if (atom instanceof HGValueLink)
+		    result = ((HGValueLink)atom).getValue();
 		for (HGProjection p : getProjections(graph))
 			result = p.project(result);
 		return (KeyType)result;
