@@ -9,6 +9,7 @@ import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
@@ -197,4 +198,39 @@ public class PropertyIndexingTests extends HGTestBase
                 graph.remove(x);
         }
     }    
+    
+    @Test
+    public void valueLinkByPropertyTest()
+    {
+        HGHandle simpleTypeHandle = graph.getTypeSystem().getTypeHandle(SimpleBean.class);
+        HGIndex<?,?> idx = graph.getIndexManager().register(new ByPartIndexer(simpleTypeHandle, "intProp"));
+        HGHandle last = simpleTypeHandle;
+        int totalAdded = 0;
+        for (int i = 0; i < 100; i++)
+        {
+            SimpleBean bean = new SimpleBean();
+            bean.setIntProp(i);
+            last = graph.add(new HGValueLink(bean, new HGHandle[]{ last }));
+            totalAdded++;
+        }        
+        try
+        {
+            Assert.assertEquals(idx.count(), totalAdded);
+            reopenDb();
+            idx = graph.getIndexManager().getIndex(new ByPartIndexer(simpleTypeHandle, "intProp"));
+            Assert.assertEquals(idx.count(), totalAdded);    
+            // check that an index will be used if querying by that property:
+            ExpressionBasedQuery<HGHandle> query = 
+                (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 56)));
+            Assert.assertTrue(query.getCompiledQuery() instanceof IndexBasedQuery, "Compiled query using index.");
+            Assert.assertEquals(hg.count(query), 1);
+        }
+        finally
+        {
+            // cleanup
+            List<HGHandle> L = hg.findAll(graph, hg.type(SimpleBean.class)); 
+            for (HGHandle x : L)
+                graph.remove(x);
+        }   
+    }
 }
