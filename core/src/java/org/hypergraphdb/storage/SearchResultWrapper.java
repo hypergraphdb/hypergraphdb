@@ -2,6 +2,17 @@ package org.hypergraphdb.storage;
 
 import org.hypergraphdb.HGSearchResult;
 
+/**
+ * <p>
+ * Used to wrap a {@see HGRandomAccessResult} in order to "disable" it. This is
+ * need in certain cases where the underlying storage result set is not ordered
+ * or random access, for example when an index is queried with range queries (lt, gt etc.).
+ * </p>
+ * 
+ * @author borislav
+ *
+ * @param <T>
+ */
 public final class SearchResultWrapper<T> implements HGSearchResult<T>
 {
 	private HGSearchResult<T> rs = null;

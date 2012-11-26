@@ -462,7 +462,14 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				return QueryMetaData.ORACCESS.clone(c);
+			    IndexedPartCondition ip = (IndexedPartCondition)c;
+                if (ip.getOperator() == ComparisonOperator.EQ)
+                    return QueryMetaData.ORACCESS.clone(c);
+                else
+                {
+                    QueryMetaData qmd = QueryMetaData.MISTERY.clone(c);
+                    return qmd;
+                }
 			}
 		});		
 		instance.put(And.class, new AndToQuery());
