@@ -19,6 +19,8 @@ public class SubgraphMemberCondition implements HGQueryCondition, HGAtomPredicat
 	public SubgraphMemberCondition(HGHandle subgraphHandle)
 	{
 		this.subgraphHandle = subgraphHandle;
+		if (subgraphHandle == null)
+			throw new NullPointerException("Subgraph handle is null in SubgraphDirectMemberCondition!");
 	}
 
 	public HGHandle getSubgraphHandle()
@@ -33,16 +35,41 @@ public class SubgraphMemberCondition implements HGQueryCondition, HGAtomPredicat
 
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
 	{
-	    HGIndex<HGPersistentHandle, HGPersistentHandle> idx = 
-	        HGSubgraph.getIndex(graph);
+	  HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getIndex(graph);
 		HGRandomAccessResult<HGPersistentHandle> rs = idx.find(subgraphHandle.getPersistent());
 		try 
 		{
-		    return rs.goTo(handle.getPersistent(), true) == GotoResult.found;
+			return rs.goTo(handle.getPersistent(), true) == GotoResult.found;
 		}
 		finally
 		{
-		    rs.close();
+			rs.close();
+		}
+	}
+	
+	public int hashCode() 
+	{ 
+		return subgraphHandle.hashCode();
+	}
+	
+	public boolean equals(Object x)
+	{
+		if (! (x instanceof SubgraphMemberCondition))
+			return false;
+		else
+		{
+			SubgraphMemberCondition c = (SubgraphMemberCondition)x;
+			return subgraphHandle.equals(c.getSubgraphHandle());
 		}
 	}	
+	
+	public String toString()
+	{
+		StringBuffer result = new StringBuffer();
+		result.append("SubgraphDirectMemberCondition(");
+		result.append("subgraphHandle:");
+		result.append(subgraphHandle);
+		result.append(")");
+		return result.toString();
+	}
 }
