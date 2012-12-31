@@ -218,7 +218,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			{
 				AtomValueCondition vc = (AtomValueCondition)c;
 				if (hg.isVar(vc.getValueReference()))
-					return QueryMetaData.MISTERY;
+					return QueryMetaData.MISTERY.clone(c);
 		        Object value = vc.getValue();
 		        if (value == null)
 		            throw new HGException("Search by null values is not supported yet.");
