@@ -106,8 +106,8 @@ public class BJEStorageImplementation implements HGStoreImplementation {
       
 			if (config.isTransactional()) {
 				CheckpointConfig ckptConfig = new CheckpointConfig();
-				System.out.println("checkpoint kbytes:" + ckptConfig.getKBytes());
-				System.out.println("checkpoint minutes:" + ckptConfig.getMinutes());
+//				System.out.println("checkpoint kbytes:" + ckptConfig.getKBytes());
+//				System.out.println("checkpoint minutes:" + ckptConfig.getMinutes());
 				env.checkpoint(null);
 				checkPointThread = new CheckPointThread();
 				checkPointThread.start();
