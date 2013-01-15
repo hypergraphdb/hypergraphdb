@@ -140,7 +140,7 @@ public class OrderedLinkCondition implements HGQueryCondition, HGAtomPredicate
 	public int hashCode() 
 	{ 
 		int x = 0;
-		for (Ref<HGHandle> h : targetSet) x += h.get().hashCode();
+		for (Ref<HGHandle> h : targetSet) x += h.hashCode();
 		return x;
 	}
 	

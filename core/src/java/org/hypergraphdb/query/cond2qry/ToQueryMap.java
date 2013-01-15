@@ -237,12 +237,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
 			{
-				QueryMetaData qmd = QueryMetaData.MISTERY.clone();
+				QueryMetaData qmd = QueryMetaData.MISTERY.clone(c);
 				qmd.predicateOnly = true;
-				qmd.pred = (HGAtomPredicate)c;
 				return qmd;
 			}
-		});		
+		});
 		instance.put(TargetCondition.class, new ConditionToQuery()
         {
 			public HGQuery<HGHandle> getQuery(final HyperGraph graph, final HGQueryCondition c)
@@ -679,5 +678,5 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 					"incidence sets or some indexed property value.");
 		else
 			return transformer.getMetaData(hg, condition);
-	}	
+	}
 }
