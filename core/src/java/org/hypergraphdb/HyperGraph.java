@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.cache.HGCache;
-import org.hypergraphdb.cache.MRUCache;
+import org.hypergraphdb.cache.LRUCache;
 import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
@@ -313,8 +313,8 @@ public /*final*/ class HyperGraph implements HyperNode
 	        cache = new WeakRefAtomCache(this);
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
-	        	new MRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
-	        ((MRUCache<HGPersistentHandle, IncidenceSet>)incidenceCache).setLockImplementation(
+	        	new LRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);
+	        ((LRUCache<HGPersistentHandle, IncidenceSet>)incidenceCache).setLockImplementation(
                     new ReentrantReadWriteLock()	                                                                                           
 	        		/* new HGLock(this, INCIDENCE_CACHE_ID) */);
 	        	// new SimpleCache<HGPersistentHandle, IncidenceSet>();

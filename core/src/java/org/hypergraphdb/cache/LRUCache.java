@@ -31,7 +31,7 @@ import org.hypergraphdb.util.RefResolver;
  * @param <Key>
  * @param <Value>
  */
-public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
+public class LRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 {
 	// The cache entry contains a lot of information here: 4 references = 16 bytes total.
 	// But there's no escape since we need a doubly linked list if we are to freely move
@@ -259,13 +259,13 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 		close();
 	}
 	
-	public MRUCache()
+	public LRUCache()
 	{
 		initMemoryListener();
 		this.lock = new ReentrantReadWriteLock();
 	}
 	
-	public MRUCache(ReadWriteLock lockImplementation)
+	public LRUCache(ReadWriteLock lockImplementation)
 	{
 		this.lock = lockImplementation;
 	}
@@ -275,7 +275,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	 * @param evictCount The number of (least used) elements to evict when 
 	 * the cache reaches its maximum.
 	 */
-	public MRUCache(int maxSize, int evictCount)
+	public LRUCache(int maxSize, int evictCount)
 	{
 		this();
 		this.maxSize = maxSize;
@@ -294,7 +294,7 @@ public class MRUCache<Key, Value> implements HGCache<Key, Value>, CloseMe
 	 * @param evictPercent The percentage of elements to evict when the
 	 * usedMemoryThreshold is reached.
 	 */
-	public MRUCache(float usedMemoryThreshold, float evictPercent)
+	public LRUCache(float usedMemoryThreshold, float evictPercent)
 	{
 		this();
 		if (usedMemoryThreshold <= 0)
