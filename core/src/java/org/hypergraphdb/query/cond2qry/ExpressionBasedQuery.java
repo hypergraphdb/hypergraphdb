@@ -22,6 +22,7 @@ import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.transaction.TransactionIsReadonlyException;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.TypeUtils;
 import org.hypergraphdb.util.HGUtils;
@@ -237,11 +238,11 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					AtomTypeCondition tc = (AtomTypeCondition)c;					
 					// if the condition is on a Java class with no HG type currently defined,
 					// clearly there can't be atoms of that type
-					if (!hg.isVar(tc.getTypeReference()) && 
-						tc.getTypeHandle() == null && 
-						graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
-						
-						return Nothing.Instance;
+//					if (!hg.isVar(tc.getTypeReference()) && 
+//						tc.getTypeHandle() == null && 
+//						graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
+//						
+//						return Nothing.Instance;
 						
 					if (byType == null)
 					{
@@ -736,12 +737,34 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	public HGQuery<ResultType> compile(final HGQueryCondition condition)
 	{
-		return graph.getTransactionManager().ensureTransaction(new Callable<HGQuery<ResultType>>() {
-			public HGQuery<ResultType> call()
-			{
-				return compileProcess(condition);
-			}
-		}, HGTransactionConfig.READONLY);
+	    try
+	    {
+    		return graph.getTransactionManager().ensureTransaction(new Callable<HGQuery<ResultType>>() {
+    			public HGQuery<ResultType> call()
+    			{
+    				return compileProcess(condition);
+    			}
+    		}, HGTransactionConfig.READONLY);
+	    }
+	    catch (Throwable t)
+	    {
+	        if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException)
+	        {
+	            if (this.hasVarContext) // it would have been popped when the transaction was aborted, so we push a new one
+	                VarContext.pushFrame(this.ctx);      	            
+	            return graph.getTransactionManager().ensureTransaction(new Callable<HGQuery<ResultType>>() {
+	                public HGQuery<ResultType> call()
+	                {
+	                    return compileProcess(condition);
+	                }});
+	        }
+	        else if (t instanceof RuntimeException)
+	            throw (RuntimeException)t;
+	        else if (t instanceof Error)
+	            throw (Error)t;
+	        else 
+	            throw new RuntimeException(t);
+	    }
 	}
 	
 	private HGQuery<ResultType> compileProcess(final HGQueryCondition condition)
