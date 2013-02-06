@@ -170,11 +170,11 @@ public class DebugTest
     {
         //anatest();
         // TestQuery.go("/tmp/alain");
-        PropertyIndexingTests test = new PropertyIndexingTests();
+        QueryCompilation test = new QueryCompilation();
         test.setUp();
         try
-        {
-            test.valueLinkByPropertyTest();
+        { 
+            test.testOLC();
         }
         finally
         {

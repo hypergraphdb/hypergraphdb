@@ -224,6 +224,21 @@ public class PropertyIndexingTests extends HGTestBase
                 (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 56)));
             Assert.assertTrue(query.getCompiledQuery() instanceof IndexBasedQuery, "Compiled query using index.");
             Assert.assertEquals(hg.count(query), 1);
+            
+            HGHandle h1 = graph.findOne(hg.and(hg.type(SimpleBean.class), hg.eq("intProp", 56)));
+            Assert.assertNotNull(h1);
+            List<HGHandle> lessthen = graph.findAll(hg.and(hg.type(SimpleBean.class), 
+                    hg.lt("intProp", 200))); 
+            List<HGHandle> incident = graph.findAll(hg.and(hg.type(SimpleBean.class), 
+                    hg.incident(h1)));
+            System.out.println(lessthen.size());
+            System.out.println(lessthen);
+            System.out.println(incident.size());
+            System.out.println(incident);
+            System.out.println(lessthen.contains(incident.iterator().next()));
+            query = (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(SimpleBean.class), 
+                    hg.lt("intProp", 200), hg.incident(h1)));
+            Assert.assertEquals(query.findAll().size(), 1);
         }
         finally
         {
