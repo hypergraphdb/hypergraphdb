@@ -6,12 +6,12 @@
   <groupId>org.hypergraphdb</groupId>
   <artifactId>hgdbtest</artifactId>
   <name>HyperGraphDB Test Utilities</name>
-  <version>1.2</version>  
+  <version>1.3-SNAPSHOT</version>  
   <url>http://hypergraphdb.org</url>
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>1.2</version>  
+    <version>1.3-SNAPSHOT</version>  
   </parent>
  <repositories>
     <repository>
@@ -24,7 +24,7 @@
 	<dependency>
 	  <groupId>org.hypergraphdb</groupId>
 	  <artifactId>hgdb</artifactId>
-	  <version>1.2</version>
+	  <version>1.3-SNAPSHOT</version>
 	</dependency>	
   	<dependency>
   		<groupId>org.testng</groupId>
