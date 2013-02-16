@@ -2003,6 +2003,8 @@ public /*final*/ class HyperGraph implements HyperNode
             result = new HGValueLink(result, targetSet);
         if (result instanceof HGAtomType)
         	result = typeSystem.toRuntimeInstance(atomHandle, (HGAtomType)result);
+        if (result instanceof HGGraphHolder)
+            ((HGGraphHolder)result).setHyperGraph(this);
         return result;    	
     }
 
