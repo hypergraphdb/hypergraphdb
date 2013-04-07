@@ -26,6 +26,7 @@ import hgtest.beans.Car;
 import hgtest.beans.Person;
 import hgtest.indexing.ManyToManyIndexerTests;
 import hgtest.indexing.PropertyIndexingTests;
+import hgtest.links.TestLinkage;
 import hgtest.query.IndexEnumTypeTest;
 import hgtest.query.Queries;
 import hgtest.query.QueryCompilation;
@@ -170,11 +171,11 @@ public class DebugTest
     {
         //anatest();
         // TestQuery.go("/tmp/alain");
-        QueryCompilation test = new QueryCompilation();
+        TestLinkage test = new TestLinkage();
         test.setUp();
         try
         { 
-            test.testOLC();
+            test.testDefineValueLink();
         }
         finally
         {
