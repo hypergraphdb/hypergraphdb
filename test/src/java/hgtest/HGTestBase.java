@@ -32,11 +32,16 @@ public class HGTestBase
         return graph;
     }
     
+    public void openGraph()
+    {
+        graph = HGEnvironment.get(getGraphLocation(), config);        
+    }
+    
     @BeforeClass
     public void setUp()
     {
         HGUtils.dropHyperGraphInstance(getGraphLocation());
-        graph = HGEnvironment.get(getGraphLocation(), config);
+        openGraph();
     }
     
     @AfterClass    

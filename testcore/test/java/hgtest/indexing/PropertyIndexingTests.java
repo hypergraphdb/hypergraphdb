@@ -11,6 +11,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.indexing.ByPartIndexer;
+import org.hypergraphdb.indexing.DirectValueIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.IndexBasedQuery;

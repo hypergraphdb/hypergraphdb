@@ -32,7 +32,9 @@ import hgtest.query.Queries;
 import hgtest.query.QueryCompilation;
 import hgtest.tx.DataTxTests;
 import hgtest.tx.NestedTxTests;
+import hgtest.types.ChangingRecordTypes;
 import hgtest.types.TestPrimitives;
+import hgtest.types.ChangingRecordTypes.Bean;
 
 public class DebugTest
 {
@@ -86,7 +88,7 @@ public class DebugTest
         System.out.println("Index size " + index.count());
         
         graph.getTransactionManager().commit();
-    }
+    }   
     
     public static void anatest()
     {
@@ -177,9 +179,13 @@ public class DebugTest
         { 
             test.testDefineValueLink();
         }
+        catch (Throwable t)
+        {
+            t.printStackTrace(System.err);
+        }
         finally
         {
-            test.tearDown();
+            //test.tearDown();
         }
     }
 }

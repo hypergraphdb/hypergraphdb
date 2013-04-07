@@ -6,7 +6,7 @@
   <groupId>org.hypergraphdb</groupId>
   <artifactId>hgdbp2p</artifactId>
   <name>HyperGraphDB Core</name>
-  <version>1.2</version>  
+  <version>1.3-SNAPSHOT</version>  
   <url>http://hypergraphdb.org</url>
 
 
