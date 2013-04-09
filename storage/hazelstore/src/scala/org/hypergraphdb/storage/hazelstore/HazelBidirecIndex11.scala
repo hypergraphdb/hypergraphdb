@@ -48,20 +48,29 @@ class HazelBidirecIndex11[K, V] (val name: String,
 
   /*--------------------------------------------------------------------------------*/
 
-  type ValMap                                     = IMap[FiveInt,BAW]                                                      // mapping combined hash of key + hash of value to Value (BAW). Indexed for quering by value
-  val valMapIndexConfig                           = new com.hazelcast.config.MapIndexConfig("data", false)               // importantly, this MapIndexConfig has false, because indexing not required to be >ordered<, since we don't need range queries for findByValue methods.
-  val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"
-  val valMapConfig                                = new com.hazelcast.config.MapConfig(valMapName)
-  valMapConfig.addMapIndexConfig(valMapIndexConfig)
-  h.getConfig.addMapConfig(valMapConfig)
+  type ValMap                                     = IMap[FiveInt,BAW]
+  val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"// mapping combined hash of key + hash of value to Value (BAW). Indexed for quering by value
+  if(hstoreConf.getUseHCIndexing)
+  {
+      val valMapIndexConfig                           = new com.hazelcast.config.MapIndexConfig("data", false)               // importantly, this MapIndexConfig has false, because indexing not required to be >ordered<, since we don't need range queries for findByValue methods.
+      val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"
+      val valMapConfig                                = new com.hazelcast.config.MapConfig(valMapName)
+      valMapConfig.addMapIndexConfig(valMapIndexConfig)
+      h.getConfig.addMapConfig(valMapConfig)
+  }
   val valmap:      ValMap                         = h.getMap[FiveInt,BAW](valMapName)
+
   /*--------------------------------------------------------------------------------*/
   type KeyMap                                     = IMap[FiveInt, ComparableBAW]
-  val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)  // data is the data
   val keyMapName: String                          = name + "keyMap"
-  val keyMapConfig                                = new com.hazelcast.config.MapConfig(keyMapName)
-  keyMapConfig.addMapIndexConfig(mapIndexConfig)
-  h.getConfig.addMapConfig(keyMapConfig)
+  if(hstoreConf.getUseHCIndexing)
+  {
+      val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)  // data is the data
+      val keyMapName: String                          = name + "keyMap"
+      val keyMapConfig                                = new com.hazelcast.config.MapConfig(keyMapName)
+      keyMapConfig.addMapIndexConfig(mapIndexConfig)
+      h.getConfig.addMapConfig(keyMapConfig)
+  }
   val keymap: IMap[FiveInt, ComparableBAW]        = h.getMap[FiveInt, ComparableBAW](keyMapName)
 
   /*--------------------------------------------------------------------------------*/

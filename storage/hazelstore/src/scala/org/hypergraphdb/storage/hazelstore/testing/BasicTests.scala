@@ -18,7 +18,7 @@ import org.hypergraphdb.HGQuery.hg
 object BasicTests {
   val random = new Random
 
- def run = main(Array.empty[String])
+ def run {main(Array.empty[String])}
 
  def main (args:Array[String]){
 
@@ -35,11 +35,11 @@ object BasicTests {
     println(s"\n\n\nstarting graphtest with parameters bootstrap $bootstrap Transactional $transactional and async $async \n\n\n")
 
     val conf = new Config
-    val graph: HyperGraph = getGraph(hazel = true, transactional = transactional)
+    val graph: HyperGraph = getGraph(hazel = true)
       println("\n\n\n\ngraph instantiated!\n\n\n\n")
      def au[T](t: T): HGHandle = assertAtom(graph, t)
      def ad[T](t: T): HGHandle = graph.add(t)
-     def gh[T](t: T): HGHandle = graph.getHandle(t);
+     def gh[T](t: T): HGHandle = graph.getHandle(t)
 
 
        if(bootstrap)
@@ -105,7 +105,6 @@ object BasicTests {
     println(s"starting graphlesstest with parameters Transacional $transactional and async $async")
     val config = new HGConfiguration
     config.setTransactional(transactional)
-    val hazelconfig = new HazelStoreConfig(transactional = transactional, async = async)
     val hs = new Hazelstore3()
     config.setStoreImplementation(hs)
     val store = new HGStore("bla", config)
@@ -116,7 +115,7 @@ object BasicTests {
 
       def testDataStoreContainsGetRemoveGet {
         val hw = "hallo Welt"
-        val ba = store.store(hw.getBytes())
+        val ba = store.store(hw.getBytes)
         assert(store.containsData(ba))
         assert(new String(store.getData(ba)).equals(hw))
         store.removeData(ba)
@@ -124,8 +123,8 @@ object BasicTests {
       }
 
       def testLinkStoreContainsGetRemoveGet {
-        val h1 = store.store("val1".getBytes())
-        val h2 = store.store("val2".getBytes())
+        val h1 = store.store("val1".getBytes)
+        val h2 = store.store("val2".getBytes)
         val li = Array[HGPersistentHandle](h1, h2)
         val liH = store.store(li)
         assert(store.containsLink(liH))

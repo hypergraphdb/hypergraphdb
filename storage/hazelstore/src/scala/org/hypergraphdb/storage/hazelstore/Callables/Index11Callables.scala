@@ -77,7 +77,15 @@ object Index11Callables {
           if (valCountOld == 1)
           {
             hi.getAtomicNumber(indexKeyCountName).decrementAndGet()
-            keyMap.remove(keyHash, timeOut)
+            try{
+              keyMap.lock(keyHash)
+              val removed = keyMap.tryRemove(keyHash, timeOut, TimeUnit.MILLISECONDS)
+              if (removed == null)
+                println("Index11Callable RemoveEntryMono: tryRemove returned null!")
+            } finally {
+              keyMap.unlock(keyHash)
+            }
+
           }
         }
       }

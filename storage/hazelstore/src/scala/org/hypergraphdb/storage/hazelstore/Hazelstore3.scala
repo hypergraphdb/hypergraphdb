@@ -62,6 +62,7 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
         throw new IllegalStateException("Nested transaction detected. Not supported by Hazelstore.")
       else
       {
+        println("Creating hazelcast transaction senselessly")
         val transaction = hi.getTransaction
         transaction.begin()
         new HazelTransaction(transaction)

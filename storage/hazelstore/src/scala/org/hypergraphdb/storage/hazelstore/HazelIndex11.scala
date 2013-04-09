@@ -84,11 +84,11 @@ class HazelIndex11[K, V] (val name: String,
   val kvmmName                                    = name + "keyValueMultiMap"
   val kvmm:MultiMap[FiveInt, BAW]                                   = h.getMultiMap(kvmmName)
   /*--------------------------------------------------------------------------------*/
-  val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)
   val keyMapName: String                          = name + "keyMap"
+/*  val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)
   val keyMapConfig                                = new com.hazelcast.config.MapConfig(keyMapName)
   keyMapConfig.addMapIndexConfig(mapIndexConfig)
-  h.getConfig.addMapConfig(keyMapConfig)
+  h.getConfig.addMapConfig(keyMapConfig) */
   val keyMap: IMap[FiveInt, ComparableBAW]                              = h.getMap(keyMapName)
 
   /*--------------------------------------------------------------------------------*/
@@ -125,7 +125,7 @@ class HazelIndex11[K, V] (val name: String,
       { executor.submit(callable); Unit}.asInstanceOf[T]
 
 
-  def addEntry(key: K, value: V)   =
+  def addEntry(key: K, value: V) {
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
@@ -133,9 +133,10 @@ class HazelIndex11[K, V] (val name: String,
     }
     else
       Unit
+  }
 
 
-  def removeEntry(key: K, value: V)   =
+  def removeEntry(key: K, value: V){
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
@@ -143,10 +144,11 @@ class HazelIndex11[K, V] (val name: String,
     }
   else
       Unit
+  }
 
   def nullcheck[T](t:T, f:T => Unit){if (t != null) f(t) else Unit}
 
-  def removeAllEntries(key: K)   =
+  def removeAllEntries(key: K) {
     if(key !=null)
     {
       val keyHash = hashBaTo5Int(toBA[K](key))
@@ -154,6 +156,7 @@ class HazelIndex11[K, V] (val name: String,
     }
     else
       Unit
+  }
 
   def findFirst(key: K): V =   {
      val keyHash = hashBaTo5Int(toBA[K](key))

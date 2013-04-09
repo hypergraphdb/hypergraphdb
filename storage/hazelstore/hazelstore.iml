@@ -17,8 +17,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-lib2101" level="application" />
-    <orderEntry type="library" name="com.hazelcast:hazelcast-client:2.5" level="project" />
     <orderEntry type="module" module-name="hgdb" />
+    <orderEntry type="library" name="com.hazelcast:hazelcast-all:2.5" level="project" />
   </component>
 </module>
 
