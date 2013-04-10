@@ -1,7 +1,7 @@
 package org.hypergraphdb.storage.hazelstore
 
-import Callables.BidirCallables11._
-import Callables.Index11Callables.GetMultiMappingsFromThatMemberMono
+import BidirCallables11._
+import Index11Callables.GetMultiMappingsFromThatMemberMono
 import com.hazelcast.core._
 import org.hypergraphdb._
 import com.hazelcast.query.{Predicate, PredicateBuilder}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="scala" name="Scala">
+      <configuration>
+        <option name="compilerLibraryLevel" value="Global" />
+        <option name="compilerLibraryName" value="scala-lib2101" />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="com.hazelcast:hazelcast-all:2.5" level="project" />
+    <orderEntry type="library" name="com.esotericsoftware.kryo:kryo:2.21" level="project" />
+    <orderEntry type="library" name="Maven: com.sleepycat:je:5.0.34" level="project" />
+    <orderEntry type="library" name="org.mapdb:mapdb:0.9-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="scala-lib2101" level="application" />
+  </component>
+</module>
+

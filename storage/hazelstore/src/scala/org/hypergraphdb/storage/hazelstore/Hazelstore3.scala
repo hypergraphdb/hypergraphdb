@@ -30,7 +30,7 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
 
   lazy val handleFactory :HGHandleFactory = hgConfig.getHandleFactory
   protected lazy val handleSize           = handleFactory.nullHandle().toByteArray.size
-  val handleComparator                    = new HandleComparator
+  val handleByteArrayComparator                    = new HandleComparator
   lazy val handleconverter                = new HandleConverter(handleFactory)
 
   protected val logger                    = new HGLogger()
@@ -131,8 +131,8 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
 
   def getIncidenceResultSet(handle: PH) = {
     val map =  inciDB.get(handle.toByteArray).map(baw => baw.data).toIndexedSeq
-    val sorted = map.sortWith{case (k1,k2) => handleComparator.compare(k1,k2)< 0}
-    new HazelRS2[PH](sorted)(handleComparator, handleconverter)
+    val sorted = map.sortWith{case (k1,k2) => handleByteArrayComparator.compare(k1,k2)< 0}
+    new HazelRS2[PH](sorted)(handleByteArrayComparator, handleconverter)
     }
 
   def removeIncidenceSet(handle: PH) {

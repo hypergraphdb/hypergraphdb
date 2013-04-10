@@ -1,7 +1,7 @@
 package org.hypergraphdb.storage.hazelstore
 
-import Callables.BidirCallables11.GetItFromThatMember
-import Callables.Index11Callables.{RemoveAllEntriesMono, RemoveEntryMono, AddEntryMono}
+import BidirCallables11.GetItFromThatMember
+import Index11Callables.{RemoveAllEntriesMono, RemoveEntryMono, AddEntryMono}
 import com.hazelcast.core._
 import org.hypergraphdb._
 import com.hazelcast.query.{Predicate, PredicateBuilder}
@@ -12,7 +12,7 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
-import storage.hazelstore.Callables.Index11Callables._
+import Index11Callables._
 import util.AbstractMap.SimpleEntry
 import util.Comparator
 import util.concurrent.{TimeUnit, Callable}
