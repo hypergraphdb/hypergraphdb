@@ -24,7 +24,7 @@ object BasicTests {
 
    println("\n\n\nNOW STARTING TEST\n\n\n")
 
-  //graphlesstest(false, false, None)
+  //graphlesstest(false, false, None)             C
   graphtest(true, false, false)
 
   println("\n\n\nfinished Test\n\n\n")
@@ -234,8 +234,8 @@ object BasicTests {
     def foundValueX(i:Seq[Int], rs: HGRandomAccessResult[String]):Boolean =
       i.forall( i => rs.goTo("value"+i.toString, true) == GotoResult.found)
 
-    def notFoundValueX(i:Seq[Int], rs: HGRandomAccessResult[String]):Boolean = true
-//      i.forall( i => rs.goTo("value"+i.toString, true) == GotoResult.nothing)
+    def notFoundValueX(i:Seq[Int], rs: HGRandomAccessResult[String]):Boolean =
+        i.forall( i => rs.goTo("value"+i.toString, true) == GotoResult.nothing)
 
 
     println(s"\n\n\n\nsuccessfully finished Testgraphlesstest with parameters Transacional $transactional and async $async\n\n\n\n ")
