@@ -38,7 +38,8 @@ object IndexCallablesV12 {
          Unit
        }
        finally{
-        lock.unlock()
+         try  { lock.unlock(); Unit}
+         catch { case _ => lock.forceUnlock  }
        }
      }
    }
@@ -157,9 +158,10 @@ object IndexCallablesV12 {
       Unit
       }
       finally{
-        lock.unlock()
+        try  { lock.unlock(); Unit}
+        catch { case _ => lock.forceUnlock  }
       }
-     }
+    }
 
      def getPartitionKey = keyHash
    }
@@ -195,7 +197,8 @@ object IndexCallablesV12 {
        Unit
        }
        finally{
-         lock.unlock()
+         try  { lock.unlock(); Unit}
+         catch { case _ => lock.forceUnlock  }
        }
      }
      def getPartitionKey = keyHash

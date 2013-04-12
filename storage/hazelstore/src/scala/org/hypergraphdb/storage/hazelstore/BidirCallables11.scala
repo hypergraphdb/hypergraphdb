@@ -50,10 +50,11 @@ object BidirCallables11 {
          }
        }
        finally{
-         lock.unlock()
-       }
+         try  { lock.unlock(); Unit}
+         catch { case _ => lock.forceUnlock  }
      }
    }
+  }
 
   /*---------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
@@ -61,9 +62,11 @@ object BidirCallables11 {
                                keyHash:FiveInt,keyBA:ComparableBAW,
                                valHash:FiveInt, valBA:BAW,
                                timeOut:Long)
-    extends Callable[Unit] with Serializable with PartitionAware[FiveInt]{
+    extends Callable[Unit] with Serializable with PartitionAware[FiveInt]
+  {
 
-    def call() {
+    def call()
+    {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
 
       val keyMap          = hi.getMap[FiveInt, ComparableBAW](keyMapName)
@@ -108,12 +111,14 @@ object BidirCallables11 {
         Unit
       }
       finally{
-        lock.unlock()
-      }
+        try  { lock.unlock(); Unit}
+        catch { case _ => lock.forceUnlock  }
      }
+    }
 
      def getPartitionKey = keyHash
-   }
+
+  }
 
 
 
@@ -208,9 +213,6 @@ object BidirCallables11 {
         resultList.add(Pair(keyMap.get(cur), kvmm.get(cur)))
       }
       resultList
+      }
     }
-  }
-
-
-
 }

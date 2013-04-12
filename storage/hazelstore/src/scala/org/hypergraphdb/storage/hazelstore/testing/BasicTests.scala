@@ -96,6 +96,7 @@ object BasicTests {
       config.setStoreImplementation(new Hazelstore4(hazelstoreConfig))
 
     graph.setConfig(config)
+    graph.getConfig.getStoreImplementation.getConfiguration.asInstanceOf[HazelStoreConfig].setAsync(false)
     println("\n\n\n\nnow trying to instantiate graph \n\n\n\n")
     graph.open("/home/ingvar/bin/trunk/bje/")
     graph
