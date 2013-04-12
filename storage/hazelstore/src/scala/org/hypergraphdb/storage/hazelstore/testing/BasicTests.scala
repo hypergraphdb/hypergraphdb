@@ -93,7 +93,7 @@ object BasicTests {
     config.setUseSystemAtomAttributes(false)
 
     if(hazel)
-      config.setStoreImplementation(new Hazelstore3(hazelstoreConfig))
+      config.setStoreImplementation(new Hazelstore4(hazelstoreConfig))
 
     graph.setConfig(config)
     println("\n\n\n\nnow trying to instantiate graph \n\n\n\n")

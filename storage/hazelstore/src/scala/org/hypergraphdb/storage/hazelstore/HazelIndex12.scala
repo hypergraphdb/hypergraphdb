@@ -8,11 +8,11 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
-import Index11Callables._
+import IndexCallablesV12._
 import util.Comparator
 import util.concurrent.{TimeUnit, Callable}
 
-class HazelIndex11[K, V] (val name: String,
+class HazelIndex12[K, V] (val name: String,
                           val h:HazelcastInstance,
                          hstoreConf:HazelStoreConfig,
                          implicit val keyConverter:   ByteArrayConverter[K],
@@ -92,11 +92,6 @@ class HazelIndex11[K, V] (val name: String,
 //  type Args       = (ComparableBAW, FiveInt, BAW)
   def eo                                          = new PredicateBuilder().getEntryObject
   /*--------------------------------------------------------------------------------*/
-  type VCntMap                                    = IMap[FiveInt,Long]
-  val firstValMapName                             = "firstvalMap" + name
-  val firstValMap:IMap[FiveInt, BAW]              = h.getMap(firstValMapName)
-  /*--------------------------------------------------------------------------------*/
-
   val valCountMapName                             = name + "valCountMap"
   val valCountMap:IMap[FiveInt, Long]             = h.getMap(valCountMapName)
   /*--------------------------------------------------------------------------------*/
@@ -124,7 +119,7 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new AddEntryMono(keyMapName, kvmmName,firstValMapName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new AddEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
     }
     else
       Unit
@@ -135,7 +130,7 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new RemoveEntryMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new RemoveEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
     }
   else
       Unit
@@ -147,20 +142,24 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null)
     {
       val keyHash = hashBaTo5Int(toBA[K](key))
-      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,hstoreConf.getTimeoutMillis))
+      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,hstoreConf.getTimeoutMillis))
     }
     else
       Unit
   }
 
-  def findFirst(key: K): V =   {
-     val keyHash = hashBaTo5Int(toBA[K](key))
-     val first = firstValMap.get(keyHash)
-     if (first != null)
-       baToT[V](first.data)
+  def findFirst(key: K): V =
+    if(key !=null)
+    {
+      val keyHash = hashBaTo5Int(toBA[K](key))
+      val valbaw = execute(new FindFirstOp(kvmmName, keyHash,hstoreConf.getTimeoutMillis), true)
+      if(valbaw != null)
+        baToT[V](valbaw.data)
       else
-       null.asInstanceOf[V]
-  }
+        null.asInstanceOf[V]
+    }
+    else
+      null.asInstanceOf[V]
 
   def find(key: K): HGRandomAccessResult[V] = {
     val keyHash = hashBaTo5Int(toBA[K](key))
@@ -172,28 +171,12 @@ class HazelIndex11[K, V] (val name: String,
     }
 
 
-  def findBase(com: PredicateBuilder, reverse:Boolean) : HGSearchResult[V] =
-  {
-    val  keySet = keyMap.keySet(com.asInstanceOf[Predicate[FiveInt, ComparableBAW]])
-    if  (keySet == null || keySet.size == 0)
-      EmptySR.asInstanceOf[HGSearchResult[V]]
-    else
-    {
-      val groupByMember = keySet.groupBy(keyHash => h.getPartitionService.getPartition(keyHash).getOwner)
-      val tasks         = groupByMember.map{ case (member, keyHashSet) => new DistributedTask(new GetMultiMappingsFromThatMemberMono(keyMapName,kvmmName,keyHashSet, hstoreConf.getTimeoutMillis),member)}
+  def findBase(key: K, greater:Boolean, equal:Boolean) : HGSearchResult[V] = ???
 
-      tasks.foreach(it => executor.execute(it))
-
-      val tempResult    = tasks.flatMap( future => future.get(2*hstoreConf.getTimeoutMillis, TimeUnit.MILLISECONDS)).toIndexedSeq
-      val sortedResult  = tempResult.sortWith{case (k1,k2) => comparator.compare(k1._1.data, k2._1.data)<0}
-      new HazelRS2[V](sortedResult.map(_._2).flatten.map(_.data))
-    }
-  }
-
-  def findLT(key: K)  = findBase(eo.get("this").lessThan(pack(key)),true)
-  def findGT(key: K)  = findBase(eo.get("this").greaterThan(pack(key)), false)
-  def findLTE(key: K) = findBase(eo.get("this").lessEqual(pack(key)), true)
-  def findGTE(key: K) = findBase(eo.get("this").greaterEqual(pack(key)), false)
+  def findLT(key: K)  = findBase(key: K, false, false)
+  def findGT(key: K)  = findBase(key: K,  true, false)
+  def findLTE(key: K) = findBase(key: K,  false, true)
+  def findGTE(key: K) = findBase(key: K,  true, true)
 
 
   def scanKeys(): HGRandomAccessResult[K] = {

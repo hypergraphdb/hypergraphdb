@@ -3,18 +3,18 @@ package org.hypergraphdb.storage.hazelstore
 import java.util.Comparator
 import com.hazelcast.core._
 import collection.JavaConversions._
-import java.util.concurrent.{ConcurrentMap, Callable}
 import com.hazelcast.util.DistributedTimeoutException
 import com.hazelcast.nio.HazelcastSerializationException
 import _root_.org.hypergraphdb._
 import _root_.org.hypergraphdb.util.HGLogger
 import storage._
 import transaction._
-import org.hypergraphdb.`type`.HGHandleType
 import org.hypergraphdb.`type`.HGHandleType.HandleComparator
+import org.hypergraphdb.storage.hazelstore.StoreCallables.{RemoveIncidenceLinkOp, AddIncidenceLinkOp, RemoveIncidenceSetOp}
+import java.util.concurrent.Callable
 
 
-class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
+class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
 {
   type BA = Array[Byte]
   type PH = HGPersistentHandle
@@ -36,9 +36,12 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
   protected val logger                    = new HGLogger()
   protected val linkDB: IMap[BA, BAW]     = hi.getMap("linkDB")
   protected val dataDB: IMap[BA, BAW]     = hi.getMap("dataDB")
-  protected val inciDB: MultiMap[BA, BAW] = hi.getMultiMap[BA, BAW]("inciDB")
-  def inciCount(handle:PH):AtomicNumber   = hi.getAtomicNumber("inciCount" + handle.toStringValue)
+  val inciDbName = "inciDB"
+  protected val inciDB: MultiMap[BA, BAW] = hi.getMultiMap[BA, BAW](inciDbName)
+  def inciName(handle:PH):String          = "inciCount" + handle.toStringValue
+  def inciCount(handle:PH):AtomicNumber   = hi.getAtomicNumber(inciName(handle))
   protected val inciConstant = "inciDB"
+  protected val clusterExecutor           = hi.getExecutorService
   val hazelstoreConfig: HazelStoreConfig  = new HazelStoreConfig()
 
 
@@ -50,8 +53,7 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
       throw new HGException("Hazelcast-Storage does not support transactions at the moment. Disable with hgconfig.setTransactional(false)")
   }
 
-  def shutdown() {}
-
+  def shutdown() { Hazelcast.shutdownAll()  }
 
   // couldn't be here a simple singleton instead of an anonymous class instantiated each call ?
   def getTransactionFactory =  new HGTransactionFactory {
@@ -80,7 +82,7 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
   }
 
   def store(handle: PH, link: Array[PH]):PH = {
-    linkDB.put(handle.toByteArray, new BAW(pHA2BA(link)));
+    linkDB.putAsync(handle.toByteArray, new BAW(pHA2BA(link)));
     handle
   }
 
@@ -97,14 +99,14 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
       }
 
   def removeLink(handle: PH){
-    linkDB.remove(handle.toByteArray)
+    linkDB.removeAsync(handle.toByteArray)
   }
 
   def containsLink(handle: PH):Boolean =
     linkDB.containsKey(handle.toByteArray)
 
   def store(handle: PH, data: BA) ={
-      dataDB.put(handle.toByteArray, new BAW(data))
+      dataDB.putAsync(handle.toByteArray, new BAW(data))
       handle
     }
 
@@ -120,13 +122,11 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
 
 
   def removeData(handle: PH) {
-      dataDB.remove(handle.toByteArray)
+      dataDB.removeAsync(handle.toByteArray)
   }
 
 
-  def containsData(handle: PH) ={
-      dataDB.containsKey(handle.toByteArray)
-    }
+  def containsData(handle: PH) =  dataDB.containsKey(handle.toByteArray)
 
 
   def getIncidenceResultSet(handle: PH) = {
@@ -135,24 +135,25 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
     new HazelRS2[PH](sorted)(handleByteArrayComparator, handleconverter)
     }
 
-  def removeIncidenceSet(handle: PH) {
-      inciDB.remove(handle.toByteArray)
-      inciCount(handle).destroy()
+  def execute(callable:Callable[Unit]){
+    if (hazelstoreConfig.getAsync)
+      clusterExecutor.submit(callable)
+    else
+      callable.call()
   }
 
-  def getIncidenceSetCardinality(handle: PH): Long =
-    inciCount(handle).get()
+  def removeIncidenceSet(handle: PH) {
+      execute(new RemoveIncidenceSetOp(inciDbName,inciName(handle), handle.toByteArray))
+  }
+
+  def getIncidenceSetCardinality(handle: PH): Long = inciCount(handle).get()
 
   def addIncidenceLink(handle: PH, newLink: PH) {
-    val added = inciDB.put(handle.toByteArray, new BAW(newLink.toByteArray))
-    if (added)
-      inciCount(handle).incrementAndGet()
+    execute(new AddIncidenceLinkOp(inciDbName,inciName(handle), handle.toByteArray, new BAW(newLink.toByteArray)))
   }
 
   def removeIncidenceLink(handle: PH, oldLink: PH) {
-    val removed = inciDB.remove(handle.toByteArray, new BAW(oldLink.toByteArray))
-    if(removed)
-      inciCount(handle).decrementAndGet()
+    execute(new RemoveIncidenceLinkOp(inciDbName,inciName(handle), handle.toByteArray, new BAW(oldLink.toByteArray)))
   }
 
 
@@ -164,7 +165,7 @@ class Hazelstore3 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
                      createIfNecessary: Boolean): HGIndex[K, V] =
     openIndices.getOrElseUpdate(name,
                                       (
-                                          if (!isBidirectional) new HazelIndex11     [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                          if (!isBidirectional) new HazelIndex12     [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
                                           else                  new HazelBidirecIndex11[K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
                                       )
 

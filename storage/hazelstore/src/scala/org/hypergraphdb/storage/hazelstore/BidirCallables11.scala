@@ -21,30 +21,37 @@ object BidirCallables11 {
 
      def getPartitionKey = keyHash
      def call() = {
-       val hi       = Hazelcast.getDefaultInstance
+       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
 
        val keyMap   = hi.getMap[FiveInt, ComparableBAW](keyMapName)
        val kvmm     = hi.getMultiMap[FiveInt,FiveInt](kvmmName)
        val vkmm     = hi.getMultiMap[FiveInt,FiveInt](vkmmName)
 
-       keyMap.put(keyHash, keyBA)
-       val kvmmAdded = kvmm.put(keyHash,valHash)
-       val vkmmAdded = vkmm.put(valHash,keyHash)
 
-       if(kvmmAdded)
+       val lock = hi.getLock(keyHash)
+       try
        {
-         val valCountMap        = hi.getMap[FiveInt, Long](valCountMapName)
-         val valmap           = hi.getMap[FiveInt, BAW](valMapName)
-         valmap.put(valHash, valBA)
+         keyMap.put(keyHash, keyBA)
+         val kvmmAdded = kvmm.put(keyHash,valHash)
+         val vkmmAdded = vkmm.put(valHash,keyHash)
 
-         val valCountOld = valCountMap.get(keyHash)
-         valCountMap.put(keyHash, valCountOld + 1)
+         if(kvmmAdded)
+         {
+           val valCountMap        = hi.getMap[FiveInt, Long](valCountMapName)
+           val valmap           = hi.getMap[FiveInt, BAW](valMapName)
+           valmap.put(valHash, valBA)
 
-         if (valCountOld == null || valCountOld == 0)
-          hi.getAtomicNumber(keyCountName).incrementAndGet()
-          hi.getMap[FiveInt, BAW](firstValMapName).put(keyHash,valBA)
+           val valCountOld = valCountMap.get(keyHash)
+           valCountMap.put(keyHash, valCountOld + 1)
+
+           if (valCountOld == null || valCountOld == 0)
+            hi.getAtomicNumber(keyCountName).incrementAndGet()
+            hi.getMap[FiveInt, BAW](firstValMapName).put(keyHash,valBA)
+         }
        }
-
+       finally{
+         lock.unlock()
+       }
      }
    }
 
@@ -57,7 +64,7 @@ object BidirCallables11 {
     extends Callable[Unit] with Serializable with PartitionAware[FiveInt]{
 
     def call() {
-      val hi              = Hazelcast.getDefaultInstance
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
 
       val keyMap          = hi.getMap[FiveInt, ComparableBAW](keyMapName)
       val kvmm            = hi.getMultiMap[FiveInt,FiveInt](kvmmName)
@@ -65,38 +72,44 @@ object BidirCallables11 {
       val valCountMap     = hi.getMap[FiveInt, Long](valCountMapName)
       val vkmm            = hi.getMultiMap[FiveInt,FiveInt](vkmmName)
 
-      val kvmmRemoved         = kvmm.remove(keyHash, valHash)
-      val firstValMapRemoved    = firstValMap.remove(keyHash,valBA)
-      val valCountOld           = valCountMap.get(keyHash)
-      vkmm.remove(valHash, keyHash)
-
-      if(kvmmRemoved)
+      val lock = hi.getLock(keyHash)
+      try
       {
-        if (valCountOld == null || valCountOld <= 0)
-        {
-          val valHashs = kvmm.get(keyHash)
-          val size = valHashs.size
-          valCountMap.put(keyHash,size)
-          if (size > 0 && firstValMapRemoved) {
-            val valHashIter   = valHashs.iterator()
-            val curVH = hi.getMap[FiveInt, BAW](valMapName).get(valHashIter.next())
-            firstValMap.put(keyHash, curVH)
-          }
-        }
+        val kvmmRemoved         = kvmm.remove(keyHash, valHash)
+        val firstValMapRemoved    = firstValMap.remove(keyHash,valBA)
+        val valCountOld           = valCountMap.get(keyHash)
+        vkmm.remove(valHash, keyHash)
 
-        else
+        if(kvmmRemoved)
         {
-          valCountMap.put(keyHash,valCountOld - 1)
-          if (valCountOld == 1)
+          if (valCountOld == null || valCountOld <= 0)
           {
-            hi.getAtomicNumber(indexKeyCountName).decrementAndGet()
-            keyMap.remove(keyHash)
+            val valHashs = kvmm.get(keyHash)
+            val size = valHashs.size
+            valCountMap.put(keyHash,size)
+            if (size > 0 && firstValMapRemoved) {
+              val valHashIter   = valHashs.iterator()
+              val curVH = hi.getMap[FiveInt, BAW](valMapName).get(valHashIter.next())
+              firstValMap.put(keyHash, curVH)
+            }
+          }
+
+          else
+          {
+            valCountMap.put(keyHash,valCountOld - 1)
+            if (valCountOld == 1)
+            {
+              hi.getAtomicNumber(indexKeyCountName).decrementAndGet()
+              keyMap.remove(keyHash)
+            }
           }
         }
+
+        Unit
       }
-
-
-      Unit
+      finally{
+        lock.unlock()
+      }
      }
 
      def getPartitionKey = keyHash
@@ -107,9 +120,7 @@ object BidirCallables11 {
 
   class RemoveAllOnMember(valMapName:String, vkmmName:String, valHashs:Iterable[FiveInt]) extends Callable[Unit] with Serializable {
     def call() = {
-      val hi      = Hazelcast.getDefaultInstance
-
-
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
       //config.addMapConfig(new com.hazelcast.config.MapConfig(valMapName).addMapIndexConfig(new com.hazelcast.config.MapIndexConfig("data", false)))
 
       val valMap  = hi.getMap[FiveInt, BAW](valMapName)
@@ -130,7 +141,8 @@ object BidirCallables11 {
 
   class GetItFromThatMember[R](mapName:String, keys:Iterable[FiveInt]) extends Callable[util.LinkedList[R]] with Serializable {
     def call() = {
-      val map = Hazelcast.getDefaultInstance.getMap[FiveInt,R](mapName)
+      val hi = Hazelcast.getAllHazelcastInstances.iterator().next
+      val map = hi.getMap[FiveInt,R](mapName)
       val it = keys.iterator
       val list = new util.LinkedList[R]
       while (it.hasNext){
@@ -144,7 +156,8 @@ object BidirCallables11 {
 
   class GetItFromThatMemberPairedWithHash[R](mapName:String, keys:Iterable[FiveInt]) extends Callable[util.LinkedList[Pair[FiveInt, R]]] with Serializable {
     def call() = {
-      val map = Hazelcast.getDefaultInstance.getMap[FiveInt,R](mapName)
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
+      val map = hi.getMap[FiveInt,R](mapName)
       val it = keys.iterator
       val list = new util.LinkedList[Pair[FiveInt, R]]
       while (it.hasNext){
@@ -159,14 +172,17 @@ object BidirCallables11 {
   /*---------------------------------------------------------------------------------------------------------------------------------------------------------*/
   // this is done as callable using Executor service, since this way, it's not necessary to transfer all vkmm.get(valHash) over the wire just to get it's size
   class CountKeys(vkmmName: String, valHash:FiveInt) extends Callable[Int] with PartitionAware[FiveInt] with Serializable {
-    def call() =Hazelcast.getDefaultInstance.getMultiMap[FiveInt,FiveInt](vkmmName).get(valHash).size
+    def call() ={
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
+      hi.getMultiMap[FiveInt, FiveInt](vkmmName).get(valHash).size
+    }
     def getPartitionKey = valHash
   }
   /*---------------------------------------------------------------------------------------------------------------------------------------------------------*/
   // this is done as callable using Executor service, since this way, it's not necessary to transfer all vkmm.get(valHash) over the wire just to get it's size
   class FindFirstByValueKeyHash(vkmmname: String, keyMapName:String, valHash:FiveInt) extends Callable[Option[FiveInt]] with PartitionAware[FiveInt] with Serializable {
     def call() = {
-      val hi = Hazelcast.getDefaultInstance
+      val hi = Hazelcast.getAllHazelcastInstances.iterator().next
       val vkmm = hi.getMultiMap[FiveInt, FiveInt](vkmmname)
       val iter = vkmm.get(valHash).iterator()
       if (iter.hasNext)
@@ -180,7 +196,7 @@ object BidirCallables11 {
 
   class GetValHashsForEachKeyHash(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], timeOut:Long) extends Callable[util.List[Pair[ComparableBAW,util.Collection[FiveInt]]]] with Serializable{
     def call() = {
-      val hi                = Hazelcast.getDefaultInstance
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
       val keyMap            = hi.getMap[FiveInt,ComparableBAW](keyMapName)
       val kvmm              = hi.getMultiMap[FiveInt,FiveInt](kvmmName)
 
@@ -194,5 +210,7 @@ object BidirCallables11 {
       resultList
     }
   }
+
+
 
 }

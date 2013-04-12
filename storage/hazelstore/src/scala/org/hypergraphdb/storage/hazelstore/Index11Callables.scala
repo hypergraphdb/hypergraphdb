@@ -2,10 +2,12 @@ package org.hypergraphdb.storage.hazelstore
 
 import org.hypergraphdb.storage.hazelstore.Common.{TenInt, FiveInt}
 import org.hypergraphdb.storage.hazelstore.{BAW, ComparableBAW}
-import java.util.concurrent.{TimeUnit, Callable}
+import java.util.concurrent.{ConcurrentSkipListMap, TimeUnit, Callable}
 import com.hazelcast.core.{Hazelcast, PartitionAware}
 import java.util.AbstractMap.SimpleEntry
 import java.util
+import java.util.Comparator
+import com.hazelcast.partition.{MigrationEvent, MigrationListener}
 
 object Index11Callables {
 
@@ -13,29 +15,26 @@ object Index11Callables {
    class AddEntryMono(keyMapName:String, kvmmName:String, firstValMapName:String,valCountMapName:String,keyCountName:String,keyHash:FiveInt,keyBA:ComparableBAW, valBA:BAW, timeOut:Long) extends Callable[Unit] with Serializable with PartitionAware[FiveInt]{
      def getPartitionKey = keyHash
      def call() = {
-       val hi               = Hazelcast.getDefaultInstance
+         val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
 //       val config = hi.getConfig
 //       config.addMapConfig(new com.hazelcast.config.MapConfig(keyMapName).addMapIndexConfig(new com.hazelcast.config.MapIndexConfig("data", true)))
 
        val localKeyMap      = hi.getMap[FiveInt, ComparableBAW](keyMapName)
        val kvmm             = hi.getMultiMap[FiveInt,BAW](kvmmName)
-       val firstValMap         = hi.getMap[FiveInt, BAW](firstValMapName)
+       val firstValMap      = hi.getMap[FiveInt, BAW](firstValMapName)
        val valCndMap        = hi.getMap[FiveInt, Long](valCountMapName)
-       val localKeyCount   = hi.getAtomicNumber(keyCountName)
+       val localKeyCount    = hi.getAtomicNumber(keyCountName)
 
-       localKeyMap.put(keyHash, keyBA)//timeOut,TimeUnit.MILLISECONDS )
-     //  localKeyMap.set(keyHash, keyBA,timeOut,TimeUnit.MILLISECONDS )
+       localKeyMap.put(keyHash, keyBA)
 
        val added = kvmm.put(keyHash,valBA)
        if(added)
        {
          val valCountOld = valCndMap.get(keyHash)
-         valCndMap.put(keyHash, valCountOld + 1)//,timeOut, TimeUnit.MILLISECONDS)
-        // valCndMap.set(keyHash, valCountOld + 1,timeOut, TimeUnit.MILLISECONDS)
+         valCndMap.put(keyHash, valCountOld + 1)
          if (valCountOld == null || valCountOld == 0)
            localKeyCount.incrementAndGet()
-         firstValMap.put(keyHash,valBA)//timeOut,TimeUnit.MILLISECONDS)
-        // firstValMap.set(keyHash,valBA,timeOut,TimeUnit.MILLISECONDS)
+         firstValMap.put(keyHash,valBA)
        }
        Unit
      }
@@ -45,9 +44,9 @@ object Index11Callables {
 
   class RemoveEntryMono(keyMapName:String, kvmmName:String,firstValMapName:String, valCountMapName:String,indexKeyCountName:String,keyHash:FiveInt,keyBA:ComparableBAW, valBA:BAW, timeOut:Long) extends Callable[Unit] with Serializable with PartitionAware[FiveInt]{
     def call() {
-      val hi               = Hazelcast.getDefaultInstance
-      //val config = hi.getConfig
-      //config.addMapConfig(new com.hazelcast.config.MapConfig(keyMapName).addMapIndexConfig(new com.hazelcast.config.MapIndexConfig("data", true)))
+//      val hi               = Hazelcast.getDefaultInstance
+//val hi               = Hazelcast.newLiteMemberHazelcastInstance()
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
 
       val kvmm             = hi.getMultiMap[FiveInt,BAW](kvmmName)
       val keyMap      = hi.getMap[FiveInt, ComparableBAW](keyMapName)
@@ -101,7 +100,7 @@ object Index11Callables {
   class RemoveAllEntriesMono(keyMapName:String, kvmmName:String,firstValMapName:String,  valCountMapName:String,keyCountName:String,keyHash:FiveInt,timeOut:Long) extends Callable[Unit] with Serializable with PartitionAware[FiveInt]{
      def call() {
 
-       val hi               = Hazelcast.getDefaultInstance
+       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
        //val config = hi.getConfig
        //config.addMapConfig(new com.hazelcast.config.MapConfig(keyMapName).addMapIndexConfig(new com.hazelcast.config.MapIndexConfig("data", true)))
 
@@ -129,7 +128,7 @@ object Index11Callables {
 
   class GetMultiMappingsFromThatMemberMono(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], timeOut:Long) extends Callable[java.util.List[Pair[ComparableBAW,util.Collection[BAW]]]] with Serializable{
     def call() = {
-      val hi                = Hazelcast.getDefaultInstance
+      val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
       val keyMap            = hi.getMap[FiveInt,ComparableBAW](keyMapName)
       val kvmm              = hi.getMultiMap[FiveInt,BAW](kvmmName)
       val keyHashsIterator  = keyHashs.iterator
@@ -142,5 +141,7 @@ object Index11Callables {
       resultList
     }
   }
+
+
 
 }
