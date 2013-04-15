@@ -14,7 +14,7 @@ object TestCommons {
   val syncTime = 100
   val baToString = new BAtoString
   type StringListMap = Map[String, List[String]]
-  val dataSize = 10
+  val dataSize = 5
 
   val random: Random = new Random
   val baComp = new ByteArrayComparator
@@ -41,7 +41,7 @@ object TestCommons {
     new HGStore("bla", config)
   }
 
-  def test2WayIterator[A](rars:HGRandomAccessResult[A]):Unit = {
+  def test2WayIterator[A](rars:HGRandomAccessResult[A]){
     if (rars.equals(EmptySR))
       return
     else
@@ -70,9 +70,6 @@ object TestCommons {
   }
 
 
-
-
-
   // Utility Methods
 
   type StringMap = Map[String, String]
@@ -85,19 +82,4 @@ object TestCommons {
     else map
   }
 
-
-
-  //  def genStringList(count:Int = 20): List[String] = {if(count >1) randomString :: genStringList (count -1 ) else randomString :: Nil}
-  def functionSucceded(f: () => Unit):Boolean = {
-    var succeed= false
-    try { f; succeed = true }
-    catch {case t:Throwable => println("throwable catched"); return false }
-    return succeed
-  }
-
-  /*doesn't work:
-    def functionSucceded(f: () => Unit):Boolean = {
-      return try { f; true }
-      catch {case t:Throwable => return false; case _ => return false }
-    } */
 }

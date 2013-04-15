@@ -107,7 +107,7 @@ class HazelIndex12[K, V] (val name: String,
   val executor = h.getExecutorService
 
   def execute[T](callable: Callable[T], returns:Boolean = false):T =
-    if (! callable.isInstanceOf[PartitionAware[FiveInt]])
+    if (! callable.isInstanceOf[PartitionAware[FiveInt]] || !hstoreConf.getAsync)
       callable.call()
     else if (!hstoreConf.getAsync || returns)
       executor.submit(callable).get()              // get makes it block == synchronous, but still better to transfer one block of code over to one keyHash owner
@@ -119,7 +119,7 @@ class HazelIndex12[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new AddEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new AddEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getUseTransactionalCallables, hstoreConf.getUseHCIndexing, hstoreConf.getTimeoutMillis))
     }
     else
       Unit
@@ -130,19 +130,17 @@ class HazelIndex12[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new RemoveEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new RemoveEntryMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA,hstoreConf.getUseTransactionalCallables, hstoreConf.getTimeoutMillis))
     }
   else
       Unit
   }
 
-  def nullcheck[T](t:T, f:T => Unit){if (t != null) f(t) else Unit}
-
   def removeAllEntries(key: K) {
     if(key !=null)
     {
       val keyHash = hashBaTo5Int(toBA[K](key))
-      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,hstoreConf.getTimeoutMillis))
+      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, valCountMapName,indexKeyCountName,keyHash,hstoreConf.getUseTransactionalCallables, hstoreConf.getTimeoutMillis))
     }
     else
       Unit
@@ -167,7 +165,7 @@ class HazelIndex12[K, V] (val name: String,
       if (valBAWs == null || valBAWs.isEmpty)
         EmptySR.asInstanceOf[HGRandomAccessResult[V]]
       else
-        new HazelRS2[V](valBAWs.toIndexedSeq.map(_.data).sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
+        new HazelRS3[V](valBAWs.toIndexedSeq.map(_.data).sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
     }
 
 
@@ -182,16 +180,17 @@ class HazelIndex12[K, V] (val name: String,
   def scanKeys(): HGRandomAccessResult[K] = {
     val keyvalues = keyMap.values().map(_.data).toIndexedSeq
     val sorted    = keyvalues.sortWith(comparator.compare(_,_) < 0)
-    new HazelRS2[K](sorted)
+    new HazelRS3[K](sorted)
   }
 
 
   def scanValues(): HGRandomAccessResult[V] = {
     val baws = kvmm.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0}
-    new HazelRS2[V](baws)
+    new HazelRS3[V](baws)
   }
 
-  def count(): Long = indexKeyCount.get
+  def count(): Long =    indexKeyCount.get
+
   def count(key: K): Long = valCountMap.get(hashBaTo5Int(toBA[K](key)))
 
   def open() { }

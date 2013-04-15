@@ -82,7 +82,10 @@ class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
   }
 
   def store(handle: PH, link: Array[PH]):PH = {
-    linkDB.putAsync(handle.toByteArray, new BAW(pHA2BA(link)));
+    if(hazelstoreConfig.getAsync)
+      linkDB.putAsync(handle.toByteArray, new BAW(pHA2BA(link)));
+    else
+      linkDB.put(handle.toByteArray, new BAW(pHA2BA(link)));
     handle
   }
 
@@ -99,15 +102,22 @@ class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
       }
 
   def removeLink(handle: PH){
-    linkDB.removeAsync(handle.toByteArray)
+    if(hazelstoreConfig.getAsync)
+      linkDB.removeAsync(handle.toByteArray)
+    else
+      linkDB.remove(handle.toByteArray)
   }
 
   def containsLink(handle: PH):Boolean =
     linkDB.containsKey(handle.toByteArray)
 
   def store(handle: PH, data: BA) ={
+    if(hazelstoreConfig.getAsync)
       dataDB.putAsync(handle.toByteArray, new BAW(data))
-      handle
+    else
+      dataDB.put(handle.toByteArray, new BAW(data))
+
+    handle
     }
 
   def getData(handle: PH) : BA =
@@ -122,7 +132,10 @@ class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
 
 
   def removeData(handle: PH) {
+    if(hazelstoreConfig.getAsync)
       dataDB.removeAsync(handle.toByteArray)
+    else
+      dataDB.remove(handle.toByteArray)
   }
 
 
@@ -143,19 +156,30 @@ class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
   }
 
   def removeIncidenceSet(handle: PH) {
-      execute(new RemoveIncidenceSetOp(inciDbName,inciName(handle), handle.toByteArray))
+    val callable = new RemoveIncidenceSetOp(inciDbName, inciName(handle), handle.toByteArray)
+    if (hazelstoreConfig.getAsync)
+        execute(callable)
+    else
+      callable.call
   }
 
   def getIncidenceSetCardinality(handle: PH): Long = inciCount(handle).get()
 
   def addIncidenceLink(handle: PH, newLink: PH) {
-    execute(new AddIncidenceLinkOp(inciDbName,inciName(handle), handle.toByteArray, new BAW(newLink.toByteArray)))
+    val callable = new AddIncidenceLinkOp(inciDbName, inciName(handle), handle.toByteArray, new BAW(newLink.toByteArray))
+    if (hazelstoreConfig.getAsync)
+      execute(callable)
+    else
+      callable.call
   }
 
   def removeIncidenceLink(handle: PH, oldLink: PH) {
-    execute(new RemoveIncidenceLinkOp(inciDbName,inciName(handle), handle.toByteArray, new BAW(oldLink.toByteArray)))
+    val callable = new RemoveIncidenceLinkOp(inciDbName, inciName(handle), handle.toByteArray, new BAW(oldLink.toByteArray))
+    if (hazelstoreConfig.getAsync)
+      execute(callable)
+    else
+      callable.call
   }
-
 
   def getIndex[K, V](name: String,
                      keyConverter: ByteArrayConverter[K],
@@ -166,7 +190,7 @@ class Hazelstore4 (hazelstoreConf: HazelStoreConfig = new HazelStoreConfig()) ex
     openIndices.getOrElseUpdate(name,
                                       (
                                           if (!isBidirectional) new HazelIndex12     [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
-                                          else                  new HazelBidirecIndex11[K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                          else                  new HazelBidirecIndex12[K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
                                       )
 
                                 ).asInstanceOf[HGIndex[K, V]]

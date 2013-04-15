@@ -3,7 +3,7 @@ package org.hypergraphdb.storage.hazelstore.testing
 import scala.Predef._
 import org.hypergraphdb._
 import com.hazelcast.core.Hazelcast
-import org.hypergraphdb.storage.hazelstore.{Hazelstore3, HazelStoreConfig}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore4, Hazelstore3, HazelStoreConfig}
 
 import TestCommons._
 import scala.collection.JavaConversions._
@@ -11,7 +11,7 @@ import scala.Some
 
 
 object IndexTest {
-    val hs = new Hazelstore3()
+    val hs = new Hazelstore4
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setStoreImplementation(hs)
@@ -45,11 +45,12 @@ object IndexTest {
 
       init()
       dataMap2.foreach {case (k: String, v: List[String]) => v.foreach(s => index.addEntry(k, s))  }
-      assert(index.count == dataMap2.size)
+      val count = index.count
+      assert(count == dataMap2.size)
       val dataMapValueSet = dataMap2.values.flatten.toSet
       //val flattenDataMap2ValueSet2 = dataMap2.foldLeft(Set.empty[String]){case (set, (string, stringlist)) => set ++ stringlist.toSet}
-      val scanValues = index.scanValues();
-      val scanValueSet = scanValues.toSet;
+      val scanValues = index.scanValues
+      val scanValueSet = scanValues.toSet
       assert(dataMapValueSet.size > dataSize)
       //assert(scanValueSet.intersect(flattenDataMap2Values).size.equals(flattenDataMap2Values.size))
       assert(scanValueSet.size.equals(dataMapValueSet.size))

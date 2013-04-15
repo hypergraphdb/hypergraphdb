@@ -1,6 +1,6 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.hazelstore.{HazelStoreConfig, Hazelstore3}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore4, HazelStoreConfig, Hazelstore3}
 import org.hypergraphdb.{HGStore, HGConfiguration}
 import collection.immutable
 import collection.JavaConversions._
@@ -16,11 +16,8 @@ object BiDirTest {
   import TestCommons._
 
   val random = new scala.util.Random
-  val hazelconf = new HazelStoreConfig()
-  val conf = new Config
-  conf.setLiteMember(true)
-  hazelconf.setHazelConfig(conf)
-  val hs = new Hazelstore3(hazelconf)
+  val hs = new Hazelstore4
+//  hs.getConfiguration.asInstanceOf[HazelStoreConfig].getHazelConfig.getExecutorConfig.setCorePoolSize(100)
   val config:HGConfiguration = new HGConfiguration
   config.setStoreImplementation(hs)
   config.setTransactional(false)
@@ -51,6 +48,7 @@ object BiDirTest {
     tests
     val stop = System.nanoTime()
     println("test took " + ((stop -start)/1000000) + " milliseconds")
+    Hazelcast.shutdownAll()
 
   }
 
@@ -99,9 +97,11 @@ object BiDirTest {
     ( 0 to dataSize-1).foreach(i =>
       //biDirDataMap.iterator.drop(random.nextInt(dataSize/2)). take(random.nextInt(dataSize/2)).............
     biDirDataMap.foreach{ case (k: String, v: List[String]) => if(random.nextBoolean()) biDirIndex.addEntry(k,dupeList(i))})
-    Thread.sleep(1000)
-    val count = biDirIndex.count()
-    assert(count == dataSize)
+    Thread.sleep(5000)
+    val count2 = biDirIndex.count()
+    if(count2 != dataSize)
+       println(s"Count unequals datasize. Should be: $dataSize is : " + biDirIndex.count())
+    assert(count2 == dataSize)
 
     println("Checking found keys from findByValue(ALLVALUES, exactValue).goto(key, exact=true)")
 //    val keysValuesFoundKeys = mapOverMap((k: String,  v: List[String]) => v.map(vv => (k,vv,biDirIndex.findByValue(vv))))
@@ -110,7 +110,8 @@ object BiDirTest {
     val foundKeys = biDirDataMap.map {
       case (k: String, v: List[String]) => v.map(vv => biDirIndex.findByValue(vv).goTo(k, true))
     }
-    //assert(foundKeys.forall(i => i.forall(ii => ii.equals(GotoResult.found))))
+    val allFound = foundKeys.forall(i => i.forall(ii => ii.equals(GotoResult.found)))
+    assert(allFound)
 
     println("checking it has all keys")
     val scanKeys = biDirIndex.scanKeys()

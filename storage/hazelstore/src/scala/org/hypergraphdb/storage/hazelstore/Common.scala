@@ -13,7 +13,7 @@ import scala.annotation.tailrec
 
 object Common {
 
-
+  // earlier version of https://github.com/scala/scala/blob/master/src/library/scala/collection/Searching.scala
   @tailrec
       def binarySearch[A,B >: A](coll:IndexedSeq[A], elem: B, from: Int, to: Int)
       (implicit ord: Ordering[B]): Either[Int, Int] = {
