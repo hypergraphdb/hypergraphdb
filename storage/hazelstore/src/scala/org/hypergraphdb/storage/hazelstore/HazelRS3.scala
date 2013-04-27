@@ -93,3 +93,11 @@ class HazelRS3[T](col: IndexedSeq[Array[Byte]], sorted:Boolean = true)(implicit 
 }
 
 
+object HazelRS3{
+  def apply[T](col: IndexedSeq[Array[Byte]], sorted:Boolean = true)(implicit comparator: Comparator[Array[Byte]],converter:ByteArrayConverter[T]):HGRandomAccessResult[T] =
+  if (col.size == 0)
+    EmptySR.asInstanceOf[HGRandomAccessResult[T]]
+  else
+    new HazelRS3[T](col, sorted)(comparator, converter)
+
+}

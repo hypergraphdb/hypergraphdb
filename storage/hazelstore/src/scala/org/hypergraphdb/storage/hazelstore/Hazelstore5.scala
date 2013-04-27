@@ -11,10 +11,10 @@ import storage._
 import transaction._
 import org.hypergraphdb.`type`.HGHandleType.HandleComparator
 import org.hypergraphdb.storage.hazelstore.StoreCallables.{RemoveIncidenceLinkOp, AddIncidenceLinkOp, RemoveIncidenceSetOp}
-import java.util.concurrent.Callable
+import Common._
 
 
-class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
+class Hazelstore5 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
 {
   type BA = Array[Byte]
   type PH = HGPersistentHandle
@@ -34,12 +34,12 @@ class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) 
   lazy val handleconverter                = new HandleConverter(handleFactory)
 
   protected val logger                    = new HGLogger()
-  protected val linkDB: IMap[BA, BAW]     = hi.getMap("linkDB")
-  protected val dataDB: IMap[BA, BAW]     = hi.getMap("dataDB")
+  protected val linkDB: IMap[PH, BAW]     = hi.getMap("linkDB")
+  protected val dataDB: IMap[PH, BAW]     = hi.getMap("dataDB")
   val inciDbName = "inciDB"
-  protected val inciDB: MultiMap[BA, BAW] = hi.getMultiMap[BA, BAW](inciDbName)
-  def inciName(handle:PH):String          = "inciCount" + handle.toStringValue
-  def inciCount(handle:PH):AtomicNumber   = hi.getAtomicNumber(inciName(handle))
+  protected val inciDB: MultiMap[PH, BAW] = hi.getMultiMap(inciDbName)
+  val inciCardinMapName                            = "inciCardinMap"
+  def inciCardinMap:IMap[PH,Long]         = hi.getMap("inciCardinMap")
   protected val inciConstant = "inciDB"
   protected val clusterExecutor           = hi.getExecutorService
 
@@ -81,67 +81,68 @@ class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) 
 
   def store(handle: PH, link: Array[PH]):PH = {
     if(hazelstoreConfig.async)
-      linkDB.putAsync(handle.toByteArray, new BAW(pHA2BA(link)));
+      linkDB.putAsync(handle, new BAW(pHA2BA(link)));
     else
-      linkDB.put(handle.toByteArray, new BAW(pHA2BA(link)));
+      linkDB.put(handle, new BAW(pHA2BA(link)));
     handle
   }
 
-  def getLink(handle: PH) : Array[PH] =
-    if (handle == null)
-      null
+//  def getLink(handle: PH) : Array[PH] = ifNotNullTwice(handle){ (x:PH) => ba2PHA(linkDB.get(x).data) }
+def getLink(handle: PH) : Array[PH] =
+  if (handle == null)
+    null
+  else
+  {
+    val ret : BAW = linkDB.get(handle)
+    if (ret != null)
+      ba2PHA(ret.data)
     else
-      {
-        val ret : BAW = linkDB.get(handle.toByteArray)
-        if (ret != null)
-          ba2PHA(ret.data)
-        else
-          null
-      }
+      null
+  }
 
   def removeLink(handle: PH){
     if(hazelstoreConfig.async)
-      linkDB.removeAsync(handle.toByteArray)
+      linkDB.removeAsync(handle)
     else
-      linkDB.remove(handle.toByteArray)
+      linkDB.remove(handle)
   }
 
-  def containsLink(handle: PH):Boolean =
-    linkDB.containsKey(handle.toByteArray)
+  def containsLink(handle: PH):Boolean = linkDB.containsKey(handle)
 
   def store(handle: PH, data: BA) ={
     if(hazelstoreConfig.async)
-      dataDB.putAsync(handle.toByteArray, new BAW(data))
+      dataDB.putAsync(handle, new BAW(data))
     else
-      dataDB.put(handle.toByteArray, new BAW(data))
+      dataDB.put(handle, new BAW(data))
 
     handle
     }
 
+  //def getData(handle: PH) : BA = ifNotNullTwice[PH,BA](handle){(x:PH) => dataDB.get(x).data }     // why does this cause NPE?
   def getData(handle: PH) : BA =
     if (handle == null) null.asInstanceOf[BA]
     else {
-       val res = dataDB.get(handle.toByteArray)
-        if (res != null)
-          res.data
-        else
-          null.asInstanceOf[BA]
+      val res = dataDB.get(handle)
+      if (res != null)
+        res.data
+      else
+        null.asInstanceOf[BA]
     }
 
 
   def removeData(handle: PH) {
     if(hazelstoreConfig.async)
-      dataDB.removeAsync(handle.toByteArray)
+      dataDB.removeAsync(handle)
     else
-      dataDB.remove(handle.toByteArray)
+      dataDB.remove(handle)
   }
 
 
-  def containsData(handle: PH) =  dataDB.containsKey(handle.toByteArray)
+  def containsData(handle: PH) =  dataDB.containsKey(handle)
 
 
   def getIncidenceResultSet(handle: PH) = {
-    val map =  inciDB.get(handle.toByteArray).map(baw => baw.data).toIndexedSeq
+    val map =  inciDB.get(handle).map(baw => baw.data).toIndexedSeq
     if(map == null || map.size == 0)
       EmptySR.asInstanceOf[HGRandomAccessResult[HGPersistentHandle]]
     else
@@ -159,29 +160,20 @@ class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) 
   }
 
   def removeIncidenceSet(handle: PH) {
-    val runnable = new RemoveIncidenceSetOp(inciDbName, inciName(handle), handle, hazelstoreConfig.transactionalRetryCount)
-    if (hazelstoreConfig.async)
+    val runnable = new RemoveIncidenceSetOp(inciDbName, inciCardinMapName, handle,hazelstoreConfig.transactionalRetryCount)
         execute(runnable)
-    else
-      runnable.run
   }
 
-  def getIncidenceSetCardinality(handle: PH): Long = inciCount(handle).get()
+  def getIncidenceSetCardinality(handle: PH): Long = inciCardinMap.get(handle)
 
   def addIncidenceLink(handle: PH, newLink: PH) {
-    val callable = new AddIncidenceLinkOp(inciDbName, inciName(handle), handle, new BAW(newLink.toByteArray),hazelstoreConfig.transactionalRetryCount)
-    if (hazelstoreConfig.async)
+    val callable = new AddIncidenceLinkOp(inciDbName, inciCardinMapName, handle, new BAW(newLink.toByteArray),hazelstoreConfig.transactionalRetryCount)
       execute(callable)
-    else
-      callable.run
   }
 
   def removeIncidenceLink(handle: PH, oldLink: PH) {
-    val callable = new RemoveIncidenceLinkOp(inciDbName, inciName(handle), handle, new BAW(oldLink.toByteArray),hazelstoreConfig.transactionalRetryCount)
-    if (hazelstoreConfig.async)
+    val callable = new RemoveIncidenceLinkOp(inciDbName, inciCardinMapName, handle, new BAW(oldLink.toByteArray),hazelstoreConfig.transactionalRetryCount)
       execute(callable)
-    else
-      callable.run
   }
 
   def getIndex[K, V](name: String,
@@ -193,8 +185,8 @@ class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) 
               if(createIfNecessary)
                 openIndices.getOrElseUpdate(name,
                                                 (
-                                                    if (!isBidirectional) new HazelIndex12     [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
-                                                    else                  new HazelBidirecIndex12[K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                                    if (!isBidirectional) new HazelIndex13        [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                                    else                  new HazelBidirecIndex13 [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
                                                 )
                                           ).asInstanceOf[HGIndex[K, V]]
               else
@@ -208,5 +200,6 @@ class Hazelstore4 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) 
   def handle2baw(handle:PH) = new BAW(handle.toByteArray)
   def pHA2BA(la:Array[PH]): BA = HGConverter.convertHandleArrayToByteArray(la, handleSize)
   def ba2PHA (ba:BA):Array[PH] = HGConverter.convertByteArrayToHandleArray(ba,handleFactory)
+
 
 }

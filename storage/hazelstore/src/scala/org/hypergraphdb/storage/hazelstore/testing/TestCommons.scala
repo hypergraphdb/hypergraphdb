@@ -1,44 +1,145 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.BAtoString
+import org.hypergraphdb.storage.{HGStoreImplementation, ByteArrayConverter, BAtoString}
 import org.hypergraphdb.handle.UUIDHandleFactory
-import org.hypergraphdb.{EmptySearchResult, HGRandomAccessResult, HGStore, HGConfiguration}
-import com.hazelcast.core.Hazelcast
-import util.Random
-import org.hypergraphdb.storage.hazelstore.{Hazelstore3, ByteArrayComparator, HazelStoreConfig, EmptySR}
+import org.hypergraphdb._
+import org.hypergraphdb.storage.hazelstore._
+import org.hypergraphdb.HGRandomAccessResult.GotoResult
+import scala.collection.immutable
+import scala.util.{Try, Random}
+import org.hypergraphdb.`type`.javaprimitive.StringType
+import scala.annotation.{tailrec, elidable}
+import scala.annotation.elidable._
+import scala.Some
 
 
 object TestCommons {
   val sbaconvert = new BAtoString
   val hanGen = new UUIDHandleFactory
-  val syncTime = 100
+  val syncTime = 2000
   val baToString = new BAtoString
   type StringListMap = Map[String, List[String]]
-  val dataSize = 5
+  val dataSize = 20
+
+  def setupStorImp(si:HGStoreImplementation){
+    val hgconfig = new HGConfiguration
+    hgconfig.setTransactional(false)
+    si.startup(null, hgconfig)
+  }
+
+
+
+
+  //def repeatUntil[I,R](fun: I => R, i:I)(until: R => Boolean):(R,Long, Boolean) = repeatUntilBase(fun(i))(until)(0)(syncTime)
+  def repeatUntil1[R](fun:() => R)(until: R => Boolean):(R,Long, Boolean) = repeatUntilBase(fun)(until)(0)(syncTime)
+  private def repeatUntilBase[R](fun: ()=> R)(until: R => Boolean)(runTime:Long)(timeOut:Long = syncTime):(R,Long, Boolean) = {
+    val start = System.currentTimeMillis()
+    val res = fun()
+    val ready = until(res)
+    (ready, timeOut) match {
+    case (true,_) => (res, (System.currentTimeMillis()-start) + runTime, true)
+    case (false, x) =>
+      if (System.currentTimeMillis()-start + runTime < timeOut) {
+        Thread.sleep(System.currentTimeMillis() - start);
+        //log("repeatUntil is repeating...")
+        repeatUntilBase(fun)(until)((System.currentTimeMillis()-start) + runTime)(timeOut - (start-System.currentTimeMillis()))}
+      else {
+        log("repeatUntil failed...")
+        (res, (System.currentTimeMillis()-start) + runTime, false)}
+    }
+  }
+
+  def repeatUntil[I,R](fun: I => R, i:I)(until: R => Boolean, timeOut:Long = syncTime):(R,Long, Boolean) = {
+    val startTime = System.currentTimeMillis()
+    var cur : R = fun(i)
+    var untilTrue:Boolean = until(cur)
+    while( !untilTrue && System.currentTimeMillis() - startTime < timeOut)
+      {
+        //log("repeating." + (System.currentTimeMillis() - startTime) + "  millis passed" );
+        Thread.sleep(System.currentTimeMillis() - startTime)
+        cur = fun(i)
+        untilTrue = until(cur)
+      }
+    if(!untilTrue)
+    {   println("repeatUntil FAILURE" );
+      (cur, System.currentTimeMillis() - startTime, false)}
+    else
+      (cur, System.currentTimeMillis() - startTime, true)
+  }
+
+  @tailrec
+  def waitFor (waitTime:Long = syncTime * 1000000) {
+    if(waitTime <= 0) Unit
+    else waitFor(waitTime -1)
+    //val start = System.nanoTime()
+    //while(System.nanoTime() - start < waitTime){Unit}
+  }
 
   val random: Random = new Random
   val baComp = new ByteArrayComparator
 
-  def randomString: String = random.nextString(10)
+  def mkValidt[Tested,Data](testName:String, fun:(Tested,Seq[Data]) => Boolean) =
+    (testName,  (store:Tested, data:Seq[Data]) => Try{
+      val a = fun(store,data)
+      assert(a, testName + "failed")
+      a
+    })
 
-  def stringListLenght: Int = {   val v1 = random.nextInt(500); if (v1 > 10) v1 else stringListLenght   }
+  def mkValidtForAll[Tested,Data](testName:String, fun:((Tested,Data) => Boolean)):(String, (Tested,Seq[Data]) => Try[Boolean])=
+    (testName,  (store:Tested, data:Seq[Data]) => Try{
+      val a = data.forall(dataSet => fun(store,dataSet))
+      assert(a, testName + "failed")
+      a
+    })
 
-  def randomStringList(accuList: List[String] = List.empty[String],
-                       length: Int = stringListLenght): List[String] = {
-    if (length > 0)
-      randomStringList(randomString :: accuList, length - 1)
-    else
-      accuList
+
+  @elidable(INFO) def log(s:String) = println(s)
+
+  def RSMatchGoTo[T](i:Seq[T], rs: HGRandomAccessResult[T], matchResult:GotoResult):Boolean =
+    i.forall( i => rs.goTo(i, true) == matchResult)
+
+  def countIt[I[_] <: Iterator[_]](it:I[_], ac:Int = 0):Int = if (! it.hasNext) ac else countIt(it, ac+1)
+
+  def timeMeasure[R](f: => R):(Long,R) = {
+    val start = System.nanoTime
+    val r = f
+    ((System.nanoTime - start),r)
   }
 
 
-  def getStore(config: HGConfiguration = new HGConfiguration): HGStore = {
+  def countAllIterOnce[T](l:List[T], countMap:immutable.Map[T,Int] = immutable.Map.empty[T,Int]):immutable.Map[T,Int] =
+    if (l.isEmpty) countMap
+    else countMap.get(l.head) match  {
+      case None     =>  countAllIterOnce(l.tail, countMap ++ immutable.Map((l.head, 1)))
+      case Some(a)  =>  countAllIterOnce(l.tail, countMap.updated(l.head,a + 1))
+    }
 
-    // HAZEL TESTS
-    //
-    val hs = new Hazelstore3
+  def getConfig(hazelConfig:HazelStoreConfig):HGConfiguration = {
+    val config = new HGConfiguration
+    config.setTransactional(false)
+    config.setUseSystemAtomAttributes(false)
+    val hs = new Hazelstore5(hazelConfig)
     config.setStoreImplementation(hs)
-    new HGStore("bla", config)
+    config
+  }
+
+  def getStore(config:HGConfiguration):HGStore = new HGStore("bla", config)
+  def getIndex(store:HGStore):HGSortIndex[String, String] = {
+    val baToString: ByteArrayConverter[String]= new StringType
+    store.getIndex(random.nextString(10), baToString, baToString, BAComp, true).asInstanceOf[HGSortIndex[String,String]]
+
+
+  }
+  def getBidirectionalIndex(store:HGStore):HGBidirectionalIndex[String, String] = {
+    val baToString: ByteArrayConverter[String]= new StringType
+    store.getBidirectionalIndex(random.nextString(10), baToString, baToString, BAComp, true)
+  }
+
+  def getGraph(config:HGConfiguration):HyperGraph = {
+    val graph = new HyperGraph()
+    graph.setConfig(config)
+    graph.open("")
+    graph
   }
 
   def test2WayIterator[A](rars:HGRandomAccessResult[A]){
@@ -58,28 +159,12 @@ object TestCommons {
   }
 
 
-  def javaRandomStringList(lengthi: Int): java.util.List[String] = {
-    var length = lengthi
-    var accuList: java.util.List[String] = new java.util.LinkedList[String]()
 
-    while (length > 0) {
-      accuList.add(randomString(20).asInstanceOf[String])  // got some weird errors.
-      length = length - 1;
-    }
-    accuList
-  }
-
-
-  // Utility Methods
-
-  type StringMap = Map[String, String]
-  val dataMap:StringMap = genStringStringMap(20)
-  //  val secondValueKeyMap:StringMap = secondaryValueKeyMap(dataMap)
-  def genStringStringMap(count:Int = 20,
-                         map:StringMap = Map.empty[String, String],
-                         stringGen: String = randomString): StringMap = {
-    if (count > 0 ) genStringStringMap(count-1, map.+(randomString -> randomString))
-    else map
+  def arraysEqual[T](left: Array[T], right: Array[T]): Boolean = {
+    if (left.equals(right))  true
+    else if (left == null || right == null)  false
+    else if (left.length != right.length)  false
+    else  ( left.deep ==   right.deep) && (left.corresponds(right)(_ == _))
   }
 
 }

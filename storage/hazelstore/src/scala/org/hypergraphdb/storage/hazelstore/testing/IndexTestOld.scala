@@ -3,15 +3,17 @@ package org.hypergraphdb.storage.hazelstore.testing
 import scala.Predef._
 import org.hypergraphdb._
 import com.hazelcast.core.Hazelcast
-import org.hypergraphdb.storage.hazelstore.{Hazelstore4, Hazelstore3, HazelStoreConfig}
+import org.hypergraphdb.storage.hazelstore.{HazelRS3, Hazelstore4, HazelStoreConfig}
 
 import TestCommons._
 import scala.collection.JavaConversions._
 import scala.Some
+import org.hypergraphdb.HGRandomAccessResult.GotoResult
 
 
-object IndexTest {
-    val hs = new Hazelstore4
+object IndexTestOld {
+  import Generators.Strings._
+    val hs = new Hazelstore4(new HazelStoreConfig)
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setStoreImplementation(hs)
@@ -20,30 +22,104 @@ object IndexTest {
     //val index:HGIndex[String, String] = store.getBidirectionalIndex(randomString, baToString, baToString, baComp, true)
     val dataMap2: StringListMap = genStriLiMap()
 
-    def genStriLiMap(accuMap: Map[String, List[String]] = Map.empty[String, List[String]],
-                     length: Int = dataSize): Map[String, List[String]] = {
-      if (length > 0)
-        genStriLiMap(accuMap + (randomString -> randomStringList()), length - 1)
-      else
-        accuMap
-    }
+
+  def testIndex{
+
+    val k1 = "key1"
+    val k2 = "key2"
+
+    index.removeAllEntries(k1)
+    Thread.sleep(syncTime)
+    val count0 = index.count(k1)
+    if (count0 != 0 ) println(s"count0 is not 0 but $count0")
+    assert(count0 ==0)
 
 
-    def init() {
-    /*  graphstore = getStore()
-      val config:HGConfiguration = new HGConfiguration
-      // val handleFactory: SequentialUUIDHandleFactory = new SequentialUUIDHandleFactory(System.currentTimeMillis, 0)     ; config.setHandleFactory(handleFactory); config.setUseSystemAtomAttributes(false)
-      config.setStoreImplementation(hs)
-      graphstore = new HGStore("bla", config)
-      hs.startup(graphstore,config)
+    // ADDING; REMOVING; COUNTING
+    index.addEntry(k1, "value1")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 1)
+    index.addEntry(k1, "value2")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 2)
+    index.removeEntry(k1, "value2")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 1)
+    index.addEntry(k1, "value2")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 2)
+    index.addEntry(k1, "value3")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 3)
 
-      index = graphstore.getIndex(randomString, baToString, baToString, baComp, true)
-      */
-    }
+    index.addEntry(k1, "valueX")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 4)
+    index.removeEntry(k1, "valueX")
+    Thread.sleep(syncTime)
+    assert(index.count(k1) == 3)
+
+    index.addEntry(k2, "value4")
+    Thread.sleep(syncTime)
+    assert(index.count(k2) == 1)
+
+    val keys = index.scanKeys()
+    assert(keys.asInstanceOf[HazelRS3[_]].count() == 2)
+    val indexKeyCount = index.count
+    if (indexKeyCount != 2) println("indexKeyCount should be 2 is: " + indexKeyCount)
+    assert( indexKeyCount == 2)
+
+    val k1back= index.find(k1)
+
+
+    assert(foundValueX(List(1,2,3),k1back))
+    assert(notFoundValueX(List(4),k1back))
+
+    val scanVals1 = index.scanValues()
+    val scanValsLength = scanVals1.asInstanceOf[HazelRS3[_]].count
+    if(scanValsLength != 4) println(s"scanValsLength $scanValsLength ")
+    assert(scanValsLength == 4)
+    assert(foundValueX(List(1,2,3,4),scanVals1))
+
+    val k1vals = index.find(k1)
+    assert(foundValueX(List(1,2,3),k1vals))
+    assert(notFoundValueX(List(4),k1vals))    //leads to an endless loop in binarysearch
+
+    // JAVACONVERSIONS DONT WORK RELIABLY!!!           // confirmed manually that scanKey contains both k1 and k2
+
+    index.removeEntry(k1,"value2")
+
+    Thread.sleep(syncTime)
+    val scanVals2: HGRandomAccessResult[String] = index.find(k1)
+    assert(foundValueX(List(1,3), scanVals2))
+    assert(notFoundValueX(List(2,4),scanVals2))      //leads to an endless loop in binarysearch
+
+    assert(index.count(k1)==2)
+
+    val scanVals3: HGRandomAccessResult[String] = index.scanValues()
+    assert(List(1,3).forall( i => scanVals3.goTo("value"+i.toString, true) == GotoResult.found))
+    assert(foundValueX(List(1,3),scanVals3))
+    assert(notFoundValueX(List(2), scanVals3))
+
+    index.removeAllEntries(k1)
+    Thread.sleep(8 * syncTime)
+    val scanVals4 = index.find(k1)
+    assert(notFoundValueX(List(1,2,3,4),scanVals4))   // I
+    val scanVals5 = index.scanValues()
+    assert(notFoundValueX(List(1,2,3),scanVals5))
+    assert(foundValueX(List(4),scanVals3))
+
+    val count1 = index.count(k1)
+    assert(count1.equals(null) || count1 == 0)
+    assert(index.count == 1)
+    assert(index.scanValues().asInstanceOf[HazelRS3[_]].count == 1 )
+  }
+
+  def foundValueX(a:Seq[Int],b:HGRandomAccessResult[String]) = RSMatchGoTo(a.map("value" + _), b,GotoResult.found)
+  def notFoundValueX(a:Seq[Int],b:HGRandomAccessResult[String]) = RSMatchGoTo(a.map("value" + _), b,GotoResult.nothing)
 
     def main(args: Array[String]) {
 
-      init()
       dataMap2.foreach {case (k: String, v: List[String]) => v.foreach(s => index.addEntry(k, s))  }
       val count = index.count
       assert(count == dataMap2.size)

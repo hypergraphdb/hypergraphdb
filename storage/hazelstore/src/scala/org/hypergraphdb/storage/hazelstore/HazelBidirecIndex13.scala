@@ -11,11 +11,13 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
+import org.hypergraphdb.storage.hazelstore.testing.TestCommons
+import TestCommons._
 import util.Comparator
-import java.util.concurrent.{Future, TimeoutException, TimeUnit, Callable}
-import scala.Some
+import java.util.concurrent.{TimeoutException, TimeUnit, Callable}
+import org.hypergraphdb.storage.hazelstore.CommonCallables.{BiIndexStringParams, Calloppe, BiIndexParams}
 
-class HazelBidirecIndex12[K, V] (val name: String,
+class HazelBidirecIndex13[K, V] (val name: String,
                                  val h:HazelcastInstance,
                                  hstoreConf:HazelStoreConfig,
                                  implicit val keyConverter:   ByteArrayConverter[K],
@@ -35,18 +37,18 @@ class HazelBidirecIndex12[K, V] (val name: String,
 
   /*--------------------------------------------------------------------------------*/
   type BiKVMM                                     = MultiMap[FiveInt,FiveInt]
-  val kvmmName                                    = name + "_kHashToValHashMM"
-  val kvmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](kvmmName)
+  val localKvmmName                                    = name + "_kHashToValHashMM"
+  val localKvmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localKvmmName)
   /*--------------------------------------------------------------------------------*/
 
   /*--------------------------------------------------------------------------------*/
-  val vkmmName                                    = name + "_valHashToKeyHashMM"
-  val vkmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](vkmmName)
+  val localVkmmName                                    = name + "_valHashToKeyHashMM"
+  val localVkmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localVkmmName)
 
   /*--------------------------------------------------------------------------------*/
 
   type ValMap                                     = IMap[FiveInt,BAW]
-  val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"// mapping combined hash of key + hash of value to Value (BAW). Indexed for quering by value
+  val localValMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"// mapping combined hash of key + hash of value to Value (BAW). Indexed for quering by value
   if(hstoreConf.useHCIndexing)
   {
       val valMapIndexConfig                           = new com.hazelcast.config.MapIndexConfig("data", false)               // importantly, this MapIndexConfig has false, because indexing not required to be >ordered<, since we don't need range queries for findByValue methods.
@@ -55,11 +57,11 @@ class HazelBidirecIndex12[K, V] (val name: String,
       valMapConfig.addMapIndexConfig(valMapIndexConfig)
       h.getConfig.addMapConfig(valMapConfig)
   }
-  val valmap:      ValMap                         = h.getMap[FiveInt,BAW](valMapName)
+  val localValmap:      ValMap                         = h.getMap[FiveInt,BAW](localValMapName)
 
   /*--------------------------------------------------------------------------------*/
   type KeyMap                                     = IMap[FiveInt, ComparableBAW]
-  val keyMapName: String                          = name + "keyMap"
+  val localKeyMapName: String                          = name + "keyMap"
   if(hstoreConf.useHCIndexing)
   {
       val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)  // data is the data
@@ -68,22 +70,22 @@ class HazelBidirecIndex12[K, V] (val name: String,
       keyMapConfig.addMapIndexConfig(mapIndexConfig)
       h.getConfig.addMapConfig(keyMapConfig)
   }
-  val keymap: IMap[FiveInt, ComparableBAW]        = h.getMap[FiveInt, ComparableBAW](keyMapName)
+  val localKeymap: IMap[FiveInt, ComparableBAW]        = h.getMap[FiveInt, ComparableBAW](localKeyMapName)
 
   /*--------------------------------------------------------------------------------*/
   val clusterExecutor = h.getExecutorService
   /*--------------------------------------------------------------------------------*/
   def eo                                          = new PredicateBuilder().getEntryObject
   /*--------------------------------------------------------------------------------*/
-  val firstValMapName                             = name + "firstvalMap"
-  val firstValMap:IMap[FiveInt,BAW]               = h.getMap[FiveInt,BAW] (firstValMapName)
+  val localFirstValMapName                             = name + "firstvalMap"
+  val localFirstValMap:IMap[FiveInt,BAW]               = h.getMap[FiveInt,BAW] (localFirstValMapName)
   /*--------------------------------------------------------------------------------*/
   type ValueCountMap                              = IMap[FiveInt,Long]
-  val valueCountMapName                           =   name + "valueCountMap"
-  lazy val valCountMap:IMap[FiveInt, Long]        = h.getMap(valueCountMapName)     // if count(key) is never called this doesn't need to be initalized
+  val localValueCountMapName                           =   name + "valueCountMap"
+  lazy val localValCountMap:IMap[FiveInt, Long]        = h.getMap(localValueCountMapName)     // if count(key) is never called this doesn't need to be initalized
   /*--------------------------------------------------------------------------------*/
-  val indexKeyCountName                           = name + "keyCountOfIndex"
-  lazy val indexKeyCount:AtomicNumber             = h.getAtomicNumber(indexKeyCountName)  // if count is never called this doesn't need to be initalized
+  val localIndexKeyCountName                           = name + "keyCountOfIndex"
+  lazy val localIndexKeyCount:AtomicNumber             = h.getAtomicNumber(localIndexKeyCountName)  // if count is never called this doesn't need to be initalized
   /*--------------------------------------------------------------------------------*/
   implicit val comparator:Comparator[Array[Byte]] =
                                  if(providedComparator == null) BAComparator
@@ -104,37 +106,110 @@ class HazelBidirecIndex12[K, V] (val name: String,
   def mkHash[T](t:T)(implicit baconverter:ByteArrayConverter[T]):FiveInt = hashBaTo5Int(toBA[T](t)(baconverter))
 
 
+  //case class BiIndexStringParams  (kvmmBiName:String, vkmmName:String, valMapName:String,firstValMapName:String,valHash:FiveInt)
+  def calloppeShortener(operationName: String, keyHash:FiveInt,keyCBA: Option[ComparableBAW],valHash:FiveInt, valBAW: Option[BAW],
+                        fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
+                        postfun: (HazelcastInstance,String) => Unit) =
+    new Calloppe((name, operationName), localKeyMapName, keyHash, localIndexKeyCountName, keyCBA,valBAW, localValueCountMapName, Right(BiIndexStringParams(localKvmmName,localVkmmName,localValMapName,localFirstValMapName,valHash)), fun, postfun,hstoreConf.transactionalRetryCount, hstoreConf.useTransactionalCallables)
+
+
+
   def addEntry(key: K, value: V){
     if(key !=null && value != null)
       {
         val (keyBA, keyHash, valBA,valHash) = initialVals(key, Option(value))
-        execute(new BiAddEntry(keyMapName, kvmmName,vkmmName, valMapName,firstValMapName,indexKeyCountName,valueCountMapName,keyHash,keyBA, valHash, valBA,hstoreConf.useTransactionalCallables, hstoreConf.useHCIndexing,timeout, hstoreConf.transactionalRetryCount), false)
+        val operationName = s"BidirIndex $name addEntry"
+        val runnable = calloppeShortener(operationName, keyHash, Some(keyBA), valHash, Some(valBA),
+          (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) => {
+          funKeyMap.put(keyHash, keyBA)
+          funParams.right.get.valMap.put(valHash,valBA)
+          val kvmmAdded = funParams.right.get.kvmmBi.put(keyHash,valHash)
+          val vkmmAdded = funParams.right.get.vkmm.put(valHash,keyHash)
+          funParams.right.get.firstValMap.put(keyHash,valBA)
+
+          if(kvmmAdded)
+          {
+            if(!vkmmAdded) log(s"Warning for $id: kvmmAddded = true but vkmmAdded = false")
+            val valCountOld = valCountMap.get(keyHash)
+            val newValCount = if(valCountOld == null) 1 else valCountOld +1
+            valCountMap.put(keyHash, newValCount)
+
+            if (valCountOld == null || valCountOld == 0)
+              (true,funKeyCountName)
+            else
+              (false,funKeyCountName)
+          }
+          else
+            (false,funKeyCountName)
+        },(hi:HazelcastInstance, indexKeyCountName:String) => hi.getAtomicNumber(indexKeyCountName).incrementAndGet())
+        execute(runnable)
       }
     else
       Unit
   }
 
+
   def removeEntry(key: K, value: V){
     if(key !=null && value != null)
-      {
-        val (keyBA, keyHash, valBA,valHash) = initialVals(key, Option(value))
-        execute(new BiRemoveEntry(keyMapName, kvmmName,vkmmName, valMapName,firstValMapName,indexKeyCountName,valueCountMapName,keyHash,keyBA, valHash, valBA, hstoreConf.useTransactionalCallables,timeout,hstoreConf.transactionalRetryCount), false)
-      }
+    {
+      val (keyBA, keyHash, valBA,valHash) = initialVals(key, Option(value))
+      val operationName = s"BidirIndex $name removeEntry"
+      val runnable = calloppeShortener(operationName, keyHash, Some(keyBA), valHash, Some(valBA),
+        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) => {
+
+          val kvmmRemoved         = funParams.right.get.kvmmBi.remove(keyHash, valHash)
+          val firstValMapRemoved  = funParams.right.get.firstValMap.remove(keyHash, valBA)
+          val valCountOld         = valCountMap.get(keyHash)
+          funParams.right.get.vkmm.remove(valHash, keyHash)   // WARNING: this is not local to owner node of keyHash, so rollback might not work. If removeEntry operation fails retryCount times and is given up, then vkmm is inconsistent. Should be put into postfun. However starting from Hazelcast 3, there'll be XA transactions
+
+          var keyCountDecrement = false
+          if (kvmmRemoved) {
+            if (valCountOld == null || valCountOld <= 1) {
+              val valHashs = funParams.right.get.kvmmBi.get(keyHash)
+              val size = if(valHashs == null) 0 else valHashs.size
+              if (size <= 0) {
+                funKeyMap.remove(keyHash)
+                valCountMap.remove(keyHash)
+                keyCountDecrement = true
+              }
+              else valCountMap.put(keyHash, size)
+              if (firstValMapRemoved && size > 0) {
+                val valHashIter = valHashs.iterator()
+                if(valHashIter.hasNext)
+                {
+                  val curVH = funParams.right.get.valMap.get(valHashIter.next())
+                  funParams.right.get.firstValMap.put(keyHash, curVH)
+                }
+              }
+            }
+
+            else     // valCountOld >1
+              valCountMap.put(keyHash, valCountOld - 1)
+
+            (keyCountDecrement,funKeyCountName)
+          }
+          else
+            (false,funKeyCountName)
+
+        },(hi:HazelcastInstance, indexKeyCountName:String) => hi.getAtomicNumber(indexKeyCountName).decrementAndGet())
+      execute(runnable)
+    }
     else
       Unit
+
   }
 
   def removeAllEntries(key: K){
     if(key !=null )
       {
         val keyHash = hashBaTo5Int(toBA[K](key))
-        val valHashs = kvmm.get(keyHash)
-        firstValMap.removeAsync(keyHash)
-        keymap.removeAsync(keyHash)
+        val valHashs = localKvmm.get(keyHash)
+        localFirstValMap.removeAsync(keyHash)
+        localKeymap.removeAsync(keyHash)
         val groupByMember = valHashs.groupBy(valHash => h.getPartitionService.getPartition(valHash).getOwner)
-        groupByMember.foreach{ case (member, keysOffThatMember) => clusterExecutor.execute(new DistributedTask(new RemoveAllOnMember(valMapName, vkmmName,keysOffThatMember,hstoreConf.useTransactionalCallables,hstoreConf.transactionalRetryCount),member))}    //parallelized
-        kvmm.remove(keyHash)
-        indexKeyCount.decrementAndGet()
+        groupByMember.foreach{ case (member, keysOffThatMember) => clusterExecutor.execute(new DistributedTask(new RemoveAllOnMember(localValMapName, localVkmmName,keysOffThatMember,hstoreConf.useTransactionalCallables,hstoreConf.transactionalRetryCount),member))}    //parallelized
+        localKvmm.remove(keyHash)
+        localIndexKeyCount.decrementAndGet()
       }
     else
       Unit
@@ -142,7 +217,7 @@ class HazelBidirecIndex12[K, V] (val name: String,
 
   def findFirst(key: K): V =    {
    val keyHash = hashBaTo5Int(toBA[K](key))
-   val first = firstValMap.get(keyHash)
+   val first = localFirstValMap.get(keyHash)
    if (first != null)
      baToT[V](first.data)
    else
@@ -152,13 +227,13 @@ class HazelBidirecIndex12[K, V] (val name: String,
   //ToDo : make a lazy Result Set based on Futures
   def find(key: K): HGRandomAccessResult[V] = {
     val keyHash = mkHash(key)
-    val valueHashes = kvmm.get(keyHash)
+    val valueHashes = localKvmm.get(keyHash)
       if (valueHashes == null || valueHashes.isEmpty)
         EmptySR.asInstanceOf[HGRandomAccessResult[V]]
       else
       {
         val groupByMember = valueHashes.groupBy(valHash => h.getPartitionService.getPartition(valHash).getOwner)
-        val tasks = groupByMember.map{ case (member, valHashsOnThatMember) => new DistributedTask(new GetItFromThatMember[BAW](valMapName,valHashsOnThatMember),member)}
+        val tasks = groupByMember.map{ case (member, valHashsOnThatMember) => new DistributedTask(new GetItFromThatMember[BAW](localValMapName,valHashsOnThatMember),member)}
         tasks.foreach(it => clusterExecutor.execute(it))
         val tempResult = tasks.flatMap( future => future.get(2*timeout, millis).map(baw => baw.data)).toIndexedSeq
         val sortedResult  = tempResult.sortWith{case (k1,k2) => comparator.compare(k1, k2)<0}
@@ -170,7 +245,7 @@ class HazelBidirecIndex12[K, V] (val name: String,
 
   def findXY(com: PredicateBuilder, reverse:Boolean) : HGSearchResult[V] =
   {
-    val  keySet = keymap.keySet(com.asInstanceOf[Predicate[FiveInt, ComparableBAW]])
+    val  keySet = localKeymap.keySet(com.asInstanceOf[Predicate[FiveInt, ComparableBAW]])
     if  (keySet == null || keySet.size == 0)
       EmptySR.asInstanceOf[HGSearchResult[V]]
     else {
@@ -179,7 +254,7 @@ class HazelBidirecIndex12[K, V] (val name: String,
         groupKeyHashsByMember.map
           { case (member, keyHashSet) =>
               {
-                val a = new DistributedTask(new GetValHashsForEachKeyHash(keyMapName,kvmmName,keyHashSet, hstoreConf.timeoutMillis),member)
+                val a = new DistributedTask(new GetValHashsForEachKeyHash(localKeyMapName,localKvmmName,keyHashSet, hstoreConf.timeoutMillis),member)
                 clusterExecutor.execute(a)
                 a
               }
@@ -199,7 +274,7 @@ class HazelBidirecIndex12[K, V] (val name: String,
         .map{
             case (member, valSet) =>
               {
-                val a = new DistributedTask(new GetItFromThatMemberPairedWithHash[BAW](valMapName,valSet),member);
+                val a = new DistributedTask(new GetItFromThatMemberPairedWithHash[BAW](localValMapName,valSet),member);
                 clusterExecutor.execute(a);
                 a
               }
@@ -223,15 +298,15 @@ class HazelBidirecIndex12[K, V] (val name: String,
 
 
   def scanKeys(): HGRandomAccessResult[K] =
-    new HazelRS3[K](keymap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
+    HazelRS3[K](localKeymap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
 
 
   def scanValues(): HGRandomAccessResult[V] =
-    new HazelRS3[V](valmap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2)< 0})
+    HazelRS3[V](localValmap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2)< 0})
 
   def open() { }
   def close() {}
-  def isOpen: Boolean = (keymap != null && kvmm != null)
+  def isOpen: Boolean = (localKeymap != null && localKvmm != null)
 
   def initialVals(key: K,value: Option[V]) =
   {
@@ -243,20 +318,20 @@ class HazelBidirecIndex12[K, V] (val name: String,
     result
   }
 
-  def count(): Long = indexKeyCount.get
-  def count(key: K): Long = valCountMap.get(mkHash[K](key))
+  def count(): Long = localIndexKeyCount.get
+  def count(key: K): Long = localValCountMap.get(mkHash[K](key))
 
   //BiDirectional-Specific Ops
-  def countKeys(value:V):Long = execute[Int](new CountKeys(vkmmName,mkHash[V](value)),true).toLong      // callable avoids transfer of entire vkmm.get(valHash) Collection
+  def countKeys(value:V):Long = execute[Int](new CountKeys(localVkmmName,mkHash[V](value)),true).toLong      // callable avoids transfer of entire vkmm.get(valHash) Collection
 
   def findFirstByValue(value: V): K =
-    execute[Option[FiveInt]](new FindFirstByValueKeyHash(vkmmName,keyMapName,mkHash[V](value)), true)   // callable avoids transfer of entire vkmm.get(valHash) Collection
+    execute[Option[FiveInt]](new FindFirstByValueKeyHash(localVkmmName,localKeyMapName,mkHash[V](value)), true)   // callable avoids transfer of entire vkmm.get(valHash) Collection
       //.flatMap(b => Some(baToT[K](keymap(b).data)))
-      .map( b => baToT[K](keymap(b).data))
+      .map( b => baToT[K](localKeymap(b).data))
       .getOrElse(null.asInstanceOf[K])
 
   def findByValue(value: V): HGRandomAccessResult[K] = {
-    val keyHashs = vkmm.get(mkHash[V](value))
+    val keyHashs = localVkmm.get(mkHash[V](value))
     if (keyHashs == null || keyHashs.size == 0)
       EmptySR.asInstanceOf[HGRandomAccessResult[K]]
     else
@@ -265,7 +340,7 @@ class HazelBidirecIndex12[K, V] (val name: String,
       val tasks = groupByMember.map
       {case (member, keysOfThatMember) =>
         {
-          val a = new DistributedTask(new GetItFromThatMember[ComparableBAW](keyMapName,keysOfThatMember),member)
+          val a = new DistributedTask(new GetItFromThatMember[ComparableBAW](localKeyMapName,keysOfThatMember),member)
           clusterExecutor.execute(a)
            a
           //val b:Future[java.util.List[ComparableBAW]] = clusterExecutor.submit(fun).asInstanceOf[Future[java.util.List[ComparableBAW]]]

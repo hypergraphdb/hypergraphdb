@@ -114,7 +114,7 @@ class HazelIndex11[K, V] (val name: String,
   def execute[T](callable: Callable[T], returns:Boolean = false):T =
     if (! callable.isInstanceOf[PartitionAware[FiveInt]])
       callable.call()
-    else if (!hstoreConf.getAsync || returns)
+    else if (!hstoreConf.async || returns)
       executor.submit(callable).get()              // get makes it block == synchronous, but still better to transfer one block of code over to one keyHash owner
     else
       { executor.submit(callable); Unit}.asInstanceOf[T]
@@ -124,7 +124,7 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new AddEntryMono(keyMapName, kvmmName,firstValMapName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new AddEntryMono(keyMapName, kvmmName,firstValMapName, valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.timeoutMillis))
     }
     else
       Unit
@@ -135,7 +135,7 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null && value != null)
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
-      execute(new RemoveEntryMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.getTimeoutMillis))
+      execute(new RemoveEntryMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,keyBA, valBA, hstoreConf.timeoutMillis))
     }
   else
       Unit
@@ -147,7 +147,7 @@ class HazelIndex11[K, V] (val name: String,
     if(key !=null)
     {
       val keyHash = hashBaTo5Int(toBA[K](key))
-      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,hstoreConf.getTimeoutMillis))
+      execute(new RemoveAllEntriesMono(keyMapName, kvmmName, firstValMapName,valCountMapName,indexKeyCountName,keyHash,hstoreConf.timeoutMillis))
     }
     else
       Unit
@@ -168,7 +168,7 @@ class HazelIndex11[K, V] (val name: String,
       if (valBAWs == null || valBAWs.isEmpty)
         EmptySR.asInstanceOf[HGRandomAccessResult[V]]
       else
-        new HazelRS2[V](valBAWs.toIndexedSeq.map(_.data).sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
+        new HazelRS3[V](valBAWs.toIndexedSeq.map(_.data).sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
     }
 
 
@@ -180,13 +180,13 @@ class HazelIndex11[K, V] (val name: String,
     else
     {
       val groupByMember = keySet.groupBy(keyHash => h.getPartitionService.getPartition(keyHash).getOwner)
-      val tasks         = groupByMember.map{ case (member, keyHashSet) => new DistributedTask(new GetMultiMappingsFromThatMemberMono(keyMapName,kvmmName,keyHashSet, hstoreConf.getTimeoutMillis),member)}
+      val tasks         = groupByMember.map{ case (member, keyHashSet) => new DistributedTask(new GetMultiMappingsFromThatMemberMono(keyMapName,kvmmName,keyHashSet, hstoreConf.timeoutMillis),member)}
 
       tasks.foreach(it => executor.execute(it))
 
-      val tempResult    = tasks.flatMap( future => future.get(2*hstoreConf.getTimeoutMillis, TimeUnit.MILLISECONDS)).toIndexedSeq
+      val tempResult    = tasks.flatMap( future => future.get(2*hstoreConf.timeoutMillis, TimeUnit.MILLISECONDS)).toIndexedSeq
       val sortedResult  = tempResult.sortWith{case (k1,k2) => comparator.compare(k1._1.data, k2._1.data)<0}
-      new HazelRS2[V](sortedResult.map(_._2).flatten.map(_.data))
+      new HazelRS3[V](sortedResult.map(_._2).flatten.map(_.data))
     }
   }
 
@@ -199,13 +199,13 @@ class HazelIndex11[K, V] (val name: String,
   def scanKeys(): HGRandomAccessResult[K] = {
     val keyvalues = keyMap.values().map(_.data).toIndexedSeq
     val sorted    = keyvalues.sortWith(comparator.compare(_,_) < 0)
-    new HazelRS2[K](sorted)
+    new HazelRS3[K](sorted)
   }
 
 
   def scanValues(): HGRandomAccessResult[V] = {
     val baws = kvmm.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0}
-    new HazelRS2[V](baws)
+    new HazelRS3[V](baws)
   }
 
   def count(): Long = indexKeyCount.get

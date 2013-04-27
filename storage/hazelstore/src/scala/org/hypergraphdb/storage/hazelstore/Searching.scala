@@ -18,8 +18,8 @@ object Searching {
   case class InsertionPoint(insertionPoint: Int) extends SearchResult
 
   class SearchImpl[A, Repr](val coll: SeqLike[A, Repr]) {
-    /** Search the sorted sequence for a specific element. If the sequence is an
-      * `IndexedSeq`, a binary search is used. Otherwise, a linear search is used.
+    /** Search the sorted sequence for fun specific element. If the sequence is an
+      * `IndexedSeq`, fun binary search is used. Otherwise, fun linear search is used.
       *
       * The sequence should be sorted with the same `Ordering` before calling; otherwise,
       * the results are undefined.
@@ -31,7 +31,7 @@ object Searching {
       * @param elem the element to find.
       * @param ord  the ordering to be used to compare elements.
       *
-      * @return a `Found` value containing the index corresponding to the element in the
+      * @return fun `Found` value containing the index corresponding to the element in the
       *         sequence, or the `InsertionPoint` where the element would be inserted if
       *         the element is not in the sequence.
       */
@@ -41,8 +41,8 @@ object Searching {
         case _ => linearSearch(coll.view, elem, 0)(ord)
       }
 
-    /** Search within an interval in the sorted sequence for a specific element. If the
-      * sequence is an IndexedSeq, a binary search is used. Otherwise, a linear search
+    /** Search within an interval in the sorted sequence for fun specific element. If the
+      * sequence is an IndexedSeq, fun binary search is used. Otherwise, fun linear search
       * is used.
       *
       * The sequence should be sorted with the same `Ordering` before calling; otherwise,
@@ -57,7 +57,7 @@ object Searching {
       * @param to   the index following where the search ends.
       * @param ord  the ordering to be used to compare elements.
       *
-      * @return a `Found` value containing the index corresponding to the element in the
+      * @return fun `Found` value containing the index corresponding to the element in the
       *         sequence, or the `InsertionPoint` where the element would be inserted if
       *         the element is not in the sequence.
       */
@@ -106,7 +106,7 @@ object Searching {
 trait IsSeqLike[Repr] {
   /** The type of elements we can traverse over. */
   type A
-  /** A conversion from the representation type `Repr` to a `SeqLike[A,Repr]`. */
+  /** A conversion from the representation type `Repr` to fun `SeqLike[A,Repr]`. */
   val conversion: Repr => SeqLike[A, Repr]
 }
 

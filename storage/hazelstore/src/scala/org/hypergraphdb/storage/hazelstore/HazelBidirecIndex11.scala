@@ -1,7 +1,6 @@
 package org.hypergraphdb.storage.hazelstore
 
 import BidirCallables11._
-import Index11Callables.GetMultiMappingsFromThatMemberMono
 import com.hazelcast.core._
 import org.hypergraphdb._
 import com.hazelcast.query.{Predicate, PredicateBuilder}
@@ -12,11 +11,9 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
-import util.AbstractMap.SimpleEntry
 import util.Comparator
 import util.concurrent.{TimeUnit, Callable}
 import scala.Some
-import collection.parallel.ParMap
 
 class HazelBidirecIndex11[K, V] (val name: String,
                                  val h:HazelcastInstance,
@@ -50,7 +47,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
 
   type ValMap                                     = IMap[FiveInt,BAW]
   val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"// mapping combined hash of key + hash of value to Value (BAW). Indexed for quering by value
-  if(hstoreConf.getUseHCIndexing)
+  if(hstoreConf.useHCIndexing)
   {
       val valMapIndexConfig                           = new com.hazelcast.config.MapIndexConfig("data", false)               // importantly, this MapIndexConfig has false, because indexing not required to be >ordered<, since we don't need range queries for findByValue methods.
       val valMapName: String                          = "BidirIndex_" + name + "kvHashToValMap"
@@ -63,7 +60,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
   /*--------------------------------------------------------------------------------*/
   type KeyMap                                     = IMap[FiveInt, ComparableBAW]
   val keyMapName: String                          = name + "keyMap"
-  if(hstoreConf.getUseHCIndexing)
+  if(hstoreConf.useHCIndexing)
   {
       val mapIndexConfig                              = new com.hazelcast.config.MapIndexConfig("data", true)  // data is the data
       val keyMapName: String                          = name + "keyMap"
@@ -99,7 +96,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
   def execute[T](callable: Callable[T], returns:Boolean = false):T =
     if (! callable.isInstanceOf[PartitionAware[FiveInt]])
       callable.call()
-    else if (!hstoreConf.getAsync || returns)
+    else if (!hstoreConf.async || returns)
       clusterExecutor.submit(callable).get()              // get makes it block == synchronous, but still better to transfer one block of code over to one keyHash owner
     else
       { clusterExecutor.submit(callable); Unit}.asInstanceOf[T]
@@ -145,7 +142,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
        null.asInstanceOf[V]
   }
 
-  //ToDo : make a lazy Result Set based on Futures
+  //ToDo : make fun lazy Result Set based on Futures
   def find(key: K): HGRandomAccessResult[V] = {
     val keyHash = mkHash(key)
     val valueHashes = kvmm.get(keyHash)
@@ -158,11 +155,11 @@ class HazelBidirecIndex11[K, V] (val name: String,
         tasks.foreach(it => clusterExecutor.execute(it))
         val tempResult = tasks.flatMap( future => future.get(2*timeout, millis).map(baw => baw.data)).toIndexedSeq
         val sortedResult  = tempResult.sortWith{case (k1,k2) => comparator.compare(k1, k2)<0}
-        new HazelRS2[V](sortedResult)
+        new HazelRS3[V](sortedResult)
       }
     }
 
-  //def groupByMember[C <: Iterable,T](col: C[T]):Map[Member, Iterable[T]] = col.groupBy(a => h.getPartitionService.getPartition(a).getOwner)   // some type prob
+  //def groupByMember[C <: Iterable,T](col: C[T]):Map[Member, Iterable[T]] = col.groupBy(fun => h.getPartitionService.getPartition(fun).getOwner)   // some type prob
 
   def findXY(com: PredicateBuilder, reverse:Boolean) : HGSearchResult[V] =
   {
@@ -175,7 +172,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
         groupKeyHashsByMember.map
           { case (member, keyHashSet) =>
               {
-                val a = new DistributedTask(new GetValHashsForEachKeyHash(keyMapName,kvmmName,keyHashSet, hstoreConf.getTimeoutMillis),member)
+                val a = new DistributedTask(new GetValHashsForEachKeyHash(keyMapName,kvmmName,keyHashSet, hstoreConf.timeoutMillis),member)
                 clusterExecutor.execute(a)
                 a
               }
@@ -208,7 +205,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
                     .map{case (keyCbaw,valhashs) => (keyCbaw,valhashs.map(valHash => valHashValBawMap(valHash)))}
 
       val sortedResult = combineResults.sortWith{case (k1,k2) => comparator.compare(k1._1.data, k2._1.data) < 0}.map(_._2.map(baw => baw.data)).flatten
-      new HazelRS2[V](sortedResult)
+      new HazelRS3[V](sortedResult)
     }
   }
 
@@ -219,12 +216,12 @@ class HazelBidirecIndex11[K, V] (val name: String,
 
 
   def scanKeys(): HGRandomAccessResult[K] =
-    new HazelRS2[K](keymap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
+    new HazelRS3[K](keymap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0})
 
 
   def scanValues(): HGRandomAccessResult[V] = {
     val result = valmap.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2)< 0}
-    new HazelRS2[V](result)
+    new HazelRS3[V](result)
   }
 
   def open() { }
@@ -267,7 +264,7 @@ class HazelBidirecIndex11[K, V] (val name: String,
         }
       }
       val result = tasks.flatMap(_.get(timeout, millis).map(_.data)).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2)< 0}
-      new HazelRS2[K](result)
+      new HazelRS3[K](result)
     }
   }
 }

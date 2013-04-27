@@ -1,6 +1,6 @@
 package org.hypergraphdb.storage.hazelstore
 
-import org.hypergraphdb.storage.hazelstore.Common.{TenInt, FiveInt}
+import org.hypergraphdb.storage.hazelstore.Common.{FiveInt}
 import org.hypergraphdb.storage.hazelstore.{BAW, ComparableBAW}
 import java.util.concurrent.{ConcurrentSkipListMap, TimeUnit, Callable}
 import com.hazelcast.core.{Hazelcast, PartitionAware}

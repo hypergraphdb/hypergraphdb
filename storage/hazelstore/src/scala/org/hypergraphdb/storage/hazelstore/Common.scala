@@ -10,25 +10,10 @@ import scala.Some
 import org.hypergraphdb.{HGRandomAccessResult, HGPersistentHandle}
 import scala.util.hashing.MurmurHash3
 import scala.annotation.tailrec
+import java.io.{DataOutput, DataInput}
 
 object Common {
-
-  // earlier version of https://github.com/scala/scala/blob/master/src/library/scala/collection/Searching.scala
-  @tailrec
-      def binarySearch[A,B >: A](coll:IndexedSeq[A], elem: B, from: Int, to: Int)
-      (implicit ord: Ordering[B]): Either[Int, Int] = {
-          //if ((to-from) == 1) Left(from) else {   // original. Does not find everything!
-            if ((to-from) <1) Left(from) else {     // does not terminate when value not found!
-              val idx = (to+from)/2
-              val elemIdx = coll(idx)
-              val signum = math.signum(ord.compare(elem, elemIdx))
-              signum match {
-                  case -1 => binarySearch(coll,elem, from, idx)(ord)
-                  case  1 => binarySearch(coll,elem, idx, to)(ord)
-                  case  _ => Right(idx)
-              }
-            }
-        }
+  type O[T] = Option[T]
 
   def sort(bas: Seq[Array[Byte]], comparator:Comparator[BA]): Seq[Array[Byte]] = {
     val localComp = if (comparator == null) BAComparator else comparator
@@ -44,17 +29,25 @@ object Common {
   }
 
 
+  def ifNotNull[T,R](input:T, f: T => R):R = if(input == null) null.asInstanceOf[R] else f(input)
+  def ifNotNullTwice[T,R](input:T)(f: T => R):R =
+    if(input == null) null.asInstanceOf[R]
+    else {
+      val res = f(input)
+      if (res == null)
+        null.asInstanceOf[R]
+      else
+        res
+    }
+
   object BAComparator extends ByteArrayComparator
-
-  //  case class KeyHash(first:Int, second:Int, third:Int, fourth:Int, fifth:Int)  // or
-
-
 
   //  case class KeyAndValueHash(first:Int, second:Int, third:Int, fourth:Int, fifth:Int, sixth:Int, seventh:Int, eighth:Int, nineth:Int,  tenth:Int)
   //type FiveInt = Tuple5[Int, Int, Int, Int, Int]
   //  type TenInt = Tuple10[Int, Int, Int, Int, Int,Int, Int, Int, Int, Int]
 
-  class FiveInt(val i1:Int,val i2:Int,val i3:Int,val i4:Int,val i5:Int) extends  Serializable{
+
+  class FiveInt(val i1:Int,val i2:Int,val i3:Int,val i4:Int,val i5:Int) extends Serializable {
     override def equals(o:Any) =
       if (!o.isInstanceOf[FiveInt]) false
       else {
@@ -69,11 +62,45 @@ object Common {
     override def hashCode = MurmurHash3.seqHash(List(i1,i2,i3,i4,i5))
   }
 
+
+  /*
+  class FiveInt(private var i1:Int,private var i2:Int, private var i3:Int,private var i4:Int,private var i5:Int) extends com.hazelcast.nio.DataSerializable{
+    override def equals(o:Any) =
+      if (!o.isInstanceOf[FiveInt]) false
+      else {
+        val other5 = o.asInstanceOf[FiveInt]
+        if      (!this.i1.equals(other5.i1)) false
+        else if (!this.i2.equals(other5.i2)) false
+        else if (!this.i3.equals(other5.i3)) false
+        else if (!this.i4.equals(other5.i4)) false
+        else if (!this.i5.equals(other5.i5)) false
+        else true
+      }
+    override def hashCode = MurmurHash3.seqHash(List(i1,i2,i3,i4,i5))
+
+    def writeData(out: DataOutput) {
+      out.writeInt(i1)
+      out.writeInt(i2)
+      out.writeInt(i3)
+      out.writeInt(i4)
+      out.writeInt(i5)
+    }
+
+    def readData(in: DataInput) {
+      i1 = in.readInt()
+      i2 = in.readInt()
+      i3 = in.readInt()
+      i4 = in.readInt()
+      i5 = in.readInt()
+    }
+  }
+  */
+
   object FiveInt{
     def apply(i1:Int,i2:Int,i3:Int,i4:Int,i5:Int) = new FiveInt(i1,i2,i3,i4,i5)
   }
 
-  class TenInt(val keyHash: FiveInt, val valHash: FiveInt) extends PartitionAware[FiveInt] with Serializable{    // possible optimizations: simple class maybe more lightweight? => implement equal / hashCode by Hand
+/*  class TenInt(val keyHash: FiveInt, val valHash: FiveInt) extends PartitionAware[FiveInt] with Serializable{    // possible optimizations: simple class maybe more lightweight? => implement equal / hashCode by Hand
     override def getPartitionKey():FiveInt = keyHash
     override def equals(o:Any) =
       if (! o.isInstanceOf[TenInt]) false
@@ -88,6 +115,10 @@ object Common {
 
   object TenInt {def apply(keyHash:FiveInt, valHash:FiveInt) = new TenInt(keyHash,valHash)}
 
+  def twoBa2tenIntHash(keyHash: FiveInt, valBA: BA): TenInt =
+    TenInt(keyHash, hashBaTo5Int(valBA))
+
+  */
   type BA = Array[Byte]
 
   def hashBaTo5Int(ba: BA): FiveInt =
@@ -112,8 +143,6 @@ object Common {
         bytesHash(ba.drop(4*chnk)))
   }
 
-  def twoBa2tenIntHash(keyHash: FiveInt, valBA: BA): TenInt =
-    TenInt(keyHash, hashBaTo5Int(valBA))
 
   def persistentH2BAWrapper(ph: HGPersistentHandle, comparator:Comparator[Array[Byte]]): ComparableBAW = new ComparableBAW(ph.toByteArray, comparator)
 

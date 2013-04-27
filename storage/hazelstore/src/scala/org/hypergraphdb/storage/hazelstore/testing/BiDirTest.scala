@@ -1,12 +1,10 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.hazelstore.{Hazelstore4, HazelStoreConfig, Hazelstore3}
-import org.hypergraphdb.{HGStore, HGConfiguration}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore4, HazelStoreConfig}
+import org.hypergraphdb.{HGRandomAccessResult, HGStore, HGConfiguration}
 import collection.immutable
 import collection.JavaConversions._
 import com.hazelcast.core.Hazelcast
-import scala.Some
-import com.hazelcast.config.Config
 import scala.Some
 import org.hypergraphdb.HGRandomAccessResult.GotoResult
 
@@ -14,10 +12,12 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult
 object BiDirTest {
 
   import TestCommons._
+  import Generators.Strings._
+
 
   val random = new scala.util.Random
-  val hs = new Hazelstore4
-//  hs.getConfiguration.asInstanceOf[HazelStoreConfig].getHazelConfig.getExecutorConfig.setCorePoolSize(100)
+  val hs = new Hazelstore4(new HazelStoreConfig)
+  //hs.getConfiguration.asInstanceOf[HazelStoreConfig].getHazelConfig.getExecutorConfig.setCorePoolSize(100)
   val config:HGConfiguration = new HGConfiguration
   config.setStoreImplementation(hs)
   config.setTransactional(false)
@@ -39,8 +39,8 @@ object BiDirTest {
 
     println("now adding and removing data in separate index for warming up")
     biDirDataMap.take(5).foreach { case (k: String, v: List[String]) => v.foreach(s => biDirIndex2.addEntry(k, s))    }
-//    biDirDataMap.take(5).foreach { case (k: String, v: List[String]) => v.foreach(s => biDirIndex2.removeEntry(k, s))   }
-//    biDirDataMap.take(5).foreach { case (k: String, v: List[String]) => v.foreach(s => biDirIndex2.removeAllEntries(k))   }
+    biDirDataMap.take(3).foreach { case (k: String, v: List[String]) => v.foreach(s => biDirIndex2.removeEntry(k, s))   }
+    biDirDataMap.drop(3).take(2).foreach { case (k: String, v: List[String]) => v.foreach(s => biDirIndex2.removeAllEntries(k))   }
 
 
     println("\n\n\nnow starting Test")
@@ -97,11 +97,10 @@ object BiDirTest {
     ( 0 to dataSize-1).foreach(i =>
       //biDirDataMap.iterator.drop(random.nextInt(dataSize/2)). take(random.nextInt(dataSize/2)).............
     biDirDataMap.foreach{ case (k: String, v: List[String]) => if(random.nextBoolean()) biDirIndex.addEntry(k,dupeList(i))})
-    Thread.sleep(5000)
-    val count2 = biDirIndex.count()
-    if(count2 != dataSize)
-       println(s"Count unequals datasize. Should be: $dataSize is : " + biDirIndex.count())
-    assert(count2 == dataSize)
+    //Thread.sleep(5000)
+//    val count2 = biDirIndex.count()
+      val count2 = repeatUntil1(biDirIndex.count)(_ == dataSize)
+    assert(count2._3)
 
     println("Checking found keys from findByValue(ALLVALUES, exactValue).goto(key, exact=true)")
 //    val keysValuesFoundKeys = mapOverMap((k: String,  v: List[String]) => v.map(vv => (k,vv,biDirIndex.findByValue(vv))))
@@ -121,16 +120,17 @@ object BiDirTest {
 
 
     println("checking it has all values")
-    val scanValues        =  biDirIndex.scanValues()
-    val allFoundV = allOrigValuesSet.forall(key => scanValues.goTo(key, true).equals(GotoResult.found))
-    assert(allFoundV)
+    //val scanValues        =  biDirIndex.scanValues()
+    //val allFoundV =   allOrigValuesSet.forall(key => scanValues.goTo(key, true).equals(GotoResult.found))
+    val allFoundV        =  repeatUntil1(biDirIndex.scanValues)( (scanValues:HGRandomAccessResult[String]) => allOrigValuesSet.forall(key => scanValues.goTo(key, true).equals(GotoResult.found)))
+    assert(allFoundV._3)
 
     println("checking duplicates")
     val allVals = mapOverMap((k: String,  v: List[String]) =>biDirIndex.find(k)).flatten.toList
     val countAll =  countAllIterOnce(allVals)
     val dupeSmart = countAll.filter( x => x._2 >1)
     val dupesCorresponds  = dupeSmart.size - dupeMap.size
-    //assert(dupesCorresponds)
+    assert(dupesCorresponds == 0)
     if(dupesCorresponds != 0)
       println("\n WARNING: duplicates retrieved are " + -dupesCorresponds + " less than stored")
 
@@ -148,14 +148,11 @@ object BiDirTest {
     val ffBvA   = findFirstByValAll.forall(k => k._2.forall(kk => kk.equals(k._1)))
 
     //hmm, maybe someDupStringStringListMap did indeed create some duplicates across keys, otherwhise this shouldn't fail
-   // assert(ffBvA)
-
+    assert(ffBvA)
 
     println("Checking countKeys")
     biDirDataMap.forall { case (k: String, v: List[String]) => v.forall(s => biDirIndex.countKeys(s).equals(dupeMap.getOrElse(s, 1)))    }
-
     println("finished test0")
-
   }
 }
 
