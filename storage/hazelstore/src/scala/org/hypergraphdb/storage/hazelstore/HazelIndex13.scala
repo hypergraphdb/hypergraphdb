@@ -8,13 +8,15 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
-import IndexCallablesV12._
 import util.Comparator
 import util.concurrent.{TimeUnit, Callable}
-import org.hypergraphdb.storage.hazelstore.CommonCallables.{BiIndexParams, Calloppe}
+
 import org.hypergraphdb.storage.hazelstore.ComparableBAW
 import Common.O
 import com.twitter.chill.MeatLocker
+
+import org.hypergraphdb.storage.hazelstore.RunnableBackbone.{Calloppe, BiIndexParams}
+import org.hypergraphdb.storage.hazelstore.IndexCallablesV12.{FindFirstOp, GetMultiMappingsFromThatMemberMono}
 
 
 class HazelIndex13[K, V] (val name: String,

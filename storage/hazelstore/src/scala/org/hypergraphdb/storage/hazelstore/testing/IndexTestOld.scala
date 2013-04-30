@@ -3,7 +3,7 @@ package org.hypergraphdb.storage.hazelstore.testing
 import scala.Predef._
 import org.hypergraphdb._
 import com.hazelcast.core.Hazelcast
-import org.hypergraphdb.storage.hazelstore.{HazelRS3, Hazelstore4, HazelStoreConfig}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore5, HazelRS3, HazelStoreConfig}
 
 import TestCommons._
 import scala.collection.JavaConversions._
@@ -13,7 +13,7 @@ import org.hypergraphdb.HGRandomAccessResult.GotoResult
 
 object IndexTestOld {
   import Generators.Strings._
-    val hs = new Hazelstore4(new HazelStoreConfig)
+    val hs = new Hazelstore5(new HazelStoreConfig)
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setStoreImplementation(hs)

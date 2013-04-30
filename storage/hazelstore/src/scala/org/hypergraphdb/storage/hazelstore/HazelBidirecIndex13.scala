@@ -1,6 +1,5 @@
 package org.hypergraphdb.storage.hazelstore
 
-import BidirCallables12._
 import com.hazelcast.core._
 import org.hypergraphdb._
 import com.hazelcast.query.{Predicate, PredicateBuilder}
@@ -15,7 +14,12 @@ import org.hypergraphdb.storage.hazelstore.testing.TestCommons
 import TestCommons._
 import util.Comparator
 import java.util.concurrent.{TimeoutException, TimeUnit, Callable}
-import org.hypergraphdb.storage.hazelstore.CommonCallables.{BiIndexStringParams, Calloppe, BiIndexParams}
+import org.hypergraphdb.storage.hazelstore.RunnableBackbone.{BiIndexParams, Calloppe, BiIndexStringParams}
+import org.hypergraphdb.storage.hazelstore.BidirCallables12._
+import scala.Some
+import org.hypergraphdb.storage.hazelstore.RunnableBackbone.BiIndexParams
+import org.hypergraphdb.storage.hazelstore.RunnableBackbone.BiIndexStringParams
+
 
 class HazelBidirecIndex13[K, V] (val name: String,
                                  val h:HazelcastInstance,

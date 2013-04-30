@@ -4,14 +4,13 @@ import org.hypergraphdb.storage.hazelstore.Common.FiveInt
 import com.hazelcast.core._
 import java.util.concurrent.Callable
 import org.hypergraphdb.storage.hazelstore.testing.TestCommons.log
-import java.io.{OutputStream, DataOutput, DataInput}
-import com.esotericsoftware.kryo.Kryo
+
 
 /**
  * User: Ingvar Bogdahn
  * Date: 25.04.13
  */
-object Callables {
+object RunnableBackbone {
   import Common.O
 
 
@@ -20,7 +19,6 @@ object Callables {
 
   class Calloppe( indexAndOperationNames:(String,String), keyMapName:String,  keyHash:FiveInt, keyCountName:String,keyBAOp:O[ComparableBAW],  valBAOp:O[BAW], valCountMapName:String,
                   params:Either[String,BiIndexStringParams],
-                  //prefun: (HazelcastInstance => Unit),
                   fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
                   postfun: (HazelcastInstance,String) => Unit,
                   transactionalRetryCount:Int, useTransactionalCallables:Boolean

@@ -1,6 +1,6 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.hazelstore.{HazelIndex12, Hazelstore5, HazelStoreConfig}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore5, HazelStoreConfig}
 import scala.util.{Success, Try, Failure}
 
 /**
