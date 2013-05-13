@@ -21,7 +21,7 @@ import org.hypergraphdb.storage.hazelstore.RunnableBackbone.BiIndexParams
 import org.hypergraphdb.storage.hazelstore.RunnableBackbone.BiIndexStringParams
 
 
-class HazelBidirecIndex13[K, V] (val name: String,
+class HazelBidirecIndex[K, V] (val name: String,
                                  val h:HazelcastInstance,
                                  hstoreConf:HazelStoreConfig,
                                  implicit val keyConverter:   ByteArrayConverter[K],

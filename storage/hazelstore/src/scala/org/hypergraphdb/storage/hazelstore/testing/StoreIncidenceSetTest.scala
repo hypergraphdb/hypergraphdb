@@ -9,15 +9,17 @@ import org.hypergraphdb.storage.hazelstore.testing.TestCommons._
  * Date: 21.04.13
  */
 class StoreIncidenceSetTest ( val tested:HGStoreImplementation,
-                              val testData:Seq[(HGPersistentHandle,Array[HGPersistentHandle])],
+                              val testData:Map[HGPersistentHandle,Array[HGPersistentHandle]],
                               val async:Boolean,
                               override val keyPred :Boolean = random.nextBoolean(),
                               override val valPred :Boolean= random.nextBoolean())  extends HazelTest
 {
   type Tested = HGStoreImplementation
-  type Data = (HGPersistentHandle,Array[HGPersistentHandle])
+
   val mutations = Seq.empty
   val validations = Seq.empty
+
+  println("T E S T   NOT  I M P L E M E N T E D")
 
   /*
   def getIncidenceResultSet(handle: HGPersistentHandle): HGRandomAccessResult[HGPersistentHandle]
@@ -29,4 +31,8 @@ class StoreIncidenceSetTest ( val tested:HGStoreImplementation,
   def addIncidenceLink(handle: HGPersistentHandle, newLink: HGPersistentHandle)
   def removeIncidenceLink(handle: HGPersistentHandle, oldLink: HGPersistentHandle)
   */
+  type Key = HGPersistentHandle
+  type Value = Array[HGPersistentHandle]
+
+  def remTestAgainstGen(a: StoreIncidenceSetTest#Value, b: StoreIncidenceSetTest#Value): Option[StoreIncidenceSetTest#Value] = ???
 }

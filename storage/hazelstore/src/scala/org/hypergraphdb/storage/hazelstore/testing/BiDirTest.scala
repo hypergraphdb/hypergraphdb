@@ -1,6 +1,6 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.hazelstore.{Hazelstore5, HazelStoreConfig}
+import org.hypergraphdb.storage.hazelstore.{Hazelstore, HazelStoreConfig}
 import org.hypergraphdb.{HGRandomAccessResult, HGStore, HGConfiguration}
 import collection.immutable
 import collection.JavaConversions._
@@ -16,7 +16,7 @@ object BiDirTest {
 
 
   val random = new scala.util.Random
-  val hs = new Hazelstore5(new HazelStoreConfig)
+  val hs = new Hazelstore(new HazelStoreConfig)
   //hs.getConfiguration.asInstanceOf[HazelStoreConfig].getHazelConfig.getExecutorConfig.setCorePoolSize(100)
   val config:HGConfiguration = new HGConfiguration
   config.setStoreImplementation(hs)

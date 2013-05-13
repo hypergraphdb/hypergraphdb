@@ -14,7 +14,7 @@ import org.hypergraphdb.storage.hazelstore.StoreCallables.{RemoveIncidenceLinkOp
 import Common._
 
 
-class Hazelstore5 (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
+class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
 {
   type BA = Array[Byte]
   type PH = HGPersistentHandle
@@ -185,8 +185,8 @@ def getLink(handle: PH) : Array[PH] =
               if(createIfNecessary)
                 openIndices.getOrElseUpdate(name,
                                                 (
-                                                    if (!isBidirectional) new HazelIndex13        [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
-                                                    else                  new HazelBidirecIndex13 [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                                    if (!isBidirectional) new HazelIndex        [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
+                                                    else                  new HazelBidirecIndex [K, V](name, hi, hazelstoreConfig, keyConverter, valueConverter,comparator.asInstanceOf[Comparator[BA]])
                                                 )
                                           ).asInstanceOf[HGIndex[K, V]]
               else

@@ -11,7 +11,7 @@ class HazelStoreConfig extends Serializable{
         var useHCIndexing:Boolean = false
         var async: Boolean = false
         var useTransactionalCallables: Boolean = false
-        var transactionalRetryCount: Int = 30
+        var transactionalRetryCount: Int = 50
 
   def setHazelcastConfig(hc:Config):HazelStoreConfig = { hazelcastConfig = hc; this}
   def setTimeoutMillis(to:Int):HazelStoreConfig = { timeoutMillis = to; this}

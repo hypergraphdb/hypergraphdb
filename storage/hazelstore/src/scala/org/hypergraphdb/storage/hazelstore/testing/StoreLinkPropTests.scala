@@ -1,18 +1,14 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.scalatest.prop.GeneratorDrivenPropertyChecks
-import org.scalatest.matchers.ShouldMatchers
 import org.hypergraphdb.storage.HGStoreImplementation
-import org.hypergraphdb.handle.{UUIDPersistentHandle, UUIDHandleFactory}
 import TestCommons._
 import org.hypergraphdb.HGPersistentHandle
-import org.scalacheck._
 
 /**
  * User: Ingvar Bogdahn
  * Date: 21.04.13
  */
-class StoreLinkPropTests (val store:HGStoreImplementation) extends GeneratorDrivenPropertyChecks with ShouldMatchers{
+class StoreLinkPropTests /*(val store:HGStoreImplementation) extends GeneratorDrivenPropertyChecks with ShouldMatchers{
 
   import Generators.Handles._
   import org.scalacheck.Gen.{Params, oneOf}
@@ -40,3 +36,4 @@ class StoreLinkPropTests (val store:HGStoreImplementation) extends GeneratorDriv
   def getLinkTest (arb:Arbitrary[LinkData])      = forAll { data: LinkData  =>   arraysEqual(store.getLink(data._1), data._2)  } _
   def notGetLinkTest (arb:Arbitrary[LinkData])      = forAll { data: LinkData  =>  store.getLink(data._1) == null  } _
 }
+*/

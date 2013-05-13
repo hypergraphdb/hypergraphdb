@@ -11,22 +11,23 @@ import scala.util.Try
  * Date: 21.04.13
  */
 class StorageLinkTest ( val tested:HGStoreImplementation,
-                        val testData:Seq[(HGPersistentHandle,Array[HGPersistentHandle])],
+                        val testData:Map[HGPersistentHandle,Array[HGPersistentHandle]],
                         val async:Boolean,
                         override val keyPred :Boolean = random.nextBoolean(),
                         override val valPred :Boolean= random.nextBoolean())  extends HazelTest
 {
 
   type Tested = HGStoreImplementation
-  type Data = (HGPersistentHandle,Array[HGPersistentHandle])
+  type Key = HGPersistentHandle
+  type Value = Array[HGPersistentHandle]
 
   setupStorImp(tested)
 
   val removeDate = testData.filter(i => keyPred).map{ case (handle, handleArray) => (handle, handleArray.filter( j => valPred)) }
 
-  val mutations:Seq[(String, Seq[Data], Seq[Data] => Unit)] = Seq(
-    ("def store(handle : HGPersistentHandle, link : Array[HGPersistentHandle])", testData, (a:Seq[Data]) => a.foreach{ case (handle, link) => tested.store(handle, link)}),
-    ("def removeLink(handle : HGPersistentHandle)", testData, (a:Seq[Data]) => a.foreach{ case (handle, link) => tested.removeLink(handle)})
+  val mutations:Seq[(String, Boolean, DataMap, DataMap => Unit)] = Seq(
+    ("def store(handle : HGPersistentHandle, link : Array[HGPersistentHandle])", false, testData, (a:DataMap) => a.foreach{ case (handle, link) => tested.store(handle, link)}),
+    ("def removeLink(handle : HGPersistentHandle)", true, testData, (a:DataMap) => a.foreach{ case (handle, link) => tested.removeLink(handle)})
   )
 
   val validations = Seq(
@@ -34,4 +35,5 @@ class StorageLinkTest ( val tested:HGStoreImplementation,
     mkValidtForAll[Tested,Data]("containsLink", (store:Tested,data:Data)  => repeatUntil(store.containsLink,data._1)(_ == true)._3)
   )
 
+  def remTestAgainstGen(a:Value, b:Value) = {val c = a.diff(b); if (c.isEmpty) None else Some(c)}
 }

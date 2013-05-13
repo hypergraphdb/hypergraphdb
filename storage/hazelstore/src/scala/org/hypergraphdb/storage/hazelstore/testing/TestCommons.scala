@@ -11,6 +11,7 @@ import org.hypergraphdb.`type`.javaprimitive.StringType
 import scala.annotation.{tailrec, elidable}
 import scala.annotation.elidable._
 import scala.Some
+import com.hazelcast.config.Config
 
 
 object TestCommons {
@@ -20,6 +21,22 @@ object TestCommons {
   val baToString = new BAtoString
   type StringListMap = Map[String, List[String]]
   val dataSize = 20
+
+  val configPermutationsBase :Seq[HazelStoreConfig] = Seq(
+  {log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
+    new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(true),
+  new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)
+  //new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(true)
+//  new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(false)
+  )
+
+  // U S E   L I T E   H A Z E L C A S T   I N S T A N C E
+  val lite = true
+
+  val liteMember:Config=new Config().setLiteMember(true)
+
+  val configPermutations :Seq[HazelStoreConfig] = if (lite) configPermutationsBase.map(hsc => hsc.setHazelcastConfig(liteMember)) else configPermutationsBase
+
 
   def setupStorImp(si:HGStoreImplementation){
     val hgconfig = new HGConfiguration
@@ -36,15 +53,16 @@ object TestCommons {
     val start = System.currentTimeMillis()
     val res = fun()
     val ready = until(res)
-    (ready, timeOut) match {
-    case (true,_) => (res, (System.currentTimeMillis()-start) + runTime, true)
-    case (false, x) =>
-      if (System.currentTimeMillis()-start + runTime < timeOut) {
-        Thread.sleep(System.currentTimeMillis() - start);
+    val localRunTime = System.currentTimeMillis()-start
+    (ready, (localRunTime + runTime) >= timeOut) match {
+      case (true,_)       => (res, (localRunTime) + runTime, true)
+      case (false, false) => {
+        Thread.sleep(localRunTime)
         //log("repeatUntil is repeating...")
-        repeatUntilBase(fun)(until)((System.currentTimeMillis()-start) + runTime)(timeOut - (start-System.currentTimeMillis()))}
-      else {
-        log("repeatUntil failed...")
+        repeatUntilBase(fun)(until)(localRunTime + runTime)(timeOut)
+      }
+      case (false, true)  => {
+        log("repeatUntil gave up retrying...")
         (res, (System.currentTimeMillis()-start) + runTime, false)}
     }
   }
@@ -54,18 +72,19 @@ object TestCommons {
     var cur : R = fun(i)
     var untilTrue:Boolean = until(cur)
     while( !untilTrue && System.currentTimeMillis() - startTime < timeOut)
-      {
-        //log("repeating." + (System.currentTimeMillis() - startTime) + "  millis passed" );
-        Thread.sleep(System.currentTimeMillis() - startTime)
-        cur = fun(i)
-        untilTrue = until(cur)
-      }
+    {
+      //log("repeating." + (System.currentTimeMillis() - startTime) + "  millis passed" );
+      Thread.sleep(System.currentTimeMillis() - startTime)
+      cur = fun(i)
+      untilTrue = until(cur)
+    }
     if(!untilTrue)
-    {   println("repeatUntil FAILURE" );
+    {   println("repeatUntil gave up retrying" );
       (cur, System.currentTimeMillis() - startTime, false)}
     else
       (cur, System.currentTimeMillis() - startTime, true)
   }
+
 
   @tailrec
   def waitFor (waitTime:Long = syncTime * 1000000) {
@@ -118,7 +137,7 @@ object TestCommons {
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setUseSystemAtomAttributes(false)
-    val hs = new Hazelstore5(hazelConfig)
+    val hs = new Hazelstore(hazelConfig)
     config.setStoreImplementation(hs)
     config
   }

@@ -66,13 +66,19 @@ object BasicTests {
 
    println("\n\nG R A P H T E S T\n\n")
    val graphResults = test((c:HazelStoreConfig) => new GraphTest(  getGraph(getConfig(c)),bootstrap = true).run)
+
+   println("\n\nI N D E X\n\n")
+   val indexResults = test((c:HazelStoreConfig) => new IndexTest(getIndex(getStore(getConfig(c))),c.async).run)
+
+   println("\n\nS T O R A G E   T E S T\n\n")
+   val storeResults = test((c:HazelStoreConfig) => new StorageTest(getStore(getConfig(c)),c.async).run)
+
    println("\n\nB I D I R E C T I O N A L   I N D E X\n\n")
    val bidirAsIndex = test((c:HazelStoreConfig) => new IndexTest(getBidirectionalIndex(getStore(getConfig(c))),c.async).run)
    val bidirResults = test((c:HazelStoreConfig) => new BiDirTest2(getBidirectionalIndex(getStore(getConfig(c))),c.async).run)
-   println("\n\nI N D E X\n\n")
-   val indexResults = test((c:HazelStoreConfig) => new IndexTest(getIndex(getStore(getConfig(c))),c.async).run)
-   println("\n\nS T O R A G E   T E S T\n\n")
-   val storeResults = test((c:HazelStoreConfig) => new StorageTest(getStore(getConfig(c)),c.async).run)
+
+
+
 
    println(s"\n\n\nRESULTS  normalized to datasize $testDataSize")
    println("now printing Results of StoreTests:")
@@ -87,20 +93,12 @@ object BasicTests {
    graphResults.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
  }
 
-  val liteMember:Config=new Config().setLiteMember(true)
-  val configPermutations :Seq[HazelStoreConfig] = Seq(
-    {log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
-    new HazelStoreConfig().setHazelcastConfig(liteMember).setAsync(false).setUseTransactionalCallables(false),
-    new HazelStoreConfig().setHazelcastConfig(liteMember).setAsync(false).setUseTransactionalCallables(true),
-    new HazelStoreConfig().setHazelcastConfig(liteMember).setAsync(true).setUseTransactionalCallables(true)
-    //new HazelStoreConfig().setHazelcastConfig(liteMember).setAsync(true).setUseTransactionalCallables(false)
-  )
 
   def getConfig(hazelConfig:HazelStoreConfig):HGConfiguration = {
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setUseSystemAtomAttributes(false)
-    val hs = new Hazelstore5(hazelConfig)
+    val hs = new Hazelstore(hazelConfig)
     config.setStoreImplementation(hs)
     config
   }
