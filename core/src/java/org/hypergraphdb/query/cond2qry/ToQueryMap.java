@@ -10,7 +10,6 @@ package org.hypergraphdb.query.cond2qry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
@@ -49,6 +48,7 @@ import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.Or;
 import org.hypergraphdb.query.OrderedLinkCondition;
 import org.hypergraphdb.query.PositionedIncidentCondition;
+import org.hypergraphdb.query.QueryCompile;
 import org.hypergraphdb.query.SubgraphContainsCondition;
 import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.query.SubsumedCondition;
@@ -74,12 +74,15 @@ import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.Ref;
+import org.hypergraphdb.util.RefResolver;
 
 @SuppressWarnings("unchecked")
-public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
+public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implements RefResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>
 {
 	private static final long serialVersionUID = -1;
 	protected static final ToQueryMap instance = new ToQueryMap();
+	
+	public static ToQueryMap getInstance() { return instance; }
 	
 	static
 	{
@@ -87,7 +90,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		{ 
 			public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
 			{
-				return HGQuery.NOP;                     
+				return HGQuery.NOP();                     
 			}
             
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
@@ -125,7 +128,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				final AtomTypeCondition ac = (AtomTypeCondition)c;
 				if (!hg.isVar(ac.getTypeReference()) && ac.getTypeHandle() == null &&
 						graph.getTypeSystem().getTypeHandleIfDefined(ac.getJavaClass()) == null)
-					return HGQuery.NOP;
+					return HGQuery.NOP();
 				return new SearchableBasedQuery(graph.getIndexManager().getIndexByType(), 
 												new Ref<HGPersistentHandle>() {
 												public HGPersistentHandle get()
@@ -172,7 +175,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				Or orCondition = new Or();
                 for (HGHandle h : ac.getSubTypes(hg))
                 	orCondition.add(new AtomTypeCondition(h));
-                return toMetaData(hg, orCondition); //instance.get(Or.class).getMetaData(hg, orCondition);
+                return QueryCompile.toMetaData(hg, orCondition); //instance.get(Or.class).getMetaData(hg, orCondition);
 			}			
 		});		
 		instance.put(TypedValueCondition.class, new TypedValueToQuery()); 
@@ -369,9 +372,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				OrderedLinkCondition lc = (OrderedLinkCondition)c;
 				ArrayList<HGQuery<?>> L = new ArrayList<HGQuery<?>>();
 				for (Ref<HGHandle> t : lc.targets())
-					L.add(toQuery(hg, new IncidentCondition(t)));
+					L.add(QueryCompile.translate(hg, new IncidentCondition(t)));
 				if (L.isEmpty())
-					return HGQuery.NOP;
+					return HGQuery.NOP();
 				else if (L.size() == 1)
 					return L.get(0);
 				else
@@ -405,7 +408,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
 			{				
 				MapCondition mc = (MapCondition)c;
-				HGQuery query = toQuery(hg, mc.getCondition());
+				HGQuery query = QueryCompile.translate(hg, mc.getCondition());
 				return new ResultMapQuery(query, mc.getMapping());
 			}
 			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
@@ -478,24 +481,24 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 			{
 				Or or = (Or)c;
 				if (or.size() == 0)
-					return HGQuery.NOP;
+					return HGQuery.NOP();
 				else if (or.size() == 1)
-					return toQuery(hg, or.get(0));
+					return QueryCompile.translate(hg, or.get(0));
 				
 				// TODO - we need to do better, even for this sloppy algorithm, we can
 				// can try to factor out common conditions in conjunctions, make sure 
 				// all conjunction end up in a treatable form (ordered or randomAccess) etc.
 				
-				HGQuery q1 = toQuery(hg, or.get(0));
+				HGQuery q1 = QueryCompile.translate(hg, or.get(0));
 				if (q1 == null)
 					throw new HGException("Untranslatable condition " + or.get(0));
-				HGQuery q2 = toQuery(hg, or.get(1));
+				HGQuery q2 = QueryCompile.translate(hg, or.get(1));
 				if (q2 == null)
 					throw new HGException("Untranslatable condition " + or.get(1));
 				UnionQuery result = new UnionQuery(q1, q2);
 				for (int i = 2; i < or.size(); i++)
 				{
-					q1 = toQuery(hg, or.get(i));
+					q1 = QueryCompile.translate(hg, or.get(i));
 					if (q1 == null)
 						throw new HGException("Untranslatable condition " + or.get(i));					
 					result = new UnionQuery(result, q1);
@@ -568,7 +571,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 				{
 					public HGSearchResult execute() 
 					{
-						HGQuery q = toQuery(graph, bc); 
+						HGQuery q = QueryCompile.translate(graph, bc); 
 						return new ProjectionAtomResultSet(graph, 
 														   q.execute(),
 														   apc.getDimensionPath(), 
@@ -606,24 +609,24 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		});
 		instance.put(SubgraphContainsCondition.class, new ConditionToQuery()
 		{
-      public QueryMetaData getMetaData(HyperGraph graph,
+		    public QueryMetaData getMetaData(HyperGraph graph,
                                        HGQueryCondition condition)
-      {
-          return QueryMetaData.ORACCESS.clone(condition);
-      }
+		    {
+		        return QueryMetaData.ORACCESS.clone(condition);
+		    }
 
-      public HGQuery<?> getQuery(final HyperGraph graph,
+		    public HGQuery<?> getQuery(final HyperGraph graph,
                                  final HGQueryCondition condition)
-      {
-          return new HGQuery<HGPersistentHandle>()
-          {
-              public HGSearchResult<HGPersistentHandle> execute() 
+            {
+              return new HGQuery<HGPersistentHandle>()
               {
-                  HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getReverseIndex(graph);
-                  return idx.find(((SubgraphContainsCondition)condition).getAtom().getPersistent());
-              }
-          };              
-      }           
+                  public HGSearchResult<HGPersistentHandle> execute() 
+                  {
+                      HGIndex<HGPersistentHandle, HGPersistentHandle> idx = HGSubgraph.getReverseIndex(graph);
+                      return idx.find(((SubgraphContainsCondition)condition).getAtom().getPersistent());
+                  }
+              };              
+            }           
 		});
 		instance.put(IsCondition.class, new ConditionToQuery()
 		{
@@ -647,36 +650,8 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery>
 		});
 	}
 	
-	public static ToQueryMap getInstance() { return instance; }
-	
-	static <ResultType> HGQuery<ResultType> toQuery(HyperGraph hg, HGQueryCondition condition)
+	public ConditionToQuery<?> resolve(Class<? extends HGQueryCondition> cl)
 	{
-		ConditionToQuery transformer = (ConditionToQuery)instance.get(condition.getClass());
-		if (transformer == null)
-			throw new HGException("The query condition '" + condition + 
-					"' could not be translated to an executable query either because it is not specific enough. " +
-					"Please try to contrain the query futher, for example by specifying the atom's types or " +
-					"incidence sets or some indexed property value.");
-		else
-		{
-			HGQuery<ResultType> q = (HGQuery<ResultType>)transformer.getQuery(hg, condition);
-			if (q == null)
-				throw new IllegalArgumentException("Unable to convert query condition " +
-						condition + " to a query. Try constraining further, e.g. by atom type.");
-			q.setHyperGraph(hg);
-			return q;
-		}
-	}
-
-	protected static QueryMetaData toMetaData(HyperGraph hg, HGQueryCondition condition)
-	{
-		ConditionToQuery transformer = (ConditionToQuery)instance.get(condition.getClass());
-		if (transformer == null)
-			throw new HGException("The query condition '" + condition + 
-					"' could not be translated to an executable query because it is not specific enough. " +
-					"Please try to contrain the query futher, for example by specifying the atom's types or " +
-					"incidence sets or some indexed property value.");
-		else
-			return transformer.getMetaData(hg, condition);
+	    return get(cl);
 	}
 }

@@ -135,10 +135,10 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
 	/**
 	 * A query that return the empty result set.
 	 */
-	public final static HGQuery<Object> NOP = new HGQuery<Object>()
+	public static <ResultType> HGQuery<ResultType> NOP() {return new HGQuery<ResultType>()
 	{
-		public HGSearchResult<Object> execute() { return (HGSearchResult<Object>)HGSearchResult.EMPTY; }
-	};
+		public HGSearchResult<ResultType> execute() { return (HGSearchResult<ResultType>)HGSearchResult.EMPTY; }
+	};};
 
 	/**
 	 * <p>
@@ -1738,17 +1738,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 */
     	public static <T> List<T> getAll(final HyperGraph graph, final HGQueryCondition condition)
     	{
-//    		final ArrayList<T> result = new ArrayList<T>();
-//    		HGQuery<HGHandle> query = HGQuery.make(graph, condition);
-//    		HGUtils.queryBatchProcess(query,
-//    				new Mapping<HGHandle, Boolean>()
-//    				{
-//    					public Boolean eval(HGHandle x) { result.add((T)graph.get(x)); return Boolean.TRUE; }
-//    				},
-//    				500,
-//					null,
-//					1);
-//    		return result;
         	return graph.getTransactionManager().ensureTransaction(new Callable<List<T>>() {
             	public List<T> call()
             	{
@@ -1777,16 +1766,6 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
     	 */
     	public static <T> List<T> findAll(final HGQuery<T> query)
     	{
-//    		final ArrayList<T> result = new ArrayList<T>();
-//    		HGUtils.queryBatchProcess(query,
-//    				new Mapping<T, Boolean>()
-//    				{
-//    					public Boolean eval(T x) { result.add(x); return Boolean.TRUE; }
-//    				},
-//    				500,
-//					null,
-//					1);
-//    		return result;    		
         	return query.getHyperGraph().getTransactionManager().ensureTransaction(new Callable<List<T>>() {
             	public List<T> call()
             	{

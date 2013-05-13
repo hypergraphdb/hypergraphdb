@@ -1084,7 +1084,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	            try { while (rsInc.hasNext()) targetRemoved(rsInc.next(), pHandle); }
 	            finally { rsInc.close(); }        	
 	        }
-	        else // Need to load in memory because circular dependencies might create deadlocks
+	        else
 	        {
 	        	IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(pHandle);
 	        	if (incidenceSet != null)

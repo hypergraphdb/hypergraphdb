@@ -25,6 +25,11 @@ import java.util.concurrent.TimeoutException;
  */
 public class CompletedFuture<V> implements Future<V>
 {
+    private static final CompletedFuture<Object> null_instance = new CompletedFuture<Object>(null);
+    
+    @SuppressWarnings("unchecked")
+    public static <T> CompletedFuture<T> getNull() { return (CompletedFuture<T>)null_instance; }
+    
     V result;
     
     public CompletedFuture(V result)

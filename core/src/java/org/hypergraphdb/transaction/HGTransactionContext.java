@@ -19,8 +19,8 @@ package org.hypergraphdb.transaction;
  * <p>
  * Transaction contexts are useful when implementing a server for HyperGraph. A context can
  * be bound to a client and then get dynamically attached/detach to worker threads using the
- * <code>HGTransactionManager.threadAttach</code> and <code>HGTransactionManager.threadDetach</code>
- * methods.
+ * {@link HGTransactionManager#threadAttach(HGTransactionContext)} and 
+ * {@link HGTransactionManager#threadDetach()} methods.
  * </p>
  * 
  * @author Borislav Iordanov

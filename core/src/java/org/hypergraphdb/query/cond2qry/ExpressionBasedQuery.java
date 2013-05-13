@@ -40,6 +40,8 @@ import org.hypergraphdb.indexing.DirectValueIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.query.*;
+import org.hypergraphdb.query.impl.AsyncSearchResult;
+import org.hypergraphdb.query.impl.SyncSearchResult;
 
 /**
  * 
@@ -304,7 +306,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				}
 				else
 				{
-					ConditionToQuery transform = ToQueryMap.getInstance().get(c.getClass());
+					ConditionToQuery<?> transform = QueryCompile.translator(c.getClass());
 					if (transform != null)
 					{
 						QueryMetaData qmd = transform.getMetaData(graph, c);
@@ -775,9 +777,10 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		// conditions is calling the varContext() method before calling HGQuery.make
 		try
 		{
+		    QueryCompile.start();
 			preprocess(condition);  
 			this.condition = simplify(toDNF(expand(graph, condition))); 
-			query = ToQueryMap.toQuery(graph, this.condition);		
+			query = QueryCompile.translate(graph, this.condition);		
 			return this;
 		}
 		finally
@@ -785,12 +788,17 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			// Cleanup thread-bound variable context
 			if (hasVarContext)
 				VarContext.popFrame();
+			QueryCompile.finish();
 		}
 	}
 	
     public HGSearchResult<ResultType> execute()
     {    	
-        return query.execute();
+        HGSearchResult<ResultType> rs = query.execute();
+        if (rs instanceof AsyncSearchResult)
+            return new SyncSearchResult<ResultType>((AsyncSearchResult<ResultType>)rs);
+        else
+            return rs;
     }
     
     /** 

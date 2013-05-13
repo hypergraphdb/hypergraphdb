@@ -20,9 +20,9 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
-public class UnionQuery extends HGQuery 
+public class UnionQuery<T> extends HGQuery<T> 
 {
-	private HGQuery left, right;
+	private HGQuery<T> left, right;
 	
 	/**
 	 * <p>Construct a union of two queries.</p>
@@ -30,21 +30,22 @@ public class UnionQuery extends HGQuery
 	 * @param left One of the two queries. May not be <code>null</code>.
 	 * @param right The other of the two queries. May not be <code>null</code>.
 	 */
-	public UnionQuery(HGQuery left, HGQuery right)
+	public UnionQuery(HGQuery<T> left, HGQuery<T> right)
 	{
 		this.left = left;
 		this.right = right;
 	}
 	
-	public HGSearchResult<?> execute()
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+    public HGSearchResult<T> execute()
 	{
-		HGSearchResult<?> leftResult = left.execute();
-		HGSearchResult<?> rightResult = right.execute();		
+		HGSearchResult<T> leftResult = left.execute();
+		HGSearchResult<T> rightResult = right.execute();		
 		if (!leftResult.hasNext() && !rightResult.hasNext())
 		{
 			leftResult.close();
 			rightResult.close();
-			return HGSearchResult.EMPTY;
+			return (HGSearchResult)HGSearchResult.EMPTY;
 		}
 		else if (!leftResult.hasNext())
 		{

@@ -15,4 +15,6 @@ public class MapResolver<Key, Value> implements RefResolver<Key, Value>
     {
         return map.get(key);
     }
+    
+    public Map<Key, Value> getMap() { return map; }
 }

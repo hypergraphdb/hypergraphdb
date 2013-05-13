@@ -24,12 +24,12 @@ import org.hypergraphdb.HGSearchResult;
  * 
  * @author Borislav Iordanov
  */
-public class UnionResult implements HGSearchResult 
+public class UnionResult<T> implements HGSearchResult<T> 
 {
 	//
 	// The left and right result sets.
 	//
-	private HGSearchResult left, right;
+	private HGSearchResult<T> left, right;
 	private boolean leftBOF = false, rightBOF = false, leftEOF=false, rightEOF=false;
 	//
 	// Indicates whether both input sets should be moved because
@@ -42,7 +42,7 @@ public class UnionResult implements HGSearchResult
 	// The input set (left or right) that hold the current element
 	// of the union. 
 	//
-	private HGSearchResult last_choice = null;
+	private HGSearchResult<T> last_choice = null;
 	
 	//
 	// IMPLEMENTATION NOTE: to understand how this works, one only
@@ -50,20 +50,20 @@ public class UnionResult implements HGSearchResult
 	// other is defined in completely analogous way, by symmetry.
 	//
 	
-	private Object select(Comparable L, Comparable R)
+	private T select(Comparable<T> L, T R)
 	{
 		int comp = L.compareTo(R);
 		if (comp == 0)
 		{
 			last_choice = left;
 			move_both = true;
-			return L;
+			return (T)L;
 		}
 		else if (comp < 0)
 		{
 			last_choice = left;
 			move_both = false;
-			return L;
+			return (T)L;
 		}
 		else
 		{
@@ -73,14 +73,14 @@ public class UnionResult implements HGSearchResult
 		}		
 	}
 	
-	private Object selectBack(Comparable L, Comparable R)
+	private T selectBack(Comparable<T> L, T R)
 	{
 		int comp = L.compareTo(R);
 		if (comp == 0)
 		{
 			last_choice = left;
 			move_both = true;
-			return L;
+			return (T)L;
 		}
 		else if (comp < 0)
 		{
@@ -92,7 +92,7 @@ public class UnionResult implements HGSearchResult
 		{
 			last_choice = left;
 			move_both = false;
-			return L;
+			return (T)L;
 		}		
 	}
 	
@@ -102,7 +102,7 @@ public class UnionResult implements HGSearchResult
 		this.right = right;
 	}
 	
-	public Object current() 
+	public T current() 
 	{
 		if (last_choice == null)
 			throw new NoSuchElementException();
@@ -116,7 +116,7 @@ public class UnionResult implements HGSearchResult
 		right.close();
 	}
 
-	public Object prev() 
+	public T prev() 
 	{
 		if (!hasPrev())
 			throw new NoSuchElementException();
@@ -132,7 +132,7 @@ public class UnionResult implements HGSearchResult
 					return left.prev();
 				}
 				else
-					return selectBack((Comparable)left.prev(), (Comparable)right.prev());
+					return selectBack((Comparable<T>)left.prev(), right.prev());
 			else
 			{
 				last_choice = right;
@@ -152,7 +152,7 @@ public class UnionResult implements HGSearchResult
 			}
 			else
 				if (rightBOF) return left.prev();
-				else return selectBack((Comparable)left.prev(), (Comparable)right.current());
+				else return selectBack((Comparable<T>)left.prev(), right.current());
 		}
 		else if (last_choice == right)
 		{
@@ -165,7 +165,7 @@ public class UnionResult implements HGSearchResult
 			}
 			else
 				if (leftBOF) return right.prev();
-				else return selectBack((Comparable)left.current(), (Comparable)right.prev());
+				else return selectBack((Comparable<T>)left.current(), right.prev());
 		}
 		else
 			throw new NoSuchElementException("This should never be thrown from here!!!"); // we'll never get here		
@@ -201,7 +201,7 @@ public class UnionResult implements HGSearchResult
 		else return false;
 	}
 
-	public Object next() 
+	public T next() 
 	{
 		if (!hasNext())
 			throw new NoSuchElementException();
@@ -209,6 +209,7 @@ public class UnionResult implements HGSearchResult
 		if (move_both)
 		{
 			if (left.hasNext())
+			{
 				if (!right.hasNext())
 				{
 					last_choice = left;
@@ -217,7 +218,8 @@ public class UnionResult implements HGSearchResult
 					return left.next();
 				}
 				else
-					return select((Comparable)left.next(),(Comparable)right.next());
+					return select((Comparable<T>)left.next(),right.next());
+			}
 			else
 			{
 				last_choice = right;
@@ -235,9 +237,10 @@ public class UnionResult implements HGSearchResult
 				leftEOF = true;
 				return right.current();
 			}
-			else
-				if (rightEOF) return left.next();
-				else return select((Comparable)left.next(), (Comparable)right.current());
+			else if (rightEOF) 
+			    return left.next();
+			else 
+			    return select((Comparable<T>)left.next(), right.current());
 		}
 		else if (last_choice == right)
 		{
@@ -248,9 +251,10 @@ public class UnionResult implements HGSearchResult
 				rightEOF = true;
 				return left.current();
 			}
-			else
-				if (leftEOF) return right.next();
-				else return select((Comparable)left.current(), (Comparable)right.next());
+			else if (leftEOF) 
+			    return right.next();
+			else 
+			    return select((Comparable<T>)left.current(), right.next());
 		}
 		else
 			throw new NoSuchElementException("This should never be thrown from here!!!"); // we'll never get here

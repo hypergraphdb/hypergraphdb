@@ -9,6 +9,10 @@ package org.hypergraphdb;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.util.MemoryWarningSystem;
 
@@ -254,6 +258,44 @@ public class HGEnvironment
 	public static void disableShutdownHook()
 	{
 		Runtime.getRuntime().removeShutdownHook(shutdownHook);
+	}
+	
+    static class HGEnvThreadFactory implements ThreadFactory 
+    {
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
+
+        HGEnvThreadFactory() 
+        {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null)? s.getThreadGroup() :
+                                 Thread.currentThread().getThreadGroup();
+            namePrefix = "HGENV pool-thread-";
+        }
+
+        public Thread newThread(Runnable r) 
+        {
+            Thread t = new Thread(group, r,
+                                  namePrefix + threadNumber.getAndIncrement(),
+                                  0);
+            t.setDaemon(true);
+            // maybe priority should be configurable via some sys property?
+//            if (t.getPriority() != Thread.NORM_PRIORITY)
+//                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+    }	
+	private static ExecutorService executorService = Executors.newCachedThreadPool(new HGEnvThreadFactory());
+	
+	/**
+	 * <p>Return the environment-wide <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ExecutorService.html" 
+	 * target="_blank">ExecutorService</a>. The executor service is shared between all opened databases. It is used to
+	 * submit long running tasks such as queries and wait for them to complete. 
+	 */
+	public static ExecutorService executor()
+	{
+	    return executorService;
 	}
 	
 	// Try to make sure all HyperGraphs are properly closed during shutdown.

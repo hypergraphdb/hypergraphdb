@@ -19,6 +19,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.query.QueryCompile;
 import org.hypergraphdb.query.impl.DelayedSetLoadPredicate;
 import org.hypergraphdb.query.impl.IntersectionQuery;
 import org.hypergraphdb.query.impl.PredicateBasedFilter;
@@ -28,7 +29,7 @@ import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 
 @SuppressWarnings("unchecked")
-public class AndToQuery implements ConditionToQuery
+public class AndToQuery<ResultType> implements ConditionToQuery<ResultType>
 {
 	/**
 	 * 
@@ -76,7 +77,7 @@ public class AndToQuery implements ConditionToQuery
 		x.predicateCost = 0;
 		for (HGQueryCondition sub : ((And)condition))
 		{
-			ConditionToQuery transformer = ToQueryMap.getInstance().get(sub.getClass());
+			ConditionToQuery<?> transformer = QueryCompile.translator(sub.getClass());
 			if (transformer == null)
 				if (! (sub instanceof HGAtomPredicate))
 					throw new HGException("Condition " + sub + " is not query translatable, nor a predicate.");
@@ -98,7 +99,7 @@ public class AndToQuery implements ConditionToQuery
 	}
 
 	@SuppressWarnings("rawtypes")
-	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition condition)
+	public HGQuery<ResultType> getQuery(HyperGraph graph, HGQueryCondition condition)
 	{
 		And and = (And)condition;
 		
@@ -106,9 +107,9 @@ public class AndToQuery implements ConditionToQuery
 		// Trivial limit cases.
 		//
 		if (and.size() == 0)
-			return HGQuery.NOP;
+			return HGQuery.NOP();
 		else if (and.size() == 1)
-			return ToQueryMap.toQuery(graph, and.iterator().next());
+			return QueryCompile.translate(graph, and.iterator().next());
 		
 		// query conditions are partitioned into the following categories:
 		// - ORA: ordered random access results
@@ -124,7 +125,7 @@ public class AndToQuery implements ConditionToQuery
 		
 		for (HGQueryCondition sub : and)
 		{
-			ConditionToQuery transformer = ToQueryMap.getInstance().get(sub.getClass());
+			ConditionToQuery<ResultType> transformer = QueryCompile.translator(sub.getClass());
 			if (transformer == null)
 			{
 			    QueryMetaData qmd = QueryMetaData.MISTERY.clone(sub);
@@ -166,14 +167,14 @@ public class AndToQuery implements ConditionToQuery
 			Iterator<QueryMetaData> i = ORA.iterator();
 			c1 = i.next().cond;
 			c2 = i.next().cond;
-			result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-										   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
+			result = new IntersectionQuery(QueryCompile.translate(graph, c1),// toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+			        QueryCompile.translate(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2),
 										   new ZigZagIntersectionResult.Combiner());
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
-											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
+				                               QueryCompile.translate(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
 											   new ZigZagIntersectionResult.Combiner());
 			}
 		}
@@ -192,15 +193,15 @@ public class AndToQuery implements ConditionToQuery
 			{
 				c1 = i.next().cond;
 				c2 = i.next().cond;
-				result = new IntersectionQuery(ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
-											   ToQueryMap.toQuery(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
+				result = new IntersectionQuery(QueryCompile.translate(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+				                               QueryCompile.translate(graph, c2), //toQueryMap.get(c2.getClass()).getQuery(graph, c2), 
 											   new SortedIntersectionResult.Combiner()); 
 			}
 			while (i.hasNext())
 			{
 				c1 = i.next().cond;
 				result = new IntersectionQuery(result, 
-											   ToQueryMap.toQuery(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
+				                               QueryCompile.translate(graph, c1), // toQueryMap.get(c1.getClass()).getQuery(graph, c1), 
 											   new SortedIntersectionResult.Combiner());					
 			}						
 		}
@@ -208,10 +209,10 @@ public class AndToQuery implements ConditionToQuery
 		{
 			c1 = O.iterator().next().cond;
 			if (result == null)
-				result = ToQueryMap.toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+				result = QueryCompile.translate(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 			else
 				result = new IntersectionQuery(result, 
-											   ToQueryMap.toQuery(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
+				                               QueryCompile.translate(graph, c1), //toQueryMap.get(c1.getClass()).getQuery(graph, c1),
 											   new SortedIntersectionResult.Combiner());
 		}
 		
@@ -227,7 +228,7 @@ public class AndToQuery implements ConditionToQuery
 					if (n < curr.getSizeExpected())
 						c1 = curr.cond;
 				}
-				result = ToQueryMap.toQuery(graph, c1); //toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+				result = QueryCompile.translate(graph, c1); //toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 				W.remove(c1);
 			}
 			else if (RA.size() > 0)
@@ -240,7 +241,7 @@ public class AndToQuery implements ConditionToQuery
 					if (cost < curr.predicateCost)
 						c1 = curr.cond;
 				}
-				result = ToQueryMap.toQuery(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
+				result = QueryCompile.translate(graph, c1); // toQueryMap.get(c1.getClass()).getQuery(graph, c1);
 				RA.remove(c1);						
 			}
 			else if (P.size() > 0) // some predicates can also be used as bases for search...when !qmd.predicateOnly
@@ -254,7 +255,7 @@ public class AndToQuery implements ConditionToQuery
 			        }
 			    if (found != null)
 			    {
-			        result = ToQueryMap.toQuery(graph, found.cond);
+			        result = QueryCompile.translate(graph, found.cond);
 			        P.remove(found);
 			    }
 			}
@@ -269,7 +270,7 @@ public class AndToQuery implements ConditionToQuery
 		{
 			QueryMetaData curr = i.next();
 			c1 = curr.cond;
-			QueryMetaData pqmd = QueryMetaData.MISTERY.clone(new RABasedPredicate(ToQueryMap.toQuery(graph, c1)));
+			QueryMetaData pqmd = QueryMetaData.MISTERY.clone(new RABasedPredicate(QueryCompile.translate(graph, c1)));
 			pqmd.predicateCost = curr.predicateCost;
 			P.add(pqmd);
 		}
@@ -297,7 +298,7 @@ public class AndToQuery implements ConditionToQuery
 		for (Iterator<QueryMetaData> i = W.iterator(); i.hasNext(); )
 		{
 			QueryMetaData curr = i.next();
-			HGQuery q = ToQueryMap.toQuery(graph, curr.cond);
+			HGQuery q = QueryCompile.translate(graph, curr.cond);
 			result = new PredicateBasedFilter(graph, result, new DelayedSetLoadPredicate(q));
 		}
 		

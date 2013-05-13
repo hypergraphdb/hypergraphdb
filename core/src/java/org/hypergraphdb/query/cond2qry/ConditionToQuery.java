@@ -11,8 +11,8 @@ import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGQueryCondition;
 
-public interface ConditionToQuery
+public interface ConditionToQuery<T>
 {
-	HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition condition);
+	HGQuery<T> getQuery(HyperGraph graph, HGQueryCondition condition);
 	QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition condition);
 }

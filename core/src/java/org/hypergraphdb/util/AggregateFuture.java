@@ -25,6 +25,18 @@ public class AggregateFuture<T> implements Future<List<T>>
 {	
 	private List<Future<T>> components = new ArrayList<Future<T>>();
 
+    /**
+     * <p>
+     * Construct from a set of futures which is copied
+     * internally.
+     * </p>
+     */
+    public AggregateFuture(Future<T>...futures)
+    {
+        for (Future<T> f : futures)
+            components.add(f);
+    }
+    
 	/**
 	 * <p>
 	 * Construct from a non-null list of components which is copied

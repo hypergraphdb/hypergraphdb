@@ -16,6 +16,7 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 import org.hypergraphdb.query.LinkCondition;
+import org.hypergraphdb.query.QueryCompile;
 import org.hypergraphdb.query.impl.IntersectionQuery;
 //import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
@@ -45,9 +46,9 @@ public class LinkToQuery implements ConditionToQuery
 		final LinkCondition lc = (LinkCondition)c;
 		ArrayList<HGQuery<HGHandle>> L = new ArrayList<HGQuery<HGHandle>>();
 		for (Ref<HGHandle> t : lc.targets())
-			L.add((HGQuery<HGHandle>)(HGQuery)ToQueryMap.toQuery(graph, new IncidentCondition(t)));
+			L.add((HGQuery<HGHandle>)(HGQuery)QueryCompile.translate(graph, new IncidentCondition(t)));
 		if (L.isEmpty())
-			return HGQuery.NOP;
+			return HGQuery.NOP();
 		else if (L.size() == 1)
 			return L.get(0);
 		else
