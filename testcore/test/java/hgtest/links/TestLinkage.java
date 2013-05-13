@@ -30,11 +30,11 @@ public class TestLinkage extends HGTestBase
     public void testDefineValueLink()
     {
         HGHandle handle = graph.getHandleFactory().makeHandle();
-        MyClass linkValue = new MyClass(handle.getPersistent().toStringValue());
+        MyClass linkValue = new MyClass(handle.getPersistent().toString());
 
         HGLink link = new HGValueLink(linkValue, graph.add("some object"));
         graph.define(handle, link);
-        Assert.assertEquals(graph.getHandle(link), handle);        
+        Assert.assertEquals(graph.getHandle(link), handle);
     }
     
     @Test

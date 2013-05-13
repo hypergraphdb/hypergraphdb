@@ -1,11 +1,12 @@
-package org.hypergraphdb.storage.hazelstore
+package org.hypergraphdb.storage.hazelstore.testing
 
 import collection.JavaConversions._
 import org.hypergraphdb.storage.hazelstore.testing.TestCommons._
+import org.hypergraphdb.storage.hazelstore.HazelRS3
 import org.hypergraphdb.{HGIndex, HGRandomAccessResult}
+import org.hypergraphdb.HGRandomAccessResult.GotoResult
 import com.hazelcast.core.Hazelcast
 import org.hypergraphdb.util.CountMe
-import org.hypergraphdb.storage.hazelstore.testing.Generators
 
 
 class IndexTest(val index:HGIndex[String,String], async:Boolean)(implicit testDataSize: Int){
