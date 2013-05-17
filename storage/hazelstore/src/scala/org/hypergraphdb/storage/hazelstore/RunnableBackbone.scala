@@ -15,11 +15,13 @@ object RunnableBackbone {
 
 
   case class BiIndexStringParams  (kvmmBiName:String, vkmmName:String, valMapName:String,firstValMapName:String,valHash:FiveInt)
-  case class BiIndexParams  (kvmmBi:MultiMap[FiveInt,FiveInt], vkmm:MultiMap[FiveInt,FiveInt], valMap:IMap[FiveInt, BAW],firstValMap:IMap[FiveInt, BAW],valHash:FiveInt)
+  //case class BiIndexParams  (kvmmBi:MultiMap[FiveInt,FiveInt], vkmm:MultiMap[FiveInt,FiveInt], valMap:IMap[FiveInt, BAW],firstValMap:IMap[FiveInt, BAW],valHash:FiveInt)
+  case class BiIndexParams  (kvmmBi:IMap[FiveInt,java.util.Set[FiveInt]], vkmm:IMap[FiveInt,java.util.Set[FiveInt]], valMap:IMap[FiveInt, BAW],firstValMap:IMap[FiveInt, BAW],valHash:FiveInt)
 
   class Calloppe( indexAndOperationNames:(String,String), keyMapName:String,  keyHash:FiveInt, keyCountName:String,keyBAOp:O[ComparableBAW],  valBAOp:O[BAW], valCountMapName:String,
                   params:Either[String,BiIndexStringParams],
-                  fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
+//                  fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
+                  fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
                   postfun: (HazelcastInstance,String) => Unit,
                   transactionalRetryCount:Int, useTransactionalCallables:Boolean
                   )
@@ -33,11 +35,11 @@ object RunnableBackbone {
       val keyMap          = hi.getMap[FiveInt, ComparableBAW](keyMapName)
       val valCountMap     = hi.getMap[FiveInt,Long](valCountMapName)
 
-      val funParams:Either[MultiMap[FiveInt,BAW],BiIndexParams] = params
-        .left.map(hi.getMultiMap[FiveInt,BAW](_))
+      val funParams:Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams] = params
+        .left.map(hi.getMap[FiveInt,java.util.Set[BAW]](_))
         .right.map(i => BiIndexParams(
-        kvmmBi      = hi.getMultiMap[FiveInt,FiveInt](i.kvmmBiName),
-        vkmm        = hi.getMultiMap[FiveInt,FiveInt](i.vkmmName),
+        kvmmBi      = hi.getMap[FiveInt,java.util.Set[FiveInt]](i.kvmmBiName),
+        vkmm        = hi.getMap[FiveInt,java.util.Set[FiveInt]](i.vkmmName),
         valMap      = hi.getMap[FiveInt,BAW](i.valMapName),
         firstValMap = hi.getMap[FiveInt, BAW](i.firstValMapName),
         valHash     = i.valHash

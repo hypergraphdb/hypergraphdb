@@ -10,8 +10,8 @@ import scala.util.{Try, Random}
 import org.hypergraphdb.`type`.javaprimitive.StringType
 import scala.annotation.{tailrec, elidable}
 import scala.annotation.elidable._
-import scala.Some
 import com.hazelcast.config.Config
+
 
 
 object TestCommons {
@@ -23,7 +23,7 @@ object TestCommons {
   val dataSize = 20
 
   val configPermutationsBase :Seq[HazelStoreConfig] = Seq(
-  {log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
+  //{log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
     new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(true),
   new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)
   //new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(true)
@@ -31,7 +31,7 @@ object TestCommons {
   )
 
   // U S E   L I T E   H A Z E L C A S T   I N S T A N C E
-  val lite = true
+  val lite = false
 
   val liteMember:Config=new Config().setLiteMember(true)
 
@@ -133,12 +133,11 @@ object TestCommons {
       case Some(a)  =>  countAllIterOnce(l.tail, countMap.updated(l.head,a + 1))
     }
 
-  def getConfig(hazelConfig:HazelStoreConfig):HGConfiguration = {
+  def getHGConfig(hazelConfig:HazelStoreConfig):HGConfiguration = {
     val config = new HGConfiguration
     config.setTransactional(false)
     config.setUseSystemAtomAttributes(false)
-    val hs = new Hazelstore(hazelConfig)
-    config.setStoreImplementation(hs)
+    config.setStoreImplementation(new Hazelstore(hazelConfig))
     config
   }
 
@@ -146,9 +145,8 @@ object TestCommons {
   def getIndex(store:HGStore):HGSortIndex[String, String] = {
     val baToString: ByteArrayConverter[String]= new StringType
     store.getIndex(random.nextString(10), baToString, baToString, BAComp, true).asInstanceOf[HGSortIndex[String,String]]
-
-
   }
+
   def getBidirectionalIndex(store:HGStore):HGBidirectionalIndex[String, String] = {
     val baToString: ByteArrayConverter[String]= new StringType
     store.getBidirectionalIndex(random.nextString(10), baToString, baToString, BAComp, true)
@@ -176,7 +174,6 @@ object TestCommons {
       assert(!(try { rars.hasPrev } catch { case  t:Throwable => false}))
     }
   }
-
 
 
   def arraysEqual[T](left: Array[T], right: Array[T]): Boolean = {

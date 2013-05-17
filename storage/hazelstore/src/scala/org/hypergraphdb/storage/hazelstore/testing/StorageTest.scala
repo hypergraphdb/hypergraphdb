@@ -79,7 +79,8 @@ class StorageTest (val store:HGStore, async:Boolean)(implicit testDataSize:Int )
   }
 
   def testIncidenceSet{
-    def assertAll(h:HGPersistentHandle,set:Set[HGPersistentHandle],rs:HGRandomAccessResult[HGPersistentHandle]):GotoResult => Unit = (x:GotoResult) => { assert(set.forall(i => rs.goTo(i, true).equals(x)))}
+    def assertAll(h:HGPersistentHandle,set:Set[HGPersistentHandle],rs:HGRandomAccessResult[HGPersistentHandle]):GotoResult => Unit =
+      (x:GotoResult) => { assert(set.forall(i => rs.goTo(i, true).equals(x)))}
 
     /*
       def getIncidenceResultSet(handle: HGPersistentHandle) = ???
@@ -96,7 +97,8 @@ class StorageTest (val store:HGStore, async:Boolean)(implicit testDataSize:Int )
   val isc = repeatUntil(store.getIncidenceSetCardinality, h1)(_ == testDataSize.toLong)
   assert(store.getIncidenceSetCardinality(h1) == testDataSize.toLong)
     println("getIncidenceSetCardinality passed. Required synctime:" + isc._2)
-  val gic = store.getIncidenceResultSet(h1)
+//  val gic = repeatUntil(store.getIncidenceResultSet, h1){(x:HGRandomAccessResult[HGPersistentHandle]) => { val toSet = x.toSet; assert(toSet.size  > 0); assert(inciSet.intersect(toSet).size == inciSet.size); toSet.diff(inciSet).size == 0}}
+  val gic =store.getIncidenceResultSet(h1)
   assertAll(h1,inciSet,gic)(GotoResult.found)
 
   val toBeRemoved  = inciSet.drop(testDataSize/4).take(testDataSize/3)

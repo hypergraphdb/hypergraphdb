@@ -31,7 +31,9 @@ class IndexHazelTest[K:Ordering,V](val tested:HGSortIndex[K,V],
 
   mutations
 
-
+//String : description of tested function
+// Tested = Index tested
+// Seq[Data] = Testdata to test against
   val validations : Seq[(String, (Tested,Seq[Data]) => Try[Boolean])]=
     Seq(
       mkValidtForAll("def findFirst(key: K)", (index:Tested, data:Data) => {
@@ -56,14 +58,18 @@ class IndexHazelTest[K:Ordering,V](val tested:HGSortIndex[K,V],
 
       mkValidtForAll("def count(key: K)",(index:Tested,data:Data) => repeatUntil(index.count,data._1)(_ == data._2.size.toLong)._3),
 
-      mkValidt[Tested,Data]("def count()",(index:Tested,data:Seq[Data]) => repeatUntil1(index.count)(_ == data.size.toLong)._3)
-      // findX("def findLTE(key: K)",_.findLTE(_),_.lteq(_,_)),
-      //findX("def findLT(key: K)",_.findLT(_),_.lt(_,_)),
-      //findX("def findGT(key: K)",_.findGT(_),_.gt(_,_)),
-      //findX("def findGTE(key: K)",_.findGTE(_),_.gteq(_,_))
+      mkValidt[Tested,Data]("def count()",(index:Tested,data:Seq[Data]) => repeatUntil1(index.count)(_ == data.size.toLong)._3),
+
+      findX("def findLTE(key: K)",_.findLTE(_),_.lteq(_,_)),
+      findX("def findLT(key: K)",_.findLT(_),_.lt(_,_)),
+      findX("def findGT(key: K)",_.findGT(_),_.gt(_,_)),
+      findX("def findGTE(key: K)",_.findGTE(_),_.gteq(_,_))
     )
 
-  def findX(name:String, fun: (HGSortIndex[K,V], K) => HGSearchResult[V], disc:(Ordering[K],K,K) => Boolean) =
+  // this function creates entries for the sequence of validations; for the findGT/GTE/LT/LTE methods
+  // as such it creates a tuple of descriptor string and a test function
+  // the test function, as above, takes the tested component and test input data and returns a success or failure.
+  def findX(name:String, fun: (HGSortIndex[K,V], K) => HGSearchResult[V], disc:(Ordering[K],K,K) => Boolean) : (String, (Tested, scala.Seq[(K, scala.Seq[V])]) => Try[Boolean]) =
     (name, (index:Tested, dataSeq:Seq[(K,Seq[V])]) => Try
     {
       val allTrue = dataSeq.forall{ case (key, valueSeq)  =>
@@ -80,6 +86,7 @@ class IndexHazelTest[K:Ordering,V](val tested:HGSortIndex[K,V],
       allTrue
     }
       )
+
 
   def remTestAgainstGen(a:Value, b:Value) = {val c = a.diff(b); if (c.isEmpty) None else Some(c)}
 }

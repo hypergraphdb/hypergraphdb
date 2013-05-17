@@ -125,7 +125,7 @@ object BidirCallables12 {
       val hit = Hazelcast.getAllHazelcastInstances.iterator()
       val hi                = if (hit.hasNext) hit.next else Hazelcast.newHazelcastInstance()
 
-      val vkmm = hi.getMultiMap[FiveInt, FiveInt](vkmmname)
+      val vkmm = hi.getMap[FiveInt, java.util.Set[FiveInt]](vkmmname)
       println("bi-FindFirstByValueKeyHash")
       val iter = vkmm.get(valHash).iterator()
       if (iter.hasNext)

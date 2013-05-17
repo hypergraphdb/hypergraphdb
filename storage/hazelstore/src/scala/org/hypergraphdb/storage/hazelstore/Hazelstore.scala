@@ -16,6 +16,8 @@ import Common._
 
 class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
 {
+  def this() = this(new HazelStoreConfig())
+
   type BA = Array[Byte]
   type PH = HGPersistentHandle
 
@@ -37,7 +39,8 @@ class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) e
   protected val linkDB: IMap[PH, BAW]     = hi.getMap("linkDB")
   protected val dataDB: IMap[PH, BAW]     = hi.getMap("dataDB")
   val inciDbName = "inciDB"
-  protected val inciDB: MultiMap[PH, BAW] = hi.getMultiMap(inciDbName)
+  //protected val inciDB: MultiMap[PH, BAW] = hi.getMultiMap(inciDbName)
+  protected val inciDB: IMap[PH, java.util.Set[BAW]]= hi.getMap(inciDbName)
   val inciCardinMapName                            = "inciCardinMap"
   def inciCardinMap:IMap[PH,Long]         = hi.getMap("inciCardinMap")
   protected val inciConstant = "inciDB"
@@ -47,8 +50,7 @@ class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) e
 
   def startup(store: HGStore, configuration: HGConfiguration) {
     hgConfig = configuration
-    if (configuration.isTransactional)
-      throw new HGException("Hazelcast-Storage does not support transactions at the moment. Disable with hgconfig.setTransactional(false)")
+    //if (configuration.isTransactional)       throw new HGException("Hazelcast-Storage does not support transactions at the moment. Disable with hgconfig.setTransactional(false)")
   }
 
   def shutdown() { Hazelcast.shutdownAll()  }
@@ -142,11 +144,12 @@ def getLink(handle: PH) : Array[PH] =
 
 
   def getIncidenceResultSet(handle: PH) = {
-    val map =  inciDB.get(handle).map(baw => baw.data).toIndexedSeq
-    if(map == null || map.size == 0)
+    val set:java.util.Set[BAW] = inciDB.get(handle)
+    if (set == null || set.isEmpty)
       EmptySR.asInstanceOf[HGRandomAccessResult[HGPersistentHandle]]
     else
     {
+      val map =  set.map(baw => baw.data).toIndexedSeq
       val sorted = map.sortWith{case (k1,k2) => handleByteArrayComparator.compare(k1,k2)< 0}
       new HazelRS3[PH](sorted)(handleByteArrayComparator, handleconverter)
     }

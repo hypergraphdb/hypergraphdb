@@ -88,8 +88,18 @@ class IndexTest(val index:HGIndex[String,String], async:Boolean)(implicit testDa
     assert(newDataMap.forall{case (key,stringSet) => {
       val a = index.find(key)
       assert(a.asInstanceOf[CountMe].count == stringSet.size.toLong)
-      a.forall(s => stringSet.contains(s))
+      a.forall(s => stringSet.contains(s))    // this boolean is asserted by being wrapped in an assert 3 lines above...
     }})
+
+    // TESTING HGSortIndex functions
+//    def findLT(key: KeyType): HGSearchResult[ValueType]
+
+
+//    def findGT(key: KeyType): HGSearchResult[ValueType]
+//    def findLTE(key: KeyType): HGSearchResult[ValueType]
+//    def findGTE(key: KeyType): HGSearchResult[ValueType]
+
+
 
     // TESTING removeAllEntries(key: KeyType) {}
     keySet.foreach(key => index.removeAllEntries(key))

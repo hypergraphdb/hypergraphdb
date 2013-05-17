@@ -1,8 +1,10 @@
 package org.hypergraphdb.storage.hazelstore
 
-import java.util.concurrent.{TimeUnit, Callable}
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentSkipListSet, TimeUnit, Callable}
 import com.hazelcast.core.{IMap, PartitionAware, Hazelcast}
 import org.hypergraphdb.HGPersistentHandle
+import com.hazelcast.util.ConcurrentHashSet
+import java.util.Collections
 
 
 object StoreCallables {
@@ -10,7 +12,8 @@ object StoreCallables {
   class RemoveIncidenceSetOp(inciDBName: String, inciCountName:String, key:HGPersistentHandle,tryCount:Int) extends Runnable with PartitionAware[HGPersistentHandle]  with Serializable{
     def run {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+//      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+      val inciDB        = hi.getMap[HGPersistentHandle, java.util.Set[BAW]](inciDBName)
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
       println(s"Store - RemoveIncidenceSetOp $inciDBName key: $key")
 
@@ -37,7 +40,8 @@ object StoreCallables {
   class AddIncidenceLinkOp(inciDBName: String, inciCountName:String, key:HGPersistentHandle, value:BAW,tryCount:Int) extends Runnable with  PartitionAware[HGPersistentHandle]  with Serializable{
     def run {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+//      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+    val inciDB        = hi.getMap[HGPersistentHandle, java.util.Set[BAW]](inciDBName)
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
 
       val opId = System.nanoTime()
@@ -51,10 +55,12 @@ object StoreCallables {
         val t = hi.getTransaction
         try{
           t.begin()
+          val set = inciDB.get(key)
+          val targetset:java.util.Set[BAW] = if(set == null) Collections.newSetFromMap[BAW](new ConcurrentHashMap[BAW,java.lang.Boolean](60, 0.8f, 2)) else set
+          val addedToSet = targetset.add(value)
+          val added = if (addedToSet) Some(inciDB.put(key,targetset)) else None
 
-          val added = inciDB.put(key,value)
-
-          if (added)
+          if (added.isDefined)
           {
             val oldCount = inciCount.get(key)
             inciCount.put(key, oldCount+1)
@@ -78,7 +84,9 @@ object StoreCallables {
   class RemoveIncidenceLinkOp(inciDBName: String, inciCountName:String, key:HGPersistentHandle, value:BAW,tryCount:Int) extends Runnable with PartitionAware[HGPersistentHandle] with Serializable{
     def run {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+//      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
+      val inciDB2        = hi.getMap[HGPersistentHandle, java.util.Set[BAW]](inciDBName)
+
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
 
       val opId = System.nanoTime()
@@ -91,8 +99,11 @@ object StoreCallables {
         try{
           t.begin()
           //          lock.tryLock(1000,TimeUnit.MILLISECONDS)
-          val removed = inciDB.remove(key,value)
-          if (removed)
+          val getSet = Option(inciDB2.get(key))
+          val removed = getSet.map(set => {set.remove(value); inciDB2.put(key, getSet.get)})
+
+//          val removed = inciDB.remove(key,value)
+          if (removed.isDefined)
           {
             val oldCount = inciCount.get(key)
             inciCount.put(key, oldCount-1)

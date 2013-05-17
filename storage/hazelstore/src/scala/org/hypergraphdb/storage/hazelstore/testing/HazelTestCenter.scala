@@ -1,8 +1,7 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
-import org.hypergraphdb.storage.hazelstore.{Hazelstore, HazelStoreConfig}
-import scala.util.{Success, Try, Failure}
-import org.hypergraphdb.storage.hazelstore.testing.TestCommons._
+import org.hypergraphdb.storage.hazelstore.Hazelstore
+
 
 /**
  * User: Ingvar Bogdahn
@@ -14,7 +13,7 @@ def main (args: Array[String] ) {
 
 
   // CONFIG PERMUTATORS
-  import TestCommons.configPermutations
+  import TestCommons._
 
   // DATA GENERATORS
   import Generators._
@@ -25,7 +24,7 @@ def main (args: Array[String] ) {
   // TEST INSTANTIATION
   val tests =
     configPermutations.map( c => {println("\n\nTESTING CONFIGURATION: " + c + "\n\n"); (c,Seq(
-      new IndexHazelTest[String,String](getIndex(getStore(getConfig(c))),genStriLiMap(),c.async).run,
+      new IndexHazelTest[String,String](getIndex(getStore(getHGConfig(c))),genStriLiMap(),c.async).run,
       new StorageDataTest(new Hazelstore(c),(0 to dataSize).map(i => mkHandleBArrayPair).toMap,c.async).run,
       new StorageLinkTest(new Hazelstore(c),(0 to dataSize).map(i => mkHandleHandleSeqPair).toMap,c.async).run
     ))})

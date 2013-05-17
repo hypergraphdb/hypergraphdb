@@ -8,8 +8,8 @@ import scala.Serializable
 import java.util
 import storage.ByteArrayConverter
 import storage.hazelstore.Common._
-import util.Comparator
-import util.concurrent.{TimeUnit, Callable}
+import java.util.{Collections, Comparator}
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit, Callable}
 
 import org.hypergraphdb.storage.hazelstore.RunnableBackbone.{Calloppe, BiIndexParams}
 import org.hypergraphdb.storage.hazelstore.IndexCallablesV12.{FindFirstOp, GetMultiMappingsFromThatMemberMono}
@@ -26,7 +26,8 @@ class HazelIndex[K, V] (val name: String,
 
   /*--------------------------------------------------------------------------------*/
   val localKvmmName                                    = name + "keyValueMultiMap"
-  val localKvmm:MultiMap[FiveInt, BAW]                                   = h.getMultiMap(localKvmmName)
+  //val localKvmm:MultiMap[FiveInt, BAW]                                   = h.getMultiMap(localKvmmName)
+  val localKvmm:IMap[FiveInt, java.util.Set[BAW]]  = h.getMap(localKvmmName)
   /*--------------------------------------------------------------------------------*/
   val localKeyMapName: String                          = name + "keyMap"
   if(hstoreConf.useHCIndexing){
@@ -73,7 +74,7 @@ class HazelIndex[K, V] (val name: String,
   }
 
   def calloppeShortener(operationName: String, keyHash:FiveInt,keyCBA: Option[ComparableBAW],valBAW: Option[BAW],
-               fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams],(String, String, FiveInt,Long)) => (Boolean,String),
+                        fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
                postfun: (HazelcastInstance,String) => Unit) =
     new Calloppe((name, operationName), localKeyMapName, keyHash, localIndexKeyCountName, keyCBA,valBAW, localValCountMapName, Left(localKvmmName), fun, postfun,hstoreConf.transactionalRetryCount, hstoreConf.useTransactionalCallables)
 
@@ -82,11 +83,15 @@ class HazelIndex[K, V] (val name: String,
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
       val callable = calloppeShortener(s"MonoIndex $name -addEntry", keyHash, keyCBA = Some(keyBA),valBAW = Some(valBA),
-        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) =>
+        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams],id:(String, String, FiveInt,Long)) =>
         {
           val incrementKeyCount = funKeyMap.put(funkeyHash, keyBA) == null
-          val incrementValueCount  = funParams.left.map(_.put(funkeyHash,valBA))
-          if(incrementValueCount.left.get)
+          val kvmm = funParams.left.get
+          val set = Option(kvmm.get(funkeyHash)).getOrElse(Collections.newSetFromMap[BAW](new ConcurrentHashMap[BAW,java.lang.Boolean](60, 0.8f, 2)))
+          val incrementValueCount  = set.add(valBA)
+          kvmm.put(funkeyHash, set)
+
+          if(incrementValueCount)
           {
             val valCountOld       = valCountMap.get(funkeyHash)
             val valCountNew       = valCountOld + 1
@@ -108,11 +113,14 @@ class HazelIndex[K, V] (val name: String,
     {
       val (keyBA, keyHash, valBA) = initialVals(key, Option(value))
       val callable = calloppeShortener(s"MonoIndex $name -removeEntry", keyHash, keyCBA = Some(keyBA),valBAW = Some(valBA),
-        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) =>
+        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams],id:(String, String, FiveInt,Long)) =>
         {
-          val kvmmRemoved    = funParams.left.map(_.remove(keyHash, valBA))
+          val kvmm = funParams.left.get
+          val set = Option(kvmm.get(funkeyHash))
+          val removed = set.map(_.remove(valBA))
+          set.map(kvmm.put(funkeyHash,_))
 
-          if(kvmmRemoved.left.get)
+          if(removed.isDefined && removed.get)
           {
             val valCountOld     = valCountMap.get(keyHash)
 
@@ -143,7 +151,7 @@ class HazelIndex[K, V] (val name: String,
       {
         val keyHash = hashBaTo5Int(toBA[K](key))
         val callable = calloppeShortener(s"MonoIndex $name -removeAllEntries", keyHash, keyCBA = None,valBAW = None,
-          (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) =>
+          (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams],id:(String, String, FiveInt,Long)) =>
           {
             val a              = funParams.left.map(_.remove(keyHash))
             //val removedKvmm    = a != null && a.left.get.size != 0
@@ -220,7 +228,8 @@ class HazelIndex[K, V] (val name: String,
 
 
     def scanValues(): HGRandomAccessResult[V] = {
-      val baws = localKvmm.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0}
+      //val baws = localKvmm.values.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0}
+      val baws = localKvmm.values.flatten.map(_.data).toIndexedSeq.sortWith{case (k1,k2) => comparator.compare(k1,k2) < 0}
       new HazelRS3[V](baws)
     }
 

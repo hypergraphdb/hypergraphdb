@@ -12,8 +12,8 @@ import storage.ByteArrayConverter
 import storage.hazelstore.Common._
 import org.hypergraphdb.storage.hazelstore.testing.TestCommons
 import TestCommons._
-import util.Comparator
-import java.util.concurrent.{TimeoutException, TimeUnit, Callable}
+import java.util.{Collections, Comparator}
+import java.util.concurrent.{ConcurrentHashMap, TimeoutException, TimeUnit, Callable}
 import org.hypergraphdb.storage.hazelstore.RunnableBackbone.{BiIndexParams, Calloppe, BiIndexStringParams}
 import org.hypergraphdb.storage.hazelstore.BidirCallables12._
 import scala.Some
@@ -32,9 +32,6 @@ class HazelBidirecIndex[K, V] (val name: String,
   // HGBidirectionalIndex adds the requirement to find keys by value
   // The simplest approach would be to extends HazelIndex and add a multimap valToKeysMap 5int-valueHash => 5int-keyHash
   // However, this would imply an overhead on each HGSortIndex operation, because in a operation such as addEntry, kvmm and valToKeysMap would go to different partitions.
-  // Since Hazelcast does not provide true distributed transactions (XA)
-
-
   // As described in HazelIndex10, hazelcast allows querying for values, but only in Maps not Multimaps.
   // Therefore we cannot querying directly in the multimap mapping single key to many values required for HGSortIndex functions.
   //
@@ -42,12 +39,14 @@ class HazelBidirecIndex[K, V] (val name: String,
   /*--------------------------------------------------------------------------------*/
   type BiKVMM                                     = MultiMap[FiveInt,FiveInt]
   val localKvmmName                                    = name + "_kHashToValHashMM"
-  val localKvmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localKvmmName)
+  //val localKvmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localKvmmName)
+  val localKvmm:IMap[FiveInt, java.util.Set[FiveInt]] = h.getMap[FiveInt,java.util.Set[FiveInt]](localKvmmName)
   /*--------------------------------------------------------------------------------*/
 
   /*--------------------------------------------------------------------------------*/
   val localVkmmName                                    = name + "_valHashToKeyHashMM"
-  val localVkmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localVkmmName)
+  //val localVkmm: BiKVMM                                = h.getMultiMap[FiveInt,FiveInt](localVkmmName)
+  val localVkmm: IMap[FiveInt, java.util.Set[FiveInt]] = h.getMap[FiveInt,java.util.Set[FiveInt]](localVkmmName)
 
   /*--------------------------------------------------------------------------------*/
 
@@ -112,10 +111,9 @@ class HazelBidirecIndex[K, V] (val name: String,
 
   //case class BiIndexStringParams  (kvmmBiName:String, vkmmName:String, valMapName:String,firstValMapName:String,valHash:FiveInt)
   def calloppeShortener(operationName: String, keyHash:FiveInt,keyCBA: Option[ComparableBAW],valHash:FiveInt, valBAW: Option[BAW],
-                        fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[MultiMap[FiveInt,BAW],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
+                        fun: (IMap[FiveInt, ComparableBAW], FiveInt, String, IMap[FiveInt,Long],Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams], (String, String,FiveInt,Long)) => (Boolean,String),
                         postfun: (HazelcastInstance,String) => Unit) =
     new Calloppe((name, operationName), localKeyMapName, keyHash, localIndexKeyCountName, keyCBA,valBAW, localValueCountMapName, Right(BiIndexStringParams(localKvmmName,localVkmmName,localValMapName,localFirstValMapName,valHash)), fun, postfun,hstoreConf.transactionalRetryCount, hstoreConf.useTransactionalCallables)
-
 
 
   def addEntry(key: K, value: V){
@@ -124,11 +122,18 @@ class HazelBidirecIndex[K, V] (val name: String,
         val (keyBA, keyHash, valBA,valHash) = initialVals(key, Option(value))
         val operationName = s"BidirIndex $name addEntry"
         val runnable = calloppeShortener(operationName, keyHash, Some(keyBA), valHash, Some(valBA),
-          (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) => {
+          (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams],id:(String, String, FiveInt,Long)) => {
           funKeyMap.put(keyHash, keyBA)
           funParams.right.get.valMap.put(valHash,valBA)
-          val kvmmAdded = funParams.right.get.kvmmBi.put(keyHash,valHash)
-          val vkmmAdded = funParams.right.get.vkmm.put(valHash,keyHash)
+            val kvmm = funParams.right.get.kvmmBi
+            val setKVMM = Option(kvmm.get(keyHash)).getOrElse(Collections.newSetFromMap[FiveInt](new ConcurrentHashMap[FiveInt,java.lang.Boolean](60, 0.8f, 2)))
+            val kvmmAdded = setKVMM.add(valHash)
+            kvmm.put(keyHash,setKVMM)
+
+            val vkmm = funParams.right.get.vkmm
+            val setVKMM = Option(vkmm.get(valHash)).getOrElse(Collections.newSetFromMap[FiveInt](new ConcurrentHashMap[FiveInt,java.lang.Boolean](60, 0.8f, 2)))
+            val vkmmAdded = setVKMM.add(keyHash)
+            vkmm.put(valHash,setVKMM)
           funParams.right.get.firstValMap.put(keyHash,valBA)
 
           if(kvmmAdded)
@@ -159,9 +164,13 @@ class HazelBidirecIndex[K, V] (val name: String,
       val (keyBA, keyHash, valBA,valHash) = initialVals(key, Option(value))
       val operationName = s"BidirIndex $name removeEntry"
       val runnable = calloppeShortener(operationName, keyHash, Some(keyBA), valHash, Some(valBA),
-        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[MultiMap[FiveInt,BAW],BiIndexParams],id:(String, String, FiveInt,Long)) => {
+        (funKeyMap: IMap[FiveInt, ComparableBAW],funkeyHash:FiveInt, funKeyCountName:String, valCountMap:IMap[FiveInt,Long],funParams: Either[IMap[FiveInt,java.util.Set[BAW]],BiIndexParams],id:(String, String, FiveInt,Long)) => {
 
-          val kvmmRemoved         = funParams.right.get.kvmmBi.remove(keyHash, valHash)
+          val kvmmBi = funParams.right.get.kvmmBi
+          val kvmmSet = kvmmBi.get(keyHash)
+          val kvmmRemoved         = kvmmSet.remove(valHash)
+          kvmmBi.put(keyHash,kvmmSet)
+
           val firstValMapRemoved  = funParams.right.get.firstValMap.remove(keyHash, valBA)
           val valCountOld         = valCountMap.get(keyHash)
           funParams.right.get.vkmm.remove(valHash, keyHash)   // WARNING: this is not local to owner node of keyHash, so rollback might not work. If removeEntry operation fails retryCount times and is given up, then vkmm is inconsistent. Should be put into postfun. However starting from Hazelcast 3, there'll be XA transactions
