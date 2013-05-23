@@ -27,7 +27,7 @@ class HazelBidirecIndex[K, V] (val name: String,
                                  implicit val keyConverter:   ByteArrayConverter[K],
                                  implicit val valueConverter: ByteArrayConverter[V],
                                  val providedComparator: Comparator[Array[Byte]] = BAComparator)
-  extends HGBidirectionalIndex[K, V] with Serializable {
+  extends HGBidirectionalIndex[K, V] with Serializable with HGSortIndex[K,V]{
 
   // HGBidirectionalIndex adds the requirement to find keys by value
   // The simplest approach would be to extends HazelIndex and add a multimap valToKeysMap 5int-valueHash => 5int-keyHash
@@ -275,13 +275,9 @@ class HazelBidirecIndex[K, V] (val name: String,
 
 
       val keyCbawWithValHashs                =    keyCbawWithValHashstasks.flatMap(_.get).toIndexedSeq
-
-      val valHashSet                = new collection.mutable.HashSet[FiveInt]
-      keyCbawWithValHashs.foreach(_._2.foreach(valHashSet.+(_)))
       val vals = keyCbawWithValHashs.map(_._2).flatten
-      vals
 
-      val groupValHashsByMember = valHashSet.groupBy(valHash => h.getPartitionService.getPartition(valHash).getOwner)
+      val groupValHashsByMember = vals.groupBy(valHash => h.getPartitionService.getPartition(valHash).getOwner)
       val valBawTasks  =
         groupValHashsByMember
         .map{

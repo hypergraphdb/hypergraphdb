@@ -205,7 +205,8 @@ class HazelIndex[K, V] (val name: String,
 
         val tempResult    = tasks.flatMap( future => future.get(2*hstoreConf.timeoutMillis, TimeUnit.MILLISECONDS)).toIndexedSeq
         val sortedResult  = tempResult.sortWith{case (k1,k2) => comparator.compare(k1._1.data, k2._1.data)<0}
-        new HazelRS3[V](sortedResult.map(_._2).flatten.map(_.data))
+        val mappedSorted = sortedResult.map(_._2).flatten.map(_.data)
+        new HazelRS3[V](mappedSorted)
       }
     }
 

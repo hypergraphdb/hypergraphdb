@@ -20,7 +20,7 @@ object BidirCallables12 {
 
       //      val keyMap          = hi.getMap[FiveInt, ComparableBAW](keyMapName)
       val valMap  = hi.getMap[FiveInt, BAW](valMapName)
-      val vkmm    = hi.getMultiMap[FiveInt,FiveInt](vkmmName)
+      val vkmm    = hi.getMap[FiveInt,java.util.Set[FiveInt]](vkmmName)
       val it      = valHashs.iterator
 
       var redo:Int       = retryCount
@@ -114,7 +114,7 @@ object BidirCallables12 {
     def call() ={
       val hit = Hazelcast.getAllHazelcastInstances.iterator()
       val hi                = if (hit.hasNext) hit.next else Hazelcast.newHazelcastInstance()
-      hi.getMultiMap[FiveInt, FiveInt](vkmmName).get(valHash).size
+      hi.getMap[FiveInt, java.util.Set[FiveInt]](vkmmName).get(valHash).size
     }
     def getPartitionKey = valHash
   }
@@ -137,16 +137,16 @@ object BidirCallables12 {
   }
   /*---------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
-  class GetValHashsForEachKeyHash(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], timeOut:Long) extends Callable[util.List[Pair[ComparableBAW,util.Collection[FiveInt]]]] with Serializable{
+  class GetValHashsForEachKeyHash(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], timeOut:Long) extends Callable[util.List[Pair[ComparableBAW,util.Set[FiveInt]]]] with Serializable{
     def call() = {
       val hit = Hazelcast.getAllHazelcastInstances.iterator()
       val hi                = if (hit.hasNext) hit.next else Hazelcast.newHazelcastInstance()
 
       val keyMap            = hi.getMap[FiveInt,ComparableBAW](keyMapName)
-      val kvmm              = hi.getMultiMap[FiveInt,FiveInt](kvmmName)
+      val kvmm              = hi.getMap[FiveInt,java.util.Set[FiveInt]](kvmmName)
       println("bi-GetValHashsForEachKeyHash")
       val keyHashsIterator  = keyHashs.iterator
-      val resultList        = new util.LinkedList[Pair[ComparableBAW,util.Collection[FiveInt]]]
+      val resultList        = new util.LinkedList[Pair[ComparableBAW,util.Set[FiveInt]]]
       while(keyHashsIterator.hasNext)
       {
         val cur       = keyHashsIterator.next()

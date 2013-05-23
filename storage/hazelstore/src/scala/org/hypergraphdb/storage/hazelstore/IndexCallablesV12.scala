@@ -8,13 +8,13 @@ import com.hazelcast.partition.{MigrationListener, MigrationEvent}
 
 object IndexCallablesV12 {
 
-  class GetMultiMappingsFromThatMemberMono(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], retryCount:Int) extends Callable[java.util.List[Pair[ComparableBAW,util.Collection[BAW]]]] with Serializable{
+  class GetMultiMappingsFromThatMemberMono(keyMapName:String, kvmmName:String, keyHashs:Iterable[FiveInt], retryCount:Int) extends Callable[java.util.List[Pair[ComparableBAW,util.Set[BAW]]]] with Serializable{
     def call() = {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
       val keyMap            = hi.getMap[FiveInt,ComparableBAW](keyMapName)
-      val kvmm              = hi.getMultiMap[FiveInt,BAW](kvmmName)
+      val kvmm              = hi.getMap[FiveInt,java.util.Set[BAW]](kvmmName)
       val keyHashsIterator  = keyHashs.iterator
-      val resultList        = new util.LinkedList[Pair[ComparableBAW,util.Collection[BAW]]]
+      val resultList        = new util.LinkedList[Pair[ComparableBAW,util.Set[BAW]]]
       while(keyHashsIterator.hasNext)
       {
         val cur = keyHashsIterator.next()
@@ -28,13 +28,13 @@ object IndexCallablesV12 {
   class FindFirstOp(kvmmName:String, keyHash:FiveInt, timeOut:Long) extends Callable[BAW] with Serializable with PartitionAware[FiveInt]{
     def call() = {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-      val kvmm              = hi.getMultiMap[FiveInt,BAW](kvmmName)
+      val kvmm              = hi.getMap[FiveInt,java.util.Set[BAW]](kvmmName)
 
-      val valHashIt = kvmm.get(keyHash).iterator()
-      if(valHashIt.hasNext)
-        valHashIt.next()
-      else
+      val valSet = kvmm.get(keyHash)
+      if(valSet == null || valSet.isEmpty)
         null.asInstanceOf[BAW]
+      else
+        valSet.iterator().next
     }
 
     def getPartitionKey = keyHash

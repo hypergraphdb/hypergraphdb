@@ -2,14 +2,14 @@ package org.hypergraphdb.storage.hazelstore.testing
 
 import collection.JavaConversions._
 import org.hypergraphdb.storage.hazelstore.testing.TestCommons._
-import org.hypergraphdb.storage.hazelstore.HazelRS3
-import org.hypergraphdb.{HGIndex, HGRandomAccessResult}
+import org.hypergraphdb.storage.hazelstore.{HazelBidirecIndex, HazelIndex, HazelRS3}
+import org.hypergraphdb.{HGSearchResult, HGSortIndex, HGIndex, HGRandomAccessResult}
 import org.hypergraphdb.HGRandomAccessResult.GotoResult
 import com.hazelcast.core.Hazelcast
 import org.hypergraphdb.util.CountMe
 
 
-class IndexTest(val index:HGIndex[String,String], async:Boolean)(implicit testDataSize: Int){
+class IndexTest(val index:HGSortIndex[String,String], async:Boolean)(implicit testDataSize: Int){
 
   def run:Long = {
     val a = timeMeasure(test)._1
@@ -71,6 +71,31 @@ class IndexTest(val index:HGIndex[String,String], async:Boolean)(implicit testDa
     // TESTING findFirst(key: KeyType)
     allValSet.forall{case (key,stringSet) => stringSet.contains(index.findFirst(key))}
 
+    // TESTING HGSortIndex functions
+    //    def findLT(key: KeyType): HGSearchResult[ValueType]
+    //    def findGT(key: KeyType): HGSearchResult[ValueType]
+    //    def findLTE(key: KeyType): HGSearchResult[ValueType]
+    //    def findGTE(key: KeyType): HGSearchResult[ValueType]
+
+    val bacomp =  if(index.isInstanceOf[HazelIndex[_,_]]) index.asInstanceOf[HazelIndex[_,_]].comparator else index.asInstanceOf[HazelBidirecIndex[_,_]].comparator
+
+    val stringOrder = new Ordering[String]{
+     def compare(x: String, y: String): Int = baComp.compare(x.getBytes,y.getBytes)
+   }
+
+    def findTests(testDataFun: (String,String)=> Boolean, indexFun : (HGSortIndex[String,String],String) => HGSearchResult[String]):Boolean =
+    {
+        val elemToCompareWith = allValSet.drop(allValSet.size/2).head._1
+        val dataFiltered        = allValSet.filter( pair => testDataFun(pair._1,elemToCompareWith)).map(pair => pair._2).flatten
+        val indexFiltered     = indexFun(index, elemToCompareWith)
+        dataFiltered.size == indexFiltered.asInstanceOf[CountMe].count && dataFiltered.toSet.intersect(indexFiltered.toSet).size == dataFiltered.size
+    }
+
+    assert(findTests(stringOrder.lt(_,_),_.findLT(_)))
+    assert(findTests(stringOrder.lteq(_,_),_.findLTE(_)))
+    assert(findTests(stringOrder.gt(_,_),_.findGT(_)))
+    assert(findTests(stringOrder.gteq(_,_),_.findGTE(_)))
+
 
     // TESTING removeEntry(key: KeyType, value: ValueType)
     val toBeRemoved = dataMap.drop(testDataSize/4).take(testDataSize/3).map{ case (key,stringList) => (key, stringList.take(stringListLenght/2).toSet)}
@@ -90,15 +115,6 @@ class IndexTest(val index:HGIndex[String,String], async:Boolean)(implicit testDa
       assert(a.asInstanceOf[CountMe].count == stringSet.size.toLong)
       a.forall(s => stringSet.contains(s))    // this boolean is asserted by being wrapped in an assert 3 lines above...
     }})
-
-    // TESTING HGSortIndex functions
-//    def findLT(key: KeyType): HGSearchResult[ValueType]
-
-
-//    def findGT(key: KeyType): HGSearchResult[ValueType]
-//    def findLTE(key: KeyType): HGSearchResult[ValueType]
-//    def findGTE(key: KeyType): HGSearchResult[ValueType]
-
 
 
     // TESTING removeAllEntries(key: KeyType) {}

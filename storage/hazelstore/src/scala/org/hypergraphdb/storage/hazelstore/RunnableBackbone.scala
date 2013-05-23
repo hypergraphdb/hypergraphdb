@@ -29,8 +29,8 @@ object RunnableBackbone {
     def getPartitionKey = keyHash
     def call() {
       val hit = Hazelcast.getAllHazelcastInstances.iterator()
-      val hi                = if (hit.hasNext) hit.next else Hazelcast.newHazelcastInstance()
-      val ID = ( indexAndOperationNames._1, indexAndOperationNames._2, keyHash, System.nanoTime())
+      val hi  = if (hit.hasNext) hit.next else Hazelcast.newHazelcastInstance()
+      val ID  = ( indexAndOperationNames._1, indexAndOperationNames._2, keyHash, System.nanoTime())
 
       val keyMap          = hi.getMap[FiveInt, ComparableBAW](keyMapName)
       val valCountMap     = hi.getMap[FiveInt,Long](valCountMapName)
