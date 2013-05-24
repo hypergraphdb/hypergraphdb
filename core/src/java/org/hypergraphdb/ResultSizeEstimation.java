@@ -125,8 +125,11 @@ class ResultSizeEstimation
 			AtomTypeCondition cond = (AtomTypeCondition)x;
 			HGHandle typeHandle = cond.getTypeHandle(); 
 			if (typeHandle == null)
-				typeHandle = graph.getTypeSystem().getTypeHandle(cond.getJavaClass());
-			return graph.indexByType.count(graph.getPersistentHandle(typeHandle));
+				typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(cond.getJavaClass());
+			if (typeHandle != null)
+				return graph.indexByType.count(graph.getPersistentHandle(typeHandle));
+			else
+				return 0;
 		}
 		
 		public long cost(HyperGraph graph, HGQueryCondition x)
@@ -160,7 +163,9 @@ class ResultSizeEstimation
 			TypedValueCondition cond = (TypedValueCondition)x;
             HGHandle typeHandle = cond.getTypeHandle();
             if (typeHandle == null)
-            	typeHandle = graph.getTypeSystem().getTypeHandle(cond.getJavaClass());
+            	typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(cond.getJavaClass());
+            if (typeHandle == null)
+            	return 0;
             HGAtomType type = graph.getTypeSystem().getType(typeHandle);
             if (type instanceof HGSearchable && cond.getOperator() == ComparisonOperator.EQ)
             {
@@ -189,6 +194,8 @@ class ResultSizeEstimation
             HGHandle typeHandle = cond.getTypeHandle();
             if (typeHandle == null)
             	typeHandle = graph.getTypeSystem().getTypeHandle(cond.getJavaClass());
+            if (typeHandle == null)
+            	return 0;
             HGAtomType type = graph.getTypeSystem().getType(typeHandle);
             if (type instanceof HGSearchable && cond.getOperator() == ComparisonOperator.EQ)
             	return 2;

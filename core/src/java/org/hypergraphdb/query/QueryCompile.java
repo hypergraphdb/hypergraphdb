@@ -1,7 +1,6 @@
 package org.hypergraphdb.query;
 
 import java.util.HashMap;
-
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HyperGraph;
@@ -9,6 +8,7 @@ import org.hypergraphdb.query.cond2qry.ConditionToQuery;
 import org.hypergraphdb.query.cond2qry.OrToParellelQuery;
 import org.hypergraphdb.query.cond2qry.QueryMetaData;
 import org.hypergraphdb.query.cond2qry.ToQueryMap;
+import org.hypergraphdb.util.CallContextRef;
 import org.hypergraphdb.util.DelegateMapResolver;
 import org.hypergraphdb.util.RefResolver;
 
@@ -27,17 +27,17 @@ import org.hypergraphdb.util.RefResolver;
  */
 public class QueryCompile
 {
-    static ThreadLocal<DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>> 
-        translatorMap = new ThreadLocal<DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>>()
-    {
-//        @Override
-//        protected RefResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>> initialValue()
-//        {
-//            return ToQueryMap.getInstance();
-//        }
-    };
-    
-//    static ThreadLocal<RefResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>>
+	static CallContextRef<DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>> 
+		translatorMap =
+			new CallContextRef<DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>>()
+	{
+		public DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>> compute()
+		{
+			return new DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>(
+	                ToQueryMap.getInstance(), 
+	                new HashMap<Class<? extends HGQueryCondition>, ConditionToQuery<?>>());			
+		}
+	};
     
     /**
      * Start query compilation in the current thread. Make sure {@link finish} is called
@@ -45,9 +45,7 @@ public class QueryCompile
      */
     public static void start()
     {
-        translatorMap.set(new DelegateMapResolver<Class<? extends HGQueryCondition>, ConditionToQuery<?>>(
-                ToQueryMap.getInstance(), 
-                new HashMap<Class<? extends HGQueryCondition>, ConditionToQuery<?>>()));
+        translatorMap.push();
     }
     
     /**
@@ -55,7 +53,7 @@ public class QueryCompile
      */
     public static void finish()
     {
-        translatorMap.set(null);
+        translatorMap.pop();
     }
     
     // This is temporary, until we figure a better API/framework to manage different

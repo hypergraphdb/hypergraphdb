@@ -353,7 +353,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 					if (byType.getTypeHandle() != null)
 						typeHandle  = byType.getTypeHandle();
 					else
-						typeHandle = graph.getTypeSystem().getTypeHandle(byType.getJavaClass());
+						typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(byType.getJavaClass());
+					if (typeHandle == null)
+						return Nothing.Instance;
 				}
 				if (byValue != null)
 				{
