@@ -11,13 +11,7 @@ import org.hypergraphdb.util.CountMe
 
 class IndexTest(val index:HGSortIndex[String,String], async:Boolean)(implicit testDataSize: Int){
 
-  def run:Long = {
-    val a = timeMeasure(test)._1
-    if (async)
-      (a/1000 - 3*syncTime*1000)
-    else
-      a/1000
-  }
+  def run:Long = timeMeasure(test)._1
 
   def test{
     import Generators.Strings._

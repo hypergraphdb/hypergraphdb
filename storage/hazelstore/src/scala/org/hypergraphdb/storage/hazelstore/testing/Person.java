@@ -5,12 +5,17 @@ public class Person {
 
     public Person() {}   // null constructor
 
-    public Person(String name, String adress, String email, Integer insurance) {
+    public Person(int id,String name, String adress, String email, Integer birthyear) {
+        this.ID = id;
         this.name = name;
         this.adress = adress;
         this.email = email;
-        this.insurance = insurance;
+        this.birthyear = birthyear;
     }
+
+    int ID;
+    public int getID() {return ID;}
+    public void setID(int ID) {this.ID = ID;}
 
     String name;
     public String getName() {return name;   }
@@ -24,11 +29,11 @@ public class Person {
     public String getEmail() {return email;    }
     public void setEmail(String email) {this.email = email;    }
 
-    Integer insurance;
-    public Integer getInsurance() {return insurance;    }
-    public void setInsurance(Integer insurance) {this.insurance = insurance;}
+    Integer birthyear;
+    public Integer getBirthyear() {return birthyear;}
+    public void setBirthyear(Integer birthyear) {this.birthyear = birthyear;}
 
     public String toString(){
-        return "Name:" + getName() + ". Adress: " + getAdress() +". email: " + getEmail() + ". insuranceID" + getInsurance();
+        return "ID" + ID + ". Name:" + getName() + ". Adress: " + getAdress() +". email: " + getEmail() + ". insuranceID" + getBirthyear();
     }
 }

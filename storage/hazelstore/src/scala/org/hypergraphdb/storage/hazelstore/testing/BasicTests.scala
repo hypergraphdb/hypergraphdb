@@ -7,6 +7,7 @@ import TestCommons._
 import com.hazelcast.core.Hazelcast
 import collection.JavaConversions._
 import org.hypergraphdb.storage.hazelstore.StoreCallables.{AddRunnable, AddCallable}
+import org.hypergraphdb.HGQuery.hg
 
 
 object BasicTests {
@@ -15,48 +16,53 @@ object BasicTests {
  def main (args:Array[String]){
    implicit val testDataSize = TestCommons.dataSize
 
+   /*
+   val graph = getGraph(getHGConfig(null))
+   val a = timeMeasure((0 to 400000).foreach(graph.add))
+   val b = timeMeasure((0 to 400000).foreach(hg.assertAtom(graph, _)))
+   graph.close
 
 
+   println("test took " + a._1 + " and " + b._1)
+*/
    def test(f: HazelStoreConfig => Long) = configPermutations.map(c => {
-     println(s"\n\n\nNow running config $c\n\n\n");Thread.sleep(1333)
+     println(s"\n\nNow running config $c\n\n");
      val run = f(c)
-     println(s"\n\n\nRunning config $c\n took: " +run)
-     Thread.sleep(1333)
+     println(s"\n\nRunning config $c\n took: " +run)
      (c.toString, run)
    })
 
-   println("\n\nB I D I R E C T I O N A L   I N D E X\n\n")
-   val bidirAsIndex = test((c:HazelStoreConfig) => new IndexTest(getBidirectionalIndex(getStore(getHGConfig(c))).asInstanceOf[HGSortIndex[String, String]],c.async).run)
-   val bidirResults = test((c:HazelStoreConfig) => new BiDirTest2(getBidirectionalIndex(getStore(getHGConfig(c))),c.async).run)
-
-   println("\n\nI N D E X\n\n")
-   val indexResults = test((c:HazelStoreConfig) => new IndexTest(getIndex(getStore(getHGConfig(c))),c.async).run)
-
+   //   T E S T S    G O    H E R E
    println("\n\nG R A P H T E S T\n\n")
    val graphResults = test((c:HazelStoreConfig) => new GraphTest(  getGraph(getHGConfig(c)),bootstrap = true).run)
 
-
-
+   println("\n\nI N D E X\n\n")
+   val indexResults = test((c:HazelStoreConfig) => new IndexTest(getIndex(getStore(getHGConfig(c))),c.async).run)
 
    println("\n\nS T O R A G E   T E S T\n\n")
    val storeResults = test((c:HazelStoreConfig) => new StorageTest(getStore(getHGConfig(c)),c.async).run)
 
 
+   println("\n\nB I D I R E C T I O N A L   I N D E X\n\n")
+   val bidirAsIndex = test((c:HazelStoreConfig) => new IndexTest(getBidirectionalIndex(getStore(getHGConfig(c))).asInstanceOf[HGSortIndex[String, String]],c.async).run)
+   val bidirResults = test((c:HazelStoreConfig) => new BiDirTest2(getBidirectionalIndex(getStore(getHGConfig(c))),c.async).run)
+
+
+   // E N D   T E S T   D E C L A R A T I O N
+
+
    //Seq.empty[(String,Long)]  //
 
-
-
-
    println(s"\n\n\nRESULTS  normalized to datasize $testDataSize")
-   println("now printing Results of StoreTests:")
+   println("Results of StoreTests:")
    storeResults.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
-   println("now printing Results of IndexTests:")
+   println("Results of IndexTests:")
    indexResults.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
-   println("now printing Results of bidirAsIndex:")
+   println("Results of bidirAsIndex:")
    bidirAsIndex.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
-   println("now printing Results of bidirResults:")
+   println("Results of bidirResults:")
    bidirResults.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
-   println("\nnow printing Results of GraphTests:")
+   println("\nResults of GraphTests:")
    graphResults.sortBy(_._2).foreach(i => {println(i._1);println(i._2 / testDataSize)})
  }
 
@@ -69,15 +75,15 @@ object BasicTests {
     callableMap.remove("bla".getBytes)
     val res2 =  callableMap.get("bla".getBytes)
 
-    println("now printing callable keySet")
+    println("callable keySet")
     val callableMapKeySet = callableMap.keySet
     callableMapKeySet .foreach(println)
-    println("now printing callable keySet size" + callableMapKeySet .size)
+    println("callable keySet size" + callableMapKeySet .size)
 
-    println("now printing runnable keySet")
+    println("runnable keySet")
     val runnableMapKeySet = runnableMap.keySet
     runnableMapKeySet.foreach(println)
-    println("now printing callable keySet size" + runnableMapKeySet.size)
+    println("callable keySet size" + runnableMapKeySet.size)
 
 
     val exec = hi.getExecutorService
@@ -96,3 +102,17 @@ object BasicTests {
   }
 
 }
+/*
+val testSize = 100000
+val graph = getGraph(getHGConfig(null))
+timeMeasure(graph.bulkImport((0 to testSize),null))                    // warmup
+val meas1 = timeMeasure(graph.bulkImport((testSize to (2*testSize)),null))
+timeMeasure(graph.bulkImportIfAbsentInCache((0 to -testSize),null))     // warmup and pre-store
+val meas2 = timeMeasure(graph.bulkImportIfAbsentInCache((0 to -testSize),null))
+val meas3 = timeMeasure((0 to -testSize).foreach(i => HGQuery.hg.assertAtom(graph, i)))
+
+
+println("bulk Import took " + meas1 + " whereas bulk import of previously stored took" + meas2 + " whereas assertAtom of previously stored took" + meas3+ " nanos.")
+
+graph.close
+*/

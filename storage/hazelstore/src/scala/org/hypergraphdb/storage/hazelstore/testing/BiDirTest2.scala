@@ -10,13 +10,7 @@ import TestCommons._
 class BiDirTest2(biDirIndex:HGBidirectionalIndex[String, String], async:Boolean) {
   import Generators.Strings._
 
-  def run:Long = {
-    val a = timeMeasure(test)._1
-    if (async)
-      (a/1000 - 1*syncTime*1000)
-    else
-      a/1000
-  }
+  def run:Long = test
 
 
   val dupeList:     List[String]        = randomStringList(length = dataSize)

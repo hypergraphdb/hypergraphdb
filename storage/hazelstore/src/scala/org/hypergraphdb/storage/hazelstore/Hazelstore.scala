@@ -6,12 +6,12 @@ import collection.JavaConversions._
 import com.hazelcast.util.DistributedTimeoutException
 import com.hazelcast.nio.HazelcastSerializationException
 import _root_.org.hypergraphdb._
-import _root_.org.hypergraphdb.util.HGLogger
+
 import storage._
 import transaction._
 import org.hypergraphdb.`type`.HGHandleType.HandleComparator
 import org.hypergraphdb.storage.hazelstore.StoreCallables.{RemoveIncidenceLinkOp, AddIncidenceLinkOp, RemoveIncidenceSetOp}
-import Common._
+import org.hypergraphdb.util.HGLogger
 
 
 class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation

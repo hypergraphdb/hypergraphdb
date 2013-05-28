@@ -296,7 +296,7 @@ class HazelBidirecIndex[K, V] (val name: String,
                     .map{case (keyCbaw,valhashs) => (keyCbaw,valhashs.map(valHash => valHashValBawMap(valHash)))}
 
       val sortedResult = combineResults.sortWith{case (k1,k2) => comparator.compare(k1._1.data, k2._1.data) < 0}.map(_._2.map(baw => baw.data)).flatten
-      new HazelRS3[V](sortedResult)
+      new HazelRS3[V](if (reverse) sortedResult.reverse else sortedResult)
     }
   }
 

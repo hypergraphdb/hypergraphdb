@@ -1,7 +1,7 @@
 package org.hypergraphdb.storage.hazelstore.testing
 
 import org.hypergraphdb.storage.{HGStoreImplementation, ByteArrayConverter, BAtoString}
-import org.hypergraphdb.handle.UUIDHandleFactory
+import org.hypergraphdb.handle.{SequentialUUIDHandleFactory, UUIDHandleFactory}
 import org.hypergraphdb._
 import org.hypergraphdb.storage.hazelstore._
 import org.hypergraphdb.HGRandomAccessResult.GotoResult
@@ -13,25 +13,25 @@ import scala.annotation.elidable._
 import com.hazelcast.config.Config
 
 
-
 object TestCommons {
   val sbaconvert = new BAtoString
   val hanGen = new UUIDHandleFactory
   val syncTime = 2000
   val baToString = new BAtoString
   type StringListMap = Map[String, List[String]]
-  val dataSize = 20
+  val dataSize = 30
 
   val configPermutationsBase :Seq[HazelStoreConfig] = Seq(
-  //{log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
+  {log("\n\nJ V M   W A R M   U P   R U N ");new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)},
+  //new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(false),
     new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(true),
-  new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false)
-  //new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(true)
-//  new HazelStoreConfig().setAsync(true).setUseTransactionalCallables(false)
+  new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(false),
+  new HazelStoreConfig().setAsync(false).setUseTransactionalCallables(true)
+
   )
 
   // U S E   L I T E   H A Z E L C A S T   I N S T A N C E
-  val lite = false
+  val lite = true
 
   val liteMember:Config=new Config().setLiteMember(true)
 
@@ -135,8 +135,14 @@ object TestCommons {
 
   def getHGConfig(hazelConfig:HazelStoreConfig):HGConfiguration = {
     val config = new HGConfiguration
+    //config.setAtomCacheFunction(new HGFunction1[HyperGraph,HGAtomCache]{def apply(arg: HyperGraph): HGAtomCache = new SimpleAtomCache() })
+    //val handleFactory = new SequentialUUIDHandleFactory(System.currentTimeMillis(), 0);
+    //config.setHandleFactory(handleFactory);
     config.setTransactional(false)
     config.setUseSystemAtomAttributes(false)
+    //config.setMaxCachedIncidenceSetSize(100)
+    //config.setSkipMaintenance(true)
+    //config.getStoreImplementation.getConfiguration.asInstanceOf[BJEConfig].getEnvironmentConfig.setCacheSize(1024*1024*500)
     config.setStoreImplementation(new Hazelstore(hazelConfig))
     config
   }
@@ -155,7 +161,7 @@ object TestCommons {
   def getGraph(config:HGConfiguration):HyperGraph = {
     val graph = new HyperGraph()
     graph.setConfig(config)
-    graph.open("")
+    graph.open("/home/ingvar/bin/bje")
     graph
   }
 

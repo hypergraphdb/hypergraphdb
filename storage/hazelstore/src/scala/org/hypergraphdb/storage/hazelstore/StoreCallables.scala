@@ -1,9 +1,8 @@
 package org.hypergraphdb.storage.hazelstore
 
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentSkipListSet, TimeUnit, Callable}
+import java.util.concurrent.{ConcurrentHashMap, Callable}
 import com.hazelcast.core.{IMap, PartitionAware, Hazelcast}
 import org.hypergraphdb.HGPersistentHandle
-import com.hazelcast.util.ConcurrentHashSet
 import java.util.Collections
 
 
@@ -12,10 +11,9 @@ object StoreCallables {
   class RemoveIncidenceSetOp(inciDBName: String, inciCountName:String, key:HGPersistentHandle,tryCount:Int) extends Runnable with PartitionAware[HGPersistentHandle]  with Serializable{
     def run {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-//      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
       val inciDB        = hi.getMap[HGPersistentHandle, java.util.Set[BAW]](inciDBName)
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
-      println(s"Store - RemoveIncidenceSetOp $inciDBName key: $key")
+//      println(s"Store - RemoveIncidenceSetOp $inciDBName key: $key")
 
       var tryAgain = tryCount
       while (tryAgain >0) {
@@ -45,12 +43,12 @@ object StoreCallables {
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
 
       val opId = System.nanoTime()
-      println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId starting")
+//      println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId starting")
 
       var tryAgain = tryCount
       while (tryAgain >0)
       {
-        println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId entering whileloop")
+//        println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId entering whileloop")
 
         val t = hi.getTransaction
         try{
@@ -64,15 +62,15 @@ object StoreCallables {
           {
             val oldCount = inciCount.get(key)
             inciCount.put(key, oldCount+1)
-            println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId incremented Count")
+//            println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId incremented Count")
           }
           t.commit()
           tryAgain = 0
-          println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId committed")
+//          println(s"Store - AddIncidenceLinkOp $inciDBName key: $key opID: $opId committed")
         }
 
         catch { case d: Throwable => {
-          println("Rolling back in AddIncidence")
+//          println("Rolling back in AddIncidence")
           t.rollback();
           tryAgain = tryAgain -1
         }}}}
@@ -84,21 +82,19 @@ object StoreCallables {
   class RemoveIncidenceLinkOp(inciDBName: String, inciCountName:String, key:HGPersistentHandle, value:BAW,tryCount:Int) extends Runnable with PartitionAware[HGPersistentHandle] with Serializable{
     def run {
       val hi               = Hazelcast.getAllHazelcastInstances.iterator().next
-//      val inciDB        = hi.getMultiMap[HGPersistentHandle, BAW](inciDBName)
       val inciDB2        = hi.getMap[HGPersistentHandle, java.util.Set[BAW]](inciDBName)
 
       val inciCount     = hi.getMap[HGPersistentHandle,Long](inciCountName)
 
       val opId = System.nanoTime()
-      println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId starting")
+//      println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId starting")
       var tryAgain = tryCount
       while (tryAgain >0) {
-        println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId entering while loop")
+//        println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId entering while loop")
 
         val t = hi.getTransaction
         try{
           t.begin()
-          //          lock.tryLock(1000,TimeUnit.MILLISECONDS)
           val getSet = Option(inciDB2.get(key))
           val removed = getSet.map(set => {set.remove(value); inciDB2.put(key, getSet.get)})
 
@@ -107,11 +103,11 @@ object StoreCallables {
           {
             val oldCount = inciCount.get(key)
             inciCount.put(key, oldCount-1)
-            println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId count decrease")
+  //          println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId count decrease")
           }
           t.commit()
           tryAgain = 0
-          println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId committed")
+//          println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId committed")
         }
         catch { case d: Throwable => {
           println(s"Store - RemoveIncidenceLinkOp $inciDBName key: $key opID: $opId rollback")
