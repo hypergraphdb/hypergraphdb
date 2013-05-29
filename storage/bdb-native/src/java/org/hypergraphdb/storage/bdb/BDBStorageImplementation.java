@@ -2,22 +2,29 @@ package org.hypergraphdb.storage.bdb;
 
 import java.io.File;
 
+
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.HGConfiguration;
+import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGStore;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.storage.incidence.AIBAConv;
+import org.hypergraphdb.storage.incidence.HGIncidentAnnotator;
 import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionConfig;
@@ -72,6 +79,29 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
     private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();    
     private LinkBinding linkBinding = null;
+
+    // experimental
+    private HGIncidentAnnotator incidentAnnotator = null;//new TypeAndPositionIncidenceAnnotator();
+    private HyperGraph graph;
+    private HyperGraph getGraph() 
+    {
+        if (graph == null)
+           graph = HGEnvironment.get(store.getDatabaseLocation());
+        return graph;
+    }
+    private byte [] incidentValue(HGPersistentHandle target, HGPersistentHandle link)
+    {
+        if (this.incidentAnnotator == null)
+            return link.toByteArray();
+        else
+        {
+            byte [] lbuf = link.toByteArray();
+            byte [] value = new byte[lbuf.length + incidentAnnotator.spaceNeeded(getGraph())];
+            System.arraycopy(lbuf, 0, value, 0, lbuf.length);
+            incidentAnnotator.annotate(graph, link, target, value, lbuf.length);
+            return value;
+        }
+    }
     
     private TransactionBDBImpl txn()
     {
@@ -97,6 +127,16 @@ public class BDBStorageImplementation implements HGStoreImplementation
         return env;
     }
     
+    public HGIncidentAnnotator getIncidentAnnotator()
+    {
+        return incidentAnnotator;
+    }
+
+    public void setIncidentAnnotator(HGIncidentAnnotator incidentAnnotator)
+    {
+        this.incidentAnnotator = incidentAnnotator;
+    }
+
     public void startup(HGStore store, HGConfiguration config)
     {
         this.store = store;
@@ -239,19 +279,10 @@ public class BDBStorageImplementation implements HGStoreImplementation
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            DatabaseEntry value = new DatabaseEntry(newLink.toByteArray());
+            DatabaseEntry value = new DatabaseEntry(incidentValue(handle, newLink));
             OperationStatus result = incidence_db.putNoDupData(txn().getBDBTransaction(), key, value);
             if (result != OperationStatus.SUCCESS && result != OperationStatus.KEYEXIST)
                 throw new Exception("OperationStatus: " + result);            
-            
-//            cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
-//            OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
-//            if (status == OperationStatus.NOTFOUND)
-//            {
-//                OperationStatus result = incidence_db.put(txn().getBDBTransaction(), key, value);
-//                if (result != OperationStatus.SUCCESS)
-//                    throw new Exception("OperationStatus: " + result);
-//            }
         }
         catch (Exception ex)
         {
@@ -323,17 +354,14 @@ public class BDBStorageImplementation implements HGStoreImplementation
             throw new HGException("Failed to retrieve link with handle " + handle, ex);
         }
     }
-
+    
     @SuppressWarnings("unchecked")
-    public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
+    private HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSetByKey(byte [] thekey)
     {
-        if (handle == null)
-            throw new NullPointerException("HGStore.getIncidenceSet called with a null handle.");
-        
         Cursor cursor = null;
         try
         {
-            DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
+            DatabaseEntry key = new DatabaseEntry(thekey);
             DatabaseEntry value = new DatabaseEntry();
             TransactionBDBImpl tx = txn();
             cursor = incidence_db.openCursor(tx.getBDBTransaction(), cursorConfig);            
@@ -344,17 +372,36 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 return (HGRandomAccessResult<HGPersistentHandle>)HGSearchResult.EMPTY;
             }
             else
-                return new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), 
-                                              key, 
-                                              BAtoHandle.getInstance(handleFactory));            
+            {
+                ByteArrayConverter<HGPersistentHandle> conv = BAtoHandle.getInstance(handleFactory);
+                if (this.incidentAnnotator != null)
+                    conv = new AIBAConv(conv, key.getData().length);
+                return new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), key, conv);
+            }
         }
         catch (Throwable ex)
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Throwable t) { }                        
-            throw new HGException("Failed to retrieve incidence set for handle " + handle + 
+            throw new HGException("Failed to retrieve incidence set for " + Arrays.asList(thekey) +  
                                   ": " + ex.toString(), ex);
         }
+    }
+    
+    public HGRandomAccessResult<HGPersistentHandle> getAnnotatedIncidenceResultSet(HGHandle target, Object...annotations)
+    {
+        if (incidentAnnotator == null)
+            throw new HGException("Attempt to query by annotated incident link when no incident annotator was configured.");
+        else if (target == null)
+            throw new NullPointerException("HGStore.getIncidenceSet called with a null target handle.");
+        return getIncidenceResultSetByKey(incidentAnnotator.annotateLookup(getGraph(), target, annotations));
+    }
+    
+    public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
+    {
+        if (handle == null)
+            throw new NullPointerException("HGStore.getIncidenceSet called with a null target handle.");
+        return getIncidenceResultSetByKey(handle.toByteArray());
     }
 
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
@@ -461,7 +508,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            DatabaseEntry value = new DatabaseEntry(oldLink.toByteArray());
+            DatabaseEntry value = new DatabaseEntry(incidentValue(handle, oldLink));
             cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchBoth(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.SUCCESS)

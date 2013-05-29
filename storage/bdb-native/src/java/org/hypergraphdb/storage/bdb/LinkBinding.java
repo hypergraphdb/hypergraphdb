@@ -10,6 +10,8 @@ package org.hypergraphdb.storage.bdb;
 import com.sleepycat.bind.tuple.TupleBinding;
 import com.sleepycat.bind.tuple.TupleInput;
 import com.sleepycat.bind.tuple.TupleOutput;
+import com.sleepycat.db.DatabaseEntry;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
@@ -54,7 +56,7 @@ public class LinkBinding extends TupleBinding<HGPersistentHandle[]>
         else
         	return readHandles(input.getBufferBytes(), 0, size);
     }
-
+    
     public void objectToEntry(HGPersistentHandle[] link, TupleOutput output)
     {
         byte [] buffer = new byte[link.length * handleSize];
