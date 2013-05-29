@@ -10,7 +10,7 @@ import org.hypergraphdb.query.cond2qry.QueryMetaData;
 import org.hypergraphdb.query.cond2qry.ToQueryMap;
 import org.hypergraphdb.util.CallContextRef;
 import org.hypergraphdb.util.DelegateMapResolver;
-import org.hypergraphdb.util.RefResolver;
+import org.hypergraphdb.util.Mapping;
 
 /**
  * <p>
@@ -67,16 +67,25 @@ public class QueryCompile
         else
             ToQueryMap.getInstance().put(Or.class, new OrToParellelQuery());
     }
-    
+        
     @SuppressWarnings("unchecked")
     public static <ResultType> ConditionToQuery<ResultType> translator(Class<? extends HGQueryCondition> conditionType)
     {
         return (ConditionToQuery<ResultType>)translatorMap.get().resolve(conditionType);
     }
     
+    public static HGQueryCondition transform(HyperGraph graph, HGQueryCondition condition)
+    {
+        for (Mapping<HGQueryCondition, HGQueryCondition> m : graph.getConfig().getQueryConfiguration().getTransforms())
+            condition = m.eval(condition); 
+        return condition;
+    }
+    
     public static <T> HGQuery<T> translate(HyperGraph graph, HGQueryCondition condition)
     {
-        ConditionToQuery<T> trans = translator(condition.getClass());
+        ConditionToQuery<T> trans = graph.getConfig().getQueryConfiguration().compiler(condition.getClass());        
+        if (trans == null)
+            trans = translator(condition.getClass());
         if (trans == null)
             throw new HGException("The query condition '" + condition + 
                     "' could not be translated to an executable query either because it is not specific enough. " +

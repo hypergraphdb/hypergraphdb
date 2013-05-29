@@ -95,8 +95,8 @@ public class HGEnvironment
 		{
 			hg = new HyperGraph();
 			hg.setConfig(getConfiguration(location));
+            dbs.put(location, hg);			
 			hg.open(location);
-			dbs.put(location, hg);
 		}
 		else if (!hg.isOpen())
 		{

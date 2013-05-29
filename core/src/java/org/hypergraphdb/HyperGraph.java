@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.util.ArrayList;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -16,7 +17,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.hypergraphdb.cache.HGCache;
 import org.hypergraphdb.cache.LRUCache;
-import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.HGManagedLiveHandle;
 import org.hypergraphdb.storage.BAtoHandle;
@@ -310,7 +310,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        store.getTransactionManager().setHyperGraph(this);
 	        eventManager = config.getEventManager();	 
 	        eventManager.setHyperGraph(this);
-	        cache = new WeakRefAtomCache(this);
+	        cache = config.getCacheImplementation();
 	        cache.setHyperGraph(this);
 	        HGCache<HGPersistentHandle, IncidenceSet> incidenceCache = 
 	        	new LRUCache<HGPersistentHandle, IncidenceSet>(0.9f, 0.3f);

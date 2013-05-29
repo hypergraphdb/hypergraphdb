@@ -195,34 +195,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	    	this.done = true;
 	    }
 	}
-	
-	public WeakRefAtomCache(HyperGraph graph)
-	{
-	    this.graph = graph;
-	    if (graph.getConfig().isTransactional())
-	    {
-	        atoms = atomsTx = new TxCacheMap<Object, HGLiveHandle>(
-	                                    graph.getTransactionManager(), 
-	                                    WeakIdentityHashMap.class,
-	                                    null);
-	        atomsTx.setReturnLatestAvailable(true);
-            liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(
-                                        graph.getTransactionManager(), 
-                                        HashMap.class,
-                                        null); 	        
-	        frozenAtoms = new TxCacheMap<HGLiveHandle, Object>(graph.getTransactionManager(), null, null);
-	    }
-	    else
-	    {
-	        atoms = new HashCacheMap<Object, HGLiveHandle>(); // need a weak hash cache map?
-	        liveHandles = new HashCacheMap<HGPersistentHandle, WeakHandle>();
-	        frozenAtoms = new HashCacheMap<HGLiveHandle, Object>();
-	    }
-		cleanupThread.setPriority(Thread.MAX_PRIORITY);
-		cleanupThread.setDaemon(true);		
-		cleanupThread.start();
-	}
-	
+		
 	public void setIncidenceCache(HGCache<HGPersistentHandle, IncidenceSet> cache)
 	{
 		this.incidenceCache= cache;
@@ -233,9 +206,32 @@ public class WeakRefAtomCache implements HGAtomCache
 		return incidenceCache;
 	}
 	
-	public void setHyperGraph(HyperGraph hg) 
+	public void setHyperGraph(HyperGraph graph) 
 	{
-		this.graph = hg;
+        this.graph = graph;
+        if (graph.getConfig().isTransactional())
+        {
+            atoms = atomsTx = new TxCacheMap<Object, HGLiveHandle>(
+                                        graph.getTransactionManager(), 
+                                        WeakIdentityHashMap.class,
+                                        null);
+            atomsTx.setReturnLatestAvailable(true);
+            liveHandles = liveHandlesTx = new TxCacheMap<HGPersistentHandle, WeakHandle>(
+                                        graph.getTransactionManager(), 
+                                        HashMap.class,
+                                        null);          
+            frozenAtoms = new TxCacheMap<HGLiveHandle, Object>(graph.getTransactionManager(), null, null);
+        }
+        else
+        {
+            atoms = new HashCacheMap<Object, HGLiveHandle>(); // need a weak hash cache map?
+            liveHandles = new HashCacheMap<HGPersistentHandle, WeakHandle>();
+            frozenAtoms = new HashCacheMap<HGLiveHandle, Object>();
+        }
+        cleanupThread.setPriority(Thread.MAX_PRIORITY);
+        cleanupThread.setDaemon(true);      
+        cleanupThread.start();
+
 		cleanupThread.setName("HGCACHE Cleanup - " + graph.getLocation());
 	}
 	

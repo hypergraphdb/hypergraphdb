@@ -64,6 +64,19 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate, Typ
 		this(hg.constant(typeHandle));
 	}
 	
+	public HGHandle typeHandleIfAvailable(HyperGraph graph)
+	{
+        if (!hg.isVar(getTypeReference()))
+        {
+            if (getTypeHandle() != null)
+                return getTypeHandle();
+            else
+                return graph.getTypeSystem().getTypeHandle(getJavaClass());
+        }	    
+        else
+            return null;
+	}
+	
 	public void setJavaClass(Class<?> c)
 	{
 		this.type = hg.constant(c);
@@ -114,7 +127,7 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate, Typ
         else if (t instanceof HGHandle)
         	h = (HGHandle)t;
         else
-        	h = hg.getTypeSystem().getTypeHandle((Class)t);
+        	h = hg.getTypeSystem().getTypeHandle((Class<?>)t);
         HGHandle typeOfValue = hg.getType(value);
         if (typeOfValue == null)
         	throw new HGException("Could not get type of atom " + value);

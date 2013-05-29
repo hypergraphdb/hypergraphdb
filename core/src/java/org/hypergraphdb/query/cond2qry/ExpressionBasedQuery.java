@@ -607,7 +607,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
     				cond = and;
     			}
             }
-		}		
+		}
 		else if (cond instanceof And)
 		{
 			HGQueryCondition statedType = null;
@@ -782,7 +782,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		    QueryCompile.start();
 			preprocess(condition);  
 			this.condition = simplify(toDNF(expand(graph, condition))); 
-			query = QueryCompile.translate(graph, this.condition);		
+			query = QueryCompile.translate(graph, QueryCompile.transform(graph, this.condition));		
 			return this;
 		}
 		finally

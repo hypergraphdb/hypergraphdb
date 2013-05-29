@@ -7,9 +7,11 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.cache.WeakRefAtomCache;
 import org.hypergraphdb.event.HGDefaultEventManager;
 
 import org.hypergraphdb.event.HGEventManager;
+import org.hypergraphdb.query.HGQueryConfiguration;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.util.HGUtils;
@@ -38,6 +40,8 @@ public final class HGConfiguration
 	private boolean useSystemAtomAttributes;
 	private boolean keepIncidentLinksOnRemoval = false;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
+	private HGQueryConfiguration queryConfiguration = new HGQueryConfiguration();
+	private HGAtomCache cacheImplementation = new WeakRefAtomCache();
 	private HGEventManager eventManager = new HGDefaultEventManager();
 	private ClassLoader classLoader;
 	
@@ -377,5 +381,33 @@ public final class HGConfiguration
     public void setClassLoader(ClassLoader classLoader)
     {
         this.classLoader = classLoader;
-    }	
+    }
+
+    /**
+     * <p>Return the {@link HGQueryConfiguration} associated with the {@link HyperGraph}
+     * instance.</p>
+     */
+    public HGQueryConfiguration getQueryConfiguration()
+    {
+        return queryConfiguration;
+    }
+
+    /**
+     * <p>Return the cache implementation configured for this {@link HyperGraph} instance.</p> 
+     */
+    public HGAtomCache getCacheImplementation()
+    {
+        return cacheImplementation;
+    }
+
+    /**
+     * <p>
+     * Configure a cache implementation to be used for this {@link HyperGraph} instance.
+     * </p>
+     * @param cacheImplementation
+     */
+    public void setCacheImplementation(HGAtomCache cacheImplementation)
+    {
+        this.cacheImplementation = cacheImplementation;
+    }    
 }

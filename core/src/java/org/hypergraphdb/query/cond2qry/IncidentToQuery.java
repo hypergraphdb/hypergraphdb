@@ -16,7 +16,7 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 
-public class IncidentToQuery implements ConditionToQuery
+public class IncidentToQuery implements ConditionToQuery<HGHandle>
 {
 	public QueryMetaData getMetaData(HyperGraph graph, HGQueryCondition c)
 	{
@@ -35,7 +35,7 @@ public class IncidentToQuery implements ConditionToQuery
 		return x;
 	}
 
-	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+	public HGQuery<HGHandle> getQuery(HyperGraph graph, HGQueryCondition c)
 	{
 		final IncidentCondition ic = (IncidentCondition)c;
 //		final HGPersistentHandle handle = graph.getPersistentHandle(((IncidentCondition)c).getTarget());
