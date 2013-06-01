@@ -24,7 +24,7 @@ public class OrToParellelQuery<T> implements ConditionToQuery<T>
          * @param left One of the two queries. May not be <code>null</code>.
          * @param right The other of the two queries. May not be <code>null</code>.
          */
-        public ParallelUnionQuery(HGQuery<T> left, HGQuery<T> right)
+        public ParallelUnionQuery(HGQuery<T> left, HGQuery<T> right, HyperGraph graph)
         {
             this.left = left;
             this.right = right;
@@ -82,13 +82,13 @@ public class OrToParellelQuery<T> implements ConditionToQuery<T>
         HGQuery<T> q2 = QueryCompile.translate(graph, or.get(1));
         if (q2 == null)
             throw new HGException("Untranslatable condition " + or.get(1));
-        ParallelUnionQuery<T> result = new ParallelUnionQuery(q1, q2);
+        ParallelUnionQuery<T> result = new ParallelUnionQuery(q1, q2, graph);
         for (int i = 2; i < or.size(); i++)
         {
             q1 = QueryCompile.translate(graph, or.get(i));
             if (q1 == null)
                 throw new HGException("Untranslatable condition " + or.get(i));                 
-            result = new ParallelUnionQuery(result, q1);
+            result = new ParallelUnionQuery(result, q1, graph);
         }
         return result;
     }
