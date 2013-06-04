@@ -13,13 +13,7 @@
     <artifactId>hypergraphdb</artifactId>
     <version>1.3-SNAPSHOT</version>  
   </parent>
- <repositories>
-    <repository>
-      <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
-    </repository>
- </repositories>
- 
+
   <dependencies>
 	<dependency>
 	  <groupId>org.hypergraphdb</groupId>

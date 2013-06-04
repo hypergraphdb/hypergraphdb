@@ -4,7 +4,6 @@ package hgtest;
 import java.io.File;
 
 import org.hypergraphdb.HGConfiguration;
-import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
@@ -34,7 +33,8 @@ public class HGTestBase
     
     public void openGraph()
     {
-        graph = HGEnvironment.get(getGraphLocation(), config);        
+        GraphFactory gfac = HGUtils.getImplementationOf("hgtest.GraphFactory", "hgtest.DefaultGraphFactory");
+        graph = gfac.createGraph(getGraphLocation());
     }
     
     @BeforeClass
