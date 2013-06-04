@@ -148,7 +148,8 @@ public class TxCacheTest extends HGTestBase
     // @Test
     public void runMe()
     {
-        cache = new WeakRefAtomCache(graph);
+        cache = new WeakRefAtomCache();
+        cache.setHyperGraph(graph);
         data = new TxMap<HGPersistentHandle, Integer>(graph.getTransactionManager(), null);
         handleMap.clear();
         for (int i = 0; i < atomsCount; i++)

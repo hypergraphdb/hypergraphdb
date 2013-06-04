@@ -1,12 +1,12 @@
 package hgtest.benchmark;
 
 import org.hypergraphdb.HGHandleFactory;
+
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 
 import hgtest.HGTestBase;
 

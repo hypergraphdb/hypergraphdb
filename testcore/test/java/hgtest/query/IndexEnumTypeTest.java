@@ -1,6 +1,5 @@
 package hgtest.query;
 
-import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;

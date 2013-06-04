@@ -1,6 +1,7 @@
 package hgtest;
 
 import java.util.List;
+import java.util.concurrent.Future;
 
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
@@ -15,6 +16,8 @@ import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.AtomPartCondition;
+import org.hypergraphdb.query.QueryCompile;
+import org.hypergraphdb.query.impl.AsyncSearchResultImpl;
 import org.hypergraphdb.type.HGHandleType;
 import org.hypergraphdb.type.Top;
 import org.hypergraphdb.type.javaprimitive.LongType;
@@ -175,9 +178,38 @@ public class DebugTest
         // TestQuery.go("/tmp/alain");
         TestLinkage test = new TestLinkage();
         test.setUp();
+        
+//        HGUtils.dropHyperGraphInstance(T.getTmpDirectory() + "/" + "emptyhg");
+//        HyperGraph graph = HGEnvironment.get(T.getTmpDirectory() + "/" + "emptyhg");
+//        System.out.println(hg.getAll(graph, hg.type(String.class)));
+//        graph.getTransactionManager().beginTransaction();
         try
-        { 
+        {
+            //QueryCompile.parallel();
             test.testDefineValueLink();
+//            HGHandle h1 = graph.add("OR-TEST-1");
+//            HGHandle h2 = graph.add("OR-TEST-2");
+//            while (true)
+//            {
+//                System.out.println("...");
+//            
+//            HGSearchResult rs = null;                    
+//                    //new AsyncSearchResultImpl(graph.find(hg.type(String.class)));
+//            try
+//            {
+//                rs = graph.find(hg.or(hg.eq("OR-TEST-1"), hg.eq("OR-TEST-2")));
+//                while (rs.hasNext())
+//                {
+//                    System.out.println(graph.get((HGHandle)rs.next()));
+//                    //System.out.println(graph.get((HGHandle)((Future)rs.next()).get()));
+//                }            
+//            }
+//            finally
+//            {
+//                if (rs != null)
+//                    rs.close();
+//            }
+//            }
         }
         catch (Throwable t)
         {
@@ -185,7 +217,9 @@ public class DebugTest
         }
         finally
         {
-            //test.tearDown();
+            test.tearDown();
+//            try { graph.getTransactionManager().endTransaction(false); }
+//            catch (Throwable t) { t.printStackTrace(); }
         }
     }
 }

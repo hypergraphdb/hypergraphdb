@@ -7,6 +7,7 @@ import hgtest.beans.SimpleBean;
 import hgtest.utils.RSUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.hypergraphdb.HGHandle;
@@ -88,6 +89,15 @@ public class Queries extends HGTestBase
         tearDown();
     }
 
+    @Test
+    public void testOrCondition()
+    {
+        HGHandle h1 = graph.add("OR-TEST-1");
+        HGHandle h2 = graph.add("OR-TEST-2");
+        for (String s : (List<String>)(List)hg.getAll(graph, hg.or(hg.eq("OR-TEST-1"), hg.eq("OR-TEST-2"))))
+            System.out.println(s);
+    }
+    
     @Test
     public void testArityCondition()
     {
@@ -240,22 +250,32 @@ public class Queries extends HGTestBase
     @Test
     public void testTypePlusCondition()
     {
-        graph.add(new NestedBean.ExExInnerBean1());
-        graph.add(new NestedBean.InnerBean());
-        graph.add(new NestedBean.ExInnerBean1());
-        graph.add(new NestedBean.ExInnerBean2());
-        // All the above
-        HGSearchResult<HGHandle> res = graph.find(new TypePlusCondition(
-                NestedBean.InnerBean.class));
-        Assert.assertEquals(RSUtils.countRS(res, true), 4);
-
-        // ExInnerBean1 + ExExInnerBean1
-        res = graph.find(new TypePlusCondition(NestedBean.ExInnerBean1.class));
-        Assert.assertEquals(RSUtils.countRS(res, true), 2);
-
-        // All nested beans
-        res = graph.find(new TypePlusCondition(NestedBean.class));
-        Assert.assertEquals(RSUtils.countRS(res, true), COUNT);
+        HashSet<HGHandle> added = new HashSet<HGHandle>(); 
+        added.add(graph.add(new NestedBean.ExExInnerBean1()));
+        added.add(graph.add(new NestedBean.InnerBean()));
+        added.add(graph.add(new NestedBean.ExInnerBean1()));
+        added.add(graph.add(new NestedBean.ExInnerBean2()));
+        try
+        {
+            // All the above
+            HGQuery<HGHandle> q = hg.make(HGHandle.class, graph).compile(hg.typePlus(NestedBean.InnerBean.class));            
+            List<HGHandle> res = q.findAll();
+    //        hg.make(HGHandle.class, graph).conf("parallel").compile()
+            Assert.assertEquals(res.size(), 4);
+    
+            // ExInnerBean1 + ExExInnerBean1
+            res = hg.findAll(graph, hg.typePlus(NestedBean.ExInnerBean1.class));
+            Assert.assertEquals(res.size(), 2);
+    
+            // All nested beans
+            res = hg.findAll(graph, hg.typePlus(NestedBean.class));
+            Assert.assertEquals(res.size(), COUNT);
+        }
+        finally
+        {
+            for (HGHandle h : added)
+                graph.remove(h);
+        }
     }
 
    

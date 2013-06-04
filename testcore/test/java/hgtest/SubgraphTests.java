@@ -9,6 +9,11 @@ import org.testng.annotations.Test;
 
 public class SubgraphTests extends HGTestBase
 {
+    @Test
+    public void testSubgraphTypeIndex()
+    {
+        
+    }
     
     @Test
     public void testSubgraphOperations()

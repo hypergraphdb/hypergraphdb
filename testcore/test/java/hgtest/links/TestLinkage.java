@@ -62,6 +62,6 @@ public class TestLinkage extends HGTestBase
         HGHandle x3 = hg.assertAtom(graph, "atom3");
         HGHandle l1 = hg.assertAtom(graph, new HGPlainLink(x1, x2));
         HGHandle l2 = hg.assertAtom(graph, new HGPlainLink(x2, x3));        
-        Assert.assertTrue(graph.findOne(hg.and(hg.bfs(x1), hg.is(x3))) == null);
+        Assert.assertTrue(graph.findOne(hg.and(hg.bfs(x1), hg.is(x3))).equals(x3));
     }
 }

@@ -153,7 +153,7 @@ public class TestPrimitives extends HGTestBase
           },
           false,
           false,
-          true);        
+          true);
     }
     
     @Test
