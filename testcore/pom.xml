@@ -56,6 +56,14 @@
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+
+<!--
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
       <artifactId>hgbdbnative</artifactId>
       <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
@@ -67,6 +75,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+-->
   </dependencies>
 
 </project>
