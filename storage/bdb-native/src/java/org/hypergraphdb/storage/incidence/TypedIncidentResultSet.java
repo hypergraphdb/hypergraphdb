@@ -1,8 +1,12 @@
 package org.hypergraphdb.storage.incidence;
 
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.query.impl.FilteredRAResultSet;
 import org.hypergraphdb.query.impl.FilteredResultSet;
+import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.util.Mapping;
 
 /**
  * <p>
@@ -14,61 +18,77 @@ import org.hypergraphdb.query.impl.FilteredResultSet;
  * @author Borislav Iordanov
  *
  */
-public class TypedIncidentResultSet implements HGRandomAccessResult<HGHandle>
+public final class TypedIncidentResultSet implements HGRandomAccessResult<HGHandle>
 {
-    private HGRandomAccessResult<HGHandle> irs = null;
+    private Mapping<byte[], Boolean> typePredicate = new Mapping<byte[], Boolean>()
+    {
+        public Boolean eval(byte[] h)
+        {
+            for (int i = 0; i < typeRep.length; i++)
+                if (h[i + typeRep.length] != typeRep[i])
+                    return false;
+            return true;
+        }
+    };
+ 
+    FilteredRAResultSet<byte[]> rs; 
+    byte [] typeRep;
+    HGHandle type;
+    ByteArrayConverter<HGPersistentHandle> handleConverter;
+
+    private HGHandle toh(byte [] B)
+    {
+        return handleConverter.fromByteArray(B, 0, typeRep.length);        
+    }
     
-    public TypedIncidentResultSet(HGRandomAccessResult<HGHandle> irs)
+    public TypedIncidentResultSet(HGRandomAccessResult<byte[]> irs, 
+                                  ByteArrayConverter<HGPersistentHandle> handleConverter,
+                                  HGHandle type)
     {
-        this.irs = irs;
-    }
-
-    public boolean hasPrev()
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public HGHandle prev()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public boolean hasNext()
-    {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    public HGHandle next()
-    {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public void remove()
-    {
-        // TODO Auto-generated method stub
-        
+        super();
+        this.rs = new FilteredRAResultSet<byte[]>(irs, typePredicate, 0);
+        this.type = type;
+        typeRep = type.getPersistent().toByteArray();
+        this.handleConverter = handleConverter;
     }
 
     public HGHandle current()
     {
-        // TODO Auto-generated method stub
-        return null;
+        return toh(rs.current());
     }
 
     public void close()
     {
-        // TODO Auto-generated method stub
-        
     }
 
     public boolean isOrdered()
     {
-        // TODO Auto-generated method stub
-        return false;
+        return rs.isOrdered();
+    }
+
+    public boolean hasPrev()
+    {
+        return rs.hasPrev();
+    }
+
+    public HGHandle prev()
+    {
+        return toh(rs.prev());
+    }
+
+    public boolean hasNext()
+    {
+        return rs.hasNext();
+    }
+
+    public HGHandle next()
+    {
+        return toh(rs.next());
+    }
+
+    public void remove()
+    {
+        rs.remove();
     }
 
     public org.hypergraphdb.HGRandomAccessResult.GotoResult goTo(HGHandle value,
@@ -80,13 +100,11 @@ public class TypedIncidentResultSet implements HGRandomAccessResult<HGHandle>
 
     public void goAfterLast()
     {
-        // TODO Auto-generated method stub
-        
+        rs.goAfterLast();
     }
 
     public void goBeforeFirst()
     {
-        // TODO Auto-generated method stub
-        
-    }    
+        rs.goBeforeFirst();
+    }        
 }

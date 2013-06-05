@@ -1,10 +1,13 @@
 package org.hypergraphdb.storage.incidence;
 
 import org.hypergraphdb.HGException;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.BAUtils;
+import org.hypergraphdb.storage.BAtoHandle;
 
 public class TypeAndPositionIncidenceAnnotator implements HGIncidentAnnotator
 {
@@ -31,6 +34,14 @@ public class TypeAndPositionIncidenceAnnotator implements HGIncidentAnnotator
         byte [] type = linkType.getPersistent().toByteArray();
         System.arraycopy(type, 0, data, offset, type.length);
         BAUtils.writeInt(targetPosition, data, offset + type.length);
+    }
+    
+    
+    public HGRandomAccessResult<HGHandle> lookup(HyperGraph graph, HGRandomAccessResult<byte[]> rs, Object...annotations)
+    {
+        return new TypedIncidentResultSet(rs, 
+                    BAtoHandle.getInstance(graph.getHandleFactory()), 
+                    (HGHandle)annotations[0]);
     }
     
     /**

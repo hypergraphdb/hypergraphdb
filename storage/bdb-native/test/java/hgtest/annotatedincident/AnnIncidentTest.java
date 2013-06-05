@@ -26,6 +26,7 @@ public class AnnIncidentTest extends HGTestBase
     @BeforeClass
     public void setUp()
     {
+        System.out.println("java.library.path"  + System.getProperty("java.library.path"));
         HGUtils.dropHyperGraphInstance(getGraphLocation());
         
         // open graph

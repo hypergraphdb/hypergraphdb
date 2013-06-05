@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hgdbstorage</artifactId>
@@ -13,14 +13,14 @@
   <name>HyperGraphDB BDB-JE Storage</name>
   <version>1.3-SNAPSHOT</version>  
   <url>http://hypergraphdb.org</url>
-
- <repositories>
+  
+  <repositories>
     <repository>
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
- </repositories>
- 
+  </repositories>
+  
   <dependencies>
 	<dependency>
 	  <groupId>com.sleepycat</groupId>
@@ -33,26 +33,41 @@
 	  <version>1.3-SNAPSHOT</version>
 	</dependency>
 	<dependency>
-		<groupId>org.hypergraphdb</groupId>
-		<artifactId>hgdbtest</artifactId>
-		<version>1.3-SNAPSHOT</version>
-		<scope>test</scope>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdbtest</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <scope>test</scope>
 	</dependency>
   </dependencies>
   
   <build>
     <sourceDirectory>src/java</sourceDirectory>    
     <plugins>
-    	<plugin>
-    		<groupId>org.apache.maven.plugins</groupId>
-    		<artifactId>maven-compiler-plugin</artifactId>
-    		<version>2.0.2</version>
-	        <configuration>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.0.2</version>
+        <configuration>
 	          <source>1.5</source>
 	          <target>1.5</target>
-	        </configuration>    		
-    	</plugin>
-    </plugins>
-    
+        </configuration>    		
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.2</version>
+        <configuration>
+          <forkMode>once</forkMode>
+          <argLine>-Djava.library.path=${project.basedir}/native/linux/x86_64</argLine>        
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+         </execution>
+        </executions>
+      </plugin>      
+    </plugins>    
   </build>
 </project>

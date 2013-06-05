@@ -20,6 +20,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
@@ -356,7 +357,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
     }
     
     @SuppressWarnings("unchecked")
-    private HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSetByKey(byte [] thekey)
+    private <T> HGRandomAccessResult<T> getIncidenceResultSetByKey(byte [] thekey, ByteArrayConverter<T> conv)
     {
         Cursor cursor = null;
         try
@@ -369,14 +370,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
             if (status == OperationStatus.NOTFOUND)
             {
                 cursor.close();
-                return (HGRandomAccessResult<HGPersistentHandle>)HGSearchResult.EMPTY;
+                return (HGRandomAccessResult<T>)HGSearchResult.EMPTY;
             }
             else
             {
-                ByteArrayConverter<HGPersistentHandle> conv = BAtoHandle.getInstance(handleFactory);
-                if (this.incidentAnnotator != null)
-                    conv = new AIBAConv(conv, key.getData().length);
-                return new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), key, conv);
+                return new SingleKeyResultSet<T>(tx.attachCursor(cursor), key, conv);
             }
         }
         catch (Throwable ex)
@@ -388,20 +386,26 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
     
+    @SuppressWarnings("unchecked")
     public HGRandomAccessResult<HGPersistentHandle> getAnnotatedIncidenceResultSet(HGHandle target, Object...annotations)
     {
         if (incidentAnnotator == null)
             throw new HGException("Attempt to query by annotated incident link when no incident annotator was configured.");
         else if (target == null)
             throw new NullPointerException("HGStore.getIncidenceSet called with a null target handle.");
-        return getIncidenceResultSetByKey(incidentAnnotator.annotateLookup(getGraph(), target, annotations));
+        return (HGRandomAccessResult)incidentAnnotator.lookup(graph, 
+                    getIncidenceResultSetByKey(target.getPersistent().toByteArray(), 
+                            BAtoBA.getInstance()), annotations);
     }
     
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
     {
         if (handle == null)
             throw new NullPointerException("HGStore.getIncidenceSet called with a null target handle.");
-        return getIncidenceResultSetByKey(handle.toByteArray());
+        ByteArrayConverter<HGPersistentHandle> conv = BAtoHandle.getInstance(handleFactory);
+        if (this.incidentAnnotator != null)
+            conv = new AIBAConv(conv, handleFactory.anyHandle().toByteArray().length);
+        return getIncidenceResultSetByKey(handle.toByteArray(), conv);
     }
 
     public long getIncidenceSetCardinality(HGPersistentHandle handle)

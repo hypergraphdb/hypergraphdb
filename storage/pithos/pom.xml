@@ -15,13 +15,6 @@
   <version>1.2</version>  
   <url>http://hypergraphdb.org</url>
   
-  <repositories>
-    <repository>
-      <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
-    </repository>
-  </repositories>
-  
   <dependencies>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
