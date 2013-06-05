@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.MemoryWarningSystem;
 
 /**
@@ -93,6 +94,8 @@ public class HGEnvironment
 		HyperGraph hg = dbs.get(location);
 		if (hg == null)
 		{
+//		    System.out.println("No HG at "+location);
+//		    HGUtils.logCallStack(System.out);
 			hg = new HyperGraph();
 			hg.setConfig(getConfiguration(location));
             dbs.put(location, hg);			
@@ -100,6 +103,8 @@ public class HGEnvironment
 		}
 		else if (!hg.isOpen())
 		{
+//		    System.out.println("HG not opened at "+ location);
+//		    HGUtils.logCallStack(System.out);
 			if (configs.containsKey(location))
 				hg.setConfig(configs.get(location));
 			hg.open(location);

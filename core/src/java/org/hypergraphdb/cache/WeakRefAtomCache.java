@@ -75,10 +75,28 @@ public class WeakRefAtomCache implements HGAtomCache
 	
 	private ReadWriteLock gcLock = new ReentrantReadWriteLock();
 	private ReferenceQueue<Object> refQueue = new ReferenceQueue<Object>();
-	private PhantomCleanup cleanupThread = new PhantomCleanup();
+	private PhantomCleanup cleanupThread = null;
 	private HGTransactionConfig cleanupTxConfig = new HGTransactionConfig();
 	private long phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
 	private boolean closing = false;
+	
+	private void reset()
+	{
+	    graph = null;
+	    incidenceCache = null;
+	    liveHandles = null;
+	    liveHandlesTx = null;
+	    atoms = null;
+	    atomsTx = null;
+	    frozenAtoms = null;
+	    coldAtoms = new ColdAtoms();
+	    gcLock = new ReentrantReadWriteLock();
+	    refQueue = new ReferenceQueue<Object>();
+	    cleanupThread = null;
+	    cleanupTxConfig = new HGTransactionConfig();
+	    phantomQueuePollInterval = DEFAULT_PHANTOM_QUEUE_POLL_INTERVAL;
+	    closing = false;
+	}
 	
 	//
 	// This handle class is used to read atoms during closing of the cache. Because
@@ -209,6 +227,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	public void setHyperGraph(HyperGraph graph) 
 	{
         this.graph = graph;
+        this.closing = false;
         if (graph.getConfig().isTransactional())
         {
             atoms = atomsTx = new TxCacheMap<Object, HGLiveHandle>(
@@ -228,6 +247,7 @@ public class WeakRefAtomCache implements HGAtomCache
             liveHandles = new HashCacheMap<HGPersistentHandle, WeakHandle>();
             frozenAtoms = new HashCacheMap<HGLiveHandle, Object>();
         }
+        cleanupThread = new PhantomCleanup();
         cleanupThread.setPriority(Thread.MAX_PRIORITY);
         cleanupThread.setDaemon(true);      
         cleanupThread.start();

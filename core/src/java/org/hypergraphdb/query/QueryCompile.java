@@ -69,9 +69,10 @@ public class QueryCompile
     }
         
     @SuppressWarnings("unchecked")
-    public static <ResultType> ConditionToQuery<ResultType> translator(Class<? extends HGQueryCondition> conditionType)
+    public static <ResultType> ConditionToQuery<ResultType> translator(HyperGraph graph, Class<? extends HGQueryCondition> conditionType)
     {
-        return (ConditionToQuery<ResultType>)translatorMap.get().resolve(conditionType);
+        ConditionToQuery<ResultType> trans = graph.getConfig().getQueryConfiguration().compiler(conditionType);        
+        return trans != null ? trans : (ConditionToQuery<ResultType>)translatorMap.get().resolve(conditionType);
     }
     
     public static HGQueryCondition transform(HyperGraph graph, HGQueryCondition condition)
@@ -83,9 +84,7 @@ public class QueryCompile
     
     public static <T> HGQuery<T> translate(HyperGraph graph, HGQueryCondition condition)
     {
-        ConditionToQuery<T> trans = graph.getConfig().getQueryConfiguration().compiler(condition.getClass());        
-        if (trans == null)
-            trans = translator(condition.getClass());
+        ConditionToQuery<T> trans = translator(graph, condition.getClass());
         if (trans == null)
             throw new HGException("The query condition '" + condition + 
                     "' could not be translated to an executable query either because it is not specific enough. " +
@@ -104,7 +103,7 @@ public class QueryCompile
     
     public static QueryMetaData toMetaData(HyperGraph graph, HGQueryCondition condition)
     {
-        ConditionToQuery<?> trans = translator(condition.getClass());
+        ConditionToQuery<?> trans = translator(graph, condition.getClass());
         if (trans == null)
             throw new HGException("The query condition '" + condition + 
                     "' could not be translated to an executable query either because it is not specific enough. " +

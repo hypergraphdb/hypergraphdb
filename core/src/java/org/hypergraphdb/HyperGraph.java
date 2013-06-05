@@ -419,6 +419,7 @@ public /*final*/ class HyperGraph implements HyperNode
         	System.err.println("Problem during HyperGraph close, stack trace of exception follows:");
         	t.printStackTrace(System.err);
         }
+//        System.out.println("HGDB at " + this.getLocation() + " closed.");
         } // synchronize closing
     }
     
@@ -1284,7 +1285,8 @@ public /*final*/ class HyperGraph implements HyperNode
     				   final HGHandle typeHandle, 
     				   final HGHandle valueHandle, 
     				   final HGLink   outgoingSet,
-    				   final Object instance)
+    				   final Object instance,
+    				   final int flags)
     {
     	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
@@ -1299,9 +1301,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	    	store.store(atomHandle.getPersistent(), layout);
 	    	indexByType.addEntry(layout[0], atomHandle.getPersistent());
 	    	indexByValue.addEntry(layout[1], atomHandle.getPersistent());
-	    	
-	    	// Need to construct the value and add it to atom indices.	    	
-	    	HGAtomType type = get(typeHandle);
+            HyperGraph.this.atomAdded(atomHandle.getPersistent(), instance, flags);	    		    	
 	    	ReadyRef<HGHandle[]> linkRef = null;
 	    	if (outgoingSet != null)
 	    	{
@@ -1310,6 +1310,7 @@ public /*final*/ class HyperGraph implements HyperNode
 		    	updateTargetsIncidenceSets(atomHandle.getPersistent(), outgoingSet);
 		    	linkRef = new ReadyRef<HGHandle[]>(targets);
     		}
+            HGAtomType type = get(typeHandle);	    	
 	        idx_manager.maybeIndex(layout[0], 
 	        					   type, 
 	        					   atomHandle.getPersistent(),
@@ -1377,10 +1378,9 @@ public /*final*/ class HyperGraph implements HyperNode
                       payload = ((HGValueLink)instance).getValue();
               }
               HGPersistentHandle valueHandle = TypeUtils.storeValue(HyperGraph.this, payload, type);
-              define(atomHandle, typeHandle, valueHandle, link, instance);
-              HyperGraph.this.atomAdded(atomHandle.getPersistent(), instance, flags);
               if (instance instanceof HGTypeHolder)
-              	((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
+                  ((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
+              define(atomHandle, typeHandle, valueHandle, link, instance, flags);
               return null;
           }});        
     }

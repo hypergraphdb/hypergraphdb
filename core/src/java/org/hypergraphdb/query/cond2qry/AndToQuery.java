@@ -77,7 +77,7 @@ public class AndToQuery<ResultType> implements ConditionToQuery<ResultType>
 		x.predicateCost = 0;
 		for (HGQueryCondition sub : ((And)condition))
 		{
-			ConditionToQuery<?> transformer = QueryCompile.translator(sub.getClass());
+			ConditionToQuery<?> transformer = QueryCompile.translator(graph, sub.getClass());
 			if (transformer == null)
 				if (! (sub instanceof HGAtomPredicate))
 					throw new HGException("Condition " + sub + " is not query translatable, nor a predicate.");
@@ -125,7 +125,7 @@ public class AndToQuery<ResultType> implements ConditionToQuery<ResultType>
 		
 		for (HGQueryCondition sub : and)
 		{
-			ConditionToQuery<ResultType> transformer = QueryCompile.translator(sub.getClass());
+			ConditionToQuery<ResultType> transformer = QueryCompile.translator(graph, sub.getClass());
 			if (transformer == null)
 			{
 			    QueryMetaData qmd = QueryMetaData.MISTERY.clone(sub);

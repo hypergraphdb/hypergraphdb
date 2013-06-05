@@ -54,7 +54,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	private HGQueryCondition condition;
 	private boolean hasVarContext = false;
 	
-	static Pair<HGHandle, HGIndex> findIndex(HyperGraph graph, HGKeyIndexer indexer)
+	static <Key> Pair<HGHandle, HGIndex<Key, HGPersistentHandle>> findIndex(HyperGraph graph, HGKeyIndexer<Key> indexer)
 	{
 	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
 	                    new DefaultALGenerator(graph, 
@@ -66,9 +66,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	    for (HGHandle type = indexer.getType(); type != null; )
 	    {
 	        indexer.setType(type);
-	        HGIndex<?, ?> idx = graph.getIndexManager().getIndex(indexer);
+	        HGIndex<Key, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
 	        if (idx != null)
-	            return new Pair<HGHandle, HGIndex>(type, idx);
+	            return new Pair<HGHandle, HGIndex<Key, HGPersistentHandle>>(type, idx);
 	        else
 	            type = typeWalk.hasNext() ? typeWalk.next().getSecond() : null;
 	    }	    
@@ -306,7 +306,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 				}
 				else
 				{
-					ConditionToQuery<?> transform = QueryCompile.translator(c.getClass());
+					ConditionToQuery<?> transform = QueryCompile.translator(graph, c.getClass());
 					if (transform != null)
 					{
 						QueryMetaData qmd = transform.getMetaData(graph, c);
@@ -375,7 +375,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			if (byTypedValue != null && 
 			    !hg.isVar(byTypedValue.getTypeReference()))
 			{
-			    Pair<HGHandle, HGIndex> p = findIndex(graph, new DirectValueIndexer<Object>(typeHandle));
+			    Pair<HGHandle, HGIndex<Object,HGPersistentHandle>> p = findIndex(graph, new DirectValueIndexer<Object>(typeHandle));
 			    if (p != null)
 			    {
 			        out.remove(byTypedValue);
@@ -399,7 +399,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						return Nothing.Instance;
 					else
 					{
-						Pair<HGHandle, HGIndex> p = findIndex(graph, new ByPartIndexer(typeHandle, 
+						Pair<HGHandle, HGIndex<?,?>> p = findIndex(graph, new ByPartIndexer(typeHandle, 
 														pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
 						if (p != null)
 						{
@@ -440,7 +440,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						Ref<HGHandle> targetHandle = c.targets()[ti];
 						if (hg.isVar(targetHandle) || targetHandle.equals(hg.constant(graph.getHandleFactory().anyHandle())))
 							continue;
-						Pair<HGHandle, HGIndex> p = findIndex(graph, new ByTargetIndexer(typeHandle, ti));
+						Pair<HGHandle, HGIndex<HGPersistentHandle,HGPersistentHandle>> p = 
+						        findIndex(graph, new ByTargetIndexer(typeHandle, ti));
 						if (p != null)
 						{
 						    if (typeHandle.equals(p.getFirst()))
@@ -561,7 +562,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			TypedValueCondition tc = (TypedValueCondition)cond;
 			if (!hg.isVar(tc.getTypeReference()))
 			{
-                Pair<HGHandle, HGIndex> p = findIndex(graph, new DirectValueIndexer<Object>(tc.getTypeHandle()));
+                Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = findIndex(graph, new DirectValueIndexer<Object>(tc.getTypeHandle()));
                 if (p != null)
                     cond = new IndexCondition(p.getSecond(), tc.getValueReference(), tc.getOperator());
                 else if (((TypedValueCondition)cond).getOperator() == ComparisonOperator.EQ)

@@ -447,6 +447,7 @@ public class HGUtils
      */
     public static void dropHyperGraphInstance(String location)
     {
+//        System.out.println("DROP HGDB at "+ location);
         if (HGEnvironment.isOpen(location))
         {
             HGEnvironment.get(location).close();

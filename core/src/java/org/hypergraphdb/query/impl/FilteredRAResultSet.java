@@ -5,7 +5,12 @@ import org.hypergraphdb.util.Mapping;
 
 public class FilteredRAResultSet<T> extends FilteredResultSet<T> implements HGRandomAccessResult<T>
 {
-    private HGRandomAccessResult<T> rs;
+    protected HGRandomAccessResult<T> rs;
+    
+    protected FilteredRAResultSet()
+    {
+        
+    }
     
     public FilteredRAResultSet(HGRandomAccessResult<T> searchResult,
                                Mapping<T, Boolean> predicate, 
