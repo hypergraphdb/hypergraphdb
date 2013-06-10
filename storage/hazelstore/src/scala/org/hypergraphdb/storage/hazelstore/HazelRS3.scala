@@ -88,9 +88,9 @@ class HazelRS3[T](col: IndexedSeq[Array[Byte]], sorted:Boolean = true)(implicit 
     converter.fromByteArray(a,0,a.length)
   }
 
-  def isOrdered = true
-
+  def isOrdered = sorted
 }
+
 
 
 object HazelRS3{

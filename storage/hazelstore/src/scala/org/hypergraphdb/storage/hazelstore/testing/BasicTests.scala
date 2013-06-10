@@ -33,19 +33,19 @@ object BasicTests {
    })
 
    //   T E S T S    G O    H E R E
+
    println("\n\nG R A P H T E S T\n\n")
    val graphResults = test((c:HazelStoreConfig) => new GraphTest(  getGraph(getHGConfig(c)),bootstrap = true).run)
 
    println("\n\nI N D E X\n\n")
    val indexResults = test((c:HazelStoreConfig) => new IndexTest(getIndex(getStore(getHGConfig(c))),c.async).run)
 
-   println("\n\nS T O R A G E   T E S T\n\n")
-   val storeResults = test((c:HazelStoreConfig) => new StorageTest(getStore(getHGConfig(c)),c.async).run)
-
-
    println("\n\nB I D I R E C T I O N A L   I N D E X\n\n")
    val bidirAsIndex = test((c:HazelStoreConfig) => new IndexTest(getBidirectionalIndex(getStore(getHGConfig(c))).asInstanceOf[HGSortIndex[String, String]],c.async).run)
    val bidirResults = test((c:HazelStoreConfig) => new BiDirTest2(getBidirectionalIndex(getStore(getHGConfig(c))),c.async).run)
+
+   println("\n\nS T O R A G E   T E S T\n\n")
+   val storeResults = test((c:HazelStoreConfig) => new StorageTest(getStore(getHGConfig(c)),c.async).run)
 
 
    // E N D   T E S T   D E C L A R A T I O N

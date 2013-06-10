@@ -11,12 +11,13 @@ import org.hypergraphdb.`type`.javaprimitive.StringType
 import scala.annotation.{tailrec, elidable}
 import scala.annotation.elidable._
 import com.hazelcast.config.Config
+import org.hypergraphdb.storage.mapStore.{HGIncidenceDB, HGLinkDB, HGDataDB, MapStoreImpl}
 
 
 object TestCommons {
   val sbaconvert = new BAtoString
   val hanGen = new UUIDHandleFactory
-  val syncTime = 2000
+  val syncTime = 20
   val baToString = new BAtoString
   type StringListMap = Map[String, List[String]]
   val dataSize = 30
@@ -144,6 +145,16 @@ object TestCommons {
     //config.setSkipMaintenance(true)
     //config.getStoreImplementation.getConfiguration.asInstanceOf[BJEConfig].getEnvironmentConfig.setCacheSize(1024*1024*500)
     config.setStoreImplementation(new Hazelstore(hazelConfig))
+
+/*    val ms:HGStoreImplementation = new MapStoreImpl with HGDataDB with HGLinkDB with HGIncidenceDB
+    {
+      val datadb: java.util.Map[DKey, DVal] = genMap.getMap[DKey, DVal]("datadb").get
+      val linkdb: java.util.Map[LKey, LVal] = genMap.getMap[LKey,LVal]("linkdb").get
+      val incidenceDB: java.util.Map[IKey, IVal] = genMap.getMap[IKey, IVal]("incidenceDB").get//.asInstanceOf[util.Map[IKey, IVal]]
+    val handleSize = 16
+   }
+    config.setStoreImplementation(ms)*/
+    config.setStoreImplementation(new Hazelstore(hazelConfig))
     config
   }
 
@@ -155,7 +166,8 @@ object TestCommons {
 
   def getBidirectionalIndex(store:HGStore):HGBidirectionalIndex[String, String] = {
     val baToString: ByteArrayConverter[String]= new StringType
-    store.getBidirectionalIndex(random.nextString(10), baToString, baToString, BAComp, true)
+    val a = store.getBidirectionalIndex(random.nextString(10), baToString, baToString, BAComp, true)
+    a
   }
 
   def getGraph(config:HGConfiguration):HyperGraph = {

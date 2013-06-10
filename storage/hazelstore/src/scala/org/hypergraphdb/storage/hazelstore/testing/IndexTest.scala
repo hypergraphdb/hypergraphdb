@@ -25,7 +25,7 @@ class IndexTest(val index:HGSortIndex[String,String], async:Boolean)(implicit te
     // TESTING scanValues()
     //val scanVals = repeatUntil1(() => index.scanValues)((x:HGRandomAccessResult[String]) => valSet.diff(x.asInstanceOf[HazelRS3[_].count == valSet.size.toLong).size == 0)
     val scanVals = repeatUntil1(() => index.scanValues)((x:HGRandomAccessResult[String]) => x.asInstanceOf[CountMe].count == valSet.size.toLong)
-    assert(scanVals._3)
+    assert(repeatUntil1(() => index.scanValues)((x:HGRandomAccessResult[String]) => x.asInstanceOf[CountMe].count == valSet.size.toLong)._3)
     assert(scanVals._1.size == valSet.size)
 
     // TESTING  scanKeys()
@@ -56,8 +56,8 @@ class IndexTest(val index:HGSortIndex[String,String], async:Boolean)(implicit te
     // TESTING find(key: KeyType)
     val allValSet = dataMap.map{case (key,stringList) => (key,stringList.toSet)}
     assert(allValSet.forall{ case (key,stringSet) => {
-          val a = index.find(key).asInstanceOf[HazelRS3[String]]
-          assert(a.count == stringSet.size.toLong)
+          val a = index.find(key)//.asInstanceOf[HazelRS3[String]]
+          assert(a.asInstanceOf[CountMe].count == stringSet.size.toLong)
           a.forall(s => stringSet.contains(s))
     }})
 
@@ -71,7 +71,7 @@ class IndexTest(val index:HGSortIndex[String,String], async:Boolean)(implicit te
     //    def findLTE(key: KeyType): HGSearchResult[ValueType]
     //    def findGTE(key: KeyType): HGSearchResult[ValueType]
 
-    val bacomp =  if(index.isInstanceOf[HazelIndex[_,_]]) index.asInstanceOf[HazelIndex[_,_]].comparator else index.asInstanceOf[HazelBidirecIndex[_,_]].comparator
+    //val bacomp =  if(index.isInstanceOf[HazelIndex[_,_]]) index.asInstanceOf[HazelIndex[_,_]].comparator else index.asInstanceOf[HazelBidirecIndex[_,_]].comparator
 
     val stringOrder = new Ordering[String]{
      def compare(x: String, y: String): Int = baComp.compare(x.getBytes,y.getBytes)

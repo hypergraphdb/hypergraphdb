@@ -14,7 +14,7 @@ import org.hypergraphdb.storage.hazelstore.StoreCallables.{RemoveIncidenceLinkOp
 import org.hypergraphdb.util.HGLogger
 
 
-class Hazelstore (hazelstoreConfig: HazelStoreConfig = new HazelStoreConfig()) extends HGStoreImplementation
+class Hazelstore (hazelstoreConfig: HazelStoreConfig) extends HGStoreImplementation
 {
   def this() = this(new HazelStoreConfig())
 

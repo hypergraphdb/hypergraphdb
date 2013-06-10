@@ -1,6 +1,7 @@
 package org.hypergraphdb.storage.hazelstore
 
 import java.util
+import java.util.Comparator
 
 
 class BAW(ba:Array[Byte]) extends  Serializable {
@@ -16,3 +17,7 @@ object BAW{
 }
 
 object EmptyBAW extends BAW(Array.empty[Byte])
+
+object BAWComparator extends Comparator[BAW]{
+  def compare(o1: BAW, o2: BAW): Int = BAComp.compare(o1.data,o2.data)
+}
