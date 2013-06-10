@@ -65,7 +65,7 @@ public class Queries extends HGTestBase
         testAtomValueCondition();
         testSubsumedCondition();
         testSubsumesCondition();
-//        testMapCondition();             // BJE fails here
+        testMapCondition();             // BJE fails here
         testTypePlusCondition();
         testTypedValueCondition();
         testFilteredLinkTarget();
