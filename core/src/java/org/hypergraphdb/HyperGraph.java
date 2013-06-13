@@ -2059,7 +2059,7 @@ public /*final*/ class HyperGraph implements HyperNode
         if (oldValue == null || oldValue == atom)
             oldValue = rawMake(layout, oldType, pHandle); //rawMake will just construct the instance, without adding to cache
                 
-        idx_manager.maybeUnindex(getPersistentHandle(typeHandle), type, pHandle, oldValue);
+        idx_manager.maybeUnindex(oldTypeHandle.getPersistent(), oldType, pHandle, oldValue);
         
         if (oldValue instanceof HGValueLink)
         	oldValue = ((HGValueLink)oldValue).getValue();
