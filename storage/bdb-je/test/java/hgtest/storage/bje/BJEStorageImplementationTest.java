@@ -159,11 +159,11 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void getDatabasePathAfterShutdown() throws Exception
 	{
+		startup(2);
+		storage.shutdown();
+		final Environment environment = storage.getBerkleyEnvironment();
 		try
 		{
-			startup(2);
-			storage.shutdown();
-			final Environment environment = storage.getBerkleyEnvironment();
 			// environment is not open, expect exception
 			environment.getHome().getPath();
 		}
@@ -180,24 +180,12 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	}
 
 	@Test
-	public void storeData() throws Exception
+	public void storeAndReadDataUsingHandle() throws Exception
 	{
-		final byte[] expected = new byte[] { 1, 2, 3 };
+		final byte[] expected = new byte[] { 4, 5, 6 };
 		startup(2, 2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.store(handle, new byte[] { 1, 2, 3 });
-		final byte[] stored = storage.getData(handle);
-		assertEquals(stored, expected);
-		shutdown();
-	}
-
-	@Test
-	public void readDataUsingHandle() throws Exception
-	{
-		final byte[] expected = new byte[] { 1, 2, 3 };
-		startup(2, 2);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.store(handle, new byte[] { 1, 2, 3 });
+		storage.store(handle, new byte[] { 4, 5, 6 });
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
 		shutdown();
