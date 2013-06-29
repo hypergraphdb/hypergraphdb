@@ -475,70 +475,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 			}
 		});		
 		instance.put(And.class, new AndToQuery());
-		instance.put(Or.class, new ConditionToQuery()
-		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
-			{
-				Or or = (Or)c;
-				if (or.size() == 0)
-					return HGQuery.NOP();
-				else if (or.size() == 1)
-					return QueryCompile.translate(hg, or.get(0));
-				
-				// TODO - we need to do better, even for this sloppy algorithm, we can
-				// can try to factor out common conditions in conjunctions, make sure 
-				// all conjunction end up in a treatable form (ordered or randomAccess) etc.
-				
-				HGQuery q1 = QueryCompile.translate(hg, or.get(0));
-				if (q1 == null)
-					throw new HGException("Untranslatable condition " + or.get(0));
-				HGQuery q2 = QueryCompile.translate(hg, or.get(1));
-				if (q2 == null)
-					throw new HGException("Untranslatable condition " + or.get(1));
-				UnionQuery result = new UnionQuery(q1, q2);
-				for (int i = 2; i < or.size(); i++)
-				{
-					q1 = QueryCompile.translate(hg, or.get(i));
-					if (q1 == null)
-						throw new HGException("Untranslatable condition " + or.get(i));					
-					result = new UnionQuery(result, q1);
-				}
-				return result;
-			}
-			public QueryMetaData getMetaData(HyperGraph hg, HGQueryCondition c)
-			{
-				QueryMetaData x = QueryMetaData.ORDERED.clone(c);
-				boolean ispredicate = true;
-				x.predicateCost = 0;
-				for (HGQueryCondition sub : ((Or)c))
-				{
-					if (! (sub instanceof HGAtomPredicate))
-						ispredicate = false;					
-					ConditionToQuery transformer = instance.get(sub.getClass());
-					if (transformer == null)
-					{
-						if (! (sub instanceof HGAtomPredicate))
-							throw new HGException("Condition " + sub + " is not query translatable, nor a predicate.");
-						else 
-						{
-							x.ordered = false;
-							x.randomAccess = false;
-							continue;
-						}
-					}
-					QueryMetaData subx = transformer.getMetaData(hg, sub);
-					ispredicate = ispredicate && subx.predicateCost > -1;
-					x.predicateCost += subx.predicateCost;
-					x.ordered = x.ordered && subx.ordered;
-					x.randomAccess = x.randomAccess && subx.randomAccess;
-				}
-				if (!ispredicate)
-					x.predicateCost = -1;
-				else
-					x.predicateCost  /= ((Or)c).size();
-				return x;
-			}
-		});
+		instance.put(Or.class, new OrToQuery());
 		instance.put(AtomPartCondition.class, new ConditionToQuery()
 		{
 			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
