@@ -4,6 +4,7 @@ import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
@@ -214,6 +215,45 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	}
 
 	@Test
+	public void removeDataUsingNullHandle() throws Exception
+	{
+		startup(2);
+		try
+		{
+			storage.removeData(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), NullPointerException.class);
+			assertEquals(ex.getMessage(),
+					"HGStore.remove called with a null handle.");
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
+
+	@Test
+	public void checkExistenceOfStoredDataUsingNullHandle() throws Exception
+	{
+		startup(2);
+		try
+		{
+			storage.containsData(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), NullPointerException.class);
+			assertEquals(ex.getMessage(), null);
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
+
+	@Test
 	public void checkExistenceOfStoredData() throws Exception
 	{
 		startup(2, 2);
@@ -286,6 +326,90 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		assertEquals(cardinality, 2);
 		shutdown();
 	}
+
+	@Test
+	public void removeIncidenceSetUsingNullHandle() throws Exception
+	{
+		startup(2);
+		try
+		{
+			storage.removeIncidenceSet(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			assertEquals(ex.getMessage(),
+					"Failed to remove incidence set of handle null: java.lang.NullPointerException");
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
+
+	@Test
+	public void removeIncidenceSetWhichContainsOneLink() throws Exception
+	{
+		startup(2, 3);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		storage.addIncidenceLink(first, second);
+		storage.removeIncidenceSet(first);
+		final long afterRemoving = storage.getIncidenceSetCardinality(first);
+		assertEquals(afterRemoving, 0);
+		shutdown();
+	}
+
+	@Test
+	public void removeIncidenceSetWhichContainsTwoLinks() throws Exception
+	{
+		startup(2, 4);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		final HGPersistentHandle third = new UUIDPersistentHandle();
+		storage.addIncidenceLink(first, second);
+		storage.addIncidenceLink(first, third);
+		storage.removeIncidenceSet(first);
+		final long afterRemoving = storage.getIncidenceSetCardinality(first);
+		assertEquals(afterRemoving, 0);
+		shutdown();
+	}
+
+	@Test
+	public void removeIncidenceSetForLinkWhichIsNotStored() throws Exception
+	{
+		startup(2, 2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.removeIncidenceSet(handle);
+		final long afterRemoving = storage.getIncidenceSetCardinality(handle);
+		assertEquals(afterRemoving, 0);
+		shutdown();
+	}
+
+	@Test
+	public void removeIncidenceSetForLinkWhichHasNotIncidenceLinks()
+			throws Exception
+	{
+		startup(2, 3);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.store(handle, new byte[] {});
+		storage.removeIncidenceSet(handle);
+		final long afterRemoving = storage.getIncidenceSetCardinality(handle);
+		assertEquals(afterRemoving, 0);
+		shutdown();
+	}
+
+	// @Test
+	// public void removeOneIncidenceLink() throws Exception
+	// {
+	// startup(2, 10);
+	// final HGPersistentHandle first = new UUIDPersistentHandle();
+	// final HGPersistentHandle second = new UUIDPersistentHandle();
+	// storage.addIncidenceLink(first, second);
+	// storage.removeIncidenceLink(first, second);
+	// assertEquals(storage.getIncidenceSetCardinality(first), 0);
+	// shutdown();
+	// }
 
 	@Test
 	public void getLinksUsingNullHandle() throws Exception
@@ -404,6 +528,29 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		{
 			shutdown();
 		}
+	}
+
+	@Test
+	public void removeLinkWhichIsStored() throws Exception
+	{
+		startup(2, 3);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		storage.store(first, new HGPersistentHandle[] { second });
+		storage.removeLink(first);
+		assertFalse(storage.containsLink(first));
+		shutdown();
+
+	}
+
+	@Test
+	public void removeLinkWhichIsNotStored() throws Exception
+	{
+		startup(2, 2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.removeLink(handle);
+		assertFalse(storage.containsLink(handle));
+		shutdown();
 	}
 
 	// public static void main(String args[])
