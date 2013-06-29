@@ -30,6 +30,7 @@ import hgtest.beans.Person;
 import hgtest.indexing.ManyToManyIndexerTests;
 import hgtest.indexing.PropertyIndexingTests;
 import hgtest.links.TestLinkage;
+import hgtest.query.BigTypePlus;
 import hgtest.query.IndexEnumTypeTest;
 import hgtest.query.Queries;
 import hgtest.query.QueryCompilation;
@@ -171,13 +172,21 @@ public class DebugTest
         public String toString() { return "ID[" + id + "]"; }
         	
     }
-
+    
+    /*
+     * 
+     * To run with native and incident annotations, add the following args.
+     * -Djava.library.path=/home/borislav/hypergraphdb/testcore/target/lib -Dorg.hypergraphdb.storage.HGStoreImplementation=org.hypergraphdb.storage.bdb.BDBStorageImplementation -Dhgtest.GraphFactory=hgtest.annotatedincident.AnnotatedIncidentGraphFactory
+     * 
+     */
     public static void main(String[] argv)
     {
         //anatest();
         // TestQuery.go("/tmp/alain");
-        TestLinkage test = new TestLinkage();
-        test.setUp();
+        BigTypePlus test = new BigTypePlus();
+        test.openGraph();
+//        test.getGraph().close();
+//        test.setUp();
         
 //        HGUtils.dropHyperGraphInstance(T.getTmpDirectory() + "/" + "emptyhg");
 //        HyperGraph graph = HGEnvironment.get(T.getTmpDirectory() + "/" + "emptyhg");
@@ -186,7 +195,8 @@ public class DebugTest
         try
         {
             //QueryCompile.parallel();
-            test.testDefineValueLink();
+            System.out.println("Start test");
+            test.testManySubtypes();
 //            HGHandle h1 = graph.add("OR-TEST-1");
 //            HGHandle h2 = graph.add("OR-TEST-2");
 //            while (true)
