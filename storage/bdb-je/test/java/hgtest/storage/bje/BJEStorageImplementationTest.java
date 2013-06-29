@@ -100,18 +100,17 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 				testDatabaseLocation);
 	}
 
-	private void startup(final int configurationCalls) throws Exception
+	private void startup() throws Exception
 	{
-		mockConfiguration(configurationCalls);
+		mockConfiguration(2);
 		mockStore();
 		EasyMock.replay(store, configuration);
 		storage.startup(store, configuration);
 	}
 
-	private void startup(final int configurationCalls,
-			final int transactionManagerCalls) throws Exception
+	private void startup(final int transactionManagerCalls) throws Exception
 	{
-		mockConfiguration(configurationCalls);
+		mockConfiguration(2);
 		mockStore();
 		// mock transaction manager
 		final HGTransactionManager transactionManager = new HGTransactionManager(
@@ -130,7 +129,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void environmentIsTransactional() throws Exception
 	{
-		startup(2);
+		startup();
 		final boolean isTransactional = storage.getConfiguration()
 				.getDatabaseConfig().getTransactional();
 		assertTrue(isTransactional);
@@ -140,7 +139,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void storageIsNotReadOnly() throws Exception
 	{
-		startup(2);
+		startup();
 		final boolean isReadOnly = storage.getConfiguration()
 				.getDatabaseConfig().getReadOnly();
 		assertFalse(isReadOnly);
@@ -150,7 +149,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void databaseNameAsSpecifiedInStore() throws Exception
 	{
-		startup(2);
+		startup();
 		final String databaseLocation = storage.getBerkleyEnvironment()
 				.getHome().getPath();
 		assertEquals(databaseLocation, testDatabaseLocation);
@@ -160,7 +159,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void getDatabasePathAfterShutdown() throws Exception
 	{
-		startup(2);
+		startup();
 		storage.shutdown();
 		final Environment environment = storage.getBerkleyEnvironment();
 		try
@@ -184,7 +183,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	public void storeAndReadDataUsingHandle() throws Exception
 	{
 		final byte[] expected = new byte[] { 4, 5, 6 };
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 4, 5, 6 });
 		final byte[] stored = storage.getData(handle);
@@ -195,7 +194,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void readDataWhichIsNotStoredUsingGivenHandle() throws Exception
 	{
-		startup(2, 1);
+		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] retrievedData = storage.getData(handle);
 		assertNull(retrievedData);
@@ -205,7 +204,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeDataUsingHandle() throws Exception
 	{
-		startup(2, 3);
+		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 1, 2, 3 });
 		storage.removeData(handle);
@@ -217,7 +216,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeDataUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.removeData(null);
@@ -237,7 +236,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfStoredDataUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.containsData(null);
@@ -256,7 +255,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfStoredData() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 4, 5, 6 });
 		assertTrue(storage.containsData(handle));
@@ -266,7 +265,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfNonStoredData() throws Exception
 	{
-		startup(2, 1);
+		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		assertFalse(storage.containsData(handle));
 		shutdown();
@@ -275,7 +274,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void getIncidenceSetCardinalityUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.getIncidenceSetCardinality(null);
@@ -295,7 +294,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void noIncidenceLinksForNonStoredHandle() throws Exception
 	{
-		startup(2, 1);
+		startup(1);
 		final long cardinality = storage
 				.getIncidenceSetCardinality(new UUIDPersistentHandle());
 		assertEquals(cardinality, 0);
@@ -305,7 +304,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void createOneIncidenceLink() throws Exception
 	{
-		startup(2, 3);
+		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 4, 5, 6 });
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
@@ -317,7 +316,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void createTwoIncidenceLinks() throws Exception
 	{
-		startup(2, 4);
+		startup(4);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
@@ -330,7 +329,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeIncidenceSetUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.removeIncidenceSet(null);
@@ -350,7 +349,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeIncidenceSetWhichContainsOneLink() throws Exception
 	{
-		startup(2, 3);
+		startup(3);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.addIncidenceLink(first, second);
@@ -363,7 +362,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeIncidenceSetWhichContainsTwoLinks() throws Exception
 	{
-		startup(2, 4);
+		startup(4);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle third = new UUIDPersistentHandle();
@@ -378,7 +377,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeIncidenceSetForLinkWhichIsNotStored() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.removeIncidenceSet(handle);
 		final long afterRemoving = storage.getIncidenceSetCardinality(handle);
@@ -390,7 +389,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	public void removeIncidenceSetForLinkWhichHasNotIncidenceLinks()
 			throws Exception
 	{
-		startup(2, 3);
+		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
 		storage.removeIncidenceSet(handle);
@@ -414,7 +413,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void getLinksUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.getLink(null);
@@ -434,7 +433,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void getLinkWhichIsNotStored() throws Exception
 	{
-		startup(2, 1);
+		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] storedLinks = storage.getLink(handle);
 		assertNull(storedLinks);
@@ -444,7 +443,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void storeOneLink() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
@@ -457,7 +456,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void storeTwoLinks() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] {
 				new UUIDPersistentHandle(), new UUIDPersistentHandle() };
@@ -470,7 +469,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfStoredLinkFromFirstToSecond() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
@@ -482,7 +481,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfStoredLinkFromSecondToFirst() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
@@ -494,7 +493,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfHandleWhichIsLinkedToItself() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new HGPersistentHandle[] { handle });
 		assertTrue(storage.containsLink(handle));
@@ -504,7 +503,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void checkExistenceOfNonStoredLink() throws Exception
 	{
-		startup(2, 1);
+		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		assertFalse(storage.containsLink(handle));
 		shutdown();
@@ -513,7 +512,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeLinkUsingNullHandle() throws Exception
 	{
-		startup(2);
+		startup();
 		try
 		{
 			storage.removeLink(null);
@@ -533,20 +532,19 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	@Test
 	public void removeLinkWhichIsStored() throws Exception
 	{
-		startup(2, 3);
+		startup(3);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.store(first, new HGPersistentHandle[] { second });
 		storage.removeLink(first);
 		assertFalse(storage.containsLink(first));
 		shutdown();
-
 	}
 
 	@Test
 	public void removeLinkWhichIsNotStored() throws Exception
 	{
-		startup(2, 2);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.removeLink(handle);
 		assertFalse(storage.containsLink(handle));
