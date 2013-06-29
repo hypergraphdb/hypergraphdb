@@ -7,7 +7,6 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.handle.IntPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import com.sleepycat.je.Environment;
@@ -193,7 +192,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(2);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 1, 2, 3 });
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
@@ -210,7 +209,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(2);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 1, 2, 3 });
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
@@ -226,7 +225,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(1);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] retrievedData = storage.getData(handle);
 		assertNull(retrievedData);
 		storage.shutdown();
@@ -241,7 +240,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(3);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 1, 2, 3 });
 		storage.removeData(handle);
 		final byte[] retrievedData = storage.getData(handle);
@@ -258,7 +257,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(2);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 4, 5, 6 });
 		assertTrue(storage.containsData(handle));
 		storage.shutdown();
@@ -273,7 +272,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(1);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		assertFalse(storage.containsData(handle));
 		storage.shutdown();
 		verify();
@@ -312,7 +311,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		replay();
 		storage.startup(store, configuration);
 		final long cardinality = storage
-				.getIncidenceSetCardinality(new IntPersistentHandle(2));
+				.getIncidenceSetCardinality(new UUIDPersistentHandle());
 		assertEquals(cardinality, 0);
 	}
 
@@ -324,9 +323,9 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(3);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 4, 5, 6 });
-		storage.addIncidenceLink(handle, new IntPersistentHandle(2));
+		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
 		assertEquals(cardinality, 1);
 		storage.shutdown();
@@ -341,10 +340,10 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockTransactionManager(4);
 		replay();
 		storage.startup(store, configuration);
-		final HGPersistentHandle handle = new IntPersistentHandle(4);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
-		storage.addIncidenceLink(handle, new IntPersistentHandle(25));
-		storage.addIncidenceLink(handle, new IntPersistentHandle(26));
+		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
+		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
 		assertEquals(cardinality, 2);
 		storage.shutdown();
