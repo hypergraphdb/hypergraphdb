@@ -661,8 +661,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
     
     class CheckPointThread extends Thread 
     {
-        boolean stop = false;
-        boolean running = false;
+        volatile boolean stop = false;
+        volatile boolean running = false;
         
         CheckPointThread()
         {
