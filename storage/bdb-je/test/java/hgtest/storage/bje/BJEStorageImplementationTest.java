@@ -2,10 +2,13 @@ package hgtest.storage.bje;
 
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
+import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.handle.IntPersistentHandle;
+import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import com.sleepycat.je.Environment;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -14,12 +17,14 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNull;
 
@@ -40,7 +45,6 @@ import static org.testng.Assert.assertNull;
 @PrepareForTest(HGConfiguration.class)
 public class BJEStorageImplementationTest extends PowerMockTestCase
 {
-	private static final String TEMP_DATABASE_DIRECTORY_SUFFIX = "hgtest.tmp";
 	private static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
@@ -60,11 +64,22 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		configuration = PowerMock.createStrictMock(HGConfiguration.class);
 	}
 
+	@BeforeMethod
 	@AfterMethod
 	private void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.reset(store, configuration);
-		new File(testDatabaseLocation).delete();
+		final File testDir = new File(testDatabaseLocation);
+		final File[] filesInTestDir = testDir.listFiles();
+		if (filesInTestDir != null)
+		{
+			for (final File eachFile : filesInTestDir)
+			{
+				eachFile.delete();
+			}
+		}
+		testDir.delete();
+
 	}
 
 	private void mockConfiguration(final int calls) throws Exception
@@ -80,7 +95,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	private void mockStore() throws Exception
 	{
 		EasyMock.expect(store.getDatabaseLocation()).andReturn(
-				TEMP_DATABASE_DIRECTORY_SUFFIX);
+				testDatabaseLocation);
 	}
 
 	private void mockTransactionManager(final int calls)
@@ -136,9 +151,9 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		mockStore();
 		replay();
 		storage.startup(store, configuration);
-		final String databaseName = storage.getBerkleyEnvironment().getHome()
-				.getPath();
-		assertEquals(databaseName, TEMP_DATABASE_DIRECTORY_SUFFIX);
+		final String databaseLocation = storage.getBerkleyEnvironment()
+				.getHome().getPath();
+		assertEquals(databaseLocation, testDatabaseLocation);
 		storage.shutdown();
 		verify();
 	}
@@ -160,6 +175,8 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		catch (Exception ex)
 		{
 			assertEquals(ex.getClass(), IllegalStateException.class);
+			assertEquals(ex.getMessage(),
+					"Attempt to use non-open Environment object().");
 		}
 		finally
 		{
@@ -168,7 +185,7 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 	}
 
 	@Test
-	public void storeArrayOfBytes() throws Exception
+	public void storeData() throws Exception
 	{
 		final byte[] expected = new byte[] { 1, 2, 3 };
 		mockConfiguration(2);
@@ -210,20 +227,10 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		replay();
 		storage.startup(store, configuration);
 		final HGPersistentHandle handle = new IntPersistentHandle(2);
-		try
-		{
-			// data was not stored, expect exception
-			storage.getData(handle);
-		}
-		catch (Exception ex)
-		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-		}
-		finally
-		{
-			storage.shutdown();
-			verify();
-		}
+		final byte[] retrievedData = storage.getData(handle);
+		assertNull(retrievedData);
+		storage.shutdown();
+		verify();
 	}
 
 	@Test
@@ -242,4 +249,294 @@ public class BJEStorageImplementationTest extends PowerMockTestCase
 		storage.shutdown();
 		verify();
 	}
+
+	@Test
+	public void checkExistenceOfStoredData() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new IntPersistentHandle(2);
+		storage.store(handle, new byte[] { 4, 5, 6 });
+		assertTrue(storage.containsData(handle));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void checkExistenceOfNonStoredData() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(1);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new IntPersistentHandle(2);
+		assertFalse(storage.containsData(handle));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void getIncidenceSetCardinalityUsingNullHandle() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		replay();
+		storage.startup(store, configuration);
+		try
+		{
+			storage.getIncidenceSetCardinality(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), NullPointerException.class);
+			assertEquals(ex.getMessage(),
+					"HGStore.getIncidenceSetCardinality called with a null handle.");
+		}
+		finally
+		{
+			storage.shutdown();
+			verify();
+		}
+	}
+
+	@Test
+	public void noIncidenceLinksForNonStoredHandle() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(1);
+		replay();
+		storage.startup(store, configuration);
+		final long cardinality = storage
+				.getIncidenceSetCardinality(new IntPersistentHandle(2));
+		assertEquals(cardinality, 0);
+	}
+
+	@Test
+	public void createOneIncidenceLink() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(3);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new IntPersistentHandle(1);
+		storage.store(handle, new byte[] { 4, 5, 6 });
+		storage.addIncidenceLink(handle, new IntPersistentHandle(2));
+		final long cardinality = storage.getIncidenceSetCardinality(handle);
+		assertEquals(cardinality, 1);
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void createTwoIncidenceLinks() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(4);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new IntPersistentHandle(4);
+		storage.store(handle, new byte[] {});
+		storage.addIncidenceLink(handle, new IntPersistentHandle(25));
+		storage.addIncidenceLink(handle, new IntPersistentHandle(26));
+		final long cardinality = storage.getIncidenceSetCardinality(handle);
+		assertEquals(cardinality, 2);
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void getLinksUsingNullHandle() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		replay();
+		storage.startup(store, configuration);
+		try
+		{
+			storage.getLink(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			assertEquals(ex.getMessage(),
+					"Failed to retrieve link with handle null");
+		}
+		finally
+		{
+			storage.shutdown();
+			verify();
+		}
+	}
+
+	@Test
+	public void getLinkWhichIsNotStored() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(1);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		final HGPersistentHandle[] storedLinks = storage.getLink(handle);
+		assertNull(storedLinks);
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void storeOneLink() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
+		storage.store(first, links);
+		final HGPersistentHandle[] storedLinks = storage.getLink(first);
+		assertEquals(storedLinks, links);
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void storeTwoLinks() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle[] links = new HGPersistentHandle[] {
+				new UUIDPersistentHandle(), new UUIDPersistentHandle() };
+		storage.store(first, links);
+		final HGPersistentHandle[] storedLinks = storage.getLink(first);
+		assertEquals(storedLinks, links);
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void checkExistenceOfStoredLinkFromFirstToSecond() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
+		storage.store(first, links);
+		assertTrue(storage.containsLink(first));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void checkExistenceOfStoredLinkFromSecondToFirst() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
+		storage.store(first, links);
+		assertFalse(storage.containsLink(second));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void checkExistenceOfHandleWhichIsLinkedToItself() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(2);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.store(handle, new HGPersistentHandle[] { handle });
+		assertTrue(storage.containsLink(handle));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void checkExistenceOfNonStoredLink() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		mockTransactionManager(1);
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		assertFalse(storage.containsLink(handle));
+		storage.shutdown();
+		verify();
+	}
+
+	@Test
+	public void removeLinkUsingNullHandle() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		replay();
+		storage.startup(store, configuration);
+		try
+		{
+			storage.removeLink(null);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), NullPointerException.class);
+			assertEquals(ex.getMessage(),
+					"HGStore.remove called with a null handle.");
+		}
+		finally
+		{
+			storage.shutdown();
+			verify();
+		}
+	}
+
+	// public static void main(String args[])
+	// {
+	// String databaseLocation = "/home/yura/hgdb/test";
+	// HyperGraph graph = null;
+	// try
+	// {
+	// graph = new HyperGraph(databaseLocation);
+	// String text = "This is a test";
+	// final HGHandle textHandle = graph.add(text);
+	//
+	// HGPersistentHandle handle = new IntPersistentHandle(1);
+	// graph.add(handle);
+	// graph.remove(handle);
+	// HGPersistentHandle handle1 = graph.get(handle);
+	// System.out.println(handle1);
+	//
+	// }
+	// catch (Throwable t)
+	// {
+	// t.printStackTrace();
+	// }
+	// finally
+	// {
+	// graph.close();
+	// }
+	// }
 }
