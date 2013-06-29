@@ -593,8 +593,8 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 	CheckPointThread checkPointThread = null;
 
 	class CheckPointThread extends Thread {
-		boolean stop = false;
-		boolean running = false;
+	    volatile boolean stop = false;
+	    volatile boolean running = false;
 
 		CheckPointThread() {
 			this.setName("HGCHECKPOINT");
