@@ -3,11 +3,14 @@ package hgtest.storage.bje;
 import com.sleepycat.je.Environment;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Field;
+
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNull;
+
 /**
  */
 public class BJEStorageImplementation_shutdownTest extends
@@ -34,5 +37,29 @@ public class BJEStorageImplementation_shutdownTest extends
 		{
 			shutdown();
 		}
+	}
+
+	@Test
+	public void checkPointThreadIsNull() throws Exception
+	{
+		startup();
+		// set value of field checkPointThread in
+		// BJEStorageImplementation instance to null
+		final Field checkPointThread = storage.getClass().getDeclaredField(
+				"checkPointThread");
+		checkPointThread.setAccessible(true);
+		checkPointThread.set(storage, null);
+		shutdown();
+	}
+
+	@Test
+	public void envIsNull() throws Exception
+	{
+		startup();
+		// set value of field env in BJEStorageImplementation instance to null
+		final Field env = storage.getClass().getDeclaredField("env");
+		env.setAccessible(true);
+		env.set(storage, null);
+		shutdown();
 	}
 }
