@@ -42,7 +42,7 @@ import static org.testng.Assert.assertNull;
 @PrepareForTest(HGConfiguration.class)
 public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 {
-	private static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
+	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
 	protected String testDatabaseLocation = System.getProperty("user.home")
@@ -93,7 +93,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 				.times(calls);
 	}
 
-	private void mockStore() throws Exception
+	protected void mockStore() throws Exception
 	{
 		store = PowerMock.createStrictMock(HGStore.class);
 		EasyMock.expect(store.getDatabaseLocation()).andReturn(
@@ -104,11 +104,15 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	{
 		mockConfiguration(2);
 		mockStore();
-		EasyMock.replay(store, configuration);
-		storage.startup(store, configuration);
+        replay();
+        storage.startup(store, configuration);
 	}
 
-	protected void startup(final int transactionManagerCalls) throws Exception
+    protected void replay() {
+        EasyMock.replay(store, configuration);
+    }
+
+    protected void startup(final int transactionManagerCalls) throws Exception
 	{
 		mockConfiguration(2);
 		mockStore();
@@ -117,8 +121,8 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 				storage.getTransactionFactory());
 		EasyMock.expect(store.getTransactionManager())
 				.andReturn(transactionManager).times(transactionManagerCalls);
-		EasyMock.replay(store, configuration);
-		storage.startup(store, configuration);
+        replay();
+        storage.startup(store, configuration);
 	}
 
 	protected void shutdown() throws Exception
