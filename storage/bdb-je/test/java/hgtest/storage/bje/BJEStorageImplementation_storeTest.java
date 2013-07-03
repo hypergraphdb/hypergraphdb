@@ -1,7 +1,9 @@
 package hgtest.storage.bje;
 
+import org.easymock.EasyMock;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.transaction.HGTransactionManager;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -194,5 +196,37 @@ public class BJEStorageImplementation_storeTest extends
 		{
 			shutdown();
 		}
+	}
+
+	@Test
+	public void throwExceptionWhileStoringLinks() throws Exception
+	{
+		mockStore();
+		mockConfiguration(2);
+		mockStoreToThrowException();
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		try
+		{
+			storage.store(handle, new HGPersistentHandle[] {});
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			assertEquals(
+					ex.getMessage(),
+					"Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
+
+	private void mockStoreToThrowException()
+	{
+		EasyMock.expect(store.getTransactionManager()).andThrow(
+				new IllegalStateException("Throw exception in test case."));
 	}
 }

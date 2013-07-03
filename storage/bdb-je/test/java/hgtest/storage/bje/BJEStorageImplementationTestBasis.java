@@ -82,7 +82,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		testDir.delete();
 	}
 
-	private void mockConfiguration(final int calls) throws Exception
+	protected void mockConfiguration(final int calls) throws Exception
 	{
 		configuration = PowerMock.createStrictMock(HGConfiguration.class);
 		EasyMock.expect(configuration.getHandleFactory()).andReturn(
