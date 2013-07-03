@@ -112,6 +112,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
         EasyMock.replay(store, configuration);
     }
 
+    protected void mockStoreToThrowException()
+    {
+        EasyMock.expect(store.getTransactionManager()).andThrow(
+                new IllegalStateException("Throw exception in test case."));
+    }
+
     protected void startup(final int transactionManagerCalls) throws Exception
 	{
 		mockConfiguration(2);

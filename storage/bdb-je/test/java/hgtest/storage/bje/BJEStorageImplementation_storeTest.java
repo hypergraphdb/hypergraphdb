@@ -224,9 +224,5 @@ public class BJEStorageImplementation_storeTest extends
 		}
 	}
 
-	private void mockStoreToThrowException()
-	{
-		EasyMock.expect(store.getTransactionManager()).andThrow(
-				new IllegalStateException("Throw exception in test case."));
-	}
+
 }

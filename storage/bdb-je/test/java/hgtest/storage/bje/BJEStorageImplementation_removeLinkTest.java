@@ -9,6 +9,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 /**
  */
@@ -56,5 +57,33 @@ public class BJEStorageImplementation_removeLinkTest extends
 		storage.removeLink(handle);
 		assertFalse(storage.containsLink(handle));
 		shutdown();
+	}
+
+	@Test
+	public void throwExceptionWhileRemovingLink() throws Exception
+	{
+		mockStore();
+		mockConfiguration(2);
+		mockStoreToThrowException();
+		replay();
+		storage.startup(store, configuration);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		try
+		{
+			storage.removeLink(handle);
+
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			final String expectedMessage = String
+					.format("Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
+							handle.toString());
+			assertEquals(ex.getMessage(), expectedMessage);
+		}
+		finally
+		{
+			shutdown();
+		}
 	}
 }
