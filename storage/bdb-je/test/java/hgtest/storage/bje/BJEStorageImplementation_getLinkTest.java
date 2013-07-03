@@ -46,28 +46,43 @@ public class BJEStorageImplementation_getLinkTest extends
 	}
 
 	@Test
-	public void storeOneLink() throws Exception
+	public void getOneStoredLink() throws Exception
 	{
+		final HGPersistentHandle[] expected = new HGPersistentHandle[] { new UUIDPersistentHandle() };
 		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
-		final HGPersistentHandle second = new UUIDPersistentHandle();
-		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
+		final HGPersistentHandle[] links = new HGPersistentHandle[] { expected[0] };
 		storage.store(first, links);
-		final HGPersistentHandle[] storedLinks = storage.getLink(first);
-		assertEquals(storedLinks, links);
+		final HGPersistentHandle[] stored = storage.getLink(first);
+		assertEquals(stored, expected);
 		shutdown();
 	}
 
 	@Test
-	public void storeTwoLinks() throws Exception
+	public void getSeveralStoredLinks() throws Exception
 	{
+		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
+				new UUIDPersistentHandle(), new UUIDPersistentHandle(),
+				new UUIDPersistentHandle() };
 		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] {
-				new UUIDPersistentHandle(), new UUIDPersistentHandle() };
+				expected[0], expected[1], expected[2] };
 		storage.store(first, links);
-		final HGPersistentHandle[] storedLinks = storage.getLink(first);
-		assertEquals(storedLinks, links);
+		final HGPersistentHandle[] stored = storage.getLink(first);
+		assertEquals(stored, expected);
+		shutdown();
+	}
+
+	@Test
+	public void getEmptyArrayOfLinks() throws Exception
+	{
+		final HGPersistentHandle[] expected = new HGPersistentHandle[] {};
+		startup(2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.store(handle, new HGPersistentHandle[] {});
+		final HGPersistentHandle[] stored = storage.getLink(handle);
+		assertEquals(stored, expected);
 		shutdown();
 	}
 }
