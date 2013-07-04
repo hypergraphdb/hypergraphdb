@@ -104,21 +104,27 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	{
 		mockConfiguration(2);
 		mockStore();
-        replay();
-        storage.startup(store, configuration);
+		replay();
+		storage.startup(store, configuration);
 	}
 
-    protected void replay() {
-        EasyMock.replay(store, configuration);
-    }
+	protected void replay()
+	{
+		EasyMock.replay(store, configuration);
+	}
 
-    protected void mockStoreToThrowException()
-    {
-        EasyMock.expect(store.getTransactionManager()).andThrow(
-                new IllegalStateException("Throw exception in test case."));
-    }
+	protected void mockStoreToThrowException()
+	{
+		EasyMock.expect(store.getTransactionManager()).andThrow(
+				new IllegalStateException("Throw exception in test case."));
+	}
 
-    protected void startup(final int transactionManagerCalls) throws Exception
+	protected void mockStoreToThrowException(final Exception ex)
+	{
+		EasyMock.expect(store.getTransactionManager()).andThrow(ex);
+	}
+
+	protected void startup(final int transactionManagerCalls) throws Exception
 	{
 		mockConfiguration(2);
 		mockStore();
@@ -127,8 +133,8 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 				storage.getTransactionFactory());
 		EasyMock.expect(store.getTransactionManager())
 				.andReturn(transactionManager).times(transactionManagerCalls);
-        replay();
-        storage.startup(store, configuration);
+		replay();
+		storage.startup(store, configuration);
 	}
 
 	protected void shutdown() throws Exception
