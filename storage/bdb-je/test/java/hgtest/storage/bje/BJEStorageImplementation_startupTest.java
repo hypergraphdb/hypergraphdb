@@ -52,12 +52,10 @@ public class BJEStorageImplementation_startupTest extends
 	@Test
 	public void exceptionWhileStartupOccurred() throws Exception
 	{
-		mockStore();
-		mockConfigurationToThrowException();
-		replay();
 		try
 		{
-			storage.startup(store, configuration);
+			startup(1, new IllegalStateException(
+					"Throw exception in test case."));
 		}
 		catch (Exception ex)
 		{
@@ -87,10 +85,7 @@ public class BJEStorageImplementation_startupTest extends
 	@Test
 	public void environmentIsNotTransactional() throws Exception
 	{
-		mockStore();
-		mockNonTransactionalConfiguration();
-		replay();
-		storage.startup(store, configuration);
+		startupNonTransactional();
 		shutdown();
 	}
 

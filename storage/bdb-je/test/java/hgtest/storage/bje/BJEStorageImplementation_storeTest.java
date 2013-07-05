@@ -201,11 +201,7 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void throwExceptionWhileStoringLinks() throws Exception
 	{
-		mockStore();
-		mockConfiguration(2);
-		mockStoreToThrowException();
-		replay();
-		storage.startup(store, configuration);
+		startup(new IllegalStateException("Throw exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		try
 		{
@@ -223,6 +219,5 @@ public class BJEStorageImplementation_storeTest extends
 			shutdown();
 		}
 	}
-
 
 }

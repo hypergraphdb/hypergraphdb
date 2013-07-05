@@ -92,12 +92,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 	@Test
 	public void exceptionWhileCheckingExistenceOfLink() throws Exception
 	{
-		mockStore();
-		mockStoreToThrowException(new DatabaseNotFoundException(
-				"Exception in test case."));
-		mockConfiguration(2);
-		replay();
-		storage.startup(store, configuration);
+		startup(new DatabaseNotFoundException("Exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		try
 		{

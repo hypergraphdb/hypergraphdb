@@ -62,11 +62,7 @@ public class BJEStorageImplementation_removeLinkTest extends
 	@Test
 	public void throwExceptionWhileRemovingLink() throws Exception
 	{
-		mockStore();
-		mockConfiguration(2);
-		mockStoreToThrowException();
-		replay();
-		storage.startup(store, configuration);
+		startup(new IllegalStateException("Throw exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		try
 		{

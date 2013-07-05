@@ -3,19 +3,14 @@ package hgtest.storage.bje;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
-import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
-import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
-import com.sleepycat.je.Environment;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 
 import java.io.File;
 
@@ -82,7 +77,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		testDir.delete();
 	}
 
-	protected void mockConfiguration(final int calls) throws Exception
+	private void replay()
+	{
+		EasyMock.replay(store, configuration);
+	}
+
+	private void mockConfiguration(final int calls) throws Exception
 	{
 		configuration = PowerMock.createStrictMock(HGConfiguration.class);
 		EasyMock.expect(configuration.getHandleFactory()).andReturn(
@@ -93,7 +93,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 				.times(calls);
 	}
 
-	protected void mockStore() throws Exception
+	private void mockStore() throws Exception
 	{
 		store = PowerMock.createStrictMock(HGStore.class);
 		EasyMock.expect(store.getDatabaseLocation()).andReturn(
@@ -108,20 +108,43 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
-	protected void replay()
+	protected void startupNonTransactional() throws Exception
 	{
-		EasyMock.replay(store, configuration);
+		mockStore();
+		configuration = PowerMock.createStrictMock(HGConfiguration.class);
+		EasyMock.expect(configuration.getHandleFactory()).andReturn(
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(configuration.isTransactional()).andReturn(false)
+				.times(2);
+		replay();
+		storage.startup(store, configuration);
 	}
 
-	protected void mockStoreToThrowException()
+	protected void startup(final Exception whatToThrow) throws Exception
 	{
-		EasyMock.expect(store.getTransactionManager()).andThrow(
-				new IllegalStateException("Throw exception in test case."));
+		mockConfiguration(2);
+		mockStore();
+		EasyMock.expect(store.getTransactionManager()).andThrow(whatToThrow);
+		replay();
+		storage.startup(store, configuration);
 	}
 
-	protected void mockStoreToThrowException(final Exception ex)
+	protected void startup(final int callsBeforeExceptionIsThrown,
+			final Exception whatToThrow) throws Exception
 	{
-		EasyMock.expect(store.getTransactionManager()).andThrow(ex);
+		mockStore();
+		configuration = PowerMock.createStrictMock(HGConfiguration.class);
+		EasyMock.expect(configuration.getHandleFactory()).andReturn(
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(configuration.isTransactional()).andReturn(true)
+				.times(callsBeforeExceptionIsThrown);
+		EasyMock.expect(configuration.isTransactional()).andThrow(whatToThrow);
+		replay();
+		storage.startup(store, configuration);
 	}
 
 	protected void startup(final int transactionManagerCalls) throws Exception

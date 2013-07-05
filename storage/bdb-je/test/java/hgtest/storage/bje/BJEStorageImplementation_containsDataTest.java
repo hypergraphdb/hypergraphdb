@@ -77,12 +77,7 @@ public class BJEStorageImplementation_containsDataTest extends
 	@Test
 	public void exceptionIsThrown() throws Exception
 	{
-		mockStore();
-		mockConfiguration(2);
-		mockStoreToThrowException(new DatabaseNotFoundException(
-				"Exception in test case."));
-		replay();
-		storage.startup(store, configuration);
+		startup(new DatabaseNotFoundException("Exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		try
 		{
