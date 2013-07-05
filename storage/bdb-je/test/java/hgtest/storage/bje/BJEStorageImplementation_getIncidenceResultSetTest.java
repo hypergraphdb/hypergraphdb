@@ -74,7 +74,7 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		storage.addIncidenceLink(first, links[2]);
 		final HGRandomAccessResult<HGPersistentHandle> incidence = storage
 				.getIncidenceResultSet(first);
-		assertEquals(set(links), set(incidence));
+		assertEquals(set(incidence), set(links));
 		incidence.close();
 		shutdown();
 	}
@@ -127,33 +127,5 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		{
 			shutdown();
 		}
-	}
-
-	/**
-	 * Puts all given handles into hash set.
-	 */
-	private Set<HGPersistentHandle> set(final HGPersistentHandle... handles)
-	{
-		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
-		for (final HGPersistentHandle eachHandle : handles)
-		{
-			allHandles.add(eachHandle);
-		}
-		return allHandles;
-	}
-
-	/**
-	 * Puts all handles which are accessible from given result set into hash
-	 * set. Result set is traverse from beginning to end one time.
-	 */
-	private Set<HGPersistentHandle> set(
-			final HGRandomAccessResult<HGPersistentHandle> handles)
-	{
-		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
-		while (handles.hasNext())
-		{
-			allHandles.add(handles.next());
-		}
-		return allHandles;
 	}
 }

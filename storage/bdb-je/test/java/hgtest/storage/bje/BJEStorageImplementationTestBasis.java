@@ -3,6 +3,8 @@ package hgtest.storage.bje;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
+import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -13,6 +15,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -163,6 +167,35 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected void shutdown() throws Exception
 	{
 		storage.shutdown();
+	}
+
+	/**
+	 * Puts all given handles into hash set.
+	 */
+	public static Set<HGPersistentHandle> set(
+			final HGPersistentHandle... handles)
+	{
+		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
+		for (final HGPersistentHandle eachHandle : handles)
+		{
+			allHandles.add(eachHandle);
+		}
+		return allHandles;
+	}
+
+	/**
+	 * Puts all handles which are accessible from given result set into hash
+	 * set. Result set is traverse from beginning to end one time.
+	 */
+	public static Set<HGPersistentHandle> set(
+			final HGRandomAccessResult<HGPersistentHandle> handles)
+	{
+		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
+		while (handles.hasNext())
+		{
+			allHandles.add(handles.next());
+		}
+		return allHandles;
 	}
 
 	// public static void main(String args[])
