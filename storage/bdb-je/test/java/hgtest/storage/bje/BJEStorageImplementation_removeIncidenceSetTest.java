@@ -1,6 +1,7 @@
 package hgtest.storage.bje;
 
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
@@ -17,7 +18,7 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 {
 
 	@Test
-	public void removeIncidenceSetUsingNullHandle() throws Exception
+	public void useNullHandle() throws Exception
 	{
 		startup();
 		try
@@ -37,20 +38,22 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 	}
 
 	@Test
-	public void removeIncidenceSetWhichContainsOneLink() throws Exception
+	public void thereIsOneLinkInIncidenceSet() throws Exception
 	{
 		startup(3);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.addIncidenceLink(first, second);
 		storage.removeIncidenceSet(first);
-		final long afterRemoving = storage.getIncidenceSetCardinality(first);
-		assertEquals(afterRemoving, 0);
+		final HGRandomAccessResult<HGPersistentHandle> afterRemoving = storage
+				.getIncidenceResultSet(first);
+		assertFalse(afterRemoving.hasNext());
+		afterRemoving.close();
 		shutdown();
 	}
 
 	@Test
-	public void removeIncidenceSetWhichContainsTwoLinks() throws Exception
+	public void thereAreSeveralLinksInIncidenceSet() throws Exception
 	{
 		startup(4);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
@@ -59,8 +62,10 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 		storage.addIncidenceLink(first, second);
 		storage.addIncidenceLink(first, third);
 		storage.removeIncidenceSet(first);
-		final long afterRemoving = storage.getIncidenceSetCardinality(first);
-		assertEquals(afterRemoving, 0);
+		final HGRandomAccessResult<HGPersistentHandle> afterRemoving = storage
+				.getIncidenceResultSet(first);
+		assertFalse(afterRemoving.hasNext());
+		afterRemoving.close();
 		shutdown();
 	}
 
@@ -70,22 +75,27 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.removeIncidenceSet(handle);
-		final long afterRemoving = storage.getIncidenceSetCardinality(handle);
-		assertEquals(afterRemoving, 0);
+		final HGRandomAccessResult<HGPersistentHandle> afterRemoving = storage
+				.getIncidenceResultSet(handle);
+		assertFalse(afterRemoving.hasNext());
+		afterRemoving.close();
 		shutdown();
 	}
 
 	@Test
-	public void removeIncidenceSetForLinkWhichHasNotIncidenceLinks()
-			throws Exception
+	public void thereAreNotIncidenceLinks() throws Exception
 	{
 		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
 		storage.removeIncidenceSet(handle);
-		final long afterRemoving = storage.getIncidenceSetCardinality(handle);
-		assertEquals(afterRemoving, 0);
+		final HGRandomAccessResult<HGPersistentHandle> afterRemoving = storage
+				.getIncidenceResultSet(handle);
+		assertFalse(afterRemoving.hasNext());
+		afterRemoving.close();
 		shutdown();
 	}
+    
+    
 
 }
