@@ -17,7 +17,7 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 {
 
 	@Test
-	public void getIncidenceSetCardinalityUsingNullHandle() throws Exception
+	public void useNullHandle() throws Exception
 	{
 		startup();
 		try
@@ -37,7 +37,7 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	}
 
 	@Test
-	public void noIncidenceLinksForNonStoredHandle() throws Exception
+	public void thereAreNotIncidenceLinks() throws Exception
 	{
 		startup(1);
 		final long cardinality = storage
@@ -47,11 +47,10 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	}
 
 	@Test
-	public void createOneIncidenceLink() throws Exception
+	public void thereIsOneIncidenceLink() throws Exception
 	{
-		startup(3);
+		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.store(handle, new byte[] { 4, 5, 6 });
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
 		assertEquals(cardinality, 1);
@@ -59,16 +58,38 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	}
 
 	@Test
-	public void createTwoIncidenceLinks() throws Exception
+	public void thereAreSeveralIncidenceLinks() throws Exception
 	{
 		startup(4);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.store(handle, new byte[] {});
+		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
-		assertEquals(cardinality, 2);
+		assertEquals(cardinality, 3);
 		shutdown();
 	}
 
+	@Test
+	public void exceptionIsThrown() throws Exception
+	{
+		startup(new IllegalArgumentException("Exception in test case."));
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		try
+		{
+			storage.getIncidenceSetCardinality(handle);
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			final String expectedMessage = String
+					.format("Failed to retrieve incidence set for handle %s: java.lang.IllegalArgumentException: Exception in test case.",
+							handle);
+			assertEquals(ex.getMessage(), expectedMessage);
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
 }
