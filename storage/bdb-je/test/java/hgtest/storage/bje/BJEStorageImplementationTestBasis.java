@@ -164,6 +164,21 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	protected void startupWithAdditionalTransaction(
+			final int transactionManagerCalls) throws Exception
+	{
+        mockConfiguration(2);
+        mockStore();
+        // mock transaction manager
+        final HGTransactionManager transactionManager = new HGTransactionManager(
+                storage.getTransactionFactory());
+        EasyMock.expect(store.getTransactionManager())
+                .andReturn(transactionManager).times(transactionManagerCalls);
+        replay();
+        storage.startup(store, configuration);
+        transactionManager.beginTransaction();
+	}
+
 	protected void shutdown() throws Exception
 	{
 		storage.shutdown();
