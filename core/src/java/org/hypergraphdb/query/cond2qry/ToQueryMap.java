@@ -186,7 +186,8 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 		        if (value == null)
 		            throw new HGException("Search by null values is not supported yet.");
 		        HGHandle type = graph.getTypeSystem().getTypeHandle(value);
-	            Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = ExpressionBasedQuery.findIndex(graph, new DirectValueIndexer<Object>(type));
+	            Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = 
+	                    ExpressionBasedQuery.findIndex(graph, new DirectValueIndexer<Object>(type));
 	            if (p != null)
 	                return (HGQuery<Object>)instance.get(IndexCondition.class).
 	                    getQuery(graph, new IndexCondition(p.getSecond(), value, op));

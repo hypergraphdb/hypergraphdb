@@ -17,6 +17,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 import org.hypergraphdb.HGConfiguration;
@@ -564,6 +565,23 @@ public class HGUtils
             }
         }
         return (T)copy;
+    }
+    
+    private static void privateVisit(Object object, Mapping<Object, Boolean> visitor, IdentityHashMap<Object, Boolean> visited)
+    {
+        if (visited.containsKey(object))
+            return;
+        visitor.eval(object);
+        visited.put(object, Boolean.TRUE);
+        if (! (object instanceof Iterable))
+            return;        
+        for (Object x : (Iterable<?>)object)
+            privateVisit(x, visitor, visited);
+    }
+    
+    public static void visit(Object object, Mapping<Object, Boolean> visitor)
+    {
+        privateVisit(object, visitor, new IdentityHashMap<Object, Boolean>());
     }
     
     static final Set<Class<?>> identityCloneClasses = new HashSet<Class<?>>();

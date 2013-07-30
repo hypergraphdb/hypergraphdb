@@ -8,6 +8,9 @@
 package org.hypergraphdb.query.impl;
 
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGHandle;
@@ -24,7 +27,7 @@ import org.hypergraphdb.util.Mapping;
  * 
  * @author Borislav Iordanov
  */
-public final class PredicateBasedFilter<T> extends HGQuery<T> 
+public final class PredicateBasedFilter<T> extends HGQuery<T> implements Iterable<HGQuery<T>>
 {
 	private HGQuery<T> query;
 	private Mapping<T, Boolean> predicate;
@@ -80,5 +83,15 @@ public final class PredicateBasedFilter<T> extends HGQuery<T>
 		}
 		baseResult.close();		
 		return (HGSearchResult<T>)HGSearchResult.EMPTY;
+	}
+	
+	public HGQuery<T> getQuery()
+	{
+	    return query;
+	}
+	
+	public Iterator<HGQuery<T>> iterator()
+	{
+	    return Collections.singleton(this.query).iterator();
 	}
 }

@@ -1,5 +1,9 @@
 package org.hypergraphdb.query.cond2qry;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HyperGraph;
@@ -13,7 +17,7 @@ import org.hypergraphdb.query.impl.UnionResultAsync;
 public class OrToParellelQuery<T> implements ConditionToQuery<T>
 {
 
-    private static class ParallelUnionQuery<T> extends HGQuery<T>
+    private static class ParallelUnionQuery<T> extends HGQuery<T> implements Iterable<HGQuery<T>>
     {
         private HGQuery<T> left, right;
         
@@ -66,6 +70,11 @@ public class OrToParellelQuery<T> implements ConditionToQuery<T>
                 return new UnionResultAsync(lasync, rasync);
             }
         }
+        
+        public Iterator<HGQuery<T>> iterator()
+        {
+            return Arrays.asList(left,right).iterator();
+        }        
     }
     
     @SuppressWarnings("unchecked")    

@@ -74,6 +74,14 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	    }	    
 	    return null;
 	}
+
+	private static void rememberInAnalyzer(HGQueryCondition src, HGQueryCondition dest)
+	{
+        AnalyzedQuery<?> aquery = (AnalyzedQuery<?>)VarContext.ctx().get("$analyzed").get();
+        if (aquery != null && src != dest)
+            aquery.transformed(src, dest);
+	    
+	}
 	
 	/**
 	 * <p>Transform a query condition into a disjunctive normal form.</p>
@@ -83,6 +91,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	 */
 	private static HGQueryCondition toDNF(HGQueryCondition C)
 	{
+	    HGQueryCondition inputCondition = C;
 		if (C instanceof And)
 		{			
 			And and = (And)C;
@@ -110,14 +119,16 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 						newsub.addAll(and.subList(i + 1, and.size()));
 						result.add(newsub);
 					}
-					return toDNF(result);
+					C = toDNF(result);
+					break;
 				}				
 				else
 					andSet.add(sub);
 			}
 			and = new And();
 			and.addAll(andSet);
-			return and;
+			if (C == inputCondition)
+			    C = and;
 		}
 		else if (C instanceof Or)
 		{
@@ -138,15 +149,19 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			}
 			or = new Or();
 			or.addAll(orSet);
-			return or;
+			C = or;
 		}
         else if (C instanceof MapCondition)
         {
             MapCondition mcond = (MapCondition)C;
-            return new MapCondition(toDNF(mcond.getCondition()), mcond.getMapping());
+            C = new MapCondition(toDNF(mcond.getCondition()), mcond.getMapping());
         }		
-		else
-			return C;
+
+        AnalyzedQuery<?> aquery = (AnalyzedQuery<?>)VarContext.ctx().get("$analyzed").get();
+        if (aquery != null && inputCondition != C)
+            aquery.transformed(inputCondition, C);
+        rememberInAnalyzer(inputCondition, C);
+        return C;
 	}
 	
 	// Condition use the same type either if both references are constant or both
@@ -211,7 +226,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			And out = new And();
 			for (HGQueryCondition c : in)
 			{
-				c = simplify(c);
+			    rememberInAnalyzer(c, c = simplify(c));
 				if (c instanceof And)
 					out.addAll((And)c);
 				else if (c == Nothing.Instance)
@@ -474,8 +489,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 			    return Nothing.Instance;
 			Or out = new Or();
 			for (HGQueryCondition c : in)
-			{
-				c = simplify(c);
+			{			    
+			    rememberInAnalyzer(c, c = simplify(c));
 				if (c instanceof Or)
 					out.addAll((Or)c);				
 				else if (c != Nothing.Instance)
@@ -487,8 +502,9 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		else if (cond instanceof MapCondition)
 		{
 		    MapCondition mcond = (MapCondition)cond;
-		    return new MapCondition(simplify(mcond.getCondition()),
-		                            mcond.getMapping());
+		    HGQueryCondition mapped = simplify(mcond.getCondition());
+		    rememberInAnalyzer(mcond.getCondition(), mapped);
+		    return new MapCondition(mapped, mcond.getMapping());
 		}
 		else
 			return cond;
@@ -526,6 +542,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
 	private HGQueryCondition expand(HyperGraph graph, HGQueryCondition cond)
 	{
+	    HGQueryCondition inputCondition = cond;
 		if (cond instanceof TypePlusCondition)
 		{
 			TypePlusCondition ac = (TypePlusCondition)cond;
@@ -546,7 +563,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	            cond = orCondition;
 			}
 			else
-				return Nothing.Instance;
+				cond = Nothing.Instance;
 		}
 //		else if (cond instanceof AtomTypeCondition)
 //		{
@@ -673,6 +690,7 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
             cond = new MapCondition(expand(graph, mcond.getCondition()),
                                     mcond.getMapping());		    
 		}
+		rememberInAnalyzer(inputCondition, cond);		
 		return cond;
 	}
 	
@@ -782,7 +800,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		{
 		    QueryCompile.start();
 			preprocess(condition);  
-			this.condition = simplify(toDNF(expand(graph, condition))); 
+			this.condition = simplify(toDNF(expand(graph, condition)));
+			rememberInAnalyzer(condition, this.condition);
 			query = QueryCompile.translate(graph, QueryCompile.transform(graph, this.condition));		
 			return this;
 		}

@@ -7,6 +7,9 @@
  */
 package org.hypergraphdb.query.impl;
 
+import java.util.Arrays;
+import java.util.Iterator;
+
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 
@@ -19,10 +22,10 @@ import org.hypergraphdb.HGSearchResult;
  * </p>
  * @author Borislav Iordanov
  */
-public class PipeQuery<Key, Value> extends HGQuery<Value> 
+public class PipeQuery<Key, Value> extends HGQuery<Value> implements Iterable<HGQuery>
 {
 	private KeyBasedQuery<Key, Value> out;
-	private HGQuery<?> in;
+	private HGQuery in;
 	
 	public PipeQuery(HGQuery<Key> in, KeyBasedQuery<Key, Value> out)
 	{
@@ -35,4 +38,9 @@ public class PipeQuery<Key, Value> extends HGQuery<Value>
 	{
 		return new PipedResult(in.execute(), out, true);
 	}
+	
+    public Iterator<HGQuery> iterator()
+    {
+        return Arrays.asList(in).iterator();
+    }
 }

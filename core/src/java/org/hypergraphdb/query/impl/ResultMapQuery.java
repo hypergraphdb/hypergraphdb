@@ -7,6 +7,9 @@
  */
 package org.hypergraphdb.query.impl;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.util.Mapping;
@@ -19,7 +22,7 @@ import org.hypergraphdb.util.Mapping;
  * 
  * @author Borislav Iordanov
  */
-public class ResultMapQuery extends HGQuery 
+public class ResultMapQuery extends HGQuery implements Iterable<HGQuery> 
 {
 	private Mapping mapping = null;
 	private HGQuery query = null;
@@ -54,4 +57,9 @@ public class ResultMapQuery extends HGQuery
 		else
 			return new MappedResult(query.execute(), mapping);
 	} 
+
+	public Iterator<HGQuery> iterator()
+    {
+        return Collections.singleton(this.query).iterator();
+    }
 }

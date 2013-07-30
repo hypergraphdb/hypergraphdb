@@ -7,6 +7,10 @@
  */
 package org.hypergraphdb.query.impl;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
 
@@ -20,7 +24,7 @@ import org.hypergraphdb.HGSearchResult;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class IntersectionQuery<T> extends HGQuery<T> 
+public class IntersectionQuery<T> extends HGQuery<T> implements Iterable<HGQuery<T>>
 {	
 	private HGQuery<T> left, right;
 	private RSCombiner<T> combiner;
@@ -84,4 +88,9 @@ public class IntersectionQuery<T> extends HGQuery<T>
     {
         this.combiner = combiner;
     } 
+
+    public Iterator<HGQuery<T>> iterator()
+    {
+        return Arrays.asList(left, right).iterator();
+    }
 }
