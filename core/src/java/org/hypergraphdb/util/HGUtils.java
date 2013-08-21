@@ -492,6 +492,14 @@ public class HGUtils
       	throw new HGException(e);
       }
     }
+
+    public static <T> Set<T> set(T...members)
+    {
+        HashSet<T> S = new HashSet<T>();
+        for (T x:members) 
+            S.add(x);
+        return S;
+    }
     
     @SuppressWarnings("unchecked")
     public static <T> T cloneObject(T p, Mapping<Pair<Object, String>, Boolean> propertyFilter) throws Exception

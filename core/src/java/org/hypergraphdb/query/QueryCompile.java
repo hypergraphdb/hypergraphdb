@@ -1,7 +1,9 @@
 package org.hypergraphdb.query;
 
 import java.util.HashMap;
+
 import java.util.Map;
+import java.util.Set;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGQuery;
@@ -13,7 +15,8 @@ import org.hypergraphdb.query.cond2qry.QueryMetaData;
 import org.hypergraphdb.query.cond2qry.ToQueryMap;
 import org.hypergraphdb.util.CallContextRef;
 import org.hypergraphdb.util.DelegateMapResolver;
-import org.hypergraphdb.util.Mapping;
+//import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.VarContext;
 
 /**
@@ -67,10 +70,10 @@ public class QueryCompile
     {
         if (translatorMap.get() != null)
         {
-            translatorMap.get().getMap().put(Or.class, new OrToParellelQuery());
+            translatorMap.get().getMap().put(Or.class, new OrToParellelQuery<Object>());
         }
         else
-            ToQueryMap.getInstance().put(Or.class, new OrToParellelQuery());
+            ToQueryMap.getInstance().put(Or.class, new OrToParellelQuery<Object>());
     }
 
     @SuppressWarnings("unchecked")
@@ -84,19 +87,19 @@ public class QueryCompile
                         conditionType);
     }
 
-    public static HGQueryCondition transform(HyperGraph graph,
-                                             HGQueryCondition condition)
-    {
-        HGQueryCondition result = condition;
-        for (Mapping<HGQueryCondition, HGQueryCondition> m : graph.getConfig()
-                .getQueryConfiguration().getTransforms())
-            result = m.eval(result);
-        AnalyzedQuery<?> aquery = (AnalyzedQuery<?>) VarContext.ctx().get(
-                "$analyzed").get();
-        if (aquery != null && result != condition)
-            aquery.transformed(condition, result);
-        return result;
-    }
+//    public static HGQueryCondition transform(HyperGraph graph,
+//                                             HGQueryCondition condition)
+//    {
+//        HGQueryCondition result = condition;
+//        for (Mapping<HGQueryCondition, HGQueryCondition> m : graph.getConfig()
+//                .getQueryConfiguration().getTransforms())
+//            result = m.eval(result);
+//        AnalyzedQuery<?> aquery = (AnalyzedQuery<?>) VarContext.ctx().get(
+//                "$analyzed").get();
+//        if (aquery != null && result != condition)
+//            aquery.transformed(condition, result);
+//        return result;
+//    }
 
     public static <T> HGQuery<T> translate(HyperGraph graph,
                                            HGQueryCondition condition)
@@ -155,4 +158,13 @@ public class QueryCompile
         return aquery;
     }
 
+    public static interface Contract 
+    {
+        Pair<HGQueryCondition, Set<HGQueryCondition>> contract(HyperGraph graph, HGQueryCondition expression);
+    }
+    
+    public static interface Expand
+    {
+        Set<HGQueryCondition> contract(HyperGraph graph, HGQueryCondition expression);
+    }
 }

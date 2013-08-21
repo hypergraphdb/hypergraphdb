@@ -1,12 +1,14 @@
 package org.hypergraphdb.query;
 
 import java.util.ArrayList;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hypergraphdb.query.cond2qry.ConditionToQuery;
-import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.query.cond2qry.ContractConjunction;
 
 /**
  * <p>
@@ -23,10 +25,19 @@ import org.hypergraphdb.util.Mapping;
 public class HGQueryConfiguration
 {
     private boolean parallelExecution = false;
-    private List<Mapping<HGQueryCondition, HGQueryCondition>> transforms = 
-            new ArrayList<Mapping<HGQueryCondition, HGQueryCondition>>();
+    private HashMap<Class<? extends HGQueryCondition>, List<QueryCompile.Expand>> expandTransforms = 
+            new HashMap<Class<? extends HGQueryCondition>, List<QueryCompile.Expand>>();
+    private HashMap<Class<? extends HGQueryCondition>, List<QueryCompile.Contract>> contractTransforms = 
+        new HashMap<Class<? extends HGQueryCondition>, List<QueryCompile.Contract>>();
     private Map<Class<? extends HGQueryCondition>, ConditionToQuery<?>> translators =
             new HashMap<Class<? extends HGQueryCondition>, ConditionToQuery<?>>();
+    
+    public HGQueryConfiguration()
+    {
+        addContractTransform(And.class, new ContractConjunction.TypeValueContract());        
+        addContractTransform(And.class, new ContractConjunction.ApplyByPartIndex());
+        addContractTransform(And.class, new ContractConjunction.ApplyByTargetIndex());
+    }
     
     @SuppressWarnings("unchecked")
     public <T> ConditionToQuery<T> compiler(Class<?> type)
@@ -40,21 +51,43 @@ public class HGQueryConfiguration
         return this;
     }
     
-    // TODO: probably need a separate interface for those transforms, one that takes the graph
-    // as a method parameter. A plain mapping means that the graph has to be a member variable
-    // initialized already. This would be fine, except that it's weird during configuration
-    // time when the graph has to be created and only then configuration can be completed. 
-    // More importantly, if there's action during the HGOpenedEvent, it won't have access
-    // to query configurations.
-    public HGQueryConfiguration addTransform(Mapping<HGQueryCondition, HGQueryCondition> transform)
+    public HGQueryConfiguration addExpandTransform(Class<? extends HGQueryCondition> type, QueryCompile.Expand transform)
     {
-        transforms.add(transform);
+          List<QueryCompile.Expand> L = expandTransforms.get(type);
+          if (L == null)
+          {
+            L = new ArrayList<QueryCompile.Expand>();
+            expandTransforms.put(type, L);  
+          }
+        L.add(transform);
         return this;
     }
-    
-    public List<Mapping<HGQueryCondition, HGQueryCondition>> getTransforms()
+
+    public HGQueryConfiguration addContractTransform(Class<? extends HGQueryCondition> type, QueryCompile.Contract transform)
     {
-        return transforms;
+      List<QueryCompile.Contract> L = contractTransforms.get(type);
+      if (L == null)
+      {
+        L = new ArrayList<QueryCompile.Contract>();
+        contractTransforms.put(type, L);    
+      }
+      L.add(transform);
+      return this;
+    }
+
+    
+    @SuppressWarnings("unchecked")
+        public List<QueryCompile.Expand> getExpandTransforms(Class<? extends HGQueryCondition> type)
+    {
+        List<QueryCompile.Expand> L = expandTransforms.get(type);
+        return L == null ? Collections.EMPTY_LIST : L;
+    }
+
+    @SuppressWarnings("unchecked")
+        public List<QueryCompile.Contract> getContractTransforms(Class<? extends HGQueryCondition> type)
+    {
+        List<QueryCompile.Contract> L = contractTransforms.get(type);
+        return L == null ? Collections.EMPTY_LIST : L;
     }
 
     public boolean isParallelExecution()

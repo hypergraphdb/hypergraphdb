@@ -8,10 +8,11 @@
 package org.hypergraphdb.query.cond2qry;
 
 import java.util.ArrayList;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
@@ -42,6 +43,7 @@ import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.query.*;
 import org.hypergraphdb.query.impl.AsyncSearchResult;
 import org.hypergraphdb.query.impl.SyncSearchResult;
+import org.hypergraphdb.query.impl.TypeConditionAggregate;
 
 /**
  * 
@@ -214,301 +216,358 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		return TypeUtils.getProjection(graph, type, vc.getDimensionPath()) != null;
 	}
 	
-	// apply a few simply transformation for common cases...
-	// this kind of assumes that we are already in DNF because 
-	// conjunction are handled by transforming them as if we are at 
-	// the top level
-	private HGQueryCondition simplify(HGQueryCondition cond)
-	{
-		if (cond instanceof And)
-		{
-			And in = (And)cond;
-			And out = new And();
-			for (HGQueryCondition c : in)
-			{
-			    rememberInAnalyzer(c, c = simplify(c));
-				if (c instanceof And)
-					out.addAll((And)c);
-				else if (c == Nothing.Instance)
-					return c;
-				else
-					out.add(c);
-			}
-			
-			// At the end of the following step, the conjunction will have
-			// either a single TypedValueCondition or at most one AtomTypeCondition
-			// and one AtomValueCondition. This step insures that there are no
-			// contradictory conditions amongst the condition of type
-			// AtomValueCondition, AtomTypeCondition and TypedValueCondition
-			AtomTypeCondition byType = null;
-			AtomValueCondition byValue = null;
-			TypedValueCondition byTypedValue = null;
-			HashSet<OrderedLinkCondition> oLinks = new HashSet<OrderedLinkCondition>();
-			HashSet<AtomPartCondition> byPart = new HashSet<AtomPartCondition>();
-			boolean has_ordered = false;
-			boolean has_ra = false;
-			for (Iterator<HGQueryCondition> i = out.iterator(); i.hasNext(); )
-			{
-				HGQueryCondition c = i.next();
-				if (c instanceof AtomTypeCondition)
-				{
-					AtomTypeCondition tc = (AtomTypeCondition)c;					
-					// if the condition is on a Java class with no HG type currently defined,
-					// clearly there can't be atoms of that type
-//					if (!hg.isVar(tc.getTypeReference()) && 
-//						tc.getTypeHandle() == null && 
-//						graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
-//						
-//						return Nothing.Instance;
-						
-					if (byType == null)
-					{
-						if (byTypedValue != null)
-						{
-							if(!checkConsistent(byTypedValue, tc))
-								return Nothing.Instance;
-							else if (isSameType(byTypedValue, tc))
-								i.remove();
-						}
-						else
-							byType = tc;
-					}
-					else if (isSameType(byType, tc))
-						i.remove();
-					else if (!checkConsistent(byType, tc))
-						return Nothing.Instance;							
-				}
-				else if (c instanceof AtomValueCondition)
-				{
-					if (byValue == null)
-					{						
-						if (byTypedValue != null)
-							if(!checkConsistent(byTypedValue, (AtomValueCondition)c))
-								return Nothing.Instance;
-							else
-								i.remove();
-						else
-							byValue = (AtomValueCondition)c;						
-					}
-					else if (byValue.equals(c))
-						i.remove();
-					else
-						return Nothing.Instance;
-				}
-				else if (c instanceof TypedValueCondition)
-				{
-					if (byTypedValue ==  null)
-						byTypedValue = (TypedValueCondition)c;
-					else if (byTypedValue.equals(c) && 					
-							isSameType(byTypedValue, (TypedValueCondition)c))
-						i.remove();
-					else
-						return Nothing.Instance;			
-					// if the condition is on a Java class with no HG type currently defined,
-					// clearly there can't be atoms of that type
-					if (!hg.isVar(byTypedValue.getTypeReference()) && 
-							byTypedValue.getTypeHandle() == null && 
-						graph.getTypeSystem().getTypeHandleIfDefined(byTypedValue.getJavaClass()) == null)						
-						return Nothing.Instance;
-				}
-				else if (c instanceof AtomPartCondition)
-				{
-					byPart.add((AtomPartCondition)c);
-				}
-				else if (c instanceof OrderedLinkCondition)
-				{
-					oLinks.add((OrderedLinkCondition)c);
-				}
-				else
-				{
-					ConditionToQuery<?> transform = QueryCompile.translator(graph, c.getClass());
-					if (transform != null)
-					{
-						QueryMetaData qmd = transform.getMetaData(graph, c);
-						has_ordered = has_ordered || qmd.ordered;
-						has_ra = has_ra || qmd.randomAccess;
-					}
-				}
-			}
-			
-			HGHandle typeHandle  = null;
-			
-			if (byTypedValue != null)
-			{
-				if (byType != null)
-				{
-					if (!checkConsistent(byTypedValue, byType))
-						return Nothing.Instance;
-					else if (isSameType(byTypedValue, byType))
-					{
-						out.remove(byType);
-						if (byType.getTypeHandle() != null && !hg.isVar(byType.getTypeReference()))
-							typeHandle = byType.getTypeHandle();
-						byType = null;
-					}
-				}
-				if (byValue != null)
-					if (!checkConsistent(byTypedValue, byValue))
-						return Nothing.Instance;
-					else
-					{
-						out.remove(byValue);
-						byValue = null;
-					}				
-				if (typeHandle == null && !hg.isVar(byTypedValue.getTypeReference()))
-					if (byTypedValue.getTypeHandle() != null)
-						typeHandle = byTypedValue.getTypeHandle();
-					else
-						typeHandle = graph.getTypeSystem().getTypeHandle(byTypedValue.getJavaClass());
-			}
-			else if (byType != null)
-			{
-				if (!hg.isVar(byType.getTypeReference()))
-				{
-					if (byType.getTypeHandle() != null)
-						typeHandle  = byType.getTypeHandle();
-					else
-						typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(byType.getJavaClass());
-					if (typeHandle == null)
-						return Nothing.Instance;
-				}
-				if (byValue != null)
-				{
-					out.add(byTypedValue = new TypedValueCondition(byType.getTypeReference(), 
-																   byValue.getValueReference(), 
-																   byValue.getOperator()));
-					out.remove(byType);
-					out.remove(byValue);
-					byType = null;
-					byValue = null;
-				}
-			}
-			
-			// now, we check for availabe indices
-			
-			// The simplest: a direct by-value index 
-			if (byTypedValue != null && 
-			    !hg.isVar(byTypedValue.getTypeReference()))
-			{
-			    Pair<HGHandle, HGIndex<Object,HGPersistentHandle>> p = findIndex(graph, new DirectValueIndexer<Object>(typeHandle));
-			    if (p != null)
-			    {
-			        out.remove(byTypedValue);
-			        out.add(new IndexCondition(p.getSecond(), 
-			                                   byTypedValue.getValueReference(),
-			                                   ComparisonOperator.EQ));
-			    }
-			}
-			
-			// indexing by value parts, if we find an appropriate index
-			// then we can eliminate the "type" predicate altogether (since bypart indices
-			// are always for a particular atom type) and a "by value" condition is kept
-			// only as a predicate
-			if (typeHandle != null && byPart.size() > 0)
-			{
-				HGAtomType type = (HGAtomType)graph.get(typeHandle);
-				if (type == null)
-					throw new HGException("No type for type handle " + typeHandle + " in this HyperGraph instance.");
-				for (AtomPartCondition pc : byPart)									
-					if (!checkConsistent(type, pc))
-						return Nothing.Instance;
-					else
-					{
-						Pair<HGHandle, HGIndex<?,?>> p = findIndex(graph, new ByPartIndexer(typeHandle, 
-														pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
-						if (p != null)
-						{
-							if (typeHandle.equals(p.getFirst()))
-							{
-								if (byType != null)
-								{
-									out.remove(byType);
-									byType = null;
-								}
-								else if (byTypedValue != null)
-								{
-									out.remove(byTypedValue);
-									out.add(new ValueAsPredicateOnly(byTypedValue.getValueReference(), 
-																	 byTypedValue.getOperator()));
-									byTypedValue = null;
-								}
-							}
-							out.remove(pc);						    
-							out.add(new IndexedPartCondition(p.getFirst(), 
-							                                 p.getSecond(), 
-							                                 pc.getValueReference(), 
-							                                 pc.getOperator()));
-						}
-					}
-			}
-			
-			// Check for "by-target" indices within an OrderedLinkConditions and replace
-			// the corresponding 'incident' condition with one based on the index.
-			// Here would be an opportunity to use HGTypeStructuralInfo on a link type and
-			// possibly eliminate the OrderedLinkCondition (and resulting predicate call during
-			// query execution) altogether
-			if (typeHandle != null)
-				for (OrderedLinkCondition c : oLinks)
-				{					
-					for (int ti = 0; ti < c.targets().length; ti++)
-					{					
-						Ref<HGHandle> targetHandle = c.targets()[ti];
-						if (hg.isVar(targetHandle) || targetHandle.equals(hg.constant(graph.getHandleFactory().anyHandle())))
-							continue;
-						Pair<HGHandle, HGIndex<HGPersistentHandle,HGPersistentHandle>> p = 
-						        findIndex(graph, new ByTargetIndexer(typeHandle, ti));
-						if (p != null)
-						{
-						    if (typeHandle.equals(p.getFirst()))
-						    {
-    							if (byType != null)
-    							{
-    								out.remove(byType);
-    								byType = null;
-    							}
-    							else if (byTypedValue != null)
-    							{
-    								out.remove(byTypedValue);
-    								out.add(new AtomValueCondition(byTypedValue.getValueReference(), 
-    															   byTypedValue.getOperator()));
-    								byTypedValue = null;
-    							}							
-						    }
-                            out.remove(new IncidentCondition(targetHandle));						    
-							out.add(new IndexCondition<HGPersistentHandle, HGPersistentHandle>(
-										p.getSecond(), targetHandle.get().getPersistent()));
-						}
-					}
-				}
-			return out.size() > 1 ? out : out.iterator().next();
-		}
-		else if (cond instanceof Or)
-		{
-			Or in = (Or)cond;
-			if (in.isEmpty())
-			    return Nothing.Instance;
-			Or out = new Or();
-			for (HGQueryCondition c : in)
-			{			    
-			    rememberInAnalyzer(c, c = simplify(c));
-				if (c instanceof Or)
-					out.addAll((Or)c);				
-				else if (c != Nothing.Instance)
-					out.add(c);
-			}			
-			return out.isEmpty() ? Nothing.Instance : 
-					out.size() > 1 ? out : out.iterator().next();
-		}
-		else if (cond instanceof MapCondition)
-		{
-		    MapCondition mcond = (MapCondition)cond;
-		    HGQueryCondition mapped = simplify(mcond.getCondition());
-		    rememberInAnalyzer(mcond.getCondition(), mapped);
-		    return new MapCondition(mapped, mcond.getMapping());
-		}
-		else
-			return cond;
-	}	
+    private HGQueryCondition simplify(HGQueryCondition cond)
+    {
+        return oldsimplify(cond);
+        //return newsimplify(cond);
+    }
+    
+    @SuppressWarnings("rawtypes")
+    private HGQueryCondition newsimplify(HGQueryCondition cond)
+    {
+        if (! (cond instanceof And))
+            return oldsimplify(cond);
+        And in = new And();
+        in.addAll((And)cond);
+        Map<Class<?>, Set<HGQueryCondition>> allbytype =  QEManip.find(in, TypeCondition.class);
+        if (!allbytype.isEmpty())
+        {
+            Set<TypeCondition> S = (Set)allbytype.get(TypeCondition.class);
+            Pair<AtomTypeCondition, TypeConditionAggregate> p = QEManip.reduce(graph, S);
+            if (p != null)
+            {
+                // We replace all "pure" AtomTypeCondition by the one returned
+                // from the reduction. 
+                for (TypeCondition tc : S)
+                    if (tc instanceof AtomTypeCondition)
+                        in.remove(tc);
+                in.add(p.getFirst());
+                if (!p.getSecond().isEmpty())
+                    in.add(p.getSecond());
+            }
+        }
+        
+        And out = new And();
+        List<QueryCompile.Contract> L = graph.getConfig().getQueryConfiguration().getContractTransforms(And.class);
+        HashSet<HGQueryCondition> ignore = new HashSet<HGQueryCondition>();
+        HashSet<HGQueryCondition> added = new HashSet<HGQueryCondition>();
+        try
+        {
+            for (QueryCompile.Contract contract : L)            
+            {
+                Pair<HGQueryCondition, Set<HGQueryCondition>> p = contract.contract(graph, in);
+                if (p.getFirst() == null) continue;
+                else if (p.getFirst() == Nothing.Instance)
+                    return Nothing.Instance;
+                ignore.addAll(p.getSecond());
+                added.add(p.getFirst());
+            }
+        }
+        catch (ContradictoryCondition ccex)
+        {
+            return Nothing.Instance;
+        }
+        for (HGQueryCondition c : in) if (!ignore.contains(c))  out.add(c);
+        for (HGQueryCondition c : added) if (!ignore.contains(c))   out.add(c);
+        return out;
+    }
+    
+    
+    // apply a few simply transformation for common cases...
+    // this kind of assumes that we are already in DNF because
+    // conjunction are handled by transforming them as if we are at
+    // the top level
+    private HGQueryCondition oldsimplify(HGQueryCondition cond)
+    {
+        if (cond instanceof And)
+        {
+            And in = (And)cond;
+            And out = new And();
+            for (HGQueryCondition c : in)
+            {
+                rememberInAnalyzer(c, c = simplify(c));
+                if (c instanceof And)
+                    out.addAll((And)c);
+                else if (c == Nothing.Instance)
+                    return c;
+                else
+                    out.add(c);
+            }
+            
+            // At the end of the following step, the conjunction will have
+            // either a single TypedValueCondition or at most one AtomTypeCondition
+            // and one AtomValueCondition. This step insures that there are no
+            // contradictory conditions amongst the condition of type
+            // AtomValueCondition, AtomTypeCondition and TypedValueCondition
+            AtomTypeCondition byType = null;
+            AtomValueCondition byValue = null;
+            TypedValueCondition byTypedValue = null;
+            HashSet<OrderedLinkCondition> oLinks = new HashSet<OrderedLinkCondition>();
+            HashSet<AtomPartCondition> byPart = new HashSet<AtomPartCondition>();
+            boolean has_ordered = false;
+            boolean has_ra = false;
+            for (Iterator<HGQueryCondition> i = out.iterator(); i.hasNext(); )
+            {
+                HGQueryCondition c = i.next();
+                if (c instanceof AtomTypeCondition)
+                {
+                    AtomTypeCondition tc = (AtomTypeCondition)c;                    
+                    // if the condition is on a Java class with no HG type currently defined,
+                    // clearly there can't be atoms of that type
+//                      if (!hg.isVar(tc.getTypeReference()) && 
+//                          tc.getTypeHandle() == null && 
+//                          graph.getTypeSystem().getTypeHandleIfDefined(tc.getJavaClass()) == null)
+//                          
+//                          return Nothing.Instance;
+                        
+                    if (byType == null)
+                    {
+                        if (byTypedValue != null)
+                        {
+                            if(!checkConsistent(byTypedValue, tc))
+                                return Nothing.Instance;
+                            else if (isSameType(byTypedValue, tc))
+                                i.remove();
+                        }
+                        else
+                            byType = tc;
+                    }
+                    else if (isSameType(byType, tc))
+                        i.remove();
+                    else if (!checkConsistent(byType, tc))
+                        return Nothing.Instance;                            
+                }
+                else if (c instanceof AtomValueCondition)
+                {
+                    if (byValue == null)
+                    {                       
+                        if (byTypedValue != null)
+                            if(!checkConsistent(byTypedValue, (AtomValueCondition)c))
+                                return Nothing.Instance;
+                            else
+                                i.remove();
+                        else
+                            byValue = (AtomValueCondition)c;                        
+                    }
+                    else if (byValue.equals(c))
+                        i.remove();
+                    else
+                        return Nothing.Instance;
+                }
+                else if (c instanceof TypedValueCondition)
+                {
+                    if (byTypedValue ==  null)
+                        byTypedValue = (TypedValueCondition)c;
+                    else if (byTypedValue.equals(c) &&                  
+                            isSameType(byTypedValue, (TypedValueCondition)c))
+                        i.remove();
+                    else
+                        return Nothing.Instance;            
+                    // if the condition is on a Java class with no HG type currently defined,
+                    // clearly there can't be atoms of that type
+                    if (!hg.isVar(byTypedValue.getTypeReference()) && 
+                            byTypedValue.getTypeHandle() == null && 
+                        graph.getTypeSystem().getTypeHandleIfDefined(byTypedValue.getJavaClass()) == null)                      
+                        return Nothing.Instance;
+                }
+                else if (c instanceof AtomPartCondition)
+                {
+                    byPart.add((AtomPartCondition)c);
+                }
+                else if (c instanceof OrderedLinkCondition)
+                {
+                    oLinks.add((OrderedLinkCondition)c);
+                }
+                else
+                {
+                    ConditionToQuery<?> transform = QueryCompile.translator(graph, c.getClass());
+                    if (transform != null)
+                    {
+                        QueryMetaData qmd = transform.getMetaData(graph, c);
+                        has_ordered = has_ordered || qmd.ordered;
+                        has_ra = has_ra || qmd.randomAccess;
+                    }
+                }
+            }
+            
+            HGHandle typeHandle  = null;
+            
+            if (byTypedValue != null)
+            {
+                if (byType != null)
+                {
+                    if (!checkConsistent(byTypedValue, byType))
+                        return Nothing.Instance;
+                    else if (isSameType(byTypedValue, byType))
+                    {
+                        out.remove(byType);
+                        if (byType.getTypeHandle() != null && !hg.isVar(byType.getTypeReference()))
+                            typeHandle = byType.getTypeHandle();
+                        byType = null;
+                    }
+                }
+                if (byValue != null)
+                    if (!checkConsistent(byTypedValue, byValue))
+                        return Nothing.Instance;
+                    else
+                    {
+                        out.remove(byValue);
+                        byValue = null;
+                    }               
+                if (typeHandle == null && !hg.isVar(byTypedValue.getTypeReference()))
+                    if (byTypedValue.getTypeHandle() != null)
+                        typeHandle = byTypedValue.getTypeHandle();
+                    else
+                        typeHandle = graph.getTypeSystem().getTypeHandle(byTypedValue.getJavaClass());
+            }
+            else if (byType != null)
+            {
+                if (!hg.isVar(byType.getTypeReference()))
+                {
+                    if (byType.getTypeHandle() != null)
+                        typeHandle  = byType.getTypeHandle();
+                    else
+                        typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(byType.getJavaClass());
+                    if (typeHandle == null)
+                        return Nothing.Instance;
+                }
+                if (byValue != null)
+                {
+                    out.add(byTypedValue = new TypedValueCondition(byType.getTypeReference(), 
+                                                                   byValue.getValueReference(), 
+                                                                   byValue.getOperator()));
+                    out.remove(byType);
+                    out.remove(byValue);
+                    byType = null;
+                    byValue = null;
+                }
+            }
+            
+            // now, we check for availabe indices
+            
+            // The simplest: a direct by-value index 
+            if (byTypedValue != null && 
+                !hg.isVar(byTypedValue.getTypeReference()))
+            {
+                Pair<HGHandle, HGIndex<Object,HGPersistentHandle>> p = findIndex(graph, new DirectValueIndexer<Object>(typeHandle));
+                if (p != null)
+                {
+                    out.remove(byTypedValue);
+                    out.add(new IndexCondition(p.getSecond(), 
+                                               byTypedValue.getValueReference(),
+                                               ComparisonOperator.EQ));
+                }
+            }
+            
+            // indexing by value parts, if we find an appropriate index
+            // then we can eliminate the "type" predicate altogether (since bypart indices
+            // are always for a particular atom type) and a "by value" condition is kept
+            // only as a predicate
+            if (typeHandle != null && byPart.size() > 0)
+            {
+                HGAtomType type = (HGAtomType)graph.get(typeHandle);
+                if (type == null)
+                    throw new HGException("No type for type handle " + typeHandle + " in this HyperGraph instance.");
+                for (AtomPartCondition pc : byPart)                                 
+                    if (!checkConsistent(type, pc))
+                        return Nothing.Instance;
+                    else
+                    {
+                        Pair<HGHandle, HGIndex<?,?>> p = findIndex(graph, new ByPartIndexer(typeHandle, 
+                                                        pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
+                        if (p != null)
+                        {
+                            if (typeHandle.equals(p.getFirst()))
+                            {
+                                if (byType != null)
+                                {
+                                    out.remove(byType);
+                                    byType = null;
+                                }
+                                else if (byTypedValue != null)
+                                {
+                                    out.remove(byTypedValue);
+                                    out.add(new ValueAsPredicateOnly(byTypedValue.getValueReference(), 
+                                                                     byTypedValue.getOperator()));
+                                    byTypedValue = null;
+                                }
+                            }
+                            out.remove(pc);                         
+                            out.add(new IndexedPartCondition(p.getFirst(), 
+                                                             p.getSecond(), 
+                                                             pc.getValueReference(), 
+                                                             pc.getOperator()));
+                        }
+                    }
+            }
+            
+            // Check for "by-target" indices within an OrderedLinkConditions and replace
+            // the corresponding 'incident' condition with one based on the index.
+            // Here would be an opportunity to use HGTypeStructuralInfo on a link type and
+            // possibly eliminate the OrderedLinkCondition (and resulting predicate call during
+            // query execution) altogether
+            if (typeHandle != null)
+                for (OrderedLinkCondition c : oLinks)
+                {                   
+                    for (int ti = 0; ti < c.targets().length; ti++)
+                    {                   
+                        Ref<HGHandle> targetHandle = c.targets()[ti];
+                        if (hg.isVar(targetHandle) || targetHandle.equals(hg.constant(graph.getHandleFactory().anyHandle())))
+                            continue;
+                        Pair<HGHandle, HGIndex<HGPersistentHandle,HGPersistentHandle>> p = 
+                                findIndex(graph, new ByTargetIndexer(typeHandle, ti));
+                        if (p != null)
+                        {
+                            if (typeHandle.equals(p.getFirst()))
+                            {
+                                if (byType != null)
+                                {
+                                    out.remove(byType);
+                                    byType = null;
+                                }
+                                else if (byTypedValue != null)
+                                {
+                                    out.remove(byTypedValue);
+                                    out.add(new AtomValueCondition(byTypedValue.getValueReference(), 
+                                                                   byTypedValue.getOperator()));
+                                    byTypedValue = null;
+                                }                           
+                            }
+                            out.remove(new IncidentCondition(targetHandle));                            
+                            out.add(new IndexCondition<HGPersistentHandle, HGPersistentHandle>(
+                                        p.getSecond(), targetHandle.get().getPersistent()));
+                        }
+                    }
+                }
+            return out.size() > 1 ? out : out.iterator().next();
+        }
+        else if (cond instanceof Or)
+        {
+            Or in = (Or)cond;
+            if (in.isEmpty())
+                return Nothing.Instance;
+            Or out = new Or();
+            for (HGQueryCondition c : in)
+            {               
+                rememberInAnalyzer(c, c = simplify(c));
+                if (c instanceof Or)
+                    out.addAll((Or)c);              
+                else if (c != Nothing.Instance)
+                    out.add(c);
+            }           
+            return out.isEmpty() ? Nothing.Instance : 
+                    out.size() > 1 ? out : out.iterator().next();
+        }
+        else if (cond instanceof MapCondition)
+        {
+            MapCondition mcond = (MapCondition)cond;
+            HGQueryCondition mapped = simplify(mcond.getCondition());
+            rememberInAnalyzer(mcond.getCondition(), mapped);
+            return new MapCondition(mapped, mcond.getMapping());
+        }
+        else
+            return cond;
+    }   
 
 	private List<AtomPartCondition> getAtomIndexedPartsConditions(HyperGraph graph, HGHandle hType, Object value)
 	{
@@ -798,12 +857,12 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 		// conditions is calling the varContext() method before calling HGQuery.make
 		try
 		{
-		    QueryCompile.start();
-			preprocess(condition);  
-			this.condition = simplify(toDNF(expand(graph, condition)));
-			rememberInAnalyzer(condition, this.condition);
-			query = QueryCompile.translate(graph, QueryCompile.transform(graph, this.condition));		
-			return this;
+            QueryCompile.start();
+            preprocess(condition);  
+            this.condition = simplify(toDNF(expand(graph, condition)));
+            rememberInAnalyzer(condition, this.condition);          
+            query = QueryCompile.translate(graph, this.condition);      
+            return this;
 		}
 		finally
 		{
