@@ -218,8 +218,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	
     private HGQueryCondition simplify(HGQueryCondition cond)
     {
-        return oldsimplify(cond);
-        //return newsimplify(cond);
+        //return oldsimplify(cond);
+        return newsimplify(cond);
     }
     
     @SuppressWarnings("rawtypes")

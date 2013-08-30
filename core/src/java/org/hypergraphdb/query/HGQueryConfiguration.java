@@ -75,7 +75,6 @@ public class HGQueryConfiguration
       return this;
     }
 
-    
     @SuppressWarnings("unchecked")
         public List<QueryCompile.Expand> getExpandTransforms(Class<? extends HGQueryCondition> type)
     {

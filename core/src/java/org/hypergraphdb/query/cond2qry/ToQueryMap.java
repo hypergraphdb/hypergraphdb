@@ -152,9 +152,11 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 				}
 				else
 				{
+				    HGHandle typeHandle = ac.typeHandleIfAvailable(graph);
 					x.sizeExpected = 
 							x.sizeLB = 
-							x.sizeUB = graph.getIndexManager().getIndexByType().count(ac.getTypeHandle(graph).getPersistent());
+							x.sizeUB = (typeHandle == null) ? 0 : 
+							    graph.getIndexManager().getIndexByType().count(typeHandle.getPersistent());
 				}
 				return x;
 			}

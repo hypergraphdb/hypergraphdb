@@ -71,7 +71,7 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate, Typ
             if (getTypeHandle() != null)
                 return getTypeHandle();
             else
-                return graph.getTypeSystem().getTypeHandle(getJavaClass());
+                return graph.getTypeSystem().getTypeHandleIfDefined(getJavaClass());
         }	    
         else
             return null;
