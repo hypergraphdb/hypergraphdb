@@ -4,6 +4,7 @@ import org.hypergraphdb.HGConfiguration;
 
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.query.And;
 import org.hypergraphdb.storage.bdb.BDBStorageImplementation;
 import org.hypergraphdb.storage.incidence.QueryByTypedIncident;
 import org.hypergraphdb.storage.incidence.TypeAndPositionIncidenceAnnotator;
@@ -22,7 +23,7 @@ public class AnnotatedIncidentGraphFactory implements GraphFactory
         storage.setIncidentAnnotator(new TypeAndPositionIncidenceAnnotator());
         config.setStoreImplementation(storage);
         HyperGraph graph = HGEnvironment.get(location, config);
-        config.getQueryConfiguration().addTransform(new QueryByTypedIncident(graph));
+        config.getQueryConfiguration().addContractTransform(And.class, new QueryByTypedIncident());
         config.getQueryConfiguration().addCompiler(TypedIncidentCondition.class, new TypedIncidentToQuery());
         return graph;
     }

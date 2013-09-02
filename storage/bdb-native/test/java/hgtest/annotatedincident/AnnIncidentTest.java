@@ -7,6 +7,7 @@ import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.query.And;
 import org.hypergraphdb.storage.bdb.BDBStorageImplementation;
 import org.hypergraphdb.storage.incidence.QueryByTypedIncident;
 import org.hypergraphdb.storage.incidence.TypeAndPositionIncidenceAnnotator;
@@ -35,7 +36,7 @@ public class AnnIncidentTest extends HGTestBase
         storage.setIncidentAnnotator(new TypeAndPositionIncidenceAnnotator());
         config.setStoreImplementation(storage);
         this.graph = HGEnvironment.get(getGraphLocation(), config);
-        config.getQueryConfiguration().addTransform(new QueryByTypedIncident(graph));
+        config.getQueryConfiguration().addContractTransform(And.class, new QueryByTypedIncident());
         config.getQueryConfiguration().addCompiler(TypedIncidentCondition.class, new TypedIncidentToQuery());
     }
     

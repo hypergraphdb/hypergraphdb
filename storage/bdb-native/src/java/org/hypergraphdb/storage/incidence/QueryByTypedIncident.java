@@ -1,75 +1,55 @@
 package org.hypergraphdb.storage.incidence;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
-import org.hypergraphdb.query.MapCondition;
-import org.hypergraphdb.query.Or;
-import org.hypergraphdb.util.Mapping;
+import org.hypergraphdb.query.QueryCompile;
+import org.hypergraphdb.util.Pair;
 
-public class QueryByTypedIncident implements Mapping<HGQueryCondition, HGQueryCondition>
+public class QueryByTypedIncident implements QueryCompile.Contract
 {
-    private HyperGraph graph;
-    
-    public QueryByTypedIncident(HyperGraph graph)
+    public Pair<HGQueryCondition, Set<HGQueryCondition>> contract(HyperGraph graph,
+                                                                  HGQueryCondition expression)
     {
-        this.graph = graph;
-    }
-    
-    public HGQueryCondition eval(HGQueryCondition cond)
-    {
-        if (cond instanceof And)
+        And in = (And) expression;
+        HashSet<HGQueryCondition> replaced = new HashSet<HGQueryCondition>();
+        ArrayList<IncidentCondition> incident = new ArrayList<IncidentCondition>();
+        And out = new And();
+
+        HGHandle typeHandle = null;
+        AtomTypeCondition tsub = null;
+        // Determine if there's a type constraint in this intersection
+        for (HGQueryCondition sub : in)
         {
-            And in = (And)cond;
-            ArrayList<IncidentCondition> incident = new ArrayList<IncidentCondition>();
-            And out = new And();
-            
-            HGHandle typeHandle = null;
-            
-            // Determine if there's a type constraint in this intersection
-            for (HGQueryCondition sub : in)
+            if (sub instanceof AtomTypeCondition)
             {
-                if (sub instanceof AtomTypeCondition)
-                {
-                    AtomTypeCondition tsub = (AtomTypeCondition)sub;                   
-                    if ( (typeHandle = tsub.typeHandleIfAvailable(graph)) == null)
-                        out.add(sub); 
-                }
-                else if (sub instanceof IncidentCondition)
-                    incident.add((IncidentCondition)sub);
-                else
-                    out.add(sub);
+                tsub = (AtomTypeCondition) sub;
+                if ((typeHandle = tsub.typeHandleIfAvailable(graph)) != null)
+                    replaced.add(sub);
             }
-            if (typeHandle != null)
+            else if (sub instanceof IncidentCondition)
+                incident.add((IncidentCondition) sub);
+        }
+        if (typeHandle != null && !incident.isEmpty())
+        {
+            for (IncidentCondition inc : incident)
             {
-                for (IncidentCondition inc : incident)
-                    out.add(new TypedIncidentCondition(inc.getTargetRef(), hg.constant(typeHandle)));
+                out.add(new TypedIncidentCondition(inc.getTargetRef(), hg
+                        .constant(typeHandle)));
+                replaced.add(inc);
             }
-            else
-                out.addAll(incident);
-            return out;
-        }
-        else if (cond instanceof Or)
-        {
-            Or in = (Or)cond;
-            Or out = new Or();
-            for (HGQueryCondition c : in)
-                out.add(eval(c));
-            return out;
-        }
-        else if (cond instanceof MapCondition)
-        {
-            MapCondition mcond = (MapCondition)cond;
-            return new MapCondition(eval(mcond.getCondition()),
-                                    mcond.getMapping());            
+            return new Pair<HGQueryCondition, Set<HGQueryCondition>>(out,
+                    replaced);
         }
         else
-            return cond;
+            return new Pair<HGQueryCondition, Set<HGQueryCondition>>(null, null);
     }
 }
