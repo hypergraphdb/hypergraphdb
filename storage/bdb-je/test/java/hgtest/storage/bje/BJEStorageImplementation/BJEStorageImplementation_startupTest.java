@@ -1,9 +1,8 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
-import org.hypergraphdb.HGStore;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 

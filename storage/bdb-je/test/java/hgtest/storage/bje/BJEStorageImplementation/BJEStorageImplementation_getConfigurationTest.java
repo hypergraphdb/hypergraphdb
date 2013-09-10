@@ -1,8 +1,7 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.EnvironmentConfig;
-import org.hypergraphdb.storage.bje.BJEConfig;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertFalse;

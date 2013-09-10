@@ -1,4 +1,4 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.Environment;
 import org.testng.annotations.Test;

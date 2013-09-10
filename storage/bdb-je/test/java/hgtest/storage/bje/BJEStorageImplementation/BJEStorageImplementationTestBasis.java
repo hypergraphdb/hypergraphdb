@@ -1,4 +1,4 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;

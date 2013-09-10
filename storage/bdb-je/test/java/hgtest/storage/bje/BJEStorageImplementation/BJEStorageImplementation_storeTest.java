@@ -1,9 +1,7 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;

@@ -1,4 +1,4 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.storage.ByteArrayConverter;

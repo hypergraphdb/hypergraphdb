@@ -1,4 +1,4 @@
-package hgtest.storage.bje;
+package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseNotFoundException;
 import org.hypergraphdb.HGPersistentHandle;
