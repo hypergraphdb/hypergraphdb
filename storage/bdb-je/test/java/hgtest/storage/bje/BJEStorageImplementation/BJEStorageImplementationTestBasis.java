@@ -44,7 +44,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
-	protected String testDatabaseLocation = System.getProperty("user.home")
+	final protected String testDatabaseLocation = System.getProperty("user.home")
 			+ File.separator + "hgtest.tmp";
 
 	// classes which are used by BJEStorageImplementation
