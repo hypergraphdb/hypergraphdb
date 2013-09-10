@@ -65,4 +65,13 @@ public class BJEStorageImplementation_getIndexTest extends
         assertEquals(firstIndex, secondIndex);
 		shutdown();
 	}
+
+    @Test
+    public void indexNameIsNull() throws Exception {
+        startup(1);
+        final String indexName = null;
+        final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null, true, true);
+        assertNotNull(createdIndex);
+        shutdown();
+    }
 }
