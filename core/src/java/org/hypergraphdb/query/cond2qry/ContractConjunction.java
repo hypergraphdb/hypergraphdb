@@ -80,8 +80,7 @@ public class ContractConjunction
             Map<Class<?>, Set<HGQueryCondition>> M = QEManip.find(
                     (Collection<HGQueryCondition>) expression,
                     AtomTypeCondition.class, AtomPartCondition.class);
-            AtomTypeCondition bytype = QEManip.collapse(graph, M
-                    .get(AtomTypeCondition.class));
+            AtomTypeCondition bytype = QEManip.collapse(graph, M.get(AtomTypeCondition.class));
             if (bytype == null || hg.isVar(bytype.getTypeReference()))
                 return notransform;
             Set<HGQueryCondition> bypart = M.get(AtomPartCondition.class);
@@ -108,7 +107,8 @@ public class ContractConjunction
                                 .getSecond(), pc.getValueReference(), pc
                                 .getOperator()));
                         replaced.add(q);
-                        replaced.add(bytype);
+                        if (typeHandle.equals(p.getFirst()))
+                            replaced.add(bytype);
                     }
                 }
             }
