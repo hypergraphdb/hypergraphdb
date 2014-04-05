@@ -1512,7 +1512,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * <p>Create a new variable with an initial value and attach it to the current variable context.</p>
          * 
          * @param name The name of the variable. Any previous variable with that name in the current context will
-         * be overriden.
+         * be overridden.
          * @param initialValue The initial value of the variable.
          * @return The {@link Var} instance.
          */

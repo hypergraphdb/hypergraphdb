@@ -8,12 +8,15 @@ import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.AtomProjection;
+import org.hypergraphdb.atom.HGRelType;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.AtomPartCondition;
 import org.hypergraphdb.query.QueryCompile;
@@ -23,6 +26,7 @@ import org.hypergraphdb.type.Top;
 import org.hypergraphdb.type.javaprimitive.LongType;
 import org.hypergraphdb.type.javaprimitive.StringType;
 import org.hypergraphdb.util.HGUtils;
+import org.testng.Assert;
 
 import hgtest.atomref.TestHGAtomRef;
 import hgtest.beans.Car;
@@ -183,20 +187,25 @@ public class DebugTest
     {
         //anatest();
         // TestQuery.go("/tmp/alain");
-        BigTypePlus test = new BigTypePlus();
-        test.openGraph();
+        Queries test = new Queries();
+//        test.openGraph();
 //        test.getGraph().close();
-//        test.setUp();
+        test.setUp();
         
 //        HGUtils.dropHyperGraphInstance(T.getTmpDirectory() + "/" + "emptyhg");
 //        HyperGraph graph = HGEnvironment.get(T.getTmpDirectory() + "/" + "emptyhg");
+//        HGHandle t1  = graph.add(40);
+//        HGHandle lh = graph.add(new HGValueLink("edgeName", t1));
+//        HGQuery q = HGQuery.make(HGHandle.class, graph);        
+//        q.compile(hg.and(hg.eq("edgeName"), hg.incident(t1)));
+//        Assert.assertEquals(q.findOne(), lh);
 //        System.out.println(hg.getAll(graph, hg.type(String.class)));
 //        graph.getTransactionManager().beginTransaction();
         try
         {
             //QueryCompile.parallel();
             System.out.println("Start test");
-            test.testManySubtypes();
+            test.testMapCondition();
 //            HGHandle h1 = graph.add("OR-TEST-1");
 //            HGHandle h2 = graph.add("OR-TEST-2");
 //            while (true)

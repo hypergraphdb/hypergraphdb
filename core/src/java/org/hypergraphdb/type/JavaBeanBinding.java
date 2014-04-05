@@ -74,24 +74,6 @@ public class JavaBeanBinding extends JavaAbstractBinding
     
     public Object make(HGPersistentHandle handle, LazyRef<HGHandle[]> targetSet, IncidenceSetRef incidenceSet)
     {
-//    	if (this.javaClass.getName().equals(CompositeIndexer.class.getName()))
-//    	{
-//    		RecordType recordType = (RecordType)hgType;
-//    		for (Iterator<HGHandle> i = recordType.getSlots().iterator(); i.hasNext(); )
-//    		{
-//    			HGHandle slotHandle = i.next();
-//    			Slot slot = graph.get(slotHandle);
-//    			if (slot.getLabel().equals("indexerParts"))
-//    			{
-//    				HGHandle slotType = graph.getTypeSystem().getTypeHandle(HGKeyIndexer[].class);
-//    				if (!slotType.equals(slot.getValueType()))
-//    				{
-//    					slot.setValueType(slotType);
-//    					graph.update(slot);
-//    				}
-//    			}
-//    		}
-//    	}
         Object bean = null;
         try
         {
@@ -118,15 +100,6 @@ public class JavaBeanBinding extends JavaAbstractBinding
 	        		value = graph.get(((HGAtomRef)value).getReferent());
 	        	try
 	        	{
-	        		// TODO: tmp for porting old DBs to new version.
-	        		// DELME
-//	        		if (value instanceof HGIndexer[])
-//	        		{
-//	        			HGIndexer [] A = (HGIndexer[])value;
-//	        			HGKeyIndexer [] newvalue = new HGKeyIndexer[A.length];
-//	        			for (int i = 0; i < A.length; i++) newvalue[i] = (HGKeyIndexer)A[i];
-//	        			value = newvalue;
-//	        		}
 	        	    BonesOfBeans.setProperty(bean, slot.getLabel(), value);
 	        	}
 	        	catch (Throwable t)
@@ -143,10 +116,13 @@ public class JavaBeanBinding extends JavaAbstractBinding
         	throw new HGException("Unable to instantiate bean of type '" + javaClass.getName() +
         			"', make sure that bean has a default constructor declared.", ex);
 		}
-        catch (HGException t) { throw t; }
+        catch (HGException t) 
+        { 
+            throw new HGException("JavaBeanBinding.make[" + this.getJavaClass().getName() + "]:" + t.toString(), t); 
+        }
         catch (Throwable t)
         {
-            throw new HGException("JavaTypeBinding.make: " + t.toString(), t);
+            throw new HGException("JavaBeanBinding.make[" + this.getJavaClass().getName() + "]:" + t.toString(), t);
         }
         return bean;
     }

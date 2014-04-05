@@ -18,8 +18,8 @@
 
   <distributionManagement>
     <repository>
-      <id>kobrix-repository</id>
-      <url>sftp://kobrix.com/home/tomcat/webapps/hypergraphdb/maven</url>
+      <id>hypergraphdb-repository</id>
+      <url>sftp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
     </repository>
   </distributionManagement>
   
@@ -104,6 +104,12 @@
     <configuration>
       <forkMode>always</forkMode>
       <argLine>-Djava.library.path=${project.build.directory}/lib</argLine>        
+      <includes>
+        <include>**/*.java</include>
+      </includes>
+      <aggregate>true</aggregate>
+      <!--also set this to link to generated source reports-->
+      <linkXRef>true</linkXRef>
     </configuration>
   </plugin>
 </plugins>
@@ -114,7 +120,7 @@
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
       <version>6.3.1</version>
-      <scope>test</scope>  		
+      <scope>test</scope>  	
     </dependency>    	
   </dependencies>    
   

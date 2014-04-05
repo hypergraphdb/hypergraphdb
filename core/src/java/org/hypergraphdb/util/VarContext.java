@@ -4,6 +4,19 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+/**
+ * <p>
+ * This is a glorified name/value map implementing the handling of query variables. 
+ * </p>
+ * 
+ * <p>
+ * The glory comes from the implementation of a thread-local (and therefore call stack 
+ * bound) stack of frames.
+ * </p>
+ * 
+ * @author Borislav Iordanov
+ *
+ */
 public class VarContext
 {
 	static ThreadLocal<Stack<VarContext>> stack = new ThreadLocal<Stack<VarContext>>() {

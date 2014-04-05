@@ -565,7 +565,7 @@ public class HyperGraphPeer
         }
     }
     
-    public void bindIdentityToNetworkTarget(HGPeerIdentity id, Object networkTarget)
+    public void bindIdentityToNetworkTarget(final HGPeerIdentity id, final Object networkTarget)
     {
         synchronized (peerIdentities)
         {            
@@ -573,7 +573,15 @@ public class HyperGraphPeer
             if (oldId != null && oldId.equals(id))
                 return;
             peerIdentities.add(networkTarget, id);
-            graph.define(id.getId(), id);
+            graph.getTransactionManager().transact(new Callable<Object>() {
+              public Object call() {  
+                if (graph.get(id.getId()) == null)
+                    graph.define(id.getId(), id);
+                else
+                    graph.replace(id.getId(), id);
+                return null;
+              }
+            });
             for (PeerPresenceListener listener : peerListeners)
                 listener.peerJoined(id);
             //System.out.println("Added peer " + networkTarget + ":" + id + " to " + this.getIdentity());

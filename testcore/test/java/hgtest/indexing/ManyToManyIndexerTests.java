@@ -156,7 +156,8 @@ public class ManyToManyIndexerTests extends HGTestBase
         while (result.hasNext())
         {
  //           System.out.println(graph.get((HGHandle) result.next()));
-            totalValues++;
+            HGHandle value = (HGHandle)result.next();
+            totalValues++;            
         }
         result.close();
         result = index.scanKeys();

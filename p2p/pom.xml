@@ -7,22 +7,12 @@
   <artifactId>hgdbp2p</artifactId>
   <name>HyperGraphDB Core</name>
   <version>1.3-SNAPSHOT</version>  
-  <url>http://hypergraphdb.org</url>
- 
-  <distributionManagement>
-    <repository>
-      <id>kobrix-repository</id>
-      <url>sftp://kobrix.com/home/tomcat/webapps/hypergraphdb/maven</url>
-    </repository>
-  </distributionManagement>
-  
-  <repositories>
-    <repository>
-      <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
-    </repository>
-  </repositories>
-  
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hypergraphdb</artifactId>
+    <version>1.3-SNAPSHOT</version>  
+  </parent>  
+   
   <dependencies>
     <dependency>
       <groupId>jivesoftware</groupId>
@@ -37,12 +27,12 @@
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdb</artifactId>
-      <version>1.2</version>
+      <version>1.3-SNAPSHOT</version>
     </dependency>	
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
-      <version>1.2</version>
+      <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
     <dependency>

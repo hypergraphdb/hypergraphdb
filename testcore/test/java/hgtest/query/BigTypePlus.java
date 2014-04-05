@@ -1,13 +1,17 @@
 package hgtest.query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.HGRel;
 import org.hypergraphdb.atom.HGRelType;
+import org.hypergraphdb.indexing.ByPartIndexer;
+import org.hypergraphdb.query.AnalyzedQuery;
 import org.hypergraphdb.query.QueryCompile;
 import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.AfterClass;
@@ -53,6 +57,8 @@ public class BigTypePlus extends HGTestBase
     public void setUp()
     {
         super.setUp();
+        HGHandle reltypeHandle = getGraph().getTypeSystem().getTypeHandle(HGRelType.class);
+        getGraph().getIndexManager().register(new ByPartIndexer(reltypeHandle, "name"));        
         alltargets = new HGHandle[N];
         for (int i = 0; i < N; i ++)
             alltargets[i] = graph.add(new Integer(i));
@@ -130,11 +136,28 @@ public class BigTypePlus extends HGTestBase
     @Test
     public void testManySubtypes()
     {
+        Map<String, Object> analyzeOptions = new HashMap<String, Object>();
+        analyzeOptions.put(AnalyzedQuery.SCAN_THRESHOLD, 3000);
+        AnalyzedQuery aq = QueryCompile.analyze(graph, 
+                    hg.and(hg.type(HGRelType.class), hg.eq("name", "t>1>1")), 
+                    analyzeOptions);
+        System.out.println(aq.getAnalysisResult(AnalyzedQuery.SCAN_THRESHOLD));
         HGHandle node = hg.findOne(graph, hg.and(hg.type(HGRelType.class), hg.eq("name", "t>1>1")));
         HGHandle t1 = hg.findOne(graph, hg.eq(1));
         HGHandle t2 = hg.findOne(graph, hg.eq(2));
-        runNormal(node, t1, t2);
-        runParallel(node, t1, t2);
+
+        analyzeOptions.clear();
+        analyzeOptions.put(AnalyzedQuery.INTERSECTION_THRESHOLD, 1000);
+        aq = QueryCompile.analyze(this.getGraph(),
+                hg.and(hg.typePlus(node),
+                        hg.incident(t1),
+                        hg.incident(t2)),
+                analyzeOptions);
+
+        System.out.println(aq.getAnalysisResult(AnalyzedQuery.INTERSECTION_THRESHOLD));
+        
+        //        runNormal(node, t1, t2);
+//        runParallel(node, t1, t2);
 //        System.out.println("again: " + graph.count(hg.typePlus(node)));
         //q.compile(condition)
     }
