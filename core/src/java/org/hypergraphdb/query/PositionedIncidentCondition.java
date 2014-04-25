@@ -22,7 +22,7 @@ import org.hypergraphdb.util.TempLink;
  * </p>
  * 
  * <p>
- * <b>Note</b> that the lower and upper bound in the range specification are inclusing.
+ * <b>Note</b> that the lower and upper bound in the range specification are inclusive.
  * A range of [1, 5] means all positions 1 to 5, included, are examined. Position counting
  * starts at 0 and, as mentioned above, position -1 means the last element.
  * </p>
@@ -39,6 +39,21 @@ public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPred
 	{
 	}
 
+	public PositionedIncidentCondition(HGHandle target, Integer position)
+	{
+		this(hg.constant(target), hg.constant(position));
+	}
+
+	public PositionedIncidentCondition(HGHandle target, Integer lowerBound, Integer upperBound)
+	{
+		this(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound), hg.constant(false));
+	}
+
+	public PositionedIncidentCondition(HGHandle target, Integer lowerBound, Integer upperBound, boolean complement)
+	{
+		this(hg.constant(target), hg.constant(lowerBound), hg.constant(upperBound), hg.constant(complement));
+	}
+	
 	public PositionedIncidentCondition(Ref<HGHandle> target, Ref<Integer> position)
 	{
 		this(target, position, hg.constant(false));
@@ -135,7 +150,12 @@ public class PositionedIncidentCondition implements HGQueryCondition, HGAtomPred
 		if (lb < 0)
 			lb = link.getArity() + lb;
 		
-		assert lb <= ub;
+		if (lb > ub 
+			|| lb < 0 
+			|| ub < 0
+			|| lb >= link.getArity()
+			|| ub >= link.getArity())
+			return false;
 		
 		if (complementRef.get())
 		{
