@@ -22,13 +22,6 @@
       <url>sftp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
     </repository>
   </distributionManagement>
-  
-  <repositories>
-    <repository>
-      <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
-    </repository>
-  </repositories>
 
   <modules>
     <module>mvnassembly</module>
