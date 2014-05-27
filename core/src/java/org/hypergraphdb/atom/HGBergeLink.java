@@ -46,6 +46,7 @@ public class HGBergeLink extends HGPlainLink
 		System.arraycopy(head, 0, targets, 0, head.length);
 		System.arraycopy(tail, 0, targets, head.length, tail.length);
 		tailIndex = head.length;
+		this.outgoingSet = targets;
 	}
 
 	public Set<HGHandle> getHead()
