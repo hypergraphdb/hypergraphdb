@@ -9,6 +9,12 @@
     <version>1.3-SNAPSHOT</version>  
   </parent>  	
   <groupId>org.hypergraphdb</groupId>
+  <properties>
+    <packageit>bundle</packageit>
+    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.namespace>org.hypergraph.storage.bdb</bundle.namespace>    
+  </properties>
+  <packaging>${packageit}</packaging>    
   <artifactId>hgbdbnative</artifactId>
   <name>HyperGraphDB BDB-JE Storage</name>
   <version>1.3-SNAPSHOT</version>  
@@ -67,7 +73,23 @@
             </goals>
          </execution>
         </executions>
-      </plugin>      
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+ 	      <manifestLocation>META-INF</manifestLocation>        
+          <instructions>
+            <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
+            <Bundle-Name>${project.name}</Bundle-Name>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <Export-Package>org.hypergraphdb.storage.bdb.*</Export-Package>
+			<Embed-Dependency>db</Embed-Dependency>                        
+          </instructions>
+        </configuration>
+      </plugin>       
     </plugins>    
   </build>
 </project>
