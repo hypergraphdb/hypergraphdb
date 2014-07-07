@@ -1,0 +1,38 @@
+Manifest-Version: 1.0
+Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.u
+ til,org.hypergraphdb.storage,org.hypergraphdb,org.hypergraphdb.transa
+ ction"
+Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
+ nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
+ pycat.compat,com.sleepycat.je,com.sleepycat.je.cleaner,com.sleepycat.
+ je.config,com.sleepycat.je.dbi,com.sleepycat.je.evictor,com.sleepycat
+ .je.incomp,com.sleepycat.je.jmx,com.sleepycat.je.latch,com.sleepycat.
+ je.log,com.sleepycat.je.log.entry,com.sleepycat.je.recovery,com.sleep
+ ycat.je.rep,com.sleepycat.je.rep.elections,com.sleepycat.je.rep.impl,
+ com.sleepycat.je.rep.impl.networkRestore,com.sleepycat.je.rep.impl.no
+ de,com.sleepycat.je.rep.jmx,com.sleepycat.je.rep.monitor,com.sleepyca
+ t.je.rep.stream,com.sleepycat.je.rep.txn,com.sleepycat.je.rep.util,co
+ m.sleepycat.je.rep.util.ldiff,com.sleepycat.je.rep.utilint,com.sleepy
+ cat.je.rep.vlsn,com.sleepycat.je.sync,com.sleepycat.je.sync.impl,com.
+ sleepycat.je.sync.jdbc,com.sleepycat.je.sync.mobile,com.sleepycat.je.
+ tree,com.sleepycat.je.tree.dupConvert,com.sleepycat.je.trigger,com.sl
+ eepycat.je.txn,com.sleepycat.je.util,com.sleepycat.je.utilint,com.sle
+ epycat.persist,com.sleepycat.persist.evolve,com.sleepycat.persist.imp
+ l,com.sleepycat.persist.model,com.sleepycat.persist.raw,com.sleepycat
+ .util,com.sleepycat.util.keyrange,com.sleepycat.utilint
+Bundle-ClassPath: .,je-5.0.34.jar
+Built-By: borislav
+Tool: Bnd-0.0.238
+Bundle-Name: HyperGraphDB BDB-JE Storage
+Created-By: Apache Maven Bundle Plugin
+Build-Jdk: 1.6.0_27
+Bundle-Version: 1.3.0.SNAPSHOT
+Bnd-LastModified: 1404594822291
+Bundle-ManifestVersion: 2
+Import-Package: javax.management,javax.transaction.xa,org.apache.tools
+ .ant,org.apache.tools.ant.types,org.hypergraphdb,org.hypergraphdb.sto
+ rage,org.hypergraphdb.storage.bje,org.hypergraphdb.transaction,org.hy
+ pergraphdb.util
+Embed-Dependency: je
+Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
+
