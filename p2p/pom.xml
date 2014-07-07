@@ -12,7 +12,13 @@
     <artifactId>hypergraphdb</artifactId>
     <version>1.3-SNAPSHOT</version>  
   </parent>  
-   
+  <properties>
+    <packageit>bundle</packageit>
+    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.namespace>org.hypergraphdb.peer</bundle.namespace>    
+  </properties>
+  <packaging>${packageit}</packaging>
+  
   <dependencies>
     <dependency>
       <groupId>jivesoftware</groupId>
@@ -59,6 +65,22 @@
 	  <target>1.5</target>
 	</configuration>    		
       </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+ 	  <manifestLocation>META-INF</manifestLocation>        
+          <instructions>
+            <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
+            <Bundle-Name>${project.name}</Bundle-Name>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <Export-Package>org.hypergraphdb.peer.*</Export-Package>
+			<Embed-Dependency>smack*,mjson*</Embed-Dependency>            
+          </instructions>
+        </configuration>
+      </plugin>        
     </plugins>
     <!--
 	<testResources>

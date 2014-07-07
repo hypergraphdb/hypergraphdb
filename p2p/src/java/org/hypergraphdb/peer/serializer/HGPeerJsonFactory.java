@@ -3,10 +3,15 @@ package org.hypergraphdb.peer.serializer;
 import java.beans.IndexedPropertyDescriptor;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import mjson.Json;
 
 import org.hypergraphdb.HGHandle;
@@ -45,6 +50,33 @@ public class HGPeerJsonFactory implements Json.Factory
 				instance.new BeanJsonConverter(new String[] {"operator", "valueReference"}));
 		instance.converterMap.put(AtomTypeCondition.class.getName(), 
 				instance.new BeanJsonConverter(new String[] {"typeReference"}));
+	}
+	
+	Number castNumber(Class<?> cl, Json v)
+	{
+	    if (!v.isNumber())
+	        throw new IllegalArgumentException("Trying to cast " + v + 
+	                " as a Number bean property, but it's not a number.");
+	    if (cl.equals(short.class) || cl.equals(Short.class))
+	        return v.asShort();
+	    else if (cl.equals(byte.class) || cl.equals(Byte.class))
+            return v.asByte();
+        else if (cl.equals(int.class) || cl.equals(Integer.class))
+            return v.asInteger();
+        else if (cl.equals(float.class) || cl.equals(Float.class))
+            return v.asFloat();
+        else if (cl.equals(long.class) || cl.equals(Long.class))
+            return v.asLong();
+        else if (cl.equals(BigDecimal.class))
+            return new BigDecimal(v.asDouble());
+        else if (cl.equals(BigInteger.class))
+            return BigInteger.valueOf(v.asLong());
+        else if (cl.equals(AtomicInteger.class))
+            return new AtomicInteger(v.asInteger());	    
+        else if (cl.equals(AtomicLong.class))
+            return new AtomicLong(v.asLong());     
+	    else
+	        return v.asDouble();
 	}
 	
 	public HGPeerJsonFactory setHyperGraph(HyperGraph graph)
@@ -161,7 +193,7 @@ public class HGPeerJsonFactory implements Json.Factory
 			if (fullName == null) fullName = typeName.asString();
 			try
 			{
-				Object bean = Class.forName(fullName).newInstance();
+				Object bean = HGUtils.loadClass(graph, fullName).newInstance();
 		        for (Map.Entry<String, Json> entry : x.asJsonMap().entrySet())
 		        {
 		            PropertyDescriptor descriptor = BonesOfBeans.getPropertyDescriptor(bean,
@@ -183,6 +215,8 @@ public class HGPeerJsonFactory implements Json.Factory
 		            else if (propertyClass.equals(Class.class))
 		            	// TODO: what about thread class loader?
 		            	value = Class.forName(entry.getValue().asString());
+		            else if (entry.getValue().isNumber())
+		                value = castNumber(propertyClass, entry.getValue());
 		            else
 		            	value = value(entry.getValue());
 		            BonesOfBeans.setProperty(bean, entry.getKey(), value);
