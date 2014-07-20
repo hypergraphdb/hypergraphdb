@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hypergraphdb.util.HGDatabaseVersionFile;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.MemoryWarningSystem;
 
@@ -33,9 +34,11 @@ import org.hypergraphdb.util.MemoryWarningSystem;
  * @author Borislav Iordanov
  */
 public class HGEnvironment 
-{		
+{			
 	private static Map<String, HyperGraph> dbs = new HashMap<String, HyperGraph>();
 	private static Map<String, HGConfiguration> configs = new HashMap<String, HGConfiguration>();
+	private static Map<String, HGDatabaseVersionFile> versions = new HashMap<String, HGDatabaseVersionFile>();
+	
 	private static MemoryWarningSystem memWarning = null;	
 	
 	synchronized static void set(String location, HyperGraph graph)
@@ -222,6 +225,25 @@ public class HGEnvironment
 			configs.put(location, conf);
 		}
 		return conf;
+	}
+	
+	/**
+	 * <p>
+	 * Return the {@link HGDatabaseVersionFile} containing version information
+	 * for the various components on the database instance at the directory
+	 * specified by the <code>location</code> parameter.
+	 * </p>
+	 * @since 1.3
+	 */
+	public synchronized static HGDatabaseVersionFile getVersions(String location)
+	{
+		HGDatabaseVersionFile vf = versions.get(location);
+		if (vf == null)
+		{
+			vf = new HGDatabaseVersionFile(new File(new File(location), "hgdbversion"));
+			versions.put(location, vf);
+		}
+		return vf;
 	}
 	
 	/**

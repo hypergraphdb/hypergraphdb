@@ -7,8 +7,8 @@
  */
 package org.hypergraphdb;
 
+import java.io.File;
 import java.util.ArrayList;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +30,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
+import org.hypergraphdb.util.HGDatabaseVersionFile;
 import org.hypergraphdb.util.HGLogger;
 import org.hypergraphdb.util.Pair;
 
@@ -371,6 +372,9 @@ public /*final*/ class HyperGraph implements HyperNode
 	        if (config == null || !config.getSkipOpenedEvent())
 	            eventManager.dispatch(this, new HGOpenedEvent());	
 	        
+	        HGDatabaseVersionFile versionFile = HGEnvironment.getVersions(location);
+	        if (versionFile.getVersion("hgdb") == null)
+	        	versionFile.setVersion("hgdb", "1.3");
 	        if (config != null)
 	        {
 	        	if (config.getCancelMaintenance())
