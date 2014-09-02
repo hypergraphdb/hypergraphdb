@@ -7,12 +7,12 @@ Export-Package: org.hypergraphdb.storage;uses:="org.hypergraphdb.util,
  s:="org.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphdb.quer
  y.impl,org.hypergraphdb.type,org.hypergraphdb.algorithms,org.hypergra
  phdb.query.cond2qry,org.hypergraphdb",org.hypergraphdb.atom;uses:="or
- g.hypergraphdb.storage,org.hypergraphdb.query,org.hypergraphdb.util,o
- rg.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.annotation,org
- .hypergraphdb.transaction,org.hypergraphdb.handle",org.hypergraphdb.u
+ g.hypergraphdb.storage,org.hypergraphdb.util,org.hypergraphdb.type,or
+ g.hypergraphdb.transaction,org.hypergraphdb.annotation,org.hypergraph
+ db,org.hypergraphdb.query,org.hypergraphdb.handle",org.hypergraphdb.u
  til;uses:="javax.management,org.hypergraphdb.query.impl,org.hypergrap
  hdb,org.hypergraphdb.transaction",org.hypergraphdb.indexing;uses:="or
- g.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphdb.storage,or
+ g.hypergraphdb.atom,org.hypergraphdb.storage,org.hypergraphdb.util,or
  g.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.query",org.hype
  rgraphdb.event;uses:="org.hypergraphdb.transaction,org.hypergraphdb",
  org.hypergraphdb.type.javaprimitive;uses:="org.hypergraphdb.storage,o
@@ -33,21 +33,21 @@ Export-Package: org.hypergraphdb.storage;uses:="org.hypergraphdb.util,
  rg.hypergraphdb.query.cond2qry,org.hypergraphdb.annotation,org.hyperg
  raphdb.maintenance,org.hypergraphdb.handle",org.hypergraphdb.algorith
  ms;uses:="org.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphd
- b,org.hypergraphdb.query,org.hypergraphdb.handle",org.hypergraphdb.qu
- ery.cond2qry;uses:="org.hypergraphdb.query,org.hypergraphdb.atom,org.
- hypergraphdb.util,org.hypergraphdb.indexing,org.hypergraphdb.query.im
- pl,org.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.algorithms
- ,org.hypergraphdb.transaction",org.hypergraphdb.annotation,org.hyperg
+ b,org.hypergraphdb.query,org.hypergraphdb.handle",org.hypergraphdb.an
+ notation,org.hypergraphdb.query.cond2qry;uses:="org.hypergraphdb.quer
+ y,org.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphdb.indexi
+ ng,org.hypergraphdb.query.impl,org.hypergraphdb.type,org.hypergraphdb
+ ,org.hypergraphdb.transaction,org.hypergraphdb.algorithms",org.hyperg
  raphdb.maintenance;uses:="org.hypergraphdb.storage,org.hypergraphdb.u
- til,org.hypergraphdb.indexing,org.hypergraphdb.type,org.hypergraphdb,
- org.hypergraphdb.transaction,org.hypergraphdb.query",org.hypergraphdb
+ til,org.hypergraphdb.indexing,org.hypergraphdb.type,org.hypergraphdb.
+ transaction,org.hypergraphdb,org.hypergraphdb.query",org.hypergraphdb
  .handle;uses:="org.hypergraphdb.storage,org.hypergraphdb"
 Built-By: borislav
-Build-Jdk: 1.6.0_27
+Build-Jdk: 1.7.0_67
 Bundle-Version: 1.3.0.SNAPSHOT
 Tool: Bnd-0.0.238
 Bundle-Name: HyperGraphDB Core
-Bnd-LastModified: 1404582906104
+Bnd-LastModified: 1409602316022
 Created-By: Apache Maven Bundle Plugin
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.hypergraphdb-hgdb;singleton:=true

@@ -15,6 +15,12 @@
     <bdb.version>5.3.15</bdb.version>    
   </properties>
 
+  <repositories>
+    <repository>
+      <id>hypergraphdb</id>
+      <url>http://hypergraphdb.org/maven</url>
+    </repository>
+  </repositories>
 
   <distributionManagement>
     <repository>
