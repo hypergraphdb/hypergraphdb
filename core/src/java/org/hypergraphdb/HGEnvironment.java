@@ -15,7 +15,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.util.HGDatabaseVersionFile;
-import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.MemoryWarningSystem;
 
 /**

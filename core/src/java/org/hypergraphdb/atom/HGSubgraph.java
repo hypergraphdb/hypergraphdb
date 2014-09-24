@@ -1,8 +1,8 @@
 package org.hypergraphdb.atom;
 
 import java.util.List;
-
 import java.util.concurrent.Callable;
+
 import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleHolder;
@@ -186,7 +186,8 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
         return (T)graph.getOne(localizeCondition(condition));
     }
 	
-	public List<HGHandle> findAll(HGQueryCondition condition)
+	@SuppressWarnings("unchecked")
+    public List<HGHandle> findAll(HGQueryCondition condition)
 	{
 		return graph.findAll(localizeCondition(condition));
 	}

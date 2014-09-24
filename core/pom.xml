@@ -15,7 +15,7 @@
   </properties>    
   <packaging>${packageit}</packaging>  
   <artifactId>hgdb</artifactId>
-  <name>HyperGraphDB Core</name>     
+  <name>HyperGraphDB Core</name>
   <build>
    <plugins>
     <plugin>
@@ -29,7 +29,14 @@
             <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-Version>${project.version}</Bundle-Version>
-            <Export-Package>org.hypergraphdb.*</Export-Package>
+            <Require-Bundle>${groupId}-hgbdbje</Require-Bundle>
+            <Export-Package>org.hypergraphdb,org.hypergraphdb.algorithms,org.hypergraphdb.query,
+            org.hypergraphdb.util,org.hypergraphdb.type,org.hypergraphdb.annotation,
+            org.hypergraphdb.atom,org.hypergraphdb.cache,org.hypergraphdb.event,
+            org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
+            org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
+            org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl</Export-Package>
+            <Import-Package>javax.management.*, *</Import-Package>
           </instructions>
         </configuration>
     </plugin>     
