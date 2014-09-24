@@ -92,7 +92,15 @@
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>org.hypergraphdb.storage.bje.*</Export-Package>
+            <Import-Package>!org.apache.*,javax.transaction.*,!javax.*,org.hypergraphdb,
+            org.hypergraphdb.algorithms,org.hypergraphdb.query,
+            org.hypergraphdb.util,org.hypergraphdb.type,org.hypergraphdb.annotation,
+            org.hypergraphdb.atom,org.hypergraphdb.cache,org.hypergraphdb.event,
+            org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
+            org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
+            org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,*</Import-Package>
 			<Embed-Dependency>je</Embed-Dependency>                        
+			<Embed-Transitive>true</Embed-Transitive>
           </instructions>
         </configuration>
       </plugin>              

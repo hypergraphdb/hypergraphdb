@@ -1,7 +1,6 @@
 package org.hypergraphdb.storage.bje;
 
 import java.io.File;
-
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +24,7 @@ import org.hypergraphdb.transaction.HGTransactionContext;
 import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.transaction.VanillaTransaction;
+import org.hypergraphdb.util.HGClassLoaderDelegate;
 
 import com.sleepycat.je.CheckpointConfig;
 import com.sleepycat.je.Cursor;
@@ -86,6 +86,7 @@ public class BJEStorageImplementation implements HGStoreImplementation {
 		this.linkBinding = new LinkBinding(handleFactory);
 		EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
 		envConfig.setConfigParam(EnvironmentConfig.CLEANER_THREADS, "5");
+		envConfig.setClassLoader(new HGClassLoaderDelegate(config));
 		if (config.isTransactional()) {
 			configuration.configureTransactional();
 		}
