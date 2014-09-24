@@ -44,7 +44,7 @@
     <dependency>
     	<groupId>org.sharegov</groupId>
     	<artifactId>mjson</artifactId>
-    	<version>1.2</version>
+    	<version>1.3</version>
     </dependency>
   </dependencies>
   
@@ -71,12 +71,13 @@
         <version>1.4.0</version>
         <extensions>true</extensions>
         <configuration>
- 	  <manifestLocation>META-INF</manifestLocation>        
+ 	      <manifestLocation>META-INF</manifestLocation>        
           <instructions>
             <Bundle-SymbolicName>${groupId}-${artifactId};singleton:=true</Bundle-SymbolicName>
             <Bundle-Name>${project.name}</Bundle-Name>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>org.hypergraphdb.peer.*</Export-Package>
+            <Import-Package>!org.apache.*,!javax.*,!org.w3c.dom.*,*</Import-Package>
 			<Embed-Dependency>smack*,mjson*</Embed-Dependency>            
           </instructions>
         </configuration>
