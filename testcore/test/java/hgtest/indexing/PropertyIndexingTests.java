@@ -183,6 +183,7 @@ public class PropertyIndexingTests extends HGTestBase
             Assert.assertTrue(query.getCompiledQuery() instanceof IndexBasedQuery, "Compiled query using index.");
     
             query = (ExpressionBasedQuery)HGQuery.make(graph, hg.and(hg.type(DerivedBean.class), hg.eq("intProp", 2)));
+            System.out.println("Compiled query type:" + query.getCompiledQuery().getClass());
             Assert.assertTrue(query.getCompiledQuery() instanceof IntersectionQuery, "Compiled query using index of base type for derived type.");
             IntersectionQuery compiled = (IntersectionQuery)query.getCompiledQuery();
             Assert.assertTrue(compiled.getLeft() instanceof IndexBasedQuery || compiled.getRight() instanceof IndexBasedQuery, "Compiled query using index of base type for derived type.");

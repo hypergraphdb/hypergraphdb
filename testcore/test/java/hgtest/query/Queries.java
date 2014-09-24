@@ -1,12 +1,18 @@
 package hgtest.query;
 
 import hgtest.HGTestBase;
+
 import hgtest.T;
+import hgtest.beans.Car;
 import hgtest.beans.Folder;
+import hgtest.beans.Person;
 import hgtest.beans.SimpleBean;
+import hgtest.beans.Transport;
+import hgtest.beans.Truck;
 import hgtest.utils.RSUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -356,6 +362,38 @@ public class Queries extends HGTestBase
     }
 
     @Test
+    public void testFilterOutIndexedSubtypes()
+    {
+        Person somebody = new Person();
+        somebody.setEmail("hyperbla@test.com");
+        somebody.setFirstName("Hip");
+        somebody.setLastName("Horry");
+        Car car = new Car();
+        car.setMake("Honda");
+        car.setYear(2010);
+        car.setOwner(somebody);
+        HGHandle carhandle = graph.add(car);
+        Truck truck = new Truck();
+        truck.setCapacity(2000);
+        truck.setAge(14);
+        truck.setOwner(somebody);
+//        somebody.setEmail("tbone@steak.com");
+//        somebody.setFirstName("Fat");
+//        somebody.setLastName("Honey");
+        HGHandle truckhandle = graph.add(truck);
+        
+        HGHandle link = graph.add(new HGValueLink("forsale", carhandle, truckhandle));
+        
+        HGQuery<HGHandle> qry = HGQuery.make(HGHandle.class, graph).compile(
+                hg.and(hg.type(Car.class), 
+                        hg.eq("owner.email", "hyperbla@test.com"), 
+                        hg.target(link))                
+        );
+        List<HGHandle> L = qry.findAll();
+        Assert.assertEquals(L, Collections.singletonList(carhandle));
+    }
+    
+    @Test
     public void testFilteredLinkTarget()
     {
         Folder folder01 = new Folder("Folder 01");
@@ -437,8 +475,11 @@ public class Queries extends HGTestBase
 
         index = (HGSortIndex<Integer, HGHandle>) graph.getIndexManager()
                 .<Integer, HGHandle> register(
-                        new ByPartIndexer(typeH, "number"));
-        
+                        new ByPartIndexer(typeH, "number"));        
+        graph.getIndexManager().register(new ByPartIndexer<String>(
+            ts.getTypeHandle(Transport.class),
+            "owner.email"            
+        ));
         ArrayList<HGHandle> nbeans = new ArrayList<HGHandle>();
         for (int i = 0; i < COUNT - 1; i++)
         {

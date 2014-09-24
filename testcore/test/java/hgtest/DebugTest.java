@@ -187,9 +187,7 @@ public class DebugTest
     {
         //anatest();
         // TestQuery.go("/tmp/alain");
-        Queries test = new Queries();
-//        test.openGraph();
-//        test.getGraph().close();
+        PropertyIndexingTests test = new PropertyIndexingTests();
         test.setUp();
         
 //        HGUtils.dropHyperGraphInstance(T.getTmpDirectory() + "/" + "emptyhg");
@@ -204,8 +202,7 @@ public class DebugTest
         try
         {
             //QueryCompile.parallel();
-            System.out.println("Start test");
-            test.testMapCondition();
+            test.derivedPropertyIndexing();
 //            HGHandle h1 = graph.add("OR-TEST-1");
 //            HGHandle h2 = graph.add("OR-TEST-2");
 //            while (true)

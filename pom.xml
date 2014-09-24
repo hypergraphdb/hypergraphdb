@@ -15,12 +15,6 @@
     <bdb.version>5.3.15</bdb.version>    
   </properties>
 
-  <repositories>
-    <repository>
-      <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
-    </repository>
-  </repositories>
 
   <distributionManagement>
     <repository>
@@ -28,7 +22,7 @@
       <url>sftp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
     </repository>
   </distributionManagement>
-
+<!--
   <modules>
     <module>mvnassembly</module>
     <module>core</module>
@@ -36,7 +30,7 @@
     <module>storage/bdb-je</module>
     <module>storage/bdb-native</module>
   </modules>
-
+-->
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
