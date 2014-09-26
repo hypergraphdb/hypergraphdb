@@ -48,7 +48,7 @@ Created-By: Apache Maven Bundle Plugin
 Require-Bundle: org.hypergraphdb-hgbdbje
 Bundle-Version: 1.3.0.SNAPSHOT
 Build-Jdk: 1.6.0_31
-Bnd-LastModified: 1411523864877
+Bnd-LastModified: 1411702666394
 Bundle-ManifestVersion: 2
 Import-Package: javax.management,org.hypergraphdb,org.hypergraphdb.alg
  orithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hypergr

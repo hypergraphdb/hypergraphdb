@@ -211,6 +211,12 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 			}
 			return recordType;
 		}
+		else if (is_default_constructible || is_link) 
+		{
+			// Nothing much more we can do...., perhaps some other default,
+			// perhaps not.
+			return new RecordType();
+		} 
 		// Should we check for serializable here?
 		// Doesn't seem right since being a bean and/or map and/or collection
 		// doesn't exclude
@@ -227,13 +233,8 @@ public class DefaultJavaTypeMapper implements JavaTypeMapper
 		// as the new (since Java 5) java.util.EnumMap.
 		//     
 		else if (is_serializable)
-			return typeSystem.getAtomType(java.io.Serializable.class);
-		else if (is_default_constructible || is_link) 
-		{
-			// Nothing much more we can do...., perhaps some other default,
-			// perhaps not.
-			return new RecordType();
-		} else
+			return typeSystem.getAtomType(java.io.Serializable.class);		
+		else
 			return null;
 	}
 
