@@ -15,6 +15,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -109,6 +110,11 @@ public class JavaAbstractBinding implements HGCompositeType
             //TODO:??? could be subclasses; if || with both forms of isAssignable is more correct
             return typeHandle.equals(otherJB.typeHandle) && javaClass.isAssignableFrom(otherJB.javaClass);            
         }
+    }
+    
+    public int hashCode()
+    {
+    	return HGUtils.hashIt(this.typeHandle);
     }
     
     public String toString()

@@ -8,7 +8,6 @@
 package org.hypergraphdb.type;
 
 import org.hypergraphdb.HGHandle;
-
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
@@ -19,6 +18,7 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.AtomProjection;
 import org.hypergraphdb.atom.HGAtomRef;
 import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.HashCodeUtil;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -321,6 +321,14 @@ public class RecordType implements HGCompositeType
                     return false;
             return true;
         }
+    }
+    
+    public int hashCode()
+    {
+    	int hash = HGUtils.hashIt(this.thisHandle); 
+    	for (HGHandle sh : slots)
+    		hash = HashCodeUtil.hash(hash, sh);
+    	return hash;
     }
     
     public String toString()

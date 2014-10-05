@@ -534,6 +534,27 @@ public class HGTypeSystem
         return getUriDB().findFirst(typeId.toString());
     }
     
+    /**
+     * <p>
+     * Return the <code>URI</code> identifiers of the set of types
+     * realized by the given type atom. With the default Java type system,
+     * this will give you all the Java classes that are handled by the
+     * specified HyperGraphDB type. 
+     * </p>
+     * <p>
+     * Most of the time, there will be one 
+     * class only, but for some cases there may be more. Objects stored
+     * through their <code>java.io.Serializable</code> interface are such a
+     * case. For example to find what Java classes the type system is treating
+     * as serializable, you could write:  
+     * </p>
+     * <pre><code>
+     *  HGTypeSystem ts = graph.getTypeSystem();
+     *  Set<URI> serializableClasses = ts.getIdentifiersForHandle(ts.getTypeHandle(Serializable.class));
+     * </code></pre>
+     * @param typeHandle
+     * @return
+     */
 	public Set<URI> getIdentifiersForHandle(HGHandle typeHandle)
 	{
 	    HGSearchResult<String> rs = this.getUriDB().findByValue(typeHandle.getPersistent());

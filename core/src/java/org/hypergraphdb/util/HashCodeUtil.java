@@ -3,15 +3,16 @@ package org.hypergraphdb.util;
 import java.lang.reflect.Array;
 
 /**
- * Collected methods which allow easy implementation of <code>hashCode</code>. Based on the recommendations of
- * Effective Java, by Joshua Bloch.
+ * Collected methods which allow easy implementation of <code>hashCode</code>.
+ * Based on the recommendations of Effective Java, by Joshua Bloch.
  * 
  * Example use case:
  * 
  * <pre>
- * public int hashCode() {
+ * public int hashCode()
+ * {
  * 	int result = HashCodeUtil.SEED;
- * 	//collect the contributions of various fields
+ * 	// collect the contributions of various fields
  * 	result = HashCodeUtil.hash(result, fPrimitive);
  * 	result = HashCodeUtil.hash(result, fObject);
  * 	result = HashCodeUtil.hash(result, fArray);
@@ -19,33 +20,39 @@ import java.lang.reflect.Array;
  * }
  * </pre>
  */
-public final class HashCodeUtil {
+public final class HashCodeUtil
+{
 	/**
-	 * An initial value for a <code>hashCode</code>, to which is added contributions from fields. Using a
-	 * non-zero value decreases collisions of <code>hashCode</code> values.
+	 * An initial value for a <code>hashCode</code>, to which is added
+	 * contributions from fields. Using a non-zero value decreases collisions of
+	 * <code>hashCode</code> values.
 	 */
 	public static final int SEED = 23;
 
 	/**
 	 * booleans.
 	 */
-	public static int hash(int aSeed, boolean aBoolean) {
+	public static int hash(int aSeed, boolean aBoolean)
+	{
 		return firstTerm(aSeed) + (aBoolean ? 1 : 0);
 	}
 
 	/**
 	 * chars.
 	 */
-	public static int hash(int aSeed, char aChar) {
-		return firstTerm(aSeed) + (int)aChar;
+	public static int hash(int aSeed, char aChar)
+	{
+		return firstTerm(aSeed) + (int) aChar;
 	}
 
 	/**
 	 * ints.
 	 */
-	public static int hash(int aSeed, int aInt) {
+	public static int hash(int aSeed, int aInt)
+	{
 		/*
-		 * Implementation Note Note that byte and short are handled by this method, through implicit conversion.
+		 * Implementation Note Note that byte and short are handled by this
+		 * method, through implicit conversion.
 		 */
 		return firstTerm(aSeed) + aInt;
 	}
@@ -53,56 +60,68 @@ public final class HashCodeUtil {
 	/**
 	 * longs.
 	 */
-	public static int hash(int aSeed, long aLong) {
-		return firstTerm(aSeed) + (int)(aLong ^ (aLong >>> 32));
+	public static int hash(int aSeed, long aLong)
+	{
+		return firstTerm(aSeed) + (int) (aLong ^ (aLong >>> 32));
 	}
 
 	/**
 	 * floats.
 	 */
-	public static int hash(int aSeed, float aFloat) {
+	public static int hash(int aSeed, float aFloat)
+	{
 		return hash(aSeed, Float.floatToIntBits(aFloat));
 	}
 
 	/**
 	 * doubles.
 	 */
-	public static int hash(int aSeed, double aDouble) {
+	public static int hash(int aSeed, double aDouble)
+	{
 		return hash(aSeed, Double.doubleToLongBits(aDouble));
 	}
 
 	/**
-	 * <code>aObject</code> is a possibly-null object field, and possibly an array.
+	 * <code>aObject</code> is a possibly-null object field, and possibly an
+	 * array.
 	 * 
-	 * If <code>aObject</code> is an array, then each element may be a primitive or a possibly-null object.
+	 * If <code>aObject</code> is an array, then each element may be a primitive
+	 * or a possibly-null object.
 	 */
-	public static int hash(int aSeed, Object aObject) {
+	public static int hash(int aSeed, Object aObject)
+	{
 		int result = aSeed;
-		if (aObject == null) {
+		if (aObject == null)
+		{
 			result = hash(result, 0);
 		}
-		else if (!isArray(aObject)) {
+		else if (!isArray(aObject))
+		{
 			result = hash(result, aObject.hashCode());
 		}
-		else {
+		else
+		{
 			int length = Array.getLength(aObject);
-			for (int idx = 0; idx < length; ++idx) {
+			for (int idx = 0; idx < length; ++idx)
+			{
 				Object item = Array.get(aObject, idx);
-				//recursive call!
+				// recursive call!
 				result = hash(result, item);
 			}
 		}
 		return result;
 	}
 
-	/// PRIVATE ///
+	// / PRIVATE ///
 	private static final int fODD_PRIME_NUMBER = 31;
 
-	private static int firstTerm(int aSeed) {
+	private static int firstTerm(int aSeed)
+	{
 		return fODD_PRIME_NUMBER * aSeed;
 	}
 
-	private static boolean isArray(Object aObject) {
+	private static boolean isArray(Object aObject)
+	{
 		return aObject.getClass().isArray();
 	}
 }
