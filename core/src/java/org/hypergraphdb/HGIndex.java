@@ -24,6 +24,11 @@ package org.hypergraphdb;
 public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, ValueType>
 {    
     /**
+     * Return the unique name that identifies this index at the storage layer.
+     */
+    public String getName();
+
+    /**
      * <p>
      * Add an entry to the index. If that entry is already present, calling this
      * method should have no effect.

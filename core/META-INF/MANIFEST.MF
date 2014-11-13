@@ -6,13 +6,13 @@ Export-Package: org.hypergraphdb.storage;uses:="org.hypergraphdb.util,
  db.query;uses:="org.hypergraphdb.atom,org.hypergraphdb.util,org.hyper
  graphdb.query.impl,org.hypergraphdb.type,org.hypergraphdb.algorithms,
  org.hypergraphdb.query.cond2qry,org.hypergraphdb",org.hypergraphdb.at
- om;uses:="org.hypergraphdb.storage,org.hypergraphdb.query,org.hypergr
- aphdb.util,org.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.an
- notation,org.hypergraphdb.transaction,org.hypergraphdb.handle",org.hy
+ om;uses:="org.hypergraphdb.storage,org.hypergraphdb.util,org.hypergra
+ phdb.type,org.hypergraphdb.transaction,org.hypergraphdb.annotation,or
+ g.hypergraphdb,org.hypergraphdb.query,org.hypergraphdb.handle",org.hy
  pergraphdb.util;uses:="javax.management,org.hypergraphdb.query.impl,o
  rg.hypergraphdb,org.hypergraphdb.transaction",org.hypergraphdb.indexi
- ng;uses:="org.hypergraphdb.atom,org.hypergraphdb.storage,org.hypergra
- phdb.util,org.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.que
+ ng;uses:="org.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphd
+ b.storage,org.hypergraphdb.type,org.hypergraphdb,org.hypergraphdb.que
  ry",org.hypergraphdb.type.javaprimitive;uses:="org.hypergraphdb.stora
  ge,org.hypergraphdb.type,org.hypergraphdb",org.hypergraphdb.event;use
  s:="org.hypergraphdb.transaction,org.hypergraphdb",org.hypergraphdb.q
@@ -26,20 +26,20 @@ Export-Package: org.hypergraphdb.storage;uses:="org.hypergraphdb.util,
  annotation,org.hypergraphdb.handle",org.hypergraphdb.query.cond2qry;u
  ses:="org.hypergraphdb.query,org.hypergraphdb.atom,org.hypergraphdb.u
  til,org.hypergraphdb.indexing,org.hypergraphdb.query.impl,org.hypergr
- aphdb.type,org.hypergraphdb,org.hypergraphdb.transaction,org.hypergra
- phdb.algorithms",org.hypergraphdb;uses:="org.hypergraphdb.storage,org
- .hypergraphdb.cache,org.hypergraphdb.query,org.hypergraphdb.atom,org.
- hypergraphdb.util,org.hypergraphdb.indexing,org.hypergraphdb.event,or
- g.hypergraphdb.query.impl,org.hypergraphdb.type,org.hypergraphdb.tran
- saction,org.hypergraphdb.query.cond2qry,org.hypergraphdb.annotation,o
- rg.hypergraphdb.maintenance,org.hypergraphdb.handle",org.hypergraphdb
- .algorithms;uses:="org.hypergraphdb.atom,org.hypergraphdb.util,org.hy
- pergraphdb,org.hypergraphdb.query,org.hypergraphdb.handle",org.hyperg
- raphdb.annotation,org.hypergraphdb.transaction;uses:="org.hypergraphd
- b.cache,org.hypergraphdb.util,org.hypergraphdb.event,org.hypergraphdb
- ",org.hypergraphdb.maintenance;uses:="org.hypergraphdb.storage,org.hy
+ aphdb.type,org.hypergraphdb,org.hypergraphdb.algorithms,org.hypergrap
+ hdb.transaction",org.hypergraphdb.transaction;uses:="org.hypergraphdb
+ .cache,org.hypergraphdb.util,org.hypergraphdb.event,org.hypergraphdb"
+ ,org.hypergraphdb;uses:="org.hypergraphdb.storage,org.hypergraphdb.ca
+ che,org.hypergraphdb.query,org.hypergraphdb.atom,org.hypergraphdb.uti
+ l,org.hypergraphdb.indexing,org.hypergraphdb.event,org.hypergraphdb.q
+ uery.impl,org.hypergraphdb.type,org.hypergraphdb.transaction,org.hype
+ rgraphdb.query.cond2qry,org.hypergraphdb.annotation,org.hypergraphdb.
+ maintenance,org.hypergraphdb.handle",org.hypergraphdb.algorithms;uses
+ :="org.hypergraphdb.atom,org.hypergraphdb.util,org.hypergraphdb,org.h
+ ypergraphdb.query,org.hypergraphdb.handle",org.hypergraphdb.annotatio
+ n,org.hypergraphdb.maintenance;uses:="org.hypergraphdb.storage,org.hy
  pergraphdb.util,org.hypergraphdb.indexing,org.hypergraphdb.type,org.h
- ypergraphdb.transaction,org.hypergraphdb,org.hypergraphdb.query",org.
+ ypergraphdb,org.hypergraphdb.transaction,org.hypergraphdb.query",org.
  hypergraphdb.handle;uses:="org.hypergraphdb.storage,org.hypergraphdb"
 Built-By: borislav
 Tool: Bnd-0.0.238
@@ -47,8 +47,8 @@ Bundle-Name: HyperGraphDB Core
 Created-By: Apache Maven Bundle Plugin
 Require-Bundle: org.hypergraphdb-hgbdbje
 Bundle-Version: 1.3.0.SNAPSHOT
-Build-Jdk: 1.6.0_31
-Bnd-LastModified: 1411845354897
+Build-Jdk: 1.7.0_25
+Bnd-LastModified: 1412703147686
 Bundle-ManifestVersion: 2
 Import-Package: javax.management,org.hypergraphdb,org.hypergraphdb.alg
  orithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hypergr
