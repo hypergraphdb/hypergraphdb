@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.u
- til,org.hypergraphdb.storage,org.hypergraphdb,org.hypergraphdb.transa
- ction"
+Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.s
+ torage,org.hypergraphdb.util,org.hypergraphdb.transaction,org.hypergr
+ aphdb"
 Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
  nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
  pycat.compat,com.sleepycat.je,com.sleepycat.je.cleaner,com.sleepycat.
@@ -27,13 +27,12 @@ Built-By: borislav
 Tool: Bnd-0.0.238
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.7.0_25
+Build-Jdk: 1.6.0_32
 Bundle-Version: 1.3.0.SNAPSHOT
-Bnd-LastModified: 1415914658911
+Bnd-LastModified: 1415933169838
 Embed-Transitive: true
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
-Embed-Dependency: je
 Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
  ergraphdb.cache,org.hypergraphdb.event,org.hypergraphdb.handle,org.hy
@@ -42,4 +41,5 @@ Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  pergraphdb.storage,org.hypergraphdb.storage.bje,org.hypergraphdb.tran
  saction,org.hypergraphdb.type,org.hypergraphdb.type.javaprimitive,org
  .hypergraphdb.util
+Embed-Dependency: je
 

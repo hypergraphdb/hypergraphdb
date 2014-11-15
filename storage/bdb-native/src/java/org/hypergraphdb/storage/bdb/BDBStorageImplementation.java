@@ -576,6 +576,19 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }       
     }    
     
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name) 
+    {
+		indicesLock.readLock().lock();		
+		try 
+        {
+			return (HGIndex<KeyType, ValueType>)openIndices.get(name);
+		}
+		finally 
+        {
+			indicesLock.readLock().unlock();
+		}
+	}
+    
     @SuppressWarnings("unchecked")
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
             String name, ByteArrayConverter<KeyType> keyConverter,

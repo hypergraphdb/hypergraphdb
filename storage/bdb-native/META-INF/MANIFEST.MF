@@ -13,9 +13,9 @@ Built-By: borislav
 Tool: Bnd-0.0.238
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.6.0_27
+Build-Jdk: 1.6.0_32
 Bundle-Version: 1.3.0.SNAPSHOT
-Bnd-LastModified: 1404706096138
+Bnd-LastModified: 1416089991068
 Bundle-ManifestVersion: 2
 Import-Package: org.hypergraphdb,org.hypergraphdb.storage,org.hypergra
  phdb.storage.bdb,org.hypergraphdb.storage.incidence,org.hypergraphdb.
