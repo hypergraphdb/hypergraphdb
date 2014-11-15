@@ -47,8 +47,7 @@ public class AtomProjectionCondition implements HGQueryCondition, HGAtomPredicat
 	public AtomProjectionCondition(String [] dimensionPath, HGQueryCondition baseSetCondition)
 	{
 		this.dimensionPath = dimensionPath;
-		this.baseSetCondition = baseSetCondition;
-		 
+		this.baseSetCondition = baseSetCondition;		 
 	}
 	
 	public String [] getDimensionPath()

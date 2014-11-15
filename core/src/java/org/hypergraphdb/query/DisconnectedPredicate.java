@@ -26,4 +26,14 @@ public class DisconnectedPredicate implements HGAtomPredicate, HGQueryCondition
     {
         return graph.getIncidenceSet(handle).isEmpty();
     }
+
+    public int hashCode()
+    {
+    	return 0;
+    }
+    
+    public boolean equals(Object x)
+    {
+    	return x != null && x.getClass().equals(this.getClass());
+    }
 }

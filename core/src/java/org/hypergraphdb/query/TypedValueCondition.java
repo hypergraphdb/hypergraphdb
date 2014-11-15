@@ -152,8 +152,7 @@ public class TypedValueCondition extends AtomValueCondition implements TypeCondi
 		else if (!super.equals(x))
 			return false;
 		else
-		{
-			
+		{			
 			TypedValueCondition c = (TypedValueCondition)x;
 			return type == null ? c.type == null : 
 				c.type == null ? false : HGUtils.eq(type.get(), c.type.get());

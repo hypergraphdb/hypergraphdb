@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.query;
 
+
 /**
  * <p>
  * This condition represents the negation of everything. It will yield an empty result set
@@ -22,5 +23,7 @@ public final class Nothing implements HGQueryCondition
 	/**
 	 * this is required to ensure the class is a bean.
 	 */
-	public Nothing() { }	
+	public Nothing() { }
+	public int hashCode() { return 0; }
+	public boolean equals(Object x) { return x instanceof Nothing; }	
 }

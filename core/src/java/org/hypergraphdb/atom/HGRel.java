@@ -43,4 +43,39 @@ public class HGRel extends HGPlainLink
 	{
 		return name + "[" + getArity() + "]";
 	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		HGRel other = (HGRel) obj;
+		if (name == null)
+		{
+			if (other.name != null)
+				return false;
+		}
+		else if (!name.equals(other.name))
+			return false;
+		if (getArity() != other.getArity())
+			return false;
+		for (int i = 0; i < getArity(); i++)
+			if (!getTargetAt(i).equals(other.getTargetAt(i)))
+				return false;
+		return true;
+	}
+	
 }

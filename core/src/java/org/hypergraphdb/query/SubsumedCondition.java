@@ -115,7 +115,7 @@ public class SubsumedCondition extends SubsumesImpl implements HGQueryCondition,
 	
 	public Object getGeneralValue()
 	{
-		return generalValue.get();
+		return generalValue == null ? null : generalValue.get();
 	}
 	
 	public void setGeneralValue(Object generalValue)

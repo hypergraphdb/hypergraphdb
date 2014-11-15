@@ -157,7 +157,9 @@ public abstract class TraversalCondition implements HGQueryCondition
 	
 	public boolean equals(Object x)
 	{
-		if (! (x instanceof TypePlusCondition))
+		if (x == null)
+			return false;
+		else if (!x.getClass().equals(this.getClass()))
 			return false;
 		else
 		{

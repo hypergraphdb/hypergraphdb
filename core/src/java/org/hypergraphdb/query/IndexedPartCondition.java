@@ -20,6 +20,10 @@ public class IndexedPartCondition implements HGQueryCondition
 	private HGHandle type;
 	private ComparisonOperator operator;
 
+	public IndexedPartCondition()
+	{		
+	}
+	
 	public IndexedPartCondition(HGHandle type, 
 			HGIndex<?, ?> idx, 
 			Object partValue, 
@@ -39,6 +43,11 @@ public class IndexedPartCondition implements HGQueryCondition
 		this.operator = operator;
 	}
 
+	public void setIndex(HGIndex<?,?> idx)
+	{
+		this.idx = idx;
+	}
+	
 	public HGIndex<?, ?> getIndex()
 	{
 		return idx;
@@ -59,11 +68,21 @@ public class IndexedPartCondition implements HGQueryCondition
 		return partValue;
 	}
 
+	public void setType(HGHandle type)
+	{
+		this.type = type;
+	}
+	
 	public HGHandle getType()
 	{
 		return type;
 	}
 
+	public void setOperator(ComparisonOperator operator)
+	{
+		this.operator = operator;
+	}
+	
 	public ComparisonOperator getOperator()
 	{
 		return operator;
@@ -79,7 +98,7 @@ public class IndexedPartCondition implements HGQueryCondition
 		if (! (other instanceof IndexedPartCondition))
 			return false;
 		IndexedPartCondition ip = (IndexedPartCondition)other;
-		return HGUtils.eq(idx, ip.idx) && 
+		return HGUtils.eq(idx.getName(), ip.idx.getName()) && 
 			   HGUtils.eq(operator, ip.operator) &&
 			   HGUtils.eq(type, ip.type) &&
 			   HGUtils.eq(partValue, ip.partValue);

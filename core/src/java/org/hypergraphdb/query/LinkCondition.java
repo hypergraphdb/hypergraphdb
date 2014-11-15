@@ -31,7 +31,7 @@ import java.util.Set;
  */
 public class LinkCondition implements HGQueryCondition, HGAtomPredicate 
 {
-	private HashSet<Ref<HGHandle>> targetSet = null;
+	private Set<Ref<HGHandle>> targetSet = null;
 	
 	public LinkCondition()
 	{
@@ -89,7 +89,7 @@ public class LinkCondition implements HGQueryCondition, HGAtomPredicate
 		return targetSet;
 	}
 	
-	public void setTargetSet(HashSet<Ref<HGHandle>> targetSet)
+	public void setTargetSet(Set<Ref<HGHandle>> targetSet)
 	{
 		this.targetSet = targetSet;
 	}

@@ -115,6 +115,13 @@ public class StorageWithAnnotatedIncidence implements HGStoreImplementation
         wrapped.removeIncidenceLink(handle, oldLink);
     }
 
+
+	@Override
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name)
+	{
+		return wrapped.getIndex(name);
+	}   
+	
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name,
                                                                      ByteArrayConverter<KeyType> keyConverter,
                                                                      ByteArrayConverter<ValueType> valueConverter,
@@ -129,5 +136,5 @@ public class StorageWithAnnotatedIncidence implements HGStoreImplementation
     public void removeIndex(String name)
     {
         wrapped.removeIndex(name);
-    }    
+    } 
 }

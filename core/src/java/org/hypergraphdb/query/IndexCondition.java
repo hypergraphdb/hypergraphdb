@@ -17,6 +17,10 @@ public class IndexCondition<Key,Value> implements HGQueryCondition
 	private Ref<Key> key = null;
 	private ComparisonOperator operator = ComparisonOperator.EQ;
 
+	public IndexCondition()
+	{		
+	}
+	
 	public IndexCondition(HGIndex<Key,Value> idx, Key key)
 	{
 		this.idx = idx;
@@ -36,7 +40,12 @@ public class IndexCondition<Key,Value> implements HGQueryCondition
 	    this.key = key;
 	    this.operator = op;
 	}
-	
+
+	public void setIndex(HGIndex<Key,Value> idx)
+	{
+		this.idx = idx;
+	}
+
 	public HGIndex<Key,Value> getIndex()
 	{
 		return idx;
@@ -61,4 +70,45 @@ public class IndexCondition<Key,Value> implements HGQueryCondition
 	{
 		return operator;
 	}
+
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((idx == null) ? 0 : idx.getName().hashCode());
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		result = prime * result + ((operator == null) ? 0 : operator.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IndexCondition other = (IndexCondition) obj;
+		if (idx == null)
+		{
+			if (other.idx != null)
+				return false;
+		}
+		else if (!idx.getName().equals(other.idx.getName()))
+			return false;
+		if (key == null)
+		{
+			if (other.key != null)
+				return false;
+		}
+		else if (!key.equals(other.key))
+			return false;
+		if (operator != other.operator)
+			return false;
+		return true;
+	}
+	
 }

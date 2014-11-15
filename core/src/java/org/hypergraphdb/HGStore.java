@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.util.Comparator;
+
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.storage.StorageGraph;
@@ -315,6 +316,15 @@ public class HGStore
         impl.removeIncidenceSet(handle);
     }
               
+    /**
+     * Get the HyperGraphDB index with the given name. Return <code>null</code> if no
+     * index with that name exists.
+     */
+    public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name)
+    {
+    	return impl.getIndex(name);
+    }
+
     /**
      * <p>
      * Retrieve an <code>HGIndex</code> by its name. An index will not 
