@@ -57,7 +57,7 @@ public class GetAtom extends FSMActivity
                 if (result.getActivity().getState().isCompleted())
                     readAtoms(subgraph, 
                               typeMap, 
-                              (Map<HGHandle, HGAtomType>)(Map)((GetAtom)result.getActivity()).atomMap);
+                              (Map<HGHandle, HGAtomType>)(Map<?,?>)((GetAtom)result.getActivity()).atomMap);
                 else
                     GetAtom.this.getState().assign(result.getActivity().getState().getConst());
             }            
@@ -113,10 +113,7 @@ public class GetAtom extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onGetAtoms(Json msg) throws Throwable
     {
-        Json C = msg.at(CONTENT);
-        handles = new HashSet<HGHandle>();
-        for (Json x : C.asJsonList())
-        	handles.add((HGHandle)Messages.fromJson(x));
+        handles = Messages.fromJson(msg.at(CONTENT));
         Json reply = getReply(msg, Performative.InformRef);
         reply.set(CONTENT, 
                   SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), handles)); 

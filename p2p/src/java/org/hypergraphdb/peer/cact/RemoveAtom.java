@@ -64,10 +64,7 @@ public class RemoveAtom extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onRemoveAtoms(Json msg) throws Throwable
     {
-        Json C = msg.at(CONTENT);
-        handles = new HashSet<HGHandle>();
-        for (Json x : C.asJsonList())
-        	handles.add((HGHandle)Messages.fromJson(x));
+        handles = Messages.fromJson(msg.at(CONTENT));
         final HyperGraph graph = getThisPeer().getGraph();
         removed = new HashMap<HGHandle, Boolean>();
         final Json response = Json.object();

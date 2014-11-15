@@ -54,8 +54,7 @@ public class QueryCount extends FSMActivity
     {
         HyperGraph graph = getThisPeer().getGraph();
         expression = Messages.fromJson(msg.at(CONTENT).at("condition"));
-        reply(msg, 
-              Performative.InformRef, hg.count(graph, expression));
+        reply(msg, Performative.InformRef, hg.count(graph, expression));
         return WorkflowState.Completed;
     }
     
