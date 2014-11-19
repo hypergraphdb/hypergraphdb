@@ -64,7 +64,10 @@
         <version>2.2</version>
         <configuration>
           <forkMode>once</forkMode>
-          <argLine>-Djava.library.path=${project.basedir}/native/linux/x86_64</argLine>        
+          <argLine>-Djava.library.path=${project.basedir}/native/linux/x86_64</argLine>
+          <archive>
+            <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+          </archive>          
         </configuration>
         <executions>
           <execution>

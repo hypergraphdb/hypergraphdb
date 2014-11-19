@@ -50,7 +50,7 @@ Bundle-Name: HyperGraphDB Core
 Created-By: Apache Maven Bundle Plugin
 Build-Jdk: 1.6.0_32
 Bundle-Version: 1.3.0.SNAPSHOT
-Bnd-LastModified: 1416088480736
+Bnd-LastModified: 1416176582735
 Bundle-ManifestVersion: 2
 Import-Package: org.hypergraphdb,org.hypergraphdb.algorithms,org.hyper
  graphdb.annotation,org.hypergraphdb.event,org.hypergraphdb.handle,org
