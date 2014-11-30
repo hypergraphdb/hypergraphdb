@@ -326,16 +326,8 @@ public class HyperGraphPeer
 		
 		if (configuration != null)
 		{
-			//get required objects
 			try
 			{
-//				String option = getOptPart(configuration, null, PeerConfig.TEMP_DB);				
-//				if (!HGUtils.isEmpty(option))
-//				{
-//					tempGraph = HGEnvironment.get(option);
-//					GenericSerializer.setTempDB(tempGraph);
-//				}
-
 				String option = configuration.at(PeerConfig.LOCAL_DB, "").asString();
 				if (graph == null && !HGUtils.isEmpty(option))
 				{
