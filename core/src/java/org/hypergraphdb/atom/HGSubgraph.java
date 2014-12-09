@@ -39,8 +39,8 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
     private static final String REVIDX_NAME = "revsubgraph.index";
     
 	@HGIgnore
-	HyperGraph graph;
-	HGHandle thisHandle;
+	protected HyperGraph graph;
+	protected HGHandle thisHandle;
 	Mapping<HGHandle, Boolean> memberPredicate = new Mapping<HGHandle, Boolean>() 
 	{
 	    public Boolean eval(HGHandle h)
