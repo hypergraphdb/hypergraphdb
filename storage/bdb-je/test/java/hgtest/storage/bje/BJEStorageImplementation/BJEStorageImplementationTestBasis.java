@@ -25,21 +25,16 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNull;
 
 /**
- * <p>
- * This class used as basis for writing test cases for
- * {@link BJEStorageImplementation}. PowerMock + EasyMock frameworks are used.
- * (see <a href="http://code.google.com/p/powermock/">PowerMock page on Google
- * Code</a> and <a href="http://easymock.org/">EasyMock home page</a> for
- * details). EasyMock's capabilities are sufficient for interfaces and plain
- * classes. But some classes in hypergraphdb modules are final so we cannot mock
- * them in usual way. PowerMock allows to create mocks even for final classes.
- * So we can test {@link BJEStorageImplementation} in isolation from other
- * environment and in most cases from other classes.
- * </p>
- * <p>
- * Typical test case executes through several phases like initialization,
- * executing and verification.
- * </p>
+ * Most common actions which have to be performed in test cases for
+ * {@link BJEStorageImplementation} (such as initialization, mocking) are
+ * extracted to this class. PowerMock + EasyMock frameworks are used. (see <a
+ * href="http://code.google.com/p/powermock/">PowerMock page on Google Code</a>
+ * and <a href="http://easymock.org/">EasyMock home page</a> for details).
+ * EasyMock's capabilities are sufficient for interfaces and plain classes. But
+ * some classes in hypergraphdb modules are final so we cannot mock them in
+ * usual way. PowerMock allows to create mocks even for final classes. So we can
+ * test {@link BJEStorageImplementation} in isolation from other environment and
+ * in most cases from other classes.
  * <p>
  * {@link BJEStorageImplementation} requires two parameters before it can start
  * functioning: {@link org.hypergraphdb.HGStore} and
@@ -49,32 +44,29 @@ import static org.testng.Assert.assertNull;
  * parameters should be mocked. It is done in
  * {@link BJEStorageImplementationTestBasis#mockStore()} and
  * {@link BJEStorageImplementationTestBasis#mockConfiguration(int)} methods.
- * </p>
  * <p>
  * The inner code in {@link BJEStorageImplementation} makes several calls to the
  * {@link org.hypergraphdb.HGStore} and {@link org.hypergraphdb.HGConfiguration}
  * objects. For {@link org.hypergraphdb.HGStore} only getDatabaseLocation() is
  * in use.
- * </p>
  * <p>
  * Mocking {@link org.hypergraphdb.HGConfiguration} object is more complicated.
- * Here we need to specify handle factory and {@code isTransactional} parameter.
+ * Here we need to specify the handle factory and {@code isTransactional} flag.
  * In different test cases the number of calls may vary (For example if we test
  * reading the data we firstly store it and then read it. Each time we
  * store/read {@link org.hypergraphdb.HGConfiguration#isTransactional()} is
- * called). So number the of calls is passed using parameter {@code calls}.
- * </p>
+ * called). So we specify how many times {@code isTransactional()} will be
+ * called using parameter {@code calls}.
  * <p>
  * In some test cases we need to test behavior of
- * {@link BJEStorageImplementation} when method is not executed properly and
- * exception somewhere inside is thrown or transaction was not opened etc. For
- * such test cases can be used specific initialization methods (like
+ * {@link BJEStorageImplementation} when tested method had not execute properly
+ * and exception somewhere inside was thrown or transaction was not opened etc.
+ * For such test cases specific initialization methods (like
  * {@link hgtest.storage.bje.BJEStorageImplementation.BJEStorageImplementationTestBasis#startup(int, java.lang.Exception)}
  * and
  * {@link hgtest.storage.bje.BJEStorageImplementation.BJEStorageImplementationTestBasis#startupNonTransactional()
- * )}.
- * </p>
- * 
+ * )} are convenient.
+ * <p>
  * Also this class contains some utility methods.
  * 
  * @author Yuriy Sechko
@@ -146,6 +138,13 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 				testDatabaseLocation);
 	}
 
+	/**
+	 * Used in most test cases (just because in most test cases
+	 * {@link org.hypergraphdb.HGConfiguration#isTransactional()}) called two
+	 * times)
+	 * 
+	 * @throws Exception
+	 */
 	protected void startup() throws Exception
 	{
 		mockConfiguration(2);
@@ -154,6 +153,11 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	/**
+	 * Used in test cases especially for checking transaction manager's behavior
+	 * 
+	 * @throws Exception
+	 */
 	protected void startupNonTransactional() throws Exception
 	{
 		mockStore();
@@ -168,6 +172,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	/**
+	 * Used in cases where specific exception expected
+	 * 
+	 * @param whatToThrow
+	 * @throws Exception
+	 */
 	protected void startup(final Exception whatToThrow) throws Exception
 	{
 		mockConfiguration(2);
@@ -177,6 +187,17 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	/**
+	 * On more variant of the
+	 * {@link BJEStorageImplementationTestBasis#startup(java.lang.Exception)}.
+	 * The difference is only in number of successful calls
+	 * {@link org.hypergraphdb.HGConfiguration#isTransactional()} before
+	 * exception occurs.
+	 * 
+	 * @param callsBeforeExceptionIsThrown
+	 * @param whatToThrow
+	 * @throws Exception
+	 */
 	protected void startup(final int callsBeforeExceptionIsThrown,
 			final Exception whatToThrow) throws Exception
 	{
@@ -193,6 +214,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	/**
+	 * Used in some test cases where transaction manager should be mocked,
+	 * 
+	 * @param transactionManagerCalls
+	 * @throws Exception
+	 */
 	protected void startup(final int transactionManagerCalls) throws Exception
 	{
 		mockConfiguration(2);
@@ -206,6 +233,11 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+    /**
+     * Used in test cases for incidence links
+     * @param transactionManagerCalls
+     * @throws Exception
+     */
 	protected void startupWithAdditionalTransaction(
 			final int transactionManagerCalls) throws Exception
 	{
