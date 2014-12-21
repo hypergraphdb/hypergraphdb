@@ -18,12 +18,6 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertNull;
-
 /**
  * Most common actions which have to be performed in test cases for
  * {@link BJEStorageImplementation} (such as initialization, mocking) are
@@ -34,7 +28,7 @@ import static org.testng.Assert.assertNull;
  * some classes in hypergraphdb modules are final so we cannot mock them in
  * usual way. PowerMock allows to create mocks even for final classes. So we can
  * test {@link BJEStorageImplementation} in isolation from other environment and
- * in most cases from other classes.
+ * in most cases from other classes (as far as possible).
  * <p>
  * {@link BJEStorageImplementation} requires two parameters before it can start
  * functioning: {@link org.hypergraphdb.HGStore} and
@@ -233,11 +227,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
-    /**
-     * Used in test cases for incidence links
-     * @param transactionManagerCalls
-     * @throws Exception
-     */
+	/**
+	 * Used in test cases for incidence links
+	 * 
+	 * @param transactionManagerCalls
+	 * @throws Exception
+	 */
 	protected void startupWithAdditionalTransaction(
 			final int transactionManagerCalls) throws Exception
 	{
