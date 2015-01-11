@@ -10,7 +10,9 @@ import java.lang.reflect.Field;
 import static org.testng.Assert.assertEquals;
 
 /**
- * Created 09.01.2015.
+ * Test cases for getters in {@link org.hypergraphdb.storage.bje.BJEConfig}
+ *
+ * @author Yuriy Sechko
  */
 public class BJEConfig_getConfigTest {
     @Test
@@ -23,7 +25,9 @@ public class BJEConfig_getConfigTest {
         privateConfigField.set(bjeConfig, expected);
 
         final EnvironmentConfig actual = bjeConfig.getEnvironmentConfig();
-        assertEquals(actual, expected);
+        // equals() is not overridden in EnvironmentConfig class. So not sure about this behavior.
+        // but toString is overridden. It is pretty enough for comparing objects in test case
+        assertEquals(actual.toString(), expected.toString());
     }
 
     @Test
@@ -35,6 +39,7 @@ public class BJEConfig_getConfigTest {
         privateConfigField.set(bjeConfig, expected);
 
         final DatabaseConfig actual = bjeConfig.getDatabaseConfig();
-        assertEquals(actual, expected);
+        // see note above
+        assertEquals(actual.toString(), expected.toString());
     }
 }
