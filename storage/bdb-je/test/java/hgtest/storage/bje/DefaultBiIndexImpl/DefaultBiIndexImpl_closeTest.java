@@ -1,6 +1,6 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import com.sleepycat.je.*;
+import com.sleepycat.je.SecondaryDatabase;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
