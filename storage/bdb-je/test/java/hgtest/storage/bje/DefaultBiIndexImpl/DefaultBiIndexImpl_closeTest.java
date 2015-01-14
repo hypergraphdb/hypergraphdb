@@ -1,22 +1,15 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import com.sleepycat.je.Database;
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.*;
 import org.easymock.EasyMock;
-import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.storage.bje.BJEConfig;
-import org.hypergraphdb.storage.bje.BJEStorageImplementation;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Comparator;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko
@@ -24,14 +17,55 @@ import java.util.Comparator;
 public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImpl_TestBasis
 {
 	@Test
-	public void testName() throws Exception
+	public void allInternalOperationsPerformFine() throws Exception
 	{
-        mockStorage();
+		mockStorage();
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
 				comparator);
 		indexImpl.open();
 		indexImpl.close();
+	}
+
+	@Test
+	public void exceptionIsTrownOnClosingInternalDatabase() throws Exception
+	{
+		final HGException expected = new HGException(
+				"java.lang.IllegalStateException");
+		// open databases normally
+		mockStorage();
+		PowerMock.replayAll();
+		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
+		indexImpl.open();
+		PowerMock.verifyAll();
+		PowerMock.resetAll();
+		// now we force to throw exception in the DefaultBiIndexImpl.close() method
+		// we link the field 'secondaryDb' to the fake database,
+		// which throws exception when their 'close' method is called
+		final SecondaryDatabase fakeSecondaryDatabase = PowerMock
+				.createStrictMock(SecondaryDatabase.class);
+		fakeSecondaryDatabase.close();
+		EasyMock.expectLastCall().andThrow(new IllegalStateException());
+		PowerMock.replayAll();
+		final Field secondaryDbField = indexImpl.getClass().getDeclaredField(
+				"secondaryDb");
+		secondaryDbField.setAccessible(true);
+		// close the real database before use fake
+		secondaryDbField.get(indexImpl).getClass().getMethod("close").invoke(secondaryDbField.get(indexImpl));
+		secondaryDbField.set(indexImpl, fakeSecondaryDatabase);
+		try
+		{
+			indexImpl.close();
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+			assertEquals(occurred.getMessage(), expected.getMessage());
+		} finally {
+			closeDatabases(indexImpl);
+		}
 	}
 }

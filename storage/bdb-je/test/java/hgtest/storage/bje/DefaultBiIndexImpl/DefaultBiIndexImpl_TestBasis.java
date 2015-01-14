@@ -13,6 +13,7 @@ import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Comparator;
@@ -97,13 +98,17 @@ public class DefaultBiIndexImpl_TestBasis {
         final Field firstDatabaseField = indexImpl.getClass().getSuperclass()
                 .getDeclaredField("db");
         firstDatabaseField.setAccessible(true);
-        ((Database) firstDatabaseField.get(indexImpl)).close();
+        final Database firstDatabase = (Database)firstDatabaseField.get(indexImpl);
+        // in some test cases first database is not opened, don't close them
+        if (firstDatabase != null) {
+            firstDatabase.close();
+        }
         // another is in DefaultBiIndexImpl
         final Field secondDatabaseField = indexImpl.getClass()
                 .getDeclaredField("secondaryDb");
         secondDatabaseField.setAccessible(true);
         final Database secondDatabase = ((Database) secondDatabaseField.get(indexImpl));
-        // in some test cases database is not opened, don't close them
+        // in some test cases second database is not opened, don't close them
         if (secondDatabase != null) {
             secondDatabase.close();
         }
