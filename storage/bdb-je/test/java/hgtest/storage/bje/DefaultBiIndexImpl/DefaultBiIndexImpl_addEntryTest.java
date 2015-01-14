@@ -13,26 +13,24 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 
 /**
- * Use null comparator in these test cases - it forces
+ * Use 'null' comparator in these test cases - it forces
  * {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl} to use default
- * Sleepycat je BTreeComparator
+ * Sleepycat's BtreeComparator
  * 
  * @author Yuriy Sechko
  */
 public class DefaultBiIndexImpl_addEntryTest extends
 		DefaultBiIndexImpl_TestBasis
 {
+
+	private DefaultBiIndexImpl<Integer, String> indexImpl;
+
 	@Test
 	public void keyIsNull() throws Exception
 	{
 		final Exception expected = new NullPointerException();
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndexImpl();
 
 		try
 		{
@@ -49,17 +47,20 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 	}
 
+	private void startupIndexImpl() {
+		mockStorage();
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
+				transactionManager, keyConverter, valueConverter, null);
+		indexImpl.open();
+	}
+
 	@Test
 	public void valueIsNull() throws Exception
 	{
 		final Exception expected = new NullPointerException();
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndexImpl();
 
 		try
 		{
@@ -79,12 +80,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	@Test
 	public void addOneEntry() throws Exception
 	{
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndexImpl();
 
 		indexImpl.addEntry(1, "one");
 
@@ -101,12 +97,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		expected.add("thirty three");
 		expected.add("forty four");
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndexImpl();
 
 		indexImpl.addEntry(22, "twenty two");
 		indexImpl.addEntry(33, "thirty three");
@@ -126,12 +117,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	{
 		final String expected = "second value";
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndexImpl();
 
 		indexImpl.addEntry(4, "first value");
 		indexImpl.addEntry(4, "second value");
@@ -149,12 +135,12 @@ public class DefaultBiIndexImpl_addEntryTest extends
 				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
 		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
+		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
 				INDEX_NAME, storage, transactionManager, keyConverter,
 				valueConverter, null);
 		try
 		{
-			indexImpl.addEntry(2, "two");
+			indexImplSpecificForThisTestCase.addEntry(2, "two");
 		}
 		catch (Exception occurred)
 		{
@@ -176,14 +162,14 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		EasyMock.expectLastCall().andThrow(
 				new IllegalStateException("Transaction manager is fake."));
 		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
+		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
 				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
 				valueConverter, null);
-		indexImpl.open();
+		indexImplSpecificForThisTestCase.open();
 
 		try
 		{
-			indexImpl.addEntry(2, "two");
+			indexImplSpecificForThisTestCase.addEntry(2, "two");
 		}
 		catch (Exception occurred)
 		{
@@ -192,7 +178,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		finally
 		{
-			indexImpl.close();
+			indexImplSpecificForThisTestCase.close();
 		}
 	}
 }
