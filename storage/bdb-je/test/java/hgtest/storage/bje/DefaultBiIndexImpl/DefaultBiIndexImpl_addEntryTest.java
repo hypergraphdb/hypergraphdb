@@ -1,6 +1,9 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
+import org.easymock.EasyMock;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
+import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
@@ -137,5 +140,59 @@ public class DefaultBiIndexImpl_addEntryTest extends
 
 		assertEquals(stored, expected);
 		indexImpl.close();
+	}
+
+	@Test
+	public void indexIsNotOpened() throws Exception
+	{
+		final Exception expected = new HGException(
+				"Attempting to operate on index 'sample_index' while the index is being closed.");
+
+		PowerMock.replayAll();
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
+				INDEX_NAME, storage, transactionManager, keyConverter,
+				valueConverter, null);
+		try
+		{
+			indexImpl.addEntry(2, "two");
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+			assertEquals(occurred.getMessage(), expected.getMessage());
+		}
+	}
+
+	@Test
+	public void transactionManagerThrowsException() throws Exception
+	{
+		final Exception expected = new HGException(
+				"Failed to add entry to index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
+
+		mockStorage();
+		HGTransactionManager fakeTransactionManager = PowerMock
+				.createStrictMock(HGTransactionManager.class);
+		fakeTransactionManager.getContext();
+		EasyMock.expectLastCall().andThrow(
+				new IllegalStateException("Transaction manager is fake."));
+		PowerMock.replayAll();
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl(
+				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
+				valueConverter, null);
+		indexImpl.open();
+
+		try
+		{
+			indexImpl.addEntry(2, "two");
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+			assertEquals(occurred.getMessage(), expected.getMessage());
+		}
+		finally
+		{
+			indexImpl.close();
+		}
 	}
 }
