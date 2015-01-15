@@ -20,29 +20,40 @@ import static org.testng.Assert.assertEquals;
  * @author Yuriy Sechko
  */
 public class DefaultBiIndexImpl_findByValue extends
-		DefaultBiIndexImpl_TestBasis
+		DefaultBiIndexImplTestBasis
 {
+	private DefaultBiIndexImpl<Integer, String> indexImpl;
+	private HGRandomAccessResult<Integer> result;
+
 	@Test
 	public void thereIsOneEntry() throws Exception
 	{
 		final List<Integer> expected = new ArrayList<Integer>();
 		expected.add(1);
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndex();
 		indexImpl.addEntry(1, "one");
 
-		final HGRandomAccessResult<Integer> result = indexImpl
+		 result = indexImpl
 				.findByValue("one");
 
 		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
+		closeResultAndIndex();
+	}
+
+	private void closeResultAndIndex() {
 		result.close();
 		indexImpl.close();
+	}
+
+	private void startupIndex() {
+		mockStorage();
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(
+				INDEX_NAME, storage, transactionManager, keyConverter,
+				valueConverter, null);
+		indexImpl.open();
 	}
 
 	@Test
@@ -50,20 +61,14 @@ public class DefaultBiIndexImpl_findByValue extends
 	{
 		final List<Integer> expected = Collections.emptyList();
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndex();
 
-		final HGRandomAccessResult<Integer> result = indexImpl
+		 result = indexImpl
 				.findByValue("this value doesn't exist");
 
 		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
-		result.close();
-		indexImpl.close();
+		closeResultAndIndex();
 	}
 
 	@Test
@@ -73,22 +78,16 @@ public class DefaultBiIndexImpl_findByValue extends
 		expected.add(2);
 		expected.add(3);
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndex();
 		indexImpl.addEntry(2, "word");
 		indexImpl.addEntry(3, "word");
 
-		final HGRandomAccessResult<Integer> result = indexImpl
+		 result = indexImpl
 				.findByValue("word");
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
-		result.close();
-		indexImpl.close();
+		closeResultAndIndex();
 	}
 
 	@Test
@@ -97,24 +96,18 @@ public class DefaultBiIndexImpl_findByValue extends
 		final List<Integer> expected = new ArrayList<Integer>();
 		expected.add(2);
 
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
+		startupIndex();
 		indexImpl.addEntry(0, "red");
 		indexImpl.addEntry(1, "orange");
 		indexImpl.addEntry(2, "yellow");
 		indexImpl.addEntry(11, "orange");
 
-		final HGRandomAccessResult<Integer> result = indexImpl
+		 result = indexImpl
 				.findByValue("yellow");
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
-		result.close();
-		indexImpl.close();
+		closeResultAndIndex();
 	}
 
 	@Test
@@ -124,7 +117,7 @@ public class DefaultBiIndexImpl_findByValue extends
 				"Attempting to lookup index 'sample_index' while it is closed.");
 
 		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
 				valueConverter, null);
 
@@ -155,7 +148,7 @@ public class DefaultBiIndexImpl_findByValue extends
 		EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
 				new IllegalStateException());
 		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
 				valueConverter, null);
 		indexImpl.open();

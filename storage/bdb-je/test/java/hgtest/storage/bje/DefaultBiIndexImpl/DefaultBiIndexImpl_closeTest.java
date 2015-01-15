@@ -14,7 +14,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImpl_TestBasis
+public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 {
 	@Test
 	public void allInternalOperationsPerformFine() throws Exception
@@ -29,7 +29,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImpl_TestBasis
 	}
 
 	@Test
-	public void exceptionIsTrownOnClosingInternalDatabase() throws Exception
+	public void exceptionIsThrownOnClosingInternalDatabase() throws Exception
 	{
 		final HGException expected = new HGException(
 				"java.lang.IllegalStateException");

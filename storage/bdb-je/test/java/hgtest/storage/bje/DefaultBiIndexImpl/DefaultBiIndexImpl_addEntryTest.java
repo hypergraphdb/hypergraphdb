@@ -20,7 +20,7 @@ import static org.testng.Assert.assertEquals;
  * @author Yuriy Sechko
  */
 public class DefaultBiIndexImpl_addEntryTest extends
-		DefaultBiIndexImpl_TestBasis
+		DefaultBiIndexImplTestBasis
 {
 
 	private DefaultBiIndexImpl<Integer, String> indexImpl;
@@ -30,7 +30,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	{
 		final Exception expected = new NullPointerException();
 
-		startupIndexImpl();
+		startupIndex();
 
 		try
 		{
@@ -47,7 +47,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 	}
 
-	private void startupIndexImpl() {
+	private void startupIndex() {
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
@@ -60,7 +60,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	{
 		final Exception expected = new NullPointerException();
 
-		startupIndexImpl();
+		startupIndex();
 
 		try
 		{
@@ -80,7 +80,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	@Test
 	public void addOneEntry() throws Exception
 	{
-		startupIndexImpl();
+		startupIndex();
 
 		indexImpl.addEntry(1, "one");
 
@@ -97,7 +97,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		expected.add("thirty three");
 		expected.add("forty four");
 
-		startupIndexImpl();
+		startupIndex();
 
 		indexImpl.addEntry(22, "twenty two");
 		indexImpl.addEntry(33, "thirty three");
@@ -117,7 +117,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	{
 		final String expected = "second value";
 
-		startupIndexImpl();
+		startupIndex();
 
 		indexImpl.addEntry(4, "first value");
 		indexImpl.addEntry(4, "second value");

@@ -24,7 +24,7 @@ import static hgtest.storage.bje.TestUtils.deleteDirectory;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultBiIndexImpl_TestBasis
+public class DefaultBiIndexImplTestBasis
 {
 	protected final File envHome = new File(System.getProperty("user.home")
 			+ File.separator + "test_environment");
