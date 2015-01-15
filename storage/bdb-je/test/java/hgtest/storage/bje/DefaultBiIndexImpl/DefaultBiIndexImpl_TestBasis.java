@@ -17,8 +17,9 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Comparator;
+
+import static hgtest.storage.bje.TestUtils.deleteDirectory;
 
 /**
  * @author Yuriy Sechko
@@ -77,7 +78,7 @@ public class DefaultBiIndexImpl_TestBasis
 	protected void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
-		deleteTestDirectory();
+		deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
@@ -86,20 +87,7 @@ public class DefaultBiIndexImpl_TestBasis
 	{
 		PowerMock.verifyAll();
 		shutdownEnvironment();
-		deleteTestDirectory();
-	}
-
-	protected void deleteTestDirectory()
-	{
-		final File[] filesInTestDir = envHome.listFiles();
-		if (filesInTestDir != null)
-		{
-			for (final File eachFile : filesInTestDir)
-			{
-				eachFile.delete();
-			}
-		}
-		envHome.delete();
+		deleteDirectory(envHome);
 	}
 
 	protected void startupEnvironment()

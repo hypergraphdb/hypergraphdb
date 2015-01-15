@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static hgtest.storage.bje.TestUtils.list;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -21,18 +22,6 @@ import static org.testng.Assert.assertEquals;
 public class DefaultBiIndexImpl_findByValue extends
 		DefaultBiIndexImpl_TestBasis
 {
-	private static <T> List<T> accessResultAsList(
-			final HGRandomAccessResult<T> result)
-	{
-		final List<T> outputList = new ArrayList<T>();
-		while (result.hasNext())
-		{
-			final T currentValue = result.next();
-			outputList.add(currentValue);
-		}
-		return outputList;
-	}
-
 	@Test
 	public void thereIsOneEntry() throws Exception
 	{
@@ -50,7 +39,7 @@ public class DefaultBiIndexImpl_findByValue extends
 		final HGRandomAccessResult<Integer> result = indexImpl
 				.findByValue("one");
 
-		final List<Integer> actual = accessResultAsList(result);
+		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
 		result.close();
 		indexImpl.close();
@@ -71,7 +60,7 @@ public class DefaultBiIndexImpl_findByValue extends
 		final HGRandomAccessResult<Integer> result = indexImpl
 				.findByValue("this value doesn't exist");
 
-		final List<Integer> actual = accessResultAsList(result);
+		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
 		result.close();
 		indexImpl.close();
@@ -95,7 +84,7 @@ public class DefaultBiIndexImpl_findByValue extends
 
 		final HGRandomAccessResult<Integer> result = indexImpl
 				.findByValue("word");
-		final List<Integer> actual = accessResultAsList(result);
+		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
 		result.close();
@@ -121,7 +110,7 @@ public class DefaultBiIndexImpl_findByValue extends
 
 		final HGRandomAccessResult<Integer> result = indexImpl
 				.findByValue("yellow");
-		final List<Integer> actual = accessResultAsList(result);
+		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
 		result.close();

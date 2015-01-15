@@ -1,8 +1,10 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
@@ -63,7 +65,7 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		storage.addIncidenceLink(handle, links[2]);
 		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
 				.getIncidenceResultSet(handle);
-		assertEquals(set(storedLinks), set(links));
+		assertEquals(TestUtils.set(storedLinks), HGUtils.set(links));
 		storedLinks.close();
 		shutdown();
 	}

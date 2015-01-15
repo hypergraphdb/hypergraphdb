@@ -3,8 +3,6 @@ package hgtest.storage.bje.BJEStorageImplementation;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
-import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -15,8 +13,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+
+import static hgtest.storage.bje.TestUtils.deleteDirectory;
 
 /**
  * Most common actions which have to be performed in test cases for
@@ -74,6 +72,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	// location of temporary directory for tests
 	final protected String testDatabaseLocation = System
 			.getProperty("user.home") + File.separator + "hgtest.tmp";
+	final File testDatabaseDirectory = new File(testDatabaseLocation);
 
 	// classes which are used by BJEStorageImplementation
 	HGStore store;
@@ -85,28 +84,14 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
-		deleteTestDirectory();
+		deleteDirectory(testDatabaseDirectory);
 	}
 
 	@AfterMethod
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
-		deleteTestDirectory();
-	}
-
-	private void deleteTestDirectory()
-	{
-		final File testDir = new File(testDatabaseLocation);
-		final File[] filesInTestDir = testDir.listFiles();
-		if (filesInTestDir != null)
-		{
-			for (final File eachFile : filesInTestDir)
-			{
-				eachFile.delete();
-			}
-		}
-		testDir.delete();
+		deleteDirectory(testDatabaseDirectory);
 	}
 
 	private void replay()
@@ -251,41 +236,6 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected void shutdown() throws Exception
 	{
 		storage.shutdown();
-	}
-
-	/**
-	 * Utility method. It can be used just for initialization set of handles in
-	 * one line. Puts all given handles into hash set.
-	 */
-	public static Set<HGPersistentHandle> set(
-			final HGPersistentHandle... handles)
-	{
-		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
-		for (final HGPersistentHandle eachHandle : handles)
-		{
-			allHandles.add(eachHandle);
-		}
-		return allHandles;
-	}
-
-	/**
-	 * Utility method. Puts all handles which are accessible from given result
-	 * set into hash set. In some test cases stored data returned as
-	 * {@link HGRandomAccessResult}. Two results cannot be compared directly. So
-	 * we put all handles into set and that compare two sets.
-	 *
-	 */
-	// TODO investigate if the handles is ordered from one call to another and
-	// return list of handles
-	public static Set<HGPersistentHandle> set(
-			final HGRandomAccessResult<HGPersistentHandle> handles)
-	{
-		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
-		while (handles.hasNext())
-		{
-			allHandles.add(handles.next());
-		}
-		return allHandles;
 	}
 
 	// public static void main(String args[])
