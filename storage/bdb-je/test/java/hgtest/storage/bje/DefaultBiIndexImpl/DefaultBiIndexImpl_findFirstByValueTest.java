@@ -25,7 +25,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, null);
+				storage, transactionManager, keyConverter, valueConverter, comparator);
 		indexImpl.open();
 	}
 
@@ -116,7 +116,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, null);
+				storage, transactionManager, keyConverter, valueConverter, comparator);
 
 		try
 		{
@@ -141,7 +141,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
                 new IllegalStateException());
         PowerMock.replayAll();
         indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                storage, transactionManager, keyConverter, valueConverter, null);
+                storage, transactionManager, keyConverter, valueConverter, comparator);
         indexImpl.open();
         indexImpl.addEntry(0, "red");
 

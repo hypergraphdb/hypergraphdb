@@ -68,8 +68,10 @@ public class DefaultBiIndexImplTestBasis
 		}
 	};
 
-	protected Comparator<?> comparator = PowerMock
-			.createStrictMock(Comparator.class);
+	// Use 'null' comparator  - it forces
+	// {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl} to use default
+	// Sleepycat's BtreeComparator
+	protected Comparator<?> comparator = null;
 
 	// real instances we need: Database, Environment (come from the
 	// Sleepycat je library)

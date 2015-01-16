@@ -13,10 +13,6 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 
 /**
- * Use 'null' comparator in these test cases - it forces
- * {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl} to use default
- * Sleepycat's BtreeComparator
- * 
  * @author Yuriy Sechko
  */
 public class DefaultBiIndexImpl_addEntryTest extends
@@ -51,7 +47,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
-				transactionManager, keyConverter, valueConverter, null);
+				transactionManager, keyConverter, valueConverter, comparator);
 		indexImpl.open();
 	}
 
@@ -137,7 +133,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
+				valueConverter, comparator);
 		try
 		{
 			indexImplSpecificForThisTestCase.addEntry(2, "two");
@@ -164,7 +160,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
 				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, null);
+				valueConverter, comparator);
 		indexImplSpecificForThisTestCase.open();
 
 		try
