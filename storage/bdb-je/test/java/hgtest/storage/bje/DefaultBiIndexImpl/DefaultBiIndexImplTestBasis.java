@@ -26,10 +26,12 @@ import static hgtest.storage.bje.TestUtils.deleteDirectory;
  */
 public class DefaultBiIndexImplTestBasis
 {
+	protected static final String INDEX_NAME = "sample_index";
+	protected static final String SECONDARY_DATABASE_FIELD_NAME = "secondaryDb";
+	public static final String DATABASE_FIELD_NAME = "db";
+
 	protected final File envHome = new File(System.getProperty("user.home")
 			+ File.separator + "test_environment");
-
-	protected static final String INDEX_NAME = "sample_index";
 	// storage - used only for getting configuration data
 	protected final BJEStorageImplementation storage = PowerMock
 			.createStrictMock(BJEStorageImplementation.class);
@@ -178,7 +180,7 @@ public class DefaultBiIndexImplTestBasis
 	{
 		// one database handle is in DefaultIndexImpl
 		final Field firstDatabaseField = indexImpl.getClass().getSuperclass()
-				.getDeclaredField("db");
+				.getDeclaredField(DATABASE_FIELD_NAME);
 		firstDatabaseField.setAccessible(true);
 		final Database firstDatabase = (Database) firstDatabaseField
 				.get(indexImpl);
@@ -189,7 +191,7 @@ public class DefaultBiIndexImplTestBasis
 		}
 		// another is in DefaultBiIndexImpl
 		final Field secondDatabaseField = indexImpl.getClass()
-				.getDeclaredField("secondaryDb");
+				.getDeclaredField(SECONDARY_DATABASE_FIELD_NAME);
 		secondDatabaseField.setAccessible(true);
 		final Database secondDatabase = ((Database) secondDatabaseField
 				.get(indexImpl));

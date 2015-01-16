@@ -51,7 +51,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		EasyMock.expectLastCall().andThrow(new IllegalStateException());
 		PowerMock.replayAll();
 		final Field secondaryDbField = indexImpl.getClass().getDeclaredField(
-				"secondaryDb");
+				SECONDARY_DATABASE_FIELD_NAME);
 		secondaryDbField.setAccessible(true);
 		// close the real database before use fake
 		secondaryDbField.get(indexImpl).getClass().getMethod("close").invoke(secondaryDbField.get(indexImpl));
