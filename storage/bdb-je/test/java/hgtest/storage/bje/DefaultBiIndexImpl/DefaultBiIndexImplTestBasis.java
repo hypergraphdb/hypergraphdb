@@ -29,8 +29,8 @@ public class DefaultBiIndexImplTestBasis
 	protected static final String INDEX_NAME = "sample_index";
 
 	protected static final String SECONDARY_DATABASE_FIELD_NAME = "secondaryDb";
-	public static final String DATABASE_FIELD_NAME = "db";
-	public static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
+	protected static final String DATABASE_FIELD_NAME = "db";
+	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
 	protected final File envHome = new File(System.getProperty("user.home")
 			+ File.separator + "test_environment");
