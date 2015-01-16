@@ -20,8 +20,7 @@ import static org.testng.Assert.assertTrue;
 public class DefaultBiIndexImpl_countKeysTest extends
 		DefaultBiIndexImplTestBasis
 {
-
-	private DefaultBiIndexImpl<Integer, String> indexImpl;
+    private DefaultBiIndexImpl<Integer, String> indexImpl;
 
 	private void startupIndex()
 	{
@@ -149,7 +148,7 @@ public class DefaultBiIndexImpl_countKeysTest extends
 
         // inject fake transaction manager
         final Field transactionManagerField = indexImpl.getClass()
-                .getSuperclass().getDeclaredField("transactionManager");
+                .getSuperclass().getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
         transactionManagerField.setAccessible(true);
         transactionManagerField.set(indexImpl, fakeTransactionManager);
         try
