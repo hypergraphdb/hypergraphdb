@@ -19,11 +19,47 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultBiIndexImpl_findByValue extends
+public class DefaultBiIndexImpl_findByValueTest extends
 		DefaultBiIndexImplTestBasis
 {
 	private DefaultBiIndexImpl<Integer, String> indexImpl;
 	private HGRandomAccessResult<Integer> result;
+
+	private void closeResultAndIndex()
+	{
+		result.close();
+		indexImpl.close();
+	}
+
+	private void startupIndex()
+	{
+		mockStorage();
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter, null);
+		indexImpl.open();
+	}
+
+	@Test
+	public void findByNullValue() throws Exception
+	{
+		final Exception expected = new NullPointerException();
+
+		startupIndex();
+
+		try
+		{
+			indexImpl.findByValue(null);
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+		}
+		finally
+		{
+			indexImpl.close();
+		}
+	}
 
 	@Test
 	public void thereIsOneEntry() throws Exception
@@ -34,26 +70,11 @@ public class DefaultBiIndexImpl_findByValue extends
 		startupIndex();
 		indexImpl.addEntry(1, "one");
 
-		 result = indexImpl
-				.findByValue("one");
+		result = indexImpl.findByValue("one");
 
 		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
 		closeResultAndIndex();
-	}
-
-	private void closeResultAndIndex() {
-		result.close();
-		indexImpl.close();
-	}
-
-	private void startupIndex() {
-		mockStorage();
-		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
-		indexImpl.open();
 	}
 
 	@Test
@@ -63,8 +84,7 @@ public class DefaultBiIndexImpl_findByValue extends
 
 		startupIndex();
 
-		 result = indexImpl
-				.findByValue("this value doesn't exist");
+		result = indexImpl.findByValue("this value doesn't exist");
 
 		final List<Integer> actual = list(result);
 		assertEquals(actual, expected);
@@ -82,8 +102,24 @@ public class DefaultBiIndexImpl_findByValue extends
 		indexImpl.addEntry(2, "word");
 		indexImpl.addEntry(3, "word");
 
-		 result = indexImpl
-				.findByValue("word");
+		result = indexImpl.findByValue("word");
+		final List<Integer> actual = list(result);
+
+		assertEquals(actual, expected);
+		closeResultAndIndex();
+	}
+
+	@Test
+	public void thereAreSeveralEntriesButDesiredValueDoesNotExist()
+			throws Exception
+	{
+		final List<Integer> expected = Collections.emptyList();
+
+		startupIndex();
+		indexImpl.addEntry(2, "two");
+		indexImpl.addEntry(3, "three");
+
+		result = indexImpl.findByValue("none");
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -102,8 +138,7 @@ public class DefaultBiIndexImpl_findByValue extends
 		indexImpl.addEntry(2, "yellow");
 		indexImpl.addEntry(11, "orange");
 
-		 result = indexImpl
-				.findByValue("yellow");
+		result = indexImpl.findByValue("yellow");
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -117,9 +152,8 @@ public class DefaultBiIndexImpl_findByValue extends
 				"Attempting to lookup index 'sample_index' while it is closed.");
 
 		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter, null);
 
 		try
 		{
@@ -148,20 +182,19 @@ public class DefaultBiIndexImpl_findByValue extends
 		EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
 				new IllegalStateException());
 		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, null);
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter, null);
 		indexImpl.open();
 		indexImpl.addEntry(0, "red");
 
 		// inject fake transaction manager
-		final Field transactionManagerField = indexImpl.getClass().getSuperclass().getDeclaredField("transactionManager");
+		final Field transactionManagerField = indexImpl.getClass()
+				.getSuperclass().getDeclaredField("transactionManager");
 		transactionManagerField.setAccessible(true);
 		transactionManagerField.set(indexImpl, fakeTransactionManager);
 		try
 		{
-			indexImpl
-					.findByValue("yellow");
+			indexImpl.findByValue("yellow");
 		}
 		catch (Exception occurred)
 		{
