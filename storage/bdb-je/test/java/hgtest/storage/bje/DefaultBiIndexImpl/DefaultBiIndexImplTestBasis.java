@@ -1,6 +1,7 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
 import com.sleepycat.je.*;
+import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.BAUtils;
@@ -14,6 +15,7 @@ import org.hypergraphdb.transaction.*;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -32,8 +34,7 @@ public class DefaultBiIndexImplTestBasis
 	protected static final String DATABASE_FIELD_NAME = "db";
 	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
-	protected final File envHome = new File(System.getProperty("user.home")
-			+ File.separator + "test_environment");
+	protected final File envHome = TestUtils.createTempFile("DefaultBiIndexImpl", "test_environment");
 	// storage - used only for getting configuration data
 	protected final BJEStorageImplementation storage = PowerMock
 			.createStrictMock(BJEStorageImplementation.class);
@@ -98,7 +99,7 @@ public class DefaultBiIndexImplTestBasis
 
 	protected void startupEnvironment()
 	{
-		envHome.mkdirs();
+		envHome.mkdir();
 		config = new EnvironmentConfig();
 		config.setAllowCreate(true).setReadOnly(false).setTransactional(true);
 		environment = new Environment(envHome, config);

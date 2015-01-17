@@ -1,5 +1,6 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
@@ -70,9 +71,10 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
-	final protected String testDatabaseLocation = System
-			.getProperty("user.home") + File.separator + "hgtest.tmp";
-	final File testDatabaseDirectory = new File(testDatabaseLocation);
+	final File testDatabaseDirectory = TestUtils.createTempFile(
+			"BJEStorageImplementation", "test_database");
+	final protected String testDatabaseLocation = TestUtils
+			.getCanonicalPath(testDatabaseDirectory);
 
 	// classes which are used by BJEStorageImplementation
 	HGStore store;

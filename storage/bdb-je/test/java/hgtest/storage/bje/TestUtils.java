@@ -4,6 +4,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -63,5 +64,25 @@ public class TestUtils
 			allHandles.add(handles.next());
 		}
 		return allHandles;
+	}
+
+	public static File createTempFile(final String prefix, final String suffix) {
+		File tempFile;
+		try {
+			tempFile = File.createTempFile(prefix, suffix);
+		} catch (IOException ioException) {
+			throw new IllegalStateException(ioException);
+		}
+		return tempFile;
+	}
+
+	public static String getCanonicalPath(final File file) {
+		String canonicalPath;
+		try {
+			canonicalPath = file.getCanonicalPath();
+		} catch(IOException ioException) {
+			throw new IllegalStateException(ioException);
+		}
+		return canonicalPath;
 	}
 }
