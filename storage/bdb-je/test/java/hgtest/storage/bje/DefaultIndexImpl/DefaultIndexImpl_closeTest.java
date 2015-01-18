@@ -15,7 +15,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultIndexImpl_closeTest extends IndexImplTestBasis{
+public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis{
     @Test
     public void indexIsNotOpenedYet() throws Exception {
         PowerMock.replayAll();

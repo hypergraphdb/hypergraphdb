@@ -16,19 +16,8 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultIndexImpl_addEntryTest extends IndexImplTestBasis
+public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 {
-	DefaultIndexImpl<Integer, String> index;
-
-	private void startupIndex()
-	{
-		mockStorage();
-		PowerMock.replayAll();
-		index = new DefaultIndexImpl<Integer, String>(INDEX_NAME, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
-		index.open();
-	}
-
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
