@@ -17,6 +17,15 @@ import static org.testng.Assert.assertEquals;
 public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 {
 	@Test
+	public void indexIsNotOpened() throws Exception {
+		PowerMock.replayAll();
+
+		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage, transactionManager, keyConverter, valueConverter, comparator);
+
+		indexImpl.close();
+	}
+
+	@Test
 	public void allInternalOperationsPerformFine() throws Exception
 	{
 		mockStorage();

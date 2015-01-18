@@ -183,7 +183,7 @@ public class IndexImplTestBasis
 	 * We obtain them by their names. It is not good. But it seems that there is
 	 * not way to obtain them from Environment instance.
 	 */
-	protected void closeDatabases(final DefaultIndexImpl indexImpl)
+	protected void closeDatabase(final DefaultIndexImpl indexImpl)
 			throws NoSuchFieldException, IllegalAccessException
 	{
 		// one database handle is in DefaultIndexImpl
