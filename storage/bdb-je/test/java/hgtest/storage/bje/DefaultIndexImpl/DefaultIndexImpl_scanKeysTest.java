@@ -54,6 +54,7 @@ public class DefaultIndexImpl_scanKeysTest extends DefaultIndexImplTestBasis
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
+		result.close();
 		index.close();
 	}
 
