@@ -2,6 +2,7 @@ package hgtest.storage.bje.DefaultBiIndexImpl;
 
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.DatabaseNotFoundException;
+import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
@@ -20,7 +21,7 @@ import static org.testng.Assert.assertTrue;
 public class DefaultBiIndexImpl_countKeysTest extends
 		DefaultBiIndexImplTestBasis
 {
-    private DefaultBiIndexImpl<Integer, String> indexImpl;
+	private DefaultBiIndexImpl<Integer, String> indexImpl;
 
 	private void startupIndex()
 	{
@@ -63,106 +64,108 @@ public class DefaultBiIndexImpl_countKeysTest extends
 		final long actual = indexImpl.countKeys("this value doesn't exist");
 
 		assertEquals(actual, expected);
-        indexImpl.close();
+		indexImpl.close();
 	}
 
-    @Test
-    public void thereAreSeveralEntriesByDesiredValueDoesNotExist() throws Exception {
-        final long expected = 0;
+	@Test
+	public void thereAreSeveralEntriesByDesiredValueDoesNotExist()
+			throws Exception
+	{
+		final long expected = 0;
 
-        startupIndex();
-        indexImpl.addEntry(1, "one");
-        indexImpl.addEntry(2, "two");
-        indexImpl.addEntry(3, "three");
+		startupIndex();
+		indexImpl.addEntry(1, "one");
+		indexImpl.addEntry(2, "two");
+		indexImpl.addEntry(3, "three");
 
-        final long actual = indexImpl.countKeys("none");
+		final long actual = indexImpl.countKeys("none");
 
-        assertEquals(actual, expected);
-        indexImpl.close();
-    }
+		assertEquals(actual, expected);
+		indexImpl.close();
+	}
 
-    @Test
-    public void thereIsOnDesiredValue() throws Exception {
-        final long expected = 1;
+	@Test
+	public void thereIsOnDesiredValue() throws Exception
+	{
+		final long expected = 1;
 
-        startupIndex();
-        indexImpl.addEntry(22, "twenty two");
-        indexImpl.addEntry(33, "thirty three");
+		startupIndex();
+		indexImpl.addEntry(22, "twenty two");
+		indexImpl.addEntry(33, "thirty three");
 
-        final long actual = indexImpl.countKeys("twenty two");
+		final long actual = indexImpl.countKeys("twenty two");
 
-        assertEquals(actual, expected);
-        indexImpl.close();
-    }
+		assertEquals(actual, expected);
+		indexImpl.close();
+	}
 
-    @Test
-    public void thereAreSeveralDesiredValues() throws Exception {
-        final long expected = 2;
+	@Test
+	public void thereAreSeveralDesiredValues() throws Exception
+	{
+		final long expected = 2;
 
-        startupIndex();
-        indexImpl.addEntry(1, "one");
-        indexImpl.addEntry(2, "two");
-        indexImpl.addEntry(11, "one");
+		startupIndex();
+		indexImpl.addEntry(1, "one");
+		indexImpl.addEntry(2, "two");
+		indexImpl.addEntry(11, "one");
 
-        final long actual = indexImpl.countKeys("one");
+		final long actual = indexImpl.countKeys("one");
 
-        assertEquals(actual, expected);
-        indexImpl.close();
-    }
+		assertEquals(actual, expected);
+		indexImpl.close();
+	}
 
-    @Test
-    public void indexIsNotOpened() throws Exception
-    {
-        final Exception expected = new NullPointerException();
+	@Test
+	public void indexIsNotOpened() throws Exception
+	{
+		final Exception expected = new NullPointerException();
 
-        PowerMock.replayAll();
-        indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                storage, transactionManager, keyConverter, valueConverter, comparator);
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 
-        try
-        {
-            indexImpl.countKeys("some value");
-        }
-        catch (Exception occurred)
-        {
-            assertEquals(occurred.getClass(), expected.getClass());
-        }
-    }
+		try
+		{
+			indexImpl.countKeys("some value");
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+		}
+	}
 
-    @Test
-    public void transactionManagerThrowsException() throws Exception
-    {
-        final Exception expected = new HGException(
-                "This exception is thrown by fake transaction manager.");
+	@Test
+	public void transactionManagerThrowsException() throws Exception
+	{
+		final Exception expected = new HGException(
+				"This exception is thrown by fake transaction manager.");
 
-        mockStorage();
-        final HGTransactionManager fakeTransactionManager = PowerMock
-                .createStrictMock(HGTransactionManager.class);
-        EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
-                new DatabaseNotFoundException("This exception is thrown by fake transaction manager."));
-                PowerMock.replayAll();
-        indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                storage, transactionManager, keyConverter, valueConverter, comparator);
-        indexImpl.open();
-        indexImpl.addEntry(0, "red");
+		mockStorage();
+		final HGTransactionManager fakeTransactionManager = PowerMock
+				.createStrictMock(HGTransactionManager.class);
+		EasyMock.expect(fakeTransactionManager.getContext())
+				.andThrow(
+						new DatabaseNotFoundException(
+								"This exception is thrown by fake transaction manager."));
+		PowerMock.replayAll();
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
+				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
+				valueConverter, comparator);
+		indexImpl.open();
 
-        // inject fake transaction manager
-        final Field transactionManagerField = indexImpl.getClass()
-                .getSuperclass().getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
-        transactionManagerField.setAccessible(true);
-        transactionManagerField.set(indexImpl, fakeTransactionManager);
-        try
-        {
-            indexImpl.countKeys("yellow");
-        }
-        catch (Exception occurred)
-        {
-            assertEquals(occurred.getClass(), expected.getClass());
-            assertTrue(occurred.getMessage().contains(expected.getMessage()));
-        }
-        finally
-        {
-            indexImpl.close();
-        }
-    }
+		try
+		{
+			indexImpl.countKeys("yellow");
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+			assertTrue(occurred.getMessage().contains(expected.getMessage()));
+		}
+		finally
+		{
+			indexImpl.close();
+		}
+	}
 }

@@ -36,7 +36,8 @@ public class DefaultBiIndexImpl_findByValueTest extends
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, comparator);
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 		indexImpl.open();
 	}
 
@@ -153,7 +154,8 @@ public class DefaultBiIndexImpl_findByValueTest extends
 
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, comparator);
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 
 		try
 		{
@@ -182,16 +184,11 @@ public class DefaultBiIndexImpl_findByValueTest extends
 		EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
 				new IllegalStateException());
 		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, comparator);
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
+				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
+				valueConverter, comparator);
 		indexImpl.open();
-		indexImpl.addEntry(0, "red");
 
-		// inject fake transaction manager
-		final Field transactionManagerField = indexImpl.getClass()
-				.getSuperclass().getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
-		transactionManagerField.setAccessible(true);
-		transactionManagerField.set(indexImpl, fakeTransactionManager);
 		try
 		{
 			indexImpl.findByValue("yellow");

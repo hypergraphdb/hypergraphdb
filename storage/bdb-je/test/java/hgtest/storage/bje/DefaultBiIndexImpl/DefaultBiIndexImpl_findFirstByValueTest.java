@@ -25,7 +25,8 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, comparator);
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 		indexImpl.open();
 	}
 
@@ -116,7 +117,8 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter, comparator);
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 
 		try
 		{
@@ -128,40 +130,35 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		}
 	}
 
-    @Test
-    public void transactionManagerThrowsException() throws Exception
-    {
-        final Exception expected = new HGException(
-                "Failed to lookup index 'sample_index': java.lang.IllegalStateException");
+	@Test
+	public void transactionManagerThrowsException() throws Exception
+	{
+		final Exception expected = new HGException(
+				"Failed to lookup index 'sample_index': java.lang.IllegalStateException");
 
-        mockStorage();
-        final HGTransactionManager fakeTransactionManager = PowerMock
-                .createStrictMock(HGTransactionManager.class);
-        EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
-                new IllegalStateException());
-        PowerMock.replayAll();
-        indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                storage, transactionManager, keyConverter, valueConverter, comparator);
-        indexImpl.open();
-        indexImpl.addEntry(0, "red");
+		mockStorage();
+		final HGTransactionManager fakeTransactionManager = PowerMock
+				.createStrictMock(HGTransactionManager.class);
+		EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
+				new IllegalStateException());
+		PowerMock.replayAll();
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
+				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
+				valueConverter, comparator);
+		indexImpl.open();
 
-        // inject fake transaction manager
-        final Field transactionManagerField = indexImpl.getClass()
-                .getSuperclass().getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
-        transactionManagerField.setAccessible(true);
-        transactionManagerField.set(indexImpl, fakeTransactionManager);
-        try
-        {
-            indexImpl.findFirstByValue("yellow");
-        }
-        catch (Exception occurred)
-        {
-            assertEquals(occurred.getClass(), expected.getClass());
-            assertEquals(occurred.getMessage(), expected.getMessage());
-        }
-        finally
-        {
-            indexImpl.close();
-        }
-    }
+		try
+		{
+			indexImpl.findFirstByValue("yellow");
+		}
+		catch (Exception occurred)
+		{
+			assertEquals(occurred.getClass(), expected.getClass());
+			assertEquals(occurred.getMessage(), expected.getMessage());
+		}
+		finally
+		{
+			indexImpl.close();
+		}
+	}
 }

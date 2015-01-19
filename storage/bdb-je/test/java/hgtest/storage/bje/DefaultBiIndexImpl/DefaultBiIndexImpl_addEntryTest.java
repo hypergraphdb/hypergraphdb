@@ -43,7 +43,8 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 	}
 
-	private void startupIndex() {
+	private void startupIndex()
+	{
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
