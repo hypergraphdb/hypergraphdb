@@ -2,6 +2,7 @@ package hgtest.storage.bje;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.HGSearchResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class TestUtils
 	/**
 	 * Iterates through result and copies encountered items to the list.
 	 */
-	public static <T> List<T> list(final HGRandomAccessResult<T> result)
+	public static <T> List<T> list(final HGSearchResult<T> result)
 	{
 		final List<T> outputList = new ArrayList<T>();
 		while (result.hasNext())

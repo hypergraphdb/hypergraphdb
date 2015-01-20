@@ -171,4 +171,6 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 			index.close();
 		}
 	}
+
+
 }
