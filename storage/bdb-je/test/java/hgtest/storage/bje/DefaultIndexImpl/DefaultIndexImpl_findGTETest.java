@@ -16,7 +16,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
+public class DefaultIndexImpl_findGTETest extends DefaultIndexImplTestBasis
 {
 	@Test
 	public void indexIsNotOpened() throws Exception
@@ -31,7 +31,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 
 		try
 		{
-			index.findGT(1);
+			index.findGTE(1);
 		}
 		catch (Exception occurred)
 		{
@@ -47,7 +47,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 
 		try
 		{
-			index.findGT(null);
+			index.findGTE(null);
 		}
 		catch (Exception occurred)
 		{
@@ -66,7 +66,24 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 
 		startupIndex();
 
-		final HGSearchResult<String> result = index.findGT(2);
+		final HGSearchResult<String> result = index.findGTE(2);
+		final List<String> actual = list(result);
+
+		assertEquals(actual, expected);
+		result.close();
+		index.close();
+	}
+
+	@Test
+	public void thereIsOneEntryAddedButItIsEqualToDesired() throws Exception
+	{
+		final List<String> expected = new ArrayList<String>();
+		expected.add("A");
+
+		startupIndex();
+		index.addEntry(2, "A");
+
+		final HGSearchResult<String> result = index.findGTE(2);
 		final List<String> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -83,7 +100,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 		startupIndex();
 		index.addEntry(2, "A");
 
-		final HGSearchResult<String> result = index.findGT(3);
+		final HGSearchResult<String> result = index.findGTE(3);
 		final List<String> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -95,49 +112,18 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 	public void thereIsOneEntryAddedButItIsGreaterThanDesired()
 			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.NullPointerException");
+		final List<String> expected = new ArrayList<String>();
+		expected.add("A");
 
 		startupIndex();
 		index.addEntry(4, "A");
 
-		try
-		{
-			index.findGT(3);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
-		}
-		finally
-		{
-			index.close();
-		}
-	}
+		final HGSearchResult<String> result = index.findGTE(3);
+		final List<String> actual = list(result);
 
-	@Test
-	public void thereIsOneEntryAddedButItIsEqualToTheDesired() throws Exception
-	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.NullPointerException");
-
-		startupIndex();
-		index.addEntry(3, "A");
-
-		try
-		{
-			index.findGT(3);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
-		}
-		finally
-		{
-			index.close();
-		}
+		assertEquals(actual, expected);
+		result.close();
+		index.close();
 	}
 
 	@Test
@@ -152,7 +138,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 		index.addEntry(3, "B");
 		index.addEntry(2, "A");
 
-		final HGSearchResult<String> result = index.findGT(4);
+		final HGSearchResult<String> result = index.findGTE(4);
 		final List<String> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -164,60 +150,46 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 	public void thereAreSeveralEntriesAddedButAllOfThemAreGreaterThanDesired()
 			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.NullPointerException");
+		final List<String> expected = new ArrayList<String>();
+		expected.add("A");
+		expected.add("B");
 
 		startupIndex();
 		index.addEntry(2, "A");
 		index.addEntry(3, "B");
 
-		try
-		{
-			index.findGT(1);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
-		}
-		finally
-		{
-			index.close();
-		}
+		final HGSearchResult<String> result = index.findGTE(1);
+		final List<String> actual = list(result);
+
+		assertEquals(actual, expected);
+		result.close();
+		index.close();
 	}
 
 	@Test
 	public void thereAreSeveralEntriesAddedButAllOfThemAreEqualToDesired()
 			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.NullPointerException");
+		final List<String> expected = new ArrayList<String>();
+		expected.add("A");
+		expected.add("B");
 
 		startupIndex();
-		index.addEntry(3, "A");
 		index.addEntry(3, "B");
+		index.addEntry(3, "A");
 
-		try
-		{
-			index.findGT(3);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
-		}
-		finally
-		{
-			index.close();
-		}
+		final HGSearchResult<String> result = index.findGTE(3);
+		final List<String> actual = list(result);
+
+		assertEquals(actual, expected);
+		result.close();
+		index.close();
 	}
 
 	@Test
 	public void thereAreSeveralEntriesAdded() throws Exception
 	{
 		final List<String> expected = new ArrayList<String>();
-		expected.add("A");
-		expected.add("B");
 		expected.add("C");
 		expected.add("D");
 
@@ -227,7 +199,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 		index.addEntry(1, "A");
 		index.addEntry(3, "C");
 
-		final HGSearchResult<String> result = index.findGT(5);
+		final HGSearchResult<String> result = index.findGTE(3);
 		final List<String> actual = list(result);
 
 		assertEquals(actual, expected);
@@ -245,7 +217,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 
 		try
 		{
-			index.findGT(2);
+			index.findGTE(2);
 		}
 		catch (Exception occurred)
 		{
