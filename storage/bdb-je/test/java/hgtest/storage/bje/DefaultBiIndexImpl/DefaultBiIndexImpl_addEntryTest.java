@@ -1,9 +1,7 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
@@ -18,9 +16,6 @@ import static org.testng.Assert.assertEquals;
 public class DefaultBiIndexImpl_addEntryTest extends
 		DefaultBiIndexImplTestBasis
 {
-
-	private DefaultBiIndexImpl<Integer, String> indexImpl;
-
 	@Test
 	public void keyIsNull() throws Exception
 	{
@@ -41,15 +36,6 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		{
 			indexImpl.close();
 		}
-	}
-
-	private void startupIndex()
-	{
-		mockStorage();
-		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
-		indexImpl.open();
 	}
 
 	@Test
@@ -152,21 +138,11 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		final Exception expected = new HGException(
 				"Failed to add entry to index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
 
-		mockStorage();
-		HGTransactionManager fakeTransactionManager = PowerMock
-				.createStrictMock(HGTransactionManager.class);
-		fakeTransactionManager.getContext();
-		EasyMock.expectLastCall().andThrow(
-				new IllegalStateException("Transaction manager is fake."));
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, comparator);
-		indexImplSpecificForThisTestCase.open();
+		startupIndexWithFakeTransactionManager();
 
 		try
 		{
-			indexImplSpecificForThisTestCase.addEntry(2, "two");
+			indexImpl.addEntry(2, "two");
 		}
 		catch (Exception occurred)
 		{
@@ -175,7 +151,9 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		finally
 		{
-			indexImplSpecificForThisTestCase.close();
+			indexImpl.close();
 		}
 	}
+
+
 }

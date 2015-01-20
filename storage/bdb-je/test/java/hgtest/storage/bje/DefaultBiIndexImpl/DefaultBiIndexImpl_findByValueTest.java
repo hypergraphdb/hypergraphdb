@@ -1,14 +1,11 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,23 +19,12 @@ import static org.testng.Assert.assertEquals;
 public class DefaultBiIndexImpl_findByValueTest extends
 		DefaultBiIndexImplTestBasis
 {
-	private DefaultBiIndexImpl<Integer, String> indexImpl;
 	private HGRandomAccessResult<Integer> result;
 
 	private void closeResultAndIndex()
 	{
 		result.close();
 		indexImpl.close();
-	}
-
-	private void startupIndex()
-	{
-		mockStorage();
-		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
-		indexImpl.open();
 	}
 
 	@Test
@@ -176,18 +162,9 @@ public class DefaultBiIndexImpl_findByValueTest extends
 	public void transactionManagerThrowsException() throws Exception
 	{
 		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.IllegalStateException");
+				"Failed to lookup index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
 
-		mockStorage();
-		final HGTransactionManager fakeTransactionManager = PowerMock
-				.createStrictMock(HGTransactionManager.class);
-		EasyMock.expect(fakeTransactionManager.getContext()).andThrow(
-				new IllegalStateException());
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, comparator);
-		indexImpl.open();
+		startupIndexWithFakeTransactionManager();
 
 		try
 		{

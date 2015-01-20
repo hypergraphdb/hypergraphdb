@@ -1,16 +1,12 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.DatabaseNotFoundException;
-import com.sun.org.apache.xerces.internal.impl.xpath.XPath;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
-
-import java.lang.reflect.Field;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -21,18 +17,6 @@ import static org.testng.Assert.assertTrue;
 public class DefaultBiIndexImpl_countKeysTest extends
 		DefaultBiIndexImplTestBasis
 {
-	private DefaultBiIndexImpl<Integer, String> indexImpl;
-
-	private void startupIndex()
-	{
-		mockStorage();
-		PowerMock.replayAll();
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
-		indexImpl.open();
-	}
-
 	@Test
 	public void useNullValue() throws Exception
 	{

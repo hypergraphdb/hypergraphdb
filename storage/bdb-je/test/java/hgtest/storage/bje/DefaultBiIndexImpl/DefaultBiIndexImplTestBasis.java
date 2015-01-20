@@ -2,27 +2,12 @@ package hgtest.storage.bje.DefaultBiIndexImpl;
 
 import com.sleepycat.je.*;
 import hgtest.storage.bje.IndexImplTestBasis;
-import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.BAUtils;
-import org.hypergraphdb.storage.BAtoString;
-import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJEConfig;
-import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.*;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Comparator;
-
-import static hgtest.storage.bje.TestUtils.deleteDirectory;
 
 /**
  * @author Yuriy Sechko
@@ -30,6 +15,8 @@ import static hgtest.storage.bje.TestUtils.deleteDirectory;
 public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 {
 	protected static final String SECONDARY_DATABASE_FIELD_NAME = "secondaryDb";
+
+	protected DefaultBiIndexImpl<Integer, String> indexImpl;
 
 	/**
 	 * Before environment can be closed all opened databases should be closed
@@ -69,5 +56,29 @@ public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 		EasyMock.expect(storage.getConfiguration()).andReturn(new BJEConfig());
 		EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
 				.times(3);
+	}
+
+	protected void startupIndex()
+	{
+		mockStorage();
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
+				transactionManager, keyConverter, valueConverter, comparator);
+		indexImpl.open();
+	}
+
+	protected void startupIndexWithFakeTransactionManager()
+	{
+		mockStorage();
+		HGTransactionManager fakeTransactionManager = PowerMock
+				.createStrictMock(HGTransactionManager.class);
+		fakeTransactionManager.getContext();
+		EasyMock.expectLastCall().andThrow(
+				new IllegalStateException("Transaction manager is fake."));
+		PowerMock.replayAll();
+		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
+				fakeTransactionManager, keyConverter, valueConverter,
+				comparator);
+		indexImpl.open();
 	}
 }

@@ -1,10 +1,7 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import hgtest.storage.bje.IndexImplTestBasis;
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
@@ -130,17 +127,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 		final Exception expected = new HGException(
 				"Failed to add entry to index 'sample_index': java.lang.IllegalStateException: This exception is thrown by fake transaction manager.");
 
-		mockStorage();
-		HGTransactionManager fakeTransactionManager = PowerMock
-				.createStrictMock(HGTransactionManager.class);
-		fakeTransactionManager.getContext();
-		EasyMock.expectLastCall().andThrow(
-				new IllegalStateException("This exception is thrown by fake transaction manager."));
-		PowerMock.replayAll();
-		index = new DefaultIndexImpl(
-				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, comparator);
-		index.open();
+		startupIndexWithFakeTransactionManager();
 
 		try
 		{
