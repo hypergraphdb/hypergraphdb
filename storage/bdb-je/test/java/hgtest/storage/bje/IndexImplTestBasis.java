@@ -41,36 +41,8 @@ public class IndexImplTestBasis
 			.createStrictMock(BJEStorageImplementation.class);
 	protected HGTransactionManager transactionManager;
 	// custom converters
-	protected ByteArrayConverter<Integer> keyConverter = new ByteArrayConverter<Integer>()
-	{
-		public byte[] toByteArray(final Integer input)
-		{
-			final byte[] buffer = new byte[4];
-			BAUtils.writeInt(input, buffer, 0);
-			return buffer;
-		}
-
-		public Integer fromByteArray(final byte[] byteArray, final int offset,
-				final int length)
-		{
-			return BAUtils.readInt(byteArray, 0);
-		}
-	};
-
-	protected ByteArrayConverter<String> valueConverter = new ByteArrayConverter<String>()
-	{
-		public byte[] toByteArray(final String input)
-		{
-			return BAtoString.getInstance().toByteArray(input);
-		}
-
-		public String fromByteArray(final byte[] byteArray, final int offset,
-				final int length)
-		{
-			return BAtoString.getInstance().fromByteArray(byteArray, offset,
-					length);
-		}
-	};
+	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
+	protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
 
 	// Use 'null' comparator - it forces
 	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default

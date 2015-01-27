@@ -4,7 +4,6 @@ import com.sleepycat.je.*;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.KeyScanResultSet;
@@ -73,21 +72,7 @@ public class KeyScanResultSet_constructorTest extends PowerMockTestCase
 
 		final DatabaseEntry keyIndex = new DatabaseEntry(new byte[] { 0, 0, 0,
 				0 });
-		final ByteArrayConverter<Integer> converter = new ByteArrayConverter<Integer>()
-		{
-			public byte[] toByteArray(final Integer input)
-			{
-				final byte[] buffer = new byte[4];
-				BAUtils.writeInt(input, buffer, 0);
-				return buffer;
-			}
-
-			public Integer fromByteArray(final byte[] byteArray,
-					final int offset, final int length)
-			{
-				return BAUtils.readInt(byteArray, 0);
-			}
-		};
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		PowerMock.replayAll();
 
 		try
@@ -104,21 +89,7 @@ public class KeyScanResultSet_constructorTest extends PowerMockTestCase
 	@Test
 	public void keyIndexIsNull() throws Exception
 	{
-		final ByteArrayConverter<Integer> converter = new ByteArrayConverter<Integer>()
-		{
-			public byte[] toByteArray(final Integer input)
-			{
-				final byte[] buffer = new byte[4];
-				BAUtils.writeInt(input, buffer, 0);
-				return buffer;
-			}
-
-			public Integer fromByteArray(final byte[] byteArray,
-					final int offset, final int length)
-			{
-				return BAUtils.readInt(byteArray, 0);
-			}
-		};
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		final Transaction transactionForTheRealCursor = environment
 				.beginTransaction(null, null);
 		final Cursor realCursor = database.openCursor(transaction, null);
@@ -142,22 +113,7 @@ public class KeyScanResultSet_constructorTest extends PowerMockTestCase
 
 		final DatabaseEntry keyIndex = new DatabaseEntry(new byte[] { 0, 0, 0,
 				0 });
-		final ByteArrayConverter<Integer> converter = new ByteArrayConverter<Integer>()
-		{
-			public byte[] toByteArray(final Integer input)
-			{
-				final byte[] buffer = new byte[4];
-				BAUtils.writeInt(input, buffer, 0);
-				return buffer;
-			}
-
-			public Integer fromByteArray(final byte[] byteArray,
-					final int offset, final int length)
-			{
-				return BAUtils.readInt(byteArray, 0);
-			}
-		};
-
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andThrow(
 				new IllegalStateException(

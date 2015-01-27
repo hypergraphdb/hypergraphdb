@@ -3,6 +3,9 @@ package hgtest.storage.bje;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.storage.BAUtils;
+import org.hypergraphdb.storage.BAtoString;
+import org.hypergraphdb.storage.ByteArrayConverter;
 
 import java.io.File;
 import java.io.IOException;
@@ -67,23 +70,64 @@ public class TestUtils
 		return allHandles;
 	}
 
-	public static File createTempFile(final String prefix, final String suffix) {
+	public static File createTempFile(final String prefix, final String suffix)
+	{
 		File tempFile;
-		try {
+		try
+		{
 			tempFile = File.createTempFile(prefix, suffix);
-		} catch (IOException ioException) {
+		}
+		catch (IOException ioException)
+		{
 			throw new IllegalStateException(ioException);
 		}
 		return tempFile;
 	}
 
-	public static String getCanonicalPath(final File file) {
+	public static String getCanonicalPath(final File file)
+	{
 		String canonicalPath;
-		try {
+		try
+		{
 			canonicalPath = file.getCanonicalPath();
-		} catch(IOException ioException) {
+		}
+		catch (IOException ioException)
+		{
 			throw new IllegalStateException(ioException);
 		}
 		return canonicalPath;
+	}
+
+	public static class ByteArrayConverterForInteger implements
+			ByteArrayConverter<Integer>
+	{
+		public byte[] toByteArray(final Integer input)
+		{
+			final byte[] buffer = new byte[4];
+			BAUtils.writeInt(input, buffer, 0);
+			return buffer;
+		}
+
+		public Integer fromByteArray(final byte[] byteArray, final int offset,
+				final int length)
+		{
+			return BAUtils.readInt(byteArray, 0);
+		}
+	}
+
+	public static class ByteArrayConverterForString implements
+			ByteArrayConverter<String>
+	{
+		public byte[] toByteArray(final String input)
+		{
+			return BAtoString.getInstance().toByteArray(input);
+		}
+
+		public String fromByteArray(final byte[] byteArray, final int offset,
+				final int length)
+		{
+			return BAtoString.getInstance().fromByteArray(byteArray, offset,
+					length);
+		}
 	}
 }
