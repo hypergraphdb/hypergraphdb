@@ -8,10 +8,6 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.KeyScanResultSet;
 import org.powermock.api.easymock.PowerMock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockTestCase;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -21,36 +17,19 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-@PrepareForTest(BJETxCursor.class)
-public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
+public class KeyScanResultSet_goToWithExactMatchTest extends
+		KeyScanResultSetTestBasis
 {
-
-	protected static final String DATABASE_NAME = "test_database";
 	protected static final boolean EXACT_MATCH = true;
 
-	protected final File envHome = TestUtils.createTempFile("IndexImpl",
-			"test_environment");
-	protected Environment environment;
-	protected Database database;
-	protected Transaction transactionForTheEnvironment;
 	protected Cursor realCursor;
 	protected Transaction transactionForTheRealCursor;
 
 	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 	protected KeyScanResultSet<Integer> keyScan;
 
-	protected void startupEnvironment() throws Exception
+	protected void startupCursor() throws Exception
 	{
-		envHome.mkdir();
-		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
-		environmentConfig.setAllowCreate(true).setReadOnly(false)
-				.setTransactional(true);
-		environment = new Environment(envHome, environmentConfig);
-		transactionForTheEnvironment = environment.beginTransaction(null, null);
-		final DatabaseConfig databaseConfig = new DatabaseConfig();
-		databaseConfig.setAllowCreate(true).setTransactional(true);
-		database = environment.openDatabase(transactionForTheEnvironment,
-				DATABASE_NAME, databaseConfig);
 		transactionForTheRealCursor = environment.beginTransaction(null, null);
 		realCursor = database.openCursor(transactionForTheEnvironment, null);
 	}
@@ -63,29 +42,10 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 		keyScan = new KeyScanResultSet<Integer>(fakeCursor, null, converter);
 	}
 
-	protected void shutdownEnvironment()
+	protected void shutdownCursor()
 	{
 		realCursor.close();
 		transactionForTheRealCursor.commit();
-	}
-
-	@BeforeMethod
-	public void resetMocksAndDeleteTestDirectory() throws Exception
-	{
-		PowerMock.resetAll();
-		TestUtils.deleteDirectory(envHome);
-		startupEnvironment();
-	}
-
-	@AfterMethod
-	public void verifyMocksAndDeleteTestDirectory() throws Exception
-	{
-		shutdownEnvironment();
-		PowerMock.verifyAll();
-		transactionForTheEnvironment.commit();
-		database.close();
-		environment.close();
-		TestUtils.deleteDirectory(envHome);
 	}
 
 	protected void putKeyValuePair(Cursor realCursor, final Integer key,
@@ -103,33 +63,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(realCursor, 1, "one");
-		startupMocks();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2, true);
-
-		assertEquals(actual, expected);
-	}
-
-	@Test
-	public void thereOneKeyButItIsEqualToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		putKeyValuePair(realCursor, 1, "one");
-		startupMocks();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-	}
-
-	@Test
-	public void thereOneKeyButItIsCloseToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		startupMocks();
 
@@ -137,6 +71,39 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
+	}
+
+	@Test
+	public void thereOneKeyButItIsEqualToDesired() throws Exception
+	{
+		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
+
+		startupCursor();
+		putKeyValuePair(realCursor, 1, "one");
+		startupMocks();
+
+		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
+				EXACT_MATCH);
+
+		assertEquals(actual, expected);
+		shutdownCursor();
+	}
+
+	@Test
+	public void thereOneKeyButItIsCloseToDesired() throws Exception
+	{
+		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
+
+		startupCursor();
+		putKeyValuePair(realCursor, 1, "one");
+		startupMocks();
+
+		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
+				EXACT_MATCH);
+
+		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -144,6 +111,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 2, "two");
 		startupMocks();
@@ -152,6 +120,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -159,6 +128,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 3, "three");
 		startupMocks();
@@ -167,6 +137,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -174,6 +145,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 2, "two");
 		startupMocks();
@@ -182,6 +154,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -189,6 +162,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 2, "two");
 		putKeyValuePair(realCursor, 3, "three");
@@ -198,6 +172,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -206,6 +181,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 2, "two");
 		putKeyValuePair(realCursor, 3, "three");
@@ -215,6 +191,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 				EXACT_MATCH);
 
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 
 	@Test
@@ -223,6 +200,7 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
+		startupCursor();
 		putKeyValuePair(realCursor, 1, "one");
 		putKeyValuePair(realCursor, 2, "two");
 		putKeyValuePair(realCursor, 3, "three");
@@ -232,5 +210,6 @@ public class KeyScanResultSet_goToWithExactMatchTest extends PowerMockTestCase
 		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(3,
 				EXACT_MATCH);
 		assertEquals(actual, expected);
+		shutdownCursor();
 	}
 }
