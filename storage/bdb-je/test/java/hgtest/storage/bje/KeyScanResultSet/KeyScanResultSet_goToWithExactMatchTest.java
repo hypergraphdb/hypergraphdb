@@ -18,45 +18,9 @@ import static org.testng.Assert.assertEquals;
  * @author Yuriy Sechko
  */
 public class KeyScanResultSet_goToWithExactMatchTest extends
-		KeyScanResultSetTestBasis
+		KeyScanResultSet_goToTestBasis
 {
-	protected static final boolean EXACT_MATCH = true;
-
-	protected Cursor realCursor;
-	protected Transaction transactionForTheRealCursor;
-
-	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
-	protected KeyScanResultSet<Integer> keyScan;
-
-	protected void startupCursor() throws Exception
-	{
-		transactionForTheRealCursor = environment.beginTransaction(null, null);
-		realCursor = database.openCursor(transactionForTheEnvironment, null);
-	}
-
-	protected void startupMocks()
-	{
-		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
-		PowerMock.replayAll();
-		keyScan = new KeyScanResultSet<Integer>(fakeCursor, null, converter);
-	}
-
-	protected void shutdownCursor()
-	{
-		realCursor.close();
-		transactionForTheRealCursor.commit();
-	}
-
-	protected void putKeyValuePair(Cursor realCursor, final Integer key,
-			final String value)
-	{
-		realCursor.put(
-				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
-						.toByteArray(key)),
-				new DatabaseEntry(new TestUtils.ByteArrayConverterForString()
-						.toByteArray(value)));
-	}
+	private static final boolean EXACT_MATCH = true;
 
 	@Test
 	public void thereIsOneKeyButItIsNotEqualToDesired() throws Exception
