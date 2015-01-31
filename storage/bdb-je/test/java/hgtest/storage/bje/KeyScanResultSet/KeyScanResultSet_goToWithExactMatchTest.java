@@ -1,16 +1,7 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
-import com.sleepycat.je.*;
-import hgtest.storage.bje.TestUtils;
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.storage.bje.BJETxCursor;
-import org.hypergraphdb.storage.bje.KeyScanResultSet;
-import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
-
-import java.io.File;
 
 import static org.testng.Assert.assertEquals;
 
