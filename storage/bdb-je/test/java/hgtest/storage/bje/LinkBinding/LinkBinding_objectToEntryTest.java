@@ -10,7 +10,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class LinkBinding_ObjectToEntryTest extends LinkBindingTestBasis
+public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 {
 	@Test
 	public void linkArrayIsNull() throws Exception
