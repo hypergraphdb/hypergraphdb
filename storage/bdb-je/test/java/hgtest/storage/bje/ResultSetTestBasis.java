@@ -1,7 +1,6 @@
-package hgtest.storage.bje.KeyScanResultSet;
+package hgtest.storage.bje;
 
 import com.sleepycat.je.*;
-import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -15,7 +14,7 @@ import java.io.File;
  * @author Yuriy Sechko
  */
 @PrepareForTest(BJETxCursor.class)
-public class KeyScanResultSetTestBasis extends PowerMockTestCase
+public class ResultSetTestBasis extends PowerMockTestCase
 {
 	protected static final String DATABASE_NAME = "test_database";
 

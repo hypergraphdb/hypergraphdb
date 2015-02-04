@@ -1,6 +1,7 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
 import com.sleepycat.je.*;
+import hgtest.storage.bje.ResultSetTestBasis;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
@@ -15,7 +16,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * @author Yuriy Sechko
  */
-public class KeyScanResultSet_constructorTest extends KeyScanResultSetTestBasis
+public class KeyScanResultSet_constructorTest extends ResultSetTestBasis
 {
 	@Test
 	public void cursorIsNull() throws Exception

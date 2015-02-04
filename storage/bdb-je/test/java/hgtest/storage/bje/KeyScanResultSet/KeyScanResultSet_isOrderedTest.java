@@ -3,6 +3,7 @@ package hgtest.storage.bje.KeyScanResultSet;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.Transaction;
+import hgtest.storage.bje.ResultSetTestBasis;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -16,7 +17,7 @@ import static org.testng.Assert.assertTrue;
 /**
  * @author Yuriy Sechko
  */
-public class KeyScanResultSet_isOrderedTest extends KeyScanResultSetTestBasis
+public class KeyScanResultSet_isOrderedTest extends ResultSetTestBasis
 {
 	@Test
 	public void test() throws Exception
