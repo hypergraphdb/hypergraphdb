@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -22,6 +23,8 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
@@ -33,7 +36,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 
 	}
@@ -101,7 +104,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 	{
 		System.out.println("databaseThrowsException test");
 		final Exception expected = new HGException(
-				"This exception is thrown by fake database.");
+				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) This exception is thrown by fake database.");
 
 		// create index and open it in usual way
 		mockStorage();
@@ -139,11 +142,11 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertTrue(occurred.getMessage().contains(expected.getMessage()));
+			assertExceptions(occurred, expected);
 		}
 		// set null value to DefaultIndexImpl.db field
-		// without this setting Database.close() method on fake database instance is invoked somewhere
+		// without this setting Database.close() method on fake database
+		// instance is invoked somewhere
 		// and all next tests fail because Powermock expects 'close' call
 		databaseField.set(index, null);
 	}

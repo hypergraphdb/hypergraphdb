@@ -8,6 +8,7 @@ import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -30,7 +31,7 @@ public class DefaultBiIndexImpl_countKeysTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

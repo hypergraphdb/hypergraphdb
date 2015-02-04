@@ -5,6 +5,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -15,6 +16,8 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 	@Test
 	public void linkArrayIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		final HGPersistentHandle[] link = null;
 		final TupleOutput output = new TupleOutput(new byte[4]);
 
@@ -24,13 +27,15 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 	}
 
 	@Test
 	public void outputIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		final HGPersistentHandle[] link = new HGPersistentHandle[] { new IntPersistentHandle(
 				1) };
 		final TupleOutput output = null;
@@ -41,7 +46,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 	}
 
@@ -102,8 +107,8 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 	@Test
 	public void outputBufferIsTooShort() throws Exception
 	{
-		final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0, 0, 0,
-				0, 0, 0 };
+		final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0,
+				0, 0, 0, 0, 0 };
 
 		final HGPersistentHandle[] link = new HGPersistentHandle[] {
 				new IntPersistentHandle(5), new IntPersistentHandle(10) };
@@ -114,17 +119,18 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 		assertEquals(output.getBufferBytes(), expected);
 	}
 
-    @Test
-    public void outputBufferIsTooLarge() throws Exception
-    {
-        final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0, 0};
+	@Test
+	public void outputBufferIsTooLarge() throws Exception
+	{
+		final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0,
+				0 };
 
-        final HGPersistentHandle[] link = new HGPersistentHandle[] {
-                new IntPersistentHandle(5), new IntPersistentHandle(10) };
-        final TupleOutput output = new TupleOutput(new byte[10]);
+		final HGPersistentHandle[] link = new HGPersistentHandle[] {
+				new IntPersistentHandle(5), new IntPersistentHandle(10) };
+		final TupleOutput output = new TupleOutput(new byte[10]);
 
-        binding.objectToEntry(link, output);
+		binding.objectToEntry(link, output);
 
-        assertEquals(output.getBufferBytes(), expected);
-    }
+		assertEquals(output.getBufferBytes(), expected);
+	}
 }

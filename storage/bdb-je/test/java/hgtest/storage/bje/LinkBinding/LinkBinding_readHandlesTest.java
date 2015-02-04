@@ -7,6 +7,7 @@ import org.hypergraphdb.storage.bje.LinkBinding;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -40,8 +41,7 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 	}
 

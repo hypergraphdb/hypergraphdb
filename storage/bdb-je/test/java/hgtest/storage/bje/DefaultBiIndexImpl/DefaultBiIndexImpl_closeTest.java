@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -17,10 +18,13 @@ import static org.testng.Assert.assertEquals;
 public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception {
+	public void indexIsNotOpened() throws Exception
+	{
 		PowerMock.replayAll();
 
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage, transactionManager, keyConverter, valueConverter, comparator);
+		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
+				storage, transactionManager, keyConverter, valueConverter,
+				comparator);
 
 		indexImpl.close();
 	}
@@ -51,7 +55,8 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		indexImpl.open();
 		PowerMock.verifyAll();
 		PowerMock.resetAll();
-		// now we force to throw exception in the DefaultBiIndexImpl.close() method
+		// now we force to throw exception in the DefaultBiIndexImpl.close()
+		// method
 		// we link the field 'secondaryDb' to the fake database,
 		// which throws exception when their 'close' method is called
 		final SecondaryDatabase fakeSecondaryDatabase = PowerMock
@@ -63,7 +68,8 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 				SECONDARY_DATABASE_FIELD_NAME);
 		secondaryDbField.setAccessible(true);
 		// close the real database before use fake
-		secondaryDbField.get(indexImpl).getClass().getMethod("close").invoke(secondaryDbField.get(indexImpl));
+		secondaryDbField.get(indexImpl).getClass().getMethod("close")
+				.invoke(secondaryDbField.get(indexImpl));
 		secondaryDbField.set(indexImpl, fakeSecondaryDatabase);
 		try
 		{
@@ -71,9 +77,10 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
-		} finally {
+			assertExceptions(occurred, expected);
+		}
+		finally
+		{
 			closeDatabases(indexImpl);
 		}
 	}

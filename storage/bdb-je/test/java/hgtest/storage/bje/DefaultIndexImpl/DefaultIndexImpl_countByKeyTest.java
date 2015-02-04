@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -21,6 +22,8 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	@Test
 	public void indexIsNopOpened() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
@@ -32,7 +35,7 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 	}
 

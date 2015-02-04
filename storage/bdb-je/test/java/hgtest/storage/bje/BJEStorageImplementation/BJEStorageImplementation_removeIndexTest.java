@@ -1,8 +1,10 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGIndex;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -14,6 +16,11 @@ public class BJEStorageImplementation_removeIndexTest extends
 	@Test
 	public void indexNameIsNull() throws Exception
 	{
+		// TODO ignore Sleepycat library version while checking exception's
+		// message
+		final Exception expected = new HGException(
+				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_null");
+
 		startup();
 		final String indexName = null;
 		try
@@ -22,11 +29,7 @@ public class BJEStorageImplementation_removeIndexTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(),
-					org.hypergraphdb.HGException.class);
-			assertEquals(
-					occurred.getMessage(),
-					"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_null");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -37,6 +40,9 @@ public class BJEStorageImplementation_removeIndexTest extends
 	@Test
 	public void removeIndexWhichIsNotStored() throws Exception
 	{
+		final Exception expected = new HGException(
+				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_This index does not exist");
+
 		startup();
 		try
 		{
@@ -44,11 +50,7 @@ public class BJEStorageImplementation_removeIndexTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(),
-					org.hypergraphdb.HGException.class);
-			assertEquals(
-					occurred.getMessage(),
-					"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_This index does not exist");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -61,11 +63,11 @@ public class BJEStorageImplementation_removeIndexTest extends
 	{
 		startup(1);
 		final String indexName = "sample index";
-		storage.getIndex(indexName,
-				null, null, null, true, true);
+		storage.getIndex(indexName, null, null, null, true, true);
 		storage.removeIndex(indexName);
-        final HGIndex<Object, Object> removedIndex = storage.getIndex(indexName, null, null, null, true, false);
-        assertNull(removedIndex);
-        shutdown();
+		final HGIndex<Object, Object> removedIndex = storage.getIndex(
+				indexName, null, null, null, true, false);
+		assertNull(removedIndex);
+		shutdown();
 	}
 }

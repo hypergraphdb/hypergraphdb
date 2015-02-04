@@ -1,10 +1,12 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
@@ -17,16 +19,17 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 	@Test
 	public void useNullHandle() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to remove incidence set of handle null: java.lang.NullPointerException");
+
 		startup();
 		try
 		{
 			storage.removeIncidenceSet(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(ex.getMessage(),
-					"Failed to remove incidence set of handle null: java.lang.NullPointerException");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -92,7 +95,5 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 		afterRemoving.close();
 		shutdown();
 	}
-    
-    
 
 }

@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.testng.Assert.assertEquals;
+
 /**
  * @author Yuriy Sechko
  */
@@ -129,5 +131,12 @@ public class TestUtils
 			return BAtoString.getInstance().fromByteArray(byteArray, offset,
 					length);
 		}
+	}
+
+	public static void assertExceptions(final Exception occurred,
+			final Exception expected)
+	{
+		assertEquals(occurred.getClass(), expected.getClass());
+		assertEquals(occurred.getMessage(), expected.getMessage());
 	}
 }

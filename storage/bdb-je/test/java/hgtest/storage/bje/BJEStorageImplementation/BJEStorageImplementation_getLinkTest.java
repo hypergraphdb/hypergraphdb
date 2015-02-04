@@ -1,9 +1,11 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -15,16 +17,17 @@ public class BJEStorageImplementation_getLinkTest extends
 	@Test
 	public void getLinksUsingNullHandle() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to retrieve link with handle null");
+
 		startup();
 		try
 		{
 			storage.getLink(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(ex.getMessage(),
-					"Failed to retrieve link with handle null");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -47,6 +48,8 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 	@Test
 	public void dataIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		final SecondaryDatabase fakeDatabase = PowerMock
 				.createStrictMock(SecondaryDatabase.class);
 		PowerMock.replayAll();
@@ -59,7 +62,7 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -70,6 +73,8 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 	@Test
 	public void resultIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		final SecondaryDatabase fakeDatabase = PowerMock
 				.createStrictMock(SecondaryDatabase.class);
 		PowerMock.replayAll();
@@ -82,7 +87,7 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

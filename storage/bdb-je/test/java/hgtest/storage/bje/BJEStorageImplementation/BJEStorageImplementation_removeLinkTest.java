@@ -4,6 +4,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
@@ -16,16 +17,17 @@ public class BJEStorageImplementation_removeLinkTest extends
 	@Test
 	public void removeLinkUsingNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException(
+				"HGStore.remove called with a null handle.");
+
 		startup();
 		try
 		{
 			storage.removeLink(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertEquals(ex.getMessage(),
-					"HGStore.remove called with a null handle.");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

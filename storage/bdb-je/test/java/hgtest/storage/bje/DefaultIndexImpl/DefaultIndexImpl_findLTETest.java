@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static hgtest.storage.bje.TestUtils.list;
 import static org.testng.Assert.assertEquals;
 
@@ -35,8 +36,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 	}
 
@@ -90,8 +90,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -132,8 +131,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -178,8 +176,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -204,8 +201,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -217,10 +213,10 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 	public void thereAreSeveralEntriesAdded() throws Exception
 	{
 		final List<String> expected = new ArrayList<String>();
-        expected.add("D");
-        expected.add("C");
-        expected.add("B");
-        expected.add("A");
+		expected.add("D");
+		expected.add("C");
+		expected.add("B");
+		expected.add("A");
 
 		startupIndex();
 		index.addEntry(4, "D");
@@ -250,8 +246,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

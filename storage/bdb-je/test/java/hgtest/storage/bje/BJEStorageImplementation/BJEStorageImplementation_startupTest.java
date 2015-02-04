@@ -1,7 +1,9 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -45,17 +47,17 @@ public class BJEStorageImplementation_startupTest extends
 	@Test
 	public void exceptionWhileStartupOccurred() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to initialize HyperGraph data store: java.lang.IllegalStateException: Throw exception in test case.");
+
 		try
 		{
 			startup(1, new IllegalStateException(
 					"Throw exception in test case."));
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(
-					ex.getMessage(),
-					"Failed to initialize HyperGraph data store: java.lang.IllegalStateException: Throw exception in test case.");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

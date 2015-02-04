@@ -6,6 +6,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -96,8 +97,7 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 	}
 
@@ -119,8 +119,7 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 	}
 }

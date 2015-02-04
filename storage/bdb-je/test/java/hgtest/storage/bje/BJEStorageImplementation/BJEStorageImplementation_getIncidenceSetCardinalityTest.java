@@ -4,6 +4,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -15,16 +16,17 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	@Test
 	public void useNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException(
+				"HGStore.getIncidenceSetCardinality called with a null handle.");
+
 		startup();
 		try
 		{
 			storage.getIncidenceSetCardinality(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertEquals(ex.getMessage(),
-					"HGStore.getIncidenceSetCardinality called with a null handle.");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

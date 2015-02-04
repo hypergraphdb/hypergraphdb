@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -15,6 +16,9 @@ public class BJEStorageImplementation_shutdownTest extends
 	@Test
 	public void getDatabasePathAfterShutdown() throws Exception
 	{
+		final Exception expected = new IllegalStateException(
+				"Attempt to use non-open Environment object().");
+
 		startup();
 		storage.shutdown();
 		final Environment environment = storage.getBerkleyEnvironment();
@@ -23,11 +27,9 @@ public class BJEStorageImplementation_shutdownTest extends
 			// environment is not open, expect exception
 			environment.getHome().getPath();
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), IllegalStateException.class);
-			assertEquals(ex.getMessage(),
-					"Attempt to use non-open Environment object().");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

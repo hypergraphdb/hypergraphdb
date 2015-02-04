@@ -5,6 +5,7 @@ import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -128,8 +129,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

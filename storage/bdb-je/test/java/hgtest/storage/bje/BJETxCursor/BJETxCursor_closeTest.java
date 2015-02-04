@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -65,7 +66,8 @@ public class BJETxCursor_closeTest
 	@Test
 	public void innerCursorThrowsDatabaseException() throws Exception
 	{
-		final Exception expectedException = new HGException("");
+		final Exception expected = new HGException(
+				"hgtest.storage.bje.BJETxCursor.BJETxCursor_closeTest$CustomDatabaseException: (JE 5.0.34) This is custom DatabaseException");
 
 		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
 		cursor.close();
@@ -87,7 +89,7 @@ public class BJETxCursor_closeTest
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expectedException.getClass());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -98,7 +100,7 @@ public class BJETxCursor_closeTest
 	@Test
 	public void innerCursorThrowsOtherException() throws Exception
 	{
-		final Exception expectedException = new IllegalStateException();
+		final Exception expected = new IllegalStateException();
 
 		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
 		cursor.close();
@@ -119,13 +121,12 @@ public class BJETxCursor_closeTest
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expectedException.getClass());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
 			PowerMock.verifyAll();
 		}
-
 	}
 
 	/**
@@ -133,7 +134,8 @@ public class BJETxCursor_closeTest
 	 * {@link org.hypergraphdb.storage.bje.TransactionBJEImpl#removeCursor(org.hypergraphdb.storage.bje.BJETxCursor)}
 	 * is called.
 	 * {@link org.hypergraphdb.storage.bje.TransactionBJEImpl#removeCursor(org.hypergraphdb.storage.bje.BJETxCursor)}
-	 * is private method. It cannot be recorded as public method. So we need invoke it by name manually.
+	 * is private method. It cannot be recorded as public method. So we need
+	 * invoke it by name manually.
 	 */
 	private void recordRemoveCursor(final TransactionBJEImpl tx,
 			final BJETxCursor bjeCursor) throws Exception

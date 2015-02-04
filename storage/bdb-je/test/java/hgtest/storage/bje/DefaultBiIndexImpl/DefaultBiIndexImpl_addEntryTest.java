@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -29,8 +30,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -51,8 +51,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -127,8 +126,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 	}
 
@@ -146,14 +144,11 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
 			indexImpl.close();
 		}
 	}
-
-
 }

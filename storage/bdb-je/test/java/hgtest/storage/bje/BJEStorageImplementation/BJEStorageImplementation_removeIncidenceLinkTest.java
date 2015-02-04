@@ -1,10 +1,12 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
@@ -16,6 +18,9 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 	@Test
 	public void handleIsNull() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to update incidence set for handle null: java.lang.NullPointerException");
+
 		startup();
 		final HGPersistentHandle handle = null;
 		final HGPersistentHandle link = new UUIDPersistentHandle();
@@ -23,12 +28,9 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		{
 			storage.removeIncidenceLink(handle, link);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(
-					ex.getMessage(),
-					"Failed to update incidence set for handle null: java.lang.NullPointerException");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -39,17 +41,17 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 	@Test
 	public void bothLinkAndHandleAreNull() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to update incidence set for handle null: java.lang.NullPointerException");
+
 		startup();
 		try
 		{
 			storage.removeIncidenceLink(null, null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(
-					ex.getMessage(),
-					"Failed to update incidence set for handle null: java.lang.NullPointerException");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -131,12 +133,13 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 	@Test
 	public void incidenceLinkIsLinkedToItself() throws Exception
 	{
-        startupWithAdditionalTransaction(3);
-        final HGPersistentHandle handle = new UUIDPersistentHandle();
-        storage.addIncidenceLink(handle, handle);
-        storage.removeIncidenceLink(handle, handle);
-        final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage.getIncidenceResultSet(handle);
-        assertFalse(afterRemove.hasNext());
-        shutdown();
+		startupWithAdditionalTransaction(3);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.addIncidenceLink(handle, handle);
+		storage.removeIncidenceLink(handle, handle);
+		final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
+				.getIncidenceResultSet(handle);
+		assertFalse(afterRemove.hasNext());
+		shutdown();
 	}
 }

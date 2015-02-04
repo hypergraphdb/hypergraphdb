@@ -1,9 +1,11 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
@@ -51,16 +53,17 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void storeDataUsingNullHandle() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to store hypergraph raw byte []: java.lang.NullPointerException");
+
 		startup(1);
 		try
 		{
 			storage.store(null, new byte[] {});
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(ex.getMessage(),
-					"Failed to store hypergraph raw byte []: java.lang.NullPointerException");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -90,6 +93,9 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void dataIsNull() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to store hypergraph raw byte []: java.lang.IllegalArgumentException: Data field for DatabaseEntry data cannot be null");
+
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] nullData = null;
@@ -97,12 +103,9 @@ public class BJEStorageImplementation_storeTest extends
 		{
 			storage.store(handle, nullData);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(
-					ex.getMessage(),
-					"Failed to store hypergraph raw byte []: java.lang.IllegalArgumentException: Data field for DatabaseEntry data cannot be null");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -196,18 +199,18 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void throwExceptionWhileStoringLinks() throws Exception
 	{
+		final Exception expected = new HGException(
+				"Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
+
 		startup(new IllegalStateException("Throw exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		try
 		{
 			storage.store(handle, new HGPersistentHandle[] {});
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			assertEquals(
-					ex.getMessage(),
-					"Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
