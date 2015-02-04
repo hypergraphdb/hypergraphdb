@@ -1,8 +1,5 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.DatabaseEntry;
-import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.testng.annotations.Test;
 
@@ -14,15 +11,6 @@ import static org.testng.Assert.assertEquals;
 public class KeyScanResultSet_goToWithoutExactMatchTest extends
         KeyScanResultSet_goToTestBasis {
     private static final boolean EXACT_MATCH = false;
-
-    protected void putKeyValuePair(Cursor realCursor, final Integer key,
-                                   final String value) {
-        realCursor.put(
-                new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
-                        .toByteArray(key)),
-                new DatabaseEntry(new TestUtils.ByteArrayConverterForString()
-                        .toByteArray(value)));
-    }
 
     @Test
     public void thereIsOneKeyButItIsGreaterThanDesired() throws Exception {

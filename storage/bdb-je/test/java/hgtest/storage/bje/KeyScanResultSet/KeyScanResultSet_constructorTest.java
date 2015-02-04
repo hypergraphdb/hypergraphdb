@@ -44,8 +44,6 @@ public class KeyScanResultSet_constructorTest extends ResultSetTestBasis
 	public void keyIndexIsNull() throws Exception
 	{
 		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
-		final Transaction transactionForTheRealCursor = environment
-				.beginTransaction(null, null);
 		final Cursor realCursor = database.openCursor(
 				transactionForTheEnvironment, null);
 		realCursor.put(new DatabaseEntry(new byte[] { 0, 1, 2, 3 }),
@@ -57,7 +55,6 @@ public class KeyScanResultSet_constructorTest extends ResultSetTestBasis
 		new KeyScanResultSet<Integer>(fakeCursor, null, converter);
 
 		realCursor.close();
-		transactionForTheRealCursor.commit();
 	}
 
 	@Test
