@@ -12,7 +12,6 @@ import java.io.File;
  */
 public class TransactionBJEImpl_constructorTest
 {
-
 	@Test
 	public void transactionIsNull() throws Exception
 	{

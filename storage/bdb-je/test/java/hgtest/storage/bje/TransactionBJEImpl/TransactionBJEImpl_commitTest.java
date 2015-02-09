@@ -2,7 +2,6 @@ package hgtest.storage.bje.TransactionBJEImpl;
 
 import com.sleepycat.je.*;
 import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.HGTransactionException;
 import org.powermock.api.easymock.PowerMock;
