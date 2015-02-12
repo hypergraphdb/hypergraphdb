@@ -1,14 +1,8 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
-import com.sleepycat.je.DatabaseEntry;
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.hypergraphdb.storage.bje.BJETxCursor;
-import org.hypergraphdb.storage.bje.SingleValueResultSet;
-import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -26,7 +20,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 
 		putKeyValuePair(database, 1, 10);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(20,
 				EXACT_MATCH);
@@ -42,7 +36,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 
 		putKeyValuePair(database, 1, 10);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(9,
 				EXACT_MATCH);
@@ -58,7 +52,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 
 		putKeyValuePair(database, 1, 10);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(10,
 				EXACT_MATCH);
@@ -76,7 +70,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 1, 10);
 		putKeyValuePair(database, 2, 20);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(30,
 				EXACT_MATCH);
@@ -94,7 +88,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 1, 10);
 		putKeyValuePair(database, 2, 20);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(-10,
 				EXACT_MATCH);
@@ -112,7 +106,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 1, 10);
 		putKeyValuePair(database, 2, 20);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(10,
 				EXACT_MATCH);
@@ -130,7 +124,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 1, 10);
 		putKeyValuePair(database, 2, 20);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(15,
 				EXACT_MATCH);
@@ -150,7 +144,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 3, 30);
 
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(50,
 				EXACT_MATCH);
@@ -169,7 +163,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 2, 20);
 		putKeyValuePair(database, 3, 30);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(-10,
 				EXACT_MATCH);
@@ -188,7 +182,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 3, 9);
 		putKeyValuePair(database, 4, 16);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(9,
 				EXACT_MATCH);
@@ -207,7 +201,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		putKeyValuePair(database, 2, 20);
 		putKeyValuePair(database, 3, 30);
 		startupCursor();
-		startupMocks();
+		createMocksForTheGoTo();
 
 		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(30,
 				EXACT_MATCH);
@@ -216,22 +210,22 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-    @Test
-    public void thereAreThreeValuesAndDesireValueIsBetweenThem()
-            throws Exception
-    {
-        final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
+	@Test
+	public void thereAreThreeValuesAndDesireValueIsBetweenThem()
+			throws Exception
+	{
+		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-        putKeyValuePair(database, 1, 10);
-        putKeyValuePair(database, 2, 20);
-        putKeyValuePair(database, 3, 30);
-        startupCursor();
-        startupMocks();
+		putKeyValuePair(database, 1, 10);
+		putKeyValuePair(database, 2, 20);
+		putKeyValuePair(database, 3, 30);
+		startupCursor();
+		createMocksForTheGoTo();
 
-        final HGRandomAccessResult.GotoResult actual = resultSet.goTo(25,
-                EXACT_MATCH);
+		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(25,
+				EXACT_MATCH);
 
-        assertEquals(actual, expected);
-        shutdownCursor();
-    }
+		assertEquals(actual, expected);
+		shutdownCursor();
+	}
 }

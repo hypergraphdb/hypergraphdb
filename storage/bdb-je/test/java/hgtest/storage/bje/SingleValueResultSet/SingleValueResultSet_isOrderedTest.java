@@ -19,7 +19,7 @@ import static org.testng.Assert.assertFalse;
  * @author Yuriy Sechko
  */
 public class SingleValueResultSet_isOrderedTest extends
-		SingleValueResultSet_constructorTest
+		SingleValueResultSetTestBasis
 {
 	@Test
 	public void test() throws Exception

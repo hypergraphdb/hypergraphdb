@@ -1,7 +1,6 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
 import com.sleepycat.je.DatabaseEntry;
-import hgtest.storage.bje.ResultSetTestBasis;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.BJETxCursor;

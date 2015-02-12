@@ -1,17 +1,13 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
 import com.sleepycat.je.*;
-import hgtest.storage.bje.ResultSetTestBasis;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
-import org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator;
 import org.hypergraphdb.storage.bje.SingleValueResultSet;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
@@ -19,44 +15,9 @@ import static hgtest.storage.bje.TestUtils.assertExceptions;
 /**
  * @author Yuriy Sechko
  */
-public class SingleValueResultSet_constructorTest extends ResultSetTestBasis
+public class SingleValueResultSet_constructorTest extends
+		SingleValueResultSetTestBasis
 {
-	protected static final String SECONDARY_DATABASE_NAME = "test_database";
-
-	protected SecondaryDatabase secondaryDatabase;
-
-	protected void startupEnvironment() throws Exception
-	{
-		super.startupEnvironment();
-		final SecondaryConfig secondaryConfig = new SecondaryConfig();
-		secondaryConfig.setAllowCreate(true).setReadOnly(false)
-				.setTransactional(true);
-		secondaryConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
-		secondaryDatabase = environment.openSecondaryDatabase(
-				transactionForTheEnvironment, SECONDARY_DATABASE_NAME,
-				database, secondaryConfig);
-	}
-
-	@BeforeMethod
-	public void resetMocksAndDeleteTestDirectory() throws Exception
-	{
-		super.resetMocksAndDeleteTestDirectory();
-		// startupEnvironment will be called from the super class automatically
-		// (will be called exactly
-		// SingleValueResultSet_constructorTest.startupEnvironment() method)
-	}
-
-	@AfterMethod
-	public void verifyMocksAndDeleteTestDirectory() throws Exception
-	{
-		PowerMock.verifyAll();
-		transactionForTheEnvironment.commit();
-		secondaryDatabase.close();
-		database.close();
-		environment.close();
-		TestUtils.deleteDirectory(envHome);
-	}
-
 	@Test
 	public void bjeCursorIsNull() throws Exception
 	{
@@ -146,5 +107,19 @@ public class SingleValueResultSet_constructorTest extends ResultSetTestBasis
 		{
 			assertExceptions(occurred, expected);
 		}
+	}
+
+	@Test
+	public void allIsOk() throws Exception
+	{
+		putKeyValuePair(database, 2, 4);
+		startupCursor();
+		createMocksForTheConstructor();
+		PowerMock.replayAll();
+		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
+
+		new SingleValueResultSet(fakeCursor, key, converter);
+
+		shutdownCursor();
 	}
 }
