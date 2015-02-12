@@ -12,12 +12,29 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 /**
+ * In addition to primary database SingleValueResultSet uses secondary database.
+ * Navigation through second database is performed by SecondaryCursor. This
+ * class contains code for setting-up secondary database and secondary cursor.
+ * Most of the test cases uses this initialization code.
+ *
+ * Note: secondary cursor doesn't support putting data into database. But it
+ * should be initialized before it can be used. In these cases the followed
+ * approach is used:<br>
+ * <ol>
+ * <li>put data directly into secondary database</li>
+ * <li>initialize secondary cursor by reading some dummy data</li>
+ * </ol>
+ * 
+ * Calls for the BJETxCursor's methods are mocked, all real manipulations are
+ * performed on Sleepycat library classes.
+ * 
+ * Only PlainSecondaryKeyCreator class is used in test, there are not fakes for
+ * it.
+ *
  * @author Yuriy Sechko
  */
 public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 {
-	protected static final String SECONDARY_DATABASE_NAME = "test_database";
-
 	protected SecondaryDatabase secondaryDatabase;
 	protected SecondaryCursor realCursor;
 	protected BJETxCursor fakeCursor;
@@ -31,8 +48,8 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 				.setTransactional(true);
 		secondaryConfig.setKeyCreator(PlainSecondaryKeyCreator.getInstance());
 		secondaryDatabase = environment.openSecondaryDatabase(
-				transactionForTheEnvironment, SECONDARY_DATABASE_NAME,
-				database, secondaryConfig);
+				transactionForTheEnvironment, DATABASE_NAME, database,
+				secondaryConfig);
 	}
 
 	protected void startupCursor()
@@ -50,19 +67,27 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		realCursor.close();
 	}
 
+	/**
+	 * All necessary fake calls before instance of SingleValueResultSet is about
+	 * to constructed
+	 */
 	protected void createMocksForTheConstructor()
 	{
 		fakeCursor = PowerMock.createStrictMock(BJETxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 	}
 
+	/**
+	 * Utility method. Just puts given data as Integer-String pairs to database.
+	 * The separate transaction is performed.
+	 */
 	protected void putKeyValuePair(final Database database, final Integer key,
 			final Integer value)
 	{
 		final Transaction transactionForAddingTestData = environment
 				.beginTransaction(null, null);
 		database.put(
-				transactionForTheEnvironment,
+				transactionForAddingTestData,
 				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
 						.toByteArray(key)),
 				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
@@ -70,24 +95,23 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		transactionForAddingTestData.commit();
 	}
 
+	@BeforeMethod
+	public void resetMocksAndDeleteTestDirectory() throws Exception
+	{
+		super.resetMocksAndDeleteTestDirectory();
+		// startupEnvironment will be called from the super class automatically
+		// (will be called exactly
+		// SingleValueResultSetTestBasis.startupEnvironment() method)
+	}
 
-    @BeforeMethod
-    public void resetMocksAndDeleteTestDirectory() throws Exception
-    {
-        super.resetMocksAndDeleteTestDirectory();
-        // startupEnvironment will be called from the super class automatically
-        // (will be called exactly
-        // SingleValueResultSetTestBasis.startupEnvironment() method)
-    }
-
-    @AfterMethod
-    public void verifyMocksAndDeleteTestDirectory() throws Exception
-    {
-        PowerMock.verifyAll();
-        transactionForTheEnvironment.commit();
-        secondaryDatabase.close();
-        database.close();
-        environment.close();
-        TestUtils.deleteDirectory(envHome);
-    }
+	@AfterMethod
+	public void verifyMocksAndDeleteTestDirectory() throws Exception
+	{
+		PowerMock.verifyAll();
+		transactionForTheEnvironment.commit();
+		secondaryDatabase.close();
+		database.close();
+		environment.close();
+		TestUtils.deleteDirectory(envHome);
+	}
 }
