@@ -12,10 +12,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 /**
- * In addition to primary database SingleValueResultSet uses secondary database.
- * Navigation through second database is performed by SecondaryCursor. This
- * class contains code for setting-up secondary database and secondary cursor.
- * Most of the test cases uses this initialization code.
+ * In addition to the primary database SingleValueResultSet uses secondary
+ * database. Navigation through second database is performed by SecondaryCursor.
+ * This class contains code for setting-up secondary database and secondary
+ * cursor. Most of the test cases uses this initialization code.
  *
  * Note: secondary cursor doesn't support putting data into database. But it
  * should be initialized before it can be used. In these cases the followed

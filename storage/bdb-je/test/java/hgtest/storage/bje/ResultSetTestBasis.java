@@ -11,6 +11,9 @@ import org.testng.annotations.BeforeMethod;
 import java.io.File;
 
 /**
+ * Contains common code for test cases for legatees of
+ * {@link org.hypergraphdb.storage.bje.IndexResultSet}.
+ *
  * @author Yuriy Sechko
  */
 @PrepareForTest(BJETxCursor.class)

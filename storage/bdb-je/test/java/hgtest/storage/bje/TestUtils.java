@@ -73,6 +73,11 @@ public class TestUtils
 		return allHandles;
 	}
 
+	/**
+	 * Creates temporary file with given prefix and suffix.
+	 * 
+	 * @return link to the created file instance
+	 */
 	public static File createTempFile(final String prefix, final String suffix)
 	{
 		File tempFile;
@@ -87,6 +92,12 @@ public class TestUtils
 		return tempFile;
 	}
 
+	/**
+	 * Shortcut for the {@link java.io.File#getCanonicalPath()}. But throws
+	 * {@link java.lang.IllegalStateException } if something went wrong.
+	 * 
+	 * @return
+	 */
 	public static String getCanonicalPath(final File file)
 	{
 		String canonicalPath;
@@ -101,6 +112,10 @@ public class TestUtils
 		return canonicalPath;
 	}
 
+	/**
+	 * Converts from Integer number to appropriate byte array (in terms of
+	 * HyperGraphDB)
+	 */
 	public static class ByteArrayConverterForInteger implements
 			ByteArrayConverter<Integer>
 	{
@@ -118,6 +133,10 @@ public class TestUtils
 		}
 	}
 
+	/**
+	 * Converts from String object number to appropriate byte array (in terms of
+	 * HyperGraphDB)
+	 */
 	public static class ByteArrayConverterForString implements
 			ByteArrayConverter<String>
 	{
@@ -134,6 +153,17 @@ public class TestUtils
 		}
 	}
 
+	// TODO: investigate how to compare messages but don't take Sleepycat's
+	// TODO: library version into account
+	/**
+	 * Compares two instances which represent exceptions by:
+	 * <ul>
+	 * <li>by object's class</li>
+	 * <li>by message</li>
+	 * </ul>
+	 * 
+	 * TestNG assertion are in use.
+	 */
 	public static void assertExceptions(final Exception occurred,
 			final Exception expected)
 	{
