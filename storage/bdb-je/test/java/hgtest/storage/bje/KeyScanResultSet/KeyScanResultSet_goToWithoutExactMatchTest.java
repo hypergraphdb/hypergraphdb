@@ -19,7 +19,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
 
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
                 EXACT_MATCH);
@@ -34,7 +34,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
 
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
                 EXACT_MATCH);
@@ -49,7 +49,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
 
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
                 EXACT_MATCH);
@@ -65,7 +65,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
                 EXACT_MATCH);
@@ -81,7 +81,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
                 EXACT_MATCH);
@@ -97,7 +97,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
                 EXACT_MATCH);
@@ -113,7 +113,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         startupCursor();
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 1, "I");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
                 EXACT_MATCH);
@@ -130,7 +130,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
         TestUtils.putKeyValuePair(realCursor, 3, "three");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
                 EXACT_MATCH);
@@ -147,7 +147,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
         TestUtils.putKeyValuePair(realCursor, 3, "three");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
                 EXACT_MATCH);
@@ -164,7 +164,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 1, "I");
         TestUtils.putKeyValuePair(realCursor, 1, "first");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
                 EXACT_MATCH);
@@ -181,7 +181,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         TestUtils.putKeyValuePair(realCursor, 1, "one");
         TestUtils.putKeyValuePair(realCursor, 2, "two");
         TestUtils.putKeyValuePair(realCursor, 3, "three");
-        startupMocks();
+        createMocksForTheGoTo();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(3,
                 EXACT_MATCH);

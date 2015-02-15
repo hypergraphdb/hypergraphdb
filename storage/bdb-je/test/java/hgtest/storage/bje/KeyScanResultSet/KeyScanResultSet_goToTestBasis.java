@@ -14,30 +14,25 @@ import org.powermock.api.easymock.PowerMock;
 /**
  * @author Yuriy Sechko
  */
-public class KeyScanResultSet_goToTestBasis extends ResultSetTestBasis {
-    protected Cursor realCursor;
-    protected Transaction transactionForTheRealCursor;
+public class KeyScanResultSet_goToTestBasis extends KeyScanResultSetTestBasis
+{
+	protected KeyScanResultSet<Integer> keyScan;
 
-    protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
-    protected KeyScanResultSet<Integer> keyScan;
+	protected void startupCursor()
+	{
+		realCursor = database.openCursor(transactionForTheEnvironment, null);
+	}
 
-    protected void startupCursor() throws Exception
-    {
-        transactionForTheRealCursor = environment.beginTransaction(null, null);
-        realCursor = database.openCursor(transactionForTheEnvironment, null);
-    }
+	protected void createMocksForTheGoTo()
+	{
+		createMocksForTheConstructor();
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
+		PowerMock.replayAll();
+		keyScan = new KeyScanResultSet<Integer>(fakeCursor, null, converter);
+	}
 
-    protected void startupMocks()
-    {
-        final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-        EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
-        PowerMock.replayAll();
-        keyScan = new KeyScanResultSet<Integer>(fakeCursor, null, converter);
-    }
-
-    protected void shutdownCursor()
-    {
-        realCursor.close();
-        transactionForTheRealCursor.commit();
-    }
+	protected void shutdownCursor()
+	{
+		realCursor.close();
+	}
 }
