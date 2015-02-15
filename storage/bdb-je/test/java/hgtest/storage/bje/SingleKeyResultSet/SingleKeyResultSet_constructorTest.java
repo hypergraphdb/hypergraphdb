@@ -13,21 +13,20 @@ import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko
  */
 public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 {
+	private final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
+    private final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
+
 	@Test
 	public void bjeCursorIsNull() throws Exception
 	{
 		final Exception expected = new HGException(
 				"java.lang.NullPointerException");
-
-		final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
-		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 		try
 		{
@@ -42,7 +41,6 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 	@Test
 	public void keyIsNull() throws Exception
 	{
-		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		final Cursor realCursor = database.openCursor(
 				transactionForTheEnvironment, null);
 		// initialize cursor
@@ -70,7 +68,6 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 		PowerMock.replayAll();
-		final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
 
 		try
 		{
@@ -104,8 +101,6 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 				new IllegalStateException(
 						"This exception is thrown by fake cursor."));
 		PowerMock.replayAll();
-		final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
-		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 		try
 		{
@@ -119,5 +114,21 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		{
 			realCursor.close();
 		}
+	}
+
+	@Test
+	public void allIsOk() throws Exception
+	{
+		final Cursor realCursor = database.openCursor(
+				transactionForTheEnvironment, null);
+		realCursor.put(new DatabaseEntry(new byte[] { 1, 2, 3, 4 }),
+				new DatabaseEntry(new byte[] { 1, 2, 3, 4 }));
+		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
+		PowerMock.replayAll();
+
+		new SingleKeyResultSet<Integer>(fakeCursor, key, converter);
+
+		realCursor.close();
 	}
 }

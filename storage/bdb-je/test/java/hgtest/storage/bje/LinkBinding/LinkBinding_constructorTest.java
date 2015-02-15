@@ -5,7 +5,6 @@ import org.hypergraphdb.storage.bje.LinkBinding;
 import org.testng.annotations.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
 import static hgtest.storage.bje.LinkBinding.LinkBindingTestBasis.HANDLE_FACTORY_CLASS_NAME;
 
 /**

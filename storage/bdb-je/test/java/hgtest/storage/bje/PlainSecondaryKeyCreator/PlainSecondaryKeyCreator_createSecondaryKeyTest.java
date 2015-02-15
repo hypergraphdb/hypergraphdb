@@ -1,14 +1,10 @@
 package hgtest.storage.bje.PlainSecondaryKeyCreator;
 
 import com.sleepycat.je.DatabaseEntry;
-import com.sleepycat.je.Environment;
 import com.sleepycat.je.SecondaryDatabase;
-import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
-
-import java.io.File;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
@@ -96,9 +92,9 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 	}
 
 	@Test
-	public void thereIsOneByteInEveryEntry() throws Exception
+	public void thereIsOneByteInEachEntry() throws Exception
 	{
-		final byte[] expected = new byte[] { 22 };
+		final DatabaseEntry expected = new DatabaseEntry(new byte[] { 22 });
 
 		final SecondaryDatabase fakeDatabase = PowerMock
 				.createStrictMock(SecondaryDatabase.class);
@@ -109,18 +105,14 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 
 		creator.createSecondaryKey(fakeDatabase, key, data, result);
 
-		// Method equals() in DatabaseEntry class is inherited
-		// from Object class.
-		// So not sure about comparison of two DatabaseEntry instances.
-		// Lets compare byte data instead.
-		assertEquals(result.getData(), expected);
+		assertEquals(result, expected);
 		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void thereAreTwoBytesInEveryEntry() throws Exception
+	public void thereAreTwoBytesInEachEntry() throws Exception
 	{
-		final byte[] expected = new byte[] { 1, 2 };
+		final DatabaseEntry expected = new DatabaseEntry(new byte[] { 1, 2 });
 
 		final SecondaryDatabase fakeDatabase = PowerMock
 				.createStrictMock(SecondaryDatabase.class);
@@ -131,14 +123,15 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 
 		creator.createSecondaryKey(fakeDatabase, key, data, result);
 
-		assertEquals(result.getData(), expected);
+		assertEquals(result, expected);
 		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void thereAreThreeBytesInEveryEntry() throws Exception
+	public void thereAreThreeBytesInEachEntry() throws Exception
 	{
-		final byte[] expected = new byte[] { 10, 11, 12 };
+		final DatabaseEntry expected = new DatabaseEntry(new byte[] { 10, 11,
+				12 });
 
 		final SecondaryDatabase fakeDatabase = PowerMock
 				.createStrictMock(SecondaryDatabase.class);
@@ -149,7 +142,7 @@ public class PlainSecondaryKeyCreator_createSecondaryKeyTest
 
 		creator.createSecondaryKey(fakeDatabase, key, data, result);
 
-		assertEquals(result.getData(), expected);
+		assertEquals(result, expected);
 		PowerMock.verifyAll();
 	}
 }
