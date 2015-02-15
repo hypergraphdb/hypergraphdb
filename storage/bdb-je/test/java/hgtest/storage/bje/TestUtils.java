@@ -1,5 +1,6 @@
 package hgtest.storage.bje;
 
+import com.sleepycat.je.*;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -138,5 +139,36 @@ public class TestUtils
 	{
 		assertEquals(occurred.getClass(), expected.getClass());
 		assertEquals(occurred.getMessage(), expected.getMessage());
+	}
+
+	/**
+	 * Utility method. Puts given data as Integer-Integer pair to database. The
+	 * separate transaction is performed.
+	 */
+	public static void putKeyValuePair(final Environment environment,
+			final Database database, final Integer key, final Integer value)
+	{
+		final Transaction transactionForAddingTestData = environment
+				.beginTransaction(null, null);
+		database.put(
+				transactionForAddingTestData,
+				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
+						.toByteArray(key)),
+				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
+						.toByteArray(value)));
+		transactionForAddingTestData.commit();
+	}
+
+	/**
+	 * Utility method. Puts given data as Integer-String pair to cursor.
+	 */
+	public static void putKeyValuePair(Cursor realCursor, final Integer key,
+			final String value)
+	{
+		realCursor.put(
+				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
+						.toByteArray(key)),
+				new DatabaseEntry(new TestUtils.ByteArrayConverterForString()
+						.toByteArray(value)));
 	}
 }

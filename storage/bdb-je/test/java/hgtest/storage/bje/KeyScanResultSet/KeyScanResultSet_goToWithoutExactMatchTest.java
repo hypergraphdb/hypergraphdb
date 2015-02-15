@@ -1,5 +1,6 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
+import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.testng.annotations.Test;
 
@@ -17,7 +18,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.close;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
@@ -32,7 +33,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
@@ -47,7 +48,7 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
@@ -62,8 +63,8 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.close;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
@@ -78,8 +79,8 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
@@ -94,8 +95,8 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
@@ -110,8 +111,8 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 1, "I");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 1, "I");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
@@ -126,9 +127,9 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.close;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
-        putKeyValuePair(realCursor, 3, "three");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 3, "three");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-5,
@@ -143,9 +144,9 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
-        putKeyValuePair(realCursor, 3, "three");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 3, "three");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
@@ -160,9 +161,9 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 1, "I");
-        putKeyValuePair(realCursor, 1, "first");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 1, "I");
+        TestUtils.putKeyValuePair(realCursor, 1, "first");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
@@ -177,9 +178,9 @@ public class KeyScanResultSet_goToWithoutExactMatchTest extends
         final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
         startupCursor();
-        putKeyValuePair(realCursor, 1, "one");
-        putKeyValuePair(realCursor, 2, "two");
-        putKeyValuePair(realCursor, 3, "three");
+        TestUtils.putKeyValuePair(realCursor, 1, "one");
+        TestUtils.putKeyValuePair(realCursor, 2, "two");
+        TestUtils.putKeyValuePair(realCursor, 3, "three");
         startupMocks();
 
         final HGRandomAccessResult.GotoResult actual = keyScan.goTo(3,

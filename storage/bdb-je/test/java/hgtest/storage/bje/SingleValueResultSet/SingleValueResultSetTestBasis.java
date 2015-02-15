@@ -77,24 +77,6 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 	}
 
-	/**
-	 * Utility method. Just puts given data as Integer-String pairs to database.
-	 * The separate transaction is performed.
-	 */
-	protected void putKeyValuePair(final Database database, final Integer key,
-			final Integer value)
-	{
-		final Transaction transactionForAddingTestData = environment
-				.beginTransaction(null, null);
-		database.put(
-				transactionForAddingTestData,
-				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
-						.toByteArray(key)),
-				new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
-						.toByteArray(value)));
-		transactionForAddingTestData.commit();
-	}
-
 	@BeforeMethod
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{

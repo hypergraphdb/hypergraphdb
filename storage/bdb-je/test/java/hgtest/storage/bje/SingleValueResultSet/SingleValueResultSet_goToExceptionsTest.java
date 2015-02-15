@@ -1,6 +1,7 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
 import com.sleepycat.je.DatabaseEntry;
+import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.BJETxCursor;
@@ -24,7 +25,7 @@ public class SingleValueResultSet_goToExceptionsTest extends
 		// Secondary cursor should be initialized, but it doesn't support
 		// putting data. So put some data into primary database before
 		// starting up the secondary cursor
-		putKeyValuePair(database, 1, 11);
+		TestUtils.putKeyValuePair(environment, database, 1, 11);
 		startupCursor();
 		final BJETxCursor fakeCursor = PowerMock
 				.createStrictMock(BJETxCursor.class);
@@ -54,7 +55,7 @@ public class SingleValueResultSet_goToExceptionsTest extends
 		final Exception expected = new HGException(
 				"java.lang.IllegalStateException: This exception is throws by fake BJE cursor.");
 
-		putKeyValuePair(database, 1, 11);
+		TestUtils.putKeyValuePair(environment, database, 1, 11);
 		startupCursor();
 		final BJETxCursor fakeCursor = PowerMock
 				.createStrictMock(BJETxCursor.class);

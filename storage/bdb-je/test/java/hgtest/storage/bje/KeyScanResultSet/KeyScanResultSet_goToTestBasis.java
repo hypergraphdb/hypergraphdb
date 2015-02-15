@@ -40,15 +40,4 @@ public class KeyScanResultSet_goToTestBasis extends ResultSetTestBasis {
         realCursor.close();
         transactionForTheRealCursor.commit();
     }
-
-    protected void putKeyValuePair(Cursor realCursor, final Integer key,
-                                   final String value)
-    {
-        realCursor.put(
-                new DatabaseEntry(new TestUtils.ByteArrayConverterForInteger()
-                        .toByteArray(key)),
-                new DatabaseEntry(new TestUtils.ByteArrayConverterForString()
-                        .toByteArray(value)));
-    }
-
 }

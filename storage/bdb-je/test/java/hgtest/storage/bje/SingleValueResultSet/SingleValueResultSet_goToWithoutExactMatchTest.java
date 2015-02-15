@@ -1,5 +1,6 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.testng.annotations.Test;
 
@@ -18,7 +19,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -34,7 +35,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -50,7 +51,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
-		putKeyValuePair(database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -67,8 +68,8 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -85,8 +86,8 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -103,8 +104,8 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -121,8 +122,8 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -139,9 +140,9 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
-		putKeyValuePair(database, 3, 30);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 3, 30);
 
 		startupCursor();
 		createMocksForTheGoTo();
@@ -159,9 +160,9 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
-		putKeyValuePair(database, 3, 30);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -178,9 +179,9 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
 
-		putKeyValuePair(database, 2, 4);
-		putKeyValuePair(database, 3, 9);
-		putKeyValuePair(database, 4, 16);
+		TestUtils.putKeyValuePair(environment, database, 2, 4);
+		TestUtils.putKeyValuePair(environment, database, 3, 9);
+		TestUtils.putKeyValuePair(environment, database, 4, 16);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -197,9 +198,9 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
-		putKeyValuePair(database, 3, 30);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 
@@ -216,9 +217,9 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
 
-		putKeyValuePair(database, 1, 10);
-		putKeyValuePair(database, 2, 20);
-		putKeyValuePair(database, 3, 30);
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		TestUtils.putKeyValuePair(environment, database, 2, 20);
+		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 

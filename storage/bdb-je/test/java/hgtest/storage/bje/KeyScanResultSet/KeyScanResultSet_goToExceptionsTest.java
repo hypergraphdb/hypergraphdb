@@ -1,5 +1,6 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
+import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.BJETxCursor;
@@ -23,7 +24,7 @@ public class KeyScanResultSet_goToExceptionsTest extends
 				"java.lang.IllegalStateException: This exception is thrown by fake BJE cursor.");
 
 		startupCursor();
-		putKeyValuePair(realCursor, 1, "one");
+		TestUtils.putKeyValuePair(realCursor, 1, "one");
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
 		// one call with real cursor for constructor
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);

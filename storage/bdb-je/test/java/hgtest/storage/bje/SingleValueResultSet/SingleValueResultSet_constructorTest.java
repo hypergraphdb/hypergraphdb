@@ -112,7 +112,7 @@ public class SingleValueResultSet_constructorTest extends
 	@Test
 	public void allIsOk() throws Exception
 	{
-		putKeyValuePair(database, 2, 4);
+		TestUtils.putKeyValuePair(environment, database, 2, 4);
 		startupCursor();
 		createMocksForTheConstructor();
 		PowerMock.replayAll();
