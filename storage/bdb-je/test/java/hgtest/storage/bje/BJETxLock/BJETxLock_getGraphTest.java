@@ -1,6 +1,5 @@
 package hgtest.storage.bje.BJETxLock;
 
-import com.sleepycat.je.cleaner.PackedObsoleteInfo;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
 import org.powermock.api.easymock.PowerMock;

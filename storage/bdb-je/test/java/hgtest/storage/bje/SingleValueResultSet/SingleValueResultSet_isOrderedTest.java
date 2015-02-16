@@ -4,7 +4,6 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.SecondaryCursor;
 import com.sleepycat.je.Transaction;
-import hgtest.storage.bje.ResultSetTestBasis;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;

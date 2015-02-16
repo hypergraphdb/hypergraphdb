@@ -5,8 +5,6 @@ import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import java.io.File;
-
 /**
  * @author Yuriy Sechko
  */

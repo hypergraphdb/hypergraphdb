@@ -11,7 +11,7 @@ import static org.testng.Assert.assertEquals;
 /**
  * {@link org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
  * method tunes up two private fields: {@code envConfig} and {@code dbConfig}.
- * These two fields are checked in appropriate test cases
+ * These two fields are checked in the appropriate test cases
  *
  * @author Yuriy Sechko
  */
@@ -23,7 +23,8 @@ public class BJEConfig_configureTransactionalTest
 		final BJEConfig bjeConfig = new BJEConfig();
 		bjeConfig.configureTransactional();
 
-		// initialize expected environment config as inside in {@link org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
+		// initialize expected environment config as inside in {@link
+		// org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
 		final EnvironmentConfig expected = new EnvironmentConfig();
 		expected.setReadOnly(false);
 		expected.setAllowCreate(true);
@@ -43,8 +44,11 @@ public class BJEConfig_configureTransactionalTest
 
 		bjeConfig.configureTransactional();
 		final EnvironmentConfig actual = bjeConfig.getEnvironmentConfig();
-		// equals() is not overridden in EnvironmentConfig class. So not sure about this behavior.
-		// but toString is overridden. It is pretty enough for comparing objects in test case
+
+		// equals() is not overridden in EnvironmentConfig class. So not sure
+		// about its behavior.
+		// But toString is overridden. It is pretty enough for comparing objects
+		// in the present test case.
 		assertEquals(actual.toString(), expected.toString());
 	}
 
@@ -53,13 +57,15 @@ public class BJEConfig_configureTransactionalTest
 	{
 		final BJEConfig bjeConfig = new BJEConfig();
 
-		// initialize expected database config as inside in {@link org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
+		// initialize expected database config as inside in {@link
+		// org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
 		final DatabaseConfig expected = new DatabaseConfig();
 		expected.setAllowCreate(true);
 		expected.setTransactional(true);
 
 		bjeConfig.configureTransactional();
 		final DatabaseConfig actual = bjeConfig.getDatabaseConfig();
+
 		// see note above about comparing
 		assertEquals(actual.toString(), expected.toString());
 	}

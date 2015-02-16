@@ -3,8 +3,6 @@ package hgtest.storage.bje;
 import com.sleepycat.je.*;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.BAUtils;
-import org.hypergraphdb.storage.BAtoString;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJEConfig;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;

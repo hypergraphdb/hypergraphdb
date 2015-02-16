@@ -4,7 +4,6 @@ import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseNotFoundException;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.BJEConfig;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
@@ -13,7 +12,6 @@ import java.lang.reflect.Field;
 import java.util.Comparator;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 /**

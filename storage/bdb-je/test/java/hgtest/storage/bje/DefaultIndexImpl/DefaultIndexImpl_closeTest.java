@@ -1,7 +1,6 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
 import com.sleepycat.je.Database;
-import hgtest.storage.bje.IndexImplTestBasis;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
@@ -11,7 +10,6 @@ import org.testng.annotations.Test;
 import java.lang.reflect.Field;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko
