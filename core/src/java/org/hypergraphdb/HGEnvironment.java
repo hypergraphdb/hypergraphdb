@@ -162,6 +162,7 @@ public class HGEnvironment
 	 */	
 	public synchronized static boolean exists(String location)
 	{
+		location = normalize(location);
 		// This filename is pretty unique to HGDB, so if a directory has it, chances
 		// are it's a HGDB database.
 		String [] testfiles = new String[] {"hgstore_idx_HGATOMTYPE", "je.lck" };
@@ -183,6 +184,7 @@ public class HGEnvironment
 	 */
 	public synchronized static boolean isOpen(String location)
 	{
+		location = normalize(location);
 		HyperGraph graph = dbs.get(location);
 		return graph != null && graph.isOpen();		
 	}
@@ -199,6 +201,7 @@ public class HGEnvironment
 	 */
 	public synchronized static void configure(String location, HGConfiguration config)
 	{
+		location = normalize(location);
 		configs.put(location, config);
 	}
 	
@@ -236,6 +239,7 @@ public class HGEnvironment
 	 */
 	public synchronized static HGDatabaseVersionFile getVersions(String location)
 	{
+		location = normalize(location);
 		HGDatabaseVersionFile vf = versions.get(location);
 		if (vf == null)
 		{
