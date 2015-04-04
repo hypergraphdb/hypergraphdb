@@ -1,5 +1,6 @@
 package hgtest.storage.bje;
 
+import com.google.code.multitester.annonations.Exported;
 import com.sleepycat.je.*;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
@@ -48,6 +49,7 @@ public class IndexImplTestBasis
 	protected Comparator<?> comparator = null;
 
 	@BeforeMethod
+    @Exported("up1")
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.resetAll();
@@ -56,6 +58,7 @@ public class IndexImplTestBasis
 	}
 
 	@AfterMethod
+    @Exported("down1")
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.verifyAll();

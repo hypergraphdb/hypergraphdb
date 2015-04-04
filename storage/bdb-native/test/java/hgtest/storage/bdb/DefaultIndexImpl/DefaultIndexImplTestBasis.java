@@ -1,5 +1,6 @@
 package hgtest.storage.bdb.DefaultIndexImpl;
 
+import com.google.code.multitester.annonations.Exported;
 import hgtest.storage.bdb.IndexImplTestBasis;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.bdb.DefaultIndexImpl;
@@ -10,8 +11,10 @@ import org.powermock.api.easymock.PowerMock;
  * @author Yuriy Sechko
  */
 public class DefaultIndexImplTestBasis extends IndexImplTestBasis{
+    @Exported("underTest")
     protected DefaultIndexImpl<Integer, String> index;
 
+    @Exported("up2")
     protected void startupIndex()
     {
         mockStorage();

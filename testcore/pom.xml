@@ -1,53 +1,87 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>1.3-SNAPSHOT</version>  
-  </parent>  
+    <version>1.3-SNAPSHOT</version>
+  </parent>
   <artifactId>hgdbtestcore</artifactId>
   <name>HyperGraphDB Core Test Project</name>
 
+  <repositories>
+    <repository>
+      <id>multitestermvn</id>
+      <url>http://yuriysechko.bitbucket.org</url>
+    </repository>
+  </repositories>
+
   <properties>
-      <powermock.version>1.4.12</powermock.version>
+    <powermock.version>1.4.12</powermock.version>
   </properties>
 
+  <profiles>
+    <!-- TODO move activation condition into root pom -->
+    <profile>
+      <id>lin32</id>
+      <activation>
+        <os>
+          <family>Linux</family>
+          <arch>i386</arch>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <!-- Use native libraries from 'bdb-native' module while running tests -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>-Djava.library.path=${project.parent.basedir}/storage/bdb-native/native/linux</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
+  <!-- Seems not required, build fails when this plugin is enabled
   <build>
   <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-dependency-plugin</artifactId>
-      <executions>
-	<execution>
-	  <id>unpack</id>
-	  <phase>compile</phase>
-	  <goals>
-	    <goal>unpack</goal>
-	  </goals>
-	  <configuration>
-	    <artifactItems>
-	      <artifactItem>
-		   <groupId>org.hypergraphdb</groupId>
-		   <artifactId>bdb-native</artifactId>
-		   <version>${bdb.version}</version>
-		   <classifier>${build.type}</classifier>
-		   <type>jar</type>
-		   <overWrite>true</overWrite>
-		   <outputDirectory>${project.build.directory}/lib</outputDirectory>
-	      </artifactItem>
-	    </artifactItems>
-	  </configuration>
-	</execution>
-      </executions>
-    </plugin>
-  </plugins>
-  </build>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-dependency-plugin</artifactId>
+    <executions>
+<execution>
+  <id>unpack</id>
+  <phase>compile</phase>
+  <goals>
+    <goal>unpack</goal>
+  </goals>
+  <configuration>
+    <artifactItems>
+      <artifactItem>
+     <groupId>org.hypergraphdb</groupId>
+     <artifactId>bdb-native</artifactId>
+     <version>${bdb.version}</version>
+     <classifier>${build.type}</classifier>
+     <type>jar</type>
+     <overWrite>true</overWrite>
+     <outputDirectory>${project.build.directory}/lib</outputDirectory>
+      </artifactItem>
+    </artifactItems>
+  </configuration>
+</execution>
+    </executions>
+  </plugin>
+</plugins>
+</build>
+-->
 
   <dependencies>
+    <!-- HyperGraphDB modules -->
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
@@ -60,8 +94,13 @@
       <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
-
-<!--
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgbdbnative</artifactId>
@@ -75,7 +114,36 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
--->
+    <!-- Third-party libraries -->
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-testng</artifactId>
+      <version>1.5.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-easymock</artifactId>
+      <version>1.5.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>6.3.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.multitester</groupId>
+      <artifactId>multitester</artifactId>
+      <version>1.0</version>
+    </dependency>
   </dependencies>
 
 </project>
