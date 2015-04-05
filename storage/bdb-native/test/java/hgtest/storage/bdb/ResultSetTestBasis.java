@@ -29,6 +29,7 @@ public class ResultSetTestBasis extends PowerMockTestCase
 
 	protected void startupEnvironment() throws Exception
 	{
+		NativeLibrariesWorkaround.loadNativeLibraries();
 		envHome.mkdir();
 		final EnvironmentConfig environmentConfig = new EnvironmentConfig();
 		environmentConfig.setAllowCreate(true);
@@ -40,9 +41,8 @@ public class ResultSetTestBasis extends PowerMockTestCase
 		databaseConfig.setAllowCreate(true);
 		databaseConfig.setTransactional(true);
 		databaseConfig.setType(DatabaseType.BTREE);
-		database = environment.openDatabase(
-				transactionForTheEnvironment, DATABASE_NAME, null,
-				databaseConfig);
+		database = environment.openDatabase(transactionForTheEnvironment,
+				DATABASE_NAME, null, databaseConfig);
 	}
 
 	@BeforeMethod

@@ -28,122 +28,138 @@ import java.util.Comparator;
  */
 public class IndexImplTestBasis
 {
-    protected static final String INDEX_NAME = "sample_index";
+	// use workaround for loading native libraries
+	protected NativeLibrariesWorkaround workaround = new NativeLibrariesWorkaround();
 
-    protected static final String DATABASE_FIELD_NAME = "db";
-    protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
+	protected static final String INDEX_NAME = "sample_index";
 
-    protected final File envHome = TestUtils.createTempFile("IndexImpl",
-            "test_environment");
+	protected static final String DATABASE_FIELD_NAME = "db";
+	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
-    // storage - used only for getting configuration data
-    protected final BDBStorageImplementation storage = PowerMock
-            .createStrictMock(BDBStorageImplementation.class);
-    protected HGTransactionManager transactionManager;
-    // custom converters
-    protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
-    protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
+	protected final File envHome = TestUtils.createTempFile("IndexImpl",
+			"test_environment");
 
-    // Use 'null' comparator - it forces
-    // {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
-    // Sleepycat's BtreeComparator
-    protected Comparator<?> comparator = null;
+	// storage - used only for getting configuration data
+	protected final BDBStorageImplementation storage = PowerMock
+			.createStrictMock(BDBStorageImplementation.class);
+	protected HGTransactionManager transactionManager;
+	// custom converters
+	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
+	protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
 
-    @BeforeMethod
-    @Exported("up1")
-    public void resetMocksAndDeleteTestDirectory() throws Exception
-    {
-        PowerMock.resetAll();
-        TestUtils.deleteDirectory(envHome);
-        startupEnvironment();
-    }
+	// Use 'null' comparator - it forces
+	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
+	// Sleepycat's BtreeComparator
+	protected Comparator<?> comparator = null;
 
-    @AfterMethod
-    @Exported("down1")
-    public void verifyMocksAndDeleteTestDirectory() throws Exception
-    {
-        PowerMock.verifyAll();
-        environment.close();
-        TestUtils.deleteDirectory(envHome);
-    }
+	@BeforeMethod
+	@Exported("up1")
+	public void resetMocksAndDeleteTestDirectory() throws Exception
+	{
+		PowerMock.resetAll();
+		TestUtils.deleteDirectory(envHome);
+		startupEnvironment();
+	}
 
-    protected EnvironmentConfig config;
-    protected Environment environment;
+	@AfterMethod
+	@Exported("down1")
+	public void verifyMocksAndDeleteTestDirectory() throws Exception
+	{
+		PowerMock.verifyAll();
+		environment.close();
+		TestUtils.deleteDirectory(envHome);
+	}
 
-    protected void startupEnvironment() throws DatabaseException, FileNotFoundException {
-        envHome.mkdir();
-        config = new EnvironmentConfig();
-        config.setAllowCreate(true);
-        config.setTransactional(true);
-        config.setInitializeCache(true);
-        environment = new Environment(envHome, config);
-        transactionManager = new HGTransactionManager(
-                // copied from the BDBStorageImplementation
-                new HGTransactionFactory()
-        {
-            public HGStorageTransaction createTransaction(HGTransactionContext context, HGTransactionConfig config, HGTransaction parent)
-            {
-                try
-                {
-                    TransactionConfig tconfig = new TransactionConfig();
-                    if (environment.getConfig().getMultiversion() && config.isReadonly())
-                        tconfig.setSnapshot(true);
-                    tconfig.setWriteNoSync(true);
-//                  tconfig.setNoSync(true);
-                    Transaction tx = null;
-                    if (parent != null)
-                        tx = environment.beginTransaction(((TransactionBDBImpl)parent.getStorageTransaction()).getBDBTransaction(), tconfig);
-                    else
-                        tx = environment.beginTransaction(null, tconfig);
-                    return new TransactionBDBImpl(tx, environment);
-                }
-                catch (DatabaseException ex)
-                {
-//                  System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
-                    ex.printStackTrace(System.err);
-//                  System.exit(-1);
-                    throw new HGException("Failed to create BerkeleyDB transaction object.", ex);
-                }
-            }
+	protected EnvironmentConfig config;
+	protected Environment environment;
 
-            public boolean canRetryAfter(Throwable t)
-            {
-                return t instanceof TransactionConflictException ||
-                        t instanceof DeadlockException;
-            }
-        });
-    }
+	protected void startupEnvironment() throws DatabaseException,
+			FileNotFoundException
+	{
+		envHome.mkdir();
+		config = new EnvironmentConfig();
+		config.setAllowCreate(true);
+		config.setTransactional(true);
+		config.setInitializeCache(true);
+		environment = new Environment(envHome, config);
+		transactionManager = new HGTransactionManager(
+		// copied from the BDBStorageImplementation
+				new HGTransactionFactory()
+				{
+					public HGStorageTransaction createTransaction(
+							HGTransactionContext context,
+							HGTransactionConfig config, HGTransaction parent)
+					{
+						try
+						{
+							TransactionConfig tconfig = new TransactionConfig();
+							if (environment.getConfig().getMultiversion()
+									&& config.isReadonly())
+								tconfig.setSnapshot(true);
+							tconfig.setWriteNoSync(true);
+							// tconfig.setNoSync(true);
+							Transaction tx = null;
+							if (parent != null)
+								tx = environment.beginTransaction(
+										((TransactionBDBImpl) parent
+												.getStorageTransaction())
+												.getBDBTransaction(), tconfig);
+							else
+								tx = environment
+										.beginTransaction(null, tconfig);
+							return new TransactionBDBImpl(tx, environment);
+						}
+						catch (DatabaseException ex)
+						{
+							// System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
+							ex.printStackTrace(System.err);
+							// System.exit(-1);
+							throw new HGException(
+									"Failed to create BerkeleyDB transaction object.",
+									ex);
+						}
+					}
 
-    // this method is used in most test cases for initializing fake instance of
-    // BJEStorageImplementation
-    protected void mockStorage()
-    {
-        EasyMock.expect(storage.getConfiguration()).andReturn(new BDBConfig());
-        EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
-                .times(1);
-        EasyMock.expect(storage.getConfiguration()).andReturn(new BDBConfig());
-        EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
-                .times(1);
-    }
+					public boolean canRetryAfter(Throwable t)
+					{
+						return t instanceof TransactionConflictException
+								|| t instanceof DeadlockException;
+					}
+				});
+	}
 
-    /**
-     * Before environment can be closed all opened databases should be closed
-     * first. Links to these databases stored in fields of DefaultBiIndexImpl.
-     * We obtain them by their names. It is not good. But it seems that there is
-     * not way to obtain them from Environment instance.
-     */
-    protected void closeDatabase(final DefaultIndexImpl indexImpl)
-            throws NoSuchFieldException, IllegalAccessException, DatabaseException {
-        // one database handle is in DefaultIndexImpl
-        final Field firstDatabaseField = indexImpl.getClass().getDeclaredField(
-                DATABASE_FIELD_NAME);
-        firstDatabaseField.setAccessible(true);
-        final Database firstDatabase = (Database) firstDatabaseField
-                .get(indexImpl);
-        // in some test cases first database is not opened, don't close them
-        if (firstDatabase != null)
-        {
-            firstDatabase.close();
-        }
-    }
+	// this method is used in most test cases for initializing fake instance of
+	// BJEStorageImplementation
+	protected void mockStorage()
+	{
+		EasyMock.expect(storage.getConfiguration()).andReturn(new BDBConfig());
+		EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
+				.times(1);
+		EasyMock.expect(storage.getConfiguration()).andReturn(new BDBConfig());
+		EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
+				.times(1);
+	}
+
+	/**
+	 * Before environment can be closed all opened databases should be closed
+	 * first. Links to these databases stored in fields of DefaultBiIndexImpl.
+	 * We obtain them by their names. It is not good. But it seems that there is
+	 * not way to obtain them from Environment instance.
+	 */
+	protected void closeDatabase(final DefaultIndexImpl indexImpl)
+			throws NoSuchFieldException, IllegalAccessException,
+			DatabaseException
+	{
+		// one database handle is in DefaultIndexImpl
+		final Field firstDatabaseField = indexImpl.getClass().getDeclaredField(
+				DATABASE_FIELD_NAME);
+		firstDatabaseField.setAccessible(true);
+		final Database firstDatabase = (Database) firstDatabaseField
+				.get(indexImpl);
+		// in some test cases first database is not opened, don't close them
+		if (firstDatabase != null)
+		{
+			firstDatabase.close();
+		}
+	}
 }
