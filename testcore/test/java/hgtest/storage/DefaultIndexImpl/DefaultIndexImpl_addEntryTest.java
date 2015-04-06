@@ -20,7 +20,7 @@ public class DefaultIndexImpl_addEntryTest
 	@DataProvider(name = "configurations")
 	public Object[][] provide() throws Exception
 	{
-		return new Object[][] { { BJE_DefaultIndexImpl_addEntryTestConfiguration.class } };
+		return new Object[][] { { BJE_DefaultIndexImpl_configuration.class } };
 	}
 
 	@Test(dataProvider = "configurations")
@@ -80,8 +80,3 @@ public class DefaultIndexImpl_addEntryTest
 	}
 }
 
-@ImportedTest(testClass = hgtest.storage.bje.DefaultIndexImpl.DefaultIndexImpl_addEntryTest.class, startupSequence = {
-		"up1", "up2" }, shutdownSequence = { "down1" })
-class BJE_DefaultIndexImpl_addEntryTestConfiguration
-{
-}

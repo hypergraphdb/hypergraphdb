@@ -16,8 +16,8 @@ public class DefaultIndexImpl_countTest
 	public Object[][] provide() throws Exception
 	{
 		return new Object[][] {
-				{ BJE_DefaultIndexImpl_countTestConfiguration.class },
-				{ BDB_DefaultIndexImpl_countTestConfiguration.class } };
+				{ BJE_DefaultIndexImpl_configuration.class },
+				{ BDB_DefaultIndexImpl_configuration.class } };
 	}
 
 	@Test(dataProvider = "configurations")
