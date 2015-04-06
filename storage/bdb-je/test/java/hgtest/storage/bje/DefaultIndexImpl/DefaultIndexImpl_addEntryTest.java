@@ -72,56 +72,6 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	}
 
 	@Test
-	public void addOneEntry() throws Exception
-	{
-		final List<String> expected = list("twenty two");
-
-		startupIndex();
-
-		index.addEntry(22, "twenty two");
-
-		final List<String> actual = listAndClose(index.find(22));
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void addSeveralDifferentEntries() throws Exception
-	{
-		final List<String> expected = list("one", "two", "three");
-
-		startupIndex();
-
-		index.addEntry(1, "one");
-		index.addEntry(2, "two");
-		index.addEntry(3, "three");
-
-		// read actual stored data entry by entry
-		final List<String> actual = list();
-		actual.addAll(listAndClose(index.find(1)));
-        actual.addAll(listAndClose(index.find(2)));
-        actual.addAll(listAndClose(index.find(3)));
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void addDuplicatedKeys() throws Exception
-	{
-		final List<String> expected = list("another one", "one");
-
-		startupIndex();
-
-		index.addEntry(1, "one");
-		index.addEntry(1, "another one");
-		index.addEntry(2, "two");
-
-		List<String> actual = listAndClose(index.find(1));
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
 	public void transactionManagerThrowsException() throws Exception
 	{
 		final Exception expected = new HGException(
