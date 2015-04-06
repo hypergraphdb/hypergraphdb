@@ -1,6 +1,7 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
 import org.hypergraphdb.HGException;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
@@ -9,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.storage.bje.TestUtils.list;
+import static hgtest.storage.bje.TestUtils.listAndClose;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -71,13 +74,13 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	@Test
 	public void addOneEntry() throws Exception
 	{
-		final String expected = "twenty two";
+		final List<String> expected = list("twenty two");
 
 		startupIndex();
 
 		index.addEntry(22, "twenty two");
 
-		final String actual = index.getData(22);
+		final List<String> actual = listAndClose(index.find(22));
 		assertEquals(actual, expected);
 		index.close();
 	}
@@ -85,10 +88,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	@Test
 	public void addSeveralDifferentEntries() throws Exception
 	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("one");
-		expected.add("two");
-		expected.add("three");
+		final List<String> expected = list("one", "two", "three");
 
 		startupIndex();
 
@@ -97,10 +97,10 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 		index.addEntry(3, "three");
 
 		// read actual stored data entry by entry
-		final List<String> actual = new ArrayList<String>();
-		actual.add(index.getData(1));
-		actual.add(index.getData(2));
-		actual.add(index.getData(3));
+		final List<String> actual = list();
+		actual.addAll(listAndClose(index.find(1)));
+        actual.addAll(listAndClose(index.find(2)));
+        actual.addAll(listAndClose(index.find(3)));
 		assertEquals(actual, expected);
 		index.close();
 	}
@@ -108,7 +108,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	@Test
 	public void addDuplicatedKeys() throws Exception
 	{
-		String expected = "another one";
+		final List<String> expected = list("another one", "one");
 
 		startupIndex();
 
@@ -116,7 +116,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 		index.addEntry(1, "another one");
 		index.addEntry(2, "two");
 
-		String actual = index.getData(1);
+		List<String> actual = listAndClose(index.find(1));
 		assertEquals(actual, expected);
 		index.close();
 	}

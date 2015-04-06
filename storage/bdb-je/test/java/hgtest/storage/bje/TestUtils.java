@@ -10,10 +10,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.testng.Assert.assertEquals;
 
@@ -22,6 +19,29 @@ import static org.testng.Assert.assertEquals;
  */
 public class TestUtils
 {
+	/**
+	 * Creates list which contains given items.
+	 * <p/>
+	 * Items in the list appear in the same order as in parameters. More items
+	 * can be added to the list later.
+	 * <p/>
+	 * Usage scenario of this method:
+	 * 
+	 * <pre>
+	 * {@code
+	 * List<Integer> list = list(1, 2, 3); // we have list with 3 items here }
+	 * </pre>
+	 *
+	 * @param items
+	 *            items of the list
+	 * @param <T>
+	 *            type of the items in the list
+	 */
+	public static <T> List<T> list(final T... items)
+	{
+		return new ArrayList<T>(Arrays.asList(items));
+	}
+
 	/**
 	 * Deletes directory's content and then deletes directory itself. Deleting
 	 * is not recursive.
@@ -52,6 +72,21 @@ public class TestUtils
 			final T currentValue = result.next();
 			outputList.add(currentValue);
 		}
+		return outputList;
+	}
+
+	/**
+	 * Iterates through result and copies encountered items to the list.
+	 */
+	public static <T> List<T> listAndClose(final HGSearchResult<T> result)
+	{
+		final List<T> outputList = new ArrayList<T>();
+		while (result.hasNext())
+		{
+			final T currentValue = result.next();
+			outputList.add(currentValue);
+		}
+		result.close();
 		return outputList;
 	}
 
