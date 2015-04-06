@@ -5,6 +5,7 @@ import org.hypergraphdb.HGIndex;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.like2DArray;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -15,7 +16,7 @@ public class DefaultIndexImpl_countTest
 	@DataProvider(name = "configurations")
 	public Object[][] provide() throws Exception
 	{
-		return new Object[][] { { BJE_DefaultIndexImpl_configuration.class }, };
+		return like2DArray(BJE_DefaultIndexImpl_configuration.class);
 	}
 
 	@Test(dataProvider = "configurations")

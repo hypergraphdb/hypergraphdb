@@ -5,6 +5,7 @@ import org.hypergraphdb.HGIndex;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.like2DArray;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -16,7 +17,7 @@ public class DefaultIndexImpl_countByKeyTest
 	@DataProvider(name = "configurations")
 	public Object[][] provide() throws Exception
 	{
-		return new Object[][] { { BJE_DefaultIndexImpl_configuration.class } };
+		return like2DArray(BJE_DefaultIndexImpl_configuration.class);
 	}
 
 	@Test(dataProvider = "configurations")
@@ -41,10 +42,10 @@ public class DefaultIndexImpl_countByKeyTest
 	{
 		final long expected = 0;
 
-        final MultiTester tester = new MultiTester(configuration);
-        tester.startup();
-        final HGIndex index = tester.importField("underTest", HGIndex.class);
-        index.addEntry(1, "one");
+		final MultiTester tester = new MultiTester(configuration);
+		tester.startup();
+		final HGIndex index = tester.importField("underTest", HGIndex.class);
+		index.addEntry(1, "one");
 
 		final long actual = index.count(2);
 
@@ -58,9 +59,9 @@ public class DefaultIndexImpl_countByKeyTest
 	{
 		final long expected = 1;
 
-        final MultiTester tester = new MultiTester(configuration);
-        tester.startup();
-        final HGIndex index = tester.importField("underTest", HGIndex.class);
+		final MultiTester tester = new MultiTester(configuration);
+		tester.startup();
+		final HGIndex index = tester.importField("underTest", HGIndex.class);
 
 		index.addEntry(1, "one");
 
@@ -76,9 +77,9 @@ public class DefaultIndexImpl_countByKeyTest
 	{
 		final long expected = 0;
 
-        final MultiTester tester = new MultiTester(configuration);
-        tester.startup();
-        final HGIndex index = tester.importField("underTest", HGIndex.class);
+		final MultiTester tester = new MultiTester(configuration);
+		tester.startup();
+		final HGIndex index = tester.importField("underTest", HGIndex.class);
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");
@@ -95,9 +96,9 @@ public class DefaultIndexImpl_countByKeyTest
 	{
 		final long expected = 1;
 
-        final MultiTester tester = new MultiTester(configuration);
-        tester.startup();
-        final HGIndex index = tester.importField("underTest", HGIndex.class);
+		final MultiTester tester = new MultiTester(configuration);
+		tester.startup();
+		final HGIndex index = tester.importField("underTest", HGIndex.class);
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");
@@ -114,9 +115,9 @@ public class DefaultIndexImpl_countByKeyTest
 	{
 		final long expected = 2;
 
-        final MultiTester tester = new MultiTester(configuration);
-        tester.startup();
-        final HGIndex index = tester.importField("underTest", HGIndex.class);
+		final MultiTester tester = new MultiTester(configuration);
+		tester.startup();
+		final HGIndex index = tester.importField("underTest", HGIndex.class);
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");

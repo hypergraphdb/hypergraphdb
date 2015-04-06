@@ -1,6 +1,5 @@
 package hgtest.storage.DefaultIndexImpl;
 
-import com.google.code.multitester.annonations.ImportedTest;
 import com.google.code.multitester.testers.MultiTester;
 import org.hypergraphdb.HGIndex;
 import org.testng.annotations.DataProvider;
@@ -8,6 +7,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static hgtest.TestUtils.like2DArray;
 import static hgtest.TestUtils.list;
 import static hgtest.TestUtils.listAndClose;
 import static org.testng.Assert.assertEquals;
@@ -20,7 +20,7 @@ public class DefaultIndexImpl_addEntryTest
 	@DataProvider(name = "configurations")
 	public Object[][] provide() throws Exception
 	{
-		return new Object[][] { { BJE_DefaultIndexImpl_configuration.class } };
+		return like2DArray(BJE_DefaultIndexImpl_configuration.class);
 	}
 
 	@Test(dataProvider = "configurations")
@@ -79,4 +79,3 @@ public class DefaultIndexImpl_addEntryTest
 		index.close();
 	}
 }
-
