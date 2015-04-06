@@ -34,6 +34,7 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -51,6 +52,7 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -69,6 +71,7 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -88,6 +91,7 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -107,6 +111,7 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -127,5 +132,6 @@ public class DefaultIndexImpl_countByKeyTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 }

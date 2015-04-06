@@ -59,6 +59,7 @@ public class DefaultIndexImpl_addEntryTest
 		actual.addAll(listAndClose(index.find(3)));
 		assertEquals(actual, expected);
 		index.close();
+        tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -77,5 +78,6 @@ public class DefaultIndexImpl_addEntryTest
 		List<String> actual = listAndClose(index.find(1));
 		assertEquals(actual, expected);
 		index.close();
+        tester.shutdown();
 	}
 }

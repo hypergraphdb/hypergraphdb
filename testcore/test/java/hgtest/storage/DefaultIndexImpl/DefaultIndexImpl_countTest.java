@@ -52,6 +52,7 @@ public class DefaultIndexImpl_countTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -71,6 +72,7 @@ public class DefaultIndexImpl_countTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 
 	@Test(dataProvider = "configurations")
@@ -91,5 +93,6 @@ public class DefaultIndexImpl_countTest
 
 		assertEquals(actual, expected);
 		index.close();
+		tester.shutdown();
 	}
 }
