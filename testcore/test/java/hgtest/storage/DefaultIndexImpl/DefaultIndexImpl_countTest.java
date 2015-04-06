@@ -21,12 +21,6 @@ public class DefaultIndexImpl_countTest
 	}
 
 	@Test(dataProvider = "configurations")
-	public void printLibraryPath(final Class configuration)
-	{
-        System.out.println(">>>>>>>>>>>>>> java.library.path=" + System.getProperty("java.library.path"));
-	}
-
-	@Test(dataProvider = "configurations")
 	public void thereAreNotAddedEntries(final Class configuration)
 			throws Exception
 	{

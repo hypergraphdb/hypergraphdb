@@ -21,7 +21,7 @@ public class NativeLibrariesWorkaround
 	}
 
 	/**
-	 * Loads {@code libdb53} then {@code libdb_java53} explicitly.
+	 * Loads {@code libdb53} then {@code libdb_java53} explicitly when runs on Windows.
 	 */
 	public static void loadNativeLibraries()
 	{
