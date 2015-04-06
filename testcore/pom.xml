@@ -45,6 +45,26 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>win32</id>
+      <activation>
+        <os>
+          <family>Windows</family>
+          <arch>x86</arch>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>-Djava.library.path=${project.parent.basedir}\storage\bdb-native\native\windows</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <!-- Seems not required, build fails when this plugin is enabled
