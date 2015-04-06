@@ -17,7 +17,7 @@ public class KeyScanResultSetTestBasis extends ResultSetTestBasis
 	protected Cursor realCursor;
 
 	protected BDBTxCursor fakeCursor;
-	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
+	protected final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
 
 	protected void startupCursor() throws DatabaseException
 	{
