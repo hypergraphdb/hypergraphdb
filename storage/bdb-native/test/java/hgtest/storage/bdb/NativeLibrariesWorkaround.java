@@ -13,29 +13,28 @@ package hgtest.storage.bdb;
  * */
 public class NativeLibrariesWorkaround
 {
+    /**
+     * Hidden constructor.
+     */
+	private NativeLibrariesWorkaround()
+	{
+	}
+
 	/**
 	 * Loads {@code libdb53} then {@code libdb_java53} explicitly.
 	 */
-	public NativeLibrariesWorkaround()
+	public static void loadNativeLibraries()
 	{
-        load();
-    }
+		load();
+	}
 
-    /**
-     * Loads {@code libdb53} then {@code libdb_java53} explicitly.
-     */
-    public static void loadNativeLibraries()
-    {
-        load();
-    }
-
-    private static void load() {
-        if (System.getProperty("os.name").toLowerCase().indexOf("win") > -1)
-        {
-            System.out.println("Force BerkleyDB DLL load order in tests.");
-            System.loadLibrary("libdb53");
-            System.loadLibrary("libdb_java53");
-        }
-    }
-
+	private static void load()
+	{
+		if (System.getProperty("os.name").toLowerCase().indexOf("win") > -1)
+		{
+			System.out.println("Force BerkleyDB DLL load order in tests.");
+			System.loadLibrary("libdb53");
+			System.loadLibrary("libdb_java53");
+		}
+	}
 }

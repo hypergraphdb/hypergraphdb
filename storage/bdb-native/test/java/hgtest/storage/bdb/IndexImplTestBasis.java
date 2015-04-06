@@ -29,7 +29,10 @@ import java.util.Comparator;
 public class IndexImplTestBasis
 {
 	// use workaround for loading native libraries
-	protected NativeLibrariesWorkaround workaround = new NativeLibrariesWorkaround();
+	static
+	{
+		NativeLibrariesWorkaround.loadNativeLibraries();
+	}
 
 	protected static final String INDEX_NAME = "sample_index";
 
