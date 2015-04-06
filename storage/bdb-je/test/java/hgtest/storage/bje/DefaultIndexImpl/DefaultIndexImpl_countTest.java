@@ -54,51 +54,6 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 	}
 
 	@Test
-	public void thereIsOneAddedEntry() throws Exception
-	{
-		final long expected = 1;
-
-		startupIndex();
-		index.addEntry(0, "0");
-
-		final long actual = index.count();
-
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereAreTwoEntriesAdded() throws Exception
-	{
-		final long expected = 2;
-
-		startupIndex();
-		index.addEntry(0, "0");
-		index.addEntry(1, "1");
-
-		final long actual = index.count();
-
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralEntriesAdded() throws Exception
-	{
-		final long expected = 3;
-
-		startupIndex();
-		index.addEntry(0, "0");
-		index.addEntry(1, "1");
-		index.addEntry(2, "2");
-
-		final long actual = index.count();
-
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
 	public void databaseThrowsException() throws Exception
 	{
 		System.out.println("databaseThrowsException test");
