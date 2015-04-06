@@ -15,8 +15,6 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 
-import static hgtest.storage.bje.TestUtils.deleteDirectory;
-
 /**
  * Most common actions which have to be performed in test cases for
  * {@link BJEStorageImplementation} (such as initialization, mocking) are
@@ -71,9 +69,9 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
-	final File testDatabaseDirectory = TestUtils.createTempFile(
+	final File testDatabaseDirectory = hgtest.TestUtils.createTempFile(
 			"BJEStorageImplementation", "test_database");
-	final protected String testDatabaseLocation = TestUtils
+	final protected String testDatabaseLocation = hgtest.TestUtils
 			.getCanonicalPath(testDatabaseDirectory);
 
 	// classes which are used by BJEStorageImplementation
@@ -86,14 +84,14 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	protected void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
-		deleteDirectory(testDatabaseDirectory);
+		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
 	@AfterMethod
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
-		deleteDirectory(testDatabaseDirectory);
+		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
 	private void replay()

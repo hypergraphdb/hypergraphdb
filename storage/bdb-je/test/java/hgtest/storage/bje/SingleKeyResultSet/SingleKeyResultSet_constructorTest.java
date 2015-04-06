@@ -12,14 +12,14 @@ import org.hypergraphdb.storage.bje.SingleKeyResultSet;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 
 /**
  * @author Yuriy Sechko
  */
 public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 {
-	private final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
+	private final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
     private final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
 
 	@Test

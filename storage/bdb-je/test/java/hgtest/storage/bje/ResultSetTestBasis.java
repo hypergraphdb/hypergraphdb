@@ -21,7 +21,7 @@ public class ResultSetTestBasis extends PowerMockTestCase
 {
 	protected static final String DATABASE_NAME = "test_database";
 
-	protected final File envHome = TestUtils.createTempFile("IndexImpl",
+	protected final File envHome = hgtest.TestUtils.createTempFile("IndexImpl",
 			"test_environment");
 	protected Environment environment;
 	protected Database database;
@@ -45,7 +45,7 @@ public class ResultSetTestBasis extends PowerMockTestCase
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.resetAll();
-		TestUtils.deleteDirectory(envHome);
+		hgtest.TestUtils.deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
@@ -56,6 +56,6 @@ public class ResultSetTestBasis extends PowerMockTestCase
 		transactionForTheEnvironment.commit();
 		database.close();
 		environment.close();
-		TestUtils.deleteDirectory(envHome);
+		hgtest.TestUtils.deleteDirectory(envHome);
 	}
 }

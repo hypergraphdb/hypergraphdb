@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

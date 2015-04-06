@@ -29,7 +29,7 @@ public class SingleKeyResultSet_isOrderedTest extends ResultSetTestBasis
 				.createStrictMock(BJETxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
 		PowerMock.replayAll();
-		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
+		final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
 		final SingleKeyResultSet<Integer> resultSet = new SingleKeyResultSet(
 				fakeCursor, null, converter);
 

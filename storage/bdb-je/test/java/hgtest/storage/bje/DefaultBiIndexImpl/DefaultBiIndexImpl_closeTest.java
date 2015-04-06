@@ -9,7 +9,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 
 /**
  * @author Yuriy Sechko

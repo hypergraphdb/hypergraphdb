@@ -38,7 +38,7 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 	protected SecondaryDatabase secondaryDatabase;
 	protected SecondaryCursor realCursor;
 	protected BJETxCursor fakeCursor;
-	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
+	protected final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
 
 	protected void startupEnvironment() throws Exception
 	{
@@ -94,6 +94,6 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		secondaryDatabase.close();
 		database.close();
 		environment.close();
-		TestUtils.deleteDirectory(envHome);
+		hgtest.TestUtils.deleteDirectory(envHome);
 	}
 }

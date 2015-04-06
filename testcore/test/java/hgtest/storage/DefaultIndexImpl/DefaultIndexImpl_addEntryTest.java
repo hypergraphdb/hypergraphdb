@@ -8,8 +8,8 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
-import static hgtest.storage.bje.TestUtils.list;
-import static hgtest.storage.bje.TestUtils.listAndClose;
+import static hgtest.TestUtils.list;
+import static hgtest.TestUtils.listAndClose;
 import static org.testng.Assert.assertEquals;
 
 /**

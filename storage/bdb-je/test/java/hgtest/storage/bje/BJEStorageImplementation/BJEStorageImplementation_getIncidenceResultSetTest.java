@@ -1,13 +1,13 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import hgtest.storage.bje.TestUtils;
+import hgtest.TestUtils;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 

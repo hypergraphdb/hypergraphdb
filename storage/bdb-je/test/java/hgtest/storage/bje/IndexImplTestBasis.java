@@ -32,7 +32,7 @@ public class IndexImplTestBasis
 	protected static final String DATABASE_FIELD_NAME = "db";
 	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
-	protected final File envHome = TestUtils.createTempFile("IndexImpl",
+	protected final File envHome = hgtest.TestUtils.createTempFile("IndexImpl",
 			"test_environment");
 
 	// storage - used only for getting configuration data
@@ -40,8 +40,8 @@ public class IndexImplTestBasis
 			.createStrictMock(BJEStorageImplementation.class);
 	protected HGTransactionManager transactionManager;
 	// custom converters
-	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
-	protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
+	protected ByteArrayConverter<Integer> keyConverter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+	protected ByteArrayConverter<String> valueConverter = new hgtest.TestUtils.ByteArrayConverterForString();
 
 	// Use 'null' comparator - it forces
 	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
@@ -53,7 +53,7 @@ public class IndexImplTestBasis
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.resetAll();
-		TestUtils.deleteDirectory(envHome);
+		hgtest.TestUtils.deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
@@ -63,7 +63,7 @@ public class IndexImplTestBasis
 	{
 		PowerMock.verifyAll();
 		environment.close();
-		TestUtils.deleteDirectory(envHome);
+		hgtest.TestUtils.deleteDirectory(envHome);
 	}
 
 	protected EnvironmentConfig config;

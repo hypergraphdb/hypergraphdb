@@ -4,7 +4,7 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGIndex;
 import org.testng.annotations.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertNull;
 
 /**

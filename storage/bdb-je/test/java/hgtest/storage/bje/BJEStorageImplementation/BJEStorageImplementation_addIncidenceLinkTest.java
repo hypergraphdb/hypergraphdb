@@ -1,6 +1,6 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import hgtest.storage.bje.TestUtils;
+import hgtest.TestUtils;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;

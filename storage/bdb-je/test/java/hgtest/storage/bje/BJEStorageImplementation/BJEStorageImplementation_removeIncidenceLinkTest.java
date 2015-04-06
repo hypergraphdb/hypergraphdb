@@ -6,7 +6,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
