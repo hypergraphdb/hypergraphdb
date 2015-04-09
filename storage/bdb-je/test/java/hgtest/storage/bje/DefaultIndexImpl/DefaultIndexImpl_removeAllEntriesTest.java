@@ -40,16 +40,6 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 	}
 
 	@Test
-	public void thereAreNotAddedEntries() throws Exception
-	{
-		startupIndex();
-
-		index.removeAllEntries(0);
-
-		index.close();
-	}
-
-	@Test
 	public void keyIsNull() throws Exception
 	{
 		startupIndex();
@@ -66,87 +56,6 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 		{
 			index.close();
 		}
-	}
-
-	@Test
-	public void thereIsOneAddedEntry() throws Exception
-	{
-		startupIndex();
-		index.addEntry(1, "one");
-
-		index.removeAllEntries(1);
-
-		final String data = index.getData(1);
-		assertNull(data);
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralEntriesButDesiredEntryDoesNotExist()
-			throws Exception
-	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("one");
-		expected.add("two");
-
-		startupIndex();
-		index.addEntry(1, "one");
-		index.addEntry(2, "two");
-
-		index.removeAllEntries(5);
-
-		final List<String> actual = new ArrayList<String>();
-		actual.add(index.getData(1));
-		actual.add(index.getData(2));
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralEntriesAndDesiredEntryExists() throws Exception
-	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("one");
-		expected.add(null);
-		expected.add("three");
-
-		startupIndex();
-		index.addEntry(1, "one");
-		index.addEntry(2, "two");
-		index.addEntry(3, "three");
-
-		index.removeAllEntries(2);
-
-		final List<String> actual = new ArrayList<String>();
-		actual.add(index.getData(1));
-		actual.add(index.getData(2));
-		actual.add(index.getData(3));
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereAreEntriesWithTheSameKey() throws Exception
-	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("one");
-		expected.add("two");
-		expected.add(null);
-
-		startupIndex();
-		index.addEntry(1, "one");
-		index.addEntry(2, "two");
-		index.addEntry(3, "three");
-		index.addEntry(3, "third");
-
-		index.removeAllEntries(3);
-
-		final List<String> actual = new ArrayList<String>();
-		actual.add(index.getData(1));
-		actual.add(index.getData(2));
-		actual.add(index.getData(3));
-		assertEquals(actual, expected);
-		index.close();
 	}
 
 	@Test
@@ -170,5 +79,4 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 			index.close();
 		}
 	}
-
 }
