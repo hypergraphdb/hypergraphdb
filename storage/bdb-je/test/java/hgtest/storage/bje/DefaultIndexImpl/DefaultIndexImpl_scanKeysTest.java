@@ -1,5 +1,6 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+import com.google.code.multitester.annonations.Exported;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
@@ -19,13 +20,19 @@ import static org.testng.Assert.assertEquals;
  */
 public class DefaultIndexImpl_scanKeysTest extends DefaultIndexImplTestBasis
 {
+    @Exported("up3")
+	protected void replayMocks()
+	{
+		PowerMock.replayAll();
+	}
+
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
 		final Exception expected = new HGException(
 				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
-		PowerMock.replayAll();
+		replayMocks();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
 				valueConverter, comparator);
@@ -38,62 +45,6 @@ public class DefaultIndexImpl_scanKeysTest extends DefaultIndexImplTestBasis
 		{
 			assertExceptions(occurred, expected);
 		}
-	}
-
-	@Test
-	public void thereAreNotAddedEntries() throws Exception
-	{
-		final List<Integer> expected = Collections.emptyList();
-
-		startupIndex();
-		PowerMock.replayAll();
-
-		final HGRandomAccessResult<Integer> result = index.scanKeys();
-		final List<Integer> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
-	}
-
-	@Test
-	public void thereIsOneAddedEntry() throws Exception
-	{
-		final List<Integer> expected = new ArrayList<Integer>();
-		expected.add(11);
-
-		startupIndex();
-		PowerMock.replayAll();
-		index.addEntry(11, "eleven");
-
-		final HGRandomAccessResult<Integer> result = index.scanKeys();
-		final List<Integer> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralAddedEntries() throws Exception
-	{
-		final List<Integer> expected = new ArrayList<Integer>();
-		expected.add(1);
-		expected.add(2);
-		expected.add(3);
-
-		startupIndex();
-		PowerMock.replayAll();
-		index.addEntry(1, "one");
-		index.addEntry(2, "two");
-		index.addEntry(3, "three");
-
-		final HGRandomAccessResult<Integer> result = index.scanKeys();
-		final List<Integer> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
 	}
 
 	@Test

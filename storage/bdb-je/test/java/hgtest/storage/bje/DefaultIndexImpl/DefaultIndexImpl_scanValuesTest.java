@@ -1,5 +1,6 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+import com.google.code.multitester.annonations.Exported;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
@@ -19,14 +20,19 @@ import static org.testng.Assert.assertEquals;
  */
 public class DefaultIndexImpl_scanValuesTest extends DefaultIndexImplTestBasis
 {
+    @Exported("up3")
+    protected void replayMocks() {
+        PowerMock.replayAll();
+    }
+
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
 		final Exception expected = new HGException(
 				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
-		PowerMock.replayAll();
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+        replayMocks();
+        final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
 				valueConverter, comparator);
 
@@ -38,62 +44,6 @@ public class DefaultIndexImpl_scanValuesTest extends DefaultIndexImplTestBasis
 		{
 			assertExceptions(occurred, expected);
 		}
-	}
-
-	@Test
-	public void thereAreNotAddedEntries() throws Exception
-	{
-		final List<String> expected = Collections.emptyList();
-
-		startupIndex();
-		PowerMock.replayAll();
-
-		final HGRandomAccessResult<String> result = index.scanValues();
-		final List<String> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
-	}
-
-	@Test
-	public void thereIsOneEntryAdded() throws Exception
-	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("first");
-
-		startupIndex();
-		PowerMock.replayAll();
-		index.addEntry(1, "first");
-
-		final HGRandomAccessResult<String> result = index.scanValues();
-		final List<String> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralEntriesAdded() throws Exception
-	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("first");
-		expected.add("second");
-		expected.add("third");
-
-		startupIndex();
-		PowerMock.replayAll();
-		index.addEntry(1, "first");
-		index.addEntry(2, "second");
-		index.addEntry(3, "third");
-
-		final HGRandomAccessResult<String> result = index.scanValues();
-		final List<String> actual = list(result);
-
-		assertEquals(actual, expected);
-		result.close();
-		index.close();
 	}
 
 	@Test
