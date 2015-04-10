@@ -9,7 +9,7 @@ public class DefaultIndexImpl_configurations
 {
 }
 
-@ImportedTest(testClass = hgtest.storage.bje.DefaultIndexImpl.DefaultIndexImpl_countTest.class, startupSequence = {
+@ImportedTest(testClass = hgtest.storage.bje.DefaultIndexImpl.DefaultIndexImplTestBasis.class, startupSequence = {
 		"up1", "up2" }, shutdownSequence = { "down1" })
 class BJE_DefaultIndexImpl_configuration
 {
