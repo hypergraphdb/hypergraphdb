@@ -28,7 +28,7 @@ public class BDBStorageImplementation_storeTest extends
 		shutdown();
 	}
 
-	@Test(enabled = false)
+	@Test
 	public void storeEmptyArray() throws Exception
 	{
 		final byte[] expected = new byte[] {};
@@ -218,5 +218,4 @@ public class BDBStorageImplementation_storeTest extends
 			shutdown();
 		}
 	}
-
 }

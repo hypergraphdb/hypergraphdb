@@ -45,7 +45,7 @@ public class BDBStorageImplementation_getDataTest extends
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void readEmptyArray() throws Exception
     {
         final byte[] expected = new byte[] {};

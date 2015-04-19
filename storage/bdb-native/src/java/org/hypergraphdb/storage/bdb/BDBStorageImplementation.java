@@ -53,10 +53,10 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private static final String DATA_DB_NAME = "datadb";
     private static final String PRIMITIVE_DB_NAME = "primitivedb";
     private static final String INCIDENCE_DB_NAME = "incidencedb";
-     
+
     static
     {
-        // This is solely because of failing to resolve dependencies under 
+        // This is solely because of failing to resolve dependencies under
         // Windows. For some reason, when libdb50 is loaded explicitly first,
         // it all works out fine.
         if (System.getProperty("os.name").toLowerCase().indexOf("win") > -1)
@@ -68,7 +68,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
             System.loadLibrary("libdb_java53");
         }
     }
-    
+
     private BDBConfig configuration;
     private HGStore store;
     private HGHandleFactory handleFactory;
@@ -78,13 +78,13 @@ public class BDBStorageImplementation implements HGStoreImplementation
     private Database primitive_db = null;
     private Database incidence_db = null;
     private HashMap<String, HGIndex<?,?>> openIndices = new HashMap<String, HGIndex<?,?>>();
-    private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();    
+    private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();
     private LinkBinding linkBinding = null;
 
     // experimental
     private HGIncidentAnnotator incidentAnnotator = null;//new TypeAndPositionIncidenceAnnotator();
     private HyperGraph graph;
-    private HyperGraph getGraph() 
+    private HyperGraph getGraph()
     {
         if (graph == null)
            graph = HGEnvironment.get(store.getDatabaseLocation());
@@ -103,7 +103,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
             return value;
         }
     }
-    
+
     private TransactionBDBImpl txn()
     {
         HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
@@ -111,23 +111,23 @@ public class BDBStorageImplementation implements HGStoreImplementation
             return TransactionBDBImpl.nullTransaction();
         else
             return (TransactionBDBImpl)tx.getStorageTransaction();
-    }    
-    
+    }
+
     public BDBStorageImplementation()
     {
         configuration = new BDBConfig();
     }
-    
+
     public BDBConfig getConfiguration()
     {
         return configuration;
     }
-    
+
     public Environment getBerkleyEnvironment()
     {
         return env;
     }
-    
+
     public HGIncidentAnnotator getIncidentAnnotator()
     {
         return incidentAnnotator;
@@ -151,15 +151,15 @@ public class BDBStorageImplementation implements HGStoreImplementation
         try
         {
             env = new Environment(envDir, envConfig);
-            data_db = env.openDatabase(null, DATA_DB_NAME, null, configuration.getDatabaseConfig().cloneConfig());    
+            data_db = env.openDatabase(null, DATA_DB_NAME, null, configuration.getDatabaseConfig().cloneConfig());
             primitive_db = env.openDatabase(null, PRIMITIVE_DB_NAME, null, configuration.getDatabaseConfig().cloneConfig());
-            
+
             DatabaseConfig incConfig = configuration.getDatabaseConfig().cloneConfig();
             incConfig.setSortedDuplicates(true);
             incidence_db = env.openDatabase(null, INCIDENCE_DB_NAME, null, incConfig);
-            
+
             openIndices = new HashMap<String, HGIndex<?,?>>();  //force reset since startup can follow a shutdown on same opened class
-            
+
             if (config.isTransactional())
             {
                 checkPointThread = new CheckPointThread();
@@ -169,9 +169,9 @@ public class BDBStorageImplementation implements HGStoreImplementation
         catch (Exception ex)
         {
             throw new HGException("Failed to initialize HyperGraph data store: " + ex.toString(), ex);
-        }        
+        }
     }
-    
+
     public void shutdown()
     {
         if (checkPointThread != null)
@@ -182,7 +182,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 try { Thread.sleep(500); }
                 catch (InterruptedException ex) { /* need to wait here until it stops... */}
         }
-        
+
         if (env != null)
         {
             try
@@ -194,7 +194,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
             {
                 t.printStackTrace();
             }
-        
+
             //
             // Close all indices
             //
@@ -206,23 +206,23 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 catch (Throwable t)
                 {
                     // TODO - we need to log the exception here, once we've decided
-                    // on a logging mechanism. 
+                    // on a logging mechanism.
                     t.printStackTrace();
                 }
             try { data_db.close(); }
             catch (Throwable t) { t.printStackTrace(); }
-            
+
             try { primitive_db.close(); }
             catch (Throwable t) { t.printStackTrace(); }
-            
+
             try { incidence_db.close(); }
             catch (Throwable t) { t.printStackTrace(); }
-            
+
             try { env.close(); }
             catch (Throwable t) { t.printStackTrace(); }
-        }         
+        }
     }
-    
+
     public void removeLink(HGPersistentHandle handle)
     {
         if (handle == null)
@@ -234,8 +234,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to remove value with handle " + handle + 
-                    ": " + ex.toString(), ex);            
+            throw new HGException("Failed to remove value with handle " + handle +
+                    ": " + ex.toString(), ex);
         }
     }
 
@@ -243,11 +243,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
     {
         try
         {
-            OperationStatus result = primitive_db.put(txn().getBDBTransaction(), 
-                                                 new DatabaseEntry(handle.toByteArray()), 
+            OperationStatus result = primitive_db.put(txn().getBDBTransaction(),
+                                                 new DatabaseEntry(handle.toByteArray()),
                                                  new DatabaseEntry(data));
             if (result != OperationStatus.SUCCESS)
-                throw new Exception("OperationStatus: " + result);            
+                throw new Exception("OperationStatus: " + result);
             return handle;
         }
         catch (Exception ex)
@@ -259,13 +259,13 @@ public class BDBStorageImplementation implements HGStoreImplementation
     public HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle[] link)
     {
         DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-        DatabaseEntry value = new DatabaseEntry(); 
+        DatabaseEntry value = new DatabaseEntry();
         linkBinding.objectToEntry(link, value);
         try
         {
             OperationStatus result = data_db.put(txn().getBDBTransaction(), key, value);
             if (result != OperationStatus.SUCCESS)
-                throw new Exception("OperationStatus: " + result);            
+                throw new Exception("OperationStatus: " + result);
         }
         catch (Exception ex)
         {
@@ -273,7 +273,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         return handle;
     }
-    
+
     public void addIncidenceLink(HGPersistentHandle handle, HGPersistentHandle newLink)
     {
         Cursor cursor = null;
@@ -283,79 +283,81 @@ public class BDBStorageImplementation implements HGStoreImplementation
             DatabaseEntry value = new DatabaseEntry(incidentValue(handle, newLink));
             OperationStatus result = incidence_db.putNoDupData(txn().getBDBTransaction(), key, value);
             if (result != OperationStatus.SUCCESS && result != OperationStatus.KEYEXIST)
-                throw new Exception("OperationStatus: " + result);            
+                throw new Exception("OperationStatus: " + result);
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to update incidence set for handle " + handle + 
+            throw new HGException("Failed to update incidence set for handle " + handle +
                                   ": " + ex.toString(), ex);
         }
         finally
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Exception ex) { }
-        }  
+        }
     }
 
     public boolean containsLink(HGPersistentHandle handle)
-    {        
+    {
         DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
         DatabaseEntry value = new DatabaseEntry();
         value.setPartial(0, 0, true);
         try
         {
-            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)
             {
 //                System.out.println(value.toString());
                 return true;
             }
         } catch (DatabaseException ex)
         {
-            throw new HGException("Failed to retrieve link with handle " + handle + 
+            throw new HGException("Failed to retrieve link with handle " + handle +
                     ": " + ex.toString(), ex);
-        }      
-        
+        }
+
         return false;
     }
 
     public boolean containsData(HGPersistentHandle handle)
-    {        
+    {
         DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
         DatabaseEntry value = new DatabaseEntry();
         value.setPartial(0, 0, true);
         try
         {
-            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)
             {
 //                System.out.println(value.toString());
                 return true;
             }
         } catch (DatabaseException ex)
         {
-            throw new HGException("Failed to retrieve link with handle " + handle + 
+            throw new HGException("Failed to retrieve link with handle " + handle +
                     ": " + ex.toString(), ex);
-        }      
-        
+        }
+
         return false;
     }
-    
+
     public byte[] getData(HGPersistentHandle handle)
     {
         try
-        {            
+        {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
-                return value.getData();
+            if (primitive_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+                final byte[] data = value.getData();
+                return data == null ? new byte[]{} : data;
+            }
             else
-                return null;            
+                return null;
         }
         catch (Exception ex)
         {
             throw new HGException("Failed to retrieve link with handle " + handle, ex);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private <T> HGRandomAccessResult<T> getIncidenceResultSetByKey(byte [] thekey, ByteArrayConverter<T> conv)
     {
@@ -365,7 +367,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
             DatabaseEntry key = new DatabaseEntry(thekey);
             DatabaseEntry value = new DatabaseEntry();
             TransactionBDBImpl tx = txn();
-            cursor = incidence_db.openCursor(tx.getBDBTransaction(), cursorConfig);            
+            cursor = incidence_db.openCursor(tx.getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
             {
@@ -380,12 +382,12 @@ public class BDBStorageImplementation implements HGStoreImplementation
         catch (Throwable ex)
         {
             if (cursor != null)
-                try { cursor.close(); } catch (Throwable t) { }                        
-            throw new HGException("Failed to retrieve incidence set for " + Arrays.asList(thekey) +  
+                try { cursor.close(); } catch (Throwable t) { }
+            throw new HGException("Failed to retrieve incidence set for " + Arrays.asList(thekey) +
                                   ": " + ex.toString(), ex);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public HGRandomAccessResult<HGPersistentHandle> getAnnotatedIncidenceResultSet(HGHandle target, Object...annotations)
     {
@@ -393,11 +395,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
             throw new HGException("Attempt to query by annotated incident link when no incident annotator was configured.");
         else if (target == null)
             throw new NullPointerException("HGStore.getIncidenceSet called with a null target handle.");
-        return (HGRandomAccessResult)incidentAnnotator.lookup(graph, 
-                    getIncidenceResultSetByKey(target.getPersistent().toByteArray(), 
+        return (HGRandomAccessResult)incidentAnnotator.lookup(graph,
+                    getIncidenceResultSetByKey(target.getPersistent().toByteArray(),
                             BAtoBA.getInstance()), annotations);
     }
-    
+
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
     {
         if (handle == null)
@@ -412,12 +414,12 @@ public class BDBStorageImplementation implements HGStoreImplementation
     {
         if (handle == null)
             throw new NullPointerException("HGStore.getIncidenceSetCardinality called with a null handle.");
-        
+
         Cursor cursor = null;
         try
         {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
-            DatabaseEntry value = new DatabaseEntry();            
+            DatabaseEntry value = new DatabaseEntry();
             cursor = incidence_db.openCursor(txn().getBDBTransaction(), cursorConfig);
             OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
             if (status == OperationStatus.NOTFOUND)
@@ -427,9 +429,9 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to retrieve incidence set for handle " + handle + 
+            throw new HGException("Failed to retrieve incidence set for handle " + handle +
                                   ": " + ex.toString(), ex);
-        }       
+        }
         finally
         {
             try { cursor.close(); } catch (Throwable t) { }
@@ -439,10 +441,10 @@ public class BDBStorageImplementation implements HGStoreImplementation
     public HGPersistentHandle[] getLink(HGPersistentHandle handle)
     {
         try
-        {           
+        {
             DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
             DatabaseEntry value = new DatabaseEntry();
-            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)          
+            if (data_db.get(txn().getBDBTransaction(), key, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)
                 return (HGPersistentHandle [])linkBinding.entryToObject(value);
             else
                 return null;
@@ -458,11 +460,11 @@ public class BDBStorageImplementation implements HGStoreImplementation
         return new HGTransactionFactory()
         {
             public HGStorageTransaction createTransaction(HGTransactionContext context, HGTransactionConfig config, HGTransaction parent)
-            {           
+            {
                 try
                 {
                     TransactionConfig tconfig = new TransactionConfig();
-                    if (env.getConfig().getMultiversion() && config.isReadonly())                    
+                    if (env.getConfig().getMultiversion() && config.isReadonly())
                         tconfig.setSnapshot(true);
                     tconfig.setWriteNoSync(true);
 //                  tconfig.setNoSync(true);
@@ -481,7 +483,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                     throw new HGException("Failed to create BerkeleyDB transaction object.", ex);
                 }
             }
-            
+
             public boolean canRetryAfter(Throwable t)
             {
                 return t instanceof TransactionConflictException ||
@@ -501,8 +503,8 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to remove value with handle " + handle + 
-                    ": " + ex.toString(), ex);            
+            throw new HGException("Failed to remove value with handle " + handle +
+                    ": " + ex.toString(), ex);
         }
     }
 
@@ -522,14 +524,14 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to update incidence set for handle " + handle + 
+            throw new HGException("Failed to update incidence set for handle " + handle +
                                   ": " + ex.toString(), ex);
         }
         finally
         {
             if (cursor != null)
                 try { cursor.close(); } catch (Exception ex) { }
-        }  
+        }
     }
 
     public void removeIncidenceSet(HGPersistentHandle handle)
@@ -541,15 +543,15 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
         catch (Exception ex)
         {
-            throw new HGException("Failed to remove incidence set of handle " + handle + 
-                    ": " + ex.toString(), ex);            
-        }        
+            throw new HGException("Failed to remove incidence set of handle " + handle +
+                    ": " + ex.toString(), ex);
+        }
     }
 
     // ------------------------------------------------------------------------
     // INDEXING
     // ------------------------------------------------------------------------
-    
+
     boolean checkIndexExisting(String name)
     {
         if (openIndices.get(name) != null)
@@ -566,34 +568,34 @@ public class BDBStorageImplementation implements HGStoreImplementation
             catch (Exception ex)
             {
             }
-            if (db != null)             
+            if (db != null)
             {
                 try { db.close(); } catch (Throwable t) { t.printStackTrace(); }
                 return true;
             }
             else
                 return false;
-        }       
-    }    
-    
-	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name) 
+        }
+    }
+
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name)
     {
-		indicesLock.readLock().lock();		
-		try 
+		indicesLock.readLock().lock();
+		try
         {
 			return (HGIndex<KeyType, ValueType>)openIndices.get(name);
 		}
-		finally 
+		finally
         {
 			indicesLock.readLock().unlock();
 		}
 	}
-    
+
     @SuppressWarnings("unchecked")
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
             String name, ByteArrayConverter<KeyType> keyConverter,
             ByteArrayConverter<ValueType> valueConverter,
-            Comparator<?> comparator, 
+            Comparator<?> comparator,
             boolean isBidirectional,
             boolean createIfNecessary)
     {
@@ -607,7 +609,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 return null;
         }
         finally {indicesLock.readLock().unlock(); }
-        
+
         indicesLock.writeLock().lock();
         try
         {
@@ -616,24 +618,24 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 return idx;
             if (!checkIndexExisting(name) && !createIfNecessary)
                 return null;
-            
+
             DefaultIndexImpl<KeyType, ValueType> result = null;
-            
+
             if (isBidirectional)
-                result =  new DefaultBiIndexImpl<KeyType, ValueType>(name, 
-                                                                     this, 
+                result =  new DefaultBiIndexImpl<KeyType, ValueType>(name,
+                                                                     this,
                                                                      store.getTransactionManager(),
-                                                                     keyConverter, 
+                                                                     keyConverter,
                                                                      valueConverter,
                                                                      comparator);
             else
-                result = new DefaultIndexImpl<KeyType, ValueType>(name, 
-                                                                  this, 
+                result = new DefaultIndexImpl<KeyType, ValueType>(name,
+                                                                  this,
                                                                   store.getTransactionManager(),
-                                                                  keyConverter, 
+                                                                  keyConverter,
                                                                   valueConverter,
                                                                   comparator);
-            result.open();          
+            result.open();
             openIndices.put(name, result);
             return result;
         }
@@ -643,7 +645,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
 
-    
+
     public void removeIndex(String name)
     {
         indicesLock.writeLock().lock();
@@ -667,22 +669,22 @@ public class BDBStorageImplementation implements HGStoreImplementation
         finally
         {
             indicesLock.writeLock().unlock();
-        }    
+        }
     }
 
     CheckPointThread checkPointThread = null;
-    
-    class CheckPointThread extends Thread 
+
+    class CheckPointThread extends Thread
     {
         volatile boolean stop = false;
         volatile boolean running = false;
-        
+
         CheckPointThread()
         {
             this.setName("HGCHECKPOINT");
-            this.setDaemon(true);                   
+            this.setDaemon(true);
         }
-        
+
         public void run()
         {
             try
@@ -700,10 +702,10 @@ public class BDBStorageImplementation implements HGStoreImplementation
             {
                 if (stop)
                     try { env.checkpoint(null); }
-                    catch (DatabaseException dx) { throw new Error(dx); }                   
+                    catch (DatabaseException dx) { throw new Error(dx); }
             }
             catch (Throwable t)
-            {               
+            {
                 System.err.println("HGDB CHECKPOINT THREAD exiting with: " + t.toString() + ", stack trace follows...");
                 t.printStackTrace(System.err);
             }
@@ -712,5 +714,5 @@ public class BDBStorageImplementation implements HGStoreImplementation
                 running = false;
             }
         }
-    }    
+    }
 }
