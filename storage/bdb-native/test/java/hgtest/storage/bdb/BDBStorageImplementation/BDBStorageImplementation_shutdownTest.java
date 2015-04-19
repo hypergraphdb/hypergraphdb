@@ -13,11 +13,11 @@ import static hgtest.TestUtils.assertExceptions;
 public class BDBStorageImplementation_shutdownTest extends
 		BDBStorageImplementationTestBasis
 {
-	@Test(enabled = false)
+	@Test
 	public void getDatabasePathAfterShutdown() throws Exception
 	{
-		final Exception expected = new IllegalStateException(
-				"Attempt to use non-open Environment object().");
+		final Exception expected = new IllegalArgumentException(
+				"call on closed handle");
 
 		startup();
 		storage.shutdown();
@@ -30,10 +30,6 @@ public class BDBStorageImplementation_shutdownTest extends
 		catch (Exception occurred)
 		{
 			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
 		}
 	}
 

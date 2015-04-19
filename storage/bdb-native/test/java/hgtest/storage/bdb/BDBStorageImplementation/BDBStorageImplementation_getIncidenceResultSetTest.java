@@ -18,11 +18,11 @@ import static org.testng.Assert.assertFalse;
 public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		BDBStorageImplementationTestBasis
 {
-	@Test(enabled = false)
+	@Test
 	public void useNullHandle() throws Exception
 	{
 		final Exception expected = new NullPointerException(
-				"HGStore.getIncidenceSet called with a null handle.");
+				"HGStore.getIncidenceSet called with a null target handle.");
 
 		startup();
 		try
@@ -107,6 +107,7 @@ public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		shutdown();
 	}
 
+    // TODO make comparing exception message with wildcards or something similar
     @Test(enabled = false)
 	public void exceptionIsThrown() throws Exception
 	{
@@ -120,8 +121,8 @@ public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		{
 			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
-					.format("Failed to retrieve incidence set for handle %s: java.lang.IllegalStateException: Exception in test case.",
-                            handle);
+					.format("Failed to retrieve incidence set for %s: java.lang.IllegalStateException: Exception in test case.",
+                            storage);
 			assertEquals(ex.getMessage(), expectedMessage);
 		}
 		finally

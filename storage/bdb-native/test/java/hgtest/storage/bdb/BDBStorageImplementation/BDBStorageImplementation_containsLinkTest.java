@@ -87,6 +87,7 @@ public class BDBStorageImplementation_containsLinkTest extends
 		shutdown();
 	}
 
+    // TODO investigate whether it possible to imitate checked DatabaseException
 	@Test(enabled = false)
 	public void exceptionWhileCheckingExistenceOfLink() throws Exception
 	{

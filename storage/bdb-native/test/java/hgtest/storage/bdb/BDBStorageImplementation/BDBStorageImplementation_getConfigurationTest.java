@@ -8,11 +8,6 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
- * In this test only some properties of configuration is checked:
- * <ul>
- * <li>read only</li>
- * <li>transactional</li>
- * </ul>
  */
 public class BDBStorageImplementation_getConfigurationTest extends
 		BDBStorageImplementationTestBasis

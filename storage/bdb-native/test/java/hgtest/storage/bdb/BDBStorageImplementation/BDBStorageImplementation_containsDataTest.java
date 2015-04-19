@@ -72,6 +72,7 @@ public class BDBStorageImplementation_containsDataTest extends
         shutdown();
     }
 
+    // TODO investigate whether it possible to imitate checked DatabaseException
     @Test(enabled = false)
     public void exceptionIsThrown() throws Exception
     {

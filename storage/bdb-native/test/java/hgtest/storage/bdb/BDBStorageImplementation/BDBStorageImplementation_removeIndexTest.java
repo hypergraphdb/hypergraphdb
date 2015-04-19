@@ -13,13 +13,11 @@ import static org.testng.Assert.assertNull;
 public class BDBStorageImplementation_removeIndexTest extends
 		BDBStorageImplementationTestBasis
 {
-	@Test(enabled = false)
+	@Test
 	public void indexNameIsNull() throws Exception
 	{
-		// TODO ignore Sleepycat library version while checking exception's
-		// message
 		final Exception expected = new HGException(
-				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_null");
+				"java.io.FileNotFoundException: No such file or directory");
 
 		startup();
 		final String indexName = null;
@@ -37,11 +35,11 @@ public class BDBStorageImplementation_removeIndexTest extends
 		}
 	}
 
-	@Test(enabled = false)
+	@Test
 	public void removeIndexWhichIsNotStored() throws Exception
 	{
 		final Exception expected = new HGException(
-				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Attempted to remove non-existent database hgstore_idx_This index does not exist");
+				"java.io.FileNotFoundException: No such file or directory");
 
 		startup();
 		try
