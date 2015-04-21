@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import static hgtest.TestUtils.assertExceptions;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_shutdownTest extends
 		BDBStorageImplementationTestBasis
@@ -37,8 +37,8 @@ public class BDBStorageImplementation_shutdownTest extends
 	public void checkPointThreadIsNull() throws Exception
 	{
 		startup();
-		// set value of field checkPointThread in
-		// BJEStorageImplementation instance to null
+		// set value of field 'checkPointThread' in
+		// BDBStorageImplementation instance to null
 		final Field checkPointThread = storage.getClass().getDeclaredField(
 				"checkPointThread");
 		checkPointThread.setAccessible(true);
@@ -50,7 +50,7 @@ public class BDBStorageImplementation_shutdownTest extends
 	public void envIsNull() throws Exception
 	{
 		startup();
-		// set value of field env in BJEStorageImplementation instance to null
+		// set value of field 'env' in BDBStorageImplementation instance to null
 		final Field env = storage.getClass().getDeclaredField("env");
 		env.setAccessible(true);
 		env.set(storage, null);

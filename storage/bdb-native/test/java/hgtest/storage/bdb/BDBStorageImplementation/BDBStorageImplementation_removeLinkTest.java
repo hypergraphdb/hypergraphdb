@@ -9,77 +9,76 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 /**
- *
+ * @author Yuriy Sechko
  */
-public class BDBStorageImplementation_removeLinkTest  extends
+public class BDBStorageImplementation_removeLinkTest extends
 		BDBStorageImplementationTestBasis
 {
 
-    @Test
-    public void removeLinkUsingNullHandle() throws Exception
-    {
-        final Exception expected = new NullPointerException(
-                "HGStore.remove called with a null handle.");
+	@Test
+	public void removeLinkUsingNullHandle() throws Exception
+	{
+		final Exception expected = new NullPointerException(
+				"HGStore.remove called with a null handle.");
 
-        startup();
-        try
-        {
-            storage.removeLink(null);
-        }
-        catch (Exception occurred)
-        {
-            assertExceptions(occurred, expected);
-        }
-        finally
-        {
-            shutdown();
-        }
-    }
+		startup();
+		try
+		{
+			storage.removeLink(null);
+		}
+		catch (Exception occurred)
+		{
+			assertExceptions(occurred, expected);
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
 
-    @Test
-    public void removeLinkWhichIsStored() throws Exception
-    {
-        startup(3);
-        final HGPersistentHandle first = new UUIDPersistentHandle();
-        final HGPersistentHandle second = new UUIDPersistentHandle();
-        storage.store(first, new HGPersistentHandle[] { second });
-        storage.removeLink(first);
-        assertFalse(storage.containsLink(first));
-        shutdown();
-    }
+	@Test
+	public void removeLinkWhichIsStored() throws Exception
+	{
+		startup(3);
+		final HGPersistentHandle first = new UUIDPersistentHandle();
+		final HGPersistentHandle second = new UUIDPersistentHandle();
+		storage.store(first, new HGPersistentHandle[] { second });
+		storage.removeLink(first);
+		assertFalse(storage.containsLink(first));
+		shutdown();
+	}
 
-    @Test
-    public void removeLinkWhichIsNotStored() throws Exception
-    {
-        startup(2);
-        final HGPersistentHandle handle = new UUIDPersistentHandle();
-        storage.removeLink(handle);
-        assertFalse(storage.containsLink(handle));
-        shutdown();
-    }
+	@Test
+	public void removeLinkWhichIsNotStored() throws Exception
+	{
+		startup(2);
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		storage.removeLink(handle);
+		assertFalse(storage.containsLink(handle));
+		shutdown();
+	}
 
-    @Test
-    public void throwExceptionWhileRemovingLink() throws Exception
-    {
-        startup(new IllegalStateException("Throw exception in test case."));
-        final HGPersistentHandle handle = new UUIDPersistentHandle();
-        try
-        {
-            storage.removeLink(handle);
+	@Test
+	public void throwExceptionWhileRemovingLink() throws Exception
+	{
+		startup(new IllegalStateException("Throw exception in test case."));
+		final HGPersistentHandle handle = new UUIDPersistentHandle();
+		try
+		{
+			storage.removeLink(handle);
 
-        }
-        catch (Exception ex)
-        {
-            assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-            final String expectedMessage = String
-                    .format("Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
-                            handle.toString());
-            assertEquals(ex.getMessage(), expectedMessage);
-        }
-        finally
-        {
-            shutdown();
-        }
-    }
+		}
+		catch (Exception ex)
+		{
+			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
+			final String expectedMessage = String
+					.format("Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
+							handle.toString());
+			assertEquals(ex.getMessage(), expectedMessage);
+		}
+		finally
+		{
+			shutdown();
+		}
+	}
 }
-

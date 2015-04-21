@@ -6,18 +6,18 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertNotNull;
 
 /**
- *
+ * @author Yuriy Sechko
  */
-public class BDBStorageImplementation_getTransactionFactoryTest  extends
-        BDBStorageImplementationTestBasis
+public class BDBStorageImplementation_getTransactionFactoryTest extends
+		BDBStorageImplementationTestBasis
 {
-    @Test
-    public void getTransactionFactory() throws Exception
-    {
-        startup();
-        final HGTransactionFactory transactionFactory = storage
-                .getTransactionFactory();
-        assertNotNull(transactionFactory);
-        shutdown();
-    }
+	@Test
+	public void getTransactionFactory() throws Exception
+	{
+		startup();
+		final HGTransactionFactory transactionFactory = storage
+				.getTransactionFactory();
+		assertNotNull(transactionFactory);
+		shutdown();
+	}
 }

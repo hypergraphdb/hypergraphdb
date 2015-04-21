@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_addIncidenceLinkTest extends
         BDBStorageImplementationTestBasis

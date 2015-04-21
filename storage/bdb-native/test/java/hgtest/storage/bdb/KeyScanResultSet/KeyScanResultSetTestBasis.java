@@ -3,7 +3,6 @@ package hgtest.storage.bdb.KeyScanResultSet;
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseException;
 import hgtest.storage.bdb.ResultSetTestBasis;
-import hgtest.storage.bdb.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bdb.BDBTxCursor;

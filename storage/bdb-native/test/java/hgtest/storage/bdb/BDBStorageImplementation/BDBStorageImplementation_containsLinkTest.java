@@ -11,6 +11,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertNull;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_containsLinkTest extends
 		BDBStorageImplementationTestBasis

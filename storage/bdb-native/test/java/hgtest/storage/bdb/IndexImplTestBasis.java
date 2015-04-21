@@ -132,7 +132,7 @@ public class IndexImplTestBasis
 	}
 
 	// this method is used in most test cases for initializing fake instance of
-	// BJEStorageImplementation
+	// BDBStorageImplementation
 	protected void mockStorage()
 	{
 		EasyMock.expect(storage.getConfiguration()).andReturn(new BDBConfig());

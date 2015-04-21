@@ -10,7 +10,7 @@ import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertFalse;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_removeIncidenceSetTest extends
 		BDBStorageImplementationTestBasis
@@ -95,5 +95,4 @@ public class BDBStorageImplementation_removeIncidenceSetTest extends
 		afterRemoving.close();
 		shutdown();
 	}
-
 }

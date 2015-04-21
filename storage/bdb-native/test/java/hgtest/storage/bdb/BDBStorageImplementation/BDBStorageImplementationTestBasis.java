@@ -15,181 +15,182 @@ import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 
-
 /**
- *
+ * Base class for test cases for
+ * {@link org.hypergraphdb.storage.bdb.BDBStorageImplementation}. Very similar
+ * to BJEStorageImplementationTestBasis.
+ * <p>
+ * PowerMock + EasyMock are used. Path to native libraries is established by
+ * Maven. Native libraries have to be loaded in
+ * {@link hgtest.storage.bdb.BDBStorageImplementation.BDBStorageImplementationTestBasis#startup()}
+ * method.
+ * 
  * @author Yuriy Sechko
  */
 
 @PrepareForTest(HGConfiguration.class)
 public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 {
-    protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
+	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
-    // location of temporary directory for tests
-    final File testDatabaseDirectory = hgtest.TestUtils.createTempFile(
-            "BDBStorageImplementation", "test_database");
-    final protected String testDatabaseLocation = hgtest.TestUtils
-            .getCanonicalPath(testDatabaseDirectory);
+	// location of temporary directory for tests
+	final File testDatabaseDirectory = hgtest.TestUtils.createTempFile(
+			"BDBStorageImplementation", "test_database");
+	final protected String testDatabaseLocation = hgtest.TestUtils
+			.getCanonicalPath(testDatabaseDirectory);
 
-    // classes which are used by BDBStorageImplementation
-    HGStore store;
-    HGConfiguration configuration;
+	// classes which are used by BDBStorageImplementation (used by
+	// BJEStorageImplementation as well)
+	HGStore store;
+	HGConfiguration configuration;
 
-    final BDBStorageImplementation storage = new BDBStorageImplementation();
+	// instance of storage which is under test
+	final BDBStorageImplementation storage = new BDBStorageImplementation();
 
-    @BeforeMethod
-    protected void resetMocksAndDeleteTestDirectory()
-    {
-        PowerMock.resetAll();
-        hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
-    }
+	@BeforeMethod
+	protected void resetMocksAndDeleteTestDirectory()
+	{
+		PowerMock.resetAll();
+		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
+	}
 
-    @AfterMethod
-    protected void verifyMocksAndDeleteTestDirectory()
-    {
-        PowerMock.verifyAll();
-        hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
-    }
+	@AfterMethod
+	protected void verifyMocksAndDeleteTestDirectory()
+	{
+		PowerMock.verifyAll();
+		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
+	}
 
-    private void replay()
-    {
-        EasyMock.replay(store, configuration);
-    }
+	private void replay()
+	{
+		EasyMock.replay(store, configuration);
+	}
 
-    private void mockConfiguration(final int calls) throws Exception
-    {
-        configuration = PowerMock.createStrictMock(HGConfiguration.class);
-        EasyMock.expect(configuration.getHandleFactory()).andReturn(
-                (HGHandleFactory) Class.forName(
-                        HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
-                        .newInstance());
-        EasyMock.expect(configuration.isTransactional()).andReturn(true)
-                .times(calls);
-    }
+	private void mockConfiguration(final int calls) throws Exception
+	{
+		configuration = PowerMock.createStrictMock(HGConfiguration.class);
+		EasyMock.expect(configuration.getHandleFactory()).andReturn(
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(configuration.isTransactional()).andReturn(true)
+				.times(calls);
+	}
 
-    private void mockStore() throws Exception
-    {
-        store = PowerMock.createStrictMock(HGStore.class);
-        EasyMock.expect(store.getDatabaseLocation()).andReturn(
-                testDatabaseLocation);
-    }
+	private void mockStore() throws Exception
+	{
+		store = PowerMock.createStrictMock(HGStore.class);
+		EasyMock.expect(store.getDatabaseLocation()).andReturn(
+				testDatabaseLocation);
+	}
 
-    /**
-     * Used in most test cases (just because in most test cases
-     * {@link org.hypergraphdb.HGConfiguration#isTransactional()}) called two
-     * times)
-     *
-     * @throws Exception
-     */
-    protected void startup() throws Exception
-    {
-        mockConfiguration(2);
-        mockStore();
-        replay();
-        storage.startup(store, configuration);
-    }
+	/**
+	 * Used in most test cases (just because in most test cases
+	 * {@link org.hypergraphdb.HGConfiguration#isTransactional()}) called two
+	 * times)
+	 *
+	 * @throws Exception
+	 */
+	protected void startup() throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		replay();
+		storage.startup(store, configuration);
+	}
 
-    /**
-     * Used in test cases especially for checking transaction manager's behavior
-     *
-     * @throws Exception
-     */
-    protected void startupNonTransactional() throws Exception
-    {
-        mockStore();
-        configuration = PowerMock.createStrictMock(HGConfiguration.class);
-        EasyMock.expect(configuration.getHandleFactory()).andReturn(
-                (HGHandleFactory) Class.forName(
-                        HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
-                        .newInstance());
-        EasyMock.expect(configuration.isTransactional()).andReturn(false)
-                .times(2);
-        replay();
-        storage.startup(store, configuration);
-    }
+	/**
+	 * Used in test cases especially for checking transaction manager's behavior
+	 *
+	 * @throws Exception
+	 */
+	protected void startupNonTransactional() throws Exception
+	{
+		mockStore();
+		configuration = PowerMock.createStrictMock(HGConfiguration.class);
+		EasyMock.expect(configuration.getHandleFactory()).andReturn(
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(configuration.isTransactional()).andReturn(false)
+				.times(2);
+		replay();
+		storage.startup(store, configuration);
+	}
 
-    /**
-     * Used in cases where specific exception expected
-     *
-     * @param whatToThrow
-     * @throws Exception
-     */
-    protected void startup(final Exception whatToThrow) throws Exception
-    {
-        System.out.println(">>> What to throw: " + whatToThrow.getClass().getSuperclass());
-        mockConfiguration(2);
-        mockStore();
-        EasyMock.expect(store.getTransactionManager()).andThrow(whatToThrow);
-        replay();
-        storage.startup(store, configuration);
-    }
+	/**
+	 * Used in cases where specific exception expected.
+	 *
+	 * @param whatToThrow
+	 *            exception that will be thrown by mock (making fake error)
+	 */
+	protected void startup(final Exception whatToThrow) throws Exception
+	{
+		System.out.println(">>> What to throw: "
+				+ whatToThrow.getClass().getSuperclass());
+		mockConfiguration(2);
+		mockStore();
+		EasyMock.expect(store.getTransactionManager()).andThrow(whatToThrow);
+		replay();
+		storage.startup(store, configuration);
+	}
 
-    /**
-     *
-     * @param callsBeforeExceptionIsThrown
-     * @param whatToThrow
-     * @throws Exception
-     */
-    protected void startup(final int callsBeforeExceptionIsThrown,
-                           final Exception whatToThrow) throws Exception
-    {
-        NativeLibrariesWorkaround.loadNativeLibraries();
-        mockStore();
-        configuration = PowerMock.createStrictMock(HGConfiguration.class);
-        EasyMock.expect(configuration.getHandleFactory()).andReturn(
-                (HGHandleFactory) Class.forName(
-                        HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
-                        .newInstance());
-        EasyMock.expect(configuration.isTransactional()).andReturn(true)
-                .times(callsBeforeExceptionIsThrown);
-        EasyMock.expect(configuration.isTransactional()).andThrow(whatToThrow);
-        replay();
-        storage.startup(store, configuration);
-    }
+	/**
+	 * Almost the same as in BJEStorageImplementation.
+	 */
+	protected void startup(final int callsBeforeExceptionIsThrown,
+			final Exception whatToThrow) throws Exception
+	{
+		NativeLibrariesWorkaround.loadNativeLibraries();
+		mockStore();
+		configuration = PowerMock.createStrictMock(HGConfiguration.class);
+		EasyMock.expect(configuration.getHandleFactory()).andReturn(
+				(HGHandleFactory) Class.forName(
+						HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME)
+						.newInstance());
+		EasyMock.expect(configuration.isTransactional()).andReturn(true)
+				.times(callsBeforeExceptionIsThrown);
+		EasyMock.expect(configuration.isTransactional()).andThrow(whatToThrow);
+		replay();
+		storage.startup(store, configuration);
+	}
 
-    /**
-     * Used in some test cases where transaction manager should be mocked,
-     *
-     * @param transactionManagerCalls
-     * @throws Exception
-     */
-    protected void startup(final int transactionManagerCalls) throws Exception
-    {
-        mockConfiguration(2);
-        mockStore();
-        // mock transaction manager
-        final HGTransactionManager transactionManager = new HGTransactionManager(
-                storage.getTransactionFactory());
-        EasyMock.expect(store.getTransactionManager())
-                .andReturn(transactionManager).times(transactionManagerCalls);
-        replay();
-        storage.startup(store, configuration);
-    }
+	/**
+	 * Used in some test cases where transaction manager should be mocked.
+	 */
+	protected void startup(final int transactionManagerCalls) throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		// mock transaction manager
+		final HGTransactionManager transactionManager = new HGTransactionManager(
+				storage.getTransactionFactory());
+		EasyMock.expect(store.getTransactionManager())
+				.andReturn(transactionManager).times(transactionManagerCalls);
+		replay();
+		storage.startup(store, configuration);
+	}
 
-    /**
-     * Used in test cases for incidence links
-     *
-     * @param transactionManagerCalls
-     * @throws Exception
-     */
-    protected void startupWithAdditionalTransaction(
-            final int transactionManagerCalls) throws Exception
-    {
-        mockConfiguration(2);
-        mockStore();
-        // mock transaction manager
-        final HGTransactionManager transactionManager = new HGTransactionManager(
-                storage.getTransactionFactory());
-        EasyMock.expect(store.getTransactionManager())
-                .andReturn(transactionManager).times(transactionManagerCalls);
-        replay();
-        storage.startup(store, configuration);
-        transactionManager.beginTransaction();
-    }
+	/**
+	 * Used in test cases for incidence links.
+	 */
+	protected void startupWithAdditionalTransaction(
+			final int transactionManagerCalls) throws Exception
+	{
+		mockConfiguration(2);
+		mockStore();
+		// mock transaction manager
+		final HGTransactionManager transactionManager = new HGTransactionManager(
+				storage.getTransactionFactory());
+		EasyMock.expect(store.getTransactionManager())
+				.andReturn(transactionManager).times(transactionManagerCalls);
+		replay();
+		storage.startup(store, configuration);
+		transactionManager.beginTransaction();
+	}
 
-    protected void shutdown() throws Exception
-    {
-        storage.shutdown();
-    }
+	protected void shutdown() throws Exception
+	{
+		storage.shutdown();
+	}
 }

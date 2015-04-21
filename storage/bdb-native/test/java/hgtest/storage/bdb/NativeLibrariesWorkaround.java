@@ -10,18 +10,24 @@ package hgtest.storage.bdb;
  * Windows. For some reason, when libdb50 is loaded explicitly first,
  * it all works out fine.
  * </pre>
+ * 
+ * @author Yuriy Sechko
  * */
 public class NativeLibrariesWorkaround
 {
-    /**
-     * Hidden constructor.
-     */
+	/**
+	 * Hidden constructor.
+	 */
 	private NativeLibrariesWorkaround()
 	{
+		// prevent creating instance of this class
+		throw new UnsupportedOperationException(
+				"Creating instance of this utility class is prohibited.");
 	}
 
 	/**
-	 * Loads {@code libdb53} then {@code libdb_java53} explicitly when runs on Windows.
+	 * Loads {@code libdb53} then {@code libdb_java53} explicitly when runs on
+	 * Windows.
 	 */
 	public static void loadNativeLibraries()
 	{

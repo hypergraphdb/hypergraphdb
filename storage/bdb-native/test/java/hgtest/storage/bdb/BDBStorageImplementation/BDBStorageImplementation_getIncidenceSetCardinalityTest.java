@@ -8,7 +8,7 @@ import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_getIncidenceSetCardinalityTest extends
 		BDBStorageImplementationTestBasis

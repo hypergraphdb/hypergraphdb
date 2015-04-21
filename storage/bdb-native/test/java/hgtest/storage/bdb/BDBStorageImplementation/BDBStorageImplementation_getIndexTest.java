@@ -11,7 +11,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_getIndexTest extends
 		BDBStorageImplementationTestBasis

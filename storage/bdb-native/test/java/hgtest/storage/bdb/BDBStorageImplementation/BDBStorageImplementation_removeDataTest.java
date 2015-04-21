@@ -9,7 +9,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_removeDataTest extends
 		BDBStorageImplementationTestBasis

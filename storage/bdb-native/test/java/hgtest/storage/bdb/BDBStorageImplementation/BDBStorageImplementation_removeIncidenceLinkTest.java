@@ -11,7 +11,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_removeIncidenceLinkTest extends
 		BDBStorageImplementationTestBasis

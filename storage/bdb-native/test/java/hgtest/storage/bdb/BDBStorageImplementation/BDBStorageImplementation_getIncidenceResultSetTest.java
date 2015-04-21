@@ -14,7 +14,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 /**
- *
+ * @author Yuriy Sechko
  */
 public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		BDBStorageImplementationTestBasis
@@ -119,10 +119,9 @@ public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		}
 		catch (Exception ex)
 		{
-			assertExceptions(
-					ex,
-					HGException.class,
-					"Failed to retrieve incidence set for", "java.lang.IllegalStateException: Exception in test case.");
+			assertExceptions(ex, HGException.class,
+					"Failed to retrieve incidence set for",
+					"java.lang.IllegalStateException: Exception in test case.");
 		}
 		finally
 		{
