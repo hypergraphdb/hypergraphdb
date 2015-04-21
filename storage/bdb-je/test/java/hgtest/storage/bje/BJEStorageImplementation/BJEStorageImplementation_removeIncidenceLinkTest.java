@@ -71,11 +71,10 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
 					.format("Failed to update incidence set for handle %s: java.lang.NullPointerException",
 							handle);
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(ex, HGException.class, expectedMessage);
 		}
 		finally
 		{

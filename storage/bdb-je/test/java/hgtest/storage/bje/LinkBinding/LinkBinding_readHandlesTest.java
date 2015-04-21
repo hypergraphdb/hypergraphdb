@@ -15,13 +15,15 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 	@Test
 	public void bufferIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		try
 		{
 			binding.readHandles(null, 0, 100);
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 	}
 

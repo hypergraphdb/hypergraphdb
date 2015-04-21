@@ -1,13 +1,13 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseNotFoundException;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static hgtest.TestUtils.assertExceptions;
+import static org.testng.Assert.*;
 
 /**
  */
@@ -17,15 +17,16 @@ public class BJEStorageImplementation_containsDataTest extends
 	@Test
 	public void useNullHandle() throws Exception
 	{
+        final Exception expected = new NullPointerException();
+
 		startup();
 		try
 		{
 			storage.containsData(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertEquals(ex.getMessage(), null);
+            assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -83,11 +84,10 @@ public class BJEStorageImplementation_containsDataTest extends
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
 					.format("Failed to retrieve link with handle %s: com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Exception in test case.",
 							handle);
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(ex, HGException.class, expectedMessage);
 		}
 		finally
 		{

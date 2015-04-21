@@ -42,6 +42,8 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	@Test
 	public void keyIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startupIndex();
 
 		try
@@ -50,7 +52,7 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

@@ -1,6 +1,5 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
@@ -237,31 +236,4 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	{
 		storage.shutdown();
 	}
-
-	// public static void main(String args[])
-	// {
-	// String databaseLocation = "/home/yura/hgdb/test";
-	// HyperGraph graph = null;
-	// try
-	// {
-	// graph = new HyperGraph(databaseLocation);
-	// String text = "This is a test";
-	// final HGHandle textHandle = graph.add(text);
-	//
-	// HGPersistentHandle handle = new IntPersistentHandle(1);
-	// graph.add(handle);
-	// graph.remove(handle);
-	// HGPersistentHandle handle1 = graph.get(handle);
-	// System.out.println(handle1);
-	//
-	// }
-	// catch (Throwable t)
-	// {
-	// t.printStackTrace();
-	// }
-	// finally
-	// {
-	// graph.close();
-	// }
-	// }
 }

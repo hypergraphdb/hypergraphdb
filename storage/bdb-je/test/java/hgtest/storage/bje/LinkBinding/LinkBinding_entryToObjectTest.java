@@ -17,6 +17,8 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 	@Test
 	public void inputIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		final TupleInput input = null;
 
 		try
@@ -25,7 +27,7 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 	}
 

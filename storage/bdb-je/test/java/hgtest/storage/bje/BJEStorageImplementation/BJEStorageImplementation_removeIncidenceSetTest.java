@@ -94,5 +94,4 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 		afterRemoving.close();
 		shutdown();
 	}
-
 }

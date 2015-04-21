@@ -1,5 +1,6 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
@@ -79,11 +80,10 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
 					.format("Failed to retrieve incidence set for handle %s: java.lang.IllegalArgumentException: Exception in test case.",
 							handle);
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(ex, HGException.class, expectedMessage);
 		}
 		finally
 		{

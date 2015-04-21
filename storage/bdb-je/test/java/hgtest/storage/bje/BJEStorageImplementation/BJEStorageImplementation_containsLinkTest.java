@@ -1,10 +1,12 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseNotFoundException;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -99,11 +101,10 @@ public class BJEStorageImplementation_containsLinkTest extends
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
 					.format("Failed to retrieve link with handle %s: com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Exception in test case.",
 							handle.toString());
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(ex, HGException.class, expectedMessage);
 		}
 		finally
 		{

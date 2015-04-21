@@ -37,6 +37,5 @@ public class BJEStorageImplementation_getConfigurationTest extends
 		assertFalse(environmentConfig.getReadOnly());
 		assertTrue(environmentConfig.getTransactional());
 		shutdown();
-
 	}
 }

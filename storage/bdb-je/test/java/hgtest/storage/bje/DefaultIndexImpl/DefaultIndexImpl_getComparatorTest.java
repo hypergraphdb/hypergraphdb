@@ -62,9 +62,6 @@ public class DefaultIndexImpl_getComparatorTest extends
 	@Test
 	public void databaseThrowsException() throws Exception
 	{
-		final Exception expected = new HGException(
-				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) This exception is thrown by fake database.");
-
 		mockStorage();
 		Database fakeDatabase = PowerMock.createStrictMock(Database.class);
 		EasyMock.expect(fakeDatabase.getConfig()).andThrow(
@@ -88,9 +85,11 @@ public class DefaultIndexImpl_getComparatorTest extends
 		{
 			indexImpl.getComparator();
 		}
-		catch (Exception occurred)
+		catch (Exception ex)
 		{
-			assertExceptions(occurred, expected);
+			assertExceptions(ex, HGException.class,
+					"com.sleepycat.je.DatabaseNotFoundException",
+					"This exception is thrown by fake database.");
 		}
 		finally
 		{

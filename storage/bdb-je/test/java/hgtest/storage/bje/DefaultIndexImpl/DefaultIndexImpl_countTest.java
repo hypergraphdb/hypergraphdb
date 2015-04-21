@@ -56,10 +56,6 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 	@Test
 	public void databaseThrowsException() throws Exception
 	{
-		System.out.println("databaseThrowsException test");
-		final Exception expected = new HGException(
-				"com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) This exception is thrown by fake database.");
-
 		// create index and open it in usual way
 		mockStorage();
 		PowerMock.replayAll();
@@ -94,9 +90,11 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		{
 			index.count();
 		}
-		catch (Exception occurred)
+		catch (Exception ex)
 		{
-			assertExceptions(occurred, expected);
+			assertExceptions(ex, HGException.class,
+					"com.sleepycat.je.DatabaseNotFoundException",
+					"This exception is thrown by fake database.");
 		}
 		// set null value to DefaultIndexImpl.db field
 		// without this setting Database.close() method on fake database

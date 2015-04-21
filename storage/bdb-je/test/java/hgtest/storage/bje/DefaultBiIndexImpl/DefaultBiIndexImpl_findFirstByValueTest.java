@@ -28,7 +28,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -111,7 +111,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), expected.getClass());
+			assertExceptions(occurred, expected);
 		}
 	}
 

@@ -65,9 +65,6 @@ public class BJETxCursor_closeTest
 	@Test
 	public void innerCursorThrowsDatabaseException() throws Exception
 	{
-		final Exception expected = new HGException(
-				"hgtest.storage.bje.BJETxCursor.BJETxCursor_closeTest$CustomDatabaseException: (JE 5.0.34) This is custom DatabaseException");
-
 		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
 		cursor.close();
 		// when BJETxCursor.cursor throws DatabaseException then HGException is
@@ -86,9 +83,13 @@ public class BJETxCursor_closeTest
 		{
 			bjeCursor.close();
 		}
-		catch (Exception occurred)
+		catch (Exception ex)
 		{
-			assertExceptions(occurred, expected);
+			assertExceptions(
+					ex,
+					HGException.class,
+					"hgtest.storage.bje.BJETxCursor.BJETxCursor_closeTest$CustomDatabaseException",
+					"This is custom DatabaseException");
 		}
 		finally
 		{

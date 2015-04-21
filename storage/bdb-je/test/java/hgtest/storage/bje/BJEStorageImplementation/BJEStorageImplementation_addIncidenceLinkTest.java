@@ -1,12 +1,14 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import hgtest.TestUtils;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 
 /**
@@ -20,17 +22,17 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		startup();
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle link = null;
-		try
+
+        try
 		{
 			storage.addIncidenceLink(handle, link);
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
 			final String expectedMessage = String
 					.format("Failed to update incidence set for handle %s: java.lang.NullPointerException",
 							handle);
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(ex, HGException.class, expectedMessage);
 		}
 		finally
 		{
@@ -44,8 +46,10 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
-		storage.addIncidenceLink(first, second);
-		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
+
+        storage.addIncidenceLink(first, second);
+
+        final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
 				.getIncidenceResultSet(first);
 		assertEquals(storedLinks.next(), second);
 		storedLinks.close();

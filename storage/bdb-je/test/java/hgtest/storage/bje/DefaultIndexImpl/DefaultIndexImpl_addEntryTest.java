@@ -42,6 +42,8 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	@Test
 	public void keyIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startupIndex();
 
 		try
@@ -50,7 +52,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 		closeDatabase(index);
 	}
@@ -58,6 +60,8 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	@Test
 	public void valueIsNull() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startupIndex();
 
 		try
@@ -66,7 +70,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 		}
 		catch (Exception occurred)
 		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
+			assertExceptions(occurred, expected);
 		}
 		closeDatabase(index);
 	}
