@@ -21,8 +21,10 @@ public class BJEStorageImplementation_getConfigurationTest extends
 	public void checkDatabaseConfig() throws Exception
 	{
 		startup();
+
 		final DatabaseConfig databaseConfig = storage.getConfiguration()
 				.getDatabaseConfig();
+
 		assertFalse(databaseConfig.getReadOnly());
 		assertTrue(databaseConfig.getTransactional());
 		shutdown();
@@ -32,8 +34,10 @@ public class BJEStorageImplementation_getConfigurationTest extends
 	public void checkEnvironmentConfig() throws Exception
 	{
 		startup();
+
 		final EnvironmentConfig environmentConfig = storage.getConfiguration()
 				.getEnvironmentConfig();
+
 		assertFalse(environmentConfig.getReadOnly());
 		assertTrue(environmentConfig.getTransactional());
 		shutdown();

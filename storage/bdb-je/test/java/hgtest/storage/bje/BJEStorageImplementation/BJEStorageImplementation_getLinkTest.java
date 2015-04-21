@@ -40,8 +40,10 @@ public class BJEStorageImplementation_getLinkTest extends
 	{
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		final HGPersistentHandle[] storedLinks = storage.getLink(handle);
-		assertNull(storedLinks);
+
+        final HGPersistentHandle[] storedLinks = storage.getLink(handle);
+
+        assertNull(storedLinks);
 		shutdown();
 	}
 
@@ -53,8 +55,10 @@ public class BJEStorageImplementation_getLinkTest extends
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { expected[0] };
 		storage.store(first, links);
-		final HGPersistentHandle[] stored = storage.getLink(first);
-		assertEquals(stored, expected);
+
+        final HGPersistentHandle[] stored = storage.getLink(first);
+
+        assertEquals(stored, expected);
 		shutdown();
 	}
 
@@ -69,8 +73,10 @@ public class BJEStorageImplementation_getLinkTest extends
 		final HGPersistentHandle[] links = new HGPersistentHandle[] {
 				expected[0], expected[1], expected[2] };
 		storage.store(first, links);
-		final HGPersistentHandle[] stored = storage.getLink(first);
-		assertEquals(stored, expected);
+
+        final HGPersistentHandle[] stored = storage.getLink(first);
+
+        assertEquals(stored, expected);
 		shutdown();
 	}
 
@@ -81,8 +87,10 @@ public class BJEStorageImplementation_getLinkTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new HGPersistentHandle[] {});
-		final HGPersistentHandle[] stored = storage.getLink(handle);
-		assertEquals(stored, expected);
+
+        final HGPersistentHandle[] stored = storage.getLink(handle);
+
+        assertEquals(stored, expected);
 		shutdown();
 	}
 }

@@ -39,7 +39,9 @@ public class BJEStorageImplementation_containsDataTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] { 4, 5, 6 });
+
 		assertTrue(storage.containsData(handle));
 		shutdown();
 	}
@@ -49,7 +51,9 @@ public class BJEStorageImplementation_containsDataTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] {});
+
 		assertTrue(storage.containsData(handle));
 		shutdown();
 	}
@@ -59,7 +63,9 @@ public class BJEStorageImplementation_containsDataTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] { 1 });
+
 		assertTrue(storage.containsData(handle));
 		shutdown();
 	}
@@ -69,6 +75,7 @@ public class BJEStorageImplementation_containsDataTest extends
 	{
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		assertFalse(storage.containsData(handle));
 		shutdown();
 	}

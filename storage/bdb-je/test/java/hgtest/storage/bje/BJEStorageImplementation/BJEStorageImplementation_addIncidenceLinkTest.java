@@ -64,9 +64,11 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		final HGPersistentHandle[] links = new HGPersistentHandle[] {
 				new UUIDPersistentHandle(), new UUIDPersistentHandle(),
 				new UUIDPersistentHandle() };
+
 		storage.addIncidenceLink(handle, links[0]);
 		storage.addIncidenceLink(handle, links[1]);
 		storage.addIncidenceLink(handle, links[2]);
+
 		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
 				.getIncidenceResultSet(handle);
 		assertEquals(TestUtils.set(storedLinks), HGUtils.set(links));
@@ -79,7 +81,9 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.addIncidenceLink(handle, handle);
+
 		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
 				.getIncidenceResultSet(handle);
 		assertEquals(storedLinks.next(), handle);

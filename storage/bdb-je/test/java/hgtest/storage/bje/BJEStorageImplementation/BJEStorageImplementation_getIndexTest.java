@@ -25,10 +25,12 @@ public class BJEStorageImplementation_getIndexTest extends
 		final Comparator<?> comparator = null;
 		final boolean bidirectional = true;
 		final boolean createIfNecessary = true;
-		final HGIndex<Integer, String> createdIndex = storage.getIndex(
+
+        final HGIndex<Integer, String> createdIndex = storage.getIndex(
 				indexName, keyConverter, valueConverter, comparator,
 				bidirectional, createIfNecessary);
-		assertNotNull(createdIndex);
+
+        assertNotNull(createdIndex);
 		shutdown();
 	}
 
@@ -37,9 +39,11 @@ public class BJEStorageImplementation_getIndexTest extends
 	{
 		startup(1);
 		final boolean bidirectional = false;
-		final HGIndex<Integer, String> createdIndex = storage.getIndex(
+
+        final HGIndex<Integer, String> createdIndex = storage.getIndex(
 				"sampleIndex", null, null, null, bidirectional, true);
-		assertNotNull(createdIndex);
+
+        assertNotNull(createdIndex);
 		shutdown();
 	}
 
@@ -48,9 +52,11 @@ public class BJEStorageImplementation_getIndexTest extends
 	{
 		startup();
 		final boolean createIfNecessary = false;
-		final HGIndex<Object, Object> createdIndex = storage.getIndex(
+
+        final HGIndex<Object, Object> createdIndex = storage.getIndex(
 				"sampleIndex", null, null, null, true, createIfNecessary);
-		assertNull(createdIndex);
+
+        assertNull(createdIndex);
 		shutdown();
 	}
 
@@ -60,8 +66,10 @@ public class BJEStorageImplementation_getIndexTest extends
 		startup(1);
 		final String indexName = "sample index";
 		final HGIndex<Object, Object> firstIndex = storage.getIndex(indexName, null, null, null, true, true);
-		final HGIndex<Object, Object> secondIndex = storage.getIndex(indexName,
+
+        final HGIndex<Object, Object> secondIndex = storage.getIndex(indexName,
 				null, null, null, true, true);
+
         assertEquals(firstIndex, secondIndex);
 		shutdown();
 	}
@@ -70,7 +78,9 @@ public class BJEStorageImplementation_getIndexTest extends
     public void indexNameIsNull() throws Exception {
         startup(1);
         final String indexName = null;
+
         final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null, true, true);
+
         assertNotNull(createdIndex);
         shutdown();
     }

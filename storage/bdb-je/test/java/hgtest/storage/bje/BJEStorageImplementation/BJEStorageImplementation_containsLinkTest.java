@@ -26,6 +26,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
 		storage.store(first, links);
+
 		assertTrue(storage.containsLink(first));
 		shutdown();
 	}
@@ -38,6 +39,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { second };
 		storage.store(first, links);
+
 		assertFalse(storage.containsLink(second));
 		shutdown();
 	}
@@ -48,6 +50,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new HGPersistentHandle[] { handle });
+
 		assertTrue(storage.containsLink(handle));
 		shutdown();
 	}
@@ -57,6 +60,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 	{
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		assertFalse(storage.containsLink(handle));
 		shutdown();
 	}
@@ -86,6 +90,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new HGPersistentHandle[] {});
+
 		assertTrue(storage.containsLink(handle));
 		shutdown();
 	}

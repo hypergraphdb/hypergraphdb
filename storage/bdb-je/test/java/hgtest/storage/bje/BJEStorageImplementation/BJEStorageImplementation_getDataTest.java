@@ -19,8 +19,10 @@ public class BJEStorageImplementation_getDataTest extends
 	{
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		final byte[] retrieved = storage.getData(handle);
-		assertNull(retrieved);
+
+        assertNull(retrieved);
 		shutdown();
 	}
 
@@ -52,8 +54,10 @@ public class BJEStorageImplementation_getDataTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
-		final byte[] retrieved = storage.getData(handle);
-		assertEquals(retrieved, expected);
+
+        final byte[] retrieved = storage.getData(handle);
+
+        assertEquals(retrieved, expected);
 		shutdown();
 	}
 
@@ -64,8 +68,10 @@ public class BJEStorageImplementation_getDataTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 44 });
-		final byte[] retrieved = storage.getData(handle);
-		assertEquals(retrieved, expected);
+
+        final byte[] retrieved = storage.getData(handle);
+
+        assertEquals(retrieved, expected);
 		shutdown();
 	}
 
@@ -76,8 +82,10 @@ public class BJEStorageImplementation_getDataTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 11, 22, 33 });
-		final byte[] retrieved = storage.getData(handle);
-		assertEquals(retrieved, expected);
+
+        final byte[] retrieved = storage.getData(handle);
+
+        assertEquals(retrieved, expected);
 		shutdown();
 	}
 }

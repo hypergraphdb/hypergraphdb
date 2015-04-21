@@ -89,8 +89,10 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle link = new UUIDPersistentHandle();
 		storage.addIncidenceLink(handle, link);
-		storage.removeIncidenceLink(handle, link);
-		final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
+
+        storage.removeIncidenceLink(handle, link);
+
+        final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
 				.getIncidenceResultSet(handle);
 		assertFalse(afterRemove.hasNext());
 		afterRemove.close();
@@ -106,9 +108,11 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		final HGPersistentHandle third = new UUIDPersistentHandle();
 		storage.addIncidenceLink(first, second);
 		storage.addIncidenceLink(first, third);
-		storage.removeIncidenceLink(first, second);
+
+        storage.removeIncidenceLink(first, second);
 		storage.removeIncidenceLink(first, third);
-		final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
+
+        final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
 				.getIncidenceResultSet(first);
 		assertFalse(afterRemove.hasNext());
 		afterRemove.close();
@@ -121,8 +125,10 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		startup(2);
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
-		storage.removeIncidenceLink(first, second);
-		final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
+
+        storage.removeIncidenceLink(first, second);
+
+        final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
 				.getIncidenceResultSet(first);
 		assertFalse(afterRemove.hasNext());
 		afterRemove.close();
@@ -135,8 +141,10 @@ public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		startupWithAdditionalTransaction(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.addIncidenceLink(handle, handle);
-		storage.removeIncidenceLink(handle, handle);
-		final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
+
+        storage.removeIncidenceLink(handle, handle);
+
+        final HGRandomAccessResult<HGPersistentHandle> afterRemove = storage
 				.getIncidenceResultSet(handle);
 		assertFalse(afterRemove.hasNext());
 		shutdown();

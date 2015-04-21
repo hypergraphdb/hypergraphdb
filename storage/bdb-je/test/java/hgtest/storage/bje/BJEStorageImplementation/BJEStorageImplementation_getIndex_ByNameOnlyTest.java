@@ -14,7 +14,9 @@ public class BJEStorageImplementation_getIndex_ByNameOnlyTest extends
 	{
 		startup();
 		final String indexName = null;
+
         HGIndex<Object,Object> retrievedIndex = storage.getIndex(indexName);
+
         assertNull(retrievedIndex);
         shutdown();
 	}
@@ -23,7 +25,9 @@ public class BJEStorageImplementation_getIndex_ByNameOnlyTest extends
     public void getNonStoredIndex() throws Exception {
         startup();
         final String indexName = "sample index";
+
         HGIndex<Object, Object> retrievedIndex = storage.getIndex(indexName);
+
         assertNull(retrievedIndex);
         shutdown();
     }
@@ -33,7 +37,9 @@ public class BJEStorageImplementation_getIndex_ByNameOnlyTest extends
         startup(1);
         final String indexName = "sample index";
         final HGIndex<Object, Object> storedIndex = storage.getIndex(indexName, null, null, null, true, true);
+
         final HGIndex<Object, Object> retrievedIndex = storage.getIndex(indexName);
+
         assertEquals(retrievedIndex, storedIndex);
         shutdown();
     }

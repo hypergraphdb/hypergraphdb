@@ -40,8 +40,10 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 	{
 		startup(1);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		final HGRandomAccessResult<HGPersistentHandle> incidence = storage
 				.getIncidenceResultSet(handle);
+
 		assertFalse(incidence.hasNext());
 		incidence.close();
 		shutdown();
@@ -54,8 +56,10 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.addIncidenceLink(first, second);
+
 		final HGRandomAccessResult<HGPersistentHandle> incidence = storage
 				.getIncidenceResultSet(first);
+
 		assertEquals(incidence.next(), second);
 		incidence.close();
 		shutdown();
@@ -72,8 +76,10 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		storage.addIncidenceLink(first, links[0]);
 		storage.addIncidenceLink(first, links[1]);
 		storage.addIncidenceLink(first, links[2]);
+
 		final HGRandomAccessResult<HGPersistentHandle> incidence = storage
 				.getIncidenceResultSet(first);
+
 		assertEquals(TestUtils.set(incidence), HGUtils.set(links));
 		incidence.close();
 		shutdown();
@@ -86,8 +92,10 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.addIncidenceLink(first, second);
+
 		final HGRandomAccessResult<HGPersistentHandle> incidenceFromSecondToFirst = storage
 				.getIncidenceResultSet(second);
+
 		assertFalse(incidenceFromSecondToFirst.hasNext());
 		incidenceFromSecondToFirst.close();
 		shutdown();
@@ -99,8 +107,10 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.addIncidenceLink(handle, handle);
+
 		HGRandomAccessResult<HGPersistentHandle> incidence = storage
 				.getIncidenceResultSet(handle);
+
 		assertEquals(incidence.next(), handle);
 		incidence.close();
 		shutdown();

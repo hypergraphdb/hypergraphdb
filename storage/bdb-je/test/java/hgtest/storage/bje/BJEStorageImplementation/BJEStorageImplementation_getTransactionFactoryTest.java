@@ -15,9 +15,11 @@ public class BJEStorageImplementation_getTransactionFactoryTest extends
 	public void getTransactionFactory() throws Exception
 	{
 		startup();
-		final HGTransactionFactory transactionFactory = storage
+
+        final HGTransactionFactory transactionFactory = storage
 				.getTransactionFactory();
-		assertNotNull(transactionFactory);
+
+        assertNotNull(transactionFactory);
 		shutdown();
 	}
 }

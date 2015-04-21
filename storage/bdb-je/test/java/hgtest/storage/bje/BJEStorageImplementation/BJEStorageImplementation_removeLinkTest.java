@@ -43,8 +43,10 @@ public class BJEStorageImplementation_removeLinkTest extends
 		final HGPersistentHandle first = new UUIDPersistentHandle();
 		final HGPersistentHandle second = new UUIDPersistentHandle();
 		storage.store(first, new HGPersistentHandle[] { second });
-		storage.removeLink(first);
-		assertFalse(storage.containsLink(first));
+
+        storage.removeLink(first);
+
+        assertFalse(storage.containsLink(first));
 		shutdown();
 	}
 
@@ -53,8 +55,10 @@ public class BJEStorageImplementation_removeLinkTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.removeLink(handle);
-		assertFalse(storage.containsLink(handle));
+
+        storage.removeLink(handle);
+
+        assertFalse(storage.containsLink(handle));
 		shutdown();
 	}
 

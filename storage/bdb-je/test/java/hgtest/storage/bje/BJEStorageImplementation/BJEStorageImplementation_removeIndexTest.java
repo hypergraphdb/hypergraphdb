@@ -61,8 +61,10 @@ public class BJEStorageImplementation_removeIndexTest extends
 		startup(1);
 		final String indexName = "sample index";
 		storage.getIndex(indexName, null, null, null, true, true);
-		storage.removeIndex(indexName);
-		final HGIndex<Object, Object> removedIndex = storage.getIndex(
+
+        storage.removeIndex(indexName);
+
+        final HGIndex<Object, Object> removedIndex = storage.getIndex(
 				indexName, null, null, null, true, false);
 		assertNull(removedIndex);
 		shutdown();

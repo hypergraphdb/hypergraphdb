@@ -39,9 +39,11 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	public void thereAreNotIncidenceLinks() throws Exception
 	{
 		startup(1);
+
 		final long cardinality = storage
 				.getIncidenceSetCardinality(new UUIDPersistentHandle());
-		assertEquals(cardinality, 0);
+
+        assertEquals(cardinality, 0);
 		shutdown();
 	}
 
@@ -51,8 +53,10 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-		final long cardinality = storage.getIncidenceSetCardinality(handle);
-		assertEquals(cardinality, 1);
+
+        final long cardinality = storage.getIncidenceSetCardinality(handle);
+
+        assertEquals(cardinality, 1);
 		shutdown();
 	}
 
@@ -64,8 +68,10 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-		final long cardinality = storage.getIncidenceSetCardinality(handle);
-		assertEquals(cardinality, 3);
+
+        final long cardinality = storage.getIncidenceSetCardinality(handle);
+
+        assertEquals(cardinality, 3);
 		shutdown();
 	}
 

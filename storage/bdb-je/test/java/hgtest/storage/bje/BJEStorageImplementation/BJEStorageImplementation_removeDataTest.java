@@ -20,8 +20,10 @@ public class BJEStorageImplementation_removeDataTest extends
 		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 1, 2, 3 });
-		storage.removeData(handle);
-		final byte[] retrieved = storage.getData(handle);
+
+        storage.removeData(handle);
+
+        final byte[] retrieved = storage.getData(handle);
 		assertNull(retrieved);
 		shutdown();
 	}
@@ -32,8 +34,10 @@ public class BJEStorageImplementation_removeDataTest extends
 		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] {});
-		storage.removeData(handle);
-		final byte[] retrieved = storage.getData(handle);
+
+        storage.removeData(handle);
+
+        final byte[] retrieved = storage.getData(handle);
 		assertNull(retrieved);
 		shutdown();
 	}
@@ -44,8 +48,10 @@ public class BJEStorageImplementation_removeDataTest extends
 		startup(3);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 2 });
-		storage.removeData(handle);
-		final byte[] retrieved = storage.getData(handle);
+
+        storage.removeData(handle);
+
+        final byte[] retrieved = storage.getData(handle);
 		assertNull(retrieved);
 		shutdown();
 	}
@@ -55,8 +61,10 @@ public class BJEStorageImplementation_removeDataTest extends
 	{
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.removeData(handle);
-		final byte[] retrieved = storage.getData(handle);
+
+        storage.removeData(handle);
+
+        final byte[] retrieved = storage.getData(handle);
 		assertNull(retrieved);
 		shutdown();
 	}
@@ -69,8 +77,10 @@ public class BJEStorageImplementation_removeDataTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle anotherHandle = new UUIDPersistentHandle();
 		storage.store(handle, new byte[] { 11, 22, 33 });
-		storage.removeData(anotherHandle);
-		final byte[] retrieved = storage.getData(handle);
+
+        storage.removeData(anotherHandle);
+
+        final byte[] retrieved = storage.getData(handle);
 		assertEquals(retrieved, expected);
 	}
 

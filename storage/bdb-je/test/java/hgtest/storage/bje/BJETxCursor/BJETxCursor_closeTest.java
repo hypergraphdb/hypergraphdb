@@ -155,5 +155,5 @@ public class BJETxCursor_closeTest
 		{
 			super(message);
 		}
-	};
+	}
 }

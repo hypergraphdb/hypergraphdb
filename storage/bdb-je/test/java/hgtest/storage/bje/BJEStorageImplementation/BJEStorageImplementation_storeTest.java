@@ -21,7 +21,9 @@ public class BJEStorageImplementation_storeTest extends
 		final byte[] expected = new byte[] { 4, 5, 6 };
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] { 4, 5, 6 });
+
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
 		shutdown();
@@ -33,7 +35,9 @@ public class BJEStorageImplementation_storeTest extends
 		final byte[] expected = new byte[] {};
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] {});
+
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
 		shutdown();
@@ -45,7 +49,9 @@ public class BJEStorageImplementation_storeTest extends
 		final byte[] expected = new byte[] { 22 };
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new byte[] { 22 });
+
 		final byte[] stored = storage.getData(handle);
 		assertEquals(stored, expected);
 	}
@@ -74,15 +80,16 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void storeLinksUsingNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startup();
 		try
 		{
 			storage.store(null, new HGPersistentHandle[] {});
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertNull(ex.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -116,6 +123,8 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void arrayOfLinksIsNull() throws Exception
 	{
+        final Exception expected = new NullPointerException();
+
 		startup();
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = null;
@@ -123,10 +132,9 @@ public class BJEStorageImplementation_storeTest extends
 		{
 			storage.store(handle, links);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertNull(ex.getMessage());
+            assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -140,7 +148,9 @@ public class BJEStorageImplementation_storeTest extends
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {};
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
+
 		storage.store(handle, new HGPersistentHandle[] {});
+
 		final HGPersistentHandle[] stored = storage.getLink(handle);
 		assertEquals(stored, expected);
 		shutdown();
@@ -153,7 +163,9 @@ public class BJEStorageImplementation_storeTest extends
 		startup(2);
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { expected[0] };
+
 		storage.store(handle, links);
+
 		final HGPersistentHandle[] stored = storage.getLink(handle);
 		assertEquals(stored, expected);
 		shutdown();
@@ -169,7 +181,9 @@ public class BJEStorageImplementation_storeTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] {
 				expected[0], expected[1], expected[2] };
+
 		storage.store(handle, links);
+
 		final HGPersistentHandle[] stored = storage.getLink(handle);
 		assertEquals(stored, expected);
 		shutdown();
@@ -217,5 +231,4 @@ public class BJEStorageImplementation_storeTest extends
 			shutdown();
 		}
 	}
-
 }
