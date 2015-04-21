@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Yuriy Sechko
@@ -203,6 +204,29 @@ public class TestUtils
 	{
 		assertEquals(occurred.getClass(), expected.getClass());
 		assertEquals(occurred.getMessage(), expected.getMessage());
+	}
+
+	/**
+	 * Verifies that given exception is an instance of certain class. Also
+	 * verifies that exception contains all specified strings in its message.
+	 * 
+	 * @param occurred
+	 *            exception to be verified
+	 * @param expectedClass
+	 *            expected class name
+	 * @param expectedMessageParts
+	 *            strings than should be contained in the exception's message
+	 */
+	public static void assertExceptions(final Exception occurred,
+			final Class expectedClass, final String... expectedMessageParts)
+	{
+		assertEquals(occurred.getClass(), expectedClass);
+		final String actualMessage = occurred.getMessage();
+		final List<String> parts = Arrays.asList(expectedMessageParts);
+		for (final String currentPart : parts)
+			assertTrue(actualMessage.contains(currentPart), String.format(
+					"Actual exception's message [%s] does not contain [%s] text.",
+					actualMessage, currentPart));
 	}
 
 	/**

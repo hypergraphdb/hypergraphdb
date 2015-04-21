@@ -2,6 +2,7 @@ package hgtest.storage.bdb.BDBStorageImplementation;
 
 import hgtest.TestUtils;
 import jdk.nashorn.internal.ir.annotations.Ignore;
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
@@ -107,8 +108,7 @@ public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		shutdown();
 	}
 
-    // TODO make comparing exception message with wildcards or something similar
-    @Test(enabled = false)
+	@Test
 	public void exceptionIsThrown() throws Exception
 	{
 		startup(new IllegalStateException("Exception in test case."));
@@ -119,11 +119,10 @@ public class BDBStorageImplementation_getIncidenceResultSetTest extends
 		}
 		catch (Exception ex)
 		{
-			assertEquals(ex.getClass(), org.hypergraphdb.HGException.class);
-			final String expectedMessage = String
-					.format("Failed to retrieve incidence set for %s: java.lang.IllegalStateException: Exception in test case.",
-                            storage);
-			assertEquals(ex.getMessage(), expectedMessage);
+			assertExceptions(
+					ex,
+					HGException.class,
+					"Failed to retrieve incidence set for", "java.lang.IllegalStateException: Exception in test case.");
 		}
 		finally
 		{
