@@ -1,5 +1,6 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import com.google.code.multitester.annonations.Exported;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
@@ -57,7 +58,6 @@ import java.io.File;
  * {@link hgtest.storage.bje.BJEStorageImplementation.BJEStorageImplementationTestBasis#startupNonTransactional()
  * )} are convenient.
  * <p>
- * Also this class contains some utility methods.
  * 
  * @author Yuriy Sechko
  */
@@ -77,9 +77,11 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	HGStore store;
 	HGConfiguration configuration;
 
+	@Exported("underTest")
 	final BJEStorageImplementation storage = new BJEStorageImplementation();
 
 	@BeforeMethod
+    @Exported("up1")
 	protected void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
@@ -87,6 +89,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	}
 
 	@AfterMethod
+    @Exported("down1")
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
@@ -212,6 +215,21 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	}
 
 	/**
+	 * For handy use in common tests.
+	 */
+	@Exported("up_2")
+	protected void startup_2() throws Exception
+	{
+		startup(2);
+	}
+
+	@Exported("up_4")
+	protected void startup_4() throws Exception
+	{
+		startup(4);
+	}
+
+	/**
 	 * Used in test cases for incidence links
 	 * 
 	 * @param transactionManagerCalls
@@ -232,6 +250,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		transactionManager.beginTransaction();
 	}
 
+	@Exported("down2")
 	protected void shutdown() throws Exception
 	{
 		storage.shutdown();

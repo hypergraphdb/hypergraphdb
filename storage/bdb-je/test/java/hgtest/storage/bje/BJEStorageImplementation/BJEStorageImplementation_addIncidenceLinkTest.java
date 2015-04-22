@@ -1,17 +1,14 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import hgtest.TestUtils;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
-import org.hypergraphdb.util.HGUtils;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_addIncidenceLinkTest extends
 		BJEStorageImplementationTestBasis
@@ -23,7 +20,7 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle link = null;
 
-        try
+		try
 		{
 			storage.addIncidenceLink(handle, link);
 		}
@@ -38,56 +35,5 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		{
 			shutdown();
 		}
-	}
-
-	@Test
-	public void addOneLink() throws Exception
-	{
-		startup(2);
-		final HGPersistentHandle first = new UUIDPersistentHandle();
-		final HGPersistentHandle second = new UUIDPersistentHandle();
-
-        storage.addIncidenceLink(first, second);
-
-        final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
-				.getIncidenceResultSet(first);
-		assertEquals(storedLinks.next(), second);
-		storedLinks.close();
-		shutdown();
-	}
-
-	@Test
-	public void addSeveralLinks() throws Exception
-	{
-		startup(4);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		final HGPersistentHandle[] links = new HGPersistentHandle[] {
-				new UUIDPersistentHandle(), new UUIDPersistentHandle(),
-				new UUIDPersistentHandle() };
-
-		storage.addIncidenceLink(handle, links[0]);
-		storage.addIncidenceLink(handle, links[1]);
-		storage.addIncidenceLink(handle, links[2]);
-
-		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
-				.getIncidenceResultSet(handle);
-		assertEquals(TestUtils.set(storedLinks), HGUtils.set(links));
-		storedLinks.close();
-		shutdown();
-	}
-
-	@Test
-	public void addLinkToItself() throws Exception
-	{
-		startup(2);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-
-		storage.addIncidenceLink(handle, handle);
-
-		final HGRandomAccessResult<HGPersistentHandle> storedLinks = storage
-				.getIncidenceResultSet(handle);
-		assertEquals(storedLinks.next(), handle);
-		storedLinks.close();
-		shutdown();
 	}
 }

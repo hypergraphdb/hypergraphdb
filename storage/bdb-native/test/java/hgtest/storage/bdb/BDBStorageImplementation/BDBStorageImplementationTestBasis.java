@@ -1,5 +1,6 @@
 package hgtest.storage.bdb.BDBStorageImplementation;
 
+import com.google.code.multitester.annonations.Exported;
 import hgtest.storage.bdb.NativeLibrariesWorkaround;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
@@ -45,16 +46,20 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	HGConfiguration configuration;
 
 	// instance of storage which is under test
+	@Exported("underTest")
 	final BDBStorageImplementation storage = new BDBStorageImplementation();
 
 	@BeforeMethod
+	@Exported("up1")
 	protected void resetMocksAndDeleteTestDirectory()
 	{
+		NativeLibrariesWorkaround.loadNativeLibraries();
 		PowerMock.resetAll();
 		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
 	@AfterMethod
+	@Exported("down1")
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
@@ -141,7 +146,6 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	protected void startup(final int callsBeforeExceptionIsThrown,
 			final Exception whatToThrow) throws Exception
 	{
-		NativeLibrariesWorkaround.loadNativeLibraries();
 		mockStore();
 		configuration = PowerMock.createStrictMock(HGConfiguration.class);
 		EasyMock.expect(configuration.getHandleFactory()).andReturn(
@@ -171,6 +175,18 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	@Exported("up_2")
+	protected void startup_2() throws Exception
+	{
+		startup(2);
+	}
+
+	@Exported("up_4")
+	protected void startup_4() throws Exception
+	{
+		startup(4);
+	}
+
 	/**
 	 * Used in test cases for incidence links.
 	 */
@@ -189,6 +205,7 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 		transactionManager.beginTransaction();
 	}
 
+	@Exported("down2")
 	protected void shutdown() throws Exception
 	{
 		storage.shutdown();
