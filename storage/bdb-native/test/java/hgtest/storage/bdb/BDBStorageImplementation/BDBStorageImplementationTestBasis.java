@@ -175,6 +175,12 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
+	@Exported("up_1")
+	protected void startup_1() throws Exception
+	{
+		startup(1);
+	}
+
 	@Exported("up_2")
 	protected void startup_2() throws Exception
 	{

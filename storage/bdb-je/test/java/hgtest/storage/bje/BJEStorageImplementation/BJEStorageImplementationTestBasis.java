@@ -81,7 +81,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	final BJEStorageImplementation storage = new BJEStorageImplementation();
 
 	@BeforeMethod
-    @Exported("up1")
+	@Exported("up1")
 	protected void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
@@ -89,7 +89,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	}
 
 	@AfterMethod
-    @Exported("down1")
+	@Exported("down1")
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
@@ -217,6 +217,12 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	/**
 	 * For handy use in common tests.
 	 */
+    @Exported("up_1")
+	protected void startup_1() throws Exception
+	{
+		startup(1);
+	}
+
 	@Exported("up_2")
 	protected void startup_2() throws Exception
 	{

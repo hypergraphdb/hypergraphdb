@@ -1,10 +1,6 @@
 package hgtest.storage.HGStorageImplementation;
 
 import hgtest.TestUtils;
-import hgtest.storage.bdb.BDBStorageImplementation.BDBStorageImplementation_addIncidenceLinkTest;
-import hgtest.storage.bdb.NativeLibrariesWorkaround;
-import hgtest.storage.bje.BJEStorageImplementation.BJEStorageImplementation_addIncidenceLinkTest;
-import com.google.code.multitester.annonations.ImportedTest;
 import com.google.code.multitester.testers.MultiTester;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGPersistentHandle;
@@ -99,29 +95,5 @@ public class HGStorageImplementation_addIncidenceLinkTest extends
 		assertEquals(storedLinks.next(), handle);
 		storedLinks.close();
 		tester.shutdown();
-	}
-
-	@ImportedTest(testClass = BJEStorageImplementation_addIncidenceLinkTest.class, startupSequence = {
-			"up1", "up_2" }, shutdownSequence = { "down2", "down1" })
-	private static class BJE_HGStorageImplementation_2
-	{
-	}
-
-	@ImportedTest(testClass = BJEStorageImplementation_addIncidenceLinkTest.class, startupSequence = {
-			"up1", "up_4" }, shutdownSequence = { "down2", "down1" })
-	private static class BJE_HGStorageImplementation_4
-	{
-	}
-
-	@ImportedTest(testClass = BDBStorageImplementation_addIncidenceLinkTest.class, startupSequence = {
-			"up1", "up_2" }, shutdownSequence = { "down2", "down1" })
-	private static class BDB_HGStorageImplementation_2
-	{
-	}
-
-	@ImportedTest(testClass = BDBStorageImplementation_addIncidenceLinkTest.class, startupSequence = {
-			"up1", "up_4" }, shutdownSequence = { "down2", "down1" })
-	private static class BDB_HGStorageImplementation_4
-	{
 	}
 }

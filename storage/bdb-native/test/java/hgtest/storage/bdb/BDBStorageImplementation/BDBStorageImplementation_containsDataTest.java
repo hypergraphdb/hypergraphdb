@@ -5,6 +5,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -18,15 +19,16 @@ public class BDBStorageImplementation_containsDataTest extends
 	@Test
 	public void useNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startup();
 		try
 		{
 			storage.containsData(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertEquals(ex.getMessage(), null);
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
