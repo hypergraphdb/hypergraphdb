@@ -39,7 +39,7 @@
     <dependency>
       <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
-      <version>5.0.34</version>
+      <version>${bje.version}</version>
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
@@ -54,31 +54,31 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-testng</artifactId>
-      <version>1.5.1</version>
+      <version>${libraries.powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-easymock</artifactId>
-      <version>1.5.1</version>
+      <version>${libraries.powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
-      <version>3.1</version>
+      <version>${libraries.easymock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>6.3.1</version>
+      <version>${libraries.testng.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.code.multitester</groupId>
       <artifactId>multitester</artifactId>
-      <version>1.0</version>
+      <version>${libraries.multitester.version}</version>
     </dependency>
   </dependencies>
 

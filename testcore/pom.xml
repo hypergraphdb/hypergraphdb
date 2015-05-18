@@ -211,31 +211,31 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-testng</artifactId>
-      <version>${powermock.version}</version>
+      <version>${libraries.powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-easymock</artifactId>
-      <version>${powermock.version}</version>
+      <version>${libraries.powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
-      <version>${easymock.version}</version>
+      <version>${libraries.easymock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>${testng.version}</version>
+      <version>${libraries.testng.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.code.multitester</groupId>
       <artifactId>multitester</artifactId>
-      <version>1.0</version>
+      <version>${libraries.multitester.version}</version>
     </dependency>
   </dependencies>
 </project>
