@@ -7,8 +7,6 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
 
 /**
  * @author Yuriy Sechko
@@ -20,15 +18,16 @@ public class BJEStorageImplementation_containsLinkTest extends
 	@Test
 	public void checkExistenceOfLinkUsingNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startup();
 		try
 		{
 			storage.containsLink(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertNull(ex.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{

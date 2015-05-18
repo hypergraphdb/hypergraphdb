@@ -131,8 +131,6 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	 */
 	protected void startup(final Exception whatToThrow) throws Exception
 	{
-		System.out.println(">>> What to throw: "
-				+ whatToThrow.getClass().getSuperclass());
 		mockConfiguration(2);
 		mockStore();
 		EasyMock.expect(store.getTransactionManager()).andThrow(whatToThrow);
