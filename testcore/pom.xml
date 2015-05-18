@@ -20,10 +20,11 @@
 
   <properties>
     <powermock.version>1.4.12</powermock.version>
+    <jarjar.version>1.4</jarjar.version>
   </properties>
 
   <profiles>
-    <!-- TODO move activation condition into root pom -->
+    <!-- TODO investigate whether it possible to inherit profiles from root pom -->
     <profile>
       <id>lin32</id>
       <activation>
@@ -69,6 +70,7 @@
 
   <build>
     <plugins>
+      <!-- Used for resolve clashing between class names in Sleepycat JE and DB libraries. -->
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.8</version>
@@ -85,22 +87,22 @@
             <configuration>
               <target name="refill-jar-and-clear-test-jar">
                 <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-                         classpath="${project.basedir}/jars/jarjar-1.4.jar"/>
+                         classpath="${project.basedir}/tools/jarjar-${jarjar.version}.jar"/>
                 <!-- Put renewed byte code into hgdbdje.jar in HypergraphDB local Maven repository
                 (so this jar can be used later by Maven without any additional efforts).
                 Note that all references to the Sleepycat JE classes it test code also should be renamed.
                 So we put both main and test code from 'bdb-je' module into the same jar. -->
                 <jarjar
-                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/1.3-SNAPSHOT/hgbdbje-1.3-SNAPSHOT.jar">
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/${project.parent.version}/hgbdbje-${project.parent.version}.jar">
                   <fileset dir="../storage/bdb-je/target/classes"/>
                   <fileset dir="../storage/bdb-je/target/test-classes"/>
-                  <zipfileset src="${settings.localRepository}/com/sleepycat/je/5.0.34/je-5.0.34.jar"/>
+                  <zipfileset src="${settings.localRepository}/com/sleepycat/je/${bje.version}/je-${bje.version}.jar"/>
                   <rule pattern="com.sleepycat.**" result="com.renamed_sleepycat.@1"/>
                 </jarjar>
                 <!-- Clear hgbdbje-test.jar, just because all required classes byte code is already in main jar
-                (put small dummy file Stub.java). -->
+                (only put small dummy file Stub.java). -->
                 <jarjar
-                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/1.3-SNAPSHOT/hgbdbje-1.3-SNAPSHOT-tests.jar">
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/${project.parent.version}/hgbdbje-${project.parent.version}-test.jar">
                   <fileset dir="./src/java"/>
                 </jarjar>
               </target>
@@ -110,7 +112,7 @@
             </goals>
           </execution>
           <execution>
-            <!-- But do not rename packages in Sleepycat DB library. And do not rename references to Sleepycat DB classes in the code
+            <!-- Actually do not rename packages in Sleepycat DB library. And do not rename references to Sleepycat DB classes in the code
              coming from 'bdb-native' module. This is because some JNI connections become broken after renaming packages.
              Anyway, Sleepycat JE specific references are already renamed by the task above. So there are not clashes in class names.-->
             <id>rename-classes-in-sleepycat-db</id>
@@ -118,15 +120,15 @@
             <configuration>
               <target name="refill-jar-and-clear-test-jar">
                 <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-                         classpath="${project.basedir}/jars/jarjar-1.4.jar"/>
+                         classpath="${project.basedir}/tools/jarjar-${jarjar.version}.jar"/>
                 <jarjar
-                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/1.3-SNAPSHOT/hgbdbnative-1.3-SNAPSHOT.jar">
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/${project.parent.version}/hgbdbnative-${project.parent.version}.jar">
                   <fileset dir="../storage/bdb-native/target/classes"/>
                   <fileset dir="../storage/bdb-native/target/test-classes"/>
-                  <zipfileset src="${settings.localRepository}/com/sleepycat/db/5.3.15/db-5.3.15.jar"/>
+                  <zipfileset src="${settings.localRepository}/com/sleepycat/db/${bdb.version}/db-${bdb.version}.jar"/>
                 </jarjar>
                 <jarjar
-                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/1.3-SNAPSHOT/hgbdbnative-1.3-SNAPSHOT-tests.jar">
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/${project.parent.version}/hgbdbnative-${project.parent.version}-tests.jar">
                   <fileset dir="./src/java"/>
                 </jarjar>
               </target>
@@ -140,39 +142,6 @@
     </plugins>
   </build>
 
-  <!-- Seems not required, build fails when this plugin is enabled
-  <build>
-  <plugins>
-  <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-dependency-plugin</artifactId>
-    <executions>
-<execution>
-  <id>unpack</id>
-  <phase>compile</phase>
-  <goals>
-    <goal>unpack</goal>
-  </goals>
-  <configuration>
-    <artifactItems>
-      <artifactItem>
-     <groupId>org.hypergraphdb</groupId>
-     <artifactId>bdb-native</artifactId>
-     <version>${bdb.version}</version>
-     <classifier>${build.type}</classifier>
-     <type>jar</type>
-     <overWrite>true</overWrite>
-     <outputDirectory>${project.build.directory}/lib</outputDirectory>
-      </artifactItem>
-    </artifactItems>
-  </configuration>
-</execution>
-    </executions>
-  </plugin>
-</plugins>
-</build>
--->
-
   <dependencies>
     <!-- HyperGraphDB modules -->
     <dependency>
@@ -183,59 +152,61 @@
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgbdbje</artifactId>
-      <version>1.3-SNAPSHOT</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sleepycat</groupId>
-          <artifactId>je</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgbdbje</artifactId>
-      <version>1.3-SNAPSHOT</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sleepycat</groupId>
-          <artifactId>je</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgbdbnative</artifactId>
-      <version>1.3-SNAPSHOT</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sleepycat</groupId>
-          <artifactId>db</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgbdbnative</artifactId>
-      <version>1.3-SNAPSHOT</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sleepycat</groupId>
-          <artifactId>db</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdb</artifactId>
       <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
+    </dependency>
+    <!-- 'bdb-je' module, exclude Sleepycat JE library -->
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>je</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>je</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- 'bdb-native' module, exclude Sleepycat DB library -->
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbnative</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>db</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbnative</artifactId>
+      <version>1.3-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>db</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- Third-party libraries -->
     <dependency>
@@ -268,5 +239,4 @@
       <version>1.0</version>
     </dependency>
   </dependencies>
-
 </project>
