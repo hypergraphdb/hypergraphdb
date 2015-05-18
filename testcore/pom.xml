@@ -19,7 +19,6 @@
   </repositories>
 
   <properties>
-    <powermock.version>1.4.12</powermock.version>
     <jarjar.version>1.4</jarjar.version>
   </properties>
 
@@ -212,25 +211,25 @@
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-testng</artifactId>
-      <version>1.5.1</version>
+      <version>${powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-easymock</artifactId>
-      <version>1.5.1</version>
+      <version>${powermock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
-      <version>3.1</version>
+      <version>${easymock.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
-      <version>6.3.1</version>
+      <version>${testng.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
