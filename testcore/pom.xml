@@ -67,6 +67,79 @@
     </profile>
   </profiles>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <!-- Rename all packages from com.sleepycat to com.renamed_sleepycat.
+            Renaming helps to avoid class names clash between classes in sleepycat je and sleepycat je jars.
+            Renaming affects classes from Sleepycat JE library and all references to the library in 'bdb-je'
+            module (both main and test code).
+            jarjar tool is used. See https://code.google.com/p/jarjar/ for details.
+            -->
+            <id>rename-classes-in-sleepycat-je</id>
+            <phase>test-compile</phase>
+            <configuration>
+              <target name="refill-jar-and-clear-test-jar">
+                <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                         classpath="${project.basedir}/jars/jarjar-1.4.jar"/>
+                <!-- Put renewed byte code into hgdbdje.jar in HypergraphDB local Maven repository
+                (so this jar can be used later by Maven without any additional efforts).
+                Note that all references to the Sleepycat JE classes it test code also should be renamed.
+                So we put both main and test code from 'bdb-je' module into the same jar. -->
+                <jarjar
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/1.3-SNAPSHOT/hgbdbje-1.3-SNAPSHOT.jar">
+                  <fileset dir="../storage/bdb-je/target/classes"/>
+                  <fileset dir="../storage/bdb-je/target/test-classes"/>
+                  <zipfileset src="${settings.localRepository}/com/sleepycat/je/5.0.34/je-5.0.34.jar"/>
+                  <rule pattern="com.sleepycat.**" result="com.renamed_sleepycat.@1"/>
+                </jarjar>
+                <!-- Clear hgbdbje-test.jar, just because all required classes byte code is already in main jar
+                (put small dummy file Stub.java). -->
+                <jarjar
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbje/1.3-SNAPSHOT/hgbdbje-1.3-SNAPSHOT-tests.jar">
+                  <fileset dir="./src/java"/>
+                </jarjar>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- But do not rename packages in Sleepycat DB library. And do not rename references to Sleepycat DB classes in the code
+             coming from 'bdb-native' module. This is because some JNI connections become broken after renaming packages.
+             Anyway, Sleepycat JE specific references are already renamed by the task above. So there are not clashes in class names.-->
+            <id>rename-classes-in-sleepycat-db</id>
+            <phase>test-compile</phase>
+            <configuration>
+              <target name="refill-jar-and-clear-test-jar">
+                <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                         classpath="${project.basedir}/jars/jarjar-1.4.jar"/>
+                <jarjar
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/1.3-SNAPSHOT/hgbdbnative-1.3-SNAPSHOT.jar">
+                  <fileset dir="../storage/bdb-native/target/classes"/>
+                  <fileset dir="../storage/bdb-native/target/test-classes"/>
+                  <zipfileset src="${settings.localRepository}/com/sleepycat/db/5.3.15/db-5.3.15.jar"/>
+                </jarjar>
+                <jarjar
+                    jarfile="${settings.localRepository}/org/hypergraphdb/hgbdbnative/1.3-SNAPSHOT/hgbdbnative-1.3-SNAPSHOT-tests.jar">
+                  <fileset dir="./src/java"/>
+                </jarjar>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
   <!-- Seems not required, build fails when this plugin is enabled
   <build>
   <plugins>
@@ -113,6 +186,12 @@
       <artifactId>hgbdbje</artifactId>
       <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>je</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
@@ -120,12 +199,24 @@
       <version>1.3-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>je</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgbdbnative</artifactId>
       <version>1.3-SNAPSHOT</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>db</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
@@ -133,6 +224,12 @@
       <version>1.3-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>db</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
