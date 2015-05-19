@@ -6,9 +6,9 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		BJEStorageImplementationTestBasis
@@ -33,46 +33,6 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		{
 			shutdown();
 		}
-	}
-
-	@Test
-	public void thereAreNotIncidenceLinks() throws Exception
-	{
-		startup(1);
-
-		final long cardinality = storage
-				.getIncidenceSetCardinality(new UUIDPersistentHandle());
-
-        assertEquals(cardinality, 0);
-		shutdown();
-	}
-
-	@Test
-	public void thereIsOneIncidenceLink() throws Exception
-	{
-		startup(2);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-
-        final long cardinality = storage.getIncidenceSetCardinality(handle);
-
-        assertEquals(cardinality, 1);
-		shutdown();
-	}
-
-	@Test
-	public void thereAreSeveralIncidenceLinks() throws Exception
-	{
-		startup(4);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
-
-        final long cardinality = storage.getIncidenceSetCardinality(handle);
-
-        assertEquals(cardinality, 3);
-		shutdown();
 	}
 
 	@Test
