@@ -31,6 +31,7 @@ public class HGStorageImplementation_getIncidenceSetCardinalityTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
+
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
 		assertEquals(cardinality, 1);
 	}
@@ -45,6 +46,7 @@ public class HGStorageImplementation_getIncidenceSetCardinalityTest extends
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
 		storage.addIncidenceLink(handle, new UUIDPersistentHandle());
+
 		final long cardinality = storage.getIncidenceSetCardinality(handle);
 		assertEquals(cardinality, 3);
 	}

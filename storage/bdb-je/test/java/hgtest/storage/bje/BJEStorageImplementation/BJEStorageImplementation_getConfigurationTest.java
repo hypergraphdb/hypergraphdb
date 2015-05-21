@@ -13,6 +13,8 @@ import static org.testng.Assert.assertTrue;
  * <li>read only</li>
  * <li>transactional</li>
  * </ul>
+ *
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_getConfigurationTest extends
 		BJEStorageImplementationTestBasis

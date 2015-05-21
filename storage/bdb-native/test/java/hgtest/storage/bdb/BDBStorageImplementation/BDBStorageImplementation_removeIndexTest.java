@@ -1,11 +1,9 @@
 package hgtest.storage.bdb.BDBStorageImplementation;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGIndex;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.assertNull;
 
 /**
  * @author Yuriy Sechko
@@ -54,18 +52,5 @@ public class BDBStorageImplementation_removeIndexTest extends
 		{
 			shutdown();
 		}
-	}
-
-	@Test
-	public void removeIndexWhichExists() throws Exception
-	{
-		startup(1);
-		final String indexName = "sample index";
-		storage.getIndex(indexName, null, null, null, true, true);
-		storage.removeIndex(indexName);
-		final HGIndex<Object, Object> removedIndex = storage.getIndex(
-				indexName, null, null, null, true, false);
-		assertNull(removedIndex);
-		shutdown();
 	}
 }

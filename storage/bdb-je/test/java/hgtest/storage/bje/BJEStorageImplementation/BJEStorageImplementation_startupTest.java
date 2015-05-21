@@ -9,6 +9,7 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_startupTest extends
 		BJEStorageImplementationTestBasis

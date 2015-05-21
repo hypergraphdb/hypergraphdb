@@ -6,10 +6,9 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_removeLinkTest extends
 		BJEStorageImplementationTestBasis
@@ -34,32 +33,6 @@ public class BJEStorageImplementation_removeLinkTest extends
 		{
 			shutdown();
 		}
-	}
-
-	@Test
-	public void removeLinkWhichIsStored() throws Exception
-	{
-		startup(3);
-		final HGPersistentHandle first = new UUIDPersistentHandle();
-		final HGPersistentHandle second = new UUIDPersistentHandle();
-		storage.store(first, new HGPersistentHandle[] { second });
-
-        storage.removeLink(first);
-
-        assertFalse(storage.containsLink(first));
-		shutdown();
-	}
-
-	@Test
-	public void removeLinkWhichIsNotStored() throws Exception
-	{
-		startup(2);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-
-        storage.removeLink(handle);
-
-        assertFalse(storage.containsLink(handle));
-		shutdown();
 	}
 
 	@Test

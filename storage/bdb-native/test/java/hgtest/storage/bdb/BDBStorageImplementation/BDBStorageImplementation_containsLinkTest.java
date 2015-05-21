@@ -5,10 +5,8 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
+import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertNull;
 
 /**
  * @author Yuriy Sechko
@@ -20,15 +18,16 @@ public class BDBStorageImplementation_containsLinkTest extends
 	@Test
 	public void checkExistenceOfLinkUsingNullHandle() throws Exception
 	{
+		final Exception expected = new NullPointerException();
+
 		startup();
 		try
 		{
 			storage.containsLink(null);
 		}
-		catch (Exception ex)
+		catch (Exception occurred)
 		{
-			assertEquals(ex.getClass(), NullPointerException.class);
-			assertNull(ex.getMessage());
+			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -36,7 +35,8 @@ public class BDBStorageImplementation_containsLinkTest extends
 		}
 	}
 
-    // TODO investigate whether it is possible to imitate checked DatabaseException
+	// TODO investigate whether it is possible to imitate checked
+	// DatabaseException
 	@Test(enabled = false)
 	public void exceptionWhileCheckingExistenceOfLink() throws Exception
 	{

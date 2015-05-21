@@ -1,6 +1,5 @@
 package hgtest.storage.HGStorageImplementation;
 
-import com.google.code.multitester.testers.MultiTester;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
@@ -48,9 +47,8 @@ public class HGStorageImplementation_containsLinkTest extends
 			final Class configuration) throws Exception
 	{
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		final MultiTester tester = new MultiTester(configuration);
-        initSpecificStorageImplementation(configuration);
 
+        initSpecificStorageImplementation(configuration);
 		storage.store(handle, new HGPersistentHandle[] { handle });
 
 		assertTrue(storage.containsLink(handle));

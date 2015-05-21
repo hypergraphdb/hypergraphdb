@@ -7,9 +7,9 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
-import static org.testng.Assert.*;
 
 /**
+ * @author Yuriy Sechko
  */
 public class BJEStorageImplementation_containsDataTest extends
 		BJEStorageImplementationTestBasis

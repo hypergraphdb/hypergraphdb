@@ -6,7 +6,6 @@ import org.testng.annotations.Test;
 
 import static hgtest.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 
 /**
  * @author Yuriy Sechko
@@ -14,7 +13,6 @@ import static org.testng.Assert.assertFalse;
 public class BDBStorageImplementation_removeLinkTest extends
 		BDBStorageImplementationTestBasis
 {
-
 	@Test
 	public void removeLinkUsingNullHandle() throws Exception
 	{
@@ -34,28 +32,6 @@ public class BDBStorageImplementation_removeLinkTest extends
 		{
 			shutdown();
 		}
-	}
-
-	@Test
-	public void removeLinkWhichIsStored() throws Exception
-	{
-		startup(3);
-		final HGPersistentHandle first = new UUIDPersistentHandle();
-		final HGPersistentHandle second = new UUIDPersistentHandle();
-		storage.store(first, new HGPersistentHandle[] { second });
-		storage.removeLink(first);
-		assertFalse(storage.containsLink(first));
-		shutdown();
-	}
-
-	@Test
-	public void removeLinkWhichIsNotStored() throws Exception
-	{
-		startup(2);
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		storage.removeLink(handle);
-		assertFalse(storage.containsLink(handle));
-		shutdown();
 	}
 
 	@Test

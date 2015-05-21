@@ -173,24 +173,6 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 		storage.startup(store, configuration);
 	}
 
-	@Exported("up_1")
-	protected void startup_1() throws Exception
-	{
-		startup(1);
-	}
-
-	@Exported("up_2")
-	protected void startup_2() throws Exception
-	{
-		startup(2);
-	}
-
-	@Exported("up_4")
-	protected void startup_4() throws Exception
-	{
-		startup(4);
-	}
-
 	/**
 	 * Used in test cases for incidence links.
 	 */
@@ -207,6 +189,51 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 		replay();
 		storage.startup(store, configuration);
 		transactionManager.beginTransaction();
+	}
+
+	/**
+	 * Shortcuts for use in common test cases.
+	 */
+	@Exported("up_0")
+	protected void startup_0() throws Exception
+	{
+		startup();
+	}
+
+	@Exported("up_1")
+	protected void startup_1() throws Exception
+	{
+		startup(1);
+	}
+
+	@Exported("up_2")
+	protected void startup_2() throws Exception
+	{
+		startup(2);
+	}
+
+	@Exported("up_3")
+	protected void startup_3() throws Exception
+	{
+		startup(3);
+	}
+
+	@Exported("up_4")
+	protected void startup_4() throws Exception
+	{
+		startup(4);
+	}
+
+	@Exported("up_t_3")
+	protected void startup_transaction_3() throws Exception
+	{
+		startupWithAdditionalTransaction(3);
+	}
+
+	@Exported("up_t_5")
+	protected void startup_transaction_5() throws Exception
+	{
+		startupWithAdditionalTransaction(5);
 	}
 
 	@Exported("down2")
