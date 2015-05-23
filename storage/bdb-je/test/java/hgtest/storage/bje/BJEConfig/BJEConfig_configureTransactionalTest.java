@@ -20,9 +20,6 @@ public class BJEConfig_configureTransactionalTest
 	@Test
 	public void checkEnvironmentConfig() throws Exception
 	{
-		final BJEConfig bjeConfig = new BJEConfig();
-		bjeConfig.configureTransactional();
-
 		// initialize expected environment config as inside in {@link
 		// org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
 		final EnvironmentConfig expected = new EnvironmentConfig();
@@ -42,6 +39,7 @@ public class BJEConfig_configureTransactionalTest
 				Durability.SyncPolicy.NO_SYNC, Durability.ReplicaAckPolicy.NONE);
 		expected.setDurability(newDurability);
 
+		final BJEConfig bjeConfig = new BJEConfig();
 		bjeConfig.configureTransactional();
 		final EnvironmentConfig actual = bjeConfig.getEnvironmentConfig();
 
@@ -55,14 +53,13 @@ public class BJEConfig_configureTransactionalTest
 	@Test
 	public void checkDatabaseConfig() throws Exception
 	{
-		final BJEConfig bjeConfig = new BJEConfig();
-
 		// initialize expected database config as inside in {@link
 		// org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}
 		final DatabaseConfig expected = new DatabaseConfig();
 		expected.setAllowCreate(true);
 		expected.setTransactional(true);
 
+        final BJEConfig bjeConfig = new BJEConfig();
 		bjeConfig.configureTransactional();
 		final DatabaseConfig actual = bjeConfig.getDatabaseConfig();
 
