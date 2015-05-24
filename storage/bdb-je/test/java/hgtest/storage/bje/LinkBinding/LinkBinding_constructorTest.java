@@ -4,13 +4,13 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.storage.bje.LinkBinding;
 import org.testng.annotations.Test;
 
+
 import static hgtest.TestUtils.assertExceptions;
-import static hgtest.storage.bje.LinkBinding.LinkBindingTestBasis.HANDLE_FACTORY_CLASS_NAME;
 
 /**
  * @author Yuriy Sechko
  */
-public class LinkBinding_constructorTest
+public class LinkBinding_constructorTest extends LinkBindingTestBasis
 {
 	@Test
 	public void handleFactoryIsNull() throws Exception

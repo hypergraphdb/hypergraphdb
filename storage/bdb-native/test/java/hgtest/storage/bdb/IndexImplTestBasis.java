@@ -42,17 +42,12 @@ public class IndexImplTestBasis
 	protected final File envHome = hgtest.TestUtils.createTempFile("IndexImpl",
 			"test_environment");
 
-	// storage - used only for getting configuration data
 	protected final BDBStorageImplementation storage = PowerMock
 			.createStrictMock(BDBStorageImplementation.class);
 	protected HGTransactionManager transactionManager;
-	// custom converters
 	protected ByteArrayConverter<Integer> keyConverter = new hgtest.TestUtils.ByteArrayConverterForInteger();
 	protected ByteArrayConverter<String> valueConverter = new hgtest.TestUtils.ByteArrayConverterForString();
 
-	// Use 'null' comparator - it forces
-	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
-	// Sleepycat's BtreeComparator
 	protected Comparator<?> comparator = null;
 
 	@BeforeMethod
@@ -153,13 +148,11 @@ public class IndexImplTestBasis
 			throws NoSuchFieldException, IllegalAccessException,
 			DatabaseException
 	{
-		// one database handle is in DefaultIndexImpl
 		final Field firstDatabaseField = indexImpl.getClass().getDeclaredField(
 				DATABASE_FIELD_NAME);
 		firstDatabaseField.setAccessible(true);
 		final Database firstDatabase = (Database) firstDatabaseField
 				.get(indexImpl);
-		// in some test cases first database is not opened, don't close them
 		if (firstDatabase != null)
 		{
 			firstDatabase.close();

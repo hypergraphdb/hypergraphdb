@@ -536,5 +536,29 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         	if (cursor != null)        
         		try { cursor.close(); } catch (Throwable t) { }
         }
-	}    
+	}
+
+    public ValueType getData(KeyType key)
+    {
+        checkOpen();
+        DatabaseEntry keyEntry = new DatabaseEntry(
+                keyConverter.toByteArray(key));
+        DatabaseEntry value = new DatabaseEntry();
+        ValueType result = null;
+
+        try
+        {
+            OperationStatus status = db.get(txn().getBDBTransaction(),
+                    keyEntry, value, LockMode.DEFAULT);
+            if (status == OperationStatus.SUCCESS)
+                result = valueConverter.fromByteArray(value.getData(),
+                        value.getOffset(), value.getSize());
+        }
+        catch (Exception ex)
+        {
+            throw new HGException("Failed to lookup index '" + name + "': "
+                    + ex.toString(), ex);
+        }
+        return result;
+    }
 }
