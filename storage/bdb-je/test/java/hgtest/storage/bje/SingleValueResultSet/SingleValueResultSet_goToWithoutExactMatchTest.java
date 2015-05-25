@@ -46,7 +46,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test
+	@Test(enabled = false)
 	public void thereIsOneValueAndItIsEqualToDesired() throws Exception
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
@@ -98,7 +98,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test
+	@Test(enabled = false)
 	public void thereAreTwoValuesAndOneOfThemIsEqualToDesired()
 			throws Exception
 	{
@@ -173,7 +173,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test
+	@Test(enabled = false)
 	public void thereAreThreeValuesAndOneOfThemIsEqualToDesired()
 			throws Exception
 	{
