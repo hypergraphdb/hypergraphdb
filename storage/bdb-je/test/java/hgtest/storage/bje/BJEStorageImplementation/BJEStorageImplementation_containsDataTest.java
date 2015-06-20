@@ -6,7 +6,8 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko

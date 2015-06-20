@@ -1,6 +1,7 @@
 package hgtest.storage.bdb.SingleValueResultSet;
 
 import com.sleepycat.db.*;
+import hgtest.storage.bdb.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bdb.BDBTxCursor;
@@ -34,7 +35,7 @@ public class SingleValueResultSet_isOrderedTest extends
 				.createStrictMock(BDBTxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 		PowerMock.replayAll();
-		final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		final SingleValueResultSet<Integer> resultSet = new SingleValueResultSet(
 				fakeCursor, null, converter);
 

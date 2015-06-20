@@ -3,7 +3,7 @@ package hgtest.storage.bdb.BDBStorageImplementation;
 import org.hypergraphdb.HGException;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bdb.TestUtils.assertExceptions;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;

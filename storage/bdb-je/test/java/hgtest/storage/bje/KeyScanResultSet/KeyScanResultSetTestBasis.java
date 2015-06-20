@@ -2,7 +2,7 @@ package hgtest.storage.bje.KeyScanResultSet;
 
 import com.sleepycat.je.Cursor;
 import hgtest.storage.bje.ResultSetTestBasis;
-import hgtest.TestUtils;
+import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;

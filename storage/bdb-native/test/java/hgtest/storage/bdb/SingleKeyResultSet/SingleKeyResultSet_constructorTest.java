@@ -3,6 +3,7 @@ package hgtest.storage.bdb.SingleKeyResultSet;
 import com.sleepycat.db.Cursor;
 import com.sleepycat.db.DatabaseEntry;
 import hgtest.storage.bdb.ResultSetTestBasis;
+import hgtest.storage.bdb.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -11,14 +12,15 @@ import org.hypergraphdb.storage.bdb.SingleKeyResultSet;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bdb.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko
  */
 public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 {
-	private final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+	private final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 	private final DatabaseEntry key = new DatabaseEntry(
 			new byte[] { 0, 0, 0, 0 });
 

@@ -1,18 +1,12 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
 
-import static hgtest.TestUtils.assertExceptions;
-import static hgtest.TestUtils.list;
-import static hgtest.TestUtils.listAndClose;
-import static org.testng.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko

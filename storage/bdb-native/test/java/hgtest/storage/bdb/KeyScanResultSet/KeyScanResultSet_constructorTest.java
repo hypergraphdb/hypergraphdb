@@ -9,7 +9,8 @@ import org.hypergraphdb.storage.bdb.KeyScanResultSet;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bdb.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko

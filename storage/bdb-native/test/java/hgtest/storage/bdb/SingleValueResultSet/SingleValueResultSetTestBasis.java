@@ -2,6 +2,7 @@ package hgtest.storage.bdb.SingleValueResultSet;
 
 import com.sleepycat.db.*;
 import hgtest.storage.bdb.ResultSetTestBasis;
+import hgtest.storage.bdb.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bdb.BDBTxCursor;
@@ -22,7 +23,7 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 	protected SecondaryDatabase secondaryDatabase;
 	protected Cursor realCursor;
 	protected BDBTxCursor fakeCursor;
-	protected final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 	protected void startupEnvironment() throws Exception
 	{
@@ -71,6 +72,6 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		secondaryDatabase.close();
 		database.close();
 		environment.close();
-		hgtest.TestUtils.deleteDirectory(envHome);
+		TestUtils.deleteDirectory(envHome);
 	}
 }

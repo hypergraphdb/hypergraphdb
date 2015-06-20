@@ -11,7 +11,8 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko

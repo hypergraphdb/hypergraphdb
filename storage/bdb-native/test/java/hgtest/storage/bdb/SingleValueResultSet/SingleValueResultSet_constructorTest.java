@@ -10,7 +10,8 @@ import org.hypergraphdb.storage.bdb.SingleValueResultSet;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bdb.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko
@@ -25,7 +26,7 @@ public class SingleValueResultSet_constructorTest extends
 				"java.lang.NullPointerException");
 
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
-		final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 		try
 		{
@@ -57,7 +58,7 @@ public class SingleValueResultSet_constructorTest extends
 				.createStrictMock(BDBTxCursor.class);
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 		PowerMock.replayAll();
-		final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 		new SingleValueResultSet(fakeCursor, null, converter);
 
@@ -97,7 +98,7 @@ public class SingleValueResultSet_constructorTest extends
 						"This exceptions is thrown by fake cursor."));
 		PowerMock.replayAll();
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
-		final ByteArrayConverter<Integer> converter = new hgtest.TestUtils.ByteArrayConverterForInteger();
+		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 		try
 		{

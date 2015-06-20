@@ -4,7 +4,8 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.storage.bdb.LinkBinding;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bdb.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko

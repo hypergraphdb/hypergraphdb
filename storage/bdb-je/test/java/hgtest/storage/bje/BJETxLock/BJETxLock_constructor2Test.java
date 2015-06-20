@@ -6,7 +6,8 @@ import org.hypergraphdb.storage.bje.BJETxLock;
 import org.powermock.api.easymock.PowerMock;
 import org.testng.annotations.Test;
 
-import static hgtest.TestUtils.assertExceptions;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
+
 
 /**
  * @author Yuriy Sechko

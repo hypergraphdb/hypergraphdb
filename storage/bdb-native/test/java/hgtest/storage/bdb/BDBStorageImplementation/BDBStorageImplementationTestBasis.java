@@ -2,6 +2,7 @@ package hgtest.storage.bdb.BDBStorageImplementation;
 
 import com.google.code.multitester.annonations.Exported;
 import hgtest.storage.bdb.NativeLibrariesWorkaround;
+import hgtest.storage.bdb.TestUtils;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
@@ -35,9 +36,9 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
 	// location of temporary directory for tests
-	final File testDatabaseDirectory = hgtest.TestUtils.createTempFile(
-			"BDBStorageImplementation", "test_database");
-	final protected String testDatabaseLocation = hgtest.TestUtils
+	final File testDatabaseDirectory = TestUtils.createTempFile(
+            "BDBStorageImplementation", "test_database");
+	final protected String testDatabaseLocation = TestUtils
 			.getCanonicalPath(testDatabaseDirectory);
 
 	// classes which are used by BDBStorageImplementation (used by
@@ -55,7 +56,7 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	{
 		NativeLibrariesWorkaround.loadNativeLibraries();
 		PowerMock.resetAll();
-		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
+		TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
 	@AfterMethod
@@ -63,7 +64,7 @@ public class BDBStorageImplementationTestBasis extends PowerMockTestCase
 	protected void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
-		hgtest.TestUtils.deleteDirectory(testDatabaseDirectory);
+		TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
 	private void replay()

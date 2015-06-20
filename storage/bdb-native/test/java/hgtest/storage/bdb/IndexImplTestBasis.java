@@ -39,14 +39,14 @@ public class IndexImplTestBasis
 	protected static final String DATABASE_FIELD_NAME = "db";
 	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
-	protected final File envHome = hgtest.TestUtils.createTempFile("IndexImpl",
-			"test_environment");
+	protected final File envHome = TestUtils.createTempFile("IndexImpl",
+            "test_environment");
 
 	protected final BDBStorageImplementation storage = PowerMock
 			.createStrictMock(BDBStorageImplementation.class);
 	protected HGTransactionManager transactionManager;
-	protected ByteArrayConverter<Integer> keyConverter = new hgtest.TestUtils.ByteArrayConverterForInteger();
-	protected ByteArrayConverter<String> valueConverter = new hgtest.TestUtils.ByteArrayConverterForString();
+	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
+	protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
 
 	protected Comparator<?> comparator = null;
 
@@ -55,7 +55,7 @@ public class IndexImplTestBasis
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.resetAll();
-		hgtest.TestUtils.deleteDirectory(envHome);
+		TestUtils.deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
@@ -65,7 +65,7 @@ public class IndexImplTestBasis
 	{
 		PowerMock.verifyAll();
 		environment.close();
-		hgtest.TestUtils.deleteDirectory(envHome);
+		TestUtils.deleteDirectory(envHome);
 	}
 
 	protected EnvironmentConfig config;
