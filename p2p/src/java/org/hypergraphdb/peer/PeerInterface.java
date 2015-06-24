@@ -11,21 +11,25 @@ import java.util.concurrent.Future;
 import mjson.Json;
 
 /**
- *
- * This interface is implemented by classes that handle incoming and outgoing message
- * traffic for the peer. 
+ * <p>
+ * This interface define the low-level communication layer for the HyperGraphDB P2P 
+ * framework. Implementations can use any transport and any presence model they wish.
+ * </p>
+ * <p>
  * The interface has some factory methods that allow implementers to decide how to create
  * and allocate objects. 
- * TODO: manage threads from this object
- *
- * @author Cipri Costa
+ * </p>
+ * 
+ * @author Cipri Costa, Borislav Iordanov
  */
 public interface PeerInterface
 {
     /**
      * <p>
-     * There is only one <code>MessageHandler</code> for incoming message through
-     * a given <code>PeerInterface</code> and this method sets it for this one.
+     * The <code>MessageHandler</code> is responsible for processing messages coming through
+     * the <code>PeerInterface</code>. The <code>PeerInterface</code> merely handles transport
+     * duties, but it delegates the logic for message handling elsewhere. In the HyperGraphDB P2P 
+     * framework, that elsewhere is the {@link ActivityManager}. 
      * </p>
      * @param message
      */
@@ -43,24 +47,22 @@ public interface PeerInterface
 	
 	/**
 	 * <p>
-	 * Execute the message handling loop of this interface. Implementations are expected
-	 * to use the <code>HyperGraphPeer</code>'s 
-	 * <code>ExecutorService</code>  for the main message handling thread as
-	 * well as for all activities triggered by this <code>PeerInterface</code>.
+	 * Establish a connection with other peers and make one's presence in the network 
+	 * known.
 	 * </p>
 	 */
 	void start();
 
 	/**
 	 * <p>Return <code>true</code> if we are currently connected to the network
-	 * and <code>false</code> otherwise.</p>
+	 * and <code>false</code> otherwise. Because presence is negotiated asynchronously,
+	 * a connection doesn't imply that all peers are already known.</p>
 	 */
 	boolean isConnected();
 	
 	/**
 	 * <p>
-	 * Stop the <code>PeerInterface</code> - no more messages are going to be
-	 * received or sent.
+	 * Disconnect from the P2P network. No more messages are going to be received or sent.
 	 * </p>
 	 */
     void stop();
@@ -84,7 +86,6 @@ public interface PeerInterface
     
 	//factory methods to obtain activities that are specific to the peer implementation
 	//TODO redesign
-//	PeerNetwork getPeerNetwork();
 	PeerFilter newFilterActivity(PeerFilterEvaluator evaluator);
 	PeerRelatedActivityFactory newSendActivityFactory();
 	

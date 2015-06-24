@@ -43,7 +43,7 @@ public class HGPeerJsonFactory implements Json.Factory
 	Json.Factory f = Json.defaultFactory;
 	TwoWayMap<String, String> shortNameMap = new TwoWayMap<String, String>();
 	Map<String, JsonConverter> converterMap = new ConcurrentHashMap<String, JsonConverter>();
-	Map<Class, JsonConverter> converterFromAbstractMap = new ConcurrentHashMap<Class, JsonConverter>();
+	Map<Class<?>, JsonConverter> converterFromAbstractMap = new ConcurrentHashMap<Class<?>, JsonConverter>();
 	
 	static HGPeerJsonFactory instance = new HGPeerJsonFactory();
 	static
@@ -156,7 +156,7 @@ public class HGPeerJsonFactory implements Json.Factory
 	public final JsonConverter indexConverter = new JsonConverter()
 	{
 		public Json to(Object x) { return Json.object().set("javaType", HGIndex.class.getName())
-										.set("value", ((HGIndex)x).getName()); }
+										.set("value", ((HGIndex<?,?>)x).getName()); }
 		public Object from(Json x) { return graph.getStore().getIndex(x.asString()); }		
 	};
 	

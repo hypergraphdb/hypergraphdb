@@ -195,6 +195,7 @@ public class ActivityManager implements MessageHandler
                 Activity rootActivity = findRootActivity(parentActivity);                
                 try 
                 {
+                	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(thisPeer.getGraph()));                	
                     Transition transition = 
                         type.getTransitionMap().getTransition(parentActivity.getState().getConst(), 
                                                               activity, 
@@ -212,6 +213,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
+                	Json.dettachFactory();
                     parentActivity.lastActionTimestamp = System.currentTimeMillis();                    
                     try
                     {
@@ -655,8 +657,8 @@ public class ActivityManager implements MessageHandler
                     // the parent activity here? It seems ok that sub-activities
                     // could be b/w a different group of peers than the parent
                     // activities
-                    notUnderstood(msg, " unkown parent activity " + parentId);
-                    return;
+//                    notUnderstood(msg, " unkown parent activity " + parentId);
+//                    return;
                 }
             }
             type = activityTypes.get(msg.at(Messages.ACTIVITY_TYPE).asString());

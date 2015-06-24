@@ -67,8 +67,10 @@ public class Messages
 	public static Json getReply(Json msg)
 	{
 		Json s = object(ACTIVITY_TYPE, msg.at(ACTIVITY_TYPE),
-		                CONVERSATION_ID, msg.at(CONVERSATION_ID),
-		                PARENT_SCOPE, msg.at(PARENT_SCOPE));
+		                CONVERSATION_ID, msg.at(CONVERSATION_ID));
+		if (msg.has(PARENT_SCOPE))
+			s.set(PARENT_SCOPE, msg.at(PARENT_SCOPE))
+		     .set(PARENT_TYPE, msg.at(PARENT_TYPE));
 		return msg.has(REPLY_WITH) ? s.set(IN_REPLY_TO, msg.at(REPLY_WITH)) : s;
 	}
 	
@@ -81,7 +83,7 @@ public class Messages
 	 */
 	public static Object getSender(Json msg)
 	{
-	    return msg.at(Messages.REPLY_TO).getValue();	  
+	    return Messages.fromJson(msg.at(Messages.REPLY_TO));	  
 	}
 
     public static final String PERFORMATIVE = "performative";
@@ -93,6 +95,7 @@ public class Messages
     public static final String REPLY_TO = "reply-to";
     public static final String CONVERSATION_ID = "conversation-id";
     public static final String PARENT_SCOPE = "x-parent-scope";
+    public static final String PARENT_TYPE = "x-parent-type";
     public static final String ACTIVITY_TYPE = "x-activity-type";
     public static final String WHY_NOT_UNDERSTOOD = "x-why-not-understood";
 }

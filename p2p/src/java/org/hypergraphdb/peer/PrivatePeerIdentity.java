@@ -15,7 +15,7 @@ import org.hypergraphdb.util.HGUtils;
  * <p>
  * This is a simple data structure that represents a HyperGraphDB peer identity. The
  * class is intended for use only by the HGDB API which will attempt to ensure uniqueness.
- * To store info about other peer, use the derived <code>HGPeerIdentity</code> class which
+ * To store info about other peers, use the derived <code>HGPeerIdentity</code> class which
  * is only different from this one by its type. 
  * </p>
  * 

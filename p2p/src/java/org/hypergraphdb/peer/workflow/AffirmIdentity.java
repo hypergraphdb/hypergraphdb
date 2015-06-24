@@ -93,7 +93,7 @@ public class AffirmIdentity extends FSMActivity
         {
             reply.set(Messages.PERFORMATIVE, Confirm)
                  .set(Messages.CONTENT, makeIdentityStruct(getThisPeer().getIdentity()));
-            getThisPeer().bindIdentityToNetworkTarget(id, msg.at(Messages.REPLY_TO).getValue());
+            getThisPeer().bindIdentityToNetworkTarget(id, Messages.fromJson(msg.at(Messages.REPLY_TO)));
         }
         getPeerInterface().send(getSender(msg), reply);
         return WorkflowState.Completed;
@@ -105,7 +105,7 @@ public class AffirmIdentity extends FSMActivity
     public WorkflowState onConfirm(Json msg)
     {
         HGPeerIdentity id = parseIdentity(msg.at(Messages.CONTENT));
-        getThisPeer().bindIdentityToNetworkTarget(id, msg.at(Messages.REPLY_TO).getValue());
+        getThisPeer().bindIdentityToNetworkTarget(id, getSender(msg));
         return WorkflowState.Completed;
     }
     

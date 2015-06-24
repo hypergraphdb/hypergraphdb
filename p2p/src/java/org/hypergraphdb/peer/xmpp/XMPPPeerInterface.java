@@ -359,35 +359,10 @@ public class XMPPPeerInterface implements PeerInterface
                         if (!msg.has(Messages.REPLY_TO))
                         {
                             msg.set(Messages.REPLY_TO, connection.getUser());
-                        }
-                        
-//                        Protocol protocol = new Protocol();
-//                        ByteArrayOutputStream out = new ByteArrayOutputStream();                        
-//                        //
-//                        // Encapsulate message serialization into a transaction because the HGDB might
-//                        // be accessed during this process.
-//                        //                   
-//                        thisPeer.getGraph().getTransactionManager().beginTransaction();
-//                        try
-//                        {
-//                            protocol.writeMessage(out, msg);
-//                        }
-//                        catch (Throwable t)
-//                        {
-//                        	System.err.println("Failed to serialize message " + msg);
-//                        	t.printStackTrace(System.err);
-//                        }
-//                        finally
-//                        {
-//                            try { thisPeer.getGraph().getTransactionManager().endTransaction(false); }
-//                            catch (Throwable t) { t.printStackTrace(System.err); }
-//                        }  
-//                      
+                        }                        
                         String msgAsString = msg.toString();
-                        //byte [] data = out.toByteArray();
                         if (msgAsString.length() > fileTransferThreshold)
                         {
-//                            System.out.println("Sending " + data.length + " byte of data as a file.");
                             OutgoingFileTransfer outFile = 
                                 fileTransfer.createOutgoingFileTransfer((String)getTarget());
                             byte [] B = msgAsString.getBytes();

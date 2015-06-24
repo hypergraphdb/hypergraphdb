@@ -50,7 +50,7 @@ public class HGTransactionManager
 	}
 	
 	/**
-	 * <p>Enable or disable transaction. Note that all current transactions will
+	 * <p>Enable or disable transactions. Note that all current transactions will
 	 * be silently aborted so make sure any pending transactions are completed before
 	 * calling this method.</p>
 	 * 
@@ -197,7 +197,11 @@ public class HGTransactionManager
 			return result;
 		}
 		else
-			return new HGTransaction(getContext(), parent, activeRecord, new VanillaTransaction(), config.isReadonly());
+			return new HGTransaction(getContext(), 
+									 parent, 
+									 activeRecord, 
+									 new VanillaTransaction(), 
+									 config.isReadonly());
 	}
 	
 	/**

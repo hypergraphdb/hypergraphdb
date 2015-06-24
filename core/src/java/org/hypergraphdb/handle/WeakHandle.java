@@ -94,7 +94,7 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
 
     public String toString()
     {
-        return "weakHandle(" + persistentHandle.toString() + ")";
+        return persistentHandle.toString();
     }
 
     public int compareTo(HGHandle h)

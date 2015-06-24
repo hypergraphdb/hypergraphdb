@@ -20,7 +20,7 @@ import org.hypergraphdb.util.Ref;
 
 /**
  * <p>
- * Implements a depth-first search of a graph. As a reminder, breadth-first will visit all atoms 
+ * Implements a breadth-first search of a graph. As a reminder, breadth-first will visit all atoms 
  * in an adjacency list before exploring their adjacent atoms in turn.
  * </p>
  *  

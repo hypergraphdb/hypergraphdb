@@ -519,9 +519,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return hg;
 	}
 
-	public void setGraph(HyperGraph graph)
+	public DefaultALGenerator setGraph(HyperGraph graph)
 	{
 		this.hg = graph;
+		return this;
 	}
 
 	public HGAtomPredicate getLinkPredicate()
@@ -529,9 +530,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return linkPredicate;
 	}
 
-	public void setLinkPredicate(HGAtomPredicate linkPredicate)
+	public DefaultALGenerator setLinkPredicate(HGAtomPredicate linkPredicate)
 	{
 		this.linkPredicate = linkPredicate;
+		return this;
 	}
 
 	public HGAtomPredicate getSiblingPredicate()
@@ -539,9 +541,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return siblingPredicate;
 	}
 
-	public void setSiblingPredicate(HGAtomPredicate siblingPredicate)
+	public DefaultALGenerator setSiblingPredicate(HGAtomPredicate siblingPredicate)
 	{
 		this.siblingPredicate = siblingPredicate;
+		return this;
 	}
 
 	public boolean isReturnPreceeding()
@@ -549,9 +552,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return returnPreceeding;
 	}
 
-	public void setReturnPreceeding(boolean returnPreceeding)
+	public DefaultALGenerator setReturnPreceeding(boolean returnPreceeding)
 	{
 		this.returnPreceeding = returnPreceeding;
+		return this;
 	}
 
 	public boolean isReturnSucceeding()
@@ -559,9 +563,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return returnSucceeding;
 	}
 
-	public void setReturnSucceeding(boolean returnSucceeding)
+	public DefaultALGenerator setReturnSucceeding(boolean returnSucceeding)
 	{
 		this.returnSucceeding = returnSucceeding;
+		return this;
 	}
 
 	public boolean isReverseOrder()
@@ -569,9 +574,10 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return reverseOrder;
 	}
 
-	public void setReverseOrder(boolean reverseOrder)
+	public DefaultALGenerator setReverseOrder(boolean reverseOrder)
 	{
 		this.reverseOrder = reverseOrder;
+		return this;
 	}
 
 	public boolean isReturnSource()
@@ -579,8 +585,9 @@ public class DefaultALGenerator implements HGALGenerator, CloseMe
 		return returnSource;
 	}
 
-	public void setReturnSource(boolean returnSource)
+	public DefaultALGenerator setReturnSource(boolean returnSource)
 	{
 		this.returnSource = returnSource;
+		return this;
 	}		
 }

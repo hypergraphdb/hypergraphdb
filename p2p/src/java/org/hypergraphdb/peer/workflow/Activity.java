@@ -114,7 +114,7 @@ public abstract class Activity
         Json msg = Messages.createMessage(performative, this);
         Activity parent = thisPeer.getActivityManager().getParent(this);
         if (parent != null)
-            msg.set(PARENT_SCOPE, parent.getId());
+            msg.set(PARENT_SCOPE, parent.getId()).set(PARENT_TYPE, parent.getType());
         msg.set(CONTENT, content);
         return msg;
     }

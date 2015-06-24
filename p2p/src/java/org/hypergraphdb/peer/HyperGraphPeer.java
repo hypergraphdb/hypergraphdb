@@ -339,9 +339,8 @@ public class HyperGraphPeer
 				peerInterface = (PeerInterface)Class.forName(peerInterfaceType).getConstructor().newInstance();
 				peerInterface.setThisPeer(HyperGraphPeer.this);
 				Json interfaceConfig = configuration.at(PeerConfig.INTERFACE_CONFIG);
-				if (interfaceConfig == null)
-				    throw new RuntimeException("Missing interfaceConfig configuration parameter.");
-				peerInterface.configure(interfaceConfig);
+				if (interfaceConfig != null)
+					peerInterface.configure(interfaceConfig);
 				
 				status = true;
 

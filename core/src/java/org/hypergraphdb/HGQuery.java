@@ -12,16 +12,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
+
 import org.hypergraphdb.atom.HGSubgraph;
 import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.atom.HGTypeStructuralInfo;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.HGIndexer;
-import org.hypergraphdb.query.AnalyzedQuery;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AnyAtomCondition;
 import org.hypergraphdb.query.ArityCondition;
@@ -1724,7 +1723,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
             			if (rs != null) rs.close();
             		}	
             	}
-            	}, HGTransactionConfig.READONLY);    		      		
+            	}, HGTransactionConfig.READONLY);
     	}
 
     	/**
