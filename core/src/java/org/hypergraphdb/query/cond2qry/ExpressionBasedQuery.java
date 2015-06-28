@@ -572,10 +572,10 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
 	private List<AtomPartCondition> getAtomIndexedPartsConditions(HyperGraph graph, HGHandle hType, Object value)
 	{
 		ArrayList<AtomPartCondition> L = new ArrayList<AtomPartCondition>();
-		List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(hType);
+		List<HGIndexer<?,?>> indexers = graph.getIndexManager().getIndexersForType(hType);
 		if (indexers == null)
 			return L;
-		for (HGIndexer idx : indexers)
+		for (HGIndexer<?,?> idx : indexers)
 		{
 			if (idx instanceof ByPartIndexer)
 			{

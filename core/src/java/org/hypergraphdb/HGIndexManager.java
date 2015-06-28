@@ -59,7 +59,7 @@ public class HGIndexManager
 	private HyperGraph graph;	
 	private HashMap<HGIndexer, HGIndex<? extends Object, ? extends Object>> indices = 
 			new HashMap<HGIndexer, HGIndex<? extends Object, ? extends Object>>();	
-	private HashMap<HGHandle, List<HGIndexer>> indexers = new HashMap<HGHandle, List<HGIndexer>>();
+	private HashMap<HGHandle, List<HGIndexer<?,?>>> indexers = new HashMap<HGHandle, List<HGIndexer<?,?>>>();
 	
 	private String getIndexName(HGIndexer indexer)
 	{
@@ -69,7 +69,7 @@ public class HGIndexManager
 	
 	private HGIndexer toAtomIndexer(HGIndexer indexer)
 	{
-		List<HGIndexer> L = indexers.get(indexer.getType());
+		List<HGIndexer<?,?>> L = indexers.get(indexer.getType());
 		int i = L.indexOf(indexer);
 		return i >= 0 ? L.get(i) : null;
 	}
@@ -107,7 +107,7 @@ public class HGIndexManager
         {
 	        if (currentType.equals(indexer.getType()))
 	            continue;
-            List<HGIndexer> forType = indexers.get(currentType);
+            List<HGIndexer<?,?>> forType = indexers.get(currentType);
             if (forType != null)
             {
                 forType.remove(indexer);
@@ -151,10 +151,10 @@ public class HGIndexManager
 			    // the lookup of the indexer by subtype doesn't work because the HGIndexer.equals
 			    // method compare the type handles, so there's no point in associated the indexer
 			    // with the sub-types here.
-    				List<HGIndexer> forType = indexers.get(currentType);
+    				List<HGIndexer<?,?>> forType = indexers.get(currentType);
     				if (forType == null)
     				{
-    					forType = new ArrayList<HGIndexer>();
+    					forType = new ArrayList<HGIndexer<?,?>>();
     					indexers.put(currentType, forType);
     				}
     				forType.add(indexer);
@@ -186,7 +186,7 @@ public class HGIndexManager
 	public boolean unregister(HGIndexer indexer)
 	{
 	    removeFromSubtypes(indexer);
-		List<HGIndexer> forType = indexers.get(indexer.getType());
+		List<HGIndexer<?,?>> forType = indexers.get(indexer.getType());
 		if (forType == null)
 			return false;
 		int i = forType.indexOf(indexer);
@@ -220,12 +220,12 @@ public class HGIndexManager
 	 */
 	public void unregisterAll(HGHandle typeHandle)
 	{
-		List<HGIndexer> forType = indexers.get(typeHandle);
+		List<HGIndexer<?,?>> forType = indexers.get(typeHandle);
 		if (forType != null)
 		{
-			for (Iterator<HGIndexer> i = forType.iterator(); i.hasNext(); )
+			for (Iterator<HGIndexer<?,?>> i = forType.iterator(); i.hasNext(); )
 			{
-				HGIndexer indexer = i.next();
+				HGIndexer<?,?> indexer = i.next();
 		        removeFromSubtypes(indexer);
 				deleteIndex(indexer);
 				graph.remove(graph.getHandle(indexer));				
@@ -241,9 +241,9 @@ public class HGIndexManager
 	 * with the index manager and <code>false</code> otherwise.  
 	 * @param indexer The possibly registered <code>HGIndexer</code>. 
 	 */
-	public boolean isRegistered(HGIndexer indexer)
+	public boolean isRegistered(HGIndexer<?,?> indexer)
 	{
-		List<HGIndexer> forType = indexers.get(indexer.getType());
+		List<HGIndexer<?,?>> forType = indexers.get(indexer.getType());
 		return forType == null ? false : forType.contains(indexer);
 	}
 	
@@ -263,17 +263,17 @@ public class HGIndexManager
 	 * @return <code>true</code> if a new index was created and <code>false</code>
 	 * otherwise.
 	 */
-	public <KeyType, ValueType> HGIndex<KeyType, ValueType> register(HGIndexer indexer)
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> register(HGIndexer<?,?> indexer)
 	{
 	    boolean createNewIndex = false;
 	    boolean activate  = hg.count(graph, hg.typePlus(indexer.getType())) == 0;
 	    
         for (HGHandle currentType : hg.typePlus(indexer.getType()).getSubTypes(graph))
         {
-            List<HGIndexer> forType = indexers.get(currentType);
+            List<HGIndexer<?,?>> forType = indexers.get(currentType);
             if (forType == null)
             {
-                forType = new ArrayList<HGIndexer>();
+                forType = new ArrayList<HGIndexer<?,?>>();
                 indexers.put(currentType, forType);
             }
             if (!forType.contains(indexer))
@@ -313,18 +313,18 @@ public class HGIndexManager
 	 */
 	void registerSubtype(HGHandle superType, HGHandle subType)
 	{
-	    List<HGIndexer> forSuperType = indexers.get(superType);
+	    List<HGIndexer<?,?>> forSuperType = indexers.get(superType);
 	    if (forSuperType == null)
 	        return;
 	    else if (forSuperType.isEmpty())
 	        indexers.remove(forSuperType);
-	    List<HGIndexer> forSubType = indexers.get(subType);
+	    List<HGIndexer<?,?>> forSubType = indexers.get(subType);
 	    if (forSubType == null)
 	    {
-	        forSubType = new ArrayList<HGIndexer>();
+	        forSubType = new ArrayList<HGIndexer<?,?>>();
             indexers.put(subType, forSubType);	        
 	    }
-	    for (HGIndexer idx : forSuperType)
+	    for (HGIndexer<?,?> idx : forSuperType)
 	        if (!forSubType.contains(idx))
 	            forSubType.add(idx);
 	}
@@ -339,12 +339,12 @@ public class HGIndexManager
 	 * @return The method will return <code>null</code> if the passed in <code>HGIndexer</code>
 	 * hasn't been registered with the index manager. 
 	 */
-	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(HGIndexer indexer)
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(HGIndexer<?,?> indexer)
 	{
 		HGIndex<KeyType, ValueType> result = (HGIndex<KeyType, ValueType>)indices.get(indexer);
 		if (result == null)
 		{
-			List<HGIndexer> L = indexers.get(indexer.getType());			
+			List<HGIndexer<?,?>> L = indexers.get(indexer.getType());			
 			if (L != null)
 			{
 				int i = L.indexOf(indexer);
@@ -365,7 +365,7 @@ public class HGIndexManager
 	 * @return The list of indexers. May be <code>null</code> if no indexer is
 	 * currently registered for that type.
 	 */
-	public List<HGIndexer> getIndexersForType(HGHandle type)
+	public List<HGIndexer<?,?>> getIndexersForType(HGHandle type)
 	{
 		return this.indexers.get(type);
 	}

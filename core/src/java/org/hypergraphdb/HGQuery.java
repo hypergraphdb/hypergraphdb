@@ -465,16 +465,16 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                     	else
                     		and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
                     }
-                    List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(type);
+                    List<HGIndexer<?,?>> indexers = graph.getIndexManager().getIndexersForType(type);
                 	boolean skipValue = false;
                     if (indexers != null)
                     {
                     	HashSet<String> dimensions = new HashSet<String>();
-                    	for (HGIndexer idx : indexers)
+                    	for (HGIndexer<?,?> idx : indexers)
 	                    {
 	                    	if (idx instanceof ByPartIndexer)
 	                    	{
-	                    		ByPartIndexer byPart = (ByPartIndexer)idx;
+	                    		ByPartIndexer<?> byPart = (ByPartIndexer<?>)idx;
 	                    		HGTypedValue prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
 	                    		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop.getValue()));
 	                    		if (byPart.getDimensionPath().length == 1)
@@ -522,12 +522,12 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
             and.add(eq(instance));
             if (instance instanceof HGLink)
                 and.add(orderedLink(HGUtils.toHandleArray((HGLink)instance)));
-            List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(type);
-            if (indexers != null) for (HGIndexer idx : indexers)
+            List<HGIndexer<?,?>> indexers = graph.getIndexManager().getIndexersForType(type);
+            if (indexers != null) for (HGIndexer<?,?> idx : indexers)
             {
             	if (idx instanceof ByPartIndexer)
             	{
-            		ByPartIndexer byPart = (ByPartIndexer)idx;
+            		ByPartIndexer<?> byPart = (ByPartIndexer<?>)idx;
             		Object prop = TypeUtils.project(graph, type, instance, byPart.getDimensionPath(), true);
             		and.add(new AtomPartCondition(byPart.getDimensionPath(), prop));
             	}
@@ -586,7 +586,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          */
         public static HGHandle addUnique(HyperGraph graph, 
         								 Object instance, 
-        								 Class javaClass, 
+        								 Class<?> javaClass, 
         								 HGQueryCondition condition)
         {            
             return addUnique(graph, instance, graph.getTypeSystem().getTypeHandle(javaClass), condition);
@@ -1191,7 +1191,7 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @param graph The {@link HyperGraph} instance against which to dereference the atom.
          * @see DerefMapping
          */
-        public static Mapping<HGHandle, Object> deref(HyperGraph graph) { return new DerefMapping(graph); }
+        public static <T> Mapping<HGHandle, T> deref(HyperGraph graph) { return new DerefMapping<T>(graph); }
         
         /**
          * <p>
@@ -1215,7 +1215,11 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @param targetPosition The target position.
          * @see CompositeMapping
          */
-        public static Mapping<HGHandle,HGHandle> targetAt(HyperGraph graph, int targetPosition) { return new CompositeMapping(deref(graph), linkProjection(targetPosition)); }
+        public static Mapping<HGHandle,HGHandle> targetAt(HyperGraph graph, int targetPosition) 
+        { 
+        	Mapping<HGHandle, HGLink> f = deref(graph);
+        	return new CompositeMapping<HGHandle, HGHandle, HGLink>(f, linkProjection(targetPosition)); 
+        }
         
         /**
          * <p>
@@ -1381,21 +1385,21 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * starting with a given atom.
          * </p>
          * @param start The starting atom.
-         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * @param linkPredicate A filtering {@link HGAtomPredicate} constraining what links to follow - only
          * links satisfying this predicate will be followed.
-         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * @param siblingPredicate A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
          * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
          * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
          * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
          * @see DFSCondition 
          */        
         public static DFSCondition dfs(HGHandle start, 
-        							   HGAtomPredicate lp, 
-        							   HGAtomPredicate sp) 
+        							   HGAtomPredicate linkPredicate, 
+        							   HGAtomPredicate siblingPredicate) 
         { 
         	DFSCondition c = new DFSCondition(start);
-        	c.setLinkPredicate(lp);
-        	c.setSiblingPredicate(sp);
+        	c.setLinkPredicate(linkPredicate);
+        	c.setSiblingPredicate(siblingPredicate);
         	return c;
         }
 
@@ -1405,21 +1409,21 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * starting with a given atom.
          * </p>
          * @param start A {@link Ref} to the starting atom.
-         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * @param linkPredicate A filtering {@link HGAtomPredicate} constraining what links to follow - only
          * links satisfying this predicate will be followed.
-         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * @param siblingPredicate A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
          * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
          * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
          * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
          * @see DFSCondition 
          */        
         public static DFSCondition dfs(Ref<HGHandle> start, 
-        							   HGAtomPredicate lp, 
-        							   HGAtomPredicate sp) 
+        							   HGAtomPredicate linkPredicate, 
+        							   HGAtomPredicate siblingPredicate) 
         { 
         	DFSCondition c = new DFSCondition(start);
-        	c.setLinkPredicate(lp);
-        	c.setSiblingPredicate(sp);
+        	c.setLinkPredicate(linkPredicate);
+        	c.setSiblingPredicate(siblingPredicate);
         	return c;
         }
         
@@ -1429,9 +1433,9 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * starting a given atom.
          * </p>
          * @param start The starting atom.
-         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * @param linkPredicate A filtering {@link HGAtomPredicate} constraining what links to follow - only
          * links satisfying this predicate will be followed.
-         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * @param siblingPredicate A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
          * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
          * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
          * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
@@ -1440,14 +1444,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DFSCondition 
          */         
         public static DFSCondition dfs(HGHandle start, 
-									   HGAtomPredicate lp, 
-									   HGAtomPredicate sp,
+									   HGAtomPredicate linkPredicate, 
+									   HGAtomPredicate siblingPredicate,
 									   boolean returnPreceeding,
 									   boolean returnSucceeding) 
 		{ 
 			DFSCondition c = new DFSCondition(start);
-			c.setLinkPredicate(lp);
-			c.setSiblingPredicate(sp);
+			c.setLinkPredicate(linkPredicate);
+			c.setSiblingPredicate(siblingPredicate);
 			c.setReturnPreceeding(returnPreceeding);
 			c.setReturnSucceeding(returnSucceeding);
 			return c;
@@ -1459,9 +1463,9 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * starting a given atom.
          * </p>
          * @param start A {@link Ref} to the starting atom.
-         * @param lp A filtering {@link HGAtomPredicate} constraining what links to follow - only
+         * @param linkPredicate A filtering {@link HGAtomPredicate} constraining what links to follow - only
          * links satisfying this predicate will be followed.
-         * @param sp A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
+         * @param siblingPredicate A filtering {@link HGAtomPredicate} - only atoms satisfying this predicate
          * will be *traversed*. If you want all atoms to be traversed, but examine only a subset
          * of them, use a conjunction of this condition and an {@link HGAtomPredicate}, e.g.
          * <code>hg.and(hg.type(someType), hg.bfs(startingAtom))</code>.
@@ -1470,14 +1474,14 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          * @see DFSCondition 
          */         
         public static DFSCondition dfs(Ref<HGHandle> start, 
-									   HGAtomPredicate lp, 
-									   HGAtomPredicate sp,
+									   HGAtomPredicate linkPredicate, 
+									   HGAtomPredicate siblingPredicate,
 									   boolean returnPreceeding,
 									   boolean returnSucceeding) 
 		{ 
 			DFSCondition c = new DFSCondition(start);
-			c.setLinkPredicate(lp);
-			c.setSiblingPredicate(sp);
+			c.setLinkPredicate(linkPredicate);
+			c.setSiblingPredicate(siblingPredicate);
 			c.setReturnPreceeding(returnPreceeding);
 			c.setReturnSucceeding(returnSucceeding);
 			return c;

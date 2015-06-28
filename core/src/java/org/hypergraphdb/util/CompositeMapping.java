@@ -7,12 +7,12 @@
  */
 package org.hypergraphdb.util;
 
-public final class CompositeMapping<From, To> implements Mapping<From, To> 
+public final class CompositeMapping<From, To, Intermediate> implements Mapping<From, To> 
 {
-	private Mapping<From, Object> first;
-	private Mapping<Object, To> second;
+	private Mapping<From, Intermediate> first;
+	private Mapping<Intermediate, To> second;
 	
-	public CompositeMapping(Mapping<From, Object> first, Mapping<Object, To> second)
+	public CompositeMapping(Mapping<From, Intermediate> first, Mapping<Intermediate, To> second)
 	{
 		this.first = first;
 		this.second = second;
