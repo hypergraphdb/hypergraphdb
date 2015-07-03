@@ -1,31 +1,56 @@
 Manifest-Version: 1.0
-Export-Package: org.hypergraphdb.peer.replication;uses:="org.hypergrap
- hdb.storage,org.hypergraphdb.peer,mjson,org.hypergraphdb.query,org.hy
- pergraphdb.peer.workflow,org.hypergraphdb.peer.log,org.hypergraphdb",
- org.hypergraphdb.peer;uses:="org.hypergraphdb.storage,org.hypergraphd
- b.peer.cact,org.hypergraphdb.peer.bootstrap,org.hypergraphdb.query,or
- g.hypergraphdb.peer.workflow,org.hypergraphdb.peer.replication,org.hy
- pergraphdb.util,org.hypergraphdb.event,org.hypergraphdb.query.impl,or
- g.hypergraphdb.peer.serializer,org.hypergraphdb.peer.log,org.hypergra
- phdb.type,org.hypergraphdb.algorithms,org.hypergraphdb,mjson,org.hype
- rgraphdb.transaction,org.hypergraphdb.handle",org.hypergraphdb.peer.s
- erializer;uses:="org.hypergraphdb.storage,org.hypergraphdb.peer,mjson
- ,org.hypergraphdb.query,org.hypergraphdb.util,org.hypergraphdb.type,o
- rg.hypergraphdb,org.hypergraphdb.handle",org.hypergraphdb.peer.cact;u
- ses:="org.hypergraphdb.storage,org.hypergraphdb.peer,mjson,org.hyperg
- raphdb.query,org.hypergraphdb.peer.workflow,org.hypergraphdb.util,org
- .hypergraphdb.peer.serializer,org.hypergraphdb.type,org.hypergraphdb.
- algorithms,org.hypergraphdb.transaction,org.hypergraphdb",org.hypergr
- aphdb.peer.log;uses:="org.hypergraphdb.storage,org.hypergraphdb.peer,
- org.hypergraphdb,org.hypergraphdb.query",org.hypergraphdb.peer.xmpp;u
- ses:="org.hypergraphdb.peer,mjson,org.hypergraphdb.util,org.hypergrap
- hdb,org.hypergraphdb.transaction",org.hypergraphdb.peer.bootstrap;use
- s:="org.hypergraphdb.peer.replication,org.hypergraphdb.peer,org.hyper
- graphdb.peer.cact,mjson,org.hypergraphdb.peer.workflow",org.hypergrap
- hdb.peer.workflow;uses:="org.hypergraphdb.storage,org.hypergraphdb.pe
- er,mjson,org.hypergraphdb.query,org.hypergraphdb.util,org.hypergraphd
- b.peer.serializer,org.hypergraphdb.transaction,org.hypergraphdb.annot
- ation,org.hypergraphdb"
+Bundle-SymbolicName: org.hypergraphdb-hgdbp2p;singleton:=true
+Require-Bundle: org.semanticweb.owl.owlapi
+Built-By: borislav
+Bundle-ManifestVersion: 2
+Bnd-LastModified: 1417319467645
+Embed-Dependency: smack*;scope=compile|runtime;inline=false
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Import-Package: javax.naming.directory;resolution:=optional,javax.net.
+ ssl;resolution:=optional,javax.net;resolution:=optional,javax.securit
+ y.auth.callback;resolution:=optional,javax.security.sasl;resolution:=
+ optional,javax.swing;resolution:=optional,javax.xml.parsers;resolutio
+ n:=optional,mjson,org.hypergraphdb,org.hypergraphdb.algorithms,org.hy
+ pergraphdb.annotation,org.hypergraphdb.event,org.hypergraphdb.handle,
+ org.hypergraphdb.peer,org.hypergraphdb.peer.bootstrap,org.hypergraphd
+ b.peer.cact,org.hypergraphdb.peer.log,org.hypergraphdb.peer.replicati
+ on,org.hypergraphdb.peer.serializer,org.hypergraphdb.peer.workflow,or
+ g.hypergraphdb.peer.xmpp,org.hypergraphdb.query,org.hypergraphdb.quer
+ y.impl,org.hypergraphdb.storage,org.hypergraphdb.transaction,org.hype
+ rgraphdb.type,org.hypergraphdb.util,org.w3c.dom;resolution:=optional
+Tool: Bnd-0.0.238
+Export-Package: org.hypergraphdb.peer; uses:="org.hypergraphdb.storage
+ ,  org.hypergraphdb.peer.cact,  org.hypergraphdb.peer.bootstrap,  org
+ .hypergraphdb.query,  org.hypergraphdb.peer.workflow,  org.hypergraph
+ db.peer.replication,  org.hypergraphdb.util,  org.hypergraphdb.event,
+   org.hypergraphdb.query.impl,  org.hypergraphdb.peer.serializer,  or
+ g.hypergraphdb.peer.log,  org.hypergraphdb.type,  org.hypergraphdb.al
+ gorithms,  org.hypergraphdb,  mjson,  org.hypergraphdb.transaction,  
+ org.hypergraphdb.handle",org.hypergraphdb.peer.bootstrap; uses:="org.
+ hypergraphdb.peer.replication,  org.hypergraphdb.peer,  org.hypergrap
+ hdb.peer.cact,  mjson,  org.hypergraphdb.peer.workflow",org.hypergrap
+ hdb.peer.cact; uses:="org.hypergraphdb.storage,  org.hypergraphdb.pee
+ r,  mjson,  org.hypergraphdb.query,  org.hypergraphdb.peer.workflow, 
+  org.hypergraphdb.util,  org.hypergraphdb.peer.serializer,  org.hyper
+ graphdb.type,  org.hypergraphdb.algorithms,  org.hypergraphdb.transac
+ tion,  org.hypergraphdb",org.hypergraphdb.peer.log; uses:="org.hyperg
+ raphdb.storage,  org.hypergraphdb.peer,  org.hypergraphdb,  org.hyper
+ graphdb.query",org.hypergraphdb.peer.replication; uses:="org.hypergra
+ phdb.storage,  org.hypergraphdb.peer,  mjson,  org.hypergraphdb.query
+ ,  org.hypergraphdb.peer.workflow,  org.hypergraphdb.peer.log,  org.h
+ ypergraphdb",org.hypergraphdb.peer.serializer; uses:="org.hypergraphd
+ b.storage,  org.hypergraphdb.peer,  mjson,  org.hypergraphdb.query,  
+ org.hypergraphdb.util,  org.hypergraphdb.type,  org.hypergraphdb,  or
+ g.hypergraphdb.handle",org.hypergraphdb.peer.workflow; uses:="org.hyp
+ ergraphdb.storage,  org.hypergraphdb.peer,  mjson,  org.hypergraphdb.
+ query,  org.hypergraphdb.util,  org.hypergraphdb.peer.serializer,  or
+ g.hypergraphdb.transaction,  org.hypergraphdb.annotation,  org.hyperg
+ raphdb",org.hypergraphdb.peer.xmpp; uses:="org.hypergraphdb.peer,  mj
+ son,  org.hypergraphdb.util,  org.hypergraphdb,  org.hypergraphdb.tra
+ nsaction"
+Bundle-Version: 1.3.0.SNAPSHOT
+Bundle-Name: HyperGraphDB P2P
+Bundle-ClassPath: .,smackx-3.1.0.jar,smack-3.1.0.jar
 Private-Package: com.jcraft.jzlib,org.jivesoftware.smack,org.jivesoftw
  are.smack.debugger,org.jivesoftware.smack.filter,org.jivesoftware.sma
  ck.packet,org.jivesoftware.smack.provider,org.jivesoftware.smack.prox
@@ -41,26 +66,6 @@ Private-Package: com.jcraft.jzlib,org.jivesoftware.smack,org.jivesoftw
  ckx.workgroup.packet,org.jivesoftware.smackx.workgroup.settings,org.j
  ivesoftware.smackx.workgroup.user,org.jivesoftware.smackx.workgroup.u
  til,org.xmlpull.mxp1,org.xmlpull.v1
-Bundle-ClassPath: .,smackx-3.1.0.jar,smack-3.1.0.jar
-Built-By: borislav
-Tool: Bnd-0.0.238
-Bundle-Name: HyperGraphDB P2P
 Created-By: Apache Maven Bundle Plugin
-Require-Bundle: org.semanticweb.owl.owlapi
-Build-Jdk: 1.7.0_75
-Bundle-Version: 1.3.0.SNAPSHOT
-Bnd-LastModified: 1417319467645
-Bundle-ManifestVersion: 2
-Bundle-SymbolicName: org.hypergraphdb-hgdbp2p;singleton:=true
-Import-Package: javax.naming.directory,javax.net,javax.net.ssl,javax.s
- ecurity.auth.callback,javax.security.sasl,javax.swing,javax.xml.parse
- rs,mjson,org.hypergraphdb,org.hypergraphdb.algorithms,org.hypergraphd
- b.annotation,org.hypergraphdb.event,org.hypergraphdb.handle,org.hyper
- graphdb.peer,org.hypergraphdb.peer.bootstrap,org.hypergraphdb.peer.ca
- ct,org.hypergraphdb.peer.log,org.hypergraphdb.peer.replication,org.hy
- pergraphdb.peer.serializer,org.hypergraphdb.peer.workflow,org.hypergr
- aphdb.peer.xmpp,org.hypergraphdb.query,org.hypergraphdb.query.impl,or
- g.hypergraphdb.storage,org.hypergraphdb.transaction,org.hypergraphdb.
- type,org.hypergraphdb.util,org.w3c.dom
-Embed-Dependency: smack*;scope=compile|runtime;inline=false
+Build-Jdk: 1.8.0_40
 
