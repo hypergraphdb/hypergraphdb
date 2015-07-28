@@ -1,7 +1,10 @@
 Manifest-Version: 1.0
-Export-Package: org.hypergraphdb.storage.bdb;uses:="org.hypergraphdb.u
- til,org.hypergraphdb.storage,org.hypergraphdb.storage.incidence,org.h
- ypergraphdb.transaction,org.hypergraphdb"
+Export-Package: org.hypergraphdb.storage.incidence;uses:="org.hypergra
+ phdb.util,org.hypergraphdb.storage,org.hypergraphdb.query.impl,org.hy
+ pergraphdb.storage.bdb,org.hypergraphdb.query.cond2qry,org.hypergraph
+ db,org.hypergraphdb.query",org.hypergraphdb.storage.bdb;uses:="org.hy
+ pergraphdb.util,org.hypergraphdb.storage,org.hypergraphdb.storage.inc
+ idence,org.hypergraphdb.transaction,org.hypergraphdb"
 Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
  nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
  pycat.compat,com.sleepycat.db,com.sleepycat.db.internal,com.sleepycat
@@ -13,13 +16,17 @@ Built-By: borislav
 Tool: Bnd-0.0.238
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.6.0_32
-Bundle-Version: 1.3.0.SNAPSHOT
-Bnd-LastModified: 1416089991068
+Build-Jdk: 1.7.0_75
+Bundle-Version: 1.3
+Bnd-LastModified: 1437422366910
 Bundle-ManifestVersion: 2
-Import-Package: org.hypergraphdb,org.hypergraphdb.storage,org.hypergra
- phdb.storage.bdb,org.hypergraphdb.storage.incidence,org.hypergraphdb.
- transaction,org.hypergraphdb.util
-Embed-Dependency: db
+Import-Package: org.hypergraphdb;version="1.3.0.SNAPSHOT",org.hypergra
+ phdb.query;version="1.3.0.SNAPSHOT",org.hypergraphdb.query.cond2qry;v
+ ersion="1.3.0.SNAPSHOT",org.hypergraphdb.query.impl;version="1.3.0.SN
+ APSHOT",org.hypergraphdb.storage;version="1.3.0.SNAPSHOT",org.hypergr
+ aphdb.storage.bdb,org.hypergraphdb.storage.incidence,org.hypergraphdb
+ .transaction;version="1.3.0.SNAPSHOT",org.hypergraphdb.util;version="
+ 1.3.0.SNAPSHOT"
 Bundle-SymbolicName: org.hypergraphdb-hgbdbnative;singleton:=true
+Embed-Dependency: db
 

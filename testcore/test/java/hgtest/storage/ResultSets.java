@@ -84,7 +84,7 @@ public class ResultSets extends HGTestBase
             ts.addAlias(typeH, ALIAS_PREFIX + i);
 
         index = (HGSortIndex<Integer, HGHandle>) graph.getIndexManager()
-                .<Integer, HGHandle> register(new ByPartIndexer(typeH, "x"));
+                .<Integer, HGHandle> register(new ByPartIndexer<Integer>(typeH, "x"));
         for (int i = 0; i < COUNT; i++)
             graph.add(new TestInt(i));
     }
@@ -107,9 +107,9 @@ public class ResultSets extends HGTestBase
             catch (Throwable t)
             {
             }
-        List<HGIndexer> indexers = graph.getIndexManager().getIndexersForType(
+        List<HGIndexer<?,?>> indexers = graph.getIndexManager().getIndexersForType(
                 graph.getTypeSystem().getTypeHandle(TestInt.class));
-        if (indexers != null) for (HGIndexer indexer : indexers)
+        if (indexers != null) for (HGIndexer<?,?> indexer : indexers)
             graph.getIndexManager().unregister(indexer);
         super.tearDown();
     }
@@ -606,7 +606,7 @@ public class ResultSets extends HGTestBase
     {
         HGHandle linkH = graph.add(new TestLink(graph.add(35), graph
                 .add("Bizi")));
-        HGHandle linkH1 = graph.add(new TestLink(graph.add("Bobi"), graph
+        graph.add(new TestLink(graph.add("Bobi"), graph
                 .add("Other"), linkH));
         return linkH;
     }

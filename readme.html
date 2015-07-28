@@ -1,0 +1,156 @@
+<html>
+<head>
+<meta title="Welcome to HyperGraphDB"/>
+</head>
+<body>
+<center>
+<h1>HyperGraphDB, Release 1.3</h1>
+<h2>README</h2>
+</center>
+<h2>Contents</h2> 
+<ul> 
+    <li><a href=#introduction>Introduction</a>
+    <li><a href=#changes>Changes</a>
+    <li><a href=#install>System Requirementsand and Installation</a> 
+    <li><a href=#license>Licensing</a> 
+    <li><a href=#source>Source Code</a>        
+    <li><a href=#documentation>Documentation</a>  
+    <li><a href=#bugs>Bug Reports and Feedback</a> 
+    <li><a href=#redistribution>Redistribution</a>  
+</ul>
+
+<a name="introduction">
+<h2>Introduction</h2>
+<p>
+Thank you for downloading the HyperGraphDB distribution, release 1.3. 
+HyperGraphDB is an innovative database management system geared towards 
+the complexities and open-endedness of modern, data intensive
+information systems, in particular the semantic web, artificial intelligence,
+networks research and object-orientation. It combines concepts and features of 
+several of the major data management paradigms, including graph-oriented and its
+cousin object-oriented DBMS as well as the relational model.
+</p>
+<p>
+HyperGraphDB is an embedded database, based on the Java platform and the 
+robust and high-performance BerkeleyDB storage system. The storage sub-system is 
+pluggable and alternatives to BerkeleyDB are available.
+</p>
+<p>
+  <b>Official Website:</b><a target="_blank" href="http://hypergraphdb.org">http://hypergraphdb.org</a>
+</p>
+<a name="changes">
+<h2>Changes</h2>
+<p>
+This release is contains numerous bug fixes and improvements over the previous 1.2 release.
+A fairly complete list of changes can be found at:
+</p>
+
+<a href="http://www.hypergraphdb.org/learn?page=NextReleaseNotes&project=hypergraphdb">
+Changes for HyperGraphDB, Release 1.3</a> wiki page.
+
+<a name="install">
+<h2>System Requirements and Installation</h2>
+<ul>
+<li>Java 6 or later is required to compile and/or run HyperGraphDB.</li>
+<li>BerkeleyDB Java Edition is used by default from now on. However, if you want to use
+the native version of BerkeleyDB, as older releases of HyperGraphDB have,
+you would need a fairly recent version of Linux 32bit/AMD64, Windows 32bit/AMD64 
+or Macos.</li>
+</ul>
+
+<a name="license">
+<h2>Licensing</h2>
+<p>
+HyperGraphDB is open-sourced software licensed under the 
+<a target="_blank" href="http://www.gnu.org/licenses/lgpl.html">
+GNU Lesser General Public License</a>. This
+essentially means that you are allowed to use it for any purpose you see fit, free
+of charge. Unlike GPL, the LGPL doesn't require you to make the source code of
+your software available for free.
+</p>
+<p>
+Third party software that HyperGraphDB relies is licensed separately. Here is 
+a list of all licenses you may need to accept in order to use HyperGraphDB:
+
+<ul>
+<li><a target="_blank" href="ThirdPartyLicensing/BERKELEYDB_LICENSE.TXT">
+BerkeleyDB license</a></li>
+<li><a target="_blank" href="http://www.igniterealtime.org/builds/smack/docs/latest/README.html">
+Smack license</a></li>
+</ul>
+</p>
+  
+<a name="source"/>
+<h2>Source Code</h2>
+<p>
+As of release 1.3, the HyperGraphDB codebase and project management has been moved from <a target="_blank" href="https://code.google.com/p/hypergraphdb/">Google Code</a> to Github under the dedicated Github user <a  target="_blank" href="https://github.com/hypergraphdb">hypergraphdb</a>. The main project URL is 
+<a  target="_blank" href="https://github.com/hypergraphdb/hypergraphdb">https://github.com/hypergraphdb/hypergraphdb</a>. You can find the various application modules under the <code>hypergraphdb</code> user. 
+</p>  
+  
+<a name="documentation"/>
+<h2>Documentation</h2>
+<p>
+The following documentation is currently available:
+
+<ul>
+<li><a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=FirstSteps">Official Tutorial</a> -
+walks you over most of what you need to develop real-world applications with
+HyperGraphDB.
+</li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/learn?page=TrivialTutorial&project=hypergraphdb">Quick Start Tutorial</a> - a minimalistic 
+tutorial, written in Q&A format by one HyperGraphDB user.
+</li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/learn?page=PeerToPeerTutorial&project=hypergraphdb">Peer to Peer Framework Tutorial</a> - 
+getting started with the P2P module for distributed applications.
+</li> 
+<li>
+<a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=QuestionsAndAnswers">Q&A</a> - information in question and answer format.
+</li>
+<li>
+<a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=HyperGraphDBApplications">
+HyperGraphDB Application</a> - APIs and application integrating HyperGraphDB
+with other software such WordNet and a Prolog language interpreter as well as
+implementions of industry standards such topics maps, Json and OWL 2.0.
+</li>
+<li>
+An API reference in the form of Javadocs is available online and it is also
+included within this distribution for offline use:
+<ul>
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/javadoc/index.html">HyperGraphDB Core and P2P</a></li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/management/index.html">Application Module Management API</a></li>  
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/mjson/index.html">JSON Graph-Based Storage</a></li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/owl/index.html">OWL (Ontology Web Language) Implementation with Distributed Version Control</a></li>
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/dataflow/index.html">Distributed Dataflow Programming Framework </a></li>  
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/prolog/index.html">Prolog Interpreter Backed by HyperGraphDB Storage</a></li>  
+<li><a target="_blank" href="http://www.hypergraphdb.org/docs/apps/wordnet/index.html">WordNet Storage with Semantic Similarity Measures</a></li>    
+</ul>
+</li>
+</ul>
+<a name="bugs">
+<h2>Bug Repors and Feedback</h2>
+<p>
+Please provide by writing on the HyperGraphDB discussion forum:
+<a target="_blank" href="http://groups.google.com/group/hypergraphdb?lnk=srg">
+http://groups.google.com/group/hypergraphdb</a>
+</p>
+<p>
+Bug reports can be posted on the
+<a target="_blank" href="https://github.com/hypergraphdb/hypergraphdb/issues">
+HyperGraphDB Github issues page.</a>
+</p>
+<a name="redistribution">
+<h2>Redistribution</h2>
+<p>
+We may redistribute only HyperGraphDB binaries and third party dependencies
+according as permitted by corresponding license agreements.
+</p>
+<p>
+Documentation on how to compile and deploy HyperGraphDB can be found
+on the <a target="_blank" href="http://www.hypergraphdb.org/learn?project=hypergraphdb&page=CompilationAndDeployment">compilation and deployment</a> wiki page.
+</p>
+<hr>
+<p style="font-size:8pt">
+Copyright (c) <a target="_blank" href="http://www.kobrix.com">Kobrix Software, Inc.</a>, 2005-2012
+</p>
+</body>
+</html>
