@@ -34,7 +34,7 @@ public class JavaTypeSchema implements HGTypeSchema<Class<?>>
     private JavaTypeMapper javaTypes = new JavaTypeFactory(); // new DefaultJavaTypeMapper();
     
     // Associates Java class and their corresponding HGDB types. Classes can be 
-    // see as identifiers for HGDB Java types and this cache is populated
+    // seen as identifiers for HGDB Java types and this cache is populated
     // on a need by need basis by looking up the type system URI->HGHandle
     // database. But the purpose of this is not only caching since different
     // class loaders may yield different versions of the same class (as identified

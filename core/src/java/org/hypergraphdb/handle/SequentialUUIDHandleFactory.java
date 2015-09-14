@@ -18,7 +18,7 @@ import org.hypergraphdb.HGPersistentHandle;
  */
 public class SequentialUUIDHandleFactory extends UUIDHandleFactory
 {
-    private static AtomicLong seed = new AtomicLong(System.currentTimeMillis());
+    private AtomicLong seed = new AtomicLong(System.currentTimeMillis());
     private byte [] data = new byte[16];
     private long base = 0;
     

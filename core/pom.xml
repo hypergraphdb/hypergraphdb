@@ -7,14 +7,14 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>1.3</version>  
+    <version>1.4-SNAPSHOT</version>  
   </parent>  
   <properties>
     <packageit>jar</packageit>
     <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph</bundle.namespace>    
   </properties>    
-  <packaging>jar</packaging>  
+  <packaging>bundle</packaging>  
   <artifactId>hgdb</artifactId>
   <name>HyperGraphDB Core</name>
   <build>
@@ -46,7 +46,12 @@
             org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
             org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
             org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl</Export-Package>
-            <Import-Package>javax.management.*,*</Import-Package>
+            <!--
+            javax.* packages must be explicitly imported as per OSGI. OSGI containers normally
+            implicitly import them as "extras", see:
+            http://wiki.osgi.org/wiki/Why_does_Eclipse_find_javax.swing_but_not_Felix%3F  
+             -->
+            <Import-Package>javax.management.*</Import-Package>
           </instructions>
         </configuration>
     </plugin>     

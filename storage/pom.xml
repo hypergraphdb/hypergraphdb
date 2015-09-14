@@ -7,14 +7,14 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>1.3</version>  
+    <version>1.4-SNAPSHOT</version>  
   </parent>  
   <artifactId>hgdbstorage</artifactId>
   <dependencies>
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdb</artifactId>
-      <version>1.3</version>
+      <version>1.4-SNAPSHOT</version>
     </dependency>
   </dependencies>
 </project>

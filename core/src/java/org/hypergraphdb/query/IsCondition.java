@@ -55,7 +55,7 @@ public class IsCondition implements HGQueryCondition, HGAtomPredicate
 
 	public boolean satisfies(HyperGraph graph, HGHandle handle)
 	{
-		return atomHandle.equals(handle);
+		return atomHandle.get().equals(handle);
 	}
 
 	@Override
@@ -79,4 +79,9 @@ public class IsCondition implements HGQueryCondition, HGAtomPredicate
 		IsCondition other = (IsCondition) obj;
 		return HGUtils.eq(atomHandle.get(), other.atomHandle.get());
 	}	
+	
+	public String toString()
+	{
+		return "Is(" + this.atomHandle.get().getPersistent() + ")";
+	}
 }

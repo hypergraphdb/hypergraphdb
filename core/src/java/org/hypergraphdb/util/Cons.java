@@ -7,7 +7,8 @@ public class Cons<E> extends Pair<E, Cons<E>> implements Iterable<E>
 {
     private static final long serialVersionUID = 827177555442759656L;
 
-    public static final Cons EMPTY = new Cons(null);
+    @SuppressWarnings("rawtypes")
+	public static final Cons EMPTY = new Cons(null);
 
     public Cons(E e)
     {

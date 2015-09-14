@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.s
- torage,org.hypergraphdb.util,org.hypergraphdb.transaction,org.hypergr
- aphdb"
+Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.u
+ til,org.hypergraphdb.storage,org.hypergraphdb,org.hypergraphdb.transa
+ ction"
 Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
  nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
  pycat.compat,com.sleepycat.je,com.sleepycat.je.cleaner,com.sleepycat.
@@ -27,25 +27,19 @@ Built-By: borislav
 Tool: Bnd-0.0.238
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.7.0_75
+Build-Jdk: 1.7.0_60
 Bundle-Version: 1.3
-Bnd-LastModified: 1437422365983
+Bnd-LastModified: 1439151944614
 Embed-Transitive: true
 Bundle-ManifestVersion: 2
 Embed-Dependency: je
-Import-Package: javax.transaction.xa,org.hypergraphdb;version="1.3.0.S
- NAPSHOT",org.hypergraphdb.algorithms;version="1.3.0.SNAPSHOT",org.hyp
- ergraphdb.annotation;version="1.3.0.SNAPSHOT",org.hypergraphdb.atom;v
- ersion="1.3.0.SNAPSHOT",org.hypergraphdb.cache;version="1.3.0.SNAPSHO
- T",org.hypergraphdb.event;version="1.3.0.SNAPSHOT",org.hypergraphdb.h
- andle;version="1.3.0.SNAPSHOT",org.hypergraphdb.indexing;version="1.3
- .0.SNAPSHOT",org.hypergraphdb.maintenance;version="1.3.0.SNAPSHOT",or
- g.hypergraphdb.query;version="1.3.0.SNAPSHOT",org.hypergraphdb.query.
- cond2qry;version="1.3.0.SNAPSHOT",org.hypergraphdb.query.impl;version
- ="1.3.0.SNAPSHOT",org.hypergraphdb.storage;version="1.3.0.SNAPSHOT",o
- rg.hypergraphdb.storage.bje,org.hypergraphdb.transaction;version="1.3
- .0.SNAPSHOT",org.hypergraphdb.type;version="1.3.0.SNAPSHOT",org.hyper
- graphdb.type.javaprimitive;version="1.3.0.SNAPSHOT",org.hypergraphdb.
- util;version="1.3.0.SNAPSHOT"
+Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
+ .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
+ ergraphdb.cache,org.hypergraphdb.event,org.hypergraphdb.handle,org.hy
+ pergraphdb.indexing,org.hypergraphdb.maintenance,org.hypergraphdb.que
+ ry,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,org.hy
+ pergraphdb.storage,org.hypergraphdb.storage.bje,org.hypergraphdb.tran
+ saction,org.hypergraphdb.type,org.hypergraphdb.type.javaprimitive,org
+ .hypergraphdb.util
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
 
