@@ -19,7 +19,7 @@ import org.hypergraphdb.util.CloseMe;
  * 
  * @author Borislav Iordanov
  */
-public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe
+public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe, AutoCloseable
 {
     /**
      * <p>Returns the current element in the result set. If there is no current element,
