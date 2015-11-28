@@ -8,17 +8,19 @@
 package org.hypergraphdb.peer.replication;
 
 
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import mjson.Json;
+
+import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.TaskActivity;
+
 import static org.hypergraphdb.peer.Messages.*;
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
@@ -53,17 +55,12 @@ public class CatchUpTaskClient extends TaskActivity<CatchUpTaskClient.State>
 		if (catchUpWith != null)
 		{
 			sendMessage(activityFactory, catchUpWith);
-			
 		}
 		else
 		{
-			PeerFilter peerFilter = getPeerInterface().newFilterActivity(null);
-
-			peerFilter.filterTargets();
-			Iterator<Object> it = peerFilter.iterator();
-			while (it.hasNext())
+			for (HGPeerIdentity peer : getThisPeer().getConnectedPeers())
 			{
-				Object target = it.next();
+				Object target = getThisPeer().getNetworkTarget(peer);
 				sendMessage(activityFactory, target);
 			}				
 		}		

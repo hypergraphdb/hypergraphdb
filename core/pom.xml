@@ -51,7 +51,7 @@
             implicitly import them as "extras", see:
             http://wiki.osgi.org/wiki/Why_does_Eclipse_find_javax.swing_but_not_Felix%3F  
              -->
-            <Import-Package>javax.management.*</Import-Package>
+            <Import-Package>javax.management.*;resolution:=optional</Import-Package>
           </instructions>
         </configuration>
     </plugin>     

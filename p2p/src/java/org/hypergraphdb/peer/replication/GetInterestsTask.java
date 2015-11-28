@@ -7,8 +7,6 @@
  */
 package org.hypergraphdb.peer.replication;
 
-
-import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,12 +15,12 @@ import mjson.Json;
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.workflow.Activity;
 import org.hypergraphdb.query.HGAtomPredicate;
+
 import static org.hypergraphdb.peer.HGDBOntology.*;
 
 /**
@@ -49,15 +47,11 @@ public class GetInterestsTask extends Activity
     {
         PeerRelatedActivityFactory activityFactory = getPeerInterface().newSendActivityFactory();
 
-        PeerFilter peerFilter = getPeerInterface().newFilterActivity(null);
-
-        peerFilter.filterTargets();
-        Iterator<Object> it = peerFilter.iterator();
         count.set(1);
-        while (it.hasNext())
-        {
+		for (HGPeerIdentity peer : getThisPeer().getConnectedPeers())
+		{
+			Object target = getThisPeer().getNetworkTarget(peer);
             count.incrementAndGet();
-            Object target = it.next();
             sendMessage(activityFactory, target);
         }
         if (count.decrementAndGet() == 0)

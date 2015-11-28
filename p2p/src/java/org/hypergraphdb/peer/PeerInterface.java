@@ -7,7 +7,9 @@
  */
 package org.hypergraphdb.peer;
 
+import java.security.Principal;
 import java.util.concurrent.Future;
+
 import mjson.Json;
 
 /**
@@ -69,6 +71,16 @@ public interface PeerInterface
     
     /**
      * <p>
+     * Return the entity authenticated within the P2P network layer. This method
+     * may return null if there is no such entity, for example if the network layer
+     * is private and secure and all peers are interchangeable. Return a value is generally
+     * warranted when the connection is established on behave of an actual user person.
+     * </p>
+     */
+    Principal principal();
+    
+    /**
+     * <p>
      * Return the <code>HyperGraphPeer</code> to which this <code>PeerInterface</code>
      * is bound.
      * </p>
@@ -86,7 +98,6 @@ public interface PeerInterface
     
 	//factory methods to obtain activities that are specific to the peer implementation
 	//TODO redesign
-	PeerFilter newFilterActivity(PeerFilterEvaluator evaluator);
 	PeerRelatedActivityFactory newSendActivityFactory();
 	
 	/**

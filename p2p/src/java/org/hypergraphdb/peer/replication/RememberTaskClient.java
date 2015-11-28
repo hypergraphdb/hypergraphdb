@@ -9,7 +9,6 @@ package org.hypergraphdb.peer.replication;
 
 
 import java.util.ArrayList;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,12 +18,12 @@ import mjson.Json;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
+
 import static org.hypergraphdb.peer.HGDBOntology.*;
+
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.hypergraphdb.peer.InterestEvaluator;
 import org.hypergraphdb.peer.Messages;
-import org.hypergraphdb.peer.PeerFilter;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
 import org.hypergraphdb.peer.Performative;
@@ -32,7 +31,9 @@ import org.hypergraphdb.peer.StorageService;
 import org.hypergraphdb.peer.SubgraphManager;
 import org.hypergraphdb.peer.log.Log;
 import org.hypergraphdb.peer.log.LogEntry;
+
 import static org.hypergraphdb.peer.Messages.*;
+
 import org.hypergraphdb.peer.workflow.AbstractActivity;
 import org.hypergraphdb.peer.workflow.Conversation;
 import org.hypergraphdb.peer.workflow.ProposalConversation;
@@ -41,8 +42,9 @@ import org.hypergraphdb.peer.workflow.TaskActivity;
 /**
  * @author Cipri Costa
  *
- * A task that performs the "client" side of the REMEMBER action. At the start of the task, it will send
- * "call for proposal" messages to peers using a <code>PeerFilter</code>. Any peer that decides to answer 
+ * A task that performs the "client" side of the REMEMBER action. 
+ * At the start of the task, it will send "call for proposal" messages to peers 
+ * using a <code>PeerFilter</code>. Any peer that decides to answer 
  * the call for proposal with a proposal will establish a conversation.
  * 
  * The task will only use <code>ProposalConversation</code> conversations. 
@@ -54,7 +56,6 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	protected enum State {Started, Accepted, HandleProposal, HandleProposalResponse, Done};
 
 	private ArrayList<HGHandle> results;
-	private InterestEvaluator evaluator;
 	private Log log;
 	private List<LogEntry> entries;
 
@@ -62,7 +63,6 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 	
 	//TODO replace. for now just assuming everyone is online 
 	private AtomicInteger count = new AtomicInteger(1);
-	PeerFilter peerFilter;
 	private Object targetPeer;
 	
 	//private StorageService.Operation operation;
@@ -80,10 +80,7 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		super(thisPeer, State.Started, State.Done);
 		batch = new ArrayList<Object>();
 		batch.add(new RememberEntity(handle, value, operation));
-		this.log = log;
-		
-		evaluator = new InterestEvaluator(thisPeer.getPeerInterface(), hg);
-		
+		this.log = log;		
 	}
 	
 	public RememberTaskClient(HyperGraphPeer thisPeer, Object value, Log log, HGPersistentHandle handle, Object targetPeer, StorageService.Operation operation)
@@ -119,11 +116,6 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 		//do startup tasks - filter peers and send messages
 		PeerRelatedActivityFactory activityFactory = getPeerInterface().newSendActivityFactory();
 
-		if (targetPeer == null)
-		{
-			peerFilter = getPeerInterface().newFilterActivity(evaluator);
-		}
-
 		if (entries == null)
 		{
 			entries = new ArrayList<LogEntry>();
@@ -146,35 +138,35 @@ public class RememberTaskClient extends TaskActivity<RememberTaskClient.State>
 			}
 		}
 		
-		if (peerFilter != null)
-		{
-			Iterator<Object> it = peerFilter.iterator();
-			while (it.hasNext())
-			{
-				Object target = it.next();
-				sendCallForProposal(target, activityFactory);
-			}
-		}else{
-			sendCallForProposal(targetPeer, activityFactory);
-		}
-		
+//		if (peerFilter != null)
+//		{
+//			for (HGPeerIdentity peer : getThisPeer().getConnectedPeers())
+//			{
+//				Object target = getThisPeer().getNetworkTarget(peer);
+//				sendCallForProposal(target, activityFactory);
+//			}
+//		}else{
+//			sendCallForProposal(targetPeer, activityFactory);
+//		}
+//		
 		if (count.decrementAndGet() == 0) setState(State.Done);
 	}
 	
 	private Iterator<Object> getTargets(HGPersistentHandle handle)
 	{
-		if (targetPeer == null)
-		{
-			evaluator.setHandle(handle);
-			peerFilter.filterTargets();
-			
-			return peerFilter.iterator();
-		}else{
-			ArrayList<Object> targets = new ArrayList<Object>();
-			targets.add(targetPeer);
-			
-			return targets.iterator();
-		}
+//		if (targetPeer == null)
+//		{
+//			evaluator.setHandle(handle);
+//			peerFilter.filterTargets();
+//			
+//			return peerFilter.iterator();
+//		}else{
+//			ArrayList<Object> targets = new ArrayList<Object>();
+//			targets.add(targetPeer);
+//			
+//			return targets.iterator();
+//		}
+		return null;
 	}
 
 	private void sendCallForProposal(Object target, PeerRelatedActivityFactory activityFactory)

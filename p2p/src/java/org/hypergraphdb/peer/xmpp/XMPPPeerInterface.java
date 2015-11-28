@@ -9,17 +9,19 @@ package org.hypergraphdb.peer.xmpp;
 
 
 import java.io.ByteArrayInputStream;
+
 import java.io.InputStreamReader;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.concurrent.Future;
+
 import mjson.Json;
+
 import org.hypergraphdb.peer.HGPeerIdentity;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.MessageHandler;
 import org.hypergraphdb.peer.Messages;
 import org.hypergraphdb.peer.NetworkPeerPresenceListener;
-import org.hypergraphdb.peer.PeerFilter;
-import org.hypergraphdb.peer.PeerFilterEvaluator;
 import org.hypergraphdb.peer.PeerInterface;
 import org.hypergraphdb.peer.PeerRelatedActivity;
 import org.hypergraphdb.peer.PeerRelatedActivityFactory;
@@ -345,6 +347,17 @@ public class XMPPPeerInterface implements PeerInterface
             try { connection.disconnect(); } catch (Throwable t) { }
     }
     
+    public Principal principal()
+    {
+    	return new Principal()
+    	{
+			public String getName()
+			{
+				return user;
+			}    		
+    	};
+    }
+    
     public PeerRelatedActivityFactory newSendActivityFactory()
     {
         return new PeerRelatedActivityFactory() {
@@ -424,11 +437,6 @@ public class XMPPPeerInterface implements PeerInterface
     public HyperGraphPeer getThisPeer()
     {
         return thisPeer;
-    }
-    
-    public PeerFilter newFilterActivity(PeerFilterEvaluator evaluator)
-    {
-        throw new UnsupportedOperationException();
     }
     
     public void addPeerPresenceListener(NetworkPeerPresenceListener listener)

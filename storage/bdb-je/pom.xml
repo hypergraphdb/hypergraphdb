@@ -50,6 +50,7 @@
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
       <version>1.3</version>
+	  <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
@@ -79,6 +80,7 @@
       <groupId>com.google.code.multitester</groupId>
       <artifactId>multitester</artifactId>
       <version>${libraries.multitester.version}</version>
+	  <scope>test</scope>
     </dependency>
   </dependencies>
 
