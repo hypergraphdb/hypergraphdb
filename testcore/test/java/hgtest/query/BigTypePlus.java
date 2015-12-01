@@ -2,7 +2,6 @@ package hgtest.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hypergraphdb.HGHandle;
@@ -13,10 +12,9 @@ import org.hypergraphdb.atom.HGRelType;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.query.AnalyzedQuery;
 import org.hypergraphdb.query.QueryCompile;
-import org.hypergraphdb.util.HGUtils;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 
@@ -49,14 +47,14 @@ import hgtest.HGTestBase;
  */
 public class BigTypePlus extends HGTestBase
 {
-    int maxDepth = 3;
-    int N = 100;
-    HGHandle [] alltargets;
+    static int maxDepth = 3;
+    static int N = 100;
+    static HGHandle [] alltargets;
     
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
-        super.setUp();
+        HGTestBase.setUp();
         HGHandle reltypeHandle = getGraph().getTypeSystem().getTypeHandle(HGRelType.class);
         getGraph().getIndexManager().register(new ByPartIndexer(reltypeHandle, "name"));        
         alltargets = new HGHandle[N];
@@ -99,7 +97,7 @@ public class BigTypePlus extends HGTestBase
     }
     
     @AfterClass    
-    public void tearDown()
+    public static void tearDown()
     {
 //        super.tearDown();
         graph.close();

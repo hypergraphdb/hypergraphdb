@@ -1,8 +1,9 @@
 package hgtest.storage.bje.LinkBinding;
 
+
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.storage.bje.LinkBinding;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 

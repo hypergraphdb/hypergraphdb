@@ -45,7 +45,7 @@ import hgtest.types.TestPrimitives;
 import hgtest.types.ChangingRecordTypes.Bean;
 
 public class DebugTest
-{
+{	
     public static class TestQuery
     {
         public static void go(String databaseLocation)
@@ -57,10 +57,9 @@ public class DebugTest
                 HGConfiguration config = new HGConfiguration();
                 config.setUseSystemAtomAttributes(false);
                 graph = HGEnvironment.get(databaseLocation, config);
-                List<Object> children = hg
-                        .getAll(graph, hg.typePlus(Top.class));
+                List<Object> children = hg.getAll(graph, hg.typePlus(Top.class));
                 System.out.println("size:" + children.size());
-            }
+             }
             catch (Throwable t)
             {
                 t.printStackTrace();
@@ -186,7 +185,8 @@ public class DebugTest
     public static void main(String[] argv)
     {
         //anatest();
-        // TestQuery.go("/tmp/alain");
+//    	HGUtils.dropHyperGraphInstance("/tmp/alain");
+//        TestQuery.go("/tmp/alain");
         PropertyIndexingTests test = new PropertyIndexingTests();
         test.setUp();
         

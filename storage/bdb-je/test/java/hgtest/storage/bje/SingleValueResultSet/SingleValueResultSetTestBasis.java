@@ -1,15 +1,18 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+
 import com.sleepycat.je.*;
+
 import hgtest.storage.bje.ResultSetTestBasis;
 import hgtest.storage.bje.TestUtils;
+
 import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator;
+import org.junit.After;
+import org.junit.Before;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 /**
  * In addition to the primary database SingleValueResultSet uses secondary
@@ -77,7 +80,7 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
 	}
 
-	@BeforeMethod
+	@Before
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		super.resetMocksAndDeleteTestDirectory();
@@ -86,7 +89,7 @@ public class SingleValueResultSetTestBasis extends ResultSetTestBasis
 		// SingleValueResultSetTestBasis.startupEnvironment() method)
 	}
 
-	@AfterMethod
+	@After
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.verifyAll();

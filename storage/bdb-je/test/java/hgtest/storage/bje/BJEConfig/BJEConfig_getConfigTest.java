@@ -3,11 +3,11 @@ package hgtest.storage.bje.BJEConfig;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.EnvironmentConfig;
 import org.hypergraphdb.storage.bje.BJEConfig;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases for getters in {@link org.hypergraphdb.storage.bje.BJEConfig}

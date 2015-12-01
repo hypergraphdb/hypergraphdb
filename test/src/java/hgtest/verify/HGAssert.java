@@ -6,7 +6,7 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.query.HGAtomPredicate;
-import org.testng.Assert;
+import org.junit.Assert;
 
 public class HGAssert
 {
@@ -91,7 +91,7 @@ public class HGAssert
         else if (A.length != B.length)
             throw new AssertionError("Expected array of length " + B.length + ", but got length " + A.length);
         else for (int i = 0; i < A.length; i++)
-            Assert.assertEquals(A[i], B[i]);        
+            Assert.assertEquals(A[i], B[i], 0.0);        
     }
     
     public HGAssert eq(float [] A, float [] B) { HGAssert.assertEquals(A, B); return this; }
@@ -106,7 +106,7 @@ public class HGAssert
         else if (A.length != B.length)
             throw new AssertionError("Expected array of length " + B.length + ", but got length " + A.length);
         else for (int i = 0; i < A.length; i++)
-            Assert.assertEquals(A[i], B[i]);        
+            Assert.assertEquals(A[i], B[i], 0.0);        
     }
     
     public HGAssert eq(short [] A, short [] B) { HGAssert.assertEquals(A, B); return this; }
@@ -162,7 +162,7 @@ public class HGAssert
         else if (x instanceof short[])
             assertEquals((short[])x, (short[])y);
         else if (x instanceof Object[])
-            Assert.assertEquals((Object[])x, (Object[])y);
+            Assert.assertArrayEquals((Object[])x, (Object[])y);
         else 
             Assert.assertEquals(x, y);        
     }

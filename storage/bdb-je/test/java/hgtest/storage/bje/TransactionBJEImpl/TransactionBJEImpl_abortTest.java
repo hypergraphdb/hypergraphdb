@@ -8,7 +8,7 @@ import org.easymock.EasyMock;
 import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.HGTransactionException;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 

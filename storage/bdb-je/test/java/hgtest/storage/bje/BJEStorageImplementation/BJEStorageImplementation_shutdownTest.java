@@ -1,7 +1,7 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.Environment;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 

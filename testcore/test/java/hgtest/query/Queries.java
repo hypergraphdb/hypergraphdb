@@ -1,7 +1,6 @@
 package hgtest.query;
 
 import hgtest.HGTestBase;
-
 import hgtest.T;
 import hgtest.beans.Car;
 import hgtest.beans.Folder;
@@ -40,10 +39,10 @@ import org.hypergraphdb.query.TypePlusCondition;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.type.Top;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 //@Test(sequential=true)
 public class Queries extends HGTestBase
@@ -52,9 +51,9 @@ public class Queries extends HGTestBase
     final static int COUNT = 11;
     final static int DUPLICATED_NUM = 5;
     final static int ALIAS_COUNT = 5;
-    HGSortIndex<Integer, HGHandle> index;
+    static HGSortIndex<Integer, HGHandle> index;
 
-    boolean value_link_or_normal_link = true;   
+    static boolean value_link_or_normal_link = true;   
 
     public static void main(String[] args)
     {
@@ -308,7 +307,7 @@ public class Queries extends HGTestBase
         Assert.assertEquals(length1, length2);
         Double length3 = GraphClassics.dijkstra(getNestedBeanHandle(0),
                 getNestedBeanHandle(1), new DefaultALGenerator(graph));
-        Assert.assertEquals(length3, 1.0);
+        Assert.assertEquals((double)length3, 1.0, 0.0);
 
     }
 
@@ -465,9 +464,9 @@ public class Queries extends HGTestBase
     }
     
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
-        super.setUp();
+        HGTestBase.setUp();
         HGTypeSystem ts = graph.getTypeSystem();
         HGHandle typeH = ts.getTypeHandle(NestedBean.InnerBean.class);
         for (int i = 0; i < ALIAS_COUNT; i++)
@@ -498,7 +497,7 @@ public class Queries extends HGTestBase
     }
 
     @AfterClass
-    public void tearDown()
+    public static void tearDown()
     {
         // List<HGHandle> list = hg.findAll(graph, hg.type(NestedBean.class));
         // for (HGHandle handle : list)
@@ -517,10 +516,10 @@ public class Queries extends HGTestBase
         // graph.getTypeSystem().getTypeHandle(NestedBean.InnerBean.class));
         // if (indexers != null) for (HGIndexer indexer : indexers)
         // graph.getIndexManager().deleteIndex(indexer);
-        super.tearDown();
+        HGTestBase.tearDown();
     }
 
-    private HGHandle create_simple_subgraph()
+    private static HGHandle create_simple_subgraph()
     {
         HGHandle linkH = graph.add(makeLink(getNestedBeanHandle(0), 
                                             getNestedBeanHandle(1)));
@@ -537,13 +536,13 @@ public class Queries extends HGTestBase
         return linkH;
     }
 
-    private HGHandle getNestedBeanHandle(int num)
+    private static HGHandle getNestedBeanHandle(int num)
     {
         return hg.findOne(graph, hg.and(hg.type(NestedBean.class), hg.eq(
                 "innerBean.number", num)));
     }
 
-    private HGLink makeLink(HGHandle... outgoingSet)
+    private static HGLink makeLink(HGHandle... outgoingSet)
     {
         return (value_link_or_normal_link) ? new HGValueLink("SOMETHING",
                 outgoingSet) : new TestLink(outgoingSet);

@@ -10,7 +10,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.SingleKeyResultSet;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 
@@ -31,7 +31,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 
 		try
 		{
-			new SingleKeyResultSet(null, key, converter);
+			new SingleKeyResultSet<Integer>(null, key, converter);
 		}
 		catch (Exception occurred)
 		{

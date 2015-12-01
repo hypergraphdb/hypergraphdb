@@ -1,13 +1,14 @@
 package hgtest.storage.bje.PlainSecondaryKeyCreator;
 
+
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.SecondaryDatabase;
 import org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko

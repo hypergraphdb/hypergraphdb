@@ -6,16 +6,16 @@ import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 
 public class NoTxTests extends HGTestBase
 {
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
         HGUtils.dropHyperGraphInstance(getGraphLocation());
         HGConfiguration config = new HGConfiguration();

@@ -1,12 +1,12 @@
 package hgtest.storage.bje;
 
 import com.sleepycat.je.*;
+
 import org.hypergraphdb.storage.bje.BJETxCursor;
+import org.junit.After;
+import org.junit.Before;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockTestCase;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 
@@ -17,12 +17,11 @@ import java.io.File;
  * @author Yuriy Sechko
  */
 @PrepareForTest(BJETxCursor.class)
-public class ResultSetTestBasis extends PowerMockTestCase
+public class ResultSetTestBasis
 {
 	protected static final String DATABASE_NAME = "test_database";
 
-	protected final File envHome = TestUtils.createTempFile("IndexImpl",
-            "test_environment");
+	protected final File envHome = TestUtils.createTempFile("IndexImpl", "test_environment");
 	protected Environment environment;
 	protected Database database;
 	protected Transaction transactionForTheEnvironment;
@@ -41,7 +40,7 @@ public class ResultSetTestBasis extends PowerMockTestCase
 				DATABASE_NAME, databaseConfig);
 	}
 
-	@BeforeMethod
+	@Before
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.resetAll();
@@ -49,7 +48,7 @@ public class ResultSetTestBasis extends PowerMockTestCase
 		startupEnvironment();
 	}
 
-	@AfterMethod
+	@After
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
 		PowerMock.verifyAll();

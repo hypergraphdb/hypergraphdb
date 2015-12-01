@@ -3,11 +3,11 @@ package hgtest.storage.bje.BJETxLock;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.util.concurrent.locks.Lock;
 
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Yuriy Sechko

@@ -1,7 +1,7 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.HGException;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 

@@ -3,22 +3,22 @@ Bundle-SymbolicName: org.hypergraphdb-hgdbp2p;singleton:=true
 Require-Bundle: org.semanticweb.owl.owlapi
 Built-By: borislav
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1444360165811
+Bnd-LastModified: 1447458678675
 Embed-Dependency: smack*;scope=compile|runtime;inline=false
 Import-Package: javax.naming.directory,javax.net,javax.net.ssl,javax.s
  ecurity.auth.callback,javax.security.sasl,javax.swing,javax.xml.parse
- rs,mjson,org.hypergraphdb;version="1.3.0.SNAPSHOT",org.hypergraphdb.a
- lgorithms;version="1.3.0.SNAPSHOT",org.hypergraphdb.annotation;versio
- n="1.3.0.SNAPSHOT",org.hypergraphdb.event;version="1.3.0.SNAPSHOT",or
- g.hypergraphdb.handle;version="1.3.0.SNAPSHOT",org.hypergraphdb.peer,
- org.hypergraphdb.peer.bootstrap,org.hypergraphdb.peer.cact,org.hyperg
- raphdb.peer.log,org.hypergraphdb.peer.replication,org.hypergraphdb.pe
- er.serializer,org.hypergraphdb.peer.workflow,org.hypergraphdb.peer.xm
- pp,org.hypergraphdb.query;version="1.3.0.SNAPSHOT",org.hypergraphdb.q
- uery.impl;version="1.3.0.SNAPSHOT",org.hypergraphdb.storage;version="
- 1.3.0.SNAPSHOT",org.hypergraphdb.transaction;version="1.3.0.SNAPSHOT"
- ,org.hypergraphdb.type;version="1.3.0.SNAPSHOT",org.hypergraphdb.util
- ;version="1.3.0.SNAPSHOT",org.w3c.dom
+ rs,mjson;version="1.4.0.SNAPSHOT",org.hypergraphdb;version="1.3.0.SNA
+ PSHOT",org.hypergraphdb.algorithms;version="1.3.0.SNAPSHOT",org.hyper
+ graphdb.annotation;version="1.3.0.SNAPSHOT",org.hypergraphdb.event;ve
+ rsion="1.3.0.SNAPSHOT",org.hypergraphdb.handle;version="1.3.0.SNAPSHO
+ T",org.hypergraphdb.peer,org.hypergraphdb.peer.bootstrap,org.hypergra
+ phdb.peer.cact,org.hypergraphdb.peer.log,org.hypergraphdb.peer.replic
+ ation,org.hypergraphdb.peer.serializer,org.hypergraphdb.peer.workflow
+ ,org.hypergraphdb.peer.xmpp,org.hypergraphdb.query;version="1.3.0.SNA
+ PSHOT",org.hypergraphdb.query.impl;version="1.3.0.SNAPSHOT",org.hyper
+ graphdb.storage;version="1.3.0.SNAPSHOT",org.hypergraphdb.transaction
+ ;version="1.3.0.SNAPSHOT",org.hypergraphdb.type;version="1.3.0.SNAPSH
+ OT",org.hypergraphdb.util;version="1.3.0.SNAPSHOT",org.w3c.dom
 Tool: Bnd-0.0.238
 Export-Package: org.hypergraphdb.peer.cact;uses:="mjson,org.hypergraph
  db.util,org.hypergraphdb.peer,org.hypergraphdb.storage,org.hypergraph

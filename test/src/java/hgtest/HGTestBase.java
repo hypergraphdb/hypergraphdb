@@ -7,45 +7,45 @@ import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 public class HGTestBase
 {
-    protected HyperGraph graph;
-    protected HGConfiguration config = new HGConfiguration();
+    protected static HyperGraph graph;
+    protected static HGConfiguration config = new HGConfiguration();
     
-    public void reopenDb()
+    public static void reopenDb()
     {
         graph.close();
         graph.open(graph.getLocation());
     }
     
-    public String getGraphLocation()
+    public static String getGraphLocation()
     {
         return T.getTmpDirectory() /* "/home/borislav/data" */ + File.separator + "hgtest"; 
     }
     
-    public HyperGraph getGraph()
+    public static HyperGraph getGraph()
     {
         return graph;
     }
     
-    public void openGraph()
+    public static void openGraph()
     {
         GraphFactory gfac = HGUtils.getImplementationOf("hgtest.GraphFactory", "hgtest.DefaultGraphFactory");
         graph = gfac.createGraph(getGraphLocation());
     }
     
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
         HGUtils.dropHyperGraphInstance(getGraphLocation());
         openGraph();
     }
     
     @AfterClass    
-    public void tearDown()
+    public static void tearDown()
     {
         graph.close();
         HGUtils.dropHyperGraphInstance(getGraphLocation());

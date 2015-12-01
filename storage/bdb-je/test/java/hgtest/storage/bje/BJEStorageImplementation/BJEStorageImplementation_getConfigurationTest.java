@@ -2,10 +2,10 @@ package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.EnvironmentConfig;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * In this test only some properties of configuration is checked:
