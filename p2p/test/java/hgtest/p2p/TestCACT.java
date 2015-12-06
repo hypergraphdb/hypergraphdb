@@ -24,7 +24,6 @@ import org.hypergraphdb.atom.HGSubsumes;
 import org.hypergraphdb.peer.HyperGraphPeer;
 import org.hypergraphdb.peer.PeerConfig;
 import org.hypergraphdb.peer.PeerHyperNode;
-import org.hypergraphdb.peer.Performative;
 import org.hypergraphdb.peer.bootstrap.AffirmIdentityBootstrap;
 import org.hypergraphdb.peer.bootstrap.CACTBootstrap;
 import org.hypergraphdb.peer.cact.DefineAtom;
@@ -35,10 +34,10 @@ import org.hypergraphdb.peer.workflow.WorkflowState;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class TestCACT
 {
@@ -200,7 +199,8 @@ public class TestCACT
 		}
 		catch (Throwable t)
 		{
-			Assert.fail("Exception during GetAtom activity", t);
+			t.printStackTrace();
+			Assert.fail("Exception during GetAtom activity");
 		}
 	}
 
@@ -221,7 +221,8 @@ public class TestCACT
 		}
 		catch (Throwable t)
 		{
-			Assert.fail("Exception during GetAtom activity", t);
+			t.printStackTrace();
+			Assert.fail("Exception during GetAtom activity");
 		}
 	}
 
@@ -246,7 +247,8 @@ public class TestCACT
 		}
 		catch (Throwable t)
 		{
-			Assert.fail("Exception during RemoteQuery Activity activity", t);
+			t.printStackTrace();
+			Assert.fail("Exception during RemoteQuery Activity activity");
 		}
 	}
 
@@ -281,11 +283,12 @@ public class TestCACT
 				// System.out.println(((Pair<?, Object>)x).getSecond());
 				result.add(((Pair<?, Object>) x).getSecond());
 			}
-			Assert.assertEqualsNoOrder(result.toArray(), beans.toArray());
+			Assert.assertEquals(new HashSet<Object>(result), new HashSet<Object>(beans));
 		}
 		catch (Throwable t)
 		{
-			Assert.fail("Exception during RemoteQuery Activity activity", t);
+			t.printStackTrace();
+			Assert.fail("Exception during RemoteQuery Activity activity");
 		}
 	}
 
@@ -342,9 +345,16 @@ public class TestCACT
 		}
 		rs.close();
 		Assert.assertTrue(intSet.isEmpty());
-		Assert.assertEqualsNoOrder(node.findAll(hg.type(intType)).toArray(new HGHandle[0]), intHandles.toArray(new HGHandle[0]));
-		Integer[] II = node.getAll(hg.type(intType)).toArray(new Integer[0]);
-		Assert.assertEqualsNoOrder(II, ints.toArray(new Integer[0]));
+		Set<HGHandle> expected = new HashSet<HGHandle>();
+		expected.addAll((List<HGHandle>)(List)node.findAll(hg.type(intType)));
+		Set<HGHandle> actual = new HashSet<HGHandle>();
+		actual.addAll(intHandles);
+		Assert.assertEquals(expected, actual);
+		Set<Integer> expectedValues = new HashSet<Integer>();
+		expectedValues.addAll((List<Integer>)(List)node.getAll(hg.type(intType)));
+		Set<Integer> actualValues = new HashSet<Integer>();
+		actualValues.addAll(ints);
+		Assert.assertEquals(expectedValues, actualValues);
 		Assert.assertEquals(node.get(toBeReplaced), ints);
 	}
 

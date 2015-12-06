@@ -1,7 +1,6 @@
 package hgtest.p2p;
 
 import hgtest.HGTestBase;
-import junit.framework.Assert;
 import mjson.Json;
 
 import org.hypergraphdb.HGHandle;
@@ -20,9 +19,10 @@ import org.hypergraphdb.query.IndexedPartCondition;
 import org.hypergraphdb.query.Nothing;
 import org.hypergraphdb.query.TypedValueCondition;
 import org.hypergraphdb.util.Mapping;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class QueryToJsonTests extends HGTestBase
 {
@@ -45,14 +45,14 @@ public class QueryToJsonTests extends HGTestBase
 	}
 	
     @BeforeClass
-	public void setUp()
+	public static void setUp()
 	{
-    	super.setUp();
-    	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(this.getGraph()));
+    	HGTestBase.setUp();
+    	Json.attachFactory(HGPeerJsonFactory.getInstance().setHyperGraph(getGraph()));
 	}
     
     @AfterClass
-	public void tearDown()
+	public static void tearDown()
 	{
 		Json.dettachFactory();
 	}
@@ -270,7 +270,7 @@ public class QueryToJsonTests extends HGTestBase
     	QueryToJsonTests test = new QueryToJsonTests();
         try
         {
-            test.setUp();
+            QueryToJsonTests.setUp();
             test.testAtomValue();
             System.out.println("test passed successfully");
         }
@@ -280,7 +280,7 @@ public class QueryToJsonTests extends HGTestBase
         }
         finally
         {
-            test.tearDown();
+        	QueryToJsonTests.tearDown();
         }
     }	
 }

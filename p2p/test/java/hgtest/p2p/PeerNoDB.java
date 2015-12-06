@@ -4,7 +4,7 @@ package hgtest.p2p;
 import java.util.concurrent.Future;
 import mjson.Json;
 import org.hypergraphdb.peer.HyperGraphPeer;
-import org.testng.annotations.Test;
+import org.junit.Test;
 import hgtest.HGTestBase;
 
 public class PeerNoDB extends HGTestBase
