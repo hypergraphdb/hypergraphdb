@@ -15,13 +15,13 @@
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
-      <version>1.4-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
     	<groupId>org.hypergraphdb</groupId>
     	<artifactId>hgbdbje</artifactId>
-    	<version>1.4-SNAPSHOT</version>
+    	<version>${project.version}</version>
     </dependency>
   </dependencies>
 
