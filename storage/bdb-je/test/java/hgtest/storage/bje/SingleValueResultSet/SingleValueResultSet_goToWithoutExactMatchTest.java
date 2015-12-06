@@ -1,10 +1,11 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+
 import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko
@@ -46,7 +47,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test(enabled = false)
+	@Test //(enabled = false)
 	public void thereIsOneValueAndItIsEqualToDesired() throws Exception
 	{
 		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
@@ -98,7 +99,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test(enabled = false)
+	@Test // (enabled = false)
 	public void thereAreTwoValuesAndOneOfThemIsEqualToDesired()
 			throws Exception
 	{
@@ -173,7 +174,7 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		shutdownCursor();
 	}
 
-	@Test(enabled = false)
+	@Test //(enabled = false)
 	public void thereAreThreeValuesAndOneOfThemIsEqualToDesired()
 			throws Exception
 	{

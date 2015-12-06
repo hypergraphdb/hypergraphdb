@@ -1,18 +1,19 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.google.code.multitester.annonations.Exported;
+
 import hgtest.storage.bje.TestUtils;
+
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.junit.After;
+import org.junit.Before;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockTestCase;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 
@@ -64,7 +65,7 @@ import java.io.File;
  */
 
 @PrepareForTest(HGConfiguration.class)
-public class BJEStorageImplementationTestBasis extends PowerMockTestCase
+public class BJEStorageImplementationTestBasis //extends PowerMockTestCase
 {
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
@@ -81,7 +82,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 	@Exported("underTest")
 	final BJEStorageImplementation storage = new BJEStorageImplementation();
 
-	@BeforeMethod
+	@Before
 	@Exported("up1")
 	protected void resetMocksAndDeleteTestDirectory()
 	{
@@ -89,7 +90,7 @@ public class BJEStorageImplementationTestBasis extends PowerMockTestCase
 		TestUtils.deleteDirectory(testDatabaseDirectory);
 	}
 
-	@AfterMethod
+	@After
 	@Exported("down1")
 	protected void verifyMocksAndDeleteTestDirectory()
 	{

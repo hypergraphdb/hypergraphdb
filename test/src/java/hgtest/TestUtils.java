@@ -11,8 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Yuriy Sechko
@@ -37,7 +37,7 @@ public class TestUtils
 	 * @param <T>
 	 *            type of the items in the list
 	 */
-	public static <T> List<T> list(final T... items)
+	public static List<T> list(final T... items)
 	{
 		return new ArrayList<T>(Arrays.asList(items));
 	}
@@ -64,7 +64,7 @@ public class TestUtils
 	/**
 	 * Iterates through result and copies encountered items to the list.
 	 */
-	public static <T> List<T> list(final HGSearchResult<T> result)
+	public static List<T> list(final HGSearchResult<T> result)
 	{
 		final List<T> outputList = new ArrayList<T>();
 		while (result.hasNext())
@@ -78,7 +78,7 @@ public class TestUtils
 	/**
 	 * Iterates through result and copies encountered items to the list.
 	 */
-	public static <T> List<T> listAndClose(final HGSearchResult<T> result)
+	public static List<T> listAndClose(final HGSearchResult<T> result)
 	{
 		final List<T> outputList = new ArrayList<T>();
 		while (result.hasNext())
@@ -218,15 +218,16 @@ public class TestUtils
 	 *            strings than should be contained in the exception's message
 	 */
 	public static void assertExceptions(final Exception occurred,
-			final Class expectedClass, final String... expectedMessageParts)
+			final Class<?> expectedClass, final String... expectedMessageParts)
 	{
 		assertEquals(occurred.getClass(), expectedClass);
 		final String actualMessage = occurred.getMessage();
 		final List<String> parts = Arrays.asList(expectedMessageParts);
 		for (final String currentPart : parts)
-			assertTrue(actualMessage.contains(currentPart), String.format(
+			assertTrue(String.format(
 					"Actual exception's message [%s] does not contain [%s] text.",
-					actualMessage, currentPart));
+					actualMessage, currentPart),
+					actualMessage.contains(currentPart));
 	}
 
 	/**
@@ -235,7 +236,7 @@ public class TestUtils
 	 * 2D arrays used for providing parameters in test cases written with
 	 * TestNG.
 	 */
-	public static Object[][] like2DArray(final Class... clazz)
+	public static Object[][] like2DArray(final Class<?>... clazz)
 	{
 		final int totalItems = clazz.length;
 		final Object[][] objects = new Object[totalItems][1];

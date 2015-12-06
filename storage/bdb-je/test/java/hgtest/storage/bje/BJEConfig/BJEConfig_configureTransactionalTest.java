@@ -4,9 +4,9 @@ import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.Durability;
 import com.sleepycat.je.EnvironmentConfig;
 import org.hypergraphdb.storage.bje.BJEConfig;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * {@link org.hypergraphdb.storage.bje.BJEConfig#configureTransactional()}

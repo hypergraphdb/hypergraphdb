@@ -33,17 +33,17 @@ import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.BAtoString;
 import org.hypergraphdb.util.Pair;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class ResultSets extends HGTestBase
 {
     private static final String ALIAS_PREFIX = "TestIntAlias";
     final static int COUNT = 10;
     final static int ALIAS_COUNT = 5;
-    HGSortIndex<Integer, HGHandle> index;
+    static HGSortIndex<Integer, HGHandle> index;
 
     public static void main(String[] args)
     {
@@ -75,9 +75,9 @@ public class ResultSets extends HGTestBase
     }
 
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
-        super.setUp();
+    	HGTestBase.setUp();
         HGTypeSystem ts = graph.getTypeSystem();
         HGHandle typeH = ts.getTypeHandle(TestInt.class);
         for (int i = 0; i < ALIAS_COUNT; i++)
@@ -90,7 +90,7 @@ public class ResultSets extends HGTestBase
     }
 
     @AfterClass
-    public void tearDown()
+    public static void tearDown()
     {
         List<HGHandle> list = hg.findAll(graph, hg.type(TestInt.class));
         for (HGHandle handle : list)
@@ -107,11 +107,12 @@ public class ResultSets extends HGTestBase
             catch (Throwable t)
             {
             }
-        List<HGIndexer<?,?>> indexers = graph.getIndexManager().getIndexersForType(
-                graph.getTypeSystem().getTypeHandle(TestInt.class));
+        List<HGIndexer<?,?>> indexers = new ArrayList<HGIndexer<?,?>>(); 
+        indexers.addAll(graph.getIndexManager().getIndexersForType(
+                graph.getTypeSystem().getTypeHandle(TestInt.class)));
         if (indexers != null) for (HGIndexer<?,?> indexer : indexers)
             graph.getIndexManager().unregister(indexer);
-        super.tearDown();
+        HGTestBase.tearDown();
     }
 
     @Test

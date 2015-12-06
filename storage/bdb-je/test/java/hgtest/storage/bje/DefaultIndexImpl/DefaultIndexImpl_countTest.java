@@ -1,5 +1,6 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseNotFoundException;
 import com.sleepycat.je.StatsConfig;
@@ -7,12 +8,12 @@ import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko

@@ -1,9 +1,9 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.transaction.HGTransactionFactory;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * In this test returned transaction factory is checked only for nullity.

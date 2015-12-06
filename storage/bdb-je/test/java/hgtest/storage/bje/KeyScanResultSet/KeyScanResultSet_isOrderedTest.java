@@ -1,11 +1,12 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
+
 import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.storage.bje.KeyScanResultSet;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Yuriy Sechko

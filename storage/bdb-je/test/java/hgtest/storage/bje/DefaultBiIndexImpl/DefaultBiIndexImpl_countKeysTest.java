@@ -6,11 +6,11 @@ import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Yuriy Sechko

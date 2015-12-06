@@ -1,10 +1,11 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
+
 import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko

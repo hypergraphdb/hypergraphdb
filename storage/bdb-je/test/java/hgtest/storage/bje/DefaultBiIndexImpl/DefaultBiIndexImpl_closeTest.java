@@ -5,7 +5,7 @@ import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 

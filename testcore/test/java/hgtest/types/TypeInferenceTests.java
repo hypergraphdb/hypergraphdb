@@ -1,7 +1,6 @@
 package hgtest.types;
 
 import static hgtest.AtomOperationKind.add;
-
 import static hgtest.AtomOperationKind.remove;
 import hgtest.AtomOperation;
 import hgtest.HGTestBase;
@@ -23,9 +22,9 @@ import java.util.Map;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.type.HGCompositeType;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * 
@@ -37,12 +36,12 @@ import org.testng.annotations.Test;
  */
 public class TypeInferenceTests extends HGTestBase
 {
-    BasicOperations basics;
+    static BasicOperations basics;
 
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
-        super.setUp();
+        HGTestBase.setUp();
         basics = new BasicOperations(graph);
     }
     

@@ -3,7 +3,7 @@ package hgtest.storage.bje.BJETxLock;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 

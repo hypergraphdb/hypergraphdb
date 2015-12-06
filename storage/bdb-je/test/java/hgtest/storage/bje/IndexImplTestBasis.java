@@ -2,6 +2,7 @@ package hgtest.storage.bje;
 
 import com.google.code.multitester.annonations.Exported;
 import com.sleepycat.je.*;
+
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
@@ -10,9 +11,9 @@ import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.*;
+import org.junit.After;
+import org.junit.Before;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -48,7 +49,7 @@ public class IndexImplTestBasis
 	// Sleepycat's BtreeComparator
 	protected Comparator<?> comparator = null;
 
-	@BeforeMethod
+	@Before
     @Exported("up1")
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
@@ -57,7 +58,7 @@ public class IndexImplTestBasis
 		startupEnvironment();
 	}
 
-	@AfterMethod
+	@After
     @Exported("down1")
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
@@ -156,7 +157,7 @@ public class IndexImplTestBasis
 	 * We obtain them by their names. It is not good. But it seems that there is
 	 * not way to obtain them from Environment instance.
 	 */
-	protected void closeDatabase(final DefaultIndexImpl indexImpl)
+	protected void closeDatabase(final DefaultIndexImpl<?,?> indexImpl)
 			throws NoSuchFieldException, IllegalAccessException
 	{
 		// one database handle is in DefaultIndexImpl

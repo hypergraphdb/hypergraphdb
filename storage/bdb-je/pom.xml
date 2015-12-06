@@ -14,10 +14,8 @@
     <bundle.namespace>org.hypergraph.storage.bje</bundle.namespace>
   </properties>
   <packaging>${packageit}</packaging>
-  <groupId>org.hypergraphdb</groupId>
   <artifactId>hgbdbje</artifactId>
   <name>HyperGraphDB BDB-JE Storage</name>
-  <version>1.4-SNAPSHOT</version>
   <url>http://hypergraphdb.org</url>
 
   <repositories>
@@ -54,7 +52,7 @@
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-testng</artifactId>
+      <artifactId>powermock-module-junit4</artifactId>
       <version>${libraries.powermock.version}</version>
       <scope>test</scope>
     </dependency>
@@ -68,12 +66,6 @@
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
       <version>${libraries.easymock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>${libraries.testng.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>

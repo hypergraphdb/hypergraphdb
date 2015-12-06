@@ -1,9 +1,10 @@
 package hgtest.storage.bje.TransactionBJEImpl;
 
-import org.hypergraphdb.storage.bje.TransactionBJEImpl;
-import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertNull;
+import org.hypergraphdb.storage.bje.TransactionBJEImpl;
+import org.junit.Test;
+
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Yuriy Sechko

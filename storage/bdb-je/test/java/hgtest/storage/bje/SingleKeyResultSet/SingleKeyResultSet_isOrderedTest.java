@@ -1,5 +1,6 @@
 package hgtest.storage.bje.SingleKeyResultSet;
 
+
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.DatabaseEntry;
 import hgtest.storage.bje.ResultSetTestBasis;
@@ -9,9 +10,9 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.SingleKeyResultSet;
 import org.powermock.api.easymock.PowerMock;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertFalse;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Yuriy Sechko

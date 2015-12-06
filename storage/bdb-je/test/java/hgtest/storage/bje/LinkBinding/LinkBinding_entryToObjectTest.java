@@ -1,13 +1,14 @@
 package hgtest.storage.bje.LinkBinding;
 
+
 import com.sleepycat.bind.tuple.TupleInput;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.testng.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Yuriy Sechko

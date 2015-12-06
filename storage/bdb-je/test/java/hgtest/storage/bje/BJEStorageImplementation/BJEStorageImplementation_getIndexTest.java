@@ -2,13 +2,13 @@ package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import java.util.Comparator;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  */

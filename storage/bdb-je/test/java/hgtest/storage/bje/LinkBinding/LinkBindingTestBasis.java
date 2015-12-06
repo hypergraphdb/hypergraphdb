@@ -1,10 +1,11 @@
 package hgtest.storage.bje.LinkBinding;
 
+
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.hypergraphdb.storage.bje.LinkBinding;
-import org.testng.annotations.BeforeMethod;
+import org.junit.Before;
 
 /**
  * @author Yuriy Sechko
@@ -32,7 +33,7 @@ public class LinkBindingTestBasis
 		return buffer;
 	}
 
-	@BeforeMethod
+	@Before
 	public void initHandleFactoryAndCreateLinkBinding() throws Exception
 	{
 		handleFactory = (HGHandleFactory) Class.forName(
