@@ -1,13 +1,14 @@
 package hgtest.storage.bje.BJETxLock;
 
 import com.sleepycat.je.DatabaseEntry;
+
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertArrayEquals;
 /**
  * @author Yuriy Sechko
  */
@@ -25,7 +26,7 @@ public class BJETxLock_getObjectIdTest
 
 		final byte[] actual = bjeLock.getObjectId();
 
-		assertEquals(actual, expected);
+		assertArrayEquals(actual, expected);
 		PowerMock.verifyAll();
 	}
 
@@ -40,8 +41,7 @@ public class BJETxLock_getObjectIdTest
 		final BJETxLock bjeLock = new BJETxLock(graph, objectId);
 
 		final byte[] actual = bjeLock.getObjectId();
-
-		assertEquals(actual, expected);
+		assertArrayEquals(actual, expected);
 		PowerMock.verifyAll();
 	}
 
@@ -57,7 +57,7 @@ public class BJETxLock_getObjectIdTest
 
 		final byte[] actual = bjeLock.getObjectId();
 
-		assertEquals(actual, expected);
+		assertArrayEquals(actual, expected);
 		PowerMock.verifyAll();
 	}
 
@@ -73,7 +73,7 @@ public class BJETxLock_getObjectIdTest
 
         final byte[] actual = bjeLock.getObjectId();
 
-        assertEquals(actual, expected);
+        assertArrayEquals(actual, expected);
         PowerMock.verifyAll();
     }
 
@@ -89,7 +89,7 @@ public class BJETxLock_getObjectIdTest
 
         final byte[] actual = bjeLock.getObjectId();
 
-        assertEquals(actual, expected);
+        assertArrayEquals(actual, expected);
         PowerMock.verifyAll();
     }
 }

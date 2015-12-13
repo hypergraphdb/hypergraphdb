@@ -5,8 +5,10 @@ import com.sleepycat.je.*;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 
@@ -16,8 +18,9 @@ import java.io.File;
  *
  * @author Yuriy Sechko
  */
+@RunWith(PowerMockRunner.class)
 @PrepareForTest(BJETxCursor.class)
-public class ResultSetTestBasis
+public abstract class ResultSetTestBasis
 {
 	protected static final String DATABASE_NAME = "test_database";
 

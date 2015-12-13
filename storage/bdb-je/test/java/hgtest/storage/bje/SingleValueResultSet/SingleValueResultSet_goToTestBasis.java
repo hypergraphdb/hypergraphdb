@@ -8,7 +8,7 @@ import org.powermock.api.easymock.PowerMock;
  * @author Yuriy Sechko
  */
 
-public class SingleValueResultSet_goToTestBasis extends
+public abstract class SingleValueResultSet_goToTestBasis extends
 		SingleValueResultSetTestBasis
 {
 	protected SingleValueResultSet<Integer> resultSet;

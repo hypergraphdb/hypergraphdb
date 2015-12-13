@@ -12,8 +12,10 @@ import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 
@@ -63,9 +65,9 @@ import java.io.File;
  * 
  * @author Yuriy Sechko
  */
-
+@RunWith(PowerMockRunner.class)
 @PrepareForTest(HGConfiguration.class)
-public class BJEStorageImplementationTestBasis //extends PowerMockTestCase
+public abstract class BJEStorageImplementationTestBasis
 {
 	protected static final String HGHANDLEFACTORY_IMPLEMENTATION_CLASS_NAME = "org.hypergraphdb.handle.UUIDHandleFactory";
 
@@ -84,7 +86,7 @@ public class BJEStorageImplementationTestBasis //extends PowerMockTestCase
 
 	@Before
 	@Exported("up1")
-	protected void resetMocksAndDeleteTestDirectory()
+	public void resetMocksAndDeleteTestDirectory()
 	{
 		PowerMock.resetAll();
 		TestUtils.deleteDirectory(testDatabaseDirectory);
@@ -92,7 +94,7 @@ public class BJEStorageImplementationTestBasis //extends PowerMockTestCase
 
 	@After
 	@Exported("down1")
-	protected void verifyMocksAndDeleteTestDirectory()
+	public void verifyMocksAndDeleteTestDirectory()
 	{
 		PowerMock.verifyAll();
 		TestUtils.deleteDirectory(testDatabaseDirectory);

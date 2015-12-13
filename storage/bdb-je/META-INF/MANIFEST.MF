@@ -1,7 +1,24 @@
 Manifest-Version: 1.0
-Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb.u
- til,org.hypergraphdb.storage,org.hypergraphdb,org.hypergraphdb.transa
- ction"
+Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
+Built-By: borislav
+Bundle-ManifestVersion: 2
+Bnd-LastModified: 1449981038529
+Embed-Dependency: je
+Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
+ .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
+ ergraphdb.cache,org.hypergraphdb.event,org.hypergraphdb.handle,org.hy
+ pergraphdb.indexing,org.hypergraphdb.maintenance,org.hypergraphdb.que
+ ry,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,org.hy
+ pergraphdb.storage,org.hypergraphdb.storage.bje,org.hypergraphdb.tran
+ saction,org.hypergraphdb.type,org.hypergraphdb.type.javaprimitive,org
+ .hypergraphdb.util
+Tool: Bnd-0.0.238
+Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,o
+ rg.hypergraphdb.util,org.hypergraphdb.transaction,org.hypergraphdb.st
+ orage"
+Bundle-Version: 1.4.0.SNAPSHOT
+Bundle-Name: HyperGraphDB BDB-JE Storage
+Bundle-ClassPath: .,je-5.0.34.jar
 Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
  nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
  pycat.compat,com.sleepycat.je,com.sleepycat.je.cleaner,com.sleepycat.
@@ -20,26 +37,9 @@ Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
  epycat.persist,com.sleepycat.persist.evolve,com.sleepycat.persist.imp
  l,com.sleepycat.persist.model,com.sleepycat.persist.raw,com.sleepycat
  .util,com.sleepycat.util.keyrange,com.sleepycat.utilint
-Ignore-Package: org.apache.tools.ant.types,javax.management,org.apache
- .tools.ant
-Bundle-ClassPath: .,je-5.0.34.jar
-Built-By: borislav
-Tool: Bnd-0.0.238
-Bundle-Name: HyperGraphDB BDB-JE Storage
-Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.7.0_60
-Bundle-Version: 1.4.0.SNAPSHOT
-Bnd-LastModified: 1449386097655
+Ignore-Package: javax.management,org.apache.tools.ant,org.apache.tools
+ .ant.types
 Embed-Transitive: true
-Bundle-ManifestVersion: 2
-Embed-Dependency: je
-Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
- .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
- ergraphdb.cache,org.hypergraphdb.event,org.hypergraphdb.handle,org.hy
- pergraphdb.indexing,org.hypergraphdb.maintenance,org.hypergraphdb.que
- ry,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,org.hy
- pergraphdb.storage,org.hypergraphdb.storage.bje,org.hypergraphdb.tran
- saction,org.hypergraphdb.type,org.hypergraphdb.type.javaprimitive,org
- .hypergraphdb.util
-Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
+Created-By: Apache Maven Bundle Plugin
+Build-Jdk: 1.8.0_40
 

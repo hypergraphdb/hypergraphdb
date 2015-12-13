@@ -7,7 +7,7 @@ import org.powermock.api.easymock.PowerMock;
 /**
  * @author Yuriy Sechko
  */
-public class KeyScanResultSet_goToTestBasis extends KeyScanResultSetTestBasis
+public abstract class KeyScanResultSet_goToTestBasis extends KeyScanResultSetTestBasis
 {
 	protected KeyScanResultSet<Integer> keyScan;
 

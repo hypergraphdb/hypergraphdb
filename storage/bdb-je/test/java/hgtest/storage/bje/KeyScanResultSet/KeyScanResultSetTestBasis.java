@@ -11,7 +11,7 @@ import org.powermock.api.easymock.PowerMock;
 /**
  * @author Yuriy Sechko
  */
-public class KeyScanResultSetTestBasis extends ResultSetTestBasis
+public abstract class KeyScanResultSetTestBasis extends ResultSetTestBasis
 {
 	protected Cursor realCursor;
 

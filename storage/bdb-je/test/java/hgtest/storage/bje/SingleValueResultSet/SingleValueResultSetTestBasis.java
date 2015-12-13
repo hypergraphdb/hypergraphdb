@@ -36,7 +36,7 @@ import org.powermock.api.easymock.PowerMock;
  *
  * @author Yuriy Sechko
  */
-public class SingleValueResultSetTestBasis extends ResultSetTestBasis
+public abstract class SingleValueResultSetTestBasis extends ResultSetTestBasis
 {
 	protected SecondaryDatabase secondaryDatabase;
 	protected SecondaryCursor realCursor;

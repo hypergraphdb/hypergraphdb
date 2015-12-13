@@ -2,12 +2,14 @@ package hgtest.storage.bje.LinkBinding;
 
 
 import com.sleepycat.bind.tuple.TupleOutput;
+
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author Yuriy Sechko
@@ -59,7 +61,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), new byte[] {});
+		assertArrayEquals(output.getBufferBytes(), new byte[] {});
 	}
 
 	@Test
@@ -73,7 +75,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(output.getBufferBytes(), expected);
 	}
 
 	@Test
@@ -87,7 +89,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(output.getBufferBytes(), expected);
 	}
 
 	@Test
@@ -102,7 +104,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(output.getBufferBytes(), expected);
 	}
 
 	@Test
@@ -117,7 +119,7 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(output.getBufferBytes(), expected);
 	}
 
 	@Test
@@ -132,6 +134,6 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(output.getBufferBytes(), expected);
 	}
 }

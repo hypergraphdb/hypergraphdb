@@ -1,11 +1,11 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import com.sleepycat.je.DatabaseNotFoundException;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.junit.Test;
-
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 
 

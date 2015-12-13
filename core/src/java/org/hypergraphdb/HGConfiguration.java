@@ -27,7 +27,7 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public final class HGConfiguration
+public class HGConfiguration
 {	
 	private HGHandleFactory handleFactory;
 	private HGStoreImplementation storeImplementation;
