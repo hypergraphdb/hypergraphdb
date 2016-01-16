@@ -1,7 +1,7 @@
 package hgtest.tx;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import hgtest.HGTestBase;
 
 import java.util.ArrayList;

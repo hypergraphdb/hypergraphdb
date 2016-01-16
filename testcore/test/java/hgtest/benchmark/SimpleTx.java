@@ -1,6 +1,6 @@
 package hgtest.benchmark;
 
-import static org.testng.Assert.*;
+import static org.junit.Assert.*;
 import hgtest.HGTestBase;
 
 import java.util.concurrent.ExecutorService;
@@ -11,7 +11,7 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class SimpleTx extends HGTestBase
 {

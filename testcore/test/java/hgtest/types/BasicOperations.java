@@ -8,7 +8,7 @@ import org.hypergraphdb.HGSystemFlags;
 import org.hypergraphdb.HyperGraph;
 import hgtest.AtomOperation;
 import hgtest.verify.Verifier;
-import static org.testng.Assert.*;
+import static org.junit.Assert.*;
 import static hgtest.verify.HGAssert.*;
 
 public class BasicOperations

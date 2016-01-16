@@ -1,7 +1,7 @@
 package hgtest.tx;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import hgtest.HGTestBase;
 import hgtest.T;
 
@@ -20,7 +20,7 @@ import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.HGUserAbortException;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class LinkTxTests extends HGTestBase
 {

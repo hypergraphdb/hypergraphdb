@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hypergraphdb.transaction.TxList;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 

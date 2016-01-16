@@ -4,8 +4,8 @@ import hgtest.HGTestBase;
 
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.*;
-import org.testng.annotations.Test;
-import static org.testng.Assert.*;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Test transaction failures.

@@ -9,8 +9,8 @@ import org.hypergraphdb.LazyRef;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.type.HGAtomTypeBase;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 

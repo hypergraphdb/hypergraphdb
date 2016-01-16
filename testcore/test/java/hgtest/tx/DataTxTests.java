@@ -1,7 +1,7 @@
 package hgtest.tx;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import hgtest.HGTestBase;
 import hgtest.T;
 
@@ -18,8 +18,8 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DataTxTests extends HGTestBase
 {

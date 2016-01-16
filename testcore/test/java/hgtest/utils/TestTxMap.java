@@ -10,8 +10,8 @@ import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TxMap;
 import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.util.WeakIdentityHashMap;
-import org.testng.annotations.Test;
-import static org.testng.Assert.*;
+import org.junit.Test;
+import static org.junit.Assert.*;
 import hgtest.HGTestBase;
 
 public class TestTxMap extends HGTestBase

@@ -4,8 +4,9 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.atom.HGSubgraph;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.hypergraphdb.util.HGUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class SubgraphTests extends HGTestBase
 {
@@ -49,7 +50,7 @@ public class SubgraphTests extends HGTestBase
         HGHandle globalLink2 = graph.add(new HGPlainLink(globalOnly, localDefine, globalAtom), linkType, 0);
         Assert.assertFalse(subgraph.getIncidenceSet(localDefine).contains(globalLink2));
         
-        this.reopenDb();
+        reopenDb();
         
         stringType = graph.getTypeSystem().getTypeHandle(String.class);
         subgraph = graph.get(subgraph.getAtomHandle().getPersistent());        
@@ -59,8 +60,8 @@ public class SubgraphTests extends HGTestBase
         subgraph.replace(toBeReplaced, "alreadyReplaced", stringType);
         Assert.assertEquals(graph.getOne(hg.eq("toBeReplaced")), null);
 
-        Assert.assertEqualsNoOrder(subgraph.getAll(hg.type(String.class)).toArray(), 
-                            new Object[] {"global", "localAtom", "localDefinedAtom", "alreadyReplaced" });
+        Assert.assertEquals(HGUtils.set(subgraph.getAll(hg.type(String.class)).toArray()), 
+        					HGUtils.set(new Object[] {"global", "localAtom", "localDefinedAtom", "alreadyReplaced" }));
         
         // Checks links and incidence sets
         Assert.assertTrue(subgraph.isMember(localLink1));
@@ -72,9 +73,8 @@ public class SubgraphTests extends HGTestBase
         Assert.assertEquals(subgraph.getIncidenceSet(localDefine).size(), 0);
         Assert.assertEquals(subgraph.getIncidenceSet(globalOnly).size(), 1);
         
-        Assert.assertEqualsNoOrder(subgraph.getIncidenceSet(localAtom).toArray(), 
-                                   new Object[] { localLink1, localLink2 });
-        
+        Assert.assertEquals(HGUtils.set(subgraph.getIncidenceSet(localAtom).toArray()), 
+                            HGUtils.set(new Object[] { localLink1, localLink2 }));        
     }
     
     public static void main(String[] argv)

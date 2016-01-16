@@ -18,7 +18,7 @@ import org.hypergraphdb.type.Record;
 import org.hypergraphdb.type.RecordType;
 import org.hypergraphdb.type.Slot;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 

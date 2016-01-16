@@ -1,6 +1,6 @@
 package hgtest;
 
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 public class TestCreateDB extends HGTestBase 
 {

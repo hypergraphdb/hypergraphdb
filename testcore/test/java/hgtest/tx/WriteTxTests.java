@@ -2,8 +2,8 @@ package hgtest.tx;
 
 import org.hypergraphdb.HGQuery.hg;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 import hgtest.beans.SimpleBean;
