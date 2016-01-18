@@ -9,17 +9,17 @@ package org.hypergraphdb.storage.bje;
 
 import java.util.Comparator;
 
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
-
-import com.sleepycat.je.BtreeStats;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
@@ -140,7 +140,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		{
 			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().clone();
 			dbConfig.setSortedDuplicates(sort_duplicates);
-
+			
 			if (comparator != null)
 			{
 				dbConfig.setBtreeComparator((Comparator<byte[]>) comparator);
@@ -620,47 +620,47 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 	public long count()
 	{
-		try
-		{
-			return ((BtreeStats) db.getStats(null)).getLeafNodeCount();
-		}
-		catch (DatabaseException ex)
-		{
-			throw new HGException(ex);
-		}
+		//return stats().keys(Long.MAX_VALUE, false).value();
+		return stats().keys(Long.MAX_VALUE, false).value();
 	}
 
 	public long count(KeyType key)
 	{
-		Cursor cursor = null;
-		try
-		{
-			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
-			DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
-			DatabaseEntry value = new DatabaseEntry();
-			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+//		Cursor cursor = null;
+//		try
+//		{
+//			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
+//			DatabaseEntry keyEntry = new DatabaseEntry(keyConverter.toByteArray(key));
+//			DatabaseEntry value = new DatabaseEntry();
+//			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
+//
+//			if (status == OperationStatus.SUCCESS)
+//				return cursor.count();
+//			else
+//				return 0;
+//		}
+//		catch (DatabaseException ex)
+//		{
+//			throw new HGException(ex);
+//		}
+//		finally
+//		{
+//			if (cursor != null)
+//			{
+//				try
+//				{
+//					cursor.close();
+//				}
+//				catch (Throwable t)
+//				{
+//				}
+//			}
+//		}
+		return stats().valuesOfKey(key, Long.MAX_VALUE, false).value();
+	}
 
-			if (status == OperationStatus.SUCCESS)
-				return cursor.count();
-			else
-				return 0;
-		}
-		catch (DatabaseException ex)
-		{
-			throw new HGException(ex);
-		}
-		finally
-		{
-			if (cursor != null)
-			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-			}
-		}
+	public HGIndexStats<KeyType, ValueType> stats()
+	{
+		return new BJEIndexStats<KeyType, ValueType>(this);
 	}
 }

@@ -18,6 +18,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgbdbje</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 </project>

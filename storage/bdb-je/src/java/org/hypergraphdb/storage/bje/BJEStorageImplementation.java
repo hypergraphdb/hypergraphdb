@@ -686,13 +686,21 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 			if (isBidirectional)
 			{
-				result = new DefaultBiIndexImpl<KeyType, ValueType>(name, this, store.getTransactionManager(), keyConverter,
-						valueConverter, comparator);
+				result = new DefaultBiIndexImpl<KeyType, ValueType>(name, 
+																	this, 
+																	store.getTransactionManager(), 
+																	keyConverter,
+																	valueConverter, 
+																	comparator);
 			}
 			else
 			{
-				result = new DefaultIndexImpl<KeyType, ValueType>(name, this, store.getTransactionManager(), keyConverter,
-						valueConverter, comparator);
+				result = new DefaultIndexImpl<KeyType, ValueType>(name, 
+																  this, 
+																  store.getTransactionManager(), 
+																  keyConverter,
+																  valueConverter, 
+																  comparator);
 			}
 
 			result.open();

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
 Built-By: borislav
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1452901534393
+Bnd-LastModified: 1453151898874
 Embed-Dependency: je
 Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
@@ -14,8 +14,8 @@ Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  .hypergraphdb.util
 Tool: Bnd-0.0.238
 Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,o
- rg.hypergraphdb.util,org.hypergraphdb.transaction,org.hypergraphdb.st
- orage"
+ rg.hypergraphdb.util,org.hypergraphdb.storage,org.hypergraphdb.transa
+ ction"
 Bundle-Version: 1.4.0.SNAPSHOT
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-ClassPath: .,je-5.0.34.jar

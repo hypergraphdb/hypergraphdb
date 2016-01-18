@@ -7,7 +7,9 @@
  */
 package org.hypergraphdb.util;
 
-public interface CloseMe
+import java.io.Closeable;
+
+public interface CloseMe extends Closeable
 {
 	void close();
 }
