@@ -2042,7 +2042,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param atom The new value of the atom
      * @param typeHandle The type of the new value
      */
-    private void replaceTransaction(final HGLiveHandle lHandle, 
+    private void replaceTransaction(HGLiveHandle lHandle, 
     							 	final HGPersistentHandle pHandle, 
     							 	final Object atom, 
     							 	final HGHandle typeHandle)
@@ -2150,10 +2150,10 @@ public /*final*/ class HyperGraph implements HyperNode
 	    	idx_manager.maybeIndex(getPersistentHandle(typeHandle), type, pHandle, atom);
 	    	if (atom instanceof HGGraphHolder)
 	    		((HGGraphHolder)atom).setHyperGraph(this);
-	    	if (atom instanceof HGHandleHolder)
-	    		((HGHandleHolder)atom).setAtomHandle(lHandle);	    	
 	    	if (lHandle != null)
-	    		cache.atomRefresh(lHandle, atom, true);
+		    	lHandle = cache.atomRefresh(lHandle, atom, true);
+	        if (atom instanceof HGHandleHolder)
+	        	 ((HGHandleHolder)atom).setAtomHandle(lHandle != null ? lHandle : pHandle);
     }
     
     /**
