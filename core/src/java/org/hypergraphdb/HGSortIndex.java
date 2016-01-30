@@ -13,14 +13,7 @@ package org.hypergraphdb;
  * keys in an order relation. It is therefore an <code>HGOrderedSearchable</code>
  * entity.
  * </p>
- * 
- * <p>
- * Taking advantage of the new Java 1.5 feature allowing overriding methods to
- * further specialize on the return type (i.e. allowing contravariant return types),
- * all lookup methods of the super-interfaces are redeclared to return a 
- * <code>HGRandomAccessResult</code>. 
- * </p>
- * 
+ *  
  * @author Borislav Iordanov
  */
 public interface HGSortIndex<KeyType, ValueType> extends HGIndex<KeyType, ValueType>, 
