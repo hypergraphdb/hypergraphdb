@@ -34,8 +34,10 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 
 	public DefaultBiIndexImpl(String indexName, BJEStorageImplementation storage,
 			HGTransactionManager transactionManager, ByteArrayConverter<KeyType> keyConverter,
-			ByteArrayConverter<ValueType> valueConverter, Comparator<?> comparator) {
-		super(indexName, storage, transactionManager, keyConverter, valueConverter, comparator);
+			ByteArrayConverter<ValueType> valueConverter, 
+			Comparator<byte[]> keyComparator, Comparator<byte[]> valueComparator) {
+		super(indexName, storage, transactionManager, keyConverter, valueConverter, 
+				keyComparator, valueComparator);
 	}
 
 	public void open() {

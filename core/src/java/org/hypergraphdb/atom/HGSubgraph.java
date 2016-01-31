@@ -60,6 +60,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 										  BAtoHandle.getInstance(graph.getHandleFactory()), 
 										  BAtoHandle.getInstance(graph.getHandleFactory()), 
 										  null, 
+										  null,
 										  true);
 	}
 
@@ -69,6 +70,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
                                           BAtoHandle.getInstance(graph.getHandleFactory()), 
                                           BAtoHandle.getInstance(graph.getHandleFactory()), 
                                           null, 
+                                          null,
                                           true);
     }
 	
@@ -81,6 +83,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 				  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
 				  BAtoHandle.getInstance(atGraph.getHandleFactory()), 
 				  null, 
+				  null,
 				  true);		
 	}
 
@@ -93,6 +96,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
                   BAtoHandle.getInstance(atGraph.getHandleFactory()), 
                   BAtoHandle.getInstance(atGraph.getHandleFactory()), 
                   null, 
+                  null,
                   true);        
     }
 

@@ -104,7 +104,7 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		try
 		{

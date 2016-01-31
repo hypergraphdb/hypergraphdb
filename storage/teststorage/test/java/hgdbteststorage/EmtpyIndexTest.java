@@ -14,6 +14,7 @@ public class EmtpyIndexTest extends StoreImplementationTestBase
 													  BAtoBA.getInstance(), 
 													  BAtoBA.getInstance(), 
 													  null,
+													  null,
 													  false, 
 													  true);
 		Assert.assertEquals(0, empty.count());

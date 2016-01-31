@@ -36,7 +36,7 @@ public class BJEStorageImplementation_getIndex_ByNameOnlyTest extends
     public void getIndexThatExists() throws Exception {
         startup(1);
         final String indexName = "sample index";
-        final HGIndex<Object, Object> storedIndex = storage.getIndex(indexName, null, null, null, true, true);
+        final HGIndex<Object, Object> storedIndex = storage.getIndex(indexName, null, null, null, null, true, true);
 
         final HGIndex<Object, Object> retrievedIndex = storage.getIndex(indexName);
 

@@ -88,6 +88,7 @@ public abstract class PrimitiveTypeBase<JavaType> implements HGPrimitiveType<Jav
             																			 BAtoBA.getInstance(), 
             																			 BAtoHandle.getInstance(graph.getHandleFactory()),
             																			 comparator,
+            																			 null,
             																			 true);
 
         }

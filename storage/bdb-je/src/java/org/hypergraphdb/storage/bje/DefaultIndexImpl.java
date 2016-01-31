@@ -54,7 +54,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	protected String name;
 	protected Database db;
 	private boolean owndb;
-	protected Comparator<?> comparator;
+	protected Comparator<byte[]> keyComparator;
+	protected Comparator<byte[]> valueComparator;
 	protected boolean sort_duplicates = true;
 	protected ByteArrayConverter<KeyType> keyConverter;
 	protected ByteArrayConverter<ValueType> valueConverter;
@@ -93,15 +94,21 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	//
 	// }
 
-	public DefaultIndexImpl(String indexName, BJEStorageImplementation storage, HGTransactionManager transactionManager,
-			ByteArrayConverter<KeyType> keyConverter, ByteArrayConverter<ValueType> valueConverter, Comparator<?> comparator)
+	public DefaultIndexImpl(String indexName, 
+							BJEStorageImplementation storage, 
+							HGTransactionManager transactionManager,
+							ByteArrayConverter<KeyType> keyConverter, 
+							ByteArrayConverter<ValueType> valueConverter, 
+							Comparator<byte[]> keyComparator,
+							Comparator<byte[]> valueComparator)
 	{
 		this.name = indexName;
 		this.storage = storage;
 		this.transactionManager = transactionManager;
 		this.keyConverter = keyConverter;
 		this.valueConverter = valueConverter;
-		this.comparator = comparator;
+		this.keyComparator = keyComparator;
+		this.valueComparator = valueComparator;
 		owndb = true;
 	}
 
@@ -115,13 +122,13 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		return DB_NAME_PREFIX + name;
 	}
 
-	public Comparator<byte[]> getComparator()
+	public Comparator<byte[]> getKeyComparator()
 	{
 		try
 		{
-			if (comparator != null)
+			if (keyComparator != null)
 			{
-				return (Comparator<byte[]>) comparator;
+				return keyComparator;
 			}
 			else
 			{
@@ -134,6 +141,26 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		}
 	}
 
+	public Comparator<byte[]> getValueComparator()
+	{
+		try
+		{
+			if (valueComparator != null)
+			{
+				return valueComparator;
+			}
+			else
+			{
+				return db.getConfig().getDuplicateComparator();
+			}
+		}
+		catch (DatabaseException ex)
+		{
+			throw new HGException(ex);
+		}
+	}
+	
+	
 	public void open()
 	{
 		try
@@ -141,11 +168,16 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().clone();
 			dbConfig.setSortedDuplicates(sort_duplicates);
 			
-			if (comparator != null)
+			if (keyComparator != null)
 			{
-				dbConfig.setBtreeComparator((Comparator<byte[]>) comparator);
+				dbConfig.setBtreeComparator((Comparator<byte[]>) keyComparator);
 			}
 
+			if (valueComparator != null)
+			{
+				dbConfig.setDuplicateComparator((Comparator<byte[]>) keyComparator);
+			}
+			
 			db = storage.getBerkleyEnvironment().openDatabase(null, DB_NAME_PREFIX + name, dbConfig);
 		}
 		catch (Throwable t)

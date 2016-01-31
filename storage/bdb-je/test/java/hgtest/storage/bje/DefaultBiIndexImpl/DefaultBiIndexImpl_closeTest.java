@@ -24,7 +24,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		indexImpl.close();
 	}
@@ -36,7 +36,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 		indexImpl.close();
 	}
@@ -51,7 +51,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 		PowerMock.verifyAll();
 		PowerMock.resetAll();

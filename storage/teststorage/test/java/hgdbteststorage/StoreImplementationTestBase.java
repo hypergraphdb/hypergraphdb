@@ -5,6 +5,7 @@ import hgtest.T;
 import java.io.File;
 
 import org.hypergraphdb.HGConfiguration;
+import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.util.HGUtils;
@@ -39,6 +40,11 @@ public class StoreImplementationTestBase
 	public HGConfiguration config()
 	{
 		return config;
+	}
+	
+	public HGHandleFactory hfactory()
+	{
+		return config().getHandleFactory();
 	}
 	
 	public HGStoreImplementation impl()

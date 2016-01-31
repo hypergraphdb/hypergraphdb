@@ -75,7 +75,7 @@ public class HGIndexManager
 	}
 	
 	private <KeyType extends Object, ValueType extends Object> 
-		HGIndex<KeyType, ValueType> getOrCreateIndex(HGIndexer indexer)
+		HGIndex<KeyType, ValueType> getOrCreateIndex(HGIndexer<?,?> indexer)
 	{
 		HGIndex<KeyType, ValueType> result = (HGIndex<KeyType, ValueType>)indices.get(indexer);
 		if (result == null)			
@@ -90,6 +90,7 @@ public class HGIndexManager
 											   (ByteArrayConverter<KeyType>)indexer.getConverter(graph), 
 											   converter, 
 											   indexer.getComparator(graph),
+											   null, 
 											   true);
 //			if (result == null)
 //				result = graph.getStore().createIndex(name, 

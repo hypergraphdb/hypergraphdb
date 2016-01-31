@@ -86,6 +86,58 @@ public class TopLevelStorageTests extends StoreImplementationTestBase
 		rs.close();
 	}
 	
+	@Test(expected=NullPointerException.class) 
+	public void testAddNullIncident()
+	{
+		impl().addIncidenceLink(hfactory().makeHandle(), null);
+	}
+	
+	@Test(expected=NullPointerException.class) 
+	public void testAddIncidentToNull()
+	{
+		impl().addIncidenceLink(null, hfactory().makeHandle());
+	}
+
+	@Test(expected=NullPointerException.class) 
+	public void testAddNullData()
+	{
+		impl().store(hfactory().makeHandle(), (byte[])null);
+	}
+
+	@Test 
+	public void testAddEmptyData()
+	{
+		HGPersistentHandle h = hfactory().makeHandle(); 
+		impl().store(h, new byte[0]);
+		Assert.assertEquals(0, impl().getData(h).length);
+	}
+	
+	@Test(expected=NullPointerException.class) 
+	public void testAddDatatoNull()
+	{
+		impl().store(null, new byte[]{2,3,4});
+	}
+
+	@Test(expected=NullPointerException.class) 
+	public void testAddNullLink()
+	{
+		impl().store(hfactory().makeHandle(), (HGPersistentHandle[])null);
+	}
+
+	@Test 
+	public void testAddEmptyLink()
+	{
+		HGPersistentHandle h = hfactory().makeHandle(); 
+		impl().store(h, new HGPersistentHandle[0]);
+		Assert.assertEquals(0, impl().getLink(h).length);
+	}
+	
+	@Test(expected=NullPointerException.class) 
+	public void testAddLinkToNull()
+	{
+		impl().store(null, new HGPersistentHandle[]{hfactory().makeHandle()});
+	}
+	
 	@Test 
 	public void testIncidenceSets()
 	{		
@@ -148,5 +200,11 @@ public class TopLevelStorageTests extends StoreImplementationTestBase
 			impl().removeIncidenceSet(key);
 			Assert.assertNull(impl().getData(key.getPersistent()));
 		});
+	}
+	
+	@Test
+	public void testNonExistingIndex()
+	{
+		Assert.assertNull(impl().getIndex("askdfjaksjhfalksjdfhurhkjsgflsjdfglsdjfhglsdufghu9q3urhggsdfg"));
 	}
 }

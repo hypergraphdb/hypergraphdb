@@ -27,6 +27,7 @@ public class IndexInterfaceTests extends StoreImplementationTestBase
 							  BAtoHandle.getInstance(config().getHandleFactory()), 
 							  BAtoBA.getInstance(), 
 							  null,
+							  null,
 							  false, 
 							  true);
 	}

@@ -206,7 +206,7 @@ public class DataTxTests extends HGTestBase
     @Test
     public void testConcurrentLinkCreation()
     {
-        graph.getStore().getIndex("temptest", BAtoBA.getInstance(), BAtoBA.getInstance(), null, true);
+        graph.getStore().getIndex("temptest", BAtoBA.getInstance(), BAtoBA.getInstance(), null, null, true);
         for (int i = 0; i < atomsCount; i++)
             hg.assertAtom(graph, makeAtom(i));
         ExecutorService pool = Executors.newFixedThreadPool(10);

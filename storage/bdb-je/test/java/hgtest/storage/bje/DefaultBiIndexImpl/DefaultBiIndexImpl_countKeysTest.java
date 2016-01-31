@@ -108,7 +108,7 @@ public class DefaultBiIndexImpl_countKeysTest extends
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		try
 		{
@@ -136,7 +136,7 @@ public class DefaultBiIndexImpl_countKeysTest extends
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
 				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 		indexImpl.open();
 
 		try

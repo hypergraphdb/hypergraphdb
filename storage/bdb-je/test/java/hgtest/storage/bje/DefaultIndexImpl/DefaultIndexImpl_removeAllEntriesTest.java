@@ -25,7 +25,7 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 
 		try
 		{

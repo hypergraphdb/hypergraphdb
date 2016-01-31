@@ -331,16 +331,19 @@ public /*final*/ class HyperGraph implements HyperNode
 	                                     BAtoHandle.getInstance(this.getHandleFactory()), 
 	                                     BAtoHandle.getInstance(this.getHandleFactory()), 
 	                                     null,
+	                                     null,
 	                                     true);	        						     	        
 	        indexByValue = store.getIndex(VALUES_INDEX_NAME, 
 	                                      BAtoHandle.getInstance(this.getHandleFactory()), 
 	                                      BAtoHandle.getInstance(this.getHandleFactory()), 
+	                                      null,
 	                                      null,
 	                                      true);	        
 	        if (config.isUseSystemAtomAttributes())
     	        systemAttributesDB = store.getIndex(SA_DB_NAME, 
     	                                            BAtoHandle.getInstance(this.getHandleFactory()), 
     	                                            HGAtomAttrib.baConverter, 
+    	                                            null,
     	                                            null,
     	                                            true);
 	        
