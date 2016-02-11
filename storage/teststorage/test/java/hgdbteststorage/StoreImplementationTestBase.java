@@ -25,6 +25,7 @@ public class StoreImplementationTestBase
 	@BeforeClass
 	public static void initStorage()
 	{
+		HGUtils.dropHyperGraphInstance(getGraphLocation());
         impl = HGUtils.getImplementationOf(HGStoreImplementation.class.getName(), 
                 						   "org.hypergraphdb.storage.bje.BJEStorageImplementation");
         config = new HGConfiguration();

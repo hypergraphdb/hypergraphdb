@@ -1,6 +1,5 @@
 package hgtest;
 
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.storage.BAUtils;
@@ -41,7 +40,7 @@ public class TestUtils
 	{
 		return new ArrayList<T>(Arrays.asList(items));
 	}
-
+	
 	/**
 	 * Deletes directory's content and then deletes directory itself. Deleting
 	 * is not recursive.
@@ -97,15 +96,14 @@ public class TestUtils
 	 * we put all handles into set and that compare two sets. The order of
 	 * handles in result set (obtained from database) is difficult to predict.
 	 */
-	public static Set<HGPersistentHandle> set(
-			final HGRandomAccessResult<HGPersistentHandle> handles)
+	public static <T> Set<T> set(final HGSearchResult<T> rs)
 	{
-		final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
-		while (handles.hasNext())
+		final Set<T> set = new HashSet<T>();
+		while (rs.hasNext())
 		{
-			allHandles.add(handles.next());
+			set.add(rs.next());
 		}
-		return allHandles;
+		return set;
 	}
 
 	/**

@@ -16,11 +16,13 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 class KeyRangeBackwardResultSet<T> extends IndexResultSet<T> {
+	
 	private DatabaseEntry initialKey = null;
 
 	protected T advance() {
 		try {
 			OperationStatus status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
+			//if (status == OperationStatus)
 			if (status == OperationStatus.SUCCESS)
 				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			else
@@ -49,9 +51,15 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T> {
 	}
 
 	public KeyRangeBackwardResultSet(BJETxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter) {
-		super(cursor, key, converter);
+		super(cursor, 
+			  key, 
+			  converter,
+//			  bje.nextDataSupplier(cursor.cursor(), new DatabaseEntry(key.getData().clone()), converter),
+//			  bje.prevDataSupplier(cursor.cursor(), null, converter),
+			  null, null,
+			  true);		
 		initialKey = new DatabaseEntry();
-		assignData(initialKey, key.getData());
+		bje.assignData(initialKey, key.getData());
 	}
 
 	public boolean isOrdered() {
