@@ -99,7 +99,7 @@ public class ContractConjunction
                     return emptyresult;
                 else
                 {
-                    Pair<HGHandle, HGIndex<?,?>> p = ExpressionBasedQuery.findIndex(
+                    Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = ExpressionBasedQuery.findIndex(
                             graph, new ByPartIndexer(typeHandle, pc.getDimensionPath())); // graph.getIndexManager().getIndex(indexer);
                     if (p != null)
                     {

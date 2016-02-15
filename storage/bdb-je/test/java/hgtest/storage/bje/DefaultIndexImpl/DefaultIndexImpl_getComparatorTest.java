@@ -28,11 +28,11 @@ public class DefaultIndexImpl_getComparatorTest extends
 
 		PowerMock.replayAll();
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(null, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
+				transactionManager, keyConverter, valueConverter, comparator, null);
 
 		try
 		{
-			indexImpl.getComparator();
+			indexImpl.getKeyComparator();
 		}
 		catch (Exception occurred)
 		{
@@ -51,10 +51,10 @@ public class DefaultIndexImpl_getComparatorTest extends
 		PowerMock.replayAll();
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 
-		final Comparator<byte[]> actualComparator = indexImpl.getComparator();
+		final Comparator<byte[]> actualComparator = indexImpl.getKeyComparator();
 
 		assertNull(actualComparator);
 		closeDatabase(indexImpl);
@@ -71,7 +71,7 @@ public class DefaultIndexImpl_getComparatorTest extends
 		PowerMock.replayAll();
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 
 		// inject fake database and imitate error
@@ -84,7 +84,7 @@ public class DefaultIndexImpl_getComparatorTest extends
 		// call method which is under test
 		try
 		{
-			indexImpl.getComparator();
+			indexImpl.getKeyComparator();
 		}
 		catch (Exception ex)
 		{

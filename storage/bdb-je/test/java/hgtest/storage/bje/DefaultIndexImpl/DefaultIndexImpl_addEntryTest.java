@@ -22,7 +22,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 
 		PowerMock.replayAll();
 		index = new DefaultIndexImpl(INDEX_NAME, storage, transactionManager,
-				keyConverter, valueConverter, comparator);
+				keyConverter, valueConverter, comparator, null);
 
 		try
 		{

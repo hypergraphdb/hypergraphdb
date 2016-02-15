@@ -18,8 +18,8 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.HGSubgraph;
 import org.hypergraphdb.util.Ref;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class QueryCompilation extends HGTestBase
 {

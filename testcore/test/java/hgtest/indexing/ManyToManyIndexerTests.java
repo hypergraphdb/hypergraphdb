@@ -17,8 +17,8 @@ import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.IndexCondition;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 

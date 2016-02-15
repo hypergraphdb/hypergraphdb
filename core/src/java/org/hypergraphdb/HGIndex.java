@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb;
 
+import org.hypergraphdb.storage.HGIndexStats;
+
 
 /**
  * <p>The <code>HGIndex</code> interface represents an user-created index in the HyperGraph 
@@ -122,14 +124,26 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
     
     /**
      * <p>Return the number of keys in this index. This operation must run
-     * in constant time, regardless of the number of keys.</p>
+     * in constant time, regardless of the number of keys. </p>
+     * @deprecated Please use {@link #stats()} method instead.
      */
-    long count();
+    default long count() { return stats().keys(Long.MAX_VALUE, false).value(); }
 
     /**
      * <p>Return the number of values for the key. This operation must run 
      * constant time regardless of the key or the number returned.</p>
      * @param key The key whose values must be counted.
+     * @deprecated Please use {@link #stats()} method instead. 
      */
-    long count(KeyType key);
+    default long count(KeyType key)  { return stats().valuesOfKey(key, Long.MAX_VALUE, false).value(); }
+ 
+    /**
+     * <p>Return the associated {@link org.hypergraphdb.storage.HGIndexStats} object which
+     * provides counts and/or count estimates for the key/value pairs in the index.</p>
+     * <p>
+     * The returned object should be used instead of the deprecated {@link #count()}
+     * and {@link #count(Object)} methods.
+     * </p>
+     */
+    HGIndexStats<KeyType, ValueType> stats();
 }

@@ -8,8 +8,8 @@ import org.hypergraphdb.indexing.HGIndexer;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.cond2qry.ExpressionBasedQuery;
 import org.hypergraphdb.query.impl.IndexBasedQuery;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 import hgtest.beans.AnEnum;

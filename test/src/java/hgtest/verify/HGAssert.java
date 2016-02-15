@@ -1,6 +1,8 @@
 package hgtest.verify;
 
 import java.util.HashSet;
+import java.util.Set;
+
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPersistentHandle;
@@ -18,6 +20,21 @@ public class HGAssert
     }
     
     public static HGAssert with(HyperGraph graph) { return new HGAssert(graph); } 
+    
+    public static <T> void assertSetEquals(Set<T> left, Set<T> right)
+    {
+    	if (left == null && right != null)
+    		Assert.fail("Left is null, but right set is not.");
+    	if (right == null && left != null)
+    		Assert.fail("Right is null, but left set is not.");
+    	for (T t : left)
+    		if (!right.contains(t))
+    			Assert.fail("Element " + t + " missing from right set.");
+    	if (left.size() != right.size())
+        	for (T t : right)
+        		if (!left.contains(t))
+        			Assert.fail("Element " + t + " missing from left set.");    		
+    }
     
     public HGAssert eq(int [] A, int [] B) { HGAssert.assertEquals(A, B); return this; }    
     public static void assertEquals(int [] A, int [] B)

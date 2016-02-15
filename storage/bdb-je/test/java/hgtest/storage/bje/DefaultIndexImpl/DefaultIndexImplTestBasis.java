@@ -21,7 +21,7 @@ public class DefaultIndexImplTestBasis extends IndexImplTestBasis{
         mockStorage();
         PowerMock.replayAll();
         index = new DefaultIndexImpl<Integer, String>(INDEX_NAME, storage,
-                transactionManager, keyConverter, valueConverter, comparator);
+                transactionManager, keyConverter, valueConverter, comparator, null);
         index.open();
     }
 
@@ -36,7 +36,7 @@ public class DefaultIndexImplTestBasis extends IndexImplTestBasis{
         PowerMock.replayAll();
         index = new DefaultIndexImpl<Integer, String>(
                 INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-                valueConverter, comparator);
+                valueConverter, comparator, null);
         index.open();
     }
 }

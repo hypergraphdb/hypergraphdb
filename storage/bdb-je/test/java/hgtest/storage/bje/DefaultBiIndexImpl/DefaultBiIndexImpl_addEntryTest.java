@@ -119,7 +119,7 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		PowerMock.replayAll();
 		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 		try
 		{
 			indexImplSpecificForThisTestCase.addEntry(2, "two");

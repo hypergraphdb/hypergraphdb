@@ -1,48 +1,22 @@
 package hgtest;
 
+import hgtest.indexing.PropertyIndexingTests;
+
 import java.util.List;
-import java.util.concurrent.Future;
 
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGPersistentHandle;
-import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
-import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.atom.AtomProjection;
-import org.hypergraphdb.atom.HGRelType;
 import org.hypergraphdb.indexing.ByPartIndexer;
-import org.hypergraphdb.query.AtomPartCondition;
-import org.hypergraphdb.query.QueryCompile;
-import org.hypergraphdb.query.impl.AsyncSearchResultImpl;
 import org.hypergraphdb.type.HGHandleType;
 import org.hypergraphdb.type.Top;
 import org.hypergraphdb.type.javaprimitive.LongType;
-import org.hypergraphdb.type.javaprimitive.StringType;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-
-import hgtest.atomref.TestHGAtomRef;
-import hgtest.beans.Car;
-import hgtest.beans.Person;
-import hgtest.indexing.ManyToManyIndexerTests;
-import hgtest.indexing.PropertyIndexingTests;
-import hgtest.links.TestLinkage;
-import hgtest.query.BigTypePlus;
-import hgtest.query.IndexEnumTypeTest;
-import hgtest.query.Queries;
-import hgtest.query.QueryCompilation;
-import hgtest.tx.DataTxTests;
-import hgtest.tx.NestedTxTests;
-import hgtest.types.ChangingRecordTypes;
-import hgtest.types.TestPrimitives;
-import hgtest.types.ChangingRecordTypes.Bean;
 
 public class DebugTest
 {	
@@ -82,7 +56,7 @@ public class DebugTest
         LongType lt = graph.getTypeSystem().getAtomType(Long.class);
         HGHandleType ht = graph.getTypeSystem().getAtomType(HGHandle.class);
         
-        HGSortIndex index = (HGSortIndex)graph.getStore().getIndex("ana", lt, ht, lt.getComparator(), true);
+        HGSortIndex index = (HGSortIndex)graph.getStore().getIndex("ana", lt, ht, lt.getComparator(), null, true);
         
         HGPersistentHandle h = graph.getHandleFactory().makeHandle();
         

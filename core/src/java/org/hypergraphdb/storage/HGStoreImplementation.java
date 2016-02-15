@@ -164,11 +164,21 @@ public interface HGStoreImplementation
      * a new index. If <code>null</code>, a default converter should be used.
      * @param valueConverter Converter to byte [] for the values  in this index. Necessary when creating
      * a new index. If <code>null</code>, a default converter should be used.
+     * @param keyComparator A comparator for the keys in this index. If a non-null comparator is provided, it will be 
+     * used by the storage implementation to main the keys in order.  
+     * @param valueComparator A comparator for the values in this index. This comparator will be used only when
+     * there are multiple values associated with a given key (i.e. "duplicate values"). 
+     * @param isBidirectional If <code>true</code> a {@link HGBidirectionalIndex} will be created and 
+     * returned, otherwise a normal {@link HGIndex} is returned.
+     * @param createIfNecessary Only when this flag is <code>true</code> will an index be created. Otherwise,
+     * if this flag is <code>false</code> a no index with the given <code>name</code> exists then
+     * <code>null</code> will be returned.
      */
     <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
                                                               ByteArrayConverter<KeyType> keyConverter, 
                                                               ByteArrayConverter<ValueType> valueConverter,
-                                                              Comparator<?> comparator,
+                                                              Comparator<byte[]> keyComparator,
+                                                              Comparator<byte[]> valueComparator,
                                                               boolean isBidirectional,
                                                               boolean createIfNecessary);
     /**

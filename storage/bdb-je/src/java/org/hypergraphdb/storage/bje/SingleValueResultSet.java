@@ -39,7 +39,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T> {
 		this.cursor = cursor;
 		this.key = new DatabaseEntry();
 		if (keyIn != null) {
-			assignData(key, keyIn.getData());
+			bje.assignData(key, keyIn.getData());
 		}
 		
 		try {
@@ -85,7 +85,7 @@ public class SingleValueResultSet<T> extends IndexResultSet<T> {
 
 	public GotoResult goTo(T value, boolean exactMatch) {
 		byte[] B = converter.toByteArray(value);
-		assignData(pkey, B);
+		bje.assignData(pkey, B);
 		try {
 			if (exactMatch) {
 				if (((SecondaryCursor)cursor.cursor()).getSearchBoth(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {

@@ -9,8 +9,8 @@ import org.hypergraphdb.util.HGUtils;
 
 import static org.hypergraphdb.HGQuery.*;
 
-import static org.testng.Assert.*;
-import org.testng.annotations.Test;
+import static org.junit.Assert.*;
+import org.junit.Test;
 import hgtest.HGTestBase;
 
 public class PatternTests extends HGTestBase

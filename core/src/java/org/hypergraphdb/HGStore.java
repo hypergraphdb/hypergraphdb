@@ -339,10 +339,11 @@ public class HGStore
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
 																	 ByteArrayConverter<KeyType> keyConverter, 
 																	 ByteArrayConverter<ValueType> valueConverter,
-																	 Comparator<byte[]> comparator,
+																	 Comparator<byte[]> keyComparator,
+																	 Comparator<byte[]> valueComparator,
 																	 boolean allowCreate)
     {
-        return impl.getIndex(name, keyConverter, valueConverter, comparator, false, allowCreate);
+        return impl.getIndex(name, keyConverter, valueConverter, keyComparator, valueComparator, false, allowCreate);
     }
     
     /**
@@ -354,11 +355,12 @@ public class HGStore
     public <KeyType, ValueType> HGBidirectionalIndex<KeyType, ValueType> getBidirectionalIndex(String name,
 																							   ByteArrayConverter<KeyType> keyConverter, 
 																							   ByteArrayConverter<ValueType> valueConverter,
-																							   Comparator<byte[]> comparator,
+																							   Comparator<byte[]> keyComparator,
+																							   Comparator<byte[]> valueComparator,
 																							   boolean allowCreate)
     {
         return (HGBidirectionalIndex<KeyType, ValueType>)
-            impl.getIndex(name, keyConverter, valueConverter, comparator, true, allowCreate);        
+            impl.getIndex(name, keyConverter, valueConverter, keyComparator, valueComparator, true, allowCreate);        
     }
     
     /**

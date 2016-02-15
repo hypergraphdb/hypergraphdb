@@ -473,7 +473,8 @@ public class ExpressionBasedQuery<ResultType> extends HGQuery<ResultType>
                         return Nothing.Instance;
                     else
                     {
-                        Pair<HGHandle, HGIndex<?,?>> p = findIndex(graph, new ByPartIndexer(typeHandle, 
+                        Pair<HGHandle, HGIndex<Object,HGPersistentHandle>> p = 
+                        		findIndex(graph, new ByPartIndexer(typeHandle, 
                                                         pc.getDimensionPath())); //graph.getIndexManager().getIndex(indexer);
                         if (p != null)
                         {

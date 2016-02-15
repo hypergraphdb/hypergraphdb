@@ -63,7 +63,7 @@ public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 		mockStorage();
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
+				transactionManager, keyConverter, valueConverter, comparator, null);
 		indexImpl.open();
 	}
 
@@ -78,7 +78,7 @@ public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 		PowerMock.replayAll();
 		indexImpl = new DefaultBiIndexImpl(INDEX_NAME, storage,
 				fakeTransactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 	}
 }

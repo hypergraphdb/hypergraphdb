@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -32,6 +33,17 @@ public class T
         return System.getProperty("user.home") + File.separator + "hgtest.tmp";
     }
 
+    /**
+     * Return a random byte [] of size <code>count</code>.
+     */
+    public static byte [] randomBytes(int count)
+    {
+    	Random random = new Random();
+    	byte [] bytes = new byte[count];
+    	random.nextBytes(bytes);
+    	return bytes;
+    }
+    
     /**
      * Return a random integer between 0 (inclusive) and i (exclusive).
      * 
@@ -232,4 +244,21 @@ public class T
     		throw new RuntimeException(ex);
     	}
     }    	
+    
+    /**
+     * Unsigned lexicographical byte[] comparator. 
+     */
+    public static int compareByteArrays(byte[] left, byte[] right) 
+    {
+        for (int i = 0, j = 0; i < left.length && j < right.length; i++, j++) 
+        {
+            int a = (left[i] & 0xff);
+            int b = (right[j] & 0xff);
+            if (a != b) 
+            {
+                return a - b;
+            }
+        }
+        return left.length - right.length;
+    }
 }

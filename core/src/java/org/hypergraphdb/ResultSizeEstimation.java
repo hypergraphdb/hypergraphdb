@@ -8,6 +8,7 @@
 package org.hypergraphdb;
 
 import java.util.HashMap;
+
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AnyAtomCondition;
 import org.hypergraphdb.query.AtomPartCondition;
@@ -103,7 +104,7 @@ class ResultSizeEstimation
 					// TODO: this is actually stupid because that we have to create another cursor
 					// and position it on the same key as our rs.current...but can't break
 					// information hiding boundaries!
-					result += graph.indexByType.count(rs.next()); 
+					result += graph.indexByType.stats().valuesOfKey(rs.next(), 1, true).value(); 
 				return result;
 			}
 			finally
@@ -114,7 +115,7 @@ class ResultSizeEstimation
 		
 		public long cost(HyperGraph graph, HGQueryCondition cond)
 		{
-			return graph.indexByType.count();
+			return Long.MAX_VALUE / 2; // an undeterminate amount less than a full scan
 		}			
 	});
 
@@ -127,7 +128,7 @@ class ResultSizeEstimation
 			if (typeHandle == null)
 				typeHandle = graph.getTypeSystem().getTypeHandleIfDefined(cond.getJavaClass());
 			if (typeHandle != null)
-				return graph.indexByType.count(graph.getPersistentHandle(typeHandle));
+				return graph.indexByType.stats().valuesOfKey(graph.getPersistentHandle(typeHandle), 1, true).value();
 			else
 				return 0;
 		}
@@ -145,7 +146,7 @@ class ResultSizeEstimation
 			TypePlusCondition cond = (TypePlusCondition)x;
 			long result = 0;
 			for (HGHandle h : cond.getSubTypes(graph))			
-				result += graph.indexByType.count(graph.getPersistentHandle(h));
+				result += graph.indexByType.stats().valuesOfKey(graph.getPersistentHandle(h), 1, true).value();
 			return result;
 		}
 		
@@ -169,12 +170,13 @@ class ResultSizeEstimation
             HGAtomType type = graph.getTypeSystem().getType(typeHandle);
             if (type instanceof HGSearchable && cond.getOperator() == ComparisonOperator.EQ)
             {
-            	HGSearchResult<HGPersistentHandle> rs = ((HGSearchable)type).find(cond.getValue());
+            	@SuppressWarnings("rawtypes")
+				HGSearchResult<HGPersistentHandle> rs = ((HGSearchable)type).find(cond.getValue());
             	try
             	{
         			long result = 0;        			
             		while (rs.hasNext())
-            			result += graph.indexByValue.count(rs.next());
+            			result += graph.indexByValue.stats().valuesOfKey(rs.next(), 1, true).value();
             		return result;            		
             	}
             	finally
@@ -296,7 +298,7 @@ class ResultSizeEstimation
 		{
 			IndexCondition ic = (IndexCondition)x;
 			if (ic.getOperator() == ComparisonOperator.EQ)
-				return ic.getIndex().count(ic.getKey());			
+				return ic.getIndex().stats().valuesOfKey(ic.getKey(), 1, true).value();			
 			else
 				return countResultSet(graph, ic);
 		}
@@ -315,7 +317,7 @@ class ResultSizeEstimation
 		{
 			IndexedPartCondition ip = (IndexedPartCondition)x;
 			if (ip.getOperator() == ComparisonOperator.EQ)
-				return ((HGIndex<Object, Object>)ip.getIndex()).count(ip.getPartValue());			
+				return ((HGIndex<Object, Object>)ip.getIndex()).stats().valuesOfKey(ip.getPartValue(), 1, true).value();			
 			else
 				return countResultSet(graph, ip);
 		}
@@ -342,6 +344,7 @@ class ResultSizeEstimation
 	
 	countersMap.put(And.class, new Counter()
 	{ 
+		@SuppressWarnings("rawtypes")
 		public long count(HyperGraph graph, HGQueryCondition x)
 		{
 			ExpressionBasedQuery q = (ExpressionBasedQuery)HGQuery.make(graph, x);
@@ -359,6 +362,7 @@ class ResultSizeEstimation
 			return countResultSet(q);
 		}
 		
+		@SuppressWarnings("rawtypes")
 		public long cost(HyperGraph graph, HGQueryCondition x)
 		{			
 			ExpressionBasedQuery q = (ExpressionBasedQuery)HGQuery.make(graph, x);

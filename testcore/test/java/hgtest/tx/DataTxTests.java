@@ -1,7 +1,7 @@
 package hgtest.tx;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import hgtest.HGTestBase;
 import hgtest.T;
 
@@ -18,8 +18,8 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.storage.BAtoBA;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class DataTxTests extends HGTestBase
 {
@@ -206,7 +206,7 @@ public class DataTxTests extends HGTestBase
     @Test
     public void testConcurrentLinkCreation()
     {
-        graph.getStore().getIndex("temptest", BAtoBA.getInstance(), BAtoBA.getInstance(), null, true);
+        graph.getStore().getIndex("temptest", BAtoBA.getInstance(), BAtoBA.getInstance(), null, null, true);
         for (int i = 0; i < atomsCount; i++)
             hg.assertAtom(graph, makeAtom(i));
         ExecutorService pool = Executors.newFixedThreadPool(10);

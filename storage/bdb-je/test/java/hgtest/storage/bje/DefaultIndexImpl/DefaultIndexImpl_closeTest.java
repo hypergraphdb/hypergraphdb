@@ -24,7 +24,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		indexImpl.close();
 	}
@@ -37,7 +37,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 
 		indexImpl.close();
@@ -53,7 +53,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 		indexImpl.open();
 		PowerMock.verifyAll();
 		PowerMock.resetAll();

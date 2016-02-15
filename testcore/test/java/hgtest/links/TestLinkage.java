@@ -5,8 +5,8 @@ import org.hypergraphdb.HGLink;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HGQuery.hg;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 import hgtest.beans.SimpleBean;

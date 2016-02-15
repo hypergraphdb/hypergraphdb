@@ -74,6 +74,7 @@ public class AtomRefType implements HGAtomType,
 			                                 BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                 BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                 null,
+			                                 null,
 			                                 true);
 		}
 		return hardIdx;
@@ -87,6 +88,7 @@ public class AtomRefType implements HGAtomType,
 			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                     null,
+			                                     null,
 			                                     true);
 		}
 		return symbolicIdx;
@@ -99,6 +101,7 @@ public class AtomRefType implements HGAtomType,
 			floatingIdx = graph.getStore().getIndex(IDX_FLOATING_DB_NAME, 
 			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
 			                                     BAtoHandle.getInstance(graph.getHandleFactory()), 
+			                                     null,
 			                                     null,
 			                                     true);
 		}
@@ -253,8 +256,7 @@ public class AtomRefType implements HGAtomType,
 	 * mode and referent are search. In the latter or if the mode of the HGAtomRef is null, 
 	 * all reference regardless of mode are searched.
 	 * 
-	 */
-	@SuppressWarnings("unchecked")	
+	 */	
 	public HGSearchResult<HGPersistentHandle> find(HGPersistentHandle key) 
 	{
 		if (key instanceof HGAtomRef)
@@ -272,8 +274,8 @@ public class AtomRefType implements HGAtomType,
 			}
 		}
 		HGPersistentHandle referent = graph.getPersistentHandle((HGHandle)key);
-		return new UnionResult(getHardIdx().find(referent), 
-							   new UnionResult(getSymbolicIdx().find(referent),
+		return new UnionResult<HGPersistentHandle>(getHardIdx().find(referent), 
+							   new UnionResult<HGPersistentHandle>(getSymbolicIdx().find(referent),
 									   		   getFloatingIdx().find(referent)));
 	}
 

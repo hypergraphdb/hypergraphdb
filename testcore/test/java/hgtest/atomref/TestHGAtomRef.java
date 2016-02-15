@@ -7,8 +7,8 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.annotation.AtomReference;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.*;
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import hgtest.beans.CircRefBean;
 import hgtest.beans.CircRefOtherBean;
@@ -60,7 +60,7 @@ public class TestHGAtomRef extends HGTestBase
         Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner", null))), carHandle);
         Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", "blabla"))));
         Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", null))));
-        this.reopenDb();
+        reopenDb();
         Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("make", null))), carHandle);        
         Assert.assertEquals(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner", null))), carHandle);
         Assert.assertNull(hg.findOne(graph, hg.and(hg.type(Car.class), hg.eq("owner.email", "blabla"))));
@@ -79,7 +79,7 @@ public class TestHGAtomRef extends HGTestBase
 	    car.setOwner(person);
 	    
 	    HGHandle carHandle = graph.add(car);
-	    this.reopenDb();
+	    reopenDb();
 	    car = graph.get(carHandle.getPersistent());
 	    Assert.assertNotNull(graph.getHandle(car.getOwner()));
 	    graph.remove(carHandle.getPersistent());
@@ -123,7 +123,7 @@ public class TestHGAtomRef extends HGTestBase
         }
         catch (HGRemoveRefusedException ex) { }
         
-        this.reopenDb();
+        reopenDb();
         try
         {
             Assert.assertFalse(graph.remove(hten.getPersistent()));

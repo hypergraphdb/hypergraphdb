@@ -20,7 +20,7 @@ public class DefaultIndexImpl_getDatabaseNameTest extends
 
 		PowerMock.replayAll();
 		final DefaultIndexImpl index = new DefaultIndexImpl(null, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
+				transactionManager, keyConverter, valueConverter, comparator, null);
 
 		final String actual = index.getDatabaseName();
 
@@ -35,7 +35,7 @@ public class DefaultIndexImpl_getDatabaseNameTest extends
 		PowerMock.replayAll();
 		final DefaultIndexImpl index = new DefaultIndexImpl("index name",
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		final String actual = index.getDatabaseName();
 

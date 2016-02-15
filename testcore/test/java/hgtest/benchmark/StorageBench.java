@@ -16,11 +16,12 @@ public class StorageBench extends HGTestBase
 	{
 		HGStore store = graph.getStore();
 		ByteArrayConverter<HGPersistentHandle> conv = BAtoHandle.getInstance(graph.getHandleFactory());
-		if (store.getIndex("benchUUIDs", conv, conv, null, false) != null)
+		if (store.getIndex("benchUUIDs", conv, conv, null, null, false) != null)
 				store.removeIndex("benchUUIDs");
 		HGIndex<HGPersistentHandle, HGPersistentHandle> idx = store.getIndex("benchUUIDs", 
 					   BAtoHandle.getInstance(graph.getHandleFactory()), 
 					   BAtoHandle.getInstance(graph.getHandleFactory()), 
+					   null,
 					   null,
 					   true);
 		HGHandleFactory hFactory = graph.getHandleFactory();
