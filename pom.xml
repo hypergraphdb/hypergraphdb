@@ -22,13 +22,12 @@
     <libraries.multitester.version>1.0</libraries.multitester.version>
   </properties>
 
-
-  <distributionManagement>
-    <repository>
-      <id>hypergraphdb-repository</id>
-      <url>sftp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
+  <distributionManagement>                                                                             
+    <repository>                                                                                       
+      <id>hypergraphdb-repository</id>                                                                
+      <url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>  
     </repository>
-  </distributionManagement>
+  </distributionManagement>                                                                             
 
   <build>
     <directory>target</directory>
@@ -47,7 +46,7 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
 	<artifactId>wagon-ftp</artifactId>
-	<version>1.0-beta-6</version>
+	<version>2.4</version>
       </extension>
     </extensions>
 
