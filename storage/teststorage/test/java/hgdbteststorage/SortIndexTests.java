@@ -4,8 +4,10 @@ import hgtest.T;
 import hgtest.TestUtils;
 import hgtest.verify.HGAssert;
 
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGSearchResult;
@@ -66,7 +68,7 @@ public class SortIndexTests extends StoreImplementationTestBase
 	public void findLTTest()
 	{
 		// There is nothing less than the smallest number
-		double smallest = map.keySet().iterator().next();
+		double smallest = map.firstKey();
 		try (HGSearchResult<HGPersistentHandle> rs = index.findLT(smallest - 0.00000001))
 		{
 			Assert.assertFalse(rs.hasNext());
@@ -88,10 +90,57 @@ public class SortIndexTests extends StoreImplementationTestBase
 	@Test
 	public void findLTETest()
 	{
-		double dkey = map.keySet().iterator().next();
+		double dkey = map.firstKey();
 		try (HGSearchResult<HGPersistentHandle> rs = index.findLTE(dkey))
 		{			
 			HGAssert.assertSetEquals(map.get(dkey), TestUtils.set(rs));
 		}
+		dkey = map.lastKey();
+		try (HGSearchResult<HGPersistentHandle> rs = index.findLTE(dkey))
+		{			
+			Set<HGPersistentHandle> all = map.values().stream().flatMap(
+					set->set.stream()).collect(Collectors.toSet());			
+			HGAssert.assertSetEquals(all, TestUtils.set(rs));
+		}		
 	}
+	
+	@Test
+	public void findGTTest()
+	{
+		double largest = map.lastKey();
+		try (HGSearchResult<HGPersistentHandle> rs = index.findGT(largest + 0.00000001))
+		{
+			Assert.assertFalse(rs.hasNext());
+		}		
+		try (HGSearchResult<HGPersistentHandle> rs = index.findGT(largest))
+		{
+			Assert.assertFalse(rs.hasNext());
+		}
+		int cnt = T.random(1,  map.size());
+		double Nth = map.keySet().stream().skip(cnt - 1).iterator().next();
+		try (HGSearchResult<HGPersistentHandle> rs = index.findGT(Nth))
+		{
+			TreeSet<HGPersistentHandle> all = new TreeSet<HGPersistentHandle>();
+			map.keySet().stream().skip(cnt).forEach(d -> all.addAll(map.get(d)));
+			Set<HGPersistentHandle> S2  = TestUtils.set(rs);
+			HGAssert.assertSetEquals(all, S2);
+		}			
+	}
+	
+	@Test
+	public void findGTETest()
+	{
+		double dkey = map.lastKey();
+		try (HGSearchResult<HGPersistentHandle> rs = index.findGTE(dkey))
+		{			
+			HGAssert.assertSetEquals(map.get(dkey), TestUtils.set(rs));
+		}
+		dkey = map.firstKey();
+		try (HGSearchResult<HGPersistentHandle> rs = index.findGTE(dkey))
+		{			
+			Set<HGPersistentHandle> all = map.values().stream().flatMap(
+						set->set.stream()).collect(Collectors.toSet());
+			HGAssert.assertSetEquals(all, TestUtils.set(rs));
+		}		
+	}	
 }
