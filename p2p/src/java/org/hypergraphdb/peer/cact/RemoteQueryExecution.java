@@ -140,7 +140,7 @@ public class RemoteQueryExecution<T> extends FSMActivity
             }
             finally
             {
-            	Json.dettachFactory();
+            	Json.detachFactory();
             }
         }
 

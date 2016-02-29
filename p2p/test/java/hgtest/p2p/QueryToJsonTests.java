@@ -54,7 +54,7 @@ public class QueryToJsonTests extends HGTestBase
     @AfterClass
 	public static void tearDown()
 	{
-		Json.dettachFactory();
+		Json.detachFactory();
 	}
 
 	@Test
