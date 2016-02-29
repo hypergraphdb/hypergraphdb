@@ -18,7 +18,7 @@ public class DefaultIndexImpl_getNameTest extends DefaultIndexImplTestBasis
 	{
 		PowerMock.replayAll();
 		final DefaultIndexImpl index = new DefaultIndexImpl(null, storage,
-				transactionManager, keyConverter, valueConverter, comparator);
+				transactionManager, keyConverter, valueConverter, comparator, null);
 
 		final String actual = index.getName();
 
@@ -33,7 +33,7 @@ public class DefaultIndexImpl_getNameTest extends DefaultIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultIndexImpl index = new DefaultIndexImpl("some index name",
 				storage, transactionManager, keyConverter, valueConverter,
-				comparator);
+				comparator, null);
 
 		final String actual = index.getName();
 

@@ -17,10 +17,12 @@ public class Upgrade
 				BAtoString.getInstance(),
                 BAtoHandle.getInstance(graph.getHandleFactory()),
                 null,
+                null,
                 true);
 		HGIndex uritohg = graph.getStore().getBidirectionalIndex("hg_typesystem_uri2hg_types",
 				BAtoString.getInstance(),
                 BAtoHandle.getInstance(graph.getHandleFactory()),
+                null,
                 null,
                 true);
 		

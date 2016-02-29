@@ -56,7 +56,7 @@ public class DebugTest
         LongType lt = graph.getTypeSystem().getAtomType(Long.class);
         HGHandleType ht = graph.getTypeSystem().getAtomType(HGHandle.class);
         
-        HGSortIndex index = (HGSortIndex)graph.getStore().getIndex("ana", lt, ht, lt.getComparator(), true);
+        HGSortIndex index = (HGSortIndex)graph.getStore().getIndex("ana", lt, ht, lt.getComparator(), null, true);
         
         HGPersistentHandle h = graph.getHandleFactory().makeHandle();
         

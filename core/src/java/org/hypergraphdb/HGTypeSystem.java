@@ -133,6 +133,7 @@ public class HGTypeSystem
                                                    BAtoString.getInstance(),
                                                    BAtoHandle.getInstance(graph.getHandleFactory()),
                                                    null,
+                                                   null,
                                                    true);
         }
         return urisDB;
@@ -159,6 +160,7 @@ public class HGTypeSystem
 			                                   BAtoString.getInstance(),
 			                                   BAtoHandle.getInstance(graph.getHandleFactory()),
 			                                   null,
+			                                   null,
 			                                   true);
 		}
 		return aliases;
@@ -171,6 +173,7 @@ public class HGTypeSystem
 			predefinedTypesDB = graph.getStore().getIndex(JAVA_PREDEFINED_TYPES_DB_NAME,
 			                                 BAtoHandle.getInstance(graph.getHandleFactory()),
 			                                 BAtoString.getInstance(),
+			                                 null,
 			                                 null,
 			                                 true);
 		}

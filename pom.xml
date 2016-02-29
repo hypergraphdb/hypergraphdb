@@ -22,17 +22,17 @@
     <libraries.multitester.version>1.0</libraries.multitester.version>
   </properties>
 
-  <distributionManagement>                                                                             
-    <repository>                                                                                       
-      <id>hypergraphdb-repository</id>                                                                
-      <url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>  
+  <distributionManagement>
+    <repository>
+      <id>hypergraphdb-repository</id>
+      <url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
     </repository>
   </distributionManagement>                                                                             
 
   <build>
     <directory>target</directory>
     <outputDirectory>target/classes</outputDirectory>
-    <finalName>${artifactId}-${version}</finalName>
+    <finalName>${project.artifactId}-${project.version}</finalName>
     <testOutputDirectory>target/test-classes</testOutputDirectory>
     <sourceDirectory>src/java</sourceDirectory>
     <testSourceDirectory>test/java</testSourceDirectory>    
@@ -46,7 +46,7 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
 	<artifactId>wagon-ssh</artifactId>
-	<version>2.4</version>
+	<version>2.10</version>
       </extension>
     </extensions>
 

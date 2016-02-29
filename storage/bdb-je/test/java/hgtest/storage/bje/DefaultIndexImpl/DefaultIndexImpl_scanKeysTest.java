@@ -35,7 +35,7 @@ public class DefaultIndexImpl_scanKeysTest extends DefaultIndexImplTestBasis
 		replayMocks();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 
 		try
 		{

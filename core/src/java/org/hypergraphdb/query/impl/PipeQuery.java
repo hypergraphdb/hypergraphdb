@@ -22,10 +22,10 @@ import org.hypergraphdb.HGSearchResult;
  * </p>
  * @author Borislav Iordanov
  */
-public class PipeQuery<Key, Value> extends HGQuery<Value> implements Iterable<HGQuery>
+public class PipeQuery<Key, Value> extends HGQuery<Value> implements Iterable<HGQuery<Key>>
 {
 	private KeyBasedQuery<Key, Value> out;
-	private HGQuery in;
+	private HGQuery<Key> in;
 	
 	public PipeQuery(HGQuery<Key> in, KeyBasedQuery<Key, Value> out)
 	{
@@ -33,13 +33,12 @@ public class PipeQuery<Key, Value> extends HGQuery<Value> implements Iterable<HG
 		this.out = out;
 	}
 	
-	@SuppressWarnings("unchecked")
     public HGSearchResult<Value> execute() 
 	{
-		return new PipedResult(in.execute(), out, true);
+		return new PipedResult<Key, Value>(in.execute(), out, true);
 	}
 	
-    public Iterator<HGQuery> iterator()
+    public Iterator<HGQuery<Key>> iterator()
     {
         return Arrays.asList(in).iterator();
     }

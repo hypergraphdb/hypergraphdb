@@ -23,7 +23,7 @@ public class DefaultIndexImpl_findGTTest extends DefaultIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 
 		try
 		{

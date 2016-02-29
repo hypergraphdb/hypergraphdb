@@ -8,18 +8,20 @@
 package org.hypergraphdb.storage.bje;
 
 import java.util.Comparator;
-
+import java.util.function.Supplier;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.TwoWayIterator;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
+
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
@@ -52,9 +54,10 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	protected CursorConfig cursorConfig = new CursorConfig();
 	protected HGTransactionManager transactionManager;
 	protected String name;
-	protected Database db;
+	public Database db;
 	private boolean owndb;
-	protected Comparator<?> comparator;
+	protected Comparator<byte[]> keyComparator;
+	protected Comparator<byte[]> valueComparator;
 	protected boolean sort_duplicates = true;
 	protected ByteArrayConverter<KeyType> keyConverter;
 	protected ByteArrayConverter<ValueType> valueConverter;
@@ -93,15 +96,21 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	//
 	// }
 
-	public DefaultIndexImpl(String indexName, BJEStorageImplementation storage, HGTransactionManager transactionManager,
-			ByteArrayConverter<KeyType> keyConverter, ByteArrayConverter<ValueType> valueConverter, Comparator<?> comparator)
+	public DefaultIndexImpl(String indexName, 
+							BJEStorageImplementation storage, 
+							HGTransactionManager transactionManager,
+							ByteArrayConverter<KeyType> keyConverter, 
+							ByteArrayConverter<ValueType> valueConverter, 
+							Comparator<byte[]> keyComparator,
+							Comparator<byte[]> valueComparator)
 	{
 		this.name = indexName;
 		this.storage = storage;
 		this.transactionManager = transactionManager;
 		this.keyConverter = keyConverter;
 		this.valueConverter = valueConverter;
-		this.comparator = comparator;
+		this.keyComparator = keyComparator;
+		this.valueComparator = valueComparator;
 		owndb = true;
 	}
 
@@ -115,17 +124,36 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		return DB_NAME_PREFIX + name;
 	}
 
-	public Comparator<byte[]> getComparator()
+	public ByteArrayConverter<KeyType> getKeyConverter()
+	{
+		return keyConverter;
+	}
+	
+	public ByteArrayConverter<ValueType> getValueConverter()
+	{
+		return valueConverter;
+	}
+	
+	public Comparator<byte[]> getKeyComparator()
 	{
 		try
 		{
-			if (comparator != null)
+			if (keyComparator != null)
 			{
-				return (Comparator<byte[]>) comparator;
+				return keyComparator;
 			}
 			else
 			{
-				return db.getConfig().getBtreeComparator();
+				Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
+				if (comparator == null)
+					comparator = new Comparator<byte[]>() 
+					{
+						public int compare(byte[]left, byte[]right)
+						{
+							return db.compareKeys(new DatabaseEntry(left), new DatabaseEntry(right));
+						}
+					};
+				return comparator;
 			}
 		}
 		catch (DatabaseException ex)
@@ -134,18 +162,43 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		}
 	}
 
+	public Comparator<byte[]> getValueComparator()
+	{
+		try
+		{
+			if (valueComparator != null)
+			{
+				return valueComparator;
+			}
+			else
+			{
+				return db.getConfig().getDuplicateComparator();
+			}
+		}
+		catch (DatabaseException ex)
+		{
+			throw new HGException(ex);
+		}
+	}
+	
+	
 	public void open()
 	{
 		try
 		{
 			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().clone();
 			dbConfig.setSortedDuplicates(sort_duplicates);
-			
-			if (comparator != null)
+
+			if (keyComparator != null)
 			{
-				dbConfig.setBtreeComparator((Comparator<byte[]>) comparator);
+				dbConfig.setBtreeComparator((Comparator<byte[]>) keyComparator);
 			}
 
+			if (valueComparator != null)
+			{
+				dbConfig.setDuplicateComparator((Comparator<byte[]>) keyComparator);
+			}
+			
 			db = storage.getBerkleyEnvironment().openDatabase(null, DB_NAME_PREFIX + name, dbConfig);
 		}
 		catch (Throwable t)
@@ -494,6 +547,14 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		return result;
 	}
 
+	/**
+	 * This is implementing the LT, LTE, GT, GTE methods.
+	 * 
+	 * @param key the key
+	 * @param lower_range do we want key/value below the key or above
+	 * @param compare_equals do we want to include values the key as well or only < or >
+	 * @return
+	 */
 	private HGSearchResult<ValueType> findOrdered(KeyType key, boolean lower_range, boolean compare_equals)
 	{
 		checkOpen();
@@ -505,69 +566,57 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		DatabaseEntry keyEntry = new DatabaseEntry(keyAsBytes);
 		DatabaseEntry value = new DatabaseEntry();
 		Cursor cursor = null;
-
+		
 		try
 		{
 			TransactionBJEImpl tx = txn();
 			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKeyRange(keyEntry, value, LockMode.DEFAULT);
-
+			Supplier<ValueType> forward = null, backward = null;
+			
 			if (status == OperationStatus.SUCCESS)
 			{
-				Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
-
-				if (!compare_equals)
-				{ // strict < or >?
-					if (lower_range)
-					{
-						status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
-					}
-					else if (comparator.compare(keyAsBytes, keyEntry.getData()) == 0)
-					{
+				if (!lower_range)
+				{
+					if (!compare_equals && getKeyComparator().compare(keyAsBytes,  keyEntry.getData()) == 0)
 						status = cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
+					if (status == OperationStatus.SUCCESS)
+					{
+						forward = bje.nextDataSupplier(cursor, null, valueConverter);
+						backward = bje.chain(bje.prevDataSupplier(cursor, new DatabaseEntry(keyAsBytes), valueConverter),
+											 bje.prevDupSupplier(cursor, new DatabaseEntry(keyAsBytes), valueConverter));
 					}
-				}
-				// BDB cursor will position on the key or on the next element
-				// greater than the key
-				// in the latter case we need to back up by one for < (or <=)
-				// query
-				else if (lower_range && comparator.compare(keyAsBytes, keyEntry.getData()) != 0)
-				{
-					status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
-				}
-			}
-			else if (lower_range)
-			{
-				status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
-			}
-			else
-			{
-				status = cursor.getFirst(keyEntry, value, LockMode.DEFAULT);
-			}
-
-			if (status == OperationStatus.SUCCESS)
-			{
-				if (lower_range)
-				{
-					return new SearchResultWrapper<ValueType>(new KeyRangeBackwardResultSet<ValueType>(tx.attachCursor(cursor),
-							keyEntry, valueConverter));
 				}
 				else
 				{
-					return new SearchResultWrapper<ValueType>(new KeyRangeForwardResultSet<ValueType>(tx.attachCursor(cursor),
-							keyEntry, valueConverter));
+					if ( (!compare_equals || getKeyComparator().compare(keyAsBytes,  keyEntry.getData()) != 0)
+						 && ((status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT)) == OperationStatus.SUCCESS))
+					{
+						forward = bje.prevDataSupplier(cursor, null, valueConverter);
+						backward = bje.nextDataSupplier(cursor, new DatabaseEntry(keyAsBytes), valueConverter);
+					}
+					else if (status == OperationStatus.SUCCESS)
+					{
+						TwoWayIterator<ValueType> specialCaseIterator = bje.lowerRangeOnKeyResultSet(cursor, keyEntry, valueConverter);
+						forward = specialCaseIterator::next;
+						backward = specialCaseIterator::prev;						
+					}
 				}
 			}
-			else
+			else if (lower_range && cursor.getLast(keyEntry, value, LockMode.DEFAULT) == OperationStatus.SUCCESS)
 			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+				forward = bje.prevDataSupplier(cursor, null, valueConverter);
+				backward = bje.nextDataSupplier(cursor, null, valueConverter);				
 			}
+			if (forward != null)
+				return new SearchResultWrapper<ValueType>(new IndexResultSet<ValueType>(
+						tx.attachCursor(cursor),
+						keyEntry, 
+						valueConverter,
+						forward,
+						backward,
+						false));  
+			try { cursor.close(); } catch (Throwable t) { }
 			return (HGSearchResult<ValueType>) HGSearchResult.EMPTY;
 		}
 		catch (Throwable ex)

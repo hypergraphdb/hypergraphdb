@@ -24,11 +24,13 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 
 	public Count entries(long cost, boolean isEstimateOk)
 	{
+		index.checkOpen();
 		return new Count(() -> ((BtreeStats) index.db.getStats(null)).getLeafNodeCount(), false);
 	}
 	
 	public Count keys(long cost, boolean isEstimateOk)
 	{
+		index.checkOpen();
 		if (cost < Long.MAX_VALUE && !isEstimateOk)
 			return null;
 		else if (cost == Long.MAX_VALUE)
@@ -48,6 +50,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 
 	public Count values(long cost, boolean isEstimateOk)
 	{
+		index.checkOpen();
 		if (cost < Long.MAX_VALUE && !isEstimateOk)
 			return null;
 		else if (cost == Long.MAX_VALUE)
@@ -67,6 +70,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 
 	public Count valuesOfKey(Key key, long cost, boolean isEstimateOk)
 	{
+		index.checkOpen();
 		if (cost == 0)
 			return null;
 		else
@@ -94,6 +98,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 
 	public Count keysWithValue(Value value, long cost, boolean isEstimateOk)
 	{
+		index.checkOpen();
 		if (index instanceof DefaultBiIndexImpl)
 			return null;
 		if (cost == 0)

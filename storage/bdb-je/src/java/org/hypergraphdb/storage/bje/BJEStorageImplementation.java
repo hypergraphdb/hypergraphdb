@@ -1,6 +1,7 @@
 package org.hypergraphdb.storage.bje;
 
 import java.io.File;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,8 +26,6 @@ import org.hypergraphdb.transaction.HGTransactionFactory;
 import org.hypergraphdb.transaction.TransactionConflictException;
 import org.hypergraphdb.transaction.VanillaTransaction;
 import org.hypergraphdb.util.HGClassLoaderDelegate;
-
-import com.sleepycat.je.CheckpointConfig;
 import com.sleepycat.je.Cursor;
 import com.sleepycat.je.CursorConfig;
 import com.sleepycat.je.Database;
@@ -120,7 +119,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 			if (config.isTransactional())
 			{
-				CheckpointConfig ckptConfig = new CheckpointConfig();
+				//CheckpointConfig ckptConfig = new CheckpointConfig();
 				// System.out.println("checkpoint kbytes:" +
 				// ckptConfig.getKBytes());
 				// System.out.println("checkpoint minutes:" +
@@ -240,6 +239,8 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
 	{
+		if (data == null)
+			throw new NullPointerException("Can't store null data.");
 		try
 		{
 			OperationStatus result = primitive_db.put(txn().getBJETransaction(), new DatabaseEntry(handle.toByteArray()),
@@ -247,6 +248,10 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			if (result != OperationStatus.SUCCESS)
 				throw new Exception("OperationStatus: " + result);
 			return handle;
+		}
+		catch (RuntimeException ex)
+		{
+			throw ex;
 		}
 		catch (Exception ex)
 		{
@@ -317,6 +322,10 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			// if (result != OperationStatus.SUCCESS)
 			// throw new Exception("OperationStatus: " + result);
 			// }
+		}
+		catch (RuntimeException ex)
+		{
+			throw ex;
 		}
 		catch (Exception ex)
 		{
@@ -638,6 +647,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name) 
     {
 		indicesLock.readLock().lock();		
@@ -653,9 +663,13 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 
 	@SuppressWarnings("unchecked")
-	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, ByteArrayConverter<KeyType> keyConverter,
-			ByteArrayConverter<ValueType> valueConverter, Comparator<?> comparator, boolean isBidirectional,
-			boolean createIfNecessary)
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name, 
+																	 ByteArrayConverter<KeyType> keyConverter,
+																	 ByteArrayConverter<ValueType> valueConverter, 
+																	 Comparator<byte[]> keyComparator, 
+																	 Comparator<byte[]> valueComparator, 
+																	 boolean isBidirectional,
+																	 boolean createIfNecessary)
 	{
 		indicesLock.readLock().lock();
 
@@ -691,7 +705,8 @@ public class BJEStorageImplementation implements HGStoreImplementation
 																	store.getTransactionManager(), 
 																	keyConverter,
 																	valueConverter, 
-																	comparator);
+																	keyComparator,
+																	valueComparator);
 			}
 			else
 			{
@@ -700,7 +715,8 @@ public class BJEStorageImplementation implements HGStoreImplementation
 																  store.getTransactionManager(), 
 																  keyConverter,
 																  valueConverter, 
-																  comparator);
+																  keyComparator,
+																  valueComparator);
 			}
 
 			result.open();

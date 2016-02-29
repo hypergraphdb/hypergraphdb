@@ -47,7 +47,7 @@ public class IndexImplTestBasis
 	// Use 'null' comparator - it forces
 	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
 	// Sleepycat's BtreeComparator
-	protected Comparator<?> comparator = null;
+	protected Comparator<byte[]> comparator = null;
 
 	@Before
     @Exported("up1")

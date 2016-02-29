@@ -125,11 +125,12 @@ public class StorageWithAnnotatedIncidence implements HGStoreImplementation
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name,
                                                                      ByteArrayConverter<KeyType> keyConverter,
                                                                      ByteArrayConverter<ValueType> valueConverter,
-                                                                     Comparator<?> comparator,
+                                                                     Comparator<byte[]> keyComparator,
+                                                                     Comparator<byte[]> valueComparator,
                                                                      boolean isBidirectional,
                                                                      boolean createIfNecessary)
     {
-        return wrapped.getIndex(name, keyConverter, valueConverter, comparator,
+        return wrapped.getIndex(name, keyConverter, valueConverter, keyComparator, valueComparator, 
                 isBidirectional, createIfNecessary);
     }
 

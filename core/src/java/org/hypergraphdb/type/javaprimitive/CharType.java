@@ -46,7 +46,8 @@ public class CharType extends PrimitiveTypeBase<Character>
     
     public static class CharComparator implements Comparator<byte[]>, java.io.Serializable 
     {        
-        public int compare(byte [] left, byte [] right)
+		private static final long serialVersionUID = 1L;
+		public int compare(byte [] left, byte [] right)
         {
             Character l = bytesToCharacter(left, dataOffset);
             Character r = bytesToCharacter(right, dataOffset);

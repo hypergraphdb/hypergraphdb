@@ -28,7 +28,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 
 		try
 		{
@@ -62,7 +62,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+				valueConverter, comparator, null);
 		index.open();
 		PowerMock.verifyAll();
 		PowerMock.resetAll();
