@@ -13,7 +13,7 @@
     <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph.storage.bje</bundle.namespace>
   </properties>
-  <packaging>${packageit}</packaging>
+  <packaging>jar</packaging>
   <groupId>org.hypergraphdb</groupId>
   <artifactId>hgbdbje</artifactId>
   <name>HyperGraphDB BDB-JE Storage</name>
@@ -75,11 +75,13 @@
       <version>${libraries.testng.version}</version>
       <scope>test</scope>
     </dependency>
+<!--
     <dependency>
       <groupId>com.google.code.multitester</groupId>
       <artifactId>multitester</artifactId>
       <version>${libraries.multitester.version}</version>
     </dependency>
+-->
   </dependencies>
 
   <build>
