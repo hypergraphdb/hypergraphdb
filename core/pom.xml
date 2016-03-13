@@ -11,7 +11,7 @@
   </parent>  
   <properties>
     <packageit>jar</packageit>
-    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph</bundle.namespace>    
   </properties>    
   <packaging>bundle</packaging>  

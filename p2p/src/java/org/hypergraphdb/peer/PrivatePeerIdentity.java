@@ -28,7 +28,6 @@ public class PrivatePeerIdentity
     private String hostname;
     private String ipAddress;
     private String graphLocation;
-//    private String name;
 
     public PrivatePeerIdentity()
     {
@@ -42,7 +41,6 @@ public class PrivatePeerIdentity
         pid.setHostname(hostname);
         pid.setIpAddress(ipAddress);
         pid.setGraphLocation(graphLocation);
-//        pid.setName(name);
         return pid;
     }
     
@@ -55,16 +53,6 @@ public class PrivatePeerIdentity
     {
         this.id = id;
     }
-
-//    public String getName()
-//    {
-//        return name;
-//    }
-//
-//    public void setName(String name)
-//    {
-//        this.name = name;
-//    }
 
     public String getHostname()
     {

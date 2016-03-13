@@ -15,11 +15,11 @@ public class PeerNoDB extends HGTestBase
 		Json config = Json.object();
 		config.set("interfaceType", "org.hypergraphdb.peer.xmpp.XMPPPeerInterface");
 		Json interfaceConfig = Json.object();
-		interfaceConfig.set("user", "hgtest");
-		interfaceConfig.set("password", "hgpassword");
-		interfaceConfig.set("serverUrl", "localhost");
-		interfaceConfig.set("room", "play@conference.ols00068");
-		interfaceConfig.set("autoRegister", true);
+		interfaceConfig.set("user", "borislav");
+		interfaceConfig.set("password", "password");
+		interfaceConfig.set("serverUrl", "hypergraphdb.org");
+		interfaceConfig.set("room", "granthika@conference.hypergraphdb.org");
+		//interfaceConfig.set("autoRegister", true);
 		config.set("interfaceConfig", interfaceConfig);
 		HyperGraphPeer peer = new HyperGraphPeer(config); 
 	    Future<Boolean> startupResult = peer.start();		
