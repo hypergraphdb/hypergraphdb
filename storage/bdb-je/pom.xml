@@ -18,11 +18,13 @@
   <name>HyperGraphDB BDB-JE Storage</name>
   <url>http://hypergraphdb.org</url>
 
+
   <repositories>
     <repository>
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
+<!--
     <repository>
       <id>central</id>
       <url>http://repo1.maven.org/maven2/</url>
@@ -31,6 +33,7 @@
       <id>multitestermvn</id>
       <url>http://yuriysechko.bitbucket.org</url>
     </repository>
+-->
   </repositories>
 
   <dependencies>
@@ -68,12 +71,14 @@
       <version>${libraries.easymock.version}</version>
       <scope>test</scope>
     </dependency>
+<!--
     <dependency>
       <groupId>com.google.code.multitester</groupId>
       <artifactId>multitester</artifactId>
       <version>${libraries.multitester.version}</version>
 	  <scope>test</scope>
     </dependency>
+-->
   </dependencies>
 
   <build>

@@ -13,6 +13,7 @@
     <packageit>jar</packageit>
     <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph</bundle.namespace>    
+    <hgdb.version>1.4-SNAPSHOT</hgdb.version>
   </properties>    
   <packaging>bundle</packaging>  
   <artifactId>hgdb</artifactId>
