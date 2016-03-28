@@ -338,6 +338,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		}
 	}
 
+	@Override
 	public void removeEntry(KeyType key, ValueType value)
 	{
 		checkOpen();

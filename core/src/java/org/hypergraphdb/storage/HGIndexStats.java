@@ -59,31 +59,36 @@ public interface HGIndexStats<Key, Value>
 	 * duplicates. See this interface description
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
-	default Count entries(long cost, boolean isEstimateOk) { return null; }
+	//default Count entries(long cost, boolean isEstimateOk) { return null; }
+	Count entries(long cost, boolean isEstimateOk);
 	
 	/**
 	 * <p>Return the number of keys in the index. See this interface description
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
-	default Count keys(long cost, boolean isEstimateOk) { return null; }
+	//default Count keys(long cost, boolean isEstimateOk) { return null; }
+	Count keys(long cost, boolean isEstimateOk);
 	
 	/**
 	 * <p>Return the number of values stored for a given key in the index. See this interface description
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code>  arguments.</p>
 	 */
-	default Count valuesOfKey(Key key, long cost, boolean isEstimateOk) { return null; }
+	//default Count valuesOfKey(Key key, long cost, boolean isEstimateOk) { return null; }
+	Count valuesOfKey(Key key, long cost, boolean isEstimateOk);
 	
 	/**
 	 * <p>For {@link org.hypergraphdb.HGBidirectionalIndex}es, return the number of values in 
 	 * the index. See this interface description for the meaning of the 
 	 * <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
-	default Count values(long cost, boolean isEstimateOk) { return null; }
-		
+	//default Count values(long cost, boolean isEstimateOk) { return null; }
+	Count values(long cost, boolean isEstimateOk);
+	
 	/**
 	 * <p>For {@link org.hypergraphdb.HGBidirectionalIndex}es, return the number of keys for which 
 	 * the specified <code>value</code> is a value. See this interface description for 
 	 * the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
-	default Count keysWithValue(Value value, long cost, boolean isEstimateOk) { return null; }
+	//default Count keysWithValue(Value value, long cost, boolean isEstimateOk) { return null; }
+	Count keysWithValue(Value value, long cost, boolean isEstimateOk);	
 }

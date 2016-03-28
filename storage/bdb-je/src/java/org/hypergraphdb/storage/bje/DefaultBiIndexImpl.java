@@ -96,6 +96,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		return super.isOpen() && secondaryDb != null;
 	}
 
+	@Override
 	public void addEntry(KeyType key, ValueType value) {
 		checkOpen();
 		DatabaseEntry dbkey = new DatabaseEntry(keyConverter.toByteArray(key));

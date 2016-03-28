@@ -96,6 +96,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 		}		
 	}
 
+	@Override
 	public Count keysWithValue(Value value, long cost, boolean isEstimateOk)
 	{
 		index.checkOpen();
