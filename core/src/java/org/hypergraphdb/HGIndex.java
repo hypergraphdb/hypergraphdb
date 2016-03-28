@@ -9,7 +9,6 @@ package org.hypergraphdb;
 
 import org.hypergraphdb.storage.HGIndexStats;
 
-
 /**
  * <p>The <code>HGIndex</code> interface represents an user-created index in the HyperGraph 
  * data structure.</p>

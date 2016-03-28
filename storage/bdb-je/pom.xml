@@ -9,7 +9,7 @@
     <version>1.4-SNAPSHOT</version>
   </parent>
   <properties>
-    <packageit>jar</packageit>
+    <packageit>bundle</packageit>
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph.storage.bje</bundle.namespace>
   </properties>

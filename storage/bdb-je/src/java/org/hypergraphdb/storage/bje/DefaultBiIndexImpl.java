@@ -9,7 +9,6 @@ package org.hypergraphdb.storage.bje;
 
 import java.util.Comparator;
 
-
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
@@ -18,6 +17,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.transaction.HGTransactionManager;
 
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.SecondaryConfig;
@@ -36,8 +36,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 			HGTransactionManager transactionManager, ByteArrayConverter<KeyType> keyConverter,
 			ByteArrayConverter<ValueType> valueConverter, 
 			Comparator<byte[]> keyComparator, Comparator<byte[]> valueComparator) {
-		super(indexName, storage, transactionManager, keyConverter, valueConverter, 
-				keyComparator, valueComparator);
+		super(indexName, storage, transactionManager, keyConverter, valueConverter, keyComparator, valueComparator);
 	}
 
 	public void open() {
@@ -96,7 +95,6 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		return super.isOpen() && secondaryDb != null;
 	}
 
-	@Override
 	public void addEntry(KeyType key, ValueType value) {
 		checkOpen();
 		DatabaseEntry dbkey = new DatabaseEntry(keyConverter.toByteArray(key));
@@ -185,30 +183,29 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 	}
 
 	public long countKeys(ValueType value) {
-//		DatabaseEntry keyEntry = new DatabaseEntry(valueConverter.toByteArray(value));
-//		DatabaseEntry valueEntry = new DatabaseEntry();
-//		SecondaryCursor cursor = null;
-//		
-//		try {
-//			cursor = secondaryDb.openCursor(txn().getBJETransaction(), cursorConfig);
-//			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
-//			if (status == OperationStatus.SUCCESS)
-//				return cursor.count();
-//			else
-//				return 0;
-//		}
-//		catch (DatabaseException ex) {
-//			throw new HGException(ex);
-//		}
-//		finally {
-//			if (cursor != null) {
-//				try {
-//					cursor.close();
-//				}
-//				catch (Throwable t) {
-//				}
-//			}
-//		}
-		return stats().keysWithValue(value, Long.MAX_VALUE, false).value();
+		DatabaseEntry keyEntry = new DatabaseEntry(valueConverter.toByteArray(value));
+		DatabaseEntry valueEntry = new DatabaseEntry();
+		SecondaryCursor cursor = null;
+		
+		try {
+			cursor = secondaryDb.openCursor(txn().getBJETransaction(), cursorConfig);
+			OperationStatus status = cursor.getSearchKey(keyEntry, valueEntry, dummy, LockMode.DEFAULT);
+			if (status == OperationStatus.SUCCESS)
+				return cursor.count();
+			else
+				return 0;
+		}
+		catch (DatabaseException ex) {
+			throw new HGException(ex);
+		}
+		finally {
+			if (cursor != null) {
+				try {
+					cursor.close();
+				}
+				catch (Throwable t) {
+				}
+			}
+		}
 	}
 }

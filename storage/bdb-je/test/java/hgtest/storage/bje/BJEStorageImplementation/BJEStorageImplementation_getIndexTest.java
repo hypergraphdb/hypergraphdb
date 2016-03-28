@@ -27,7 +27,7 @@ public class BJEStorageImplementation_getIndexTest extends
 		final boolean createIfNecessary = true;
 
         final HGIndex<Integer, String> createdIndex = storage.getIndex(
-				indexName, keyConverter, valueConverter, comparator,null,
+				indexName, keyConverter, valueConverter, comparator,null, 
 				bidirectional, createIfNecessary);
 
         assertNotNull(createdIndex);
@@ -79,7 +79,7 @@ public class BJEStorageImplementation_getIndexTest extends
         startup(1);
         final String indexName = null;
 
-        final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null, null, true, true);
+        final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null,null,  true, true);
 
         assertNotNull(createdIndex);
         shutdown();

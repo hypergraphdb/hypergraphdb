@@ -25,7 +25,12 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 	public Count entries(long cost, boolean isEstimateOk)
 	{
 		index.checkOpen();
-		return new Count(() -> ((BtreeStats) index.db.getStats(null)).getLeafNodeCount(), false);
+		return new Count(new Ref<Long>() {
+			public Long get()
+			{
+				return ((BtreeStats) index.db.getStats(null)).getLeafNodeCount();	
+			}
+		}, false);
 	}
 	
 	public Count keys(long cost, boolean isEstimateOk)
@@ -34,17 +39,26 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 		if (cost < Long.MAX_VALUE && !isEstimateOk)
 			return null;
 		else if (cost == Long.MAX_VALUE)
-			return new Count( () -> {
-				final long [] value = new long[1];
-				try (HGRandomAccessResult<Key> keys = index.scanKeys())
+			return new Count(new Ref<Long>() 
+			{
+				public Long get()
 				{
-					keys.forEachRemaining(k -> value[0]++);
+					final long [] value = new long[1];
+					try (HGRandomAccessResult<Key> keys = index.scanKeys())
+					{
+						while (keys.hasNext()) { value[0]++; keys.next(); }
+					}
+					return value[0];
 				}
-				return value[0];
-			}, false);
+			}, false);					
 		else // isEstimateOk
 		{
-			return new Count(() -> ((BtreeStats) index.db.getStats(null)).getLeafNodeCount(), true);
+			return new Count(new Ref<Long>() {
+				public Long get()
+				{
+					return ((BtreeStats) index.db.getStats(null)).getLeafNodeCount();	
+				}
+			}, true);
 		}
 	}
 
@@ -54,28 +68,37 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 		if (cost < Long.MAX_VALUE && !isEstimateOk)
 			return null;
 		else if (cost == Long.MAX_VALUE)
-			return new Count( () -> {
-				final long [] cnt = new long[1];
-				try (HGRandomAccessResult<Value> values = index.scanValues())
+			return new Count(new Ref<Long>() {
+				public Long get()
 				{
-					values.forEachRemaining(k -> cnt[0]++);
+					final long [] cnt = new long[1];
+					try (HGRandomAccessResult<Value> values = index.scanValues())
+					{
+						while (values.hasNext()) { cnt[0]++; values.next(); }
+					}
+					return cnt[0];	
 				}
-				return cnt[0];
 			}, false);
 		else // isEstimateOk
 		{
-			return new Count(() -> ((BtreeStats) index.db.getStats(null)).getLeafNodeCount(), true);
+			return new Count(new Ref<Long>() {
+				public Long get()
+				{
+					return ((BtreeStats) index.db.getStats(null)).getLeafNodeCount();	
+				}
+			}, true);			
 		}		
 	}
 
-	public Count valuesOfKey(Key key, long cost, boolean isEstimateOk)
+	public Count valuesOfKey(final Key key, final long cost, final boolean isEstimateOk)
 	{
 		index.checkOpen();
 		if (cost == 0)
 			return null;
 		else
 		{
-			Ref<Long> counter = () -> {
+			Ref<Long> counter = new Ref<Long>() {
+			public Long get() {
 				try (Cursor cursor = index.db.openCursor(index.txn().getBJETransaction(), index.cursorConfig)) 
 				{
 					DatabaseEntry keyEntry = new DatabaseEntry(index.keyConverter.toByteArray(key));
@@ -91,13 +114,12 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 				{
 					throw new HGException(ex);
 				}
-			};
+			}};
 			return new Count(counter, false);
 		}		
 	}
 
-	@Override
-	public Count keysWithValue(Value value, long cost, boolean isEstimateOk)
+	public Count keysWithValue(final Value value, final long cost, final boolean isEstimateOk)
 	{
 		index.checkOpen();
 		if (index instanceof DefaultBiIndexImpl)
@@ -106,8 +128,9 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 			return null;
 		else
 		{
-			DefaultBiIndexImpl<Key, Value> bindex = (DefaultBiIndexImpl<Key, Value>)index;
-			Ref<Long> counter = () -> {
+			final DefaultBiIndexImpl<Key, Value> bindex = (DefaultBiIndexImpl<Key, Value>)index;
+			Ref<Long> counter = new Ref<Long>() {
+			public Long get() {
 				try (SecondaryCursor cursor = bindex.secondaryDb.openCursor(index.txn().getBJETransaction(), index.cursorConfig)) 
 				{
 					DatabaseEntry keyEntry = new DatabaseEntry(bindex.valueConverter.toByteArray(value));
@@ -122,7 +145,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 				{
 					throw new HGException(ex);
 				}
-			};
+			}};
 			return new Count(counter, false);
 		}		
 		

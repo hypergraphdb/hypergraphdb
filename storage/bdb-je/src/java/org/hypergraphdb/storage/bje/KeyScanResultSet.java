@@ -66,7 +66,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T> {
 		this.key = new DatabaseEntry();
 		
 		if (keyIn != null) {
-			bje.assignData(key, keyIn.getData());
+			assignData(key, keyIn.getData());
 		}
 		
 		try {
@@ -81,7 +81,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T> {
 
 	public GotoResult goTo(T value, boolean exactMatch) {
 		byte[] B = converter.toByteArray(value);
-		bje.assignData(key, B);
+		assignData(key, B);
 		
 		try {
 			if (exactMatch) {
