@@ -1,6 +1,6 @@
 package org.hypergraphdb.storage;
 
-import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGRandomAccessResult;
 
 /**
  * <p>
@@ -13,11 +13,11 @@ import org.hypergraphdb.HGSearchResult;
  *
  * @param <T>
  */
-public final class SearchResultWrapper<T> implements HGSearchResult<T>
+public final class SearchResultWrapper<T> implements HGRandomAccessResult<T>
 {
-	private HGSearchResult<T> rs = null;
+	private HGRandomAccessResult<T> rs = null;
 	
-	public SearchResultWrapper(HGSearchResult<T> rs)
+	public SearchResultWrapper(HGRandomAccessResult<T> rs)
 	{
 		this.rs = rs;
 	}
@@ -60,5 +60,20 @@ public final class SearchResultWrapper<T> implements HGSearchResult<T>
 	public T prev()
 	{
 		return rs.prev();
+	}
+
+	@Override
+	public GotoResult goTo(T value, boolean exactMatch) {
+		return rs.goTo(value, exactMatch);
+	}
+
+	@Override
+	public void goAfterLast() {
+		rs.goAfterLast();
+	}
+
+	@Override
+	public void goBeforeFirst() {
+		rs.goBeforeFirst();
 	}	
 }

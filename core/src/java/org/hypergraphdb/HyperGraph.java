@@ -998,18 +998,23 @@ public /*final*/ class HyperGraph implements HyperNode
     {
     	if (eventManager.dispatch(this, new HGAtomRemoveRequestEvent(handle)) == HGListener.Result.cancel)
     		throw new HGRemoveRefusedException(handle, "Removal cancelled by atom listener");
-    	
-    	if (config.getPreventDanglingAtomReferences())
-    	{
-    		AtomRefType refType = typeSystem.getAtomType(HGAtomRef.class);
-    		 // symbolic links don't prevent removal of atoms
-			if (refType.getHardIdx().findFirst(handle.getPersistent()) != null ||
-				refType.getFloatingIdx().findFirst(handle.getPersistent()) != null)
-				throw new HGRemoveRefusedException(handle, "Atom is in use in a HGAtomRef");
-    	}
-    	
+    	    	
     	return getTransactionManager().ensureTransaction(new Callable<Boolean>() 
-    	{ public Boolean call() { return removeTransaction(handle, keepIncidentLinks); }});
+    	{ 
+    		public Boolean call() 
+    		{
+    	    	if (config.getPreventDanglingAtomReferences())
+    	    	{
+    	    		AtomRefType refType = typeSystem.getAtomType(HGAtomRef.class);
+    	    		 // symbolic links don't prevent removal of atoms
+    				if (refType.getHardIdx().findFirst(handle.getPersistent()) != null ||
+    					refType.getFloatingIdx().findFirst(handle.getPersistent()) != null)
+    					throw new HGRemoveRefusedException(handle, "Atom is in use in a HGAtomRef");
+    	    	}
+    			
+    			return removeTransaction(handle, keepIncidentLinks); 
+    		}
+    	});
     }
     
     private boolean removeTransaction(final HGHandle handle, final boolean keepIncidentLinks)

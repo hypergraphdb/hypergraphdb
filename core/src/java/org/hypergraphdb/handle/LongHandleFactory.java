@@ -5,6 +5,32 @@ import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.BAUtils;
 
+/**
+ * 
+ * <p>
+ * A handle factory where identifiers are Java long numbers, sequentially incremented. This is suitable
+ * either for a local installation, or for a distributed installation where data is written to a single
+ * node so no conflicting identifiers are possible.
+ * </p>
+ *
+ * <p>
+ * <b>Important note</b>: because the predefined type system already declares a few atoms as part of the initialization
+ * process, when configuring a newly created database with this handle factory, one must also tell the type system
+ * to use a different configuration file for the predefined types. Here is how to do it:
+ * 
+ * </p>
+ * 
+ * <code><pre>
+ * HGConfiguration config = new HGConfiguration();
+ *	((JavaTypeSchema)config.getTypeConfiguration().getDefaultSchema()).setPredefinedTypes("/org/hypergraphdb/types_intid");
+ * LongHandleFactory hgHandleFactory = new LongHandleFactory();
+ * config.setHandleFactory(hgHandleFactory);	
+ * HyperGraph graph = HGEnvironment.get(location, config);
+ * </pre></code>
+ * 
+ * @author Borislav Iordanov
+ *
+ */
 public class LongHandleFactory implements HGHandleFactory
 {
     private static final LongPersistentHandle any = new LongPersistentHandle(1);
