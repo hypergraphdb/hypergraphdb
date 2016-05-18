@@ -1,1 +1,3 @@
 gov.miamidade.owlgdb/
+**/*.iml
+.idea
