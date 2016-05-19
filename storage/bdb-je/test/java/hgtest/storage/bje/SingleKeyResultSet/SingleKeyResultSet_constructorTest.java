@@ -26,8 +26,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 	@Test
 	public void bjeCursorIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.NullPointerException");
+		final Exception expected = new NullPointerException();
 
 		try
 		{
@@ -48,7 +47,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		realCursor.put(new DatabaseEntry(new byte[] { 1, 2, 3, 4 }),
 				new DatabaseEntry(new byte[] { 1, 2, 3, 4 }));
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(4);
 		PowerMock.replayAll();
 
 		new SingleKeyResultSet(fakeCursor, null, converter);
@@ -67,7 +66,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		realCursor.put(new DatabaseEntry(new byte[] { 1, 2, 3, 4 }),
 				new DatabaseEntry(new byte[] { 1, 2, 3, 4 }));
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(4);
 		PowerMock.replayAll();
 
 		try
@@ -87,8 +86,8 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 	@Test
 	public void fakeCursorThrowsException() throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.IllegalStateException: This exception is thrown by fake cursor.");
+		final Exception expected = new IllegalStateException(
+				"This exception is thrown by fake cursor.");
 
 		final Cursor realCursor = database.openCursor(
 				transactionForTheEnvironment, null);
@@ -111,9 +110,8 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		{
 			assertExceptions(occurred, expected);
 		}
-		finally
-		{
-			realCursor.close();
+		finally {
+            realCursor.close();
 		}
 	}
 
@@ -125,7 +123,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 		realCursor.put(new DatabaseEntry(new byte[] { 1, 2, 3, 4 }),
 				new DatabaseEntry(new byte[] { 1, 2, 3, 4 }));
 		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(4);
 		PowerMock.replayAll();
 
 		new SingleKeyResultSet<Integer>(fakeCursor, key, converter);

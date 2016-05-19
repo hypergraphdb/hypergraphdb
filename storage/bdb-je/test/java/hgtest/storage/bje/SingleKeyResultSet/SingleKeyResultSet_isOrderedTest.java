@@ -28,7 +28,7 @@ public class SingleKeyResultSet_isOrderedTest extends ResultSetTestBasis
 				new DatabaseEntry(new byte[] { 1, 2, 3, 4 }));
 		final BJETxCursor fakeCursor = PowerMock
 				.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(2);
+		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor).times(4);
 		PowerMock.replayAll();
 		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 		final SingleKeyResultSet<Integer> resultSet = new SingleKeyResultSet(

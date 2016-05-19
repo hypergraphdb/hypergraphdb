@@ -1,19 +1,19 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseNotFoundException;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
 import java.util.Comparator;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.junit.Assert.assertNull;
+import org.easymock.EasyMock;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultIndexImpl;
+import org.junit.Test;
+import org.powermock.api.easymock.PowerMock;
+
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseNotFoundException;
 
 /**
  * @author Yuriy Sechko
@@ -28,7 +28,8 @@ public class DefaultIndexImpl_getComparatorTest extends
 
 		PowerMock.replayAll();
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(null, storage,
-				transactionManager, keyConverter, valueConverter, comparator, null);
+				transactionManager, keyConverter, valueConverter, comparator,
+				null);
 
 		try
 		{
@@ -54,9 +55,10 @@ public class DefaultIndexImpl_getComparatorTest extends
 				comparator, null);
 		indexImpl.open();
 
-		final Comparator<byte[]> actualComparator = indexImpl.getKeyComparator();
+		final Comparator<byte[]> actualComparator = indexImpl
+				.getKeyComparator();
 
-		assertNull(actualComparator);
+		assertNotNull(actualComparator);
 		closeDatabase(indexImpl);
 	}
 

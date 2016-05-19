@@ -9,17 +9,14 @@ import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_storeTest extends
 		BJEStorageImplementationTestBasis
 {
+
 	@Test
 	public void storeDataUsingNullHandle() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to store hypergraph raw byte []: java.lang.NullPointerException");
+		final Exception expected = new NullPointerException();
 
 		startup(1);
 		try
@@ -35,6 +32,7 @@ public class BJEStorageImplementation_storeTest extends
 			shutdown();
 		}
 	}
+
 
 	@Test
 	public void storeLinksUsingNullHandle() throws Exception
@@ -59,10 +57,9 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void dataIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to store hypergraph raw byte []: java.lang.IllegalArgumentException: Data field for DatabaseEntry data cannot be null");
+		final Exception expected = new NullPointerException("Can't store null data.");
 
-		startup(1);
+		startup();
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] nullData = null;
 		try

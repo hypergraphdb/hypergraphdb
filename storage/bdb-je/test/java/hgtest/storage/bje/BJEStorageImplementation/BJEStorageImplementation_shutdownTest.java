@@ -32,10 +32,6 @@ public class BJEStorageImplementation_shutdownTest extends
 		{
 			assertExceptions(occurred, expected);
 		}
-		finally
-		{
-			shutdown();
-		}
 	}
 
 	@Test

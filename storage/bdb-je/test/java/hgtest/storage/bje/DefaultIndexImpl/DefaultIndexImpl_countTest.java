@@ -1,9 +1,6 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-
-import com.sleepycat.je.Database;
-import com.sleepycat.je.DatabaseNotFoundException;
-import com.sleepycat.je.StatsConfig;
+import com.sleepycat.je.*;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
@@ -23,7 +20,8 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
-		final Exception expected = new NullPointerException();
+		final Exception expected = new HGException(
+				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
@@ -79,10 +77,13 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		final Database fakeDatabase = PowerMock
 				.createStrictMock(Database.class);
 		EasyMock.expect(
-				fakeDatabase.getStats(EasyMock.<StatsConfig> anyObject()))
-				.andThrow(
-						new DatabaseNotFoundException(
-								"This exception is thrown by fake database."));
+				fakeDatabase.openCursor(EasyMock.isNull(),
+						EasyMock.anyObject(CursorConfig.class)
+
+				)).andThrow(
+				new DatabaseNotFoundException(
+						"This exception is thrown by fake database."));
+
 		PowerMock.replayAll();
 		// inject fake database into appropriate field
 		databaseField.set(index, fakeDatabase);

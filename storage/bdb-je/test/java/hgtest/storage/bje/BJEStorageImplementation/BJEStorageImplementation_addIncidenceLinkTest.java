@@ -29,7 +29,7 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 			final String expectedMessage = String
 					.format("Failed to update incidence set for handle %s: java.lang.NullPointerException",
 							handle);
-			assertExceptions(ex, HGException.class, expectedMessage);
+			assertExceptions(ex, NullPointerException.class);
 		}
 		finally
 		{

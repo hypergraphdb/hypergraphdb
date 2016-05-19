@@ -1,6 +1,5 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-
 import com.sleepycat.je.DatabaseNotFoundException;
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
@@ -23,7 +22,8 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	@Test
 	public void indexIsNopOpened() throws Exception
 	{
-		final Exception expected = new NullPointerException();
+		final Exception expected = new HGException(
+				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
 		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
