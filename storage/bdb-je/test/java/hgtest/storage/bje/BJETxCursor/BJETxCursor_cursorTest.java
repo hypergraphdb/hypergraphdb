@@ -6,39 +6,31 @@ import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
-/**
- * @author Yuriy Sechko
- */
-public class BJETxCursor_cursorTest
+public class BJETxCursor_cursorTest extends BJETxCursorTestBasis
 {
 	@Test
-	public void cursorIsNull() throws Exception
+	public void returnsNull_whenCursorIsNull() throws Exception
 	{
-		final Cursor cursor = null;
-		final TransactionBJEImpl tx = PowerMock
-				.createStrictMock(TransactionBJEImpl.class);
-		PowerMock.replayAll();
+		replay();
 
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
+		final BJETxCursor bjeCursor = new BJETxCursor(null, mockedTx);
 		final Cursor actual = bjeCursor.cursor();
 		assertNull(actual);
-		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void cursorIsNotNull() throws Exception
+	public void returnsTheSameInstance_whenCursorIsNotNull() throws Exception
 	{
-		final Cursor expected = PowerMock.createStrictMock(Cursor.class);
-		final TransactionBJEImpl tx = PowerMock
-				.createStrictMock(TransactionBJEImpl.class);
-		PowerMock.replayAll();
+		final Cursor expected = mockedCursor;
+		replay();
 
-		final BJETxCursor bjeCursor = new BJETxCursor(expected, tx);
+		final BJETxCursor bjeCursor = new BJETxCursor(mockedCursor, mockedTx);
 		final Cursor actual = bjeCursor.cursor();
-		assertEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertSame(expected, actual);
 	}
 }
