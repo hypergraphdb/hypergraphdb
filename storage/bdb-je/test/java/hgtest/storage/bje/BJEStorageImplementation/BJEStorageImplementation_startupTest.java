@@ -43,8 +43,8 @@ public class BJEStorageImplementation_startupTest extends
 	@Test
 	public void exceptionWhileStartupOccurred() throws Exception
 	{
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage("Failed to initialize HyperGraph data store: java.lang.IllegalStateException: Throw exception in test case.");
 		startup(1, new IllegalStateException("Throw exception in test case."));
 	}

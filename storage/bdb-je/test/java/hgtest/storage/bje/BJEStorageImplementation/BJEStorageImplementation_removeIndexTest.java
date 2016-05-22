@@ -14,8 +14,8 @@ public class BJEStorageImplementation_removeIndexTest extends
 	@Test
 	public void throwsException_whenIndexNameIsNull() throws Exception
 	{
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(allOf(
 						containsString("com.sleepycat.je.DatabaseNotFoundException"),
 						containsString("Attempted to remove non-existent database hgstore_idx_null")));
@@ -27,8 +27,8 @@ public class BJEStorageImplementation_removeIndexTest extends
 	public void throwsException_whenIndexWhichIsNotStoredAhead()
 			throws Exception
 	{
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(allOf(
 						containsString("com.sleepycat.je.DatabaseNotFoundException"),
 						containsString("Attempted to remove non-existent database hgstore_idx_This index does not exist")));

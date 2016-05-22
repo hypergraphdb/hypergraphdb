@@ -16,7 +16,7 @@ public class BJEStorageImplementation_storeTest extends
 	{
 		startup(1);
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.store(null, new byte[] {});
 	}
 
@@ -26,7 +26,7 @@ public class BJEStorageImplementation_storeTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.store(null, new HGPersistentHandle[] {});
 	}
 
@@ -38,8 +38,8 @@ public class BJEStorageImplementation_storeTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] nullData = null;
 
-		expectedException.expect(NullPointerException.class);
-		expectedException.expectMessage("Can't store null data.");
+		below.expect(NullPointerException.class);
+		below.expectMessage("Can't store null data.");
 		storage.store(handle, nullData);
 	}
 
@@ -51,7 +51,7 @@ public class BJEStorageImplementation_storeTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = null;
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.store(handle, links);
 	}
 
@@ -64,7 +64,7 @@ public class BJEStorageImplementation_storeTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle[] links = new HGPersistentHandle[] { null };
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.store(handle, links);
 	}
 
@@ -76,8 +76,8 @@ public class BJEStorageImplementation_storeTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage("Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
 		storage.store(handle, new HGPersistentHandle[] {});
 	}

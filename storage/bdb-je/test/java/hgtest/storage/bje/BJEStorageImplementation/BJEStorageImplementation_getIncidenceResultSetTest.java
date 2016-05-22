@@ -16,8 +16,8 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
-		expectedException
+		below.expect(NullPointerException.class);
+		below
 				.expectMessage("HGStore.getIncidenceSet called with a null handle.");
 		storage.getIncidenceResultSet(null);
 	}
@@ -30,8 +30,8 @@ public class BJEStorageImplementation_getIncidenceResultSetTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(format(
 						"Failed to retrieve incidence set for handle %s: java.lang.IllegalStateException: Exception in test case.",
 						handle));

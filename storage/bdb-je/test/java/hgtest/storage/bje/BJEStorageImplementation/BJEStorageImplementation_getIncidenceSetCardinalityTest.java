@@ -17,8 +17,8 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
-		expectedException
+		below.expect(NullPointerException.class);
+		below
 				.expectMessage("HGStore.getIncidenceSetCardinality called with a null handle.");
 		storage.getIncidenceSetCardinality(null);
 	}
@@ -31,8 +31,8 @@ public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(format(
 						"Failed to retrieve incidence set for handle %s: java.lang.IllegalArgumentException: Exception in test case.",
 						handle));

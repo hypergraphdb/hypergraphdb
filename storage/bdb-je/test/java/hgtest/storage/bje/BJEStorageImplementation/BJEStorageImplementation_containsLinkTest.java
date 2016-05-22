@@ -19,7 +19,7 @@ public class BJEStorageImplementation_containsLinkTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.containsLink(null);
 	}
 
@@ -31,8 +31,8 @@ public class BJEStorageImplementation_containsLinkTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(format(
 						"Failed to retrieve link with handle %s: com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Exception in test case.",
 						handle.toString()));

@@ -16,8 +16,8 @@ public class BJEStorageImplementation_removeDataTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
-		expectedException
+		below.expect(NullPointerException.class);
+		below
 				.expectMessage("HGStore.remove called with a null handle.");
 		storage.removeData(null);
 	}
@@ -30,8 +30,8 @@ public class BJEStorageImplementation_removeDataTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(format(
 						"Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
 						handle));

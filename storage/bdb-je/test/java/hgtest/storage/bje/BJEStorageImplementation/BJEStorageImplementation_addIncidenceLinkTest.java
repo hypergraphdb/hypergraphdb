@@ -15,7 +15,7 @@ public class BJEStorageImplementation_addIncidenceLinkTest extends
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle link = null;
 
-		expectedException.expect(NullPointerException.class);
+		below.expect(NullPointerException.class);
 		storage.addIncidenceLink(handle, link);
 	}
 

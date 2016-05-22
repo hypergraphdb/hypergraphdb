@@ -18,8 +18,8 @@ public class BJEStorageImplementation_shutdownTest extends
 
 		final Environment environment = storage.getBerkleyEnvironment();
 
-		expectedException.expect(IllegalStateException.class);
-		expectedException
+		below.expect(IllegalStateException.class);
+		below
 				.expectMessage("Attempt to use non-open Environment object().");
 		environment.getHome().getPath();
 	}

@@ -11,8 +11,8 @@ public class BJEStorageImplementation_getLinkTest extends
 	@Test
 	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage("Failed to retrieve link with handle null");
 		storage.getLink(null);
 	}

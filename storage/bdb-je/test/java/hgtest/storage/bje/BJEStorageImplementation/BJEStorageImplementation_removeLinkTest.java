@@ -17,8 +17,8 @@ public class BJEStorageImplementation_removeLinkTest extends
 	{
 		startup();
 
-		expectedException.expect(NullPointerException.class);
-		expectedException
+		below.expect(NullPointerException.class);
+		below
 				.expectMessage("HGStore.remove called with a null handle.");
 		storage.removeLink(null);
 	}
@@ -31,8 +31,8 @@ public class BJEStorageImplementation_removeLinkTest extends
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage(format(
 						"Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
 						handle.toString()));

@@ -11,8 +11,8 @@ public class BJEStorageImplementation_removeIncidenceSetTest extends
 	@Test
 	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		expectedException.expect(HGException.class);
-		expectedException
+		below.expect(HGException.class);
+		below
 				.expectMessage("Failed to remove incidence set of handle null: java.lang.NullPointerException");
 		storage.removeIncidenceSet(null);
 	}
