@@ -11,8 +11,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Test cases for getters in {@link org.hypergraphdb.storage.bje.BJEConfig}
- *
- * @author Yuriy Sechko
  */
 public class BJEConfig_getConfigTest
 {
@@ -29,17 +27,14 @@ public class BJEConfig_getConfigTest
 
 		final EnvironmentConfig actual = bjeConfig.getEnvironmentConfig();
 
-		// equals() is not overridden in EnvironmentConfig class. So not sure
-		// about its behavior.
-		// But toString is overridden. It is pretty enough for comparing objects
-		// in the present test case.
-		assertEquals(actual.toString(), expected.toString());
+		assertEquals(expected.toString(), actual.toString());
 	}
 
 	@Test
 	public void getDatabaseConfigTest() throws Exception
 	{
 		final DatabaseConfig expected = new DatabaseConfig();
+
 		final BJEConfig bjeConfig = new BJEConfig();
 		final Field privateConfigField = bjeConfig.getClass().getDeclaredField(
 				"dbConfig");
@@ -48,7 +43,6 @@ public class BJEConfig_getConfigTest
 
 		final DatabaseConfig actual = bjeConfig.getDatabaseConfig();
 
-		// see note above
-		assertEquals(actual.toString(), expected.toString());
+		assertEquals(expected.toString(), actual.toString());
 	}
 }

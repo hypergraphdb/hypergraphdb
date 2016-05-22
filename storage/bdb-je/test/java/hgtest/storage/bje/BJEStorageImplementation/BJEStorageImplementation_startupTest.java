@@ -1,16 +1,11 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import static org.junit.Assert.*;
+
 import org.hypergraphdb.HGException;
+import org.junit.After;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_startupTest extends
 		BJEStorageImplementationTestBasis
 {
@@ -19,57 +14,50 @@ public class BJEStorageImplementation_startupTest extends
 	public void environmentIsTransactional() throws Exception
 	{
 		startup();
+
 		final boolean isTransactional = storage.getConfiguration()
 				.getDatabaseConfig().getTransactional();
 		assertTrue(isTransactional);
-		shutdown();
 	}
 
 	@Test
 	public void storageIsNotReadOnly() throws Exception
 	{
 		startup();
+
 		final boolean isReadOnly = storage.getConfiguration()
 				.getDatabaseConfig().getReadOnly();
 		assertFalse(isReadOnly);
-		shutdown();
 	}
 
 	@Test
 	public void checkDatabaseName() throws Exception
 	{
 		startup();
+
 		final String databaseLocation = storage.getBerkleyEnvironment()
 				.getHome().getPath();
-		assertEquals(databaseLocation, testDatabaseLocation);
-		shutdown();
+		assertEquals(testDatabaseLocation, databaseLocation);
 	}
 
 	@Test
 	public void exceptionWhileStartupOccurred() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to initialize HyperGraph data store: java.lang.IllegalStateException: Throw exception in test case.");
-
-		try
-		{
-			startup(1, new IllegalStateException(
-					"Throw exception in test case."));
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage("Failed to initialize HyperGraph data store: java.lang.IllegalStateException: Throw exception in test case.");
+		startup(1, new IllegalStateException("Throw exception in test case."));
 	}
 
 	@Test
 	public void environmentIsNotTransactional() throws Exception
 	{
 		startupNonTransactional();
-		shutdown();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

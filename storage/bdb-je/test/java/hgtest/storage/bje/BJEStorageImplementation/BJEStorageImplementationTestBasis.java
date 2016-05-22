@@ -1,8 +1,6 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import com.google.code.multitester.annonations.Exported;
-
-import hgtest.storage.bje.TestUtils;
+import java.io.File;
 
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGConfiguration;
@@ -12,12 +10,15 @@ import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.File;
+import com.google.code.multitester.annonations.Exported;
+import hgtest.storage.bje.TestUtils;
 
 /**
  * Most common actions which have to be performed in test cases for
@@ -62,8 +63,6 @@ import java.io.File;
  * {@link hgtest.storage.bje.BJEStorageImplementation.BJEStorageImplementationTestBasis#startupNonTransactional()
  * )} are convenient.
  * <p>
- * 
- * @author Yuriy Sechko
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HGConfiguration.class)
@@ -73,7 +72,7 @@ public abstract class BJEStorageImplementationTestBasis
 
 	// location of temporary directory for tests
 	final File testDatabaseDirectory = TestUtils.createTempFile(
-            "BJEStorageImplementation", "test_database");
+			"BJEStorageImplementation", "test_database");
 	final protected String testDatabaseLocation = TestUtils
 			.getCanonicalPath(testDatabaseDirectory);
 
@@ -83,6 +82,9 @@ public abstract class BJEStorageImplementationTestBasis
 
 	@Exported("underTest")
 	final BJEStorageImplementation storage = new BJEStorageImplementation();
+
+	@Rule
+	protected ExpectedException expectedException = ExpectedException.none();
 
 	@Before
 	@Exported("up1")
@@ -242,35 +244,35 @@ public abstract class BJEStorageImplementationTestBasis
 	/**
 	 * Shortcuts for use in common test cases.
 	 */
-    @Exported("up_0")
-    protected void startup_0() throws Exception
-    {
-        startup();
-    }
+	@Exported("up_0")
+	protected void startup_0() throws Exception
+	{
+		startup();
+	}
 
-    @Exported("up_1")
-    protected void startup_1() throws Exception
-    {
-        startup(1);
-    }
+	@Exported("up_1")
+	protected void startup_1() throws Exception
+	{
+		startup(1);
+	}
 
-    @Exported("up_2")
-    protected void startup_2() throws Exception
-    {
-        startup(2);
-    }
+	@Exported("up_2")
+	protected void startup_2() throws Exception
+	{
+		startup(2);
+	}
 
-    @Exported("up_3")
-    protected void startup_3() throws Exception
-    {
-        startup(3);
-    }
+	@Exported("up_3")
+	protected void startup_3() throws Exception
+	{
+		startup(3);
+	}
 
-    @Exported("up_4")
-    protected void startup_4() throws Exception
-    {
-        startup(4);
-    }
+	@Exported("up_4")
+	protected void startup_4() throws Exception
+	{
+		startup(4);
+	}
 
 	@Exported("up_t_3")
 	protected void startup_transaction_3() throws Exception

@@ -1,83 +1,61 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import static java.lang.String.format;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_removeIncidenceLinkTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void handleIsNull() throws Exception
+	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to update incidence set for handle null: java.lang.NullPointerException");
-
-		startup();
 		final HGPersistentHandle handle = null;
 		final HGPersistentHandle link = new UUIDPersistentHandle();
-		try
-		{
-			storage.removeIncidenceLink(handle, link);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage("Failed to update incidence set for handle null: java.lang.NullPointerException");
+		storage.removeIncidenceLink(handle, link);
 	}
 
 	@Test
-	public void bothLinkAndHandleAreNull() throws Exception
+	public void throwsException_whenBothLinkAndHandleAreNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to update incidence set for handle null: java.lang.NullPointerException");
-
-		startup();
-		try
-		{
-			storage.removeIncidenceLink(null, null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage("Failed to update incidence set for handle null: java.lang.NullPointerException");
+		storage.removeIncidenceLink(null, null);
 	}
 
 	@Test
-	public void linkIsNull() throws Exception
+	public void throwsException_whenLinkIsNull() throws Exception
 	{
-		startup();
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final HGPersistentHandle link = null;
-		try
-		{
-			storage.removeIncidenceLink(handle, link);
-		}
-		catch (Exception ex)
-		{
-			final String expectedMessage = String
-					.format("Failed to update incidence set for handle %s: java.lang.NullPointerException",
-							handle);
-			assertExceptions(ex, HGException.class, expectedMessage);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage(format(
+						"Failed to update incidence set for handle %s: java.lang.NullPointerException",
+						handle));
+		storage.removeIncidenceLink(handle, link);
+	}
+
+	@Before
+	public void startup() throws Exception
+	{
+		super.startup();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

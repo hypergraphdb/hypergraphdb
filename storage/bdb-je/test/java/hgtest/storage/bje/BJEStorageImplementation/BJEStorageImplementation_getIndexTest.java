@@ -1,24 +1,23 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import org.hypergraphdb.HGIndex;
-import org.hypergraphdb.storage.ByteArrayConverter;
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.Comparator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.storage.ByteArrayConverter;
+import org.junit.After;
+import org.junit.Test;
 
-/**
- */
 public class BJEStorageImplementation_getIndexTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void convertersAndComparatorsAreNull() throws Exception
+	public void returnsValidIndex_whenConvertersAndComparatorsAreNull()
+			throws Exception
 	{
 		startup(1);
+
 		final String indexName = "sampleIndex";
 		final ByteArrayConverter<Integer> keyConverter = null;
 		final ByteArrayConverter<String> valueConverter = null;
@@ -26,62 +25,73 @@ public class BJEStorageImplementation_getIndexTest extends
 		final boolean bidirectional = true;
 		final boolean createIfNecessary = true;
 
-        final HGIndex<Integer, String> createdIndex = storage.getIndex(
-				indexName, keyConverter, valueConverter, comparator,null,
+		final HGIndex<Integer, String> createdIndex = storage.getIndex(
+				indexName, keyConverter, valueConverter, comparator, null,
 				bidirectional, createIfNecessary);
 
-        assertNotNull(createdIndex);
-		shutdown();
+		assertNotNull(createdIndex);
 	}
 
 	@Test
-	public void bidirectionalFlagIsSetToFalse() throws Exception
+	public void returnsValidIndex_whenBidirectionalFlagIsSetToFalse()
+			throws Exception
 	{
 		startup(1);
+
 		final boolean bidirectional = false;
 
-        final HGIndex<Integer, String> createdIndex = storage.getIndex(
+		final HGIndex<Integer, String> createdIndex = storage.getIndex(
 				"sampleIndex", null, null, null, null, bidirectional, true);
 
-        assertNotNull(createdIndex);
-		shutdown();
+		assertNotNull(createdIndex);
 	}
 
 	@Test
-	public void createIfNecessaryFlagIsSetToFalse() throws Exception
+	public void returnsNull_whenCreateIfNecessaryFlagIsSetToFalse()
+			throws Exception
 	{
 		startup();
+
 		final boolean createIfNecessary = false;
 
-        final HGIndex<Object, Object> createdIndex = storage.getIndex(
+		final HGIndex<Object, Object> createdIndex = storage.getIndex(
 				"sampleIndex", null, null, null, null, true, createIfNecessary);
 
-        assertNull(createdIndex);
-		shutdown();
+		assertNull(createdIndex);
 	}
 
 	@Test
-	public void indexWithTheSameNameAlreadyExists() throws Exception
+	public void returnsTheSameInstance_whenIndexWithTheSameNameAlreadyExists()
+			throws Exception
 	{
 		startup(1);
-		final String indexName = "sample index";
-		final HGIndex<Object, Object> firstIndex = storage.getIndex(indexName, null, null, null, null, true, true);
 
-        final HGIndex<Object, Object> secondIndex = storage.getIndex(indexName,
+		final String indexName = "sample index";
+		final HGIndex<Object, Object> firstIndex = storage.getIndex(indexName,
 				null, null, null, null, true, true);
 
-        assertEquals(firstIndex, secondIndex);
-		shutdown();
+		final HGIndex<Object, Object> secondIndex = storage.getIndex(indexName,
+				null, null, null, null, true, true);
+
+		assertSame(firstIndex, secondIndex);
 	}
 
-    @Test
-    public void indexNameIsNull() throws Exception {
-        startup(1);
-        final String indexName = null;
+	@Test
+	public void returnsValidIndex_whenIndexNameIsNull() throws Exception
+	{
+		startup(1);
 
-        final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null, null, true, true);
+		final String indexName = null;
 
-        assertNotNull(createdIndex);
-        shutdown();
-    }
+		final HGIndex<Object, Object> createdIndex = storage.getIndex(
+				indexName, null, null, null, null, true, true);
+
+		assertNotNull(createdIndex);
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
+	}
 }

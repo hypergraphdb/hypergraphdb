@@ -1,57 +1,50 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.StringContains.containsString;
+
 import org.hypergraphdb.HGException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_removeIndexTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void indexNameIsNull() throws Exception
+	public void throwsException_whenIndexNameIsNull() throws Exception
 	{
-		startup();
-		final String indexName = null;
-		try
-		{
-			storage.removeIndex(indexName);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, HGException.class,
-					"com.sleepycat.je.DatabaseNotFoundException",
-					"Attempted to remove non-existent database hgstore_idx_null");
-		}
-		finally
-		{
-			shutdown();
-		}
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage(allOf(
+						containsString("com.sleepycat.je.DatabaseNotFoundException"),
+						containsString("Attempted to remove non-existent database hgstore_idx_null")));
+
+		storage.removeIndex(null);
 	}
 
 	@Test
-	public void removeIndexWhichIsNotStored() throws Exception
+	public void throwsException_whenIndexWhichIsNotStoredAhead()
+			throws Exception
 	{
-		startup();
-		try
-		{
-			storage.removeIndex("This index does not exist");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(
-					occurred,
-					HGException.class,
-					"com.sleepycat.je.DatabaseNotFoundException",
-					"Attempted to remove non-existent database hgstore_idx_This index does not exist");
-		}
-		finally
-		{
-			shutdown();
-		}
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage(allOf(
+						containsString("com.sleepycat.je.DatabaseNotFoundException"),
+						containsString("Attempted to remove non-existent database hgstore_idx_This index does not exist")));
+
+		storage.removeIndex("This index does not exist");
+	}
+
+	@Before
+	public void startup() throws Exception
+	{
+		super.startup();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

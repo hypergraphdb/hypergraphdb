@@ -1,35 +1,31 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.HGException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_removeIncidenceSetTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void useNullHandle() throws Exception
+	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to remove incidence set of handle null: java.lang.NullPointerException");
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage("Failed to remove incidence set of handle null: java.lang.NullPointerException");
+		storage.removeIncidenceSet(null);
+	}
 
-		startup();
-		try
-		{
-			storage.removeIncidenceSet(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+	@Before
+	public void startup() throws Exception
+	{
+		super.startup();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

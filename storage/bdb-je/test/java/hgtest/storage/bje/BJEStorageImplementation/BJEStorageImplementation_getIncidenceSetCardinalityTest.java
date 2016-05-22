@@ -1,59 +1,47 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import static java.lang.String.format;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.junit.After;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_getIncidenceSetCardinalityTest extends
 		BJEStorageImplementationTestBasis
 {
 
 	@Test
-	public void useNullHandle() throws Exception
+	public void throwsException_whenNullHandleIsUsed() throws Exception
 	{
-		final Exception expected = new NullPointerException(
-				"HGStore.getIncidenceSetCardinality called with a null handle.");
-
 		startup();
-		try
-		{
-			storage.getIncidenceSetCardinality(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		expectedException.expect(NullPointerException.class);
+		expectedException
+				.expectMessage("HGStore.getIncidenceSetCardinality called with a null handle.");
+		storage.getIncidenceSetCardinality(null);
 	}
 
 	@Test
-	public void exceptionIsThrown() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
 		startup(new IllegalArgumentException("Exception in test case."));
+
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		try
-		{
-			storage.getIncidenceSetCardinality(handle);
-		}
-		catch (Exception ex)
-		{
-			final String expectedMessage = String
-					.format("Failed to retrieve incidence set for handle %s: java.lang.IllegalArgumentException: Exception in test case.",
-							handle);
-			assertExceptions(ex, HGException.class, expectedMessage);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		expectedException.expect(HGException.class);
+		expectedException
+				.expectMessage(format(
+						"Failed to retrieve incidence set for handle %s: java.lang.IllegalArgumentException: Exception in test case.",
+						handle));
+		storage.getIncidenceSetCardinality(handle);
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }
