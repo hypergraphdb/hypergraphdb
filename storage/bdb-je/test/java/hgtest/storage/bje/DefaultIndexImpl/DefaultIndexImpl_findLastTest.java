@@ -6,6 +6,7 @@ import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -19,10 +20,10 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 	{
 		final Exception expected = new HGException(
 				"Attempting to operate on index 'sample_index' while the index is being closed.");
+        replay(mockedStorage);
 
-		PowerMock.replayAll();
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
 		try
@@ -39,7 +40,6 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 	public void keyIsNull() throws Exception
 	{
 		startupIndex();
-		PowerMock.replayAll();
 
 		try
 		{
@@ -59,7 +59,6 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 	public void thereAreNotAddedEntries() throws Exception
 	{
 		startupIndex();
-		PowerMock.replayAll();
 
 		final String found = index.findLast(28);
 
@@ -73,7 +72,7 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 		final String expected = "first";
 
 		startupIndex();
-		PowerMock.replayAll();
+
 		index.addEntry(1, "first");
 
 		final String actual = index.findLast(1);
@@ -87,7 +86,7 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 			throws Exception
 	{
 		startupIndex();
-		PowerMock.replayAll();
+
 		index.addEntry(1, "first");
 		index.addEntry(2, "second");
 
@@ -104,7 +103,7 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 		final String expected = "fifty";
 
 		startupIndex();
-		PowerMock.replayAll();
+
 		index.addEntry(1, "first");
 		index.addEntry(2, "second");
 		index.addEntry(50, "fifty");
@@ -121,7 +120,7 @@ public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 		final String expected = "two";
 
 		startupIndex();
-		PowerMock.replayAll();
+
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(2, "second");

@@ -1,7 +1,8 @@
 package hgtest.storage.bje;
 
-import com.google.code.multitester.annonations.Exported;
-import com.sleepycat.je.*;
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Comparator;
 
 import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
@@ -13,11 +14,9 @@ import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.*;
 import org.junit.After;
 import org.junit.Before;
-import org.powermock.api.easymock.PowerMock;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Comparator;
+import com.google.code.multitester.annonations.Exported;
+import com.sleepycat.je.*;
 
 /**
  * Contains common code for test cases for
@@ -34,11 +33,12 @@ public class IndexImplTestBasis
 	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
 
 	protected final File envHome = TestUtils.createTempFile("IndexImpl",
-            "test_environment");
+			"test_environment");
 
 	// storage - used only for getting configuration data
-	protected final BJEStorageImplementation storage = PowerMock
+	protected final BJEStorageImplementation mockedStorage = EasyMock
 			.createStrictMock(BJEStorageImplementation.class);
+
 	protected HGTransactionManager transactionManager;
 	// custom converters
 	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
@@ -50,19 +50,19 @@ public class IndexImplTestBasis
 	protected Comparator<byte[]> comparator = null;
 
 	@Before
-    @Exported("up1")
+	@Exported("up1")
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
-		PowerMock.resetAll();
+		EasyMock.reset(mockedStorage);
 		TestUtils.deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
 	@After
-    @Exported("down1")
+	@Exported("down1")
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
-		PowerMock.verifyAll();
+		EasyMock.verify(mockedStorage);
 		environment.close();
 		TestUtils.deleteDirectory(envHome);
 	}
@@ -146,9 +146,10 @@ public class IndexImplTestBasis
 	// BJEStorageImplementation
 	protected void mockStorage()
 	{
-		EasyMock.expect(storage.getConfiguration()).andReturn(new BJEConfig());
-		EasyMock.expect(storage.getBerkleyEnvironment()).andReturn(environment)
-				.times(1);
+		EasyMock.expect(mockedStorage.getConfiguration()).andReturn(
+				new BJEConfig());
+		EasyMock.expect(mockedStorage.getBerkleyEnvironment())
+				.andReturn(environment).times(1);
 	}
 
 	/**
@@ -157,7 +158,7 @@ public class IndexImplTestBasis
 	 * We obtain them by their names. It is not good. But it seems that there is
 	 * not way to obtain them from Environment instance.
 	 */
-	protected void closeDatabase(final DefaultIndexImpl<?,?> indexImpl)
+	protected void closeDatabase(final DefaultIndexImpl<?, ?> indexImpl)
 			throws NoSuchFieldException, IllegalAccessException
 	{
 		// one database handle is in DefaultIndexImpl

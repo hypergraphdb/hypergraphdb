@@ -10,21 +10,18 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.*;
 
-
-/**
- * @author Yuriy Sechko
- */
 public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 {
 	@Test
 	public void indexIsNotOpened() throws Exception
 	{
-		PowerMock.replayAll();
+		replay(mockedStorage);
 
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
 		indexImpl.close();
 	}
@@ -33,10 +30,11 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 	public void allInternalOperationsPerformFine() throws Exception
 	{
 		mockStorage();
-		PowerMock.replayAll();
+        replay(mockedStorage);
+
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
 		indexImpl.close();
 	}
@@ -48,22 +46,22 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 				"java.lang.IllegalStateException");
 		// open databases normally
 		mockStorage();
-		PowerMock.replayAll();
+        replay(mockedStorage);
+
 		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
-		PowerMock.verifyAll();
-		PowerMock.resetAll();
+		verify(mockedStorage);
+		reset(mockedStorage);
 		// now we force to throw exception in the DefaultBiIndexImpl.close()
 		// method
 		// we link the field 'secondaryDb' to the fake database,
 		// which throws exception when their 'close' method is called
-		final SecondaryDatabase fakeSecondaryDatabase = PowerMock
-				.createStrictMock(SecondaryDatabase.class);
+		final SecondaryDatabase fakeSecondaryDatabase = createStrictMock(SecondaryDatabase.class);
 		fakeSecondaryDatabase.close();
-		EasyMock.expectLastCall().andThrow(new IllegalStateException());
-		PowerMock.replayAll();
+		expectLastCall().andThrow(new IllegalStateException());
+		replay(mockedStorage, fakeSecondaryDatabase);
 		final Field secondaryDbField = indexImpl.getClass().getDeclaredField(
 				SECONDARY_DATABASE_FIELD_NAME);
 		secondaryDbField.setAccessible(true);

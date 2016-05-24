@@ -5,33 +5,28 @@ import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static java.util.Arrays.asList;
+import static org.easymock.EasyMock.replay;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-/**
- * @author Yuriy Sechko
- */
 public class DefaultBiIndexImpl_addEntryTest extends
 		DefaultBiIndexImplTestBasis
 {
 	@Test
-	public void keyIsNull() throws Exception
+	public void throwsException_whenKeyIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			indexImpl.addEntry(null, "some string");
 		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
 		finally
 		{
 			indexImpl.close();
@@ -39,19 +34,14 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	}
 
 	@Test
-	public void valueIsNull() throws Exception
+	public void throwsException_whenValueIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			indexImpl.addEntry(48, null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -60,24 +50,55 @@ public class DefaultBiIndexImpl_addEntryTest extends
 	}
 
 	@Test
-	public void addOneEntry() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
+	{
+		replay(mockedStorage);
+
+		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
+
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		indexImplSpecificForThisTestCase.addEntry(2, "two");
+	}
+
+	@Test
+	public void wrapsTransactionManagerException_withHypergraphException()
+			throws Exception
+	{
+		startupIndexWithFakeTransactionManager();
+
+		try
+		{
+			below.expect(HGException.class);
+			below.expectMessage("Failed to add entry to index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
+			indexImpl.addEntry(2, "two");
+		}
+		finally
+		{
+			indexImpl.close();
+		}
+	}
+
+	@Test
+	public void happyPath_addOneEntry() throws Exception
 	{
 		startupIndex();
 
 		indexImpl.addEntry(1, "one");
 
-		final String stored = indexImpl.getData(1);
-		assertEquals(stored, "one");
+		final String storedData = indexImpl.getData(1);
+		assertThat(storedData, is("one"));
+
 		indexImpl.close();
 	}
 
 	@Test
-	public void addSeveralDifferentEntries() throws Exception
+	public void happyPath_addSeveralDifferentEntries() throws Exception
 	{
-		final List<String> expected = new ArrayList<String>();
-		expected.add("twenty two");
-		expected.add("thirty three");
-		expected.add("forty four");
+		final List<String> expected = asList("twenty two", "thirty three",
+				"forty four");
 
 		startupIndex();
 
@@ -85,70 +106,27 @@ public class DefaultBiIndexImpl_addEntryTest extends
 		indexImpl.addEntry(33, "thirty three");
 		indexImpl.addEntry(44, "forty four");
 
-		final List<String> stored = new ArrayList<String>();
-		stored.add(indexImpl.getData(22));
-		stored.add(indexImpl.getData(33));
-		stored.add(indexImpl.getData(44));
+		final List<String> stored = asList(indexImpl.getData(22),
+				indexImpl.getData(33), indexImpl.getData(44));
 
-		assertEquals(stored, expected);
+		assertEquals(expected, stored);
+
 		indexImpl.close();
 	}
 
 	@Test
-	public void addDuplicatedKeys() throws Exception
+	public void theLastStoredValueOverwritesExisting_whenKeysAreTheSame()
+			throws Exception
 	{
-		final String expected = "second value";
-
 		startupIndex();
 
 		indexImpl.addEntry(4, "first value");
 		indexImpl.addEntry(4, "second value");
 
-		final String stored = indexImpl.getData(4);
+		final String storedData = indexImpl.getData(4);
 
-		assertEquals(stored, expected);
+		assertThat(storedData, is("second value"));
+
 		indexImpl.close();
-	}
-
-	@Test
-	public void indexIsNotOpened() throws Exception
-	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
-
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl<Integer, String> indexImplSpecificForThisTestCase = new DefaultBiIndexImpl(
-				INDEX_NAME, storage, transactionManager, keyConverter,
-				valueConverter, comparator, null);
-		try
-		{
-			indexImplSpecificForThisTestCase.addEntry(2, "two");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-	}
-
-	@Test
-	public void transactionManagerThrowsException() throws Exception
-	{
-		final Exception expected = new HGException(
-				"Failed to add entry to index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
-
-		startupIndexWithFakeTransactionManager();
-
-		try
-		{
-			indexImpl.addEntry(2, "two");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			indexImpl.close();
-		}
 	}
 }

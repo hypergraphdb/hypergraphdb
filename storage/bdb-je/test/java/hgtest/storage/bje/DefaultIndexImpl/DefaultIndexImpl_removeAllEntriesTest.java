@@ -8,6 +8,7 @@ import org.junit.Test;
 
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -22,9 +23,9 @@ public class DefaultIndexImpl_removeAllEntriesTest extends
 		final Exception expected = new HGException(
 				"Attempting to operate on index 'sample_index' while the index is being closed.");
 
-		PowerMock.replayAll();
+        replay(mockedStorage);
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
 		try

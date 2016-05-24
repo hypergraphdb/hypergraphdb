@@ -5,6 +5,7 @@ import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -18,8 +19,8 @@ public class DefaultIndexImpl_getDatabaseNameTest extends
 	{
 		final String expected = "hgstore_idx_null";
 
-		PowerMock.replayAll();
-		final DefaultIndexImpl index = new DefaultIndexImpl(null, storage,
+        replay(mockedStorage);
+		final DefaultIndexImpl index = new DefaultIndexImpl(null, mockedStorage,
 				transactionManager, keyConverter, valueConverter, comparator, null);
 
 		final String actual = index.getDatabaseName();
@@ -32,9 +33,9 @@ public class DefaultIndexImpl_getDatabaseNameTest extends
 	{
 		final String expected = "hgstore_idx_index name";
 
-		PowerMock.replayAll();
+        replay(mockedStorage);
 		final DefaultIndexImpl index = new DefaultIndexImpl("index name",
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 
 		final String actual = index.getDatabaseName();

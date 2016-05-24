@@ -1,9 +1,11 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;
@@ -11,9 +13,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.powermock.api.easymock.PowerMock;
 
-/**
- * @author Yuriy Sechko
- */
 public class DefaultBiIndexImpl_countKeysTest extends
 		DefaultBiIndexImplTestBasis
 {
@@ -108,10 +107,10 @@ public class DefaultBiIndexImpl_countKeysTest extends
 	{
 		final Exception expected = new HGException("");
 
-		PowerMock.replayAll();
+        replay(mockedStorage);
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
 		try
 		{
@@ -132,10 +131,10 @@ public class DefaultBiIndexImpl_countKeysTest extends
 		mockStorage();
 		final HGTransactionManager fakeTransactionManager = PowerMock
 				.createStrictMock(HGTransactionManager.class);
-		PowerMock.replayAll();
+		EasyMock.replay(mockedStorage, fakeTransactionManager);
 		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<Integer, String>(
-				INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-				valueConverter, comparator, null);
+				INDEX_NAME, mockedStorage, fakeTransactionManager,
+				keyConverter, valueConverter, comparator, null);
 		indexImpl.open();
 
 		try

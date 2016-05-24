@@ -7,6 +7,7 @@ import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -101,9 +102,9 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 		final Exception expected = new HGException(
 				"Attempting to lookup by value index 'sample_index' while it is closed.");
 
-		PowerMock.replayAll();
+        replay(mockedStorage);
 		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 
 		try

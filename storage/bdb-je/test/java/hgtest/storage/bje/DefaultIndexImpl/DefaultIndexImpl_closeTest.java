@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.lang.reflect.Field;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 
 
 /**
@@ -20,10 +21,10 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 	@Test
 	public void indexIsNotOpenedYet() throws Exception
 	{
-		PowerMock.replayAll();
+        replay(mockedStorage);
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 
 		indexImpl.close();
@@ -33,10 +34,10 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 	public void allInternalOperationsPerformFine() throws Exception
 	{
 		mockStorage();
-		PowerMock.replayAll();
+        replay(mockedStorage);
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 		indexImpl.open();
 
@@ -50,22 +51,23 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 				"java.lang.IllegalStateException");
 		// open databases normally
 		mockStorage();
-		PowerMock.replayAll();
+        replay(mockedStorage);
+
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 		indexImpl.open();
-		PowerMock.verifyAll();
-		PowerMock.resetAll();
+		EasyMock.verify(mockedStorage);
+		EasyMock.reset(mockedStorage);
 		// now we force to throw exception in the DefaultIndexImpl.close()
 		// method
 		// we link the field 'db' to the fake database,
 		// which throws exception when their 'close' method is called
-		final Database fakeDatabase = PowerMock
+		final Database fakeDatabase = EasyMock
 				.createStrictMock(Database.class);
 		fakeDatabase.close();
 		EasyMock.expectLastCall().andThrow(new IllegalStateException());
-		PowerMock.replayAll();
+		EasyMock.replay(mockedStorage, fakeDatabase);
 		final Field dbField = indexImpl.getClass().getDeclaredField(
 				DATABASE_FIELD_NAME);
 		dbField.setAccessible(true);

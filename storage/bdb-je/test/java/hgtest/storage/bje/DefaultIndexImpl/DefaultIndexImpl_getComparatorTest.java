@@ -1,6 +1,7 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
@@ -26,8 +27,8 @@ public class DefaultIndexImpl_getComparatorTest extends
 	{
 		final Exception expected = new NullPointerException();
 
-		PowerMock.replayAll();
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(null, storage,
+        replay(mockedStorage);
+		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(null, mockedStorage,
 				transactionManager, keyConverter, valueConverter, comparator,
 				null);
 
@@ -49,9 +50,10 @@ public class DefaultIndexImpl_getComparatorTest extends
 	public void indexIsOpened() throws Exception
 	{
 		mockStorage();
-		PowerMock.replayAll();
+        replay(mockedStorage);
+
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 		indexImpl.open();
 
@@ -70,9 +72,9 @@ public class DefaultIndexImpl_getComparatorTest extends
 		EasyMock.expect(fakeDatabase.getConfig()).andThrow(
 				new DatabaseNotFoundException(
 						"This exception is thrown by fake database."));
-		PowerMock.replayAll();
+        replay(mockedStorage, fakeDatabase);
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
+                mockedStorage, transactionManager, keyConverter, valueConverter,
 				comparator, null);
 		indexImpl.open();
 
