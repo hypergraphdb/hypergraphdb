@@ -1,36 +1,26 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
+import static org.easymock.EasyMock.replay;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-/**
- * @author Yuriy Sechko
- */
 public class DefaultBiIndexImpl_findFirstByValueTest extends
 		DefaultBiIndexImplTestBasis
 {
 	@Test
-	public void findByNullValue() throws Exception
+	public void throwsException_whenValueIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			indexImpl.findFirstByValue(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -39,99 +29,84 @@ public class DefaultBiIndexImpl_findFirstByValueTest extends
 	}
 
 	@Test
-	public void thereAreNotAddedEntries() throws Exception
+	public void returnsNullValue_whenThereAreNotAddedEntries() throws Exception
 	{
 		startupIndex();
 
 		final Integer actual = indexImpl
 				.findFirstByValue("this value doesn't exist");
-
 		assertNull(actual);
+
 		indexImpl.close();
 	}
 
 	@Test
-	public void thereAreSeveralEntriesButDesiredValueDoesNotExist()
+	public void returnsNullValue_whenDesiredValueDoesNotExist()
 			throws Exception
 	{
 		startupIndex();
 		indexImpl.addEntry(50, "value");
 
 		final Integer actual = indexImpl.findFirstByValue("none");
-
 		assertNull(actual);
+
 		indexImpl.close();
 	}
 
 	@Test
-	public void thereSeveralEntries() throws Exception
+	public void happyPath_thereSeveralUniqueValues() throws Exception
 	{
-		final Integer expected = 2;
-
 		startupIndex();
 		indexImpl.addEntry(1, "one");
 		indexImpl.addEntry(2, "two");
 		indexImpl.addEntry(3, "three");
 
-		final Integer actual = indexImpl.findFirstByValue("two");
+		final Integer found = indexImpl.findFirstByValue("two");
+		assertThat(found, is(2));
 
-		assertEquals(actual, expected);
 		indexImpl.close();
 	}
 
 	@Test
-	public void thereAreDuplicatedValues() throws Exception
+	public void returnsLastAddedValue_whenThereAreDuplicatedValues()
+			throws Exception
 	{
-		final Integer expected = 1;
-
 		startupIndex();
 		indexImpl.addEntry(2, "two");
 		indexImpl.addEntry(11, "one");
 		indexImpl.addEntry(3, "three");
 		indexImpl.addEntry(1, "one");
 
-		final Integer actual = indexImpl.findFirstByValue("one");
+		final Integer found = indexImpl.findFirstByValue("one");
 
-		assertEquals(actual, expected);
+		assertThat(found, is(1));
 		indexImpl.close();
 	}
 
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to lookup by value index 'sample_index' while it is closed.");
+		replay(mockedStorage);
+		indexImpl = new DefaultBiIndexImpl<>(INDEX_NAME, mockedStorage,
+				transactionManager, keyConverter, valueConverter, comparator,
+				null);
 
-        replay(mockedStorage);
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
-
-		try
-		{
-			indexImpl.findFirstByValue("some value");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to lookup by value index 'sample_index' while it is closed.");
+		indexImpl.findFirstByValue("some value");
 	}
 
 	@Test
-	public void transactionManagerThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
-
 		startupIndexWithFakeTransactionManager();
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("Failed to lookup index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
 			indexImpl.findFirstByValue("yellow");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{

@@ -1,18 +1,16 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
-
-import java.util.List;
-
-import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static java.util.Arrays.asList;
 import static org.easymock.EasyMock.replay;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+
+import java.util.List;
+
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
+import org.junit.Test;
 
 public class DefaultBiIndexImpl_addEntryTest extends
 		DefaultBiIndexImplTestBasis

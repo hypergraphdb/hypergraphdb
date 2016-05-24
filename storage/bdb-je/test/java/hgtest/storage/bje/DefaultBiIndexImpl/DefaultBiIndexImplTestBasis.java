@@ -5,7 +5,6 @@ import static org.junit.rules.ExpectedException.none;
 
 import java.lang.reflect.Field;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.storage.bje.BJEConfig;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;

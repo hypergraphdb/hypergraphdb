@@ -1,46 +1,32 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
+import static hgtest.storage.bje.TestUtils.list;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.easymock.EasyMock.replay;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
+import java.util.List;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static hgtest.storage.bje.TestUtils.list;
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
 
 public class DefaultBiIndexImpl_findByValueTest extends
 		DefaultBiIndexImplTestBasis
 {
-	private HGRandomAccessResult<Integer> result;
-
-	private void closeResultAndIndex()
-	{
-		result.close();
-		indexImpl.close();
-	}
-
 	@Test
-	public void findByNullValue() throws Exception
+	public void throwsException_whenValueIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			indexImpl.findByValue(null);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
 		}
 		finally
 		{
@@ -49,75 +35,81 @@ public class DefaultBiIndexImpl_findByValueTest extends
 	}
 
 	@Test
-	public void thereIsOneEntry() throws Exception
+	public void happyPath_thereIsOneEntry() throws Exception
 	{
-		final List<Integer> expected = new ArrayList<Integer>();
-		expected.add(1);
+		final List<Integer> expected = asList(1);
 
 		startupIndex();
 		indexImpl.addEntry(1, "one");
 
-		result = indexImpl.findByValue("one");
+		final HGRandomAccessResult<Integer> result = indexImpl
+				.findByValue("one");
 
 		final List<Integer> actual = list(result);
-		assertEquals(actual, expected);
-		closeResultAndIndex();
+		assertEquals(expected, actual);
+
+		result.close();
+		indexImpl.close();
 	}
 
 	@Test
-	public void thereAreNotAddedEntries() throws Exception
+	public void returnsEmptyList_whenThereAreNotAddedEntries() throws Exception
 	{
-		final List<Integer> expected = Collections.emptyList();
-
 		startupIndex();
 
-		result = indexImpl.findByValue("this value doesn't exist");
+		final HGRandomAccessResult<Integer> result = indexImpl
+				.findByValue("this value doesn't exist");
 
-		final List<Integer> actual = list(result);
-		assertEquals(actual, expected);
-		closeResultAndIndex();
+		final List<Integer> actualList = list(result);
+		assertThat(actualList, is(emptyList()));
+
+		result.close();
+		indexImpl.close();
 	}
 
 	@Test
-	public void thereAreDuplicatedValues() throws Exception
+	public void returnsLastAddedValue_whenThereAreDuplicatedValues()
+			throws Exception
 	{
-		final List<Integer> expected = new ArrayList<Integer>();
-		expected.add(2);
-		expected.add(3);
+		final List<Integer> expected = asList(2, 3);
 
 		startupIndex();
 		indexImpl.addEntry(2, "word");
 		indexImpl.addEntry(3, "word");
 
-		result = indexImpl.findByValue("word");
+		final HGRandomAccessResult<Integer> result = indexImpl
+				.findByValue("word");
 		final List<Integer> actual = list(result);
 
 		assertEquals(actual, expected);
-		closeResultAndIndex();
+
+		result.close();
+		indexImpl.close();
 	}
 
 	@Test
-	public void thereAreSeveralEntriesButDesiredValueDoesNotExist()
+	public void returnsEmptyList_whenThereAreSeveralEntriesButDesiredValueDoesNotExist()
 			throws Exception
 	{
-		final List<Integer> expected = Collections.emptyList();
-
 		startupIndex();
 		indexImpl.addEntry(2, "two");
 		indexImpl.addEntry(3, "three");
 
-		result = indexImpl.findByValue("none");
-		final List<Integer> actual = list(result);
+		final HGRandomAccessResult<Integer> result = indexImpl
+				.findByValue("none");
 
-		assertEquals(actual, expected);
-		closeResultAndIndex();
+		final List<Integer> actualList = list(result);
+		assertThat(actualList, is(emptyList()));
+
+		result.close();
+		indexImpl.close();
 	}
 
 	@Test
-	public void thereSeveralValuesSomeOfThemAreDuplicated() throws Exception
+	public void returnsLastAddedValue_whenThereSeveralValues_andSomeOfThemAreDuplicated()
+			throws Exception
 	{
-		final List<Integer> expected = new ArrayList<Integer>();
-		expected.add(2);
+		final List<Integer> expected = asList(2);
 
 		startupIndex();
 		indexImpl.addEntry(0, "red");
@@ -125,31 +117,29 @@ public class DefaultBiIndexImpl_findByValueTest extends
 		indexImpl.addEntry(2, "yellow");
 		indexImpl.addEntry(11, "orange");
 
-		result = indexImpl.findByValue("yellow");
-		final List<Integer> actual = list(result);
+		final HGRandomAccessResult<Integer> result = indexImpl
+				.findByValue("yellow");
 
-		assertEquals(actual, expected);
-		closeResultAndIndex();
+		final List<Integer> actual = list(result);
+		assertEquals(expected, actual);
+
+		result.close();
+		indexImpl.close();
 	}
 
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to lookup index 'sample_index' while it is closed.");
-
-        replay(mockedStorage);
-		indexImpl = new DefaultBiIndexImpl<Integer, String>(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		replay(mockedStorage);
+		indexImpl = new DefaultBiIndexImpl<>(INDEX_NAME, mockedStorage,
+				transactionManager, keyConverter, valueConverter, comparator,
+				null);
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("Attempting to lookup index 'sample_index' while it is closed.");
 			indexImpl.findByValue("some value");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -158,20 +148,16 @@ public class DefaultBiIndexImpl_findByValueTest extends
 	}
 
 	@Test
-	public void transactionManagerThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
-
 		startupIndexWithFakeTransactionManager();
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("Failed to lookup index 'sample_index': java.lang.IllegalStateException: Transaction manager is fake.");
 			indexImpl.findByValue("yellow");
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
