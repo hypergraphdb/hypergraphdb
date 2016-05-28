@@ -1,53 +1,39 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
-
 import static hgtest.storage.bje.TestUtils.assertExceptions;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-/**
- * @author Yuriy Sechko
- */
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultIndexImpl;
+import org.junit.Test;
+
 public class DefaultIndexImpl_findLastTest extends DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
-        replay(mockedStorage);
+		replay(mockedStorage);
 
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		try
-		{
-			index.findLast(0);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		index.findLast(0);
 	}
 
 	@Test
-	public void keyIsNull() throws Exception
+	public void throwsException_whenKeyIsNull() throws Exception
 	{
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			index.findLast(null);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
 		}
 		finally
 		{

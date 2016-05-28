@@ -1,54 +1,36 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+import static org.easymock.EasyMock.replay;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
-
-/**
- * @author Yuriy Sechko
- */
 public class DefaultIndexImpl_findTest extends DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
+		replay(mockedStorage);
 
-        replay(mockedStorage);
-
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		try
-		{
-			index.find(5);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		index.find(5);
 	}
 
 	@Test
-	public void keyIsNull() throws Exception
+	public void throwsException_whenKeyIsNull() throws Exception
 	{
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			index.find(null);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), NullPointerException.class);
 		}
 		finally
 		{
@@ -57,20 +39,15 @@ public class DefaultIndexImpl_findTest extends DefaultIndexImplTestBasis
 	}
 
 	@Test
-	public void transactionManagerThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.IllegalStateException: This exception is thrown by fake transaction manager.");
-
 		startupIndexWithFakeTransactionManager();
 
 		try
 		{
+            below.expect(HGException.class);
+            below.expectMessage("Failed to lookup index 'sample_index': java.lang.IllegalStateException: This exception is thrown by fake transaction manager.");
 			index.find(2);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{

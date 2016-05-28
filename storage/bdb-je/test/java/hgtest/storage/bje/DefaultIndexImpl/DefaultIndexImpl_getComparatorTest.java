@@ -1,44 +1,35 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.*;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.Field;
 import java.util.Comparator;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.junit.Test;
-import org.powermock.api.easymock.PowerMock;
 
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseNotFoundException;
 
-/**
- * @author Yuriy Sechko
- */
 public class DefaultIndexImpl_getComparatorTest extends
 		DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
-        replay(mockedStorage);
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(null, mockedStorage,
-				transactionManager, keyConverter, valueConverter, comparator,
-				null);
+		replay(mockedStorage);
+		final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(
+				null, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			indexImpl.getKeyComparator();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -47,35 +38,36 @@ public class DefaultIndexImpl_getComparatorTest extends
 	}
 
 	@Test
-	public void indexIsOpened() throws Exception
+	public void happyPath() throws Exception
 	{
 		mockStorage();
-        replay(mockedStorage);
+		replay(mockedStorage);
 
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
 
 		final Comparator<byte[]> actualComparator = indexImpl
 				.getKeyComparator();
-
 		assertNotNull(actualComparator);
+
 		closeDatabase(indexImpl);
 	}
 
 	@Test
-	public void databaseThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
 		mockStorage();
-		Database fakeDatabase = PowerMock.createStrictMock(Database.class);
-		EasyMock.expect(fakeDatabase.getConfig()).andThrow(
+		Database fakeDatabase = createStrictMock(Database.class);
+		expect(fakeDatabase.getConfig()).andThrow(
 				new DatabaseNotFoundException(
 						"This exception is thrown by fake database."));
-        replay(mockedStorage, fakeDatabase);
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		replay(mockedStorage, fakeDatabase);
+		final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
 
 		// inject fake database and imitate error
@@ -88,13 +80,11 @@ public class DefaultIndexImpl_getComparatorTest extends
 		// call method which is under test
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage(allOf(
+					containsString("com.sleepycat.je.DatabaseNotFoundException"),
+					containsString("This exception is thrown by fake database.")));
 			indexImpl.getKeyComparator();
-		}
-		catch (Exception ex)
-		{
-			assertExceptions(ex, HGException.class,
-					"com.sleepycat.je.DatabaseNotFoundException",
-					"This exception is thrown by fake database.");
 		}
 		finally
 		{

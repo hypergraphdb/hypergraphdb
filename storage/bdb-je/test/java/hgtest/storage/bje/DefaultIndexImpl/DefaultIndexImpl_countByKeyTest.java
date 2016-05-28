@@ -1,60 +1,43 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import com.sleepycat.je.DatabaseNotFoundException;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.hypergraphdb.transaction.HGTransactionManager;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static org.easymock.EasyMock.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultIndexImpl;
+import org.hypergraphdb.transaction.HGTransactionManager;
+import org.junit.Test;
 
-/**
- * @author Yuriy Sechko
- */
+import com.sleepycat.je.DatabaseNotFoundException;
+
 public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNopOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
-
-        replay(mockedStorage);
+		replay(mockedStorage);
 		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		try
-		{
-			index.count(1);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		index.count(1);
 	}
 
 	@Test
-	public void keyIsNull() throws Exception
+	public void throwsException_whenKeyIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		startupIndex();
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			index.count(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -63,11 +46,37 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	}
 
 	@Test
-	public void thereAreNotAddedEntries() throws Exception
+	public void returnsZero_whenThereAreNotAddedEntries() throws Exception
 	{
-		final long expected = 0;
+		startupIndex();
+
+		final long actualCount = index.count(1);
+		assertThat(actualCount, is(0L));
+
+		index.close();
+	}
+
+	@Test
+	public void returnsZero_whenThereIsOneEntryAdded_butItIsNotEqualToDesired()
+			throws Exception
+	{
+		startupIndex();
+		index.addEntry(1, "one");
+
+		final long actualCount = index.count(2);
+		assertThat(actualCount, is(0L));
+
+		index.close();
+	}
+
+	@Test
+	public void happyPath_thereIsOneEntryAdded_andItIsEqualToDesired()
+			throws Exception
+	{
+		final long expected = 1;
 
 		startupIndex();
+		index.addEntry(1, "one");
 
 		final long actual = index.count(1);
 
@@ -76,105 +85,67 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	}
 
 	@Test
-	public void thereIsOneEntryAddedButItIsNotEqualToDesired() throws Exception
-	{
-		final long expected = 0;
-
-		startupIndex();
-		index.addEntry(1, "one");
-
-		final long actual = index.count(2);
-
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereIsOneEntryAddedAndItIsEqualToDesired() throws Exception
-	{
-		final long expected = 1;
-
-		startupIndex();
-		index.addEntry(1, "one");
-
-		final long actual = index.count(1);
-
-		assertEquals(actual, expected);
-		index.close();
-	}
-
-	@Test
-	public void thereAreSeveralEntriesAddedButThereAreNotDesired()
+	public void returnsZero_whenThereAreSeveralEntriesAdded_butThereAreNotDesired()
 			throws Exception
 	{
-		final long expected = 0;
-
 		startupIndex();
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");
 
-		final long actual = index.count(5);
+		final long actualCount = index.count(5);
+		assertThat(actualCount, is(0L));
 
-		assertEquals(actual, expected);
 		index.close();
 	}
 
 	@Test
-	public void thereAreSeveralEntriesAddedButThereAreNotDuplicatedKeys()
+	public void countsUniqueKeys_whenThereAreSeveralEntriesAdded_andThereAreNotDuplicatedKeys()
 			throws Exception
 	{
-		final long expected = 1;
-
 		startupIndex();
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");
 
-		final long actual = index.count(3);
+		final long actualCount = index.count(3);
+		assertThat(actualCount, is(1L));
 
-		assertEquals(actual, expected);
 		index.close();
 	}
 
 	@Test
-	public void thereAreSeveralEntriesAddedAndSomeKeysAreDuplicated()
+	public void countUniqueKeys_whenThereAreSeveralEntriesAdded_andSomeKeysAreDuplicated()
 			throws Exception
 	{
-		final long expected = 2;
-
 		startupIndex();
 		index.addEntry(1, "one");
 		index.addEntry(2, "two");
 		index.addEntry(3, "three");
 		index.addEntry(3, "third");
 
-		final long actual = index.count(3);
+		final long actualCount = index.count(3);
+		assertThat(actualCount, is(2L));
 
-		assertEquals(actual, expected);
 		index.close();
 	}
 
 	@Test
-	public void transactionManagerThrowsException() throws Exception
+	public void wrapsUnderlyingException_whenHypergraphException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"This exception is thrown by fake transaction manager.");
-
 		// create index and open it in usual way
 		startupIndex();
-		PowerMock.verifyAll();
-		PowerMock.resetAll();
+		verify(mockedStorage);
+		reset(mockedStorage);
 
-		// after index is opened inject fake transaction manager and call
-		// count(KeyType key) method
-		final HGTransactionManager fakeTransactionManager = PowerMock
-				.createStrictMock(HGTransactionManager.class);
-		EasyMock.expect(fakeTransactionManager.getContext())
+		// after index is opened inject fake transaction manager
+		final HGTransactionManager fakeTransactionManager = createStrictMock(HGTransactionManager.class);
+		expect(fakeTransactionManager.getContext())
 				.andThrow(
 						new DatabaseNotFoundException(
 								"This exception is thrown by fake transaction manager."));
-		PowerMock.replayAll();
+		replay(mockedStorage, fakeTransactionManager);
 		final Field transactionManagerField = index.getClass()
 				.getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
 		transactionManagerField.setAccessible(true);
@@ -182,12 +153,9 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("This exception is thrown by fake transaction manager.");
 			index.count(1);
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertTrue(occurred.getMessage().contains(expected.getMessage()));
 		}
 		finally
 		{

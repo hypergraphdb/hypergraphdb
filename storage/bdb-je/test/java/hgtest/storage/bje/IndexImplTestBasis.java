@@ -1,10 +1,15 @@
 package hgtest.storage.bje;
 
+import static com.sleepycat.je.Durability.ReplicaAckPolicy;
+import static com.sleepycat.je.Durability.SyncPolicy;
+import static hgtest.storage.bje.TestUtils.deleteDirectory;
+import static org.easymock.EasyMock.*;
+import static org.junit.rules.ExpectedException.none;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Comparator;
 
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJEConfig;
@@ -14,16 +19,16 @@ import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.hypergraphdb.transaction.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 
 import com.google.code.multitester.annonations.Exported;
 import com.sleepycat.je.*;
 
 /**
- * Contains common code for test cases for
+ * Contains common code of test cases for
  * {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} and
- * {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl} classes
- * 
- * @author Yuriy Sechko
+ * {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl}.
  */
 public class IndexImplTestBasis
 {
@@ -36,8 +41,7 @@ public class IndexImplTestBasis
 			"test_environment");
 
 	// storage - used only for getting configuration data
-	protected final BJEStorageImplementation mockedStorage = EasyMock
-			.createStrictMock(BJEStorageImplementation.class);
+	protected final BJEStorageImplementation mockedStorage = createStrictMock(BJEStorageImplementation.class);
 
 	protected HGTransactionManager transactionManager;
 	// custom converters
@@ -49,12 +53,15 @@ public class IndexImplTestBasis
 	// Sleepycat's BtreeComparator
 	protected Comparator<byte[]> comparator = null;
 
+	@Rule
+	public final ExpectedException below = none();
+
 	@Before
 	@Exported("up1")
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
-		EasyMock.reset(mockedStorage);
-		TestUtils.deleteDirectory(envHome);
+		reset(mockedStorage);
+		deleteDirectory(envHome);
 		startupEnvironment();
 	}
 
@@ -62,9 +69,9 @@ public class IndexImplTestBasis
 	@Exported("down1")
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
-		EasyMock.verify(mockedStorage);
+		verify(mockedStorage);
 		environment.close();
-		TestUtils.deleteDirectory(envHome);
+		deleteDirectory(envHome);
 	}
 
 	protected EnvironmentConfig config;
@@ -77,7 +84,8 @@ public class IndexImplTestBasis
 		config.setAllowCreate(true).setReadOnly(false).setTransactional(true);
 		environment = new Environment(envHome, config);
 		transactionManager = new HGTransactionManager(
-		// copied from the BJEStorageImplementation
+		// copied and pasted from the BJEStorageImplementation and slightly
+		// simplified for the sake of brevity
 				new HGTransactionFactory()
 				{
 					public HGStorageTransaction createTransaction(
@@ -89,30 +97,16 @@ public class IndexImplTestBasis
 							TransactionConfig tconfig = new TransactionConfig();
 
 							Durability tDurability = new Durability(
-									Durability.SyncPolicy.WRITE_NO_SYNC,
-									Durability.SyncPolicy.NO_SYNC, // unused
-									// by
-									// non-HA
-									// applications.
-									Durability.ReplicaAckPolicy.NONE); // unused
-							// by
-							// non-HA
-							// applications.
+									SyncPolicy.WRITE_NO_SYNC,
+									SyncPolicy.NO_SYNC, ReplicaAckPolicy.NONE);
 							tconfig.setDurability(tDurability);
 
-							Transaction tx = null;
+							Transaction tx;
 
 							if (parent != null)
 							{
-								// Nested transaction are not supported by JE
-								// Berkeley
-								// DB.
 								throw new IllegalStateException(
 										"Nested transaction detected. Not supported by JE Berkeley DB.");
-								// tx =
-								// env.beginTransaction(((TransactionBJEImpl)parent.getStorageTransaction()).getBJETransaction(),
-								// tconfig);
-								// tx = env.beginTransaction(null, tconfig);
 							}
 							else
 							{
@@ -123,9 +117,7 @@ public class IndexImplTestBasis
 						}
 						catch (DatabaseException ex)
 						{
-							// System.err.println("Failed to create transaction, will exit - temporary behavior to be removed at some point.");
 							ex.printStackTrace(System.err);
-							// System.exit(-1);
 							throw new HGException(
 									"Failed to create BerkeleyDB transaction object.",
 									ex);
@@ -135,21 +127,22 @@ public class IndexImplTestBasis
 					public boolean canRetryAfter(Throwable ex)
 					{
 						return ex instanceof TransactionConflictException
-								|| ex instanceof LockConflictException; // DeadlockException;
+								|| ex instanceof LockConflictException;
 
 					}
 				});
 
 	}
 
-	// this method is used in most test cases for initializing fake instance of
-	// BJEStorageImplementation
+	/**
+	 * This method is used in most test cases for initializing fake instance of
+	 * {@link org.hypergraphdb.storage.bje.BJEStorageImplementation}.
+	 */
 	protected void mockStorage()
 	{
-		EasyMock.expect(mockedStorage.getConfiguration()).andReturn(
-				new BJEConfig());
-		EasyMock.expect(mockedStorage.getBerkleyEnvironment())
-				.andReturn(environment).times(1);
+		expect(mockedStorage.getConfiguration()).andReturn(new BJEConfig());
+		expect(mockedStorage.getBerkleyEnvironment()).andReturn(environment)
+				.times(1);
 	}
 
 	/**
@@ -161,7 +154,7 @@ public class IndexImplTestBasis
 	protected void closeDatabase(final DefaultIndexImpl<?, ?> indexImpl)
 			throws NoSuchFieldException, IllegalAccessException
 	{
-		// one database handle is in DefaultIndexImpl
+		// one database handle resides in DefaultIndexImpl
 		final Field firstDatabaseField = indexImpl.getClass().getDeclaredField(
 				DATABASE_FIELD_NAME);
 		firstDatabaseField.setAccessible(true);

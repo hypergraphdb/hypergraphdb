@@ -1,45 +1,40 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+import static org.easymock.EasyMock.replay;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-/**
- * @author Yuriy Sechko
- */
 public class DefaultIndexImpl_getNameTest extends DefaultIndexImplTestBasis
 {
 	@Test
 	public void nameIsNull() throws Exception
 	{
-        replay(mockedStorage);
+		replay(mockedStorage);
 
-		final DefaultIndexImpl index = new DefaultIndexImpl(null, mockedStorage,
-				transactionManager, keyConverter, valueConverter, comparator, null);
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
+				null, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
-		final String actual = index.getName();
+		final String actualName = index.getName();
 
-		assertNull(actual);
+		assertNull(actualName);
 	}
 
 	@Test
 	public void nameIsNotNull() throws Exception
 	{
-		final String expected = "some index name";
+		replay(mockedStorage);
 
-        replay(mockedStorage);
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
+				"some index name", mockedStorage, transactionManager,
+				keyConverter, valueConverter, comparator, null);
 
-		final DefaultIndexImpl index = new DefaultIndexImpl("some index name",
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		final String actualName = index.getName();
 
-		final String actual = index.getName();
-
-		assertEquals(actual, expected);
+		assertThat(actualName, is("some index name"));
 	}
 }

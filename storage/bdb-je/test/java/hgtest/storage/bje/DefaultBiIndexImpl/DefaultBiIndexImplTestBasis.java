@@ -18,9 +18,6 @@ public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 {
 	protected static final String SECONDARY_DATABASE_FIELD_NAME = "secondaryDb";
 
-	@Rule
-	public final ExpectedException below = none();
-
 	protected DefaultBiIndexImpl<Integer, String> indexImpl;
 
 	/**

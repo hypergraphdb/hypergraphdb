@@ -1,108 +1,97 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import com.sleepycat.je.*;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static org.easymock.EasyMock.*;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
-import static org.junit.Assert.assertEquals;
+import org.hamcrest.CoreMatchers;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultIndexImpl;
+import org.junit.Test;
 
-/**
- * @author Yuriy Sechko
- */
+import com.sleepycat.je.CursorConfig;
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseNotFoundException;
+
 public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
-
-        replay(mockedStorage);
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		replay(mockedStorage);
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		try
-		{
-			index.count();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		index.count();
 	}
 
 	@Test
-	public void thereAreNotAddedEntries() throws Exception
+	public void returnsZero_whenThereAreNotAddedEntries() throws Exception
 	{
-		final long expected = 0;
-
 		startupIndex();
 
-		final long actual = index.count();
+		final long actualCount = index.count();
+		assertThat(actualCount, is(0L));
 
-		assertEquals(actual, expected);
 		index.close();
 	}
 
 	@Test
-	public void databaseThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
 		// create index and open it in usual way
 		mockStorage();
-        replay(mockedStorage);
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		replay(mockedStorage);
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 		index.open();
-		EasyMock.verify(mockedStorage);
-		PowerMock.resetAll();
+		verify(mockedStorage);
+		reset(mockedStorage);
 
 		// after index is opened inject fake database field and call
-		// count() method
 		final Field databaseField = index.getClass().getDeclaredField(
 				DATABASE_FIELD_NAME);
 		databaseField.setAccessible(true);
-		// close real database before use fake
+		// close real database before use fake one
 		final Database realDatabase = (Database) databaseField.get(index);
 		realDatabase.close();
 		// create fake database instance and imitate throwing exception
-		final Database fakeDatabase = PowerMock
-				.createStrictMock(Database.class);
-		EasyMock.expect(
-				fakeDatabase.openCursor(EasyMock.isNull(),
-						EasyMock.anyObject(CursorConfig.class)
+		final Database fakeDatabase = createStrictMock(Database.class);
+		expect(fakeDatabase.openCursor(isNull(), anyObject(CursorConfig.class)
 
-				)).andThrow(
+		)).andThrow(
 				new DatabaseNotFoundException(
 						"This exception is thrown by fake database."));
 
-		PowerMock.replayAll();
+		replay(mockedStorage, fakeDatabase);
 		// inject fake database into appropriate field
 		databaseField.set(index, fakeDatabase);
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage(allOf(
+					containsString("com.sleepycat.je.DatabaseNotFoundException"),
+					CoreMatchers
+							.containsString("This exception is thrown by fake database.")));
 			index.count();
 		}
-		catch (Exception ex)
+		finally
 		{
-			assertExceptions(ex, HGException.class,
-					"com.sleepycat.je.DatabaseNotFoundException",
-					"This exception is thrown by fake database.");
+			// set null value to DefaultIndexImpl.db field
+			// without this setting Database.close() method on fake database
+			// instance is invoked somewhere
+			// and all next tests fail because Easymock expects 'close' call
+			databaseField.set(index, null);
 		}
-		// set null value to DefaultIndexImpl.db field
-		// without this setting Database.close() method on fake database
-		// instance is invoked somewhere
-		// and all next tests fail because Powermock expects 'close' call
-		databaseField.set(index, null);
 	}
 }

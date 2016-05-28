@@ -1,91 +1,97 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import com.sleepycat.je.Database;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static org.easymock.EasyMock.*;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.easymock.EasyMock.replay;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultIndexImpl;
+import org.junit.Test;
 
+import com.sleepycat.je.Database;
 
-/**
- * @author Yuriy Sechko
- */
 public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpenedYet() throws Exception
+	public void doesNotFails_whenIndexIsNotOpenedAhead() throws Exception
 	{
-        replay(mockedStorage);
+		replay(mockedStorage);
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
 		indexImpl.close();
 	}
 
 	@Test
-	public void allInternalOperationsPerformFine() throws Exception
+	public void happyPath() throws Exception
 	{
 		mockStorage();
-        replay(mockedStorage);
+		replay(mockedStorage);
 
 		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+				mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
 
 		indexImpl.close();
 	}
 
 	@Test
-	public void exceptionIsThrownOnClosingInternalDatabase() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
-		final HGException expected = new HGException(
-				"java.lang.IllegalStateException");
-		// open databases normally
-		mockStorage();
-        replay(mockedStorage);
+		final DefaultIndexImpl indexImpl = new TrickySetup()
+				.openIndexNormally();
+		new TrickySetup().useFakeDatabase(indexImpl);
 
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
-                mockedStorage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
-		indexImpl.open();
-		EasyMock.verify(mockedStorage);
-		EasyMock.reset(mockedStorage);
-		// now we force to throw exception in the DefaultIndexImpl.close()
-		// method
-		// we link the field 'db' to the fake database,
-		// which throws exception when their 'close' method is called
-		final Database fakeDatabase = EasyMock
-				.createStrictMock(Database.class);
-		fakeDatabase.close();
-		EasyMock.expectLastCall().andThrow(new IllegalStateException());
-		EasyMock.replay(mockedStorage, fakeDatabase);
-		final Field dbField = indexImpl.getClass().getDeclaredField(
-				DATABASE_FIELD_NAME);
-		dbField.setAccessible(true);
-		// close the real database before use fake
-		dbField.get(indexImpl).getClass().getMethod("close")
-				.invoke(dbField.get(indexImpl));
-		dbField.set(indexImpl, fakeDatabase);
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("java.lang.IllegalStateException");
 			indexImpl.close();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
 			closeDatabase(indexImpl);
+		}
+	}
+
+	protected class TrickySetup
+	{
+		protected DefaultIndexImpl openIndexNormally()
+		{
+			mockStorage();
+			replay(mockedStorage);
+			final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
+					mockedStorage, transactionManager, keyConverter,
+					valueConverter, comparator, null);
+			indexImpl.open();
+			verify(mockedStorage);
+			reset(mockedStorage);
+			return indexImpl;
+		}
+
+		/**
+		 * Here we force to throw exception in the DefaultIndexImpl.close()
+		 * method. We link the field 'db' to the fake database, which throws
+		 * exception when their 'close' method is called.
+		 */
+		protected void useFakeDatabase(DefaultIndexImpl indexImpl)
+				throws Exception
+		{
+			final Database fakeDatabase = createStrictMock(Database.class);
+			fakeDatabase.close();
+			expectLastCall().andThrow(new IllegalStateException());
+			replay(mockedStorage, fakeDatabase);
+			final Field dbField = indexImpl.getClass().getDeclaredField(
+					DATABASE_FIELD_NAME);
+			dbField.setAccessible(true);
+			// close real database before use fake one
+			dbField.get(indexImpl).getClass().getMethod("close")
+					.invoke(dbField.get(indexImpl));
+			dbField.set(indexImpl, fakeDatabase);
 		}
 	}
 }
