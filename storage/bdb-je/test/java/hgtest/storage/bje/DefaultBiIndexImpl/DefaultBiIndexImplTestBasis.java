@@ -1,15 +1,15 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import static org.easymock.EasyMock.*;
-import static org.junit.rules.ExpectedException.none;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
 
 import java.lang.reflect.Field;
 
 import org.hypergraphdb.storage.bje.BJEConfig;
 import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
 
 import com.sleepycat.je.Database;
 import hgtest.storage.bje.IndexImplTestBasis;
@@ -32,7 +32,7 @@ public class DefaultBiIndexImplTestBasis extends IndexImplTestBasis
 	{
 		// close database in DefaultIndexImpl
 		final Field firstDatabaseField = indexImpl.getClass().getSuperclass()
-				.getDeclaredField(DATABASE_FIELD_NAME);
+				.getDeclaredField(FieldNames.DATABASE);
 		firstDatabaseField.setAccessible(true);
 		final Database firstDatabase = (Database) firstDatabaseField
 				.get(indexImpl);

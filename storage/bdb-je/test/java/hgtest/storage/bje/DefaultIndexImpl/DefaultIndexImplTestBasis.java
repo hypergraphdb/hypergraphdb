@@ -1,6 +1,8 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;

@@ -1,6 +1,8 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertNotNull;
@@ -72,7 +74,7 @@ public class DefaultIndexImpl_getComparatorTest extends
 
 		// inject fake database and imitate error
 		final Field databaseField = indexImpl.getClass().getDeclaredField(
-				DATABASE_FIELD_NAME);
+				FieldNames.DATABASE);
 		databaseField.setAccessible(true);
 		final Database realDatabase = (Database) databaseField.get(indexImpl);
 		databaseField.set(indexImpl, fakeDatabase);

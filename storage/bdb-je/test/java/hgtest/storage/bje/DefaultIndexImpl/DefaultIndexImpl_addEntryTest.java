@@ -13,7 +13,7 @@ public class DefaultIndexImpl_addEntryTest extends DefaultIndexImplTestBasis
 	{
 		replay(mockedStorage);
 
-		index = new DefaultIndexImpl(INDEX_NAME, mockedStorage,
+		index = new DefaultIndexImpl<>(INDEX_NAME, mockedStorage,
 				transactionManager, keyConverter, valueConverter, comparator,
 				null);
 

@@ -1,6 +1,10 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 
 import java.lang.reflect.Field;
 
@@ -17,7 +21,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 	{
 		replay(mockedStorage);
 
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
+		final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(INDEX_NAME,
 				mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
@@ -30,7 +34,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 		mockStorage();
 		replay(mockedStorage);
 
-		final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
+		final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(INDEX_NAME,
 				mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 		indexImpl.open();
@@ -64,7 +68,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 		{
 			mockStorage();
 			replay(mockedStorage);
-			final DefaultIndexImpl indexImpl = new DefaultIndexImpl(INDEX_NAME,
+			final DefaultIndexImpl<Integer, String> indexImpl = new DefaultIndexImpl<>(INDEX_NAME,
 					mockedStorage, transactionManager, keyConverter,
 					valueConverter, comparator, null);
 			indexImpl.open();
@@ -86,7 +90,7 @@ public class DefaultIndexImpl_closeTest extends DefaultIndexImplTestBasis
 			expectLastCall().andThrow(new IllegalStateException());
 			replay(mockedStorage, fakeDatabase);
 			final Field dbField = indexImpl.getClass().getDeclaredField(
-					DATABASE_FIELD_NAME);
+                    FieldNames.DATABASE);
 			dbField.setAccessible(true);
 			// close real database before use fake one
 			dbField.get(indexImpl).getClass().getMethod("close")

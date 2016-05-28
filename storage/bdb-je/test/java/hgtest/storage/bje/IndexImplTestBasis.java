@@ -3,7 +3,10 @@ package hgtest.storage.bje;
 import static com.sleepycat.je.Durability.ReplicaAckPolicy;
 import static com.sleepycat.je.Durability.SyncPolicy;
 import static hgtest.storage.bje.TestUtils.deleteDirectory;
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.junit.rules.ExpectedException.none;
 
 import java.io.File;
@@ -16,14 +19,26 @@ import org.hypergraphdb.storage.bje.BJEConfig;
 import org.hypergraphdb.storage.bje.BJEStorageImplementation;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.hypergraphdb.storage.bje.TransactionBJEImpl;
-import org.hypergraphdb.transaction.*;
+import org.hypergraphdb.transaction.HGStorageTransaction;
+import org.hypergraphdb.transaction.HGTransaction;
+import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.transaction.HGTransactionContext;
+import org.hypergraphdb.transaction.HGTransactionFactory;
+import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.transaction.TransactionConflictException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
 
-import com.google.code.multitester.annonations.Exported;
-import com.sleepycat.je.*;
+import com.sleepycat.je.Database;
+import com.sleepycat.je.DatabaseException;
+import com.sleepycat.je.Durability;
+import com.sleepycat.je.Environment;
+import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.LockConflictException;
+import com.sleepycat.je.Transaction;
+import com.sleepycat.je.TransactionConfig;
 
 /**
  * Contains common code of test cases for
@@ -34,30 +49,37 @@ public class IndexImplTestBasis
 {
 	protected static final String INDEX_NAME = "sample_index";
 
-	protected static final String DATABASE_FIELD_NAME = "db";
-	protected static final String TRANSACTION_MANAGER_FIELD_NAME = "transactionManager";
+	protected static class FieldNames
+	{
+		public static final String DATABASE = "db";
+		public static final String TRANSACTION_MANAGER = "transactionManager";
+
+	}
 
 	protected final File envHome = TestUtils.createTempFile("IndexImpl",
 			"test_environment");
 
-	// storage - used only for getting configuration data
+	/**
+	 * Mock of storage is used only for getting configuration data.
+	 */
 	protected final BJEStorageImplementation mockedStorage = createStrictMock(BJEStorageImplementation.class);
 
 	protected HGTransactionManager transactionManager;
-	// custom converters
+
 	protected ByteArrayConverter<Integer> keyConverter = new TestUtils.ByteArrayConverterForInteger();
 	protected ByteArrayConverter<String> valueConverter = new TestUtils.ByteArrayConverterForString();
 
-	// Use 'null' comparator - it forces
-	// {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
-	// Sleepycat's BtreeComparator
+	/**
+	 * Use <code>null</code> comparator: it forces
+	 * {@link org.hypergraphdb.storage.bje.DefaultIndexImpl} to use default
+	 * Sleepycat's BtreeComparator.
+	 */
 	protected Comparator<byte[]> comparator = null;
 
 	@Rule
 	public final ExpectedException below = none();
 
 	@Before
-	@Exported("up1")
 	public void resetMocksAndDeleteTestDirectory() throws Exception
 	{
 		reset(mockedStorage);
@@ -66,7 +88,6 @@ public class IndexImplTestBasis
 	}
 
 	@After
-	@Exported("down1")
 	public void verifyMocksAndDeleteTestDirectory() throws Exception
 	{
 		verify(mockedStorage);
@@ -156,7 +177,7 @@ public class IndexImplTestBasis
 	{
 		// one database handle resides in DefaultIndexImpl
 		final Field firstDatabaseField = indexImpl.getClass().getDeclaredField(
-				DATABASE_FIELD_NAME);
+				FieldNames.DATABASE);
 		firstDatabaseField.setAccessible(true);
 		final Database firstDatabase = (Database) firstDatabaseField
 				.get(indexImpl);

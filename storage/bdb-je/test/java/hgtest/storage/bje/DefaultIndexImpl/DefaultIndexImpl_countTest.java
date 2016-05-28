@@ -1,6 +1,12 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.anyObject;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.isNull;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.core.StringContains.containsString;
@@ -59,7 +65,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 
 		// after index is opened inject fake database field and call
 		final Field databaseField = index.getClass().getDeclaredField(
-				DATABASE_FIELD_NAME);
+				FieldNames.DATABASE);
 		databaseField.setAccessible(true);
 		// close real database before use fake one
 		final Database realDatabase = (Database) databaseField.get(index);

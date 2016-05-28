@@ -1,6 +1,10 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -20,7 +24,7 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
 		replay(mockedStorage);
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
@@ -147,7 +151,7 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 								"This exception is thrown by fake transaction manager."));
 		replay(mockedStorage, fakeTransactionManager);
 		final Field transactionManagerField = index.getClass()
-				.getDeclaredField(TRANSACTION_MANAGER_FIELD_NAME);
+				.getDeclaredField(FieldNames.TRANSACTION_MANAGER);
 		transactionManagerField.setAccessible(true);
 		transactionManagerField.set(index, fakeTransactionManager);
 

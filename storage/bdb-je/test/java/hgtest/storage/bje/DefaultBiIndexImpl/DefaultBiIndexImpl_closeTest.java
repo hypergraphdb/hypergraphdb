@@ -1,6 +1,10 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 
 import java.lang.reflect.Field;
 
@@ -17,8 +21,8 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 	{
 		replay(mockedStorage);
 
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				mockedStorage, transactionManager, keyConverter,
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
 		indexImpl.close();
@@ -30,8 +34,8 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		mockStorage();
 		replay(mockedStorage);
 
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				mockedStorage, transactionManager, keyConverter,
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 		indexImpl.open();
 		indexImpl.close();
@@ -71,7 +75,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 			mockStorage();
 			replay(mockedStorage);
 
-			final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(
+			final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
 					INDEX_NAME, mockedStorage, transactionManager,
 					keyConverter, valueConverter, comparator, null);
 			indexImpl.open();
@@ -89,7 +93,7 @@ public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 		protected void useFakeSecondaryDatabase(
 				final DefaultBiIndexImpl indexImpl) throws Exception
 		{
-            // mock fake database
+			// mock fake database
 			final SecondaryDatabase fakeSecondaryDatabase = createStrictMock(SecondaryDatabase.class);
 			fakeSecondaryDatabase.close();
 			expectLastCall().andThrow(new IllegalStateException());

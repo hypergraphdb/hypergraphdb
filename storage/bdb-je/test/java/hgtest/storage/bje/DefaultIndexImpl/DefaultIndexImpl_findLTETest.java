@@ -13,7 +13,7 @@ public class DefaultIndexImpl_findLTETest extends DefaultIndexImplTestBasis
 	{
 		replay(mockedStorage);
 
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
