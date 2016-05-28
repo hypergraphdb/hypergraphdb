@@ -710,6 +710,7 @@ public class SubgraphManager
                                           BAtoHandle.getInstance(graph.getHandleFactory()), 
                                           BAtoHandle.getInstance(graph.getHandleFactory()), 
                                           null,
+                                          null,
                                           true);
             
         }

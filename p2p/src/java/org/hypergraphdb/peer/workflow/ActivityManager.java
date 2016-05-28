@@ -213,7 +213,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
-                	Json.dettachFactory();
+                	Json.detachFactory();
                     parentActivity.lastActionTimestamp = System.currentTimeMillis();                    
                     try
                     {
@@ -269,7 +269,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
-                	Json.dettachFactory();
+                	Json.detachFactory();
                     // Reschedule root only if it hasn't failed - in particular when
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
@@ -307,7 +307,7 @@ public class ActivityManager implements MessageHandler
                 }
                 finally
                 {
-                	Json.dettachFactory();
+                	Json.detachFactory();
                     // Reschedule root only if it hasn't failed - in particular when
                     // a sub-activity fails with an exception in the above, the root
                     // will be rescheduled.
@@ -557,7 +557,7 @@ public class ActivityManager implements MessageHandler
     	}
     	finally
     	{
-    		Json.dettachFactory();
+    		Json.detachFactory();
     	}
     }
     

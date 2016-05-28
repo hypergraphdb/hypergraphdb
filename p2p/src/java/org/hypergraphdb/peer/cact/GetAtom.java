@@ -113,7 +113,8 @@ public class GetAtom extends FSMActivity
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onGetAtoms(Json msg) throws Throwable
     {
-        handles = Messages.fromJson(msg.at(CONTENT));
+        handles = new HashSet<HGHandle>();
+        handles.addAll(Messages.fromJson(msg.at(CONTENT)));
         Json reply = getReply(msg, Performative.InformRef);
         reply.set(CONTENT, 
                   SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), handles)); 

@@ -163,7 +163,7 @@ public class HyperGraphPeer
 		this.graph = graph;
 	}
 	
-	public static HGPeerIdentity getIdentity(final HyperGraph graph, final String peerName)
+	public static HGPeerIdentity getIdentity(final HyperGraph graph)
 	{
 	    return graph.getTransactionManager().ensureTransaction(new Callable<HGPeerIdentity>() { public HGPeerIdentity call() {
 	    HGPeerIdentity identity = null;	    
@@ -189,8 +189,6 @@ public class HyperGraphPeer
             id.setGraphLocation(graph.getLocation());
             id.setHostname(localMachine.getHostName());
             id.setIpAddress(localMachine.getHostAddress());
-//            id.setName(peerName);
-            System.out.println("DEFINE PEER IDENTITY: " + peerName);
             graph.define(id.getId(), id);
             return identity = id.makePublicIdentity();
         }
@@ -203,12 +201,6 @@ public class HyperGraphPeer
         else
         {
         	final PrivatePeerIdentity pid = all.get(0);
-//            if (!HGUtils.eq(pid.getName(), peerName))
-//            {
-//                pid.setName(peerName);
-//                System.out.println("UPDATE PEER IDENTITY: " + peerName);                
-//                graph.update(pid);
-//            }
             identity = pid.makePublicIdentity();
             if (!HGUtils.eq(identity.getHostname(), localMachine.getHostName()) ||
                 !HGUtils.eq(identity.getIpAddress(), localMachine.getHostAddress()) ||
@@ -225,7 +217,6 @@ public class HyperGraphPeer
 //	                pid.setGraphLocation(graph.getLocation());
 //	                pid.setHostname(machine.getHostName());
 //	                pid.setIpAddress(machine.getHostAddress());
-//	                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
 //	                graph.define(newId, pid);
 //	                return pid.makePublicIdentity();
 //            	}}, 
@@ -236,7 +227,6 @@ public class HyperGraphPeer
                 pid.setGraphLocation(graph.getLocation());
                 pid.setHostname(machine.getHostName());
                 pid.setIpAddress(machine.getHostAddress());
-                System.out.println("REDEFINE PEER IDENTITY: " + peerName);
                 graph.define(newId, pid);
                 identity = pid.makePublicIdentity();
             }
@@ -256,7 +246,7 @@ public class HyperGraphPeer
 	        return identity;
 	    if (graph == null)
 	        throw new RuntimeException("Can't get peer identity because this peer is not bound to a graph.");
-	    return getIdentity(graph, configuration.at(PeerConfig.PEER_NAME, "HGDBPeer").asString());
+	    return getIdentity(graph);
 	}
 	
 	private void loadConfig(File configFile)
