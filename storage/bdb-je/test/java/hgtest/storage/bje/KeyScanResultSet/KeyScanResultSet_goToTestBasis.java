@@ -1,12 +1,10 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
-import org.easymock.EasyMock;
-import org.hypergraphdb.storage.bje.KeyScanResultSet;
-import org.powermock.api.easymock.PowerMock;
+import static org.easymock.EasyMock.expect;
+import static org.powermock.api.easymock.PowerMock.replayAll;
 
-/**
- * @author Yuriy Sechko
- */
+import org.hypergraphdb.storage.bje.KeyScanResultSet;
+
 public abstract class KeyScanResultSet_goToTestBasis extends KeyScanResultSetTestBasis
 {
 	protected KeyScanResultSet<Integer> keyScan;
@@ -19,9 +17,9 @@ public abstract class KeyScanResultSet_goToTestBasis extends KeyScanResultSetTes
 	protected void createMocksForTheGoTo()
 	{
 		createMocksForTheConstructor();
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
-		PowerMock.replayAll();
-		keyScan = new KeyScanResultSet<Integer>(fakeCursor, null, converter);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
+		replayAll();
+		keyScan = new KeyScanResultSet<>(fakeCursor, null, converter);
 	}
 
 	protected void shutdownCursor()
