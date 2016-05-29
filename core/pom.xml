@@ -49,7 +49,8 @@
             org.hypergraphdb.atom,org.hypergraphdb.cache,org.hypergraphdb.event,
             org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
             org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
-            org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl</Export-Package>
+            org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,
+            org.hypergraphdb.atom.impl</Export-Package>
             <!--
             javax.* packages must be explicitly imported as per OSGI. OSGI containers normally
             implicitly import them as "extras", see:
