@@ -7,20 +7,19 @@ import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-/**
- * @author Yuriy Sechko
- */
 public class TransactionBJEImpl_getBJETransactionTest
 {
 	@Test
-	public void transactionIsNull() throws Exception
+	public void returnsNull_whenTransactionIsNull() throws Exception
 	{
-		final Environment fakeEnvironment = PowerMock
-				.createStrictMock(Environment.class);
-		PowerMock.replayAll();
+		final Environment fakeEnvironment = createStrictMock(Environment.class);
+		replay(fakeEnvironment);
 
 		final TransactionBJEImpl bjeTransaction = new TransactionBJEImpl(null,
 				fakeEnvironment);
@@ -28,24 +27,24 @@ public class TransactionBJEImpl_getBJETransactionTest
 		final Transaction actual = bjeTransaction.getBJETransaction();
 
 		assertNull(actual);
-		PowerMock.verifyAll();
+
+        verify(fakeEnvironment);
 	}
 
 	@Test
-	public void transactionIsNotNull() throws Exception
+	public void returnInstanceSpecifiedInConstructor_whenTransactionIsNotNull() throws Exception
 	{
-		final Transaction expected = PowerMock
-				.createStrictMock(Transaction.class);
-		final Environment fakeEnvironment = PowerMock
-				.createStrictMock(Environment.class);
-		PowerMock.replayAll();
+		final Transaction expectedTransaction = createStrictMock(Transaction.class);
+		final Environment fakeEnvironment = createStrictMock(Environment.class);
+		replay(expectedTransaction, fakeEnvironment);
 
 		final TransactionBJEImpl bjeTransaction = new TransactionBJEImpl(
-				expected, fakeEnvironment);
+				expectedTransaction, fakeEnvironment);
 
-		final Transaction actual = bjeTransaction.getBJETransaction();
+		final Transaction actualTransaction = bjeTransaction.getBJETransaction();
 
-		assertEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertEquals(expectedTransaction, actualTransaction);
+
+		verify(expectedTransaction, fakeEnvironment);
 	}
 }

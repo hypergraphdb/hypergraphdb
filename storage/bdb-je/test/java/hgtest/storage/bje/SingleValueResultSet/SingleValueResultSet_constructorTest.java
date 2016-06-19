@@ -1,46 +1,37 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
-import com.sleepycat.je.*;
-import hgtest.storage.bje.TestUtils;
-import org.easymock.EasyMock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.SingleValueResultSet;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.SecondaryCursor;
+import com.sleepycat.je.Transaction;
+import hgtest.storage.bje.TestUtils;
 
-
-/**
- * @author Yuriy Sechko
- */
 public class SingleValueResultSet_constructorTest extends
 		SingleValueResultSetTestBasis
 {
 	@Test
-	public void bjeCursorIsNull() throws Exception
+	public void throwsException_whenBjeCursorIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.NullPointerException");
-
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
 		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
-		try
-		{
-			new SingleValueResultSet(null, key, converter);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("java.lang.NullPointerException");
+		new SingleValueResultSet(null, key, converter);
 	}
 
 	@Test
-	public void keyIsNull() throws Exception
+	public void throwsException_whenKeyIsNull() throws Exception
 	{
 		// put some data into primary database
 		final Transaction transactionForAddingTestData = environment
@@ -55,72 +46,53 @@ public class SingleValueResultSet_constructorTest extends
 		final DatabaseEntry stubValue = new DatabaseEntry();
 		// initialize secondary cursor
 		realCursor.getFirst(stubKey, stubValue, LockMode.DEFAULT);
-		final BJETxCursor fakeCursor = PowerMock
-				.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
-		PowerMock.replayAll();
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
+		replay(fakeCursor);
 		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
-		new SingleValueResultSet(fakeCursor, null, converter);
+		new SingleValueResultSet<>(fakeCursor, null, converter);
 
 		realCursor.close();
 	}
 
 	@Test
-	public void converterIsNull() throws Exception
+	public void throwsException_whenConverterIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
-		final BJETxCursor fakeCursor = PowerMock
-				.createStrictMock(BJETxCursor.class);
-		PowerMock.replayAll();
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		replay(fakeCursor);
 		final DatabaseEntry key = new DatabaseEntry();
 
-		try
-		{
-			new SingleValueResultSet(fakeCursor, key, null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		new SingleValueResultSet<>(fakeCursor, key, null);
 	}
 
 	@Test
 	public void bjeCursorThrowsException() throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.IllegalStateException: This exceptions is thrown by fake cursor.");
-
-		final BJETxCursor fakeCursor = PowerMock
-				.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andThrow(
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andThrow(
 				new IllegalStateException(
 						"This exceptions is thrown by fake cursor."));
-		PowerMock.replayAll();
+		replay(fakeCursor);
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
 		final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
-		try
-		{
-			new SingleValueResultSet(fakeCursor, key, converter);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("java.lang.IllegalStateException: This exceptions is thrown by fake cursor.");
+		new SingleValueResultSet<>(fakeCursor, key, converter);
 	}
 
 	@Test
-	public void allIsOk() throws Exception
+	public void happyPath() throws Exception
 	{
 		TestUtils.putKeyValuePair(environment, database, 2, 4);
 		startupCursor();
 		createMocksForTheConstructor();
-		PowerMock.replayAll();
+		replay(fakeCursor);
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 1, 2, 3, 4 });
 
-		new SingleValueResultSet(fakeCursor, key, converter);
+		new SingleValueResultSet<>(fakeCursor, key, converter);
 
 		shutdownCursor();
 	}

@@ -1,12 +1,9 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
-import org.easymock.EasyMock;
-import org.hypergraphdb.storage.bje.SingleValueResultSet;
-import org.powermock.api.easymock.PowerMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
-/**
- * @author Yuriy Sechko
- */
+import org.hypergraphdb.storage.bje.SingleValueResultSet;
 
 public abstract class SingleValueResultSet_goToTestBasis extends
 		SingleValueResultSetTestBasis
@@ -16,9 +13,9 @@ public abstract class SingleValueResultSet_goToTestBasis extends
 	protected void createMocksForTheGoTo()
 	{
 		createMocksForTheConstructor();
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
-		PowerMock.replayAll();
-		resultSet = new SingleValueResultSet<Integer>(fakeCursor, null,
+		expect(fakeCursor.cursor()).andReturn(realCursor);
+		replay(fakeCursor);
+		resultSet = new SingleValueResultSet<>(fakeCursor, null,
 				converter);
 	}
 }

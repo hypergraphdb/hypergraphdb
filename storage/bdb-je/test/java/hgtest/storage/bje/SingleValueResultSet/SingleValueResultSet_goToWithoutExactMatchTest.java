@@ -1,146 +1,126 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
-import hgtest.storage.bje.TestUtils;
 import org.hypergraphdb.HGRandomAccessResult;
+import org.hypergraphdb.HGRandomAccessResult.GotoResult;
+import org.junit.After;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import hgtest.storage.bje.TestUtils;
 
-/**
- * @author Yuriy Sechko
- */
 public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		SingleValueResultSet_goToTestBasis
 {
 	private static final boolean EXACT_MATCH = false;
 
 	@Test
-	public void thereIsOneValueButItIsLessThanDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		TestUtils.putKeyValuePair(environment, database, 1, 10);
-		startupCursor();
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(20,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereIsOneValueButItIsGreaterThanDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		TestUtils.putKeyValuePair(environment, database, 1, 10);
-		startupCursor();
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(9,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test //(enabled = false)
-	public void thereIsOneValueAndItIsEqualToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		TestUtils.putKeyValuePair(environment, database, 1, 10);
-		startupCursor();
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(10,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreTwoValuesButAllOfThemAreLessThanDesired()
+	public void returnsNothing_whenThereIsOneValue_andItIsLessThanDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		startupCursor();
+		createMocksForTheGoTo();
 
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(20,
+				EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsNothing_whenThereIsOneValue_andItIsGreaterThanDesired()
+			throws Exception
+	{
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		startupCursor();
+		createMocksForTheGoTo();
+
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(9,
+				EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsFound_whenThereIsOneValue_andItIsEqualToDesired()
+			throws Exception
+	{
+		TestUtils.putKeyValuePair(environment, database, 1, 10);
+		startupCursor();
+		createMocksForTheGoTo();
+
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(10,
+				EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.found));
+	}
+
+	@Test
+	public void returnsNothing_whenThereAreTwoValues_andAllOfThemAreLessThanDesired()
+			throws Exception
+	{
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(30,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(30,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
 	@Test
-	public void thereAreTwoValuesButAllOfThemAreGreaterThanDesired()
+	public void returnsNothing_whenThereAreTwoValues_andAllOfThemAreGreaterThanDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(-10,
-				EXACT_MATCH);
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(
+				-10, EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
-	@Test // (enabled = false)
-	public void thereAreTwoValuesAndOneOfThemIsEqualToDesired()
+	@Test
+	public void returnsFound_whenThereAreTwoValues_andOneOfThemIsEqualToDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(10,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(10,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.found));
 	}
 
 	@Test
-	public void thereAreTwoValuesAndDesiredValueIsBetweenThem()
+	public void returnsNothing_whenThereAreTwoValues_andDesiredValueIsBetweenThem()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(15,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(15,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
 	@Test
-	public void thereAreThreeValuesButAllOfThemAreLessThanDesired()
+	public void returnsNothing_whenThereAreThreeValues_andAllOfThemAreLessThanDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		TestUtils.putKeyValuePair(environment, database, 3, 30);
@@ -148,86 +128,78 @@ public class SingleValueResultSet_goToWithoutExactMatchTest extends
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(50,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(50,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
 	@Test
-	public void thereAreThreeValuesButAllOfThemAreGreaterThanDesired()
+	public void returnsNothing_whenThereAreThreeValues_andAllOfThemAreGreaterThanDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(-10,
-				EXACT_MATCH);
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(
+				-10, EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
-	@Test //(enabled = false)
-	public void thereAreThreeValuesAndOneOfThemIsEqualToDesired()
+	@Test
+	public void returnsFound_whenThereAreThreeValues_andOneOfThemIsEqualToDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
 		TestUtils.putKeyValuePair(environment, database, 2, 4);
 		TestUtils.putKeyValuePair(environment, database, 3, 9);
 		TestUtils.putKeyValuePair(environment, database, 4, 16);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(9,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(9,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.found));
 	}
 
 	@Test
-	public void anotherCaseWhenThereAreThreeValuesAndOneOfThemIsEqualToDesired()
+	public void returnsNothing_whenThereAreThreeValues_andOneOfThemIsEqualToDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(30,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(30,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
 	@Test
-	public void thereAreThreeValuesAndDesireValueIsBetweenThem()
+	public void returnsNoting_whenThereAreThreeValues_andDesireValueIsBetweenThem()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
 		TestUtils.putKeyValuePair(environment, database, 1, 10);
 		TestUtils.putKeyValuePair(environment, database, 2, 20);
 		TestUtils.putKeyValuePair(environment, database, 3, 30);
 		startupCursor();
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = resultSet.goTo(25,
+		final HGRandomAccessResult.GotoResult actualResult = resultSet.goTo(25,
 				EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
+
+    @After
+    public void shutdown() {
+        shutdownCursor();
+    }
 }

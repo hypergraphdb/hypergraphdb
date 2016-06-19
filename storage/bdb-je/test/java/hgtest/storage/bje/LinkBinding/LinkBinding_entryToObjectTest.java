@@ -1,6 +1,5 @@
 package hgtest.storage.bje.LinkBinding;
 
-
 import com.sleepycat.bind.tuple.TupleInput;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
@@ -8,32 +7,24 @@ import org.hypergraphdb.handle.IntPersistentHandle;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static java.lang.System.arraycopy;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-/**
- * @author Yuriy Sechko
- */
 public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 {
 	@Test
-	public void inputIsNull() throws Exception
+	public void throwsException_whenInputIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
-		final TupleInput input = null;
-
-		try
-		{
-			binding.entryToObject(input);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		binding.entryToObject((TupleInput) null);
 	}
 
 	@Test
-	public void thereAreZeroBytesInInput() throws Exception
+	public void returnsEmptyArrayOfHandles_whenInputArrayIsEmpty()
+			throws Exception
 	{
 		final TupleInput input = new TupleInput(new byte[] {});
 
@@ -43,7 +34,8 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 	}
 
 	@Test
-	public void thereAreFourBytesInInput() throws Exception
+	public void returnsOneHandle_whenThereAreFourBytesInInput()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] { new IntPersistentHandle(
 				1) };
@@ -52,11 +44,12 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.entryToObject(input);
 
-		assertEquals(actual, expected);
+        assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void thereAreEightBytesInInput() throws Exception
+	public void returnsTwoHandles_whenThereAreEightBytesInInput()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
 				new IntPersistentHandle(2), new IntPersistentHandle(5) };
@@ -65,11 +58,12 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.entryToObject(input);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void thereAreTwelveBytesInInput() throws Exception
+	public void returnsThreeHandles_whenThereAreTwelveBytesInInput()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
 				new IntPersistentHandle(2), new IntPersistentHandle(5),
@@ -79,50 +73,34 @@ public class LinkBinding_entryToObjectTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.entryToObject(input);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void BytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreEnoughBytesInBuffer()
+	public void throwsException_whenBytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreEnoughBytesInTheBuffer()
 			throws Exception
 	{
-		final Exception expected = new HGException(
-				"While reading link tuple: the value buffer size is not a multiple of the handle size.");
-
 		final byte[] buffer = intHandlesAsByteArray(1, 2, 3);
 		final byte[] truncatedBuffer = new byte[10];
-		System.arraycopy(buffer, 0, truncatedBuffer, 0, 10);
+		arraycopy(buffer, 0, truncatedBuffer, 0, 10);
 		final TupleInput input = new TupleInput(truncatedBuffer);
 
-		try
-		{
-			binding.entryToObject(input);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("While reading link tuple: the value buffer size is not a multiple of the handle size.");
+		binding.entryToObject(input);
 	}
 
 	@Test
-	public void BytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreInsufficientBytesInBuffer()
+	public void throwsException_whenBytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreInsufficientBytesInTheBuffer()
 			throws Exception
 	{
-		final Exception expected = new HGException(
-				"While reading link tuple: the value buffer size is not a multiple of the handle size.");
-
 		final byte[] buffer = intHandlesAsByteArray(1, 2, 3);
 		final byte[] truncatedBuffer = new byte[15];
-		System.arraycopy(buffer, 0, truncatedBuffer, 0, 10);
+		arraycopy(buffer, 0, truncatedBuffer, 0, 10);
 		final TupleInput input = new TupleInput(truncatedBuffer);
 
-		try
-		{
-			binding.entryToObject(input);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("While reading link tuple: the value buffer size is not a multiple of the handle size.");
+		binding.entryToObject(input);
 	}
 }
