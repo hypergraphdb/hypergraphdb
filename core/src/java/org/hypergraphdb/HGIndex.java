@@ -9,7 +9,6 @@ package org.hypergraphdb;
 
 import org.hypergraphdb.storage.HGIndexStats;
 
-
 /**
  * <p>The <code>HGIndex</code> interface represents an user-created index in the HyperGraph 
  * data structure.</p>
@@ -127,16 +126,18 @@ public interface HGIndex<KeyType, ValueType> extends HGSearchable<KeyType, Value
      * in constant time, regardless of the number of keys. </p>
      * @deprecated Please use {@link #stats()} method instead.
      */
-    default long count() { return stats().keys(Long.MAX_VALUE, false).value(); }
-
+    //default long count() { return stats().keys(Long.MAX_VALUE, false).value(); }
+    long count();
+    
     /**
      * <p>Return the number of values for the key. This operation must run 
      * constant time regardless of the key or the number returned.</p>
      * @param key The key whose values must be counted.
      * @deprecated Please use {@link #stats()} method instead. 
      */
-    default long count(KeyType key)  { return stats().valuesOfKey(key, Long.MAX_VALUE, false).value(); }
- 
+    //default long count(KeyType key)  { return stats().valuesOfKey(key, Long.MAX_VALUE, false).value(); }
+    long count(KeyType key);
+    
     /**
      * <p>Return the associated {@link org.hypergraphdb.storage.HGIndexStats} object which
      * provides counts and/or count estimates for the key/value pairs in the index.</p>

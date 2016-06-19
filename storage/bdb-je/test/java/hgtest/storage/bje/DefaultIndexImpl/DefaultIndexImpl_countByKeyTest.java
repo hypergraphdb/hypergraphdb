@@ -28,8 +28,7 @@ public class DefaultIndexImpl_countByKeyTest extends DefaultIndexImplTestBasis
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		below.expect(HGException.class);
-		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		below.expect(NullPointerException.class);
 		index.count(1);
 	}
 

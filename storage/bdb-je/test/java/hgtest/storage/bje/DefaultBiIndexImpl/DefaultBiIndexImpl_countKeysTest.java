@@ -90,7 +90,7 @@ public class DefaultBiIndexImpl_countKeysTest extends
                 transactionManager, keyConverter, valueConverter, comparator,
                 null);
 
-        below.expect(HGException.class);
+        below.expect(NullPointerException.class);
         indexImpl.countKeys("some value");
     }
 }

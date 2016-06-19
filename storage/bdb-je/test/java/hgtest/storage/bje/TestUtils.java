@@ -1,8 +1,8 @@
 package hgtest.storage.bje;
 
 import com.sleepycat.je.*;
-
 import org.hypergraphdb.HGPersistentHandle;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.storage.BAUtils;
 import org.hypergraphdb.storage.BAtoString;
@@ -99,7 +99,7 @@ public class TestUtils
      * handles in result set (obtained from database) is difficult to predict.
      */
     public static Set<HGPersistentHandle> set(
-            final HGSearchResult<HGPersistentHandle> handles)
+            final HGRandomAccessResult<HGPersistentHandle> handles)
     {
         final Set<HGPersistentHandle> allHandles = new HashSet<HGPersistentHandle>();
         while (handles.hasNext())

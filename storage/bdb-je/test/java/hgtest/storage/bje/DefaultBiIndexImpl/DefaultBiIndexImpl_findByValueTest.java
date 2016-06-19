@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hypergraphdb.HGException;
@@ -61,7 +62,7 @@ public class DefaultBiIndexImpl_findByValueTest extends
 				.findByValue("this value doesn't exist");
 
 		final List<Integer> actualList = list(result);
-		assertThat(actualList, is(emptyList()));
+		assertThat(actualList, is(Collections.<Integer> emptyList()));
 
 		result.close();
 		indexImpl.close();
@@ -99,7 +100,7 @@ public class DefaultBiIndexImpl_findByValueTest extends
 				.findByValue("none");
 
 		final List<Integer> actualList = list(result);
-		assertThat(actualList, is(emptyList()));
+		assertThat(actualList, is(Collections.<Integer> emptyList()));
 
 		result.close();
 		indexImpl.close();

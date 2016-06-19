@@ -11,7 +11,7 @@
   <groupId>org.hypergraphdb</groupId>
   <properties>
     <packageit>bundle</packageit>
-    <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph.storage.bdb</bundle.namespace>
   </properties>
   <packaging>${packageit}</packaging>

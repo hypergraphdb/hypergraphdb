@@ -3,6 +3,8 @@ package org.hypergraphdb.peer.cact;
 import static org.hypergraphdb.peer.Messages.CONTENT;
 import static org.hypergraphdb.peer.Messages.getReply;
 import static org.hypergraphdb.peer.Messages.getSender;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,13 +110,14 @@ public class GetAtom extends FSMActivity
         send(target, msg);
     }
 
-    @FromState("Started")
+    @SuppressWarnings("unchecked")
+	@FromState("Started")
     @OnMessage(performative="QueryRef")
     @PossibleOutcome("Completed")    
     public WorkflowStateConstant onGetAtoms(Json msg) throws Throwable
     {
         handles = new HashSet<HGHandle>();
-        handles.addAll(Messages.fromJson(msg.at(CONTENT)));
+        handles.addAll((Collection<HGHandle>)Messages.fromJson(msg.at(CONTENT)));
         Json reply = getReply(msg, Performative.InformRef);
         reply.set(CONTENT, 
                   SubgraphManager.getTransferAtomRepresentation(getThisPeer().getGraph(), handles)); 

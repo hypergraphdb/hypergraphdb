@@ -14,6 +14,7 @@ import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Field;
 
+import com.sleepycat.je.Transaction;
 import org.hamcrest.CoreMatchers;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
@@ -33,8 +34,7 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		below.expect(HGException.class);
-		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		below.expect(NullPointerException.class);
 		index.count();
 	}
 
@@ -72,9 +72,8 @@ public class DefaultIndexImpl_countTest extends DefaultIndexImplTestBasis
 		realDatabase.close();
 		// create fake database instance and imitate throwing exception
 		final Database fakeDatabase = createStrictMock(Database.class);
-		expect(fakeDatabase.openCursor(isNull(), anyObject(CursorConfig.class)
-
-		)).andThrow(
+		expect(
+				fakeDatabase.getStats(null)).andThrow(
 				new DatabaseNotFoundException(
 						"This exception is thrown by fake database."));
 

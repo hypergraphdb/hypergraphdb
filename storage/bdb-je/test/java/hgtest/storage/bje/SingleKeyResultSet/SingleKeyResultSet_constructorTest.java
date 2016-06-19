@@ -25,7 +25,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 	@Test
 	public void throwsException_whenBjeCursorIsNull() throws Exception
 	{
-		below.expect(NullPointerException.class);
+		below.expect(HGException.class);
 		new SingleKeyResultSet<>(null, key, converter);
 	}
 
@@ -88,7 +88,7 @@ public class SingleKeyResultSet_constructorTest extends ResultSetTestBasis
 
 		try
 		{
-			below.expect(IllegalStateException.class);
+			below.expect(HGException.class);
 			below.expectMessage("This exception is thrown by fake cursor.");
 			new SingleKeyResultSet<>(fakeCursor, key, converter);
 		}

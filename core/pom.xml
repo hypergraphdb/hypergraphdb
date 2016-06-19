@@ -42,9 +42,7 @@
             <!-- This requirement is really to please OSGI but it's in fact only a runtime
             dependency, not build time, and it was put there for the ProtegeOWL plugin so we 
             should figure out how to get rid of it!  -->
-            <!-- 
             <Require-Bundle>${groupId}-hgbdbje</Require-Bundle>
-             -->
             <Export-Package>org.hypergraphdb,org.hypergraphdb.algorithms,org.hypergraphdb.query,
             org.hypergraphdb.util,org.hypergraphdb.type,org.hypergraphdb.annotation,
             org.hypergraphdb.atom,org.hypergraphdb.cache,org.hypergraphdb.event,

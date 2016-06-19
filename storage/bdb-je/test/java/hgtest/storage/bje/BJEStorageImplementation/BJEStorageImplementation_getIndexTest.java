@@ -83,8 +83,7 @@ public class BJEStorageImplementation_getIndexTest extends
 
 		final String indexName = null;
 
-		final HGIndex<Object, Object> createdIndex = storage.getIndex(
-				indexName, null, null, null, null, true, true);
+        final HGIndex<Object, Object> createdIndex = storage.getIndex(indexName, null, null, null,null,  true, true);
 
 		assertNotNull(createdIndex);
 	}

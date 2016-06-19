@@ -7,8 +7,12 @@
  */
 package org.hypergraphdb.storage.bje;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
+
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.OperationStatus;
 
 /**
  * <p>
@@ -18,27 +22,19 @@ import com.sleepycat.je.DatabaseEntry;
  * 
  * @author Borislav Iordanov
  */
-public class SingleKeyResultSet<T> extends IndexResultSet<T> 
-{
-//	private boolean ordered = false;
+public class SingleKeyResultSet<T> extends IndexResultSet<T> {
+	private boolean ordered = false;
 
 	public SingleKeyResultSet(BJETxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter) {
-		super(cursor, 
-			  key, 
-			  converter, 
-			  bje.nextDupSupplier(cursor.cursor(), key, converter),
-			  bje.prevDupSupplier(cursor.cursor(), key, converter),
-			  cursor.cursor().getDatabase().getConfig().getSortedDuplicates());
-/*		try 
-		{
+		super(cursor, key, converter);
+		try {
 			ordered = cursor.cursor().getDatabase().getConfig().getSortedDuplicates();
 		}
-		catch (Throwable t) 
-		{
+		catch (Throwable t) {
 			throw new HGException(t);
-	 	} */
+		}
 	}
-/*
+
 	protected T advance() {
 		try {
 			OperationStatus status = cursor.cursor().getNextDup(key, data, LockMode.DEFAULT);
@@ -69,5 +65,5 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T>
 
 	public boolean isOrdered() {
 		return ordered;
-	} */
+	}
 }

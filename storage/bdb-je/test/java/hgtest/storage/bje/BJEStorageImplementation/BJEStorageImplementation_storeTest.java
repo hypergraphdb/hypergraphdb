@@ -6,6 +6,8 @@ import org.hypergraphdb.handle.UUIDPersistentHandle;
 import org.junit.After;
 import org.junit.Test;
 
+import org.hypergraphdb.HGException;
+
 public class BJEStorageImplementation_storeTest extends
 		BJEStorageImplementationTestBasis
 {
@@ -16,7 +18,8 @@ public class BJEStorageImplementation_storeTest extends
 	{
 		startup(1);
 
-		below.expect(NullPointerException.class);
+		below.expect(HGException.class);
+		below.expectMessage("Failed to store hypergraph raw byte []: java.lang.NullPointerException");
 		storage.store(null, new byte[] {});
 	}
 
@@ -33,13 +36,13 @@ public class BJEStorageImplementation_storeTest extends
 	@Test
 	public void throwsException_whenDataIsNull() throws Exception
 	{
-		startup();
+		startup(1);
 
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
 		final byte[] nullData = null;
 
-		below.expect(NullPointerException.class);
-		below.expectMessage("Can't store null data.");
+		below.expect(HGException.class);
+		below.expectMessage("Failed to store hypergraph raw byte []: java.lang.IllegalArgumentException: Data field for DatabaseEntry data cannot be null");
 		storage.store(handle, nullData);
 	}
 
@@ -74,11 +77,10 @@ public class BJEStorageImplementation_storeTest extends
 	{
 		startup(new IllegalStateException("Throw exception in test case."));
 
-		final HGPersistentHandle handle = new UUIDPersistentHandle();
+        final HGPersistentHandle handle = new UUIDPersistentHandle();
 
-		below.expect(HGException.class);
-		below
-				.expectMessage("Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
+        below.expect(HGException.class);
+		below.expectMessage("Failed to store hypergraph link: java.lang.IllegalStateException: Throw exception in test case.");
 		storage.store(handle, new HGPersistentHandle[] {});
 	}
 

@@ -20,10 +20,5 @@ public class AffirmIdentityBootstrap implements BootstrapPeer
     {
         peer.getActivityManager().registerActivityType(AffirmIdentity.TYPE_NAME, 
                                                        AffirmIdentity.class);
-//        AffirmIdentityTask.Factory factory = new AffirmIdentityTask.Factory();
-/*        peer.getPeerInterface().registerTaskFactory(Performative.Inform, 
-                                                    HGDBOntology.AFFIRM_IDENTITY, 
-                                                    factory); */
-//        factory.newTask(peer, null).run();
     }
 }
