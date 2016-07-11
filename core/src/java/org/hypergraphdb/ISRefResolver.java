@@ -32,7 +32,6 @@ import org.hypergraphdb.util.RefResolver;
  * @author Borislav Iordanov
  *
  */
-@SuppressWarnings("unchecked")
 class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 {
 	HyperGraph graph;
@@ -85,11 +84,12 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A.toArray(HGUtils.EMPTY_HANDLE_ARRAY));
 				impl.setLock(new DummyReadWriteLock());
 				IncidenceSet result = new IncidenceSet(key,
-														new TxCacheSet(graph.getTransactionManager(),
-																					 impl,
-																					 key,
-																					 loader,
-																					 writeMap));
+														new TxCacheSet<HGPersistentHandle, HGHandle>(
+																graph.getTransactionManager(),
+																impl,
+																key,
+																loader,
+																writeMap));
 				HGLiveHandle lHandle = graph.cache.get(key);
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);
