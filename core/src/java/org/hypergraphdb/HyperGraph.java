@@ -2035,10 +2035,12 @@ public /*final*/ class HyperGraph implements HyperNode
 								 final Object atom, 
 								 final HGHandle typeHandle)
     {
-    	getTransactionManager().ensureTransaction(new Callable<Object>() 
+    	Object oldValue = getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ 
-    		public Object call() { replaceTransaction(lHandle, pHandle, atom, typeHandle); return null; }
+    		public Object call() { return replaceTransaction(lHandle, pHandle, atom, typeHandle); }
     	});    	
+    	if (oldValue instanceof HGHandleHolder)
+    		((HGHandleHolder)oldValue).setAtomHandle(null);
     }
     
     
@@ -2050,7 +2052,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * @param atom The new value of the atom
      * @param typeHandle The type of the new value
      */
-    private void replaceTransaction(HGLiveHandle lHandle, 
+    private Object replaceTransaction(HGLiveHandle lHandle, 
     							 	final HGPersistentHandle pHandle, 
     							 	final Object atom, 
     							 	final HGHandle typeHandle)
@@ -2162,6 +2164,7 @@ public /*final*/ class HyperGraph implements HyperNode
 		    	lHandle = cache.atomRefresh(lHandle, atom, true);
 	        if (atom instanceof HGHandleHolder)
 	        	 ((HGHandleHolder)atom).setAtomHandle(lHandle != null ? lHandle : pHandle);
+	        return oldValue;
     }
     
     /**
