@@ -199,7 +199,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	            } 
 	        	catch (InterruptedException exc) 
 	        	{
-	                Thread.currentThread().interrupt();
+	        		done = true;
 	            }
 	        	catch (Throwable t)
 	        	{
