@@ -43,13 +43,37 @@ public class TxList<E> implements List<E>
 		return result.get();
 	}
 	
+	VBox<Node<E>> fromInitial(Iterator<E> I)
+	{
+		if (!I.hasNext())
+			return new VBox<Node<E>>(txManager, null);
+		E current = I.next();		
+		if (!I.hasNext())
+		{
+			tail = new VBox<Node<E>>(txManager, new Node<E>(current, null));
+			return tail;
+		}
+		else
+		{
+			VBox<Node<E>> next = fromInitial(I);
+			return new VBox<Node<E>>(txManager, new Node<E>(current, next));
+		}
+	}
+	
 	public TxList(HGTransactionManager txManager)
 	{
 		this.txManager = txManager;
-		sizebox = new VBox<Integer>(txManager);
-		sizebox.put(0);
+		sizebox = new VBox<Integer>(txManager, 0);
 		head = new VBox<Node<E>>(txManager, null);
 		tail = new VBox<Node<E>>(txManager, null);
+	}
+
+	public TxList(HGTransactionManager txManager, Iterable<E> initialData)
+	{
+		this.txManager = txManager;
+		sizebox = new VBox<Integer>(txManager, 0);
+		head = fromInitial(initialData.iterator());
+//		tail = new VBox<Node<E>>(txManager, null);
 	}
 	
     public boolean add(E e)
@@ -174,7 +198,10 @@ public class TxList<E> implements List<E>
 			public E next()
 			{
 				E x = next.value;
-				next = next.next.get();
+				if (next.next != null)
+					next = next.next.get();
+				else
+					next = null;
 				return x;
 			}
 

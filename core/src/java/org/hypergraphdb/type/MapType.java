@@ -72,8 +72,7 @@ public class MapType implements HGAtomType
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
-    public HGPersistentHandle store(Object instance) 
+	public HGPersistentHandle store(Object instance) 
 	{
 		HGPersistentHandle result = TypeUtils.getNewHandleFor(hg, instance);
 		Map map = (Map)instance;

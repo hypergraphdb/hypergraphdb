@@ -8,6 +8,7 @@
 package org.hypergraphdb.cache;
 
 import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -198,7 +199,7 @@ public class WeakRefAtomCache implements HGAtomCache
 	            } 
 	        	catch (InterruptedException exc) 
 	        	{
-	                Thread.currentThread().interrupt();
+	        		done = true;
 	            }
 	        	catch (Throwable t)
 	        	{
@@ -439,6 +440,7 @@ public class WeakRefAtomCache implements HGAtomCache
 		{
 			atoms.remove(lhdl.getRef());
 			liveHandles.remove(lhdl.getPersistent());
+			((WeakReference<?>)lhdl).clear();
 		}
 	}
 	

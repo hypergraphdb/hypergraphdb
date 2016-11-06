@@ -18,15 +18,18 @@
   <name>HyperGraphDB BDB-JE Storage</name>
   <url>http://hypergraphdb.org</url>
 
+
   <repositories>
     <repository>
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
+    <!-- 
     <repository>
       <id>central</id>
       <url>http://repo1.maven.org/maven2/</url>
     </repository>
+     -->
     <repository>
       <id>multitestermvn</id>
       <url>http://yuriysechko.bitbucket.org</url>

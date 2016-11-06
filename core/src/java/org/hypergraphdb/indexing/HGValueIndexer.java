@@ -16,7 +16,7 @@ import org.hypergraphdb.storage.ByteArrayConverter;
  * 
  * <p>
  * An indexer that not only determines the key in an index entry, but the value
- * as well. By default, <code>HGKeyIndexer</code> implementation  provide a key by
+ * as well. By default, the <code>HGKeyIndexer</code> implementation  provides a key by
  * which to index HyperGraph atoms. In other words, atoms are the "default" values
  * for index entries. A <code>HGValueIndexer</code> provides also the value in an
  * index entry in cases where it is not the atom itself. 
