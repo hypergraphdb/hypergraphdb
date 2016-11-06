@@ -1,7 +1,11 @@
 package org.hypergraphdb.handle;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.BAUtils;
@@ -65,8 +69,21 @@ public class IntHandleFactory implements HGHandleFactory
     {
         return new IntPersistentHandle(BAUtils.readInt(buffer, offset));
     }
+    
+    @Override
+	public HGPersistentHandle makeHandle(InputStream in)
+	{
+		try
+		{
+			return new IntPersistentHandle(new DataInputStream(in).readInt());
+		}
+		catch (IOException e)
+		{
+			throw new HGException(e);
+		}
+	}
 
-    public HGPersistentHandle nullHandle()
+	public HGPersistentHandle nullHandle()
     {
         return nil;
     }
