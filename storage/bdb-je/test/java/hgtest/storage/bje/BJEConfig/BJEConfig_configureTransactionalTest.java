@@ -1,18 +1,19 @@
 package hgtest.storage.bje.BJEConfig;
 
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.Durability;
-import com.sleepycat.je.EnvironmentConfig;
+import static com.sleepycat.je.Durability.ReplicaAckPolicy.NONE;
+import static com.sleepycat.je.Durability.SyncPolicy.NO_SYNC;
+import static com.sleepycat.je.Durability.SyncPolicy.WRITE_NO_SYNC;
+import static com.sleepycat.je.EnvironmentConfig.CLEANER_LOOK_AHEAD_CACHE_SIZE;
+import static com.sleepycat.je.EnvironmentConfig.CLEANER_READ_SIZE;
+import static com.sleepycat.je.EnvironmentConfig.LOG_FILE_MAX;
+import static org.junit.Assert.assertEquals;
+
 import org.hypergraphdb.storage.bje.BJEConfig;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static com.sleepycat.je.EnvironmentConfig.LOG_FILE_MAX;
-import static com.sleepycat.je.EnvironmentConfig.CLEANER_LOOK_AHEAD_CACHE_SIZE;
-import static com.sleepycat.je.EnvironmentConfig.CLEANER_READ_SIZE;
-import static com.sleepycat.je.Durability.SyncPolicy.WRITE_NO_SYNC;
-import static com.sleepycat.je.Durability.SyncPolicy.NO_SYNC;
-import static com.sleepycat.je.Durability.ReplicaAckPolicy.NONE;
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.Durability;
+import com.sleepycat.je.EnvironmentConfig;
 
 /**
  * <p>
@@ -26,7 +27,7 @@ import static com.sleepycat.je.Durability.ReplicaAckPolicy.NONE;
 public class BJEConfig_configureTransactionalTest
 {
 	@Test
-	public void checkEnvironmentConfig() throws Exception
+	public void environmentConfigIsCorrect_whenTransactionalIsConfigured() throws Exception
 	{
 		final EnvironmentConfig expectedConfig = new EnvironmentConfig();
 		expectedConfig
@@ -50,7 +51,7 @@ public class BJEConfig_configureTransactionalTest
 	}
 
 	@Test
-	public void checkDatabaseConfig() throws Exception
+	public void databaseConfigIsCorrect_whenTransactionalIsConfigured() throws Exception
 	{
 		final DatabaseConfig expectedConfig = new DatabaseConfig()
 				.setAllowCreate(true).setTransactional(true);

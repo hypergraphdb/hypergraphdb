@@ -1,13 +1,14 @@
 package hgtest.storage.bje.BJEConfig;
 
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.EnvironmentConfig;
-import org.hypergraphdb.storage.bje.BJEConfig;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.assertEquals;
+import org.hypergraphdb.storage.bje.BJEConfig;
+import org.junit.Test;
+
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.EnvironmentConfig;
 
 /**
  * Test cases for getters in {@link org.hypergraphdb.storage.bje.BJEConfig}
@@ -15,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class BJEConfig_getConfigTest
 {
 	@Test
-	public void getEnvironmentConfigTest() throws Exception
+	public void getEnvironmentConfig() throws Exception
 	{
 		final EnvironmentConfig expected = new EnvironmentConfig();
 
@@ -31,7 +32,7 @@ public class BJEConfig_getConfigTest
 	}
 
 	@Test
-	public void getDatabaseConfigTest() throws Exception
+	public void getDatabaseConfig() throws Exception
 	{
 		final DatabaseConfig expected = new DatabaseConfig();
 
