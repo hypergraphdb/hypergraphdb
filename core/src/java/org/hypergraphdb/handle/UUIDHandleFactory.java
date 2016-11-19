@@ -1,5 +1,9 @@
 package org.hypergraphdb.handle;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 
@@ -50,6 +54,32 @@ public class UUIDHandleFactory implements HGHandleFactory
         return UUIDPersistentHandle.makeHandle(buffer, offset);
     }
 
+    @Override
+	public HGPersistentHandle makeHandle(InputStream in)
+	{
+		try
+		{
+			byte[] toBuf = new byte[UUIDPersistentHandle.SIZE];
+			int total = in.read(toBuf, 0, UUIDPersistentHandle.SIZE);			
+			while (total < UUIDPersistentHandle.SIZE) 
+			{
+				int n = in.read(toBuf, total, UUIDPersistentHandle.SIZE - total);
+				if (n <= 0)
+					break;
+				else
+					total += n;
+			}
+			if (UUIDPersistentHandle.SIZE != total) {
+				throw new IllegalArgumentException("Attempt to construct UUIDPersistentHandle with not enough bytes left in the input.");
+			}
+			return UUIDPersistentHandle.makeHandle(toBuf, 0);
+		}
+		catch (IOException e)
+		{
+			throw new HGException(e);
+		}
+	}
+    
     public HGPersistentHandle nullHandle()
     {
         return UUIDPersistentHandle.nullHandle();

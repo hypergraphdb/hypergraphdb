@@ -1,6 +1,11 @@
 package org.hypergraphdb.handle;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.BAUtils;
@@ -77,6 +82,19 @@ public class LongHandleFactory implements HGHandleFactory
         return new LongPersistentHandle(BAUtils.readLong(buffer, offset));
     }
 
+    @Override
+	public HGPersistentHandle makeHandle(InputStream in)
+	{
+		try
+		{
+			return new LongPersistentHandle(new DataInputStream(in).readLong());
+		}
+		catch (IOException e)
+		{
+			throw new HGException(e);
+		}
+	}
+    
     public HGPersistentHandle nullHandle()
     {
         return nil;

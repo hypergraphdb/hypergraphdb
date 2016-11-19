@@ -7,6 +7,8 @@
  */
 package org.hypergraphdb;
 
+import java.io.InputStream;
+
 /**
  * <p>
  * The <code>HGHandleFactory</code> is used to manage persistent handles
@@ -53,6 +55,18 @@ public interface HGHandleFactory
      * @param offset The offset within <code>buffer</code> where the handle value starts.
      */
     HGPersistentHandle makeHandle(byte [] buffer, int offset);
+    
+    /**
+     * <p>
+     * Construct a persistent handle by reading the next input from an input stream. 
+     * </p>
+     * 
+     * @param in An input stream in a valid state. Implementations assume that there is
+     * data available and that the data is well formed representing a handle. 
+     * @return The newly read {@link HGPersistentHandle}. The stream will naturally be 
+     * advanced. 
+     */
+    HGPersistentHandle makeHandle(InputStream in);
     
     /**
      * <p>Return the representation of a null persistent handle. A null
