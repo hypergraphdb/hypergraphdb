@@ -1,87 +1,69 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
-import com.sleepycat.je.*;
-import hgtest.storage.bje.TestUtils;
-import org.easymock.EasyMock;
+import static hgtest.storage.bje.TestUtils.putKeyValuePair;
+import static org.easymock.EasyMock.expect;
+import static org.powermock.api.easymock.PowerMock.createStrictMock;
+import static org.powermock.api.easymock.PowerMock.replayAll;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.KeyScanResultSet;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import com.sleepycat.je.DatabaseEntry;
 
-
-/**
- * @author Yuriy Sechko
- */
 public class KeyScanResultSet_constructorTest extends KeyScanResultSetTestBasis
 {
-	private final DatabaseEntry keyIndex = new DatabaseEntry(new byte[] { 0, 0,
-			0, 0 });
+	protected final DatabaseEntry sampleKeyIndex = new DatabaseEntry(new byte[] { 0,
+			0, 0, 0 });
 
 	@Test
-	public void cursorIsNull() throws Exception
+	public void throwsException_whenCursorIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.NullPointerException");
+		replayAll();
 
-		PowerMock.replayAll();
-
-		try
-		{
-			new KeyScanResultSet<Integer>(null, keyIndex, converter);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("java.lang.NullPointerException");
+		new KeyScanResultSet<>(null, sampleKeyIndex, converter);
 	}
 
 	@Test
-	public void keyIndexIsNull() throws Exception
+	public void doesNotFail_whenKeyIndexIsNull() throws Exception
 	{
 		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 1, "one");
 		createMocksForTheConstructor();
-		PowerMock.replayAll();
+		replayAll();
 
-		new KeyScanResultSet<Integer>(fakeCursor, null, converter);
+		new KeyScanResultSet<>(fakeCursor, null, converter);
 
 		shutdownCursor();
 	}
 
 	@Test
-	public void bjeCursorThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.IllegalStateException: This exception is thrown by fake cursor.");
-
-		final BJETxCursor fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andThrow(
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andThrow(
 				new IllegalStateException(
 						"This exception is thrown by fake cursor."));
-		PowerMock.replayAll();
+		replayAll();
 
-		try
-		{
-			new KeyScanResultSet<Integer>(fakeCursor, keyIndex, converter);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("java.lang.IllegalStateException: This exception is thrown by fake cursor.");
+		new KeyScanResultSet<>(fakeCursor, sampleKeyIndex, converter);
 	}
 
 	@Test
-	public void allIsOk() throws Exception
+	public void happyPath() throws Exception
 	{
 		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 1, "one");
 		createMocksForTheConstructor();
-		PowerMock.replayAll();
+		replayAll();
 
-		new KeyScanResultSet<Integer>(fakeCursor, keyIndex, converter);
+		new KeyScanResultSet<>(fakeCursor, sampleKeyIndex, converter);
 
 		shutdownCursor();
 	}

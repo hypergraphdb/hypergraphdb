@@ -1,42 +1,41 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
-import com.google.code.multitester.annonations.Exported;
-import hgtest.storage.bje.IndexImplTestBasis;
-import org.easymock.EasyMock;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
+
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.powermock.api.easymock.PowerMock;
 
-/**
- * @author Yuriy Sechko
- */
-public class DefaultIndexImplTestBasis extends IndexImplTestBasis{
+import hgtest.storage.bje.IndexImplTestBasis;
 
-    @Exported("underTest")
-    protected DefaultIndexImpl<Integer, String> index;
+public class DefaultIndexImplTestBasis extends IndexImplTestBasis
+{
 
-    @Exported("up2")
-    protected void startupIndex()
-    {
-        mockStorage();
-        PowerMock.replayAll();
-        index = new DefaultIndexImpl<Integer, String>(INDEX_NAME, storage,
-                transactionManager, keyConverter, valueConverter, comparator, null);
-        index.open();
-    }
+	protected DefaultIndexImpl<Integer, String> index;
 
-    protected void startupIndexWithFakeTransactionManager() {
-        mockStorage();
-        final HGTransactionManager fakeTransactionManager = PowerMock
-                .createStrictMock(HGTransactionManager.class);
-        EasyMock.expect(fakeTransactionManager.getContext())
-                .andThrow(
-                        new IllegalStateException(
-                                "This exception is thrown by fake transaction manager."));
-        PowerMock.replayAll();
-        index = new DefaultIndexImpl<Integer, String>(
-                INDEX_NAME, storage, fakeTransactionManager, keyConverter,
-                valueConverter, comparator, null);
-        index.open();
-    }
+	protected void startupIndex()
+	{
+		mockStorage();
+		replay(mockedStorage);
+		index = new DefaultIndexImpl<>(INDEX_NAME, mockedStorage,
+				transactionManager, keyConverter, valueConverter, comparator,
+				null);
+		index.open();
+	}
+
+	protected void startupIndexWithFakeTransactionManager()
+	{
+		mockStorage();
+		final HGTransactionManager fakeTransactionManager = createStrictMock(HGTransactionManager.class);
+		expect(fakeTransactionManager.getContext())
+				.andThrow(
+						new IllegalStateException(
+								"This exception is thrown by fake transaction manager."));
+		replay(mockedStorage, fakeTransactionManager);
+		index = new DefaultIndexImpl<>(INDEX_NAME, mockedStorage,
+				fakeTransactionManager, keyConverter, valueConverter,
+				comparator, null);
+		index.open();
+	}
 }

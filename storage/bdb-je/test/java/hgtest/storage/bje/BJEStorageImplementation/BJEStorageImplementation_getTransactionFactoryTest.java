@@ -1,25 +1,33 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import org.hypergraphdb.transaction.HGTransactionFactory;
-import org.junit.Test;
-
 import static org.junit.Assert.assertNotNull;
 
-/**
- * In this test returned transaction factory is checked only for nullity.
- */
+import org.hypergraphdb.transaction.HGTransactionFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 public class BJEStorageImplementation_getTransactionFactoryTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
 	public void getTransactionFactory() throws Exception
 	{
-		startup();
-
-        final HGTransactionFactory transactionFactory = storage
+		final HGTransactionFactory transactionFactory = storage
 				.getTransactionFactory();
 
-        assertNotNull(transactionFactory);
-		shutdown();
+		assertNotNull(transactionFactory);
+	}
+
+	@Before
+	public void startup() throws Exception
+	{
+		super.startup();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

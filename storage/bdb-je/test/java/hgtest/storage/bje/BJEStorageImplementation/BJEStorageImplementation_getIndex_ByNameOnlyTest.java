@@ -1,46 +1,55 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import org.hypergraphdb.HGIndex;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import org.hypergraphdb.HGIndex;
+import org.junit.After;
+import org.junit.Test;
 
 public class BJEStorageImplementation_getIndex_ByNameOnlyTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void indexNameIsNull() throws Exception
+	public void returnsNullIndex_whenIndexNameIsNull() throws Exception
 	{
 		startup();
-		final String indexName = null;
 
-        HGIndex<Object,Object> retrievedIndex = storage.getIndex(indexName);
+		final HGIndex<Object, Object> retrievedIndex = storage.getIndex(null);
 
-        assertNull(retrievedIndex);
-        shutdown();
+		assertNull(retrievedIndex);
 	}
 
-    @Test
-    public void getNonStoredIndex() throws Exception {
-        startup();
-        final String indexName = "sample index";
+	@Test
+	public void returnsNullIndex_whenThereIsNotIndexWithDesiredName()
+			throws Exception
+	{
+		startup();
 
-        HGIndex<Object, Object> retrievedIndex = storage.getIndex(indexName);
+		HGIndex<Object, Object> retrievedIndex = storage
+				.getIndex("there is not index with such name");
 
-        assertNull(retrievedIndex);
-        shutdown();
-    }
+		assertNull(retrievedIndex);
+	}
 
-    @Test
-    public void getIndexThatExists() throws Exception {
-        startup(1);
-        final String indexName = "sample index";
-        final HGIndex<Object, Object> storedIndex = storage.getIndex(indexName, null, null, null, null, true, true);
+	@Test
+	public void happyPath() throws Exception
+	{
+		startup(1);
 
-        final HGIndex<Object, Object> retrievedIndex = storage.getIndex(indexName);
+		final String indexName = "sample index";
+		final HGIndex<Object, Object> storedIndex = storage.getIndex(indexName,
+				null, null, null, null, true, true);
 
-        assertEquals(retrievedIndex, storedIndex);
-        shutdown();
-    }
+		final HGIndex<Object, Object> retrievedIndex = storage
+				.getIndex(indexName);
+
+		assertEquals(storedIndex, retrievedIndex);
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
+	}
 }

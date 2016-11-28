@@ -1,23 +1,22 @@
 package hgtest.storage.bje.BJEConfig;
 
-import com.sleepycat.je.DatabaseConfig;
-import com.sleepycat.je.EnvironmentConfig;
-import org.hypergraphdb.storage.bje.BJEConfig;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.assertEquals;
+import org.hypergraphdb.storage.bje.BJEConfig;
+import org.junit.Test;
+
+import com.sleepycat.je.DatabaseConfig;
+import com.sleepycat.je.EnvironmentConfig;
 
 /**
  * Test cases for getters in {@link org.hypergraphdb.storage.bje.BJEConfig}
- *
- * @author Yuriy Sechko
  */
 public class BJEConfig_getConfigTest
 {
 	@Test
-	public void getEnvironmentConfigTest() throws Exception
+	public void getEnvironmentConfig() throws Exception
 	{
 		final EnvironmentConfig expected = new EnvironmentConfig();
 
@@ -29,17 +28,14 @@ public class BJEConfig_getConfigTest
 
 		final EnvironmentConfig actual = bjeConfig.getEnvironmentConfig();
 
-		// equals() is not overridden in EnvironmentConfig class. So not sure
-		// about its behavior.
-		// But toString is overridden. It is pretty enough for comparing objects
-		// in the present test case.
-		assertEquals(actual.toString(), expected.toString());
+		assertEquals(expected.toString(), actual.toString());
 	}
 
 	@Test
-	public void getDatabaseConfigTest() throws Exception
+	public void getDatabaseConfig() throws Exception
 	{
 		final DatabaseConfig expected = new DatabaseConfig();
+
 		final BJEConfig bjeConfig = new BJEConfig();
 		final Field privateConfigField = bjeConfig.getClass().getDeclaredField(
 				"dbConfig");
@@ -48,7 +44,6 @@ public class BJEConfig_getConfigTest
 
 		final DatabaseConfig actual = bjeConfig.getDatabaseConfig();
 
-		// see note above
-		assertEquals(actual.toString(), expected.toString());
+		assertEquals(expected.toString(), actual.toString());
 	}
 }

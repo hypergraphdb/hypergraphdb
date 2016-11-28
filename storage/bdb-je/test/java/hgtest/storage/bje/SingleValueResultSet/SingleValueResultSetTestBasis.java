@@ -1,12 +1,7 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
+import static org.easymock.EasyMock.expect;
 
-import com.sleepycat.je.*;
-
-import hgtest.storage.bje.ResultSetTestBasis;
-import hgtest.storage.bje.TestUtils;
-
-import org.easymock.EasyMock;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator;
@@ -14,12 +9,25 @@ import org.junit.After;
 import org.junit.Before;
 import org.powermock.api.easymock.PowerMock;
 
+import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.LockMode;
+import com.sleepycat.je.SecondaryConfig;
+import com.sleepycat.je.SecondaryCursor;
+import com.sleepycat.je.SecondaryDatabase;
+
+import hgtest.storage.bje.ResultSetTestBasis;
+import hgtest.storage.bje.TestUtils;
+
 /**
- * In addition to the primary database SingleValueResultSet uses secondary
- * database. Navigation through second database is performed by SecondaryCursor.
- * This class contains code for setting-up secondary database and secondary
- * cursor. Most of the test cases uses this initialization code.
- *
+ * <p>
+ * In addition to the primary database
+ * {@link org.hypergraphdb.storage.bje.SingleValueResultSet} uses secondary
+ * database. Navigation through second database is performed by
+ * {@link com.sleepycat.je.SecondaryCursor}. This class contains code for
+ * setting-up secondary database and secondary cursor. Most of the test cases
+ * uses this initialization code.
+ * </p>
+ * <p>
  * Note: secondary cursor doesn't support putting data into database. But it
  * should be initialized before it can be used. In these cases the followed
  * approach is used:<br>
@@ -27,14 +35,15 @@ import org.powermock.api.easymock.PowerMock;
  * <li>put data directly into secondary database</li>
  * <li>initialize secondary cursor by reading some dummy data</li>
  * </ol>
- * 
- * Calls for the BJETxCursor's methods are mocked, all real manipulations are
- * performed on Sleepycat library classes.
- * 
- * Only PlainSecondaryKeyCreator class is used in test, there are not fakes for
- * it.
- *
- * @author Yuriy Sechko
+ * </p>
+ * <p>
+ * Calls for the {@link org.hypergraphdb.storage.bje.BJETxCursor}'s methods are
+ * mocked, all real manipulations are performed on Sleepycat library classes.
+ * </p>
+ * <p>
+ * Only {@link org.hypergraphdb.storage.bje.PlainSecondaryKeyCreator} class is
+ * used "really" in test, there are not fakes for it.
+ * </p>
  */
 public abstract class SingleValueResultSetTestBasis extends ResultSetTestBasis
 {
@@ -71,13 +80,14 @@ public abstract class SingleValueResultSetTestBasis extends ResultSetTestBasis
 	}
 
 	/**
-	 * All necessary fake calls before instance of SingleValueResultSet is about
-	 * to constructed
+	 * All necessary fake calls before instance of
+	 * {@link org.hypergraphdb.storage.bje.SingleValueResultSet} is about to
+	 * constructed.
 	 */
 	protected void createMocksForTheConstructor()
 	{
 		fakeCursor = PowerMock.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
 	}
 
 	@Before

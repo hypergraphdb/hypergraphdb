@@ -6,9 +6,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
 
-/**
- * @author Yuriy Sechko
- */
 public class TransactionBJEImpl_nullTransactionTest
 {
 	@Test

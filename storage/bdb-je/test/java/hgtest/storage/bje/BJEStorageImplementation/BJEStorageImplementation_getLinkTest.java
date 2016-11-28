@@ -1,35 +1,31 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
 import org.hypergraphdb.HGException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_getLinkTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void getLinksUsingNullHandle() throws Exception
+	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to retrieve link with handle null");
+		below.expect(HGException.class);
+		below
+				.expectMessage("Failed to retrieve link with handle null");
+		storage.getLink(null);
+	}
 
-		startup();
-		try
-		{
-			storage.getLink(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+	@Before
+	public void startup() throws Exception
+	{
+		super.startup();
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

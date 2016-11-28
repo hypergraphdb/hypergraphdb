@@ -1,47 +1,32 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import com.sleepycat.je.Environment;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import org.junit.Before;
+import org.junit.Test;
 
+import com.sleepycat.je.Environment;
 
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_shutdownTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void getDatabasePathAfterShutdown() throws Exception
+	public void throwsException_whenManipulationIsPerformedAfterShutdown()
+			throws Exception
 	{
-		final Exception expected = new IllegalStateException(
-				"Attempt to use non-open Environment object().");
-
-		startup();
 		storage.shutdown();
+
 		final Environment environment = storage.getBerkleyEnvironment();
-		try
-		{
-			// environment is not open, expect exception
-			environment.getHome().getPath();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		below.expect(IllegalStateException.class);
+		below
+				.expectMessage("Attempt to use non-open Environment object().");
+		environment.getHome().getPath();
 	}
 
 	@Test
-	public void checkPointThreadIsNull() throws Exception
+	public void doesNotFail_whenCheckPointThreadBecomesNull() throws Exception
 	{
-		startup();
 		// set value of field checkPointThread in
 		// BJEStorageImplementation instance to null
 		final Field checkPointThread = storage.getClass().getDeclaredField(
@@ -52,13 +37,17 @@ public class BJEStorageImplementation_shutdownTest extends
 	}
 
 	@Test
-	public void envIsNull() throws Exception
+	public void doesNotFails_whenEnvBecomesNull() throws Exception
 	{
-		startup();
 		// set value of field env in BJEStorageImplementation instance to null
 		final Field env = storage.getClass().getDeclaredField("env");
 		env.setAccessible(true);
 		env.set(storage, null);
 		shutdown();
 	}
+
+    @Before
+    public void startup() throws Exception {
+        super.startup();
+    }
 }

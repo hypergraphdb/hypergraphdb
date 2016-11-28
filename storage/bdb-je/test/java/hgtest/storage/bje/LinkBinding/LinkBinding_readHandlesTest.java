@@ -1,62 +1,48 @@
 package hgtest.storage.bje.LinkBinding;
 
-
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-/**
- * @author Yuriy Sechko
- */
 public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 {
 	@Test
-	public void bufferIsNull() throws Exception
+	public void throwsException_whenBufferIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
-		try
-		{
-			binding.readHandles(null, 0, 100);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		binding.readHandles(null, 0, 100);
 	}
 
 	@Test
-	public void offsetIsNegative() throws Exception
+	public void throwsException_whenOffsetIsNegative() throws Exception
 	{
-		final Exception expected = new ArrayIndexOutOfBoundsException("-1");
-
 		final byte[] buffer = new byte[] { 0, 0, 0, 0 };
 
-		try
-		{
-			binding.readHandles(buffer, -1, 4);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(ArrayIndexOutOfBoundsException.class);
+		below.expectMessage("-1");
+		binding.readHandles(buffer, -1, 4);
 	}
 
 	@Test
-	public void lengthIsNegative() throws Exception
+	public void returnsEmptyArrayOfHandles_whenLengthIsNegative()
+			throws Exception
 	{
 		final byte[] buffer = new byte[] { 0, 0, 0, 0 };
 
 		final HGPersistentHandle[] result = binding.readHandles(buffer, 0, -1);
 
-		assertEquals(result.length, 0);
+		assertThat(result.length, is(0));
 	}
 
 	@Test
-	public void thereAreFourBytesInBuffer() throws Exception
+	public void returnsOneIntegerHandle_whenThereAreFourBytesInBuffer()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] { new IntPersistentHandle(
 				0) };
@@ -65,11 +51,12 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.readHandles(buffer, 0, 4);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void thereAreEightBytesInBuffer() throws Exception
+	public void returnsTwoIntegerHandles_whenThereAreEightBytesInBuffer()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
 				new IntPersistentHandle(1), new IntPersistentHandle(2) };
@@ -78,11 +65,12 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.readHandles(buffer, 0, 8);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void thereAreTwelveBytesInBuffer() throws Exception
+	public void returnsThreeIntegerHandles_whenThereAreTwelveBytesInBuffer()
+			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
 				new IntPersistentHandle(1), new IntPersistentHandle(2),
@@ -92,20 +80,21 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.readHandles(buffer, 0, 12);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void thereAreZeroBytesInBuffer() throws Exception
+	public void returnsEmptyArrayOfHandles_whenBufferIsEmptyr()
+			throws Exception
 	{
 		final HGPersistentHandle[] result = binding.readHandles(new byte[] {},
 				0, 0);
 
-		assertEquals(result.length, 0);
+		assertThat(result.length, is(0));
 	}
 
 	@Test
-	public void BytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreEnoughBytesInBuffer()
+	public void returnsTwoIntegerHandles_whenBytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreEnoughBytesInBuffer()
 			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
@@ -115,11 +104,11 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.readHandles(buffer, 0, 10);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void BytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreInsufficientBytesInBuffer()
+	public void returnsThreeIntegerHandles_whenBytesCount_Div_HandleSize_IsNotEqualToZero_AndThereAreInsufficientBytesInBuffer()
 			throws Exception
 	{
 		final HGPersistentHandle[] expected = new HGPersistentHandle[] {
@@ -130,6 +119,6 @@ public class LinkBinding_readHandlesTest extends LinkBindingTestBasis
 
 		final HGPersistentHandle[] actual = binding.readHandles(buffer, 0, 15);
 
-		assertEquals(actual, expected);
+		assertArrayEquals(expected, actual);
 	}
 }

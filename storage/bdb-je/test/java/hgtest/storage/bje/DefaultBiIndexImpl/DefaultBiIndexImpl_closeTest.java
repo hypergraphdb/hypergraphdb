@@ -1,87 +1,110 @@
 package hgtest.storage.bje.DefaultBiIndexImpl;
 
-import com.sleepycat.je.SecondaryDatabase;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.reset;
+import static org.easymock.EasyMock.verify;
 
 import java.lang.reflect.Field;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.DefaultBiIndexImpl;
+import org.junit.Test;
 
+import com.sleepycat.je.SecondaryDatabase;
 
-/**
- * @author Yuriy Sechko
- */
 public class DefaultBiIndexImpl_closeTest extends DefaultBiIndexImplTestBasis
 {
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void doesNotFail_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		PowerMock.replayAll();
+		replay(mockedStorage);
 
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 
 		indexImpl.close();
 	}
 
 	@Test
-	public void allInternalOperationsPerformFine() throws Exception
+	public void happyPath() throws Exception
 	{
 		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
+		replay(mockedStorage);
+
+		final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
+				valueConverter, comparator, null);
 		indexImpl.open();
 		indexImpl.close();
 	}
 
 	@Test
-	public void exceptionIsThrownOnClosingInternalDatabase() throws Exception
+	public void wrapsDatabaseException_withHypergraphException()
+			throws Exception
 	{
-		final HGException expected = new HGException(
-				"java.lang.IllegalStateException");
-		// open databases normally
-		mockStorage();
-		PowerMock.replayAll();
-		final DefaultBiIndexImpl indexImpl = new DefaultBiIndexImpl(INDEX_NAME,
-				storage, transactionManager, keyConverter, valueConverter,
-				comparator, null);
-		indexImpl.open();
-		PowerMock.verifyAll();
-		PowerMock.resetAll();
-		// now we force to throw exception in the DefaultBiIndexImpl.close()
-		// method
-		// we link the field 'secondaryDb' to the fake database,
-		// which throws exception when their 'close' method is called
-		final SecondaryDatabase fakeSecondaryDatabase = PowerMock
-				.createStrictMock(SecondaryDatabase.class);
-		fakeSecondaryDatabase.close();
-		EasyMock.expectLastCall().andThrow(new IllegalStateException());
-		PowerMock.replayAll();
-		final Field secondaryDbField = indexImpl.getClass().getDeclaredField(
-				SECONDARY_DATABASE_FIELD_NAME);
-		secondaryDbField.setAccessible(true);
-		// close the real database before use fake
-		secondaryDbField.get(indexImpl).getClass().getMethod("close")
-				.invoke(secondaryDbField.get(indexImpl));
-		secondaryDbField.set(indexImpl, fakeSecondaryDatabase);
+		final DefaultBiIndexImpl indexImpl = new TrickySetup()
+				.openIndexNormally();
+		new TrickySetup().useFakeSecondaryDatabase(indexImpl);
+
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("java.lang.IllegalStateException");
 			indexImpl.close();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
 			closeDatabases(indexImpl);
+		}
+	}
+
+	/**
+	 * This class contains routines which are intended to test some corner cases
+	 * (related to error handling).
+	 */
+	protected class TrickySetup
+	{
+		/**
+		 * Returns well-formed index which is ready for any manipulations.
+		 */
+		protected DefaultBiIndexImpl openIndexNormally()
+		{
+			mockStorage();
+			replay(mockedStorage);
+
+			final DefaultBiIndexImpl<Integer, String> indexImpl = new DefaultBiIndexImpl<>(
+					INDEX_NAME, mockedStorage, transactionManager,
+					keyConverter, valueConverter, comparator, null);
+			indexImpl.open();
+			verify(mockedStorage);
+			reset(mockedStorage);
+			return indexImpl;
+		}
+
+		/**
+		 * This method replaces original instance of Berkley database with fake
+		 * one. Fake database will throw exception within
+		 * {@link org.hypergraphdb.storage.bje.DefaultBiIndexImpl#open())
+		 * method.
+		 */
+		protected void useFakeSecondaryDatabase(
+				final DefaultBiIndexImpl indexImpl) throws Exception
+		{
+			// mock fake database
+			final SecondaryDatabase fakeSecondaryDatabase = createStrictMock(SecondaryDatabase.class);
+			fakeSecondaryDatabase.close();
+			expectLastCall().andThrow(new IllegalStateException());
+			replay(mockedStorage, fakeSecondaryDatabase);
+			final Field secondaryDbField = indexImpl.getClass()
+					.getDeclaredField(SECONDARY_DATABASE_FIELD_NAME);
+			secondaryDbField.setAccessible(true);
+			// close the real database before use fake one
+			secondaryDbField.get(indexImpl).getClass().getMethod("close")
+					.invoke(secondaryDbField.get(indexImpl));
+			secondaryDbField.set(indexImpl, fakeSecondaryDatabase);
 		}
 	}
 }

@@ -1,35 +1,20 @@
 package hgtest.storage.bje.LinkBinding;
 
-
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.storage.bje.LinkBinding;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class LinkBinding_constructorTest extends LinkBindingTestBasis
 {
 	@Test
-	public void handleFactoryIsNull() throws Exception
+	public void throwsException_whenHandleFactoryIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
-		try
-		{
-			new LinkBinding(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		new LinkBinding(null);
 	}
 
 	@Test
-	public void handleFactoryIsNotNull() throws Exception
+	public void happyPath() throws Exception
 	{
 		final HGHandleFactory handleFactory = (HGHandleFactory) Class.forName(
 				HANDLE_FACTORY_CLASS_NAME).newInstance();
