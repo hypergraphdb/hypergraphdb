@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
 Built-By: borislav
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1478410892901
+Bnd-LastModified: 1478933567131
 Embed-Dependency: je
 Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp

@@ -2,6 +2,7 @@ package hgdbteststorage;
 
 import java.util.Arrays;
 
+
 import hgtest.T;
 
 import org.hypergraphdb.HGException;
@@ -86,7 +87,5 @@ public class IndexInterfaceTests extends StoreImplementationTestBase
 			Assert.assertEquals(1, cnt.value());
 		cnt = index.stats().valuesOfKey(key, Long.MAX_VALUE, false);
 		Assert.assertEquals(valuesCount, cnt.value());
-
 	}
-
 }

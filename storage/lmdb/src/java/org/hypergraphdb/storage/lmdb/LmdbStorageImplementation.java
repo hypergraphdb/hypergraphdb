@@ -102,6 +102,9 @@ public class LmdbStorageImplementation implements HGStoreImplementation
 
 		try
 		{
+			//NativeUtils.loadLibraryFromJar("/native/liblmdbjni.so");
+			//System.load("/hypergraphdb/storage/lmdb/target/classes/native/liblmdb.so");
+			System.loadLibrary("liblmdbjni.so");
 			env = new Env();
 			env.open(store.getDatabaseLocation(), envConfig);
 			DatabaseConfig dbConfig = configuration.getDatabaseConfig().cloneConfig();

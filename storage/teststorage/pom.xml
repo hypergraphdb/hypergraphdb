@@ -1,27 +1,92 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.hypergraphdb</groupId>
-    <artifactId>hypergraphdb</artifactId>
-    <version>1.4-SNAPSHOT</version>
-  </parent>
-  <artifactId>hgdbteststorage</artifactId>
-  <name>HyperGraphDB Storage Test Project</name>
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.hypergraphdb</groupId>
+		<artifactId>hypergraphdb</artifactId>
+		<version>1.4-SNAPSHOT</version>
+	</parent>
+	<artifactId>hgdbteststorage</artifactId>
+	<name>HyperGraphDB Storage Test Project</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgdbtest</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.hypergraphdb</groupId>
-      <artifactId>hgbdbje</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
+	<properties>
+		<lmdb.version>99-master-SNAPSHOT</lmdb.version>
+	</properties>
 
+	<dependencies>
+		<dependency>
+			<groupId>org.hypergraphdb</groupId>
+			<artifactId>hgdbtest</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>berkleydb</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>berkleydb</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.5</version>
+						<configuration>
+						    <argLine>-Dorg.hypergraphdb.storage.HGStoreImplementation=org.hypergraphdb.storage.bje.BJEStorageImplementation</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<dependencies>
+				<dependency>
+					<groupId>org.hypergraphdb</groupId>
+					<artifactId>hgbdbje</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>lmdb-linux</id>
+			<activation>
+                <activeByDefault>false</activeByDefault>			
+				<property>
+					<name>lmdb-linux</name>
+					<value>false</value>
+				</property>
+			</activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.5</version>
+                        <configuration>
+                            <argLine>-Dorg.hypergraphdb.storage.HGStoreImplementation=org.hypergraphdb.storage.lmdb.LmdbStorageImplementation</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>			
+			<dependencies>
+				<dependency>
+					<groupId>org.hypergraphdb</groupId>
+					<artifactId>hglmdb</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+
+				<dependency>
+					<groupId>org.fusesource.lmdbjni</groupId>
+					<artifactId>lmdbjni-linux64</artifactId>
+					<version>${lmdb.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
+
+	</profiles>
 </project>

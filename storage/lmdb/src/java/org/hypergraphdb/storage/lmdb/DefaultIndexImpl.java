@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.storage.lmdb;
 
+import java.nio.ByteOrder;
 import java.text.MessageFormat;
 import java.util.Comparator;
 
@@ -22,7 +23,6 @@ import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
 
 import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
-import com.google.common.primitives.UnsignedBytes;
 
 import static org.fusesource.lmdbjni.Constants.*;
 
@@ -127,7 +127,13 @@ public class DefaultIndexImpl<KeyType, ValueType>
 
 			comp = db.getConfig().getComparator();
 			if (comp == null)
-				comp = UnsignedBytes.lexicographicalComparator();
+				comp = new Comparator<byte[]>() 
+				{
+					public int compare(byte[]left, byte[]right)			
+					{
+						return fastcompare(left, right);
+					}
+				};
 
 			return comp;
 		}
@@ -826,4 +832,114 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		return 0;
 	}
 
+	
+	// what follows is code copied from the Google Guava package: specifically the 
+	// UnsignedBytes.lexicographicalComparator is copied here with all its dependency bits
+	// and pieces as the fastcompare method.
+	// see https://github.com/google/guava/blob/master/guava/src/com/google/common/primitives/UnsignedBytes.java
+	public static final int LONG_BYTES = Long.SIZE / Byte.SIZE;
+	
+    static final sun.misc.Unsafe theUnsafe;
+
+    /** The offset to the first element in a byte array. */
+    static final int BYTE_ARRAY_BASE_OFFSET;
+
+    static {
+      theUnsafe = getUnsafe();
+
+      BYTE_ARRAY_BASE_OFFSET = theUnsafe.arrayBaseOffset(byte[].class);
+
+      // sanity check - this should never fail
+      if (theUnsafe.arrayIndexScale(byte[].class) != 1) {
+        throw new AssertionError();
+      }
+}
+    static final boolean BIG_ENDIAN = ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN);
+    private static final int UNSIGNED_MASK = 0xFF;
+    
+    private static long flip(long a) 
+    {
+        return a ^ Long.MIN_VALUE;
+    }
+    
+    public static int compare(long a, long b) 
+    {
+    	a ^= Long.MIN_VALUE; // flip
+    	b ^= Long.MIN_VALUE; // flip        
+        return (a < b) ? -1 : ((a > b) ? 1 : 0);
+    }
+    
+    public static int toInt(byte value) {
+        return value & UNSIGNED_MASK;
+    }
+    
+    public static int compare(byte a, byte b) {
+        return toInt(a) - toInt(b);
+    }
+    
+	public int fastcompare(byte[] left, byte[] right) {
+        int minLength = Math.min(left.length, right.length);
+        int minWords = minLength / LONG_BYTES;
+
+        /*
+         * Compare 8 bytes at a time. Benchmarking shows comparing 8 bytes at a time is no slower
+         * than comparing 4 bytes at a time even on 32-bit. On the other hand, it is substantially
+         * faster on 64-bit.
+         */
+        for (int i = 0; i < minWords * LONG_BYTES; i += LONG_BYTES) {
+          long lw = theUnsafe.getLong(left, BYTE_ARRAY_BASE_OFFSET + (long) i);
+          long rw = theUnsafe.getLong(right, BYTE_ARRAY_BASE_OFFSET + (long) i);
+          if (lw != rw) {
+            if (BIG_ENDIAN) {
+              return compare(lw, rw);
+            }
+
+            /*
+             * We want to compare only the first index where left[index] != right[index]. This
+             * corresponds to the least significant nonzero byte in lw ^ rw, since lw and rw are
+             * little-endian. Long.numberOfTrailingZeros(diff) tells us the least significant
+             * nonzero bit, and zeroing out the first three bits of L.nTZ gives us the shift to get
+             * that least significant nonzero byte.
+             */
+            int n = Long.numberOfTrailingZeros(lw ^ rw) & ~0x7;
+            return ((int) ((lw >>> n) & UNSIGNED_MASK)) - ((int) ((rw >>> n) & UNSIGNED_MASK));
+          }
+        }
+
+        // The epilogue to cover the last (minLength % 8) elements.
+        for (int i = minWords * LONG_BYTES; i < minLength; i++) {
+          int result = compare(left[i], right[i]);
+          if (result != 0) {
+            return result;
+          }
+        }
+        return left.length - right.length;
+	}
+	
+	private static sun.misc.Unsafe getUnsafe() {
+        try {
+          return sun.misc.Unsafe.getUnsafe();
+        } catch (SecurityException e) {
+          // that's okay; try reflection instead
+        }
+        try {
+          return java.security.AccessController.doPrivileged(
+              new java.security.PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                @Override
+                public sun.misc.Unsafe run() throws Exception {
+                  Class<sun.misc.Unsafe> k = sun.misc.Unsafe.class;
+                  for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                    f.setAccessible(true);
+                    Object x = f.get(null);
+                    if (k.isInstance(x)) {
+                      return k.cast(x);
+                    }
+                  }
+                  throw new NoSuchFieldError("the Unsafe");
+                }
+              });
+        } catch (java.security.PrivilegedActionException e) {
+          throw new RuntimeException("Could not initialize intrinsics", e.getCause());
+        }
+}
 }
