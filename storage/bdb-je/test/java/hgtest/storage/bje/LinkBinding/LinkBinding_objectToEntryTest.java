@@ -1,71 +1,54 @@
 package hgtest.storage.bje.LinkBinding;
 
-
-import com.sleepycat.bind.tuple.TupleOutput;
+import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertThat;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.IntPersistentHandle;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
+import com.sleepycat.bind.tuple.TupleOutput;
 
-/**
- * @author Yuriy Sechko
- */
 public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 {
 	@Test
-	public void linkArrayIsNull() throws Exception
+	public void throwsException_whenArrayOfHandlesIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		final HGPersistentHandle[] link = null;
 		final TupleOutput output = new TupleOutput(new byte[4]);
 
-		try
-		{
-			binding.objectToEntry(link, output);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		binding.objectToEntry(link, output);
 	}
 
 	@Test
-	public void outputIsNull() throws Exception
+	public void throwsException_whenOutputTupleIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		final HGPersistentHandle[] link = new HGPersistentHandle[] { new IntPersistentHandle(
 				1) };
 		final TupleOutput output = null;
 
-		try
-		{
-			binding.objectToEntry(link, output);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(NullPointerException.class);
+		binding.objectToEntry(link, output);
 	}
 
 	@Test
-	public void linkArrayIsEmpty() throws Exception
+	public void returnsTupleWithByteBuffer_whenArrayOfHandlesIsEmpty()
+			throws Exception
 	{
 		final HGPersistentHandle[] link = new HGPersistentHandle[] {};
 		final TupleOutput output = new TupleOutput(new byte[] {});
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), new byte[] {});
+		assertThat(output.getBufferBytes(), is(new byte[] {}));
 	}
 
 	@Test
-	public void thereIsOneHandle() throws Exception
+	public void returnsTupleWithFourBytesInBuffer_whenThereIsOneIntegerHandle()
+			throws Exception
 	{
 		final byte[] expected = intHandlesAsByteArray(1);
 
@@ -75,11 +58,12 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(expected, output.getBufferBytes());
 	}
 
 	@Test
-	public void thereAreTwoHandles() throws Exception
+	public void returnsTupleWithEightBytesInBuffer_whenThereAreTwoIntegerHandles()
+			throws Exception
 	{
 		final byte[] expected = intHandlesAsByteArray(5, 10);
 
@@ -89,11 +73,12 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(expected, output.getBufferBytes());
 	}
 
 	@Test
-	public void thereAreThreeHandles() throws Exception
+	public void returnsTupleWithTwelveBytesInBuffer_whenThereAreThreeIntegerHandles()
+			throws Exception
 	{
 		final byte[] expected = intHandlesAsByteArray(5, 10, 15);
 
@@ -104,11 +89,11 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(expected, output.getBufferBytes());
 	}
 
 	@Test
-	public void outputBufferIsTooShort() throws Exception
+	public void doesNotFail_whenOutputBufferIsTooShort() throws Exception
 	{
 		final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0,
 				0, 0, 0, 0, 0 };
@@ -119,11 +104,11 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(expected, output.getBufferBytes());
 	}
 
 	@Test
-	public void outputBufferIsTooLarge() throws Exception
+	public void doesNotFails_whenOutputBufferIsTooLarge() throws Exception
 	{
 		final byte[] expected = new byte[] { -128, 0, 0, 5, -128, 0, 0, 10, 0,
 				0 };
@@ -134,6 +119,6 @@ public class LinkBinding_objectToEntryTest extends LinkBindingTestBasis
 
 		binding.objectToEntry(link, output);
 
-		assertArrayEquals(output.getBufferBytes(), expected);
+		assertArrayEquals(expected, output.getBufferBytes());
 	}
 }

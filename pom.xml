@@ -17,8 +17,8 @@
     <bje.version>5.0.34</bje.version>
     <bdb.version>5.3.15</bdb.version>
     <!-- Other third-party libraries -->
-    <libraries.powermock.version>1.6.4</libraries.powermock.version>
-    <libraries.easymock.version>3.1</libraries.easymock.version>
+    <libraries.powermock.version>1.6.5</libraries.powermock.version>
+    <libraries.easymock.version>3.4</libraries.easymock.version>
     <libraries.multitester.version>1.0</libraries.multitester.version>
   </properties>
 

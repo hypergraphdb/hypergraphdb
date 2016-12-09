@@ -1,67 +1,38 @@
 package hgtest.storage.bje.DefaultIndexImpl;
 
+import static org.easymock.EasyMock.replay;
 
-import com.google.code.multitester.annonations.Exported;
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.bje.DefaultIndexImpl;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-import static org.junit.Assert.assertEquals;
-
-/**
- * @author Yuriy Sechko
- */
 public class DefaultIndexImpl_scanKeysTest extends DefaultIndexImplTestBasis
 {
-    @Exported("up3")
-	protected void replayMocks()
-	{
-		PowerMock.replayAll();
-	}
-
 	@Test
-	public void indexIsNotOpened() throws Exception
+	public void throwsException_whenIndexIsNotOpenedAhead() throws Exception
 	{
-		final Exception expected = new HGException(
-				"Attempting to operate on index 'sample_index' while the index is being closed.");
+		replay(mockedStorage);
 
-		replayMocks();
-		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<Integer, String>(
-				INDEX_NAME, storage, transactionManager, keyConverter,
+		final DefaultIndexImpl<Integer, String> index = new DefaultIndexImpl<>(
+				INDEX_NAME, mockedStorage, transactionManager, keyConverter,
 				valueConverter, comparator, null);
 
-		try
-		{
-			index.scanKeys();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
+		below.expect(HGException.class);
+		below.expectMessage("Attempting to operate on index 'sample_index' while the index is being closed.");
+		index.scanKeys();
 	}
 
 	@Test
-	public void transactionManagerThrowsException() throws Exception
+	public void wrapsUnderlyingException_withHypergraphException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"Failed to lookup index 'sample_index': java.lang.IllegalStateException: This exception is thrown by fake transaction manager.");
-
 		startupIndexWithFakeTransactionManager();
+
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("Failed to lookup index 'sample_index': java.lang.IllegalStateException: This exception is thrown by fake transaction manager.");
 			index.scanKeys();
-		}
-		catch (Exception occurred)
-		{
-			assertEquals(occurred.getClass(), expected.getClass());
-			assertEquals(occurred.getMessage(), expected.getMessage());
 		}
 		finally
 		{

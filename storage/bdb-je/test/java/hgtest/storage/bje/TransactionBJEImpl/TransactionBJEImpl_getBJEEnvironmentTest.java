@@ -1,26 +1,24 @@
 package hgtest.storage.bje.TransactionBJEImpl;
 
-
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.Transaction;
 import org.hypergraphdb.storage.bje.TransactionBJEImpl;
 import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-/**
- * @author Yuriy Sechko
- */
 public class TransactionBJEImpl_getBJEEnvironmentTest
 {
 	@Test
-	public void environmentIsNull() throws Exception
+	public void returnsNull_whenEnvironmentIsNull() throws Exception
 	{
-		final Transaction fakeTransaction = PowerMock
-				.createStrictMock(Transaction.class);
-		PowerMock.replayAll();
+		final Transaction fakeTransaction = createStrictMock(Transaction.class);
+		replay(fakeTransaction);
 
 		final TransactionBJEImpl bjeTransaction = new TransactionBJEImpl(
 				fakeTransaction, null);
@@ -28,24 +26,24 @@ public class TransactionBJEImpl_getBJEEnvironmentTest
 		final Environment actual = bjeTransaction.getBJEEnvironment();
 
 		assertNull(actual);
-		PowerMock.verifyAll();
+
+		verify(fakeTransaction);
 	}
 
 	@Test
-	public void environmentIsNotNull() throws Exception
+	public void returnsInstanceSpecifiedInConstructor_whenEnvironmentIsNotNull()
+			throws Exception
 	{
-		final Environment expected = PowerMock
-				.createStrictMock(Environment.class);
-		final Transaction fakeTransaction = PowerMock
-				.createStrictMock(Transaction.class);
-		PowerMock.replayAll();
-
+		final Environment expectedEnvironment = createStrictMock(Environment.class);
+		final Transaction fakeTransaction = createStrictMock(Transaction.class);
+		replay(expectedEnvironment, fakeTransaction);
 		final TransactionBJEImpl bjeTransaction = new TransactionBJEImpl(
-				fakeTransaction, expected);
+				fakeTransaction, expectedEnvironment);
 
-		final Environment actual = bjeTransaction.getBJEEnvironment();
+		final Environment actualEnvironment = bjeTransaction.getBJEEnvironment();
 
-		assertEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertEquals( expectedEnvironment, actualEnvironment);
+
+		verify(expectedEnvironment, fakeTransaction);
 	}
 }

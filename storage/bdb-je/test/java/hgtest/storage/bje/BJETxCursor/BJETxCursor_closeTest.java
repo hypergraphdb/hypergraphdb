@@ -1,144 +1,96 @@
 package hgtest.storage.bje.BJETxCursor;
 
-import com.sleepycat.je.Cursor;
-import com.sleepycat.je.DatabaseException;
-import org.easymock.EasyMock;
-import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.bje.BJETxCursor;
-import org.hypergraphdb.storage.bje.TransactionBJEImpl;
-import org.powermock.api.easymock.PowerMock;
-import org.junit.Test;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.hamcrest.core.StringContains.containsString;
 
 import java.lang.reflect.Method;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
+import org.hypergraphdb.HGException;
+import org.hypergraphdb.storage.bje.BJETxCursor;
+import org.hypergraphdb.storage.bje.TransactionBJEImpl;
+import org.junit.Test;
 
+import com.sleepycat.je.DatabaseException;
 
-/**
- * @author Yuriy Sechko
- */
-public class BJETxCursor_closeTest
+public class BJETxCursor_closeTest extends  BJETxCursorTestBasis
 {
 	@Test
-	public void cursorIsNotOpened() throws Exception
+	public void doesNotFail_whenCursorIsNotOpenedAhead() throws Exception
 	{
-		final Cursor cursor = null;
-		final TransactionBJEImpl tx = PowerMock
-				.createStrictMock(TransactionBJEImpl.class);
-		PowerMock.replayAll();
+		replay();
 
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
+		final BJETxCursor bjeCursor = new BJETxCursor(null, mockedTx);
 		bjeCursor.close();
-
-		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void cursorIsOpened() throws Exception
+	public void happyPath() throws Exception
 	{
-		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
-		cursor.close();
-		final TransactionBJEImpl tx = PowerMock
-				.createMock(TransactionBJEImpl.class);
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
-		recordRemoveCursor(tx, bjeCursor);
-		PowerMock.replayAll();
+		mockedCursor.close();
+		final BJETxCursor bjeCursor = new BJETxCursor(mockedCursor, mockedTx);
+		recordRemoveCursor(mockedTx, bjeCursor);
+		replay();
 
 		bjeCursor.close();
-
-		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void txIsNull() throws Exception
+	public void doesNotFail_whenTxIsNull() throws Exception
 	{
-		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
-		cursor.close();
-		final TransactionBJEImpl tx = null;
-		PowerMock.replayAll();
+		mockedCursor.close();
+		replay();
 
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
+		final BJETxCursor bjeCursor = new BJETxCursor(mockedCursor, null);
 		bjeCursor.close();
-
-		PowerMock.verifyAll();
 	}
 
 	@Test
-	public void innerCursorThrowsDatabaseException() throws Exception
+	public void wrapsDatabaseException_whenHypergraphException()
+			throws Exception
 	{
-		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
-		cursor.close();
-		// when BJETxCursor.cursor throws DatabaseException then HGException is
-		// rethrown in BJETxCursor.close() method
-		EasyMock.expectLastCall()
-				.andThrow(
-						new CustomDatabaseException(
-								"This is custom DatabaseException"));
-		final TransactionBJEImpl tx = PowerMock
-				.createMock(TransactionBJEImpl.class);
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
-		recordRemoveCursor(tx, bjeCursor);
-		PowerMock.replayAll();
+		mockedCursor.close();
+		expectLastCall().andThrow(
+				new DummyDatabaseException("This is custom DatabaseException"));
+		final BJETxCursor bjeCursor = new BJETxCursor(mockedCursor, mockedTx);
+		recordRemoveCursor(mockedTx, bjeCursor);
+		replay();
 
-		try
-		{
-			bjeCursor.close();
-		}
-		catch (Exception ex)
-		{
-			assertExceptions(
-					ex,
-					HGException.class,
-					"hgtest.storage.bje.BJETxCursor.BJETxCursor_closeTest$CustomDatabaseException",
-					"This is custom DatabaseException");
-		}
-		finally
-		{
-			PowerMock.verifyAll();
-		}
+		below.expect(HGException.class);
+		below.expectMessage(allOf(
+				containsString("hgtest.storage.bje.BJETxCursor.BJETxCursor_closeTest$DummyDatabaseException"),
+				containsString("This is custom DatabaseException")));
+		bjeCursor.close();
 	}
 
 	@Test
-	public void innerCursorThrowsOtherException() throws Exception
+	public void doesNotWrapsOtherExceptions() throws Exception
 	{
-		final Exception expected = new IllegalStateException();
-
-		final Cursor cursor = PowerMock.createStrictMock(Cursor.class);
-		cursor.close();
+		mockedCursor.close();
 		// when BJETxCursor.cursor throws something differ from
 		// DatabaseException then nothing is caught and rethrown in
-		// BJETxCursor.close()
-		// method
-		EasyMock.expectLastCall().andThrow(new IllegalStateException());
-		final TransactionBJEImpl tx = PowerMock
-				.createMock(TransactionBJEImpl.class);
-		final BJETxCursor bjeCursor = new BJETxCursor(cursor, tx);
-		recordRemoveCursor(tx, bjeCursor);
-		PowerMock.replayAll();
+		// BJETxCursor.close() method
+		expectLastCall().andThrow(new IllegalStateException());
+		final BJETxCursor bjeCursor = new BJETxCursor(mockedCursor, mockedTx);
+		recordRemoveCursor(mockedTx, bjeCursor);
+		replay();
 
-		try
-		{
-			bjeCursor.close();
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			PowerMock.verifyAll();
-		}
+		below.expect(IllegalStateException.class);
+		bjeCursor.close();
 	}
+
+
 
 	/**
 	 * Inside {@link org.hypergraphdb.storage.bje.BJETxCursor#close()} method
 	 * {@link org.hypergraphdb.storage.bje.TransactionBJEImpl#removeCursor(org.hypergraphdb.storage.bje.BJETxCursor)}
 	 * is called.
 	 * {@link org.hypergraphdb.storage.bje.TransactionBJEImpl#removeCursor(org.hypergraphdb.storage.bje.BJETxCursor)}
-	 * is private method. It cannot be recorded as public method. So we need
-	 * invoke it by name manually.
+	 * is private method. It cannot be recorded as public method on mocked
+	 * object. So we need invoke it by name manually.
 	 */
-	private void recordRemoveCursor(final TransactionBJEImpl tx,
+	private static void recordRemoveCursor(final TransactionBJEImpl tx,
 			final BJETxCursor bjeCursor) throws Exception
 	{
 		final Method removeCursorMethod = tx.getClass().getDeclaredMethod(
@@ -148,11 +100,11 @@ public class BJETxCursor_closeTest
 	}
 
 	/**
-	 * Just a subclass for DatabaseException (which is abstract)
+	 * Just a subclass for DatabaseException (which is abstract).
 	 */
-	class CustomDatabaseException extends DatabaseException
+	class DummyDatabaseException extends DatabaseException
 	{
-		public CustomDatabaseException(final String message)
+		public DummyDatabaseException(final String message)
 		{
 			super(message);
 		}

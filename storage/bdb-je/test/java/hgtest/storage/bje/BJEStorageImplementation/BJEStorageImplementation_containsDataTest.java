@@ -1,59 +1,45 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
-import com.sleepycat.je.DatabaseNotFoundException;
+import static java.lang.String.format;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.junit.After;
 import org.junit.Test;
-import static hgtest.storage.bje.TestUtils.assertExceptions;
 
+import com.sleepycat.je.DatabaseNotFoundException;
 
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_containsDataTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void useNullHandle() throws Exception
+	public void throwsException_whenHandleIsNull() throws Exception
 	{
-        final Exception expected = new NullPointerException();
-
 		startup();
-		try
-		{
-			storage.containsData(null);
-		}
-		catch (Exception occurred)
-		{
-            assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		below.expect(NullPointerException.class);
+		storage.containsData(null);
 	}
 
 	@Test
-	public void exceptionIsThrown() throws Exception
+	public void throwsException_whenThereAreNotCorrespondingLink()
+			throws Exception
 	{
 		startup(new DatabaseNotFoundException("Exception in test case."));
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		try
-		{
-			storage.containsData(handle);
-		}
-		catch (Exception ex)
-		{
-			final String expectedMessage = String
-					.format("Failed to retrieve link with handle %s: com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Exception in test case.",
-							handle);
-			assertExceptions(ex, HGException.class, expectedMessage);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		below.expect(HGException.class);
+		below
+				.expectMessage(format(
+						"Failed to retrieve link with handle %s: com.sleepycat.je.DatabaseNotFoundException: (JE 5.0.34) Exception in test case.",
+						handle));
+		storage.containsData(handle);
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

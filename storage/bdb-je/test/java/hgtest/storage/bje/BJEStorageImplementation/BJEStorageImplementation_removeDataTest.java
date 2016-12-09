@@ -1,59 +1,46 @@
 package hgtest.storage.bje.BJEStorageImplementation;
 
+import static java.lang.String.format;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.UUIDPersistentHandle;
+import org.junit.After;
 import org.junit.Test;
 
-import static hgtest.storage.bje.TestUtils.assertExceptions;
-
-
-/**
- * @author Yuriy Sechko
- */
 public class BJEStorageImplementation_removeDataTest extends
 		BJEStorageImplementationTestBasis
 {
 	@Test
-	public void useNullHandle() throws Exception
+	public void throwsException_whenHandleIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException(
-				"HGStore.remove called with a null handle.");
-
 		startup();
-		try
-		{
-			storage.removeData(null);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		below.expect(NullPointerException.class);
+		below
+				.expectMessage("HGStore.remove called with a null handle.");
+		storage.removeData(null);
 	}
 
 	@Test
-	public void exceptionWhileRemovingData() throws Exception
+	public void shouldWrapUnderlyingException_withHypergraphException()
+			throws Exception
 	{
 		startup(new IllegalStateException("Throw exception in test case."));
+
 		final HGPersistentHandle handle = new UUIDPersistentHandle();
-		try
-		{
-			storage.removeData(handle);
-		}
-		catch (Exception ex)
-		{
-			final String expectedMessage = String
-					.format("Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
-							handle);
-			assertExceptions(ex, HGException.class, expectedMessage);
-		}
-		finally
-		{
-			shutdown();
-		}
+
+		below.expect(HGException.class);
+		below
+				.expectMessage(format(
+						"Failed to remove value with handle %s: java.lang.IllegalStateException: Throw exception in test case.",
+						handle));
+		storage.removeData(handle);
+	}
+
+	@After
+	public void shutdown() throws Exception
+	{
+		super.shutdown();
 	}
 }

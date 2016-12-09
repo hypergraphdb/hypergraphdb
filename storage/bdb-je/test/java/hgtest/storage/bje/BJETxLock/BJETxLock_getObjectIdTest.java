@@ -1,95 +1,75 @@
 package hgtest.storage.bje.BJETxLock;
 
-import com.sleepycat.je.DatabaseEntry;
+import static org.junit.Assert.assertArrayEquals;
 
-import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-/**
- * @author Yuriy Sechko
- */
-public class BJETxLock_getObjectIdTest
+import com.sleepycat.je.DatabaseEntry;
+
+public class BJETxLock_getObjectIdTest extends BJETxLockTestBasis
 {
 	@Test
-	public void instanceConstructedUsingEmptyByteArray() throws Exception
+	public void returnsEmptyArray_whenLockHasBeenConstructedUsingEmptyArray()
+			throws Exception
 	{
 		final byte[] expected = new byte[] {};
 
-		final HyperGraph graph = PowerMock.createStrictMock(HyperGraph.class);
-		PowerMock.replayAll();
-		final byte[] objectId = new byte[] {};
-		final BJETxLock bjeLock = new BJETxLock(graph, objectId);
+		final BJETxLock bjeLock = new BJETxLock(mockedGraph, new byte[] {});
 
 		final byte[] actual = bjeLock.getObjectId();
-
-		assertArrayEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void instanceConstructedUsingOneItemByteArray() throws Exception
+	public void returnsCorrespondingArray_whenLockHasBeenConstructedUsingOneItemArray()
+			throws Exception
 	{
 		final byte[] expected = new byte[] { 1 };
 
-		final HyperGraph graph = PowerMock.createStrictMock(HyperGraph.class);
-		PowerMock.replayAll();
-		final byte[] objectId = new byte[] { 1 };
-		final BJETxLock bjeLock = new BJETxLock(graph, objectId);
+		final BJETxLock bjeLock = new BJETxLock(mockedGraph, new byte[] { 1 });
 
 		final byte[] actual = bjeLock.getObjectId();
-		assertArrayEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertArrayEquals(expected, actual);
 	}
 
 	@Test
-	public void instanceConstructedUsingFourItemsByteArray() throws Exception
+	public void returnsCorrespondingArray_whenLockHasBeenConstructedUsingLongArray()
+			throws Exception
 	{
-		final byte[] expected = new byte[] { 2, 3, 4, 5 };
+		final byte[] expected = new byte[] { 22, 33, 44, 55, 66, 77, 88, 99, 10 };
 
-		final HyperGraph graph = PowerMock.createStrictMock(HyperGraph.class);
-		PowerMock.replayAll();
-		final byte[] objectId = new byte[] { 2, 3, 4, 5 };
-		final BJETxLock bjeLock = new BJETxLock(graph, objectId);
+		final BJETxLock bjeLock = new BJETxLock(mockedGraph, new byte[] { 22,
+				33, 44, 55, 66, 77, 88, 99, 10 });
 
 		final byte[] actual = bjeLock.getObjectId();
-
-		assertArrayEquals(actual, expected);
-		PowerMock.verifyAll();
+		assertArrayEquals(expected, actual);
 	}
 
-    @Test
-    public void instanceConstructedUsingOneByteDatabaseEntry() throws Exception
-    {
-        final byte[] expected = new byte[] {2};
+	@Test
+	public void returnsCorrespondingArray_whenLockHasBeenConstructedUsingOneByteDatabaseEntry()
+			throws Exception
+	{
+		final byte[] expected = new byte[] { 2 };
 
-        final HyperGraph graph = PowerMock.createStrictMock(HyperGraph.class);
-        PowerMock.replayAll();
-        final DatabaseEntry objectId = new DatabaseEntry(new byte[] {2});
-        final BJETxLock bjeLock = new BJETxLock(graph, objectId);
+		final DatabaseEntry objectId = new DatabaseEntry(new byte[] { 2 });
+		final BJETxLock bjeLock = new BJETxLock(mockedGraph, objectId);
 
-        final byte[] actual = bjeLock.getObjectId();
+		final byte[] actual = bjeLock.getObjectId();
+		assertArrayEquals(expected, actual);
+	}
 
-        assertArrayEquals(actual, expected);
-        PowerMock.verifyAll();
-    }
+	@Test
+	public void instanceConstructedUsingManyBytesDatabaseEntry()
+			throws Exception
+	{
+		final byte[] expected = new byte[] { 22, 33, 44, 55, 66, 77, 88, 99, 10 };
 
-    @Test
-    public void instanceConstructedUsingFourBytesDatabaseEntry() throws Exception
-    {
-        final byte[] expected = new byte[] {2, 4, 9, 16};
+		final DatabaseEntry objectId = new DatabaseEntry(new byte[] { 22, 33,
+				44, 55, 66, 77, 88, 99, 10 });
+		final BJETxLock bjeLock = new BJETxLock(mockedGraph, objectId);
 
-        final HyperGraph graph = PowerMock.createStrictMock(HyperGraph.class);
-        PowerMock.replayAll();
-        final DatabaseEntry objectId = new DatabaseEntry(new byte[] {2, 4, 9, 16});
-        final BJETxLock bjeLock = new BJETxLock(graph, objectId);
-
-        final byte[] actual = bjeLock.getObjectId();
-
-        assertArrayEquals(actual, expected);
-        PowerMock.verifyAll();
-    }
+		final byte[] actual = bjeLock.getObjectId();
+		assertArrayEquals(expected, actual);
+	}
 }

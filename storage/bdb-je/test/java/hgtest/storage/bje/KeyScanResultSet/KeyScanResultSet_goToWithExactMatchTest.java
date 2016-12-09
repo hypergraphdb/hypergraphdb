@@ -1,172 +1,146 @@
 package hgtest.storage.bje.KeyScanResultSet;
 
+import static hgtest.storage.bje.TestUtils.putKeyValuePair;
+import static org.hamcrest.core.Is.is;
+import static org.hypergraphdb.HGRandomAccessResult.GotoResult;
+import static org.junit.Assert.assertThat;
 
-import hgtest.storage.bje.TestUtils;
-import org.hypergraphdb.HGRandomAccessResult;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-
-/**
- * @author Yuriy Sechko
- */
 public class KeyScanResultSet_goToWithExactMatchTest extends
 		KeyScanResultSet_goToTestBasis
 {
-	private static final boolean EXACT_MATCH = true;
+	protected static final boolean EXACT_MATCH = true;
 
 	@Test
-	public void thereIsOneKeyButItIsNotEqualToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereOneKeyButItIsEqualToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(1,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereOneKeyButItIsCloseToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreTwoItemsButThereIsNotDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 2, "two");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(-2,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreTwoItemsAndOnOfThemIsCloseToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 3, "three");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreTwoItemsAndOnOfThemIsEqualToDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 2, "two");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreThreeItemsButThereIsNotDesired() throws Exception
-	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.nothing;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 2, "two");
-		TestUtils.putKeyValuePair(realCursor, 3, "three");
-		createMocksForTheGoTo();
-
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(5,
-				EXACT_MATCH);
-
-		assertEquals(actual, expected);
-		shutdownCursor();
-	}
-
-	@Test
-	public void thereAreThreeItemsAndOneOfThemIsEqualToDesired()
+	public void returnsNothing_whenThereIsOneKey_andItIsNotEqualToDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 2, "two");
-		TestUtils.putKeyValuePair(realCursor, 3, "three");
+		putKeyValuePair(realCursor, 1, "one");
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(2,
-				EXACT_MATCH);
+		final GotoResult actualResult = keyScan.goTo(2, EXACT_MATCH);
 
-		assertEquals(actual, expected);
-		shutdownCursor();
+		assertThat(actualResult, is(GotoResult.nothing));
 	}
 
 	@Test
-	public void thereAreThreeItemsAndSeveralOfThemAreEqualToDesired()
+	public void returnsFound_whenThereOneKey_andItIsEqualToDesired()
 			throws Exception
 	{
-		final HGRandomAccessResult.GotoResult expected = HGRandomAccessResult.GotoResult.found;
-
-		startupCursor();
-		TestUtils.putKeyValuePair(realCursor, 1, "one");
-		TestUtils.putKeyValuePair(realCursor, 2, "two");
-		TestUtils.putKeyValuePair(realCursor, 3, "three");
-		TestUtils.putKeyValuePair(realCursor, 3, "III");
+		putKeyValuePair(realCursor, 1, "one");
 		createMocksForTheGoTo();
 
-		final HGRandomAccessResult.GotoResult actual = keyScan.goTo(3,
-				EXACT_MATCH);
-		assertEquals(actual, expected);
+		final GotoResult actualResult = keyScan.goTo(1, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.found));
+	}
+
+	@Test
+	public void returnsNothing_whenThereIsOneKey_andItIsCloseToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(2, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsNothing_whenThereAreTwoItems_andNeitherOfThemIsEqualToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 2, "two");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(-2, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsNothing_whenThereAreTwoItems_andOnOfThemIsCloseToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 3, "three");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(2, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsFound_whenThereAreTwoItems_andOneOfThemIsEqualToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 2, "two");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(2, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.found));
+	}
+
+	@Test
+	public void returnsNothing_whenThereAreThreeItems_andNeitherOfThemIsEqualToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 2, "two");
+		putKeyValuePair(realCursor, 3, "three");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(5, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.nothing));
+	}
+
+	@Test
+	public void returnsFound_whenThereAreThreeItems_andOneOfThemIsEqualToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 2, "two");
+		putKeyValuePair(realCursor, 3, "three");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(2, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.found));
+	}
+
+	@Test
+	public void returnsFound_whenThereAreThreeItems_andSeveralOfThemAreEqualToDesired()
+			throws Exception
+	{
+		putKeyValuePair(realCursor, 1, "one");
+		putKeyValuePair(realCursor, 2, "two");
+		putKeyValuePair(realCursor, 3, "three");
+		putKeyValuePair(realCursor, 3, "III");
+		createMocksForTheGoTo();
+
+		final GotoResult actualResult = keyScan.goTo(3, EXACT_MATCH);
+
+		assertThat(actualResult, is(GotoResult.found));
+	}
+
+	@Before
+	public void startup()
+	{
+		startupCursor();
+	}
+
+	@After
+	public void shutdown()
+	{
 		shutdownCursor();
 	}
 }

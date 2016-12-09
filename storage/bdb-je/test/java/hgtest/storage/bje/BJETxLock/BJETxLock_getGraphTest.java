@@ -1,20 +1,16 @@
 package hgtest.storage.bje.BJETxLock;
 
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.storage.bje.BJETxLock;
-import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-/**
- * @author Yuriy Sechko
- */
-public class BJETxLock_getGraphTest
+public class BJETxLock_getGraphTest extends BJETxLockTestBasis
 {
 	@Test
-	public void graphIsNull() throws Exception
+	public void returnsNullInstance_whenGraphIsNull() throws Exception
 	{
 		final byte[] objectId = new byte[] { 0, 0, 0, 1 };
 		final BJETxLock bjeLock = new BJETxLock(null, objectId);
@@ -25,17 +21,15 @@ public class BJETxLock_getGraphTest
 	}
 
 	@Test
-	public void graphIsNotNull() throws Exception
+	public void returnsTheSameInstance_whenGraphIsNotNull() throws Exception
 	{
-		final HyperGraph expectedGraph = PowerMock
-				.createStrictMock(HyperGraph.class);
-		PowerMock.replayAll();
+		final HyperGraph expectedGraph = mockedGraph;
+
 		final byte[] objectId = new byte[] { 0, 0, 0, 1 };
 		final BJETxLock bjeLock = new BJETxLock(expectedGraph, objectId);
 
 		final HyperGraph actualGraph = bjeLock.getGraph();
 
-		assertEquals(actualGraph, expectedGraph);
-		PowerMock.verifyAll();
+		assertSame(expectedGraph, actualGraph);
 	}
 }

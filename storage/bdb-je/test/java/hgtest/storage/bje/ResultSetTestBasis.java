@@ -5,6 +5,8 @@ import com.sleepycat.je.*;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.powermock.api.easymock.PowerMock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -12,11 +14,11 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
 
+import static org.junit.rules.ExpectedException.none;
+
 /**
- * Contains common code for test cases for legatees of
+ * Contains common code for test cases for derivatives of
  * {@link org.hypergraphdb.storage.bje.IndexResultSet}.
- *
- * @author Yuriy Sechko
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(BJETxCursor.class)
@@ -24,10 +26,14 @@ public abstract class ResultSetTestBasis
 {
 	protected static final String DATABASE_NAME = "test_database";
 
-	protected final File envHome = TestUtils.createTempFile("IndexImpl", "test_environment");
+	protected final File envHome = TestUtils.createTempFile("IndexImpl",
+			"test_environment");
 	protected Environment environment;
 	protected Database database;
 	protected Transaction transactionForTheEnvironment;
+
+	@Rule
+	public ExpectedException below = none();
 
 	protected void startupEnvironment() throws Exception
 	{

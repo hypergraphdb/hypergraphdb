@@ -1,6 +1,5 @@
 package hgtest.storage.bje.SingleValueResultSet;
 
-
 import com.sleepycat.je.DatabaseEntry;
 import hgtest.storage.bje.TestUtils;
 import org.easymock.EasyMock;
@@ -11,39 +10,32 @@ import org.powermock.api.easymock.PowerMock;
 import org.junit.Test;
 
 import static hgtest.storage.bje.TestUtils.assertExceptions;
+import static org.easymock.EasyMock.createStrictMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
-
-/**
- * @author Yuriy Sechko
- */
 public class SingleValueResultSet_goToExceptionsTest extends
 		SingleValueResultSet_goToTestBasis
 {
 	@Test
-	public void valueIsNull() throws Exception
+	public void throwsException_whenValueIsNull() throws Exception
 	{
-		final Exception expected = new NullPointerException();
-
 		// Secondary cursor should be initialized, but it doesn't support
 		// putting data. So put some data into primary database before
 		// starting up the secondary cursor
 		TestUtils.putKeyValuePair(environment, database, 1, 11);
 		startupCursor();
-		final BJETxCursor fakeCursor = PowerMock
-				.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
-		PowerMock.replayAll();
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
+		replay(fakeCursor);
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
-		final SingleValueResultSet<Integer> resultSet = new SingleValueResultSet<Integer>(
+		final SingleValueResultSet<Integer> resultSet = new SingleValueResultSet<>(
 				fakeCursor, key, converter);
 
 		try
 		{
+			below.expect(NullPointerException.class);
 			resultSet.goTo(null, true);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{
@@ -52,31 +44,26 @@ public class SingleValueResultSet_goToExceptionsTest extends
 	}
 
 	@Test
-	public void bjeCursorThrowsException() throws Exception
+	public void wrapsUnderlyingException_whenBjeCursorThrowsException()
+			throws Exception
 	{
-		final Exception expected = new HGException(
-				"java.lang.IllegalStateException: This exception is throws by fake BJE cursor.");
-
 		TestUtils.putKeyValuePair(environment, database, 1, 11);
 		startupCursor();
-		final BJETxCursor fakeCursor = PowerMock
-				.createStrictMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
-		EasyMock.expect(fakeCursor.cursor()).andThrow(
+		final BJETxCursor fakeCursor = createStrictMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
+		expect(fakeCursor.cursor()).andThrow(
 				new IllegalStateException(
 						"This exception is throws by fake BJE cursor."));
-		PowerMock.replayAll();
+		replay(fakeCursor);
 		final DatabaseEntry key = new DatabaseEntry(new byte[] { 0, 0, 0, 0 });
-		final SingleValueResultSet<Integer> resultSet = new SingleValueResultSet<Integer>(
+		final SingleValueResultSet<Integer> resultSet = new SingleValueResultSet<>(
 				fakeCursor, key, converter);
 
 		try
 		{
+			below.expect(HGException.class);
+			below.expectMessage("java.lang.IllegalStateException: This exception is throws by fake BJE cursor.");
 			resultSet.goTo(1, true);
-		}
-		catch (Exception occurred)
-		{
-			assertExceptions(occurred, expected);
 		}
 		finally
 		{

@@ -8,14 +8,15 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.bje.BJETxCursor;
 import org.powermock.api.easymock.PowerMock;
 
-/**
- * @author Yuriy Sechko
- */
+import static org.easymock.EasyMock.expect;
+import static org.powermock.api.easymock.PowerMock.createMock;
+
 public abstract class KeyScanResultSetTestBasis extends ResultSetTestBasis
 {
 	protected Cursor realCursor;
 
 	protected BJETxCursor fakeCursor;
+
 	protected final ByteArrayConverter<Integer> converter = new TestUtils.ByteArrayConverterForInteger();
 
 	protected void startupCursor()
@@ -30,7 +31,7 @@ public abstract class KeyScanResultSetTestBasis extends ResultSetTestBasis
 
 	protected void createMocksForTheConstructor()
 	{
-		fakeCursor = PowerMock.createMock(BJETxCursor.class);
-		EasyMock.expect(fakeCursor.cursor()).andReturn(realCursor);
+		fakeCursor = createMock(BJETxCursor.class);
+		expect(fakeCursor.cursor()).andReturn(realCursor);
 	}
 }
