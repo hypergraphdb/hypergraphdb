@@ -50,23 +50,15 @@ public class LmdbConfig
 		envConfig.setReadOnly(false);
 		envConfig.setMapSize(Long.parseLong(lmdbProps.getProperty("map.size")));
 		envConfig.setMaxDbs(Long.parseLong(lmdbProps.getProperty("max.dbs")));
-		envConfig.setMaxReaders(
-				Long.parseLong(lmdbProps.getProperty("max.readers")));
-		envConfig.setNoSync(
-				Boolean.parseBoolean(lmdbProps.getProperty("no.sync")));
-		envConfig.setNoMetaSync(
-				Boolean.parseBoolean(lmdbProps.getProperty("no.meta.sync")));
-		envConfig.setWriteMap(
-				Boolean.parseBoolean(lmdbProps.getProperty("write.map")));
-		envConfig.setMapAsync(
-				Boolean.parseBoolean(lmdbProps.getProperty("map.async")));
-		envConfig.setWriteMap(
-				Boolean.parseBoolean(lmdbProps.getProperty("write.map")));
-
+		envConfig.setMaxReaders(Long.parseLong(lmdbProps.getProperty("max.readers")));
+		envConfig.setNoSync(Boolean.parseBoolean(lmdbProps.getProperty("no.sync")));
+		envConfig.setNoMetaSync(Boolean.parseBoolean(lmdbProps.getProperty("no.meta.sync")));
+		envConfig.setWriteMap(Boolean.parseBoolean(lmdbProps.getProperty("write.map")));
+		envConfig.setMapAsync(Boolean.parseBoolean(lmdbProps.getProperty("map.async")));
+		envConfig.setWriteMap(Boolean.parseBoolean(lmdbProps.getProperty("write.map")));
 		dbConfig.setCreate(true);
 
-		syncFrequency = Integer
-				.parseInt(lmdbProps.getProperty("sync.frequency"));
+		syncFrequency = Integer.parseInt(lmdbProps.getProperty("sync.frequency"));
 		syncForce = Boolean.parseBoolean(lmdbProps.getProperty("sync.force"));
 	}
 

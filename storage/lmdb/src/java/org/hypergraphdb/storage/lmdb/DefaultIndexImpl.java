@@ -76,13 +76,16 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	protected TransactionLmdbImpl txn()
 	{
 		HGTransaction tx = transactionManager.getContext().getCurrent();
-		if (tx == null
-				|| tx.getStorageTransaction() instanceof VanillaTransaction)
+		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
 			return TransactionLmdbImpl.nullTransaction();
 		else
-			return (TransactionLmdbImpl) tx.getStorageTransaction();
+		{
+			TransactionLmdbImpl result = (TransactionLmdbImpl) tx.getStorageTransaction();
+			if (comparator != null && db != null)
+				result.ensureComparator(db.pointer(), comparator);
+			return result;
+		}
 	}
-
 
 	boolean isSplitIndex()
 	{
@@ -147,18 +150,15 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	{
 		try
 		{
-			DatabaseConfig dbConfig = storage.getConfiguration()
-					.getDatabaseConfig().cloneConfig();
+			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().cloneConfig();
 			dbConfig.setDupSort(sort_duplicates);
 			if (comparator != null)
-			{
-				// dbConfig.setComparator(comparator);
-				throw new IllegalArgumentException(
-						"Custom comparators are not presently supported in LMDB");
-			}
-			db = storage.getEnvironment().openDatabase(txn().getDbTransaction(),
-					DB_NAME_PREFIX + name, dbConfig);
-
+				dbConfig.setComparator(comparator);
+			db = storage.getEnvironment().openDatabase(
+					txn().getDbTransaction(),
+					DB_NAME_PREFIX + name, 
+					dbConfig);
+			
 			if (isSplitIndex())
 			{
 				db2 = storage.getEnvironment().openDatabase(

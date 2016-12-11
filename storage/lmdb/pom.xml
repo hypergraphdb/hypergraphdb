@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.hypergraphdb</groupId>
+    <artifactId>hgdbstorage</artifactId>
+    <version>1.4-SNAPSHOT</version>
+  </parent>
+  <properties>
+    <packageit>bundle</packageit>
+    <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
+    <bundle.namespace>org.hypergraph.storage.lmdb</bundle.namespace>
+    <lmdb.version>99-master-SNAPSHOT</lmdb.version>
+  </properties>
+  <packaging>${packageit}</packaging>
+  <artifactId>hglmdb</artifactId>
+  <name>HyperGraphDB BDB-JE Storage</name>
+  <url>http://hypergraphdb.org</url>
+
+  <repositories>
+    <repository>
+      <id>hypergraphdb</id>
+      <url>http://hypergraphdb.org/maven</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdb</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.fusesource.lmdbjni</groupId>
+      <artifactId>lmdbjni</artifactId>
+      <version>${lmdb.version}</version>
+    </dependency>    
+    <dependency>
+      <groupId>org.fusesource.lmdbjni</groupId>
+      <artifactId>lmdbjni-osx64</artifactId>
+      <version>${lmdb.version}</version>
+    </dependency>    
+    <dependency>
+      <groupId>org.hypergraphdb</groupId>
+      <artifactId>hgdbtest</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <!-- Provide tests classes so they can be used in 'testcore' module -->
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <manifestLocation>META-INF</manifestLocation>
+          <instructions>
+            <Bundle-SymbolicName>${project.groupId}-${project.artifactId};singleton:=true</Bundle-SymbolicName>
+            <Bundle-Name>${project.name}</Bundle-Name>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <Export-Package>org.hypergraphdb.storage.bje.*</Export-Package>
+            <Import-Package>!org.apache.*,javax.transaction.*,!javax.*,org.hypergraphdb,
+              org.hypergraphdb.algorithms,org.hypergraphdb.query,
+              org.hypergraphdb.util,org.hypergraphdb.type,org.hypergraphdb.annotation,
+              org.hypergraphdb.atom,org.hypergraphdb.cache,org.hypergraphdb.event,
+              org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
+              org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
+              org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,*
+            </Import-Package>
+            <Embed-Dependency>je</Embed-Dependency>
+            <Embed-Transitive>true</Embed-Transitive>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
+</project>

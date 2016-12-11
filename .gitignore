@@ -3,3 +3,7 @@ gov.miamidade.owlgdb/
 .idea
 **/target
 core/META-INF/
+**/.project
+**/.classpath
+**/.settings
+**/.gitignore

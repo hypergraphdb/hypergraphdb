@@ -362,8 +362,10 @@ public /*final*/ class HyperGraph implements HyperNode
 	        initAtomManagement();    
             	        
 	        // Load all listeners stored in this HyperGraph as HGListenerAtoms
+	        getTransactionManager().beginTransaction(HGTransactionConfig.DEFAULT);
 	        loadListeners();
-
+	        getTransactionManager().endTransaction(true);
+	        
 	        // This is kind of completing the type system bootstrap process, otherwise
 	        // there's a circular dependency between the initialization of the index manager
 	        // and the JavaObjectMapper (which has an index on the HGSerializable atoms). Another

@@ -112,9 +112,9 @@ public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 		else
 		{
 			Ref<Long> counter = new Ref<Long>() {
-			public Long get() {				 
-				try (Database db = index.keyBucket(key) == 0 ? index.db : index.db2; 
-					 Cursor cursor = db.openCursor(index.txn().getDbTransaction())) 
+			public Long get() {
+				Database db = index.keyBucket(key) == 0 ? index.db : index.db2;
+				try (Cursor cursor = db.openCursor(index.txn().getDbTransaction())) 
 				{
 					byte[] keyAsBytes = index.keyConverter.toByteArray(key);
 					Entry entry = cursor.get(CursorOp.SET, keyAsBytes);
