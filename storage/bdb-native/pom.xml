@@ -25,10 +25,6 @@
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
-    <repository>
-      <id>multitestermvn</id>
-      <url>http://yuriysechko.bitbucket.org</url>
-    </repository>
   </repositories>
 
   <dependencies>
@@ -47,35 +43,6 @@
       <artifactId>hgdbtest</artifactId>
       <version>1.3</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-testng</artifactId>
-      <version>${libraries.powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-easymock</artifactId>
-      <version>${libraries.powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>${libraries.easymock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.testng</groupId>
-      <artifactId>testng</artifactId>
-      <version>${libraries.testng.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.multitester</groupId>
-      <artifactId>multitester</artifactId>
-      <version>${libraries.multitester.version}</version>
     </dependency>
   </dependencies>
 
