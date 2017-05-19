@@ -7,7 +7,6 @@
  */
 package org.hypergraphdb;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -401,35 +400,35 @@ public /*final*/ class HyperGraph implements HyperNode
     		throw new HGException(t);
     	}    	
     }
-    
-    // A lock that makes sure only one thread can close the HGDB instance.
-    private Object closeLock = new Object();
-    
+        
     /**
      * <p>Gracefully close all resources associated with the run-time instance
      * of <code>HyperGraph</code>. </p>
      */
     public void close()
     {
-        synchronized (closeLock) 
-        {
-        if (!is_open)
-            return;
-        ArrayList<Throwable> problems = new ArrayList<Throwable>();
-        try { eventManager.dispatch(this, new HGClosingEvent()); } catch (Throwable t) { problems.add(t); }
-    	try { replace(statsHandle, stats);  					 } catch (Throwable t) { problems.add(t); }     
-        try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
-    	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
-    	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
-        try { store.close();                                     } catch (Throwable t) { problems.add(t); }
-        is_open = false;
-        for (Throwable t : problems)
-        {
-        	System.err.println("Problem during HyperGraph close, stack trace of exception follows:");
-        	t.printStackTrace(System.err);
-        }
-//        System.out.println("HGDB at " + this.getLocation() + " closed.");
-        } // synchronize closing
+    	// Acquiring the HGEnvironment.class lock is consistent with the fact that closing
+    	// a graph is changing the global HGEnviornment. Previously we had a separate
+    	// internal lock just for this graph object, but that led to deadlocks due
+    	// to the cache also accessing the memory hook of the environment.
+    	synchronized (HGEnvironment.class) 
+    	{
+	        if (!is_open)
+	            return;
+	        ArrayList<Throwable> problems = new ArrayList<Throwable>();
+	        try { eventManager.dispatch(this, new HGClosingEvent()); } catch (Throwable t) { problems.add(t); }
+	    	try { replace(statsHandle, stats);  					 } catch (Throwable t) { problems.add(t); }     
+	        try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
+	    	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
+	    	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
+	        try { store.close();                                     } catch (Throwable t) { problems.add(t); }
+	        is_open = false;
+	        for (Throwable t : problems)
+	        {
+	        	System.err.println("Problem during HyperGraph close, stack trace of exception follows:");
+	        	t.printStackTrace(System.err);
+	        }
+    	}
     }
     
     /** 

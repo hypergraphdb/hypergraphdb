@@ -2,20 +2,16 @@ Manifest-Version: 1.0
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
 Built-By: borislav
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1478933567131
+Bnd-LastModified: 1494716968678
 Embed-Dependency: je
 Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb
  .algorithms,org.hypergraphdb.annotation,org.hypergraphdb.atom,org.hyp
  ergraphdb.cache,org.hypergraphdb.event,org.hypergraphdb.handle,org.hy
  pergraphdb.indexing,org.hypergraphdb.maintenance,org.hypergraphdb.que
  ry,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,org.hy
- pergraphdb.storage,org.hypergraphdb.storage.bje,org.hypergraphdb.tran
- saction,org.hypergraphdb.type,org.hypergraphdb.type.javaprimitive,org
- .hypergraphdb.util
+ pergraphdb.storage,org.hypergraphdb.transaction,org.hypergraphdb.type
+ ,org.hypergraphdb.type.javaprimitive,org.hypergraphdb.util
 Tool: Bnd-0.0.238
-Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,o
- rg.hypergraphdb.util,org.hypergraphdb.storage,org.hypergraphdb.transa
- ction"
 Bundle-Version: 1.4.0.SNAPSHOT
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-ClassPath: .,je-5.0.34.jar
@@ -41,5 +37,5 @@ Ignore-Package: javax.management,org.apache.tools.ant,org.apache.tools
  .ant.types
 Embed-Transitive: true
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.8.0_101
+Build-Jdk: 1.8.0_40
 

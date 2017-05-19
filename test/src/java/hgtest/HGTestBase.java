@@ -40,8 +40,15 @@ public class HGTestBase
     @BeforeClass
     public static void setUp()
     {
-        HGUtils.dropHyperGraphInstance(getGraphLocation());
-        openGraph();
+    	try
+    	{
+	        HGUtils.dropHyperGraphInstance(getGraphLocation());
+	        openGraph();
+    	}
+    	catch (Throwable t)
+    	{
+    		t.printStackTrace(System.err);
+    	}
     }
     
     @AfterClass    
