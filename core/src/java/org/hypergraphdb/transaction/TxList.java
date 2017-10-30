@@ -73,7 +73,8 @@ public class TxList<E> implements List<E>
 		this.txManager = txManager;
 		sizebox = new VBox<Integer>(txManager, 0);
 		head = fromInitial(initialData.iterator());
-//		tail = new VBox<Node<E>>(txManager, null);
+		if (head.get() == null)
+			tail = new VBox<Node<E>>(txManager, null);
 	}
 	
     public boolean add(E e)
