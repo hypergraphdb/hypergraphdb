@@ -11,11 +11,10 @@
     <version>1.4-SNAPSHOT</version>  
   </parent>  
   <properties>
-    <packageit>bundle</packageit>
     <bundle.symbolicName>${groupId}-${artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraphdb.peer</bundle.namespace>    
   </properties>
-  <packaging>${packageit}</packaging>
+  <packaging>bundle</packaging>
   
   <dependencies>
     <dependency>
@@ -92,7 +91,7 @@
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>org.hypergraphdb.peer.*</Export-Package>
             <Import-Package>*</Import-Package>             
-			<Embed-Dependency>smack*;scope=compile|runtime;inline=false</Embed-Dependency>            
+			      <Embed-Dependency>smack*;scope=compile|runtime;inline=false</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>        

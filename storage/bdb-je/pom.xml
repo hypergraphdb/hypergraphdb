@@ -13,7 +13,7 @@
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph.storage.bje</bundle.namespace>
   </properties>
-  <packaging>${packageit}</packaging>
+  <packaging>bundle</packaging>
   <artifactId>hgbdbje</artifactId>
   <name>HyperGraphDB BDB-JE Storage</name>
   <url>http://hypergraphdb.org</url>

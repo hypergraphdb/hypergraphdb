@@ -559,8 +559,14 @@ public class XMPPPeerInterface implements PeerInterface
                                             " to long with " + inFile.getFileSize() + " bytes.");
                     StringBuilder sb = new StringBuilder();
                     char [] buf = new char[4096];
-                    for (int count = in.read(buf); count != -1; count = in.read(buf))
-                        sb.append(buf,  0, count);
+                    for (; ; ) {
+                        int rsz = in.read(buf, 0, buf.length);
+                        if (rsz < 0)
+                            break;
+                        sb.append(buf, 0, rsz);
+                    }                    
+//                    for (int count = in.read(buf); count != -1; count = in.read(buf))
+//                        sb.append(buf,  0, count);
 //                    M = new org.hypergraphdb.peer.Message((Map<String, Object>)
 //                                  new Protocol().readMessage(new ByteArrayInputStream(B)));
                     M = Json.read(sb.toString());
@@ -568,7 +574,7 @@ public class XMPPPeerInterface implements PeerInterface
                 catch (Throwable t)
                 {
                     t.printStackTrace(System.err);
-                    throw new RuntimeException(t);
+                    request.reject();
                 }
                 finally
                 {

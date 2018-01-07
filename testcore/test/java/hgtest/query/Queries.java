@@ -8,6 +8,7 @@ import hgtest.beans.Person;
 import hgtest.beans.SimpleBean;
 import hgtest.beans.Transport;
 import hgtest.beans.Truck;
+import hgtest.links.SampleLink1;
 import hgtest.utils.RSUtils;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ import org.hypergraphdb.query.SubsumedCondition;
 import org.hypergraphdb.query.SubsumesCondition;
 import org.hypergraphdb.query.TargetCondition;
 import org.hypergraphdb.query.TypePlusCondition;
+import org.hypergraphdb.query.impl.PipeQuery;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
 import org.hypergraphdb.type.Top;
 import org.hypergraphdb.util.HGUtils;
@@ -58,7 +60,10 @@ public class Queries extends HGTestBase
     public static void main(String[] args)
     {
         Queries q = new Queries();
-        q.test();        
+//        q.test();
+        setUp();
+        q.testCount();
+        tearDown();
     }
 
     void test()
@@ -461,6 +466,30 @@ public class Queries extends HGTestBase
         HGHandle somenested = hg.findOne(graph, hg.type(NestedBean.class));
         Assert.assertNotNull(somenested);
         Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.incident(somenested))));
+    }
+    
+    @Test
+    public void testCount()
+    {
+    	HGHandle n1 = graph.add(100);
+    	HGHandle n2 = graph.add(1000l);
+    	HGHandle n3 = graph.add(2000l);
+    	HGHandle n4 = graph.add(10.10);    	
+    	Assert.assertTrue(graph.findAll(hg.type(Integer.class)).contains(n1));
+    	Assert.assertTrue(graph.findAll(hg.type(Long.class)).contains(n2));
+    	graph.add(new SampleLink1(n1, n2));
+    	graph.add(new SampleLink1(n1, n3));
+    	graph.add(new HGPlainLink(n1, n4));
+    	Assert.assertEquals(2, graph.count(hg.and(hg.incident(n1), hg.type(SampleLink1.class))));
+//    	HGQuery siblings = hg.apply(, c) hg.incident(n1))
+//    	Assert.assertEquals(1, 
+//    		hg.count(new PipeQuery<HGHandle, HGHandle>(
+//    		 hg.and(hg.not(hg.is(n1)),
+//    				hg.apply(hg.deref(graph),
+//    				 hg.target(linkHandle)
+//    				 
+//    		 hg.type(Double.class)))
+//    	)
     }
     
     @BeforeClass
