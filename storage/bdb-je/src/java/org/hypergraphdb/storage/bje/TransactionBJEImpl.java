@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.storage.bje;
 
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,8 +24,10 @@ public class TransactionBJEImpl implements HGStorageTransaction
 	private Environment env;
 	private Transaction t;
 	private Set<BJETxCursor> bdbCursors = new HashSet<BJETxCursor>();
-	private boolean aborting = false;
-
+	private volatile boolean aborting = false;
+	private volatile boolean attached;
+	private volatile boolean detached;
+	private volatile boolean committing = false;
 //	public static volatile boolean traceme = false;
 	
 	public static final TransactionBJEImpl nullTransaction()
@@ -56,11 +59,25 @@ public class TransactionBJEImpl implements HGStorageTransaction
 //			System.err.println("Committing tx " + t.getId());
 		try
 		{
+			attached = false;
+			detached = false;
+			committing = true;
 			Set<BJETxCursor> S = new HashSet<BJETxCursor>(bdbCursors);
+			committing = false;
+			//for (BJETxCursor c : bdbCursors) S.add(c);
 			for (BJETxCursor c : S)
 				c.close();
 			if (t != null)
 				t.commit();
+		}
+		catch (ConcurrentModificationException ex)
+		{
+			if (attached)
+				throw new ConcurrentModificationException("Somebody attached cursor");
+			else if (detached)
+				throw new ConcurrentModificationException("Sombody detached cursor");
+			else
+				throw new ConcurrentModificationException("Nobody touched cursor");
 		}
 		catch (DatabaseException ex)
 		{
@@ -75,7 +92,7 @@ public class TransactionBJEImpl implements HGStorageTransaction
 //			System.err.println("Aborting tx " + t.getId());
 		try
 		{
-			aborting = true;
+//			aborting = true;
 			Set<BJETxCursor> S = new HashSet<BJETxCursor>(bdbCursors);
 			for (BJETxCursor c : S)
 			{
@@ -101,6 +118,7 @@ public class TransactionBJEImpl implements HGStorageTransaction
 
 	public BJETxCursor attachCursor(Cursor cursor)
 	{
+		attached = true;
 //		if (t != null && traceme)
 //			System.err.println("Adding cursor to tx " + t.getId());
 		if (t == null)
@@ -114,6 +132,9 @@ public class TransactionBJEImpl implements HGStorageTransaction
 
 	void removeCursor(BJETxCursor c)
 	{
+		if (committing)
+			System.out.println("WTF - I am committing already!");
+		detached = true;
 //		if (t != null && traceme)		
 //			System.err.println("Removing cursor from tx " + t.getId());
 		if (!aborting)

@@ -44,10 +44,15 @@ public class TxMonitor
 		try
 		{
 			long id = tx.getNumber();
-			txMap.remove(id);
-			Info txInfo = txMap.get(id);
+			Info txInfo = txMap.remove(id);
 			if (txInfo == null)
-				throw new NullPointerException("No transaction with ID " + id + " was recorded to start.");
+			{
+				// throw new NullPointerException("No transaction with ID " + id + " was recorded to start.");
+//				System.err.println("WARN - no transaction with ID " + id + " in monitor.");
+				// this is quite possible since several transactions with the same id can be initiated
+				// concurrently and only one of them will succeed...
+				return;
+			}
 			StringBuffer b = new StringBuffer();
 			for (StackTraceElement el : Thread.currentThread().getStackTrace())
 				{ b.append(el.toString()); b.append("\n"); }

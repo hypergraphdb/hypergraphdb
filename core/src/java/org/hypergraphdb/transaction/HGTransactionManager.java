@@ -112,7 +112,8 @@ public class HGTransactionManager
      */
     public void setHyperGraph(HyperGraph graph)
     {
-        this.graph = graph;         
+        this.graph = graph;
+        this.txMonitor = graph.getConfig().getMonitorTransactions() ? new TxMonitor() : null;
     }
     
     /**
@@ -444,4 +445,14 @@ public class HGTransactionManager
 			}
 		}
 	}
+	
+	/**
+	 * Return {@link TxMonitor} if the {@link org.hypergraphdb.HGConfiguration#getMonitorTransactions()}
+	 * is <code>true</code> and <code>null</code> otherwise.
+	 */
+	public TxMonitor txMonitor()
+	{
+		return this.txMonitor;
+	}
+
 }

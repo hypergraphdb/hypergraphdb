@@ -156,28 +156,6 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 	 */
 	public Iterator<T> iterator()
 	{
-/*		final HGRandomAccessResult<T> rs = getSearchResult();
-		return new Iterator<T>()
-		{
-			boolean closed = false;
-			public void remove() { throw new UnsupportedOperationException(); }
-			public boolean hasNext() 
-			{
-				return !closed && rs.hasNext();
-			}
-			public T next()
-			{
-				T n = rs.next();
-				if (!rs.hasNext())
-				{
-					rs.close();
-					closed = true;
-				}
-				return n;
-			}
-			
-			protected void finalize() { if (!closed) rs.close(); } 
-		}; */
 		throw new UnsupportedOperationException("Use getSearchResult and make sure you close it.");
 	}
 
@@ -192,7 +170,7 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 			return false;
 	}
 
-	public boolean removeAll(Collection c)
+	public boolean removeAll(Collection<?> c)
 	{
 		boolean modified = false;
 		for (Object x : c)
@@ -200,7 +178,7 @@ public class DBKeyedSortedSet<Key, T> implements HGSortedSet<T>
 		return modified;
 	}
 
-	public boolean retainAll(Collection c)
+	public boolean retainAll(Collection<?> c)
 	{
 		throw new UnsupportedOperationException();
 	}

@@ -773,18 +773,6 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		return findOrdered(key, true, true);
 	}
 
-	protected void finalize()
-	{
-		if (isOpen())
-			try
-			{
-				close();
-			}
-			catch (Throwable t)
-			{
-			}
-	}
-
 	public long count()
 	{
 		return stats().entries(Long.MAX_VALUE, false).value();

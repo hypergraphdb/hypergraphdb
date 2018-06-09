@@ -39,6 +39,7 @@ public class HGConfiguration
 	private int maxCachedIncidenceSetSize; 
 	private boolean useSystemAtomAttributes;
 	private boolean keepIncidentLinksOnRemoval = false;
+	private boolean monitorTransactions = false;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	private HGQueryConfiguration queryConfiguration = new HGQueryConfiguration();
 	private HGAtomCache cacheImplementation = new WeakRefAtomCache();
@@ -410,4 +411,20 @@ public class HGConfiguration
     {
         this.cacheImplementation = cacheImplementation;
     }    
+    
+    /**
+     * Return whether transactions are monitored or not. Monitoring transactions
+     * is intended purely for debugging and/or profiling purposes and it shouldn't
+     * be used in production. To obtain monitoring information refer to the
+     * {@link org.hypergraphdb.transaction.HGTransactionMonitor#txMonitor()}
+     */
+    public boolean getMonitorTransactions()
+    {
+    	return this.monitorTransactions;
+    }
+    
+    public void setMonitorTransactions(boolean monitorTransactions)
+    {
+    	this.monitorTransactions = monitorTransactions;
+    }
 }

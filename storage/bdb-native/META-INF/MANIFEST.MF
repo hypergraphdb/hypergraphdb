@@ -2,9 +2,22 @@ Manifest-Version: 1.0
 Bundle-SymbolicName: org.hypergraphdb-hgbdbnative;singleton:=true
 Built-By: borislav
 Bundle-ManifestVersion: 2
-Bnd-LastModified: 1454885619917
+Bnd-LastModified: 1528482986779
 Embed-Dependency: db
+Import-Package: org.hypergraphdb;version="1.3.0.SNAPSHOT",org.hypergra
+ phdb.query;version="1.3.0.SNAPSHOT",org.hypergraphdb.query.cond2qry;v
+ ersion="1.3.0.SNAPSHOT",org.hypergraphdb.query.impl;version="1.3.0.SN
+ APSHOT",org.hypergraphdb.storage;version="1.3.0.SNAPSHOT",org.hypergr
+ aphdb.storage.bdb,org.hypergraphdb.storage.incidence,org.hypergraphdb
+ .transaction;version="1.3.0.SNAPSHOT",org.hypergraphdb.util;version="
+ 1.3.0.SNAPSHOT"
 Tool: Bnd-0.0.238
+Export-Package: org.hypergraphdb.storage.bdb;uses:="org.hypergraphdb,o
+ rg.hypergraphdb.util,org.hypergraphdb.transaction,org.hypergraphdb.st
+ orage,org.hypergraphdb.storage.incidence",org.hypergraphdb.storage.in
+ cidence;uses:="org.hypergraphdb.query,org.hypergraphdb,org.hypergraph
+ db.query.impl,org.hypergraphdb.storage.bdb,org.hypergraphdb.util,org.
+ hypergraphdb.storage,org.hypergraphdb.query.cond2qry"
 Bundle-Version: 1.4.0.SNAPSHOT
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-ClassPath: .,db-5.3.15.jar
