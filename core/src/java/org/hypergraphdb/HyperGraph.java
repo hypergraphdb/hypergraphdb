@@ -684,14 +684,14 @@ public /*final*/ class HyperGraph implements HyperNode
      * been previously registered with the type system. 
      * @param flags A combination of system-level bit flags. Available flags that can 
      * be <em>or-ed</em> together are listed in the <code>HGSystemFlags</code> interface.   
-     * @return The HyperGraph handle of the newly added atom or <code>null</code> if
-     * the addition was refused by a listener to the {@link HGAtomProposeEvent}.
+     * @return The HyperGraph handle of the newly added atom.
+     * @throws HGAtomRefusedException if the {@link HGAtomProposeEvent} was rejected by a listener.
      */
     public HGHandle add(Object atom, HGHandle type, int flags)
     {
         if (eventManager.dispatch(this, 
                new HGAtomProposeEvent(atom, type, flags)) == HGListener.Result.cancel)
-            return null;
+            throw new HGAtomRefusedException();
         HGHandle result;
         if (atom instanceof HGLink)
         {
@@ -1301,6 +1301,9 @@ public /*final*/ class HyperGraph implements HyperNode
     				   final Object instance,
     				   final int flags)
     {
+        if (eventManager.dispatch(this, 
+                new HGDefineProposeEvent(atomHandle, instance, typeHandle, flags)) == HGListener.Result.cancel)
+             throw new HGAtomRefusedException();
     	getTransactionManager().ensureTransaction(new Callable<Object>() 
     	{ public Object call() {
     	    if (get(atomHandle) != null)
@@ -1327,9 +1330,10 @@ public /*final*/ class HyperGraph implements HyperNode
 	        idx_manager.maybeIndex(layout[0], 
 	        					   type, 
 	        					   atomHandle.getPersistent(),
-	        					   instance == null ? type.make(layout[1], linkRef, null) : instance);	        	    	
+	        					   instance == null ? type.make(layout[1], linkRef, null) : instance);	        
 	    	return null;
     	}});
+        eventManager.dispatch(this, new HGAtomDefinedEvent(atomHandle, "HyperGraph.define"));    	
     }
     
     /**
