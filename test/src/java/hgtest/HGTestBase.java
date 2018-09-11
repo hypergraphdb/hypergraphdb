@@ -76,4 +76,9 @@ public class HGTestBase
             mapping.eval(top);
         }        
     }      
+    
+    public static void tx(final Runnable runnable)
+    {
+    	graph.getTransactionManager().ensureTransaction(() -> { runnable.run(); return null; });
+    }    
 }

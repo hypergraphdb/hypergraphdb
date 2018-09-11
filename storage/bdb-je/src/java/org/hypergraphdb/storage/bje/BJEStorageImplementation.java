@@ -489,7 +489,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 				try
 				{
 					TransactionConfig tconfig = new TransactionConfig();
-
+					tconfig.setSerializableIsolation(false);
 					Durability tDurability = new Durability(Durability.SyncPolicy.WRITE_NO_SYNC, Durability.SyncPolicy.NO_SYNC, // unused
 																																// by
 																																// non-HA

@@ -57,7 +57,8 @@ public class BJEConfig
 	{
 		envConfig.setTransactional(true);
 		dbConfig.setTransactional(true);
-
+		envConfig.setTxnSerializableIsolation(false);
+		
 		// envConfig.setLockDetectMode(LockDetectMode.RANDOM);
 
 		Durability defaultDurability = new Durability(
