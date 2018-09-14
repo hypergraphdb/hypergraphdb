@@ -33,21 +33,22 @@ public class TxList<E> implements List<E>
 	private VBox<Node<E>> head = null;
 	private VBox<Node<E>> tail = null;
 	
-	Node<E> findNode(int index)
+	VBox<Node<E>> findNode(int index)
 	{
 		if (index < 0 || index >= sizebox.get())
 			throw new IndexOutOfBoundsException("In TxList: " + index);
 		VBox<Node<E>> result = head;
 		while (index-- > 0)
 			result = result.get().next;
-		return result.get();
+		return result;
 	}
 	
 	VBox<Node<E>> fromInitial(Iterator<E> I)
 	{
 		if (!I.hasNext())
 			return new VBox<Node<E>>(txManager, null);
-		E current = I.next();		
+		E current = I.next();
+		sizebox.put(sizebox.get() + 1);
 		if (!I.hasNext())
 		{
 			tail = new VBox<Node<E>>(txManager, new Node<E>(current, null));
@@ -102,7 +103,7 @@ public class TxList<E> implements List<E>
     	else
     	{
 	    	// find the node after which we need to insert
-	    	Node<E> prev = findNode(index - 1); 
+	    	Node<E> prev = findNode(index - 1).get(); 
 	   		node.next.put(prev.next.get());
 	   		prev.next.put(node);
     	}
@@ -120,7 +121,7 @@ public class TxList<E> implements List<E>
     {
     	Node<E> prev = null;
     	if (index > 0)
-    		prev = findNode(index - 1);
+    		prev = findNode(index - 1).get();
     	for (E e : c)
     	{
     		Node<E> node = new Node<E>(e, new VBox<Node<E>>(txManager, null));
@@ -164,7 +165,7 @@ public class TxList<E> implements List<E>
 
     public E get(int index)
     {
-        Node<E> x = findNode(index);
+        Node<E> x = findNode(index).get();
         return x.value;
     }
 
@@ -250,7 +251,7 @@ public class TxList<E> implements List<E>
     	}
     	else
     	{
-    		Node<E> prev = findNode(index - 1);
+    		Node<E> prev = findNode(index - 1).get();
     		if (tail.get() == prev.next.get())
     			tail.put(prev);
     		old = prev.next.get().value;
@@ -302,9 +303,9 @@ public class TxList<E> implements List<E>
 
     public E set(int index, E element)
     {
-        Node<E> node = findNode(index);
-        E old = node.value;
-        node.value = element;
+        VBox<Node<E>> nodeBox = findNode(index);
+        E old = nodeBox.get().value;
+        nodeBox.put(new Node<E>(element, nodeBox.get().next));
         return old;
     }
 

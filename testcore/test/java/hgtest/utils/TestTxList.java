@@ -19,6 +19,12 @@ public class TestTxList extends HGTestBase
         graph.getTransactionManager().beginTransaction();
         L.add("blabla");
         graph.getTransactionManager().abort();
+        try
+        {
+        	Assert.assertEquals(L.get(0), "blabla");
+        	Assert.fail("");
+        }
+        catch (IndexOutOfBoundsException ex) {/* expected */ }
         Assert.assertEquals(L.size(), 0);
     }
     
@@ -105,4 +111,23 @@ public class TestTxList extends HGTestBase
         Assert.assertEquals(L.size(), base.size());
         Assert.assertEquals(L.toArray(), base.toArray());        
     }
+    
+    @Test
+    public void testSetValue()
+    {
+        List<String> base = Arrays.asList("first", "second", "third", "forth", "fifth", "sixth", "sevent", "eight");
+        TxList<String> L = new TxList<String>(graph.getTransactionManager(), base);
+        
+        graph.getTransactionManager().beginTransaction();
+        L.set(1, "2nd");
+        graph.getTransactionManager().abort();
+        Assert.assertEquals(L.size(), base.size());
+        Assert.assertEquals("second", L.get(1));
+        
+        graph.getTransactionManager().beginTransaction();
+        L.set(1, "2nd");
+        graph.getTransactionManager().commit();
+        Assert.assertEquals(L.size(), base.size());
+        Assert.assertEquals("2nd", L.get(1));
+    }    
 }
