@@ -48,7 +48,7 @@ public class TxList<E> implements List<E>
 		if (!I.hasNext())
 			return new VBox<Node<E>>(txManager, null);
 		E current = I.next();
-		sizebox.put(sizebox.get() + 1);
+		sizebox = new VBox<Integer>(txManager, sizebox.get() + 1);
 		if (!I.hasNext())
 		{
 			tail = new VBox<Node<E>>(txManager, new Node<E>(current, null));
