@@ -15,10 +15,10 @@ public class TxMonitor
 {
 	public static class Info
 	{
-		long id = 0;
-		String threadName = null;
-		String beginTrace = null;
-		String endTrace = null;
+		public long id = 0;
+		public String threadName = null;
+		public String beginTrace = null;
+		public String endTrace = null;
 	}
 	
 	public Map<Long, Info> txMap = Collections.synchronizedMap(new HashMap<Long, Info>());

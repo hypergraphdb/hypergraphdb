@@ -56,31 +56,37 @@ public class DefaultTransactionContext implements HGTransactionContext
 		if (tstack.isEmpty())
 			throw new HGException("Attempt to end a transaction for an empty transaction context.");
 		HGTransaction top = tstack.pop();
-		if (manager.txMonitor != null)
-			manager.txMonitor.transactionFinished(top);		
-		if (success)
-			top.commit();
-		else
-			top.abort();
+		try
+		{
+			if (success)
+				top.commit();
+			else
+				top.abort();
+		}
+		finally
+		{
+			if (manager.txMonitor != null)
+				manager.txMonitor.transactionFinished(top);		
+		}
 	}
 	
-	public void endAll(boolean success) throws HGTransactionException
-	{
-		if (success)
-			while (!tstack.isEmpty()) 
-			{
-				HGTransaction tx = tstack.pop();
-				if (manager.txMonitor != null)
-					manager.txMonitor.transactionFinished(tx);				 				
-				tx.commit();
-			}
-		else
-			while (!tstack.isEmpty()) 
-			{
-				HGTransaction tx = tstack.pop();
-				if (manager.txMonitor != null)
-					manager.txMonitor.transactionFinished(tx);								
-				tx.abort();			
-			}
-	}
+//	public void endAll(boolean success) throws HGTransactionException
+//	{
+//		if (success)
+//			while (!tstack.isEmpty()) 
+//			{
+//				HGTransaction tx = tstack.pop();
+//				if (manager.txMonitor != null)
+//					manager.txMonitor.transactionFinished(tx);				 				
+//				tx.commit();
+//			}
+//		else
+//			while (!tstack.isEmpty()) 
+//			{
+//				HGTransaction tx = tstack.pop();
+//				if (manager.txMonitor != null)
+//					manager.txMonitor.transactionFinished(tx);								
+//				tx.abort();			
+//			}
+//	}
 }

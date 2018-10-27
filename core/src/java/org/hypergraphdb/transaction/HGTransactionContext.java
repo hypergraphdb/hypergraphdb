@@ -32,5 +32,5 @@ public interface HGTransactionContext
 	HGTransaction getCurrent();
 	void beginTransaction(HGTransactionConfig config);
 	void endTransaction(boolean success) throws HGTransactionException;
-	void endAll(boolean success) throws HGTransactionException;
+//	void endAll(boolean success) throws HGTransactionException;
 }
