@@ -400,8 +400,9 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 		lock.readLock().lock();
 		try
 		{
-			Object [] A = new Object[array.length];
-			System.arraycopy(array, 0, A, 0, array.length);
+			int len = size();
+			Object [] A = new Object[len];
+			System.arraycopy(array, 0, A, 0, len);
 			return A;
 		}
 		finally
