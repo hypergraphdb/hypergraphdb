@@ -14,6 +14,12 @@ public class HGDefaultEventManager implements HGEventManager
     private HyperGraph graph;
 	private Map<Class<?>, List<HGListener>> listenerMap = null;
 	
+	private void initListenerMap()
+	{
+	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(),
+	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
+	}
+	
 	private List<HGListener> getListeners(Class<?> eventType, boolean addIfMissing)
 	{
 			if (listenerMap == null) {
@@ -33,20 +39,7 @@ public class HGDefaultEventManager implements HGEventManager
       }
       return listeners;
 	}
-	
-	public HGDefaultEventManager() { }
-	
-	public HGDefaultEventManager(HyperGraph graph)
-	{
-	    this.graph = graph;
-	}
-	
-	public void initListenerMap()
-	{
-	    listenerMap = new TxMap<Class<?>, List<HGListener>>(graph.getTransactionManager(), 
-	                                                        new HashMap<Class<?>, VBox<List<HGListener>>>());	    
-	}
-	
+		
 	public <T extends HGEvent> void addListener(Class<T> eventType, HGListener listener)
 	{
 		getListeners(eventType, true).add(listener);
@@ -60,12 +53,15 @@ public class HGDefaultEventManager implements HGEventManager
 		}
 	}
 	
-	public  HGListener.Result dispatch(HyperGraph hg, HGEvent event)
+	public HGListener.Result dispatch(HyperGraph hg, HGEvent event)
 	{
-    if (listenerMap == null || listenerMap.isEmpty()) // avoid looping through the class hierarchy cause it's expensive
-        return HGListener.Result.ok;
-
-    for (Class<?> clazz = event.getClass(); clazz != null && HGEvent.class != clazz; clazz = clazz.getSuperclass())
+		if (listenerMap == null)
+			return HGListener.Result.ok;
+		
+	    if (listenerMap.isEmpty()) // avoid looping through the class hierarchy cause it's expensive
+	        return HGListener.Result.ok;
+	
+	    for (Class<?> clazz = event.getClass(); clazz != null && HGEvent.class != clazz; clazz = clazz.getSuperclass())
 		{
 			List<HGListener> listeners = listenerMap.get(clazz);
 			if (listeners == null)

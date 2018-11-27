@@ -105,8 +105,7 @@ public class TxMap<K, V> implements Map<K, V>
     {
         this.txManager = tManager;
         this.M = backingMap == null ? new ConcurrentHashMap<K, Box>(): backingMap;        
-        this.sizebox = new VBox<Integer>(txManager);
-        this.sizebox.put(0);
+        this.sizebox = new VBox<Integer>(txManager, 0);
         if (this.M instanceof ConcurrentMap)            
             boxGetter = new RefResolver<Object,Box>() 
         {
