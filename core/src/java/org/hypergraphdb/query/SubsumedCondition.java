@@ -84,6 +84,11 @@ public class SubsumedCondition extends SubsumesImpl implements HGQueryCondition,
 	{
 		setGeneralValue(generalValue);
 	}
+
+	public SubsumedCondition(Ref<HGHandle> general)
+	{
+		setGeneralHandleReference(general);
+	}
 	
 	public SubsumedCondition(HGHandle general)
 	{
