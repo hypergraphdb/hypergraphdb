@@ -87,6 +87,11 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 		setSpecificHandle(specific);
 	}
 	
+	public SubsumesCondition(Ref<HGHandle> specific)
+	{
+		setSpecificHandleReference(specific);
+	}
+	
 	public Ref<HGHandle> getSpecificHandleReference()
 	{
 		return specific;
@@ -95,6 +100,9 @@ public class SubsumesCondition extends SubsumesImpl implements HGQueryCondition,
 	public void setSpecificHandleReference(Ref<HGHandle> specific)
 	{
 		this.specific = specific;
+		this.specificValue = null;
+		if(specific != null) 
+			impl = new HandleBased();		
 	}
 	
 	public HGHandle getSpecificHandle()

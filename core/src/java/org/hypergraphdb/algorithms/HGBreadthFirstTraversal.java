@@ -37,7 +37,7 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	private Queue<Pair<Pair<HGHandle, HGHandle>, Integer>> to_explore = 
 	    new LinkedList<Pair<Pair<HGHandle, HGHandle>, Integer>>();
 	private HGALGenerator adjListGenerator;
-	private boolean initialized = false;
+	private volatile boolean initialized = false;
 	
 	private void init()
 	{
@@ -124,7 +124,10 @@ public class HGBreadthFirstTraversal implements HGTraversal
 	    this.maxDistance = maxDistance;
         this.startAtom = startAtom;
         this.adjListGenerator = adjListGenerator;
-        init();		
+        
+        // we need to lazily initialize because of compiled queries where the start atom handle
+        // is not necessarily known at construction time
+//        init();		
 	}
 	
 	public boolean hasNext() 

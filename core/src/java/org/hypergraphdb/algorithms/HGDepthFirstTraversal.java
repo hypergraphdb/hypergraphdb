@@ -34,7 +34,7 @@ public class HGDepthFirstTraversal implements HGTraversal
     private Map<HGHandle, Boolean> examined = new HashMap<HGHandle, Boolean>();
 	private Stack<Pair<HGHandle, HGHandle>> to_explore = new Stack<Pair<HGHandle, HGHandle>>();
 	private HGALGenerator adjListGenerator;
-	private boolean initialized = false;
+	private volatile boolean initialized = false;
 	
 	private void init()
 	{
@@ -71,7 +71,11 @@ public class HGDepthFirstTraversal implements HGTraversal
 	{
 		this.startAtom = startAtom;
 		this.adjListGenerator = adjListGenerator;
-		init();		
+		
+        // we need to lazily initialize because of compiled queries where the start atom handle
+        // is not necessarily known at construction time
+		
+//		init();		
 	}
 	
 	public Ref<HGHandle> getStartAtomReference()

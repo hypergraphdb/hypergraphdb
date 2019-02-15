@@ -1,5 +1,38 @@
 package hgtest.query;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGLink;
+import org.hypergraphdb.HGPlainLink;
+import org.hypergraphdb.HGQuery;
+import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGSortIndex;
+import org.hypergraphdb.HGTypeSystem;
+import org.hypergraphdb.HGValueLink;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.GraphClassics;
+import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.indexing.ByPartIndexer;
+import org.hypergraphdb.query.BFSCondition;
+import org.hypergraphdb.query.DFSCondition;
+import org.hypergraphdb.query.HGQueryCondition;
+import org.hypergraphdb.query.LinkCondition;
+import org.hypergraphdb.query.OrderedLinkCondition;
+import org.hypergraphdb.query.SubsumedCondition;
+import org.hypergraphdb.query.SubsumesCondition;
+import org.hypergraphdb.query.TargetCondition;
+import org.hypergraphdb.query.impl.TraversalBasedQuery;
+import org.hypergraphdb.type.Top;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import hgtest.HGTestBase;
 import hgtest.T;
 import hgtest.beans.Car;
@@ -10,41 +43,6 @@ import hgtest.beans.Transport;
 import hgtest.beans.Truck;
 import hgtest.links.SampleLink1;
 import hgtest.utils.RSUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-
-import org.hypergraphdb.HGHandle;
-import org.hypergraphdb.HGLink;
-import org.hypergraphdb.HGPlainLink;
-import org.hypergraphdb.HGQuery;
-import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.HGSortIndex;
-import org.hypergraphdb.HGTypeSystem;
-import org.hypergraphdb.HGValueLink;
-import org.hypergraphdb.HGQuery.hg;
-import org.hypergraphdb.algorithms.DefaultALGenerator;
-import org.hypergraphdb.algorithms.GraphClassics;
-import org.hypergraphdb.indexing.ByPartIndexer;
-import org.hypergraphdb.query.BFSCondition;
-import org.hypergraphdb.query.DFSCondition;
-import org.hypergraphdb.query.HGQueryCondition;
-import org.hypergraphdb.query.LinkCondition;
-import org.hypergraphdb.query.OrderedLinkCondition;
-import org.hypergraphdb.query.SubsumedCondition;
-import org.hypergraphdb.query.SubsumesCondition;
-import org.hypergraphdb.query.TargetCondition;
-import org.hypergraphdb.query.TypePlusCondition;
-import org.hypergraphdb.query.impl.PipeQuery;
-import org.hypergraphdb.query.impl.TraversalBasedQuery;
-import org.hypergraphdb.type.Top;
-import org.hypergraphdb.util.HGUtils;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 //@Test(sequential=true)
 public class Queries extends HGTestBase
@@ -300,10 +298,10 @@ public class Queries extends HGTestBase
                 // linkH1, linkH,
                 getNestedBeanHandle(5), getNestedBeanHandle(6),
                 new DefaultALGenerator(graph));
-        // Assert.assertEquals(length, 1.0); //??? should be 1
+        Assert.assertEquals(length, Double.valueOf(1.0)); //??? should be 1
         length = GraphClassics.dijkstra(getNestedBeanHandle(5),
                 getNestedBeanHandle(3), new DefaultALGenerator(graph));
-        // Assert.assertEquals(length, 2.0);
+        Assert.assertEquals(length, Double.valueOf(2.0));
         Double length1 = GraphClassics.dijkstra(getNestedBeanHandle(6),
                 getNestedBeanHandle(3), new DefaultALGenerator(graph));
         Assert.assertEquals(length, length1);                               //BJE fails here
@@ -328,6 +326,24 @@ public class Queries extends HGTestBase
     }
 
     @Test
+    public void testSubsumedVarCondition()
+    {
+        HGHandle h = graph.getTypeSystem().getTypeHandle(Top.class);
+        HGHandle h1 = graph.getTypeSystem().getTypeHandle(Boolean.class);
+        HGQuery<HGHandle> q = HGQuery.make(HGHandle.class, graph).compile(hg.subsumed(hg.var("general")));
+        q.var("general", h);        
+        Assert.assertTrue(q.findAll().contains(h1));
+        
+        HGHandle superabstract = graph.add("superabstract");
+        HGHandle veryconcrete = graph.add("veryconcrete");
+        graph.add(new HGSubsumes(superabstract, veryconcrete));
+        q = HGQuery.make(HGHandle.class, graph).compile(
+        	hg.and(hg.type(String.class), hg.subsumed(hg.var("general"))));
+        q.var("general", superabstract);
+        Assert.assertTrue(q.findAll().contains(veryconcrete));
+    }
+    
+    @Test
     public void testSubsumesCondition()
     {
         HGHandle h = graph.getTypeSystem().getTypeHandle(Top.class);
@@ -338,6 +354,24 @@ public class Queries extends HGTestBase
         Assert.assertFalse(cond.satisfies(graph, h1));
     }
 
+    @Test
+    public void testSubsumesVarCondition()
+    {
+        HGHandle h = graph.getTypeSystem().getTypeHandle(Top.class);
+        HGHandle h1 = graph.getTypeSystem().getTypeHandle(Boolean.class);
+        HGQuery<HGHandle> q = HGQuery.make(HGHandle.class, graph).compile(hg.subsumes(hg.var("specific")));
+        q.var("specific", h1);        
+        Assert.assertTrue(q.findAll().contains(h));
+        
+        HGHandle superabstract = graph.add("superabstract");
+        HGHandle veryconcrete = graph.add("veryconcrete");
+        graph.add(new HGSubsumes(superabstract, veryconcrete));
+        q = HGQuery.make(HGHandle.class, graph).compile(
+        	hg.and(hg.type(String.class), hg.subsumes(hg.var("specific"))));
+        q.var("specific", veryconcrete);
+        Assert.assertTrue(q.findAll().contains(superabstract));        
+    }
+      
     @Test
     public void testBFSCondition()
     {

@@ -682,6 +682,13 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
          */
         public static SubsumesCondition subsumes(HGHandle specific) { return new SubsumesCondition(specific); }
         /**
+         * <p>Return a condition constraining the result set to atoms more general than the passed in
+         * <code>specific</code> reference parameter. This condition is generally useful when searching for types,
+         * but it is applicable to any set atoms interlinked with the {@link HGSubsumes} relation.
+         * @see SubsumesCondition
+         */
+        public static SubsumesCondition subsumes(Ref<HGHandle> specific) { return new SubsumesCondition(specific); }        
+        /**
          * <p>Return a condition constraining the result set to atoms more specific than the passed in
          * <code>general</code> parameter. This condition is generally useful when searching for types,
          * but it is applicable to any set atoms interlinked with the {@link HGSubsumes} relation.

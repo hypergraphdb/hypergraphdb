@@ -121,11 +121,9 @@ public class QueryCompile
                                 + condition
                                 + " to a query. Try constraining further, e.g. by atom type.");
             q.setHyperGraph(graph);
-            AnalyzedQuery<?> aquery = (AnalyzedQuery<?>) VarContext.ctx().get(
-                    "$analyzed").get();
+            AnalyzedQuery<?> aquery = (AnalyzedQuery<?>) VarContext.ctx().get("$analyzed").get();
             if (aquery != null)
-                aquery.translated(condition, q, trans.getMetaData(graph,
-                        condition));
+                aquery.translated(condition, q, trans.getMetaData(graph, condition));
             return q;
         }
     }
