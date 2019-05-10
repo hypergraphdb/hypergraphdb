@@ -640,7 +640,7 @@ public /*final*/ class HyperGraph implements HyperNode
      * as a reference to the atom within hypergraph and to construct link to that atom.
      */
     public HGHandle add(Object atom, int flags)
-    {
+    {	
     	HGHandle result;
     	
         if (atom instanceof HGLink)
@@ -652,13 +652,19 @@ public /*final*/ class HyperGraph implements HyperNode
             HGHandle type = typeSystem.getTypeHandle(value);
             if (type == null)
             	throw new HGException("Unable to create HyperGraph type for class " + value.getClass().getName());
+            if (eventManager.dispatch(this, 
+                    new HGAtomProposeEvent(atom, type, flags)) == HGListener.Result.cancel)
+                 throw new HGAtomRefusedException();            
             result = addLink(value, type, link, (byte)flags);
         }
         else
         {
         	HGHandle type = typeSystem.getTypeHandle(atom);
         	if (type == null)
-        		throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());        	
+        		throw new HGException("Unable to create HyperGraph type for class " + atom.getClass().getName());
+            if (eventManager.dispatch(this, 
+                    new HGAtomProposeEvent(atom, type, flags)) == HGListener.Result.cancel)
+                 throw new HGAtomRefusedException();        	
         	result = addNode(atom, type, (byte)flags);
         }
         eventManager.dispatch(this, new HGAtomAddedEvent(result, "HyperGraph.add"));

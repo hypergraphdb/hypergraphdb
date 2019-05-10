@@ -489,14 +489,10 @@ public class BJEStorageImplementation implements HGStoreImplementation
 				try
 				{
 					TransactionConfig tconfig = new TransactionConfig();
-					tconfig.setSerializableIsolation(false);
-					Durability tDurability = new Durability(Durability.SyncPolicy.WRITE_NO_SYNC, Durability.SyncPolicy.NO_SYNC, // unused
-																																// by
-																																// non-HA
-																																// applications.
-							Durability.ReplicaAckPolicy.NONE); // unused by
-																// non-HA
-																// applications.
+
+					Durability tDurability = new Durability(Durability.SyncPolicy.WRITE_NO_SYNC, 
+															Durability.SyncPolicy.NO_SYNC, 
+															Durability.ReplicaAckPolicy.NONE);
 					tconfig.setDurability(tDurability);
 
 					Transaction tx = null;

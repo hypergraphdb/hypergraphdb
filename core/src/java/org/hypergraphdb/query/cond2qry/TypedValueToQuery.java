@@ -51,18 +51,29 @@ public class TypedValueToQuery implements ConditionToQuery
 				// of the atoms
 				// so far obtained.
 				//
-				return new PredicateBasedFilter(graph, new PipeQuery(
-						new SearchableBasedQuery((HGSearchable<?, ?>) type, value,
-								vc.getOperator()), new SearchableBasedQuery(graph
-								.getIndexManager().getIndexByValue(), null,
-								ComparisonOperator.EQ)), new AtomTypeCondition(
-						typeHandle)).execute();
+				// Note: not sure we need the predicate AtomTypeCondition here since
+				// we are using the index of the type itself. Do we really have situations
+				// where a parent type is providing the indexing ? We could be optimizing
+				// this by checking if indeed the index is in a parent type and we are
+				// looking for a sub-type. Though type checking is fast...
+				//
+				return new PredicateBasedFilter(
+					graph, 
+					new PipeQuery(
+						new SearchableBasedQuery((HGSearchable<?, ?>) type, 
+												 value,
+												 vc.getOperator()), 
+						new SearchableBasedQuery(graph.getIndexManager().getIndexByValue(), 
+												 null,
+												 ComparisonOperator.EQ)), 
+						new AtomTypeCondition(typeHandle)).execute();
 			else
 				// else, we need to scan all atoms of the given type
-				return new PredicateBasedFilter(graph, new IndexBasedQuery(graph
-						.getIndexManager().getIndexByType(),
-						typeHandle.getPersistent()),
-						new AtomValueCondition(vc.getValue(), vc.getOperator())).execute();
+				return new PredicateBasedFilter(graph, 
+												new IndexBasedQuery(graph.getIndexManager().getIndexByType(),
+																    typeHandle.getPersistent()),
+												new AtomValueCondition(vc.getValue(), 
+																	   vc.getOperator())).execute();
 		}
 	}
 	

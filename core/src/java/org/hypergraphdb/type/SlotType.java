@@ -101,8 +101,7 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
             HGPersistentHandle labelHandle = stringType.store(slot.getLabel());
             HGPersistentHandle handle = hg.getStore().store( 
                     new HGPersistentHandle[]
-                                { hg.getPersistentHandle(slot.getValueType()),
-                                  labelHandle,});
+                                { hg.getPersistentHandle(slot.getValueType()), labelHandle});
             getIndex().addEntry(slotToByteArray(slot), handle);
             return handle;     
         }
@@ -122,8 +121,7 @@ public final class SlotType implements HGCompositeType, HGSearchable<Slot, HGPer
 
     public HGSearchResult<HGPersistentHandle> find(Slot key)
     {
-        byte [] asByteArray = slotToByteArray(key);
-        return getIndex().find(asByteArray);
+        return getIndex().find(slotToByteArray(key));
     }
     
 	public Iterator<String> getDimensionNames()

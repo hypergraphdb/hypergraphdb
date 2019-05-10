@@ -77,7 +77,7 @@ public class WeakHandle extends WeakReference<Object> implements HGLiveHandle, C
         }
         return x;
     }
-
+    
     public void accessed() { }
     
     public final int hashCode()
