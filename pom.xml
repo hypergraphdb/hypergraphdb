@@ -11,7 +11,7 @@
   <url>http://hypergraphdb.org</url>
 
   <properties>
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <version>1.4-SNAPSHOT</version>
     <!-- Sleepycat libraries -->
     <bje.version>5.0.34</bje.version>

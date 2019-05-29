@@ -388,7 +388,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public HGRandomAccessResult<HGPersistentHandle> getAnnotatedIncidenceResultSet(HGHandle target, Object...annotations)
     {
         if (incidentAnnotator == null)
@@ -578,6 +578,7 @@ public class BDBStorageImplementation implements HGStoreImplementation
         }
     }
 
+	@SuppressWarnings("unchecked")
 	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name)
     {
 		indicesLock.readLock().lock();
@@ -591,14 +592,17 @@ public class BDBStorageImplementation implements HGStoreImplementation
 		}
 	}
 
-    @SuppressWarnings("unchecked")
-    public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
-            String name, ByteArrayConverter<KeyType> keyConverter,
-            ByteArrayConverter<ValueType> valueConverter,
-            Comparator<?> comparator,
-            boolean isBidirectional,
-            boolean createIfNecessary)
-    {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
+			String name, 
+			ByteArrayConverter<KeyType> keyConverter,
+			ByteArrayConverter<ValueType> valueConverter,
+			Comparator<byte[]> keyComparator,
+			Comparator<byte[]> valueComparator, 
+			boolean isBidirectional,
+			boolean createIfNecessary)
+	{
         indicesLock.readLock().lock();
         try
         {
@@ -627,14 +631,16 @@ public class BDBStorageImplementation implements HGStoreImplementation
                                                                      store.getTransactionManager(),
                                                                      keyConverter,
                                                                      valueConverter,
-                                                                     comparator);
+                                                                     keyComparator,
+                                                                     valueComparator);
             else
                 result = new DefaultIndexImpl<KeyType, ValueType>(name,
                                                                   this,
                                                                   store.getTransactionManager(),
                                                                   keyConverter,
                                                                   valueConverter,
-                                                                  comparator);
+                                                                  keyComparator,
+                                                                  valueComparator);
             result.open();
             openIndices.put(name, result);
             return result;
@@ -715,4 +721,5 @@ public class BDBStorageImplementation implements HGStoreImplementation
             }
         }
     }
+
 }

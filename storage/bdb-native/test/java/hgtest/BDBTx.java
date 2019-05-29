@@ -1,6 +1,9 @@
 package hgtest;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import com.sleepycat.db.Database;
 import com.sleepycat.db.DatabaseConfig;
@@ -45,9 +48,11 @@ public class BDBTx
 		}
 	}
 	
-	public static void main(String [] argv)
+	public static void main(String [] argv) throws IOException
 	{
-        String databaseLocation = "c:/tmp/dblock";
+		System.setProperty("java.library.path", "/Users/borislav/code/hypergraphdb/storage/bdb-native/native/macos");
+		System.out.println(System.getProperty("java.library.path"));
+        String databaseLocation = Files.createTempDirectory("hgdbtest").toAbsolutePath().toString();
         
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);

@@ -31,6 +31,7 @@ import org.hypergraphdb.event.*;
 import org.hypergraphdb.transaction.*;
 import org.hypergraphdb.util.HGDatabaseVersionFile;
 import org.hypergraphdb.util.HGLogger;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Pair;
 
 /**
@@ -2299,7 +2300,7 @@ public /*final*/ class HyperGraph implements HyperNode
     			Class<?> listenerClass;
     			try
     			{
-    				eventClass = Class.forName(listenerAtom.getEventClassName());
+    				eventClass = HGUtils.loadClass(this,listenerAtom.getEventClassName());
     				listenerClass = Class.forName(listenerAtom.getListenerClassName());
     				eventManager.addListener((Class<HGEvent>)eventClass, (HGListener)listenerClass.newInstance());
     			}

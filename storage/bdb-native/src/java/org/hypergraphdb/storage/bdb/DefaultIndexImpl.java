@@ -14,20 +14,21 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
 
 import com.sleepycat.db.BtreeStats;
+import com.sleepycat.db.Cursor;
 import com.sleepycat.db.CursorConfig;
 import com.sleepycat.db.Database;
-import com.sleepycat.db.DatabaseException;
-import com.sleepycat.db.DatabaseType;
-import com.sleepycat.db.Cursor;
-import com.sleepycat.db.LockMode;
 import com.sleepycat.db.DatabaseConfig;
 import com.sleepycat.db.DatabaseEntry;
+import com.sleepycat.db.DatabaseException;
+import com.sleepycat.db.DatabaseType;
+import com.sleepycat.db.LockMode;
 import com.sleepycat.db.OperationStatus;
 import com.sleepycat.db.Transaction;
 
@@ -56,6 +57,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     protected Database db;
     private   boolean owndb;
     protected Comparator<?> comparator;
+    protected Comparator<?> duplicateComparator;
     protected boolean sort_duplicates = true;
     protected ByteArrayConverter<KeyType> keyConverter;
     protected ByteArrayConverter<ValueType> valueConverter;
@@ -101,7 +103,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
     						HGTransactionManager transactionManager,
     						ByteArrayConverter<KeyType> keyConverter,
     						ByteArrayConverter<ValueType> valueConverter,
-    						Comparator<?> comparator)
+    						Comparator<?> comparator,
+    						Comparator<?> duplicateComparator)
     {
         this.name = indexName;
         this.storage = storage;
@@ -109,6 +112,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
         this.comparator = comparator;
+        this.duplicateComparator = duplicateComparator;
         owndb = true;
     }
     
@@ -122,22 +126,22 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         return DB_NAME_PREFIX + name;
     }
     
-    public Comparator<?> getComparator()
-    {
-        try
-        {
-            if (comparator != null)
-                return comparator;
-            else if (db.getConfig().getType() == DatabaseType.BTREE)
-                return db.getConfig().getBtreeComparator();
-            else 
-                return db.getConfig().getHashComparator();
-        }
-        catch (DatabaseException ex)
-        {
-            throw new HGException(ex);
-        }
-    }
+//    public Comparator<?> getComparator()
+//    {
+//        try
+//        {
+//            if (comparator != null)
+//                return comparator;
+//            else if (db.getConfig().getType() == DatabaseType.BTREE)
+//                return db.getConfig().getBtreeComparator();
+//            else 
+//                return db.getConfig().getHashComparator();
+//        }
+//        catch (DatabaseException ex)
+//        {
+//            throw new HGException(ex);
+//        }
+//    }
     
     public void open()
     {    	
@@ -155,6 +159,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
                 else
                     dbConfig.setHashComparator(comparator);
             }
+            if (sort_duplicates)
+            	dbConfig.setDuplicateComparator(duplicateComparator);
             db = storage.getBerkleyEnvironment().openDatabase(null, DB_NAME_PREFIX + name, null, dbConfig);
         }
         catch (Throwable t)
@@ -555,4 +561,10 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
         }
         return result;
     }
+
+	public HGIndexStats<KeyType, ValueType> stats()
+	{
+		checkOpen();
+		return new BDBIndexStats<KeyType, ValueType>(db);
+	}
 }

@@ -1,6 +1,8 @@
 package hgtest;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 import com.sleepycat.db.DatabaseEntry;
 import com.sleepycat.db.Environment;
@@ -11,9 +13,9 @@ import com.sleepycat.db.LockRequestMode;
 
 public class BDBLock
 {
-	public static void main(String [] argv)
+	public static void main(String [] argv) throws Exception
 	{
-        String databaseLocation = "c:/tmp/dblock";
+		String databaseLocation = Files.createTempDirectory("hgdbtest").toAbsolutePath().toString();
         
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);

@@ -13,6 +13,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -41,7 +42,7 @@ public class CollectionTypeConstructor implements HGAtomType
 		String className = new String(graph.getStore().getData(handle));
 		try
 		{
-			Class<?> clazz = Class.forName(className);
+			Class<?> clazz = HGUtils.loadClass(graph, className);
 			GenericObjectFactory factory = new GenericObjectFactory(clazz);
 			result = new CollectionType(factory);
 		}

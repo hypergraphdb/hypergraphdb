@@ -13,6 +13,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  */
@@ -31,7 +32,7 @@ public class ArrayTypeConstructor implements HGAtomType
 		String className = new String(hg.getStore().getData(handle));
 		try
 		{
-			Class<?> clazz = Class.forName(className);
+			Class<?> clazz = HGUtils.loadClass(hg, className);
 			result = new ArrayType(clazz);
 		}
 		catch (Throwable t)
