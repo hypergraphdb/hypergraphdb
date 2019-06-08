@@ -835,53 +835,12 @@ public /*final*/ class HyperGraph implements HyperNode
         Pair<HGLiveHandle, Object> loaded = loadAtom(persistentHandle, liveHandle);                
 
         if (loaded == null)
-        	return null; // TODO: perhaps we should throw an exception here, but a new type, e.g. HGInvalidHandleException?
-        
-//        HGLiveHandle temp = cache.get(loaded.getSecond());
-//        if (temp == null ) // || loaded.getSecond() != temp.getRef())
-//        {
-//        	System.out.println("oops, just loaded not same as in cache " + persistentHandle);
-//        	//return get(persistentHandle);
-//        }
-//
+        	return null; 
         
         liveHandle = loaded.getFirst();
-
-//        if (liveHandle.getRef() != loaded.getSecond())
-//        	return get(liveHandle);
-        
-        //
-        // If the incidence set of the newly fetched atom is already loaded,
-        // traverse it to update the target handles of all links pointing to it.
-        //
-        IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(persistentHandle);
-        if (incidenceSet != null)
-        	updateLinksInIncidenceSet(incidenceSet, liveHandle);
-        
-        //
-        // If the newly fetched atom is a link, update all loaded incidence
-        // sets, of which it is part, with its live handle. 
-        //
-        // NOTE: commented out for now since IncidenceSet stores only persistent handles for
-        // speedier lookup (because this way there's no need to check for live handles and do type casts)
-        /* if (liveHandle.getRef() instanceof HGLink)
-        {
-        	HGLink link = (HGLink)liveHandle.getRef();
-            for (int i = 0; i < link.getArity(); i++)
-            {
-                IncidenceSet targetIncidenceSet = cache.getIncidenceSet(getPersistentHandle(link.getTargetAt(i)));
-                if (targetIncidenceSet != null)
-                    for (int j = 0; j < targetIncidenceSet.length; j++)
-                    {
-                        if (targetIncidenceSet[j].equals(persistentHandle))
-                        	targetIncidenceSet[j] = liveHandle;
-                    }
-            }
-        } */
-        
+               
         eventManager.dispatch(HyperGraph.this, new HGAtomAccessedEvent(liveHandle, loaded.getSecond()));        
-        return (T)loaded.getSecond();
-//}});        
+        return (T)loaded.getSecond();        
     }
 
     /**
@@ -1782,7 +1741,37 @@ public /*final*/ class HyperGraph implements HyperNode
 	        if (instance instanceof HGTypeHolder)
 	        	((HGTypeHolder<HGAtomType>)instance).setAtomType(type);
 	    	
-	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance)); 
+	        eventManager.dispatch(HyperGraph.this, new HGAtomLoadedEvent(result, instance));
+	        
+	        //
+	        // If the incidence set of the newly fetched atom is already loaded,
+	        // traverse it to update the target handles of all links pointing to it.
+	        //
+	        IncidenceSet incidenceSet = cache.getIncidenceCache().getIfLoaded(persistentHandle);
+	        if (incidenceSet != null)
+	        	updateLinksInIncidenceSet(incidenceSet, result);
+	        
+	        //
+	        // If the newly fetched atom is a link, update all loaded incidence
+	        // sets, of which it is part, with its live handle. 
+	        //
+	        // NOTE: commented out for now since IncidenceSet stores only persistent handles for
+	        // speedier lookup (because this way there's no need to check for live handles and do type casts)
+	        /* if (liveHandle.getRef() instanceof HGLink)
+	        {
+	        	HGLink link = (HGLink)liveHandle.getRef();
+	            for (int i = 0; i < link.getArity(); i++)
+	            {
+	                IncidenceSet targetIncidenceSet = cache.getIncidenceSet(getPersistentHandle(link.getTargetAt(i)));
+	                if (targetIncidenceSet != null)
+	                    for (int j = 0; j < targetIncidenceSet.length; j++)
+	                    {
+	                        if (targetIncidenceSet[j].equals(persistentHandle))
+	                        	targetIncidenceSet[j] = liveHandle;
+	                    }
+	            }
+	        } */
+	        
 	        return new Pair<HGLiveHandle, Object>(result, instance);
     	}}, HGTransactionConfig.READONLY);
     }
