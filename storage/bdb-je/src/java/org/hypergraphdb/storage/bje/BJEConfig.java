@@ -61,7 +61,7 @@ public class BJEConfig
 		envConfig.setTransactional(true);
 		dbConfig.setTransactional(true);
 		
-		// The following is set to false for purely performance reasons, but the semantics
+		// The following is set tn  false for purely performance reasons, but the semantics
 		// are terrible since transaction are not truly isolated anymore. The issue is
 		// that BerkeleyDB Java Edition doesn't support proper snapshot isolation (MVCC), so
 		// it works by setting lock timeouts and detecting conflicts this way. So when one
@@ -69,7 +69,9 @@ public class BJEConfig
 		// and throughput is terrible. If we sacrifice isolation though, that leads to 
 		// subtle non repeatable read issues (a record read twice in the same transaction giving
 		// two different results because another transaction committed a new value).
-		envConfig.setTxnSerializableIsolation(false);
+		
+		envConfig.setTxnSerializableIsolation(true);
+		envConfig.setLockTimeout(100, TimeUnit.MILLISECONDS);
 
 		Durability defaultDurability = new Durability(
 				Durability.SyncPolicy.WRITE_NO_SYNC,
