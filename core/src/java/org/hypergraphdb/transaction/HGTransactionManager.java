@@ -8,7 +8,6 @@
 package org.hypergraphdb.transaction;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HyperGraph;
@@ -37,8 +36,6 @@ public class HGTransactionManager
 	final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
         
 	TxMonitor txMonitor = null;
-	AtomicInteger conflicted = new AtomicInteger(0);
-	AtomicInteger successful = new AtomicInteger(0);
 	
 	/** 
 	 * <p>Return <code>true</code> if the transaction are enabled and <code>false</code>
@@ -113,7 +110,7 @@ public class HGTransactionManager
     public void setHyperGraph(HyperGraph graph)
     {
         this.graph = graph;
-        this.txMonitor = graph.getConfig().getMonitorTransactions() ? new TxMonitor() : null;
+        this.txMonitor = graph.getConfig().getMonitorTransactions() ? new TxMonitor(this) : null;
     }
     
     /**
@@ -193,8 +190,6 @@ public class HGTransactionManager
 			                                         activeRecord,
 			                                         storageTx,
 			                                         config.isReadonly());
-			if (txMonitor != null)
-				txMonitor.transactionCreated(result);
 			return result;
 		}
 		else
@@ -328,7 +323,7 @@ public class HGTransactionManager
 			return transact(transaction, config);
 	}
 	
-	private void handleTxException(Throwable t)
+	void handleTxException(Throwable t)
 	{
         // If there is a DeadlockException at the root of this, we have to simply abort
         // the transaction and try again.               
@@ -389,6 +384,18 @@ public class HGTransactionManager
 	 */
 	public <V> V transact(Callable<V> transaction, HGTransactionConfig config)
 	{
+		// If we are monitoring, we have the same logic below but annotated with
+		// some monitoring operations in the TxMonitoringRunner. Should the logic
+		// of that retry loop change, due to a bug or whatever reason, the change
+		// has to be replicated to the monitoring version as well.
+		if (this.monitor().enabled())
+		{
+			return this.monitor().transact(
+					Thread.currentThread().getName() + System.currentTimeMillis(), // unique name 
+					transaction, 
+					config);
+		}
+		
 		// We retry for as long as it takes. There's no reason
 		// why a transaction shouldn't eventually be able to acquire
 		// the locks it needs.
@@ -418,30 +425,25 @@ public class HGTransactionManager
 				else
 				{
     				handleTxException(t); // will re-throw if we can't retry the transaction
-    				conflicted.incrementAndGet();
 				}
-//				    System.out.println("Retrying transaction");
 				continue;
 			}
 			try
 			{
-				endTransaction(true);
-				successful.incrementAndGet(); // "successful" means not conflicting with other transactions				
+				endTransaction(true);				
 				return result;
 			}  
 			catch (Throwable t)
 			{
                 if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException && 
                         config.isWriteUpgradable())
-                    {
-                        config = HGTransactionConfig.DEFAULT;
-                    }
-                    else
-                    {
-                        handleTxException(t); // will re-throw if we can't retry the transaction
-                        conflicted.incrementAndGet();
-                    }
-//      	          System.out.println("Retrying transaction");
+                {
+                    config = HGTransactionConfig.DEFAULT;
+                }
+                else
+                {
+                    handleTxException(t); // will re-throw if we can't retry the transaction
+                }
 			}
 		}
 	}
@@ -450,7 +452,7 @@ public class HGTransactionManager
 	 * Return {@link TxMonitor} if the {@link org.hypergraphdb.HGConfiguration#getMonitorTransactions()}
 	 * is <code>true</code> and <code>null</code> otherwise.
 	 */
-	public TxMonitor txMonitor()
+	public TransactionMonitor monitor()
 	{
 		return this.txMonitor;
 	}

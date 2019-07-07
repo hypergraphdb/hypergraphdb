@@ -9,9 +9,15 @@ package org.hypergraphdb.transaction;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
-public class TxMonitor
+import org.hypergraphdb.util.HGUtils;
+import org.hypergraphdb.util.Mapping;
+
+class TxMonitor implements TransactionMonitor
 {
 	public static class Info
 	{
@@ -21,46 +27,136 @@ public class TxMonitor
 		public String endTrace = null;
 	}
 	
-	public Map<Long, Info> txMap = Collections.synchronizedMap(new HashMap<Long, Info>());
+	Map<Long, TxInfo<?>> txMap = 
+			Collections.synchronizedMap(new HashMap<Long, TxInfo<?>>());
+			
+    volatile boolean enabled = false;
+	private HGTransactionManager manager;
 	
-	public void transactionCreated(HGTransaction tx)
+	static class MonitorFilter implements Mapping<TxInfo<?>, Boolean> 
 	{
-		try
+		HashMap<String, Object> params = new HashMap<String, Object>();
+		
+		public MonitorFilter(Object...params)
 		{
-			Info txInfo = new Info();
-			txInfo.id = tx.getNumber();
-			txInfo.threadName = Thread.currentThread().getName();
-			StringBuffer b = new StringBuffer();
-			for (StackTraceElement el : Thread.currentThread().getStackTrace())
-				{ b.append(el.toString()); b.append("\n"); }
-			txInfo.beginTrace = b.toString();
-			txMap.put(txInfo.id, txInfo);
+			for (int i = 0; i < params.length; i += 2)
+				this.params.put(params[i].toString(), params[i+1]);
 		}
-		catch (Throwable t) { t.printStackTrace(); }
+		
+		@Override
+		public Boolean eval(TxInfo<?> x)
+		{
+			for (Map.Entry<String, Object> e : params.entrySet())
+				if (!x.is(e.getKey(), e.getValue()))
+					return false;
+			return true;
+		}
 	}
 	
-	public void transactionFinished(HGTransaction tx)
+	TxMonitor(HGTransactionManager manager)
 	{
-		try
+		this.manager = manager;
+	}
+
+	public boolean enabled()
+	{
+		return this.enabled;
+	}
+	
+	@Override
+	public TransactionMonitor enable()
+	{
+		this.enabled = true;
+		return this;
+	}
+
+	@Override
+	public TransactionMonitor disable()
+	{
+		this.enabled = false;
+		return this;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> TxInfo<T> tx()
+	{
+		if (manager.getContext().getCurrent() != null)
 		{
-			long id = tx.getNumber();
-			Info txInfo = txMap.remove(id);
-			if (txInfo == null)
-			{
-				// throw new NullPointerException("No transaction with ID " + id + " was recorded to start.");
-//				System.err.println("WARN - no transaction with ID " + id + " in monitor.");
-				// this is quite possible since several transactions with the same id can be initiated
-				// concurrently and only one of them will succeed...
-				return;
-			}
-			StringBuffer b = new StringBuffer();
-			for (StackTraceElement el : Thread.currentThread().getStackTrace())
-				{ b.append(el.toString()); b.append("\n"); }
-			txInfo.endTrace = b.toString();
+			long txid = manager.getContext().getCurrent().getNumber();
+			return (TxInfo<T>) txMap.get(txid); 
 		}
-		catch (Throwable t)
-		{
-			t.printStackTrace();
-		}
+		else
+			return null;
+	}
+
+	public Set<TxInfo<?>> lookup(Object... params)
+	{
+		HashSet<TxInfo<?>> S = new HashSet<TxInfo<?>>();
+		MonitorFilter filter = new MonitorFilter(params);
+		for (TxInfo<?> tx : txMap.values())
+			if (filter.eval(tx))
+				S.add(tx);
+		return S;
 	}	
+	
+	public <V> V transact(String name, Callable<V> transaction, HGTransactionConfig config)
+	{
+		while (true)
+		{		    
+			manager.beginTransaction(config);
+			TxInfo<V> runner =
+				new TxInfo<V>(name, manager.getContext().getCurrent().getNumber());
+			this.txMap.put(runner.transactionNumber(), runner);
+			V result;
+			try
+			{
+				result = transaction.call();
+			}
+			catch (HGUserAbortException ex)
+			{
+				try { manager.endTransaction(false); }
+				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
+				runner.failed(ex);
+				return null;
+			}
+			catch (Throwable t)
+			{
+				try { manager.endTransaction(false); }
+				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
+				if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException && 
+				    config.isWriteUpgradable())
+				{
+				    config = HGTransactionConfig.DEFAULT;
+				}
+				else
+				{
+					runner.failed(t);
+					manager.handleTxException(t); // will re-throw if we can't retry the transaction
+					runner.retried();
+				}
+				continue;
+			}
+			try
+			{
+				manager.endTransaction(true);		
+				runner.succeeded();
+				return result;
+			}  
+			catch (Throwable t)
+			{
+                if (HGUtils.getRootCause(t) instanceof TransactionIsReadonlyException && 
+                        config.isWriteUpgradable())
+                {
+                    config = HGTransactionConfig.DEFAULT;
+                }
+                else
+                {
+                	runner.failed(t);
+                    manager.handleTxException(t); // will re-throw if we can't retry the transaction
+                    runner.retried();
+                }
+			}
+		}		
+	}
 }
