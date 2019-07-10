@@ -47,7 +47,7 @@ public interface TransactionMonitor
 	 * Return info of the current transaction (if any) or <code>null</code>
 	 * if not present.
 	 */
-	<T> TxInfo<T> tx();	
+	<T> TxInfo tx();	
 	
 	/**
 	 * Look up transactions by their attributes. 
@@ -56,7 +56,7 @@ public interface TransactionMonitor
 	 * is expected to be a string and each odd parameter can be any value.
 	 * @return
 	 */
-	Set<TxInfo<?>> lookup(Object... params);
+	Set<TxInfo> lookup(Object... params);
 	
 	/**
 	 * Perform a transaction while monitoring regardless of whether

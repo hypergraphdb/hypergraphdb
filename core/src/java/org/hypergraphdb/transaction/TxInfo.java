@@ -14,7 +14,7 @@ import java.util.HashMap;
  * and notifying a a tx monitor about success/failure, retries and
  * time to completion.
  */
-public class TxInfo<T>
+public class TxInfo
 {
 	private String name;
 	private long startTime; 
@@ -31,7 +31,7 @@ public class TxInfo<T>
 		this.startTime = System.currentTimeMillis();
 	}
 	
-	TxInfo<T> retried()
+	TxInfo retried()
 	{
 		this.endTime = 0;
 		this.failureException = null;
@@ -39,17 +39,22 @@ public class TxInfo<T>
 		return this;
 	}
 	
-	TxInfo<T> succeeded()
+	TxInfo succeeded()
 	{
 		this.endTime = System.currentTimeMillis();
 		return this;
 	}
 	
-	TxInfo<T> failed(Throwable failureException)
+	TxInfo failed(Throwable failureException)
 	{
 		this.failureException = failureException;
 		this.endTime = System.currentTimeMillis();
 		return this;
+	}
+	
+	public long number()
+	{
+		return this.transactionNumber;
 	}
 	
 	public String name()
@@ -91,7 +96,7 @@ public class TxInfo<T>
 		return this.transactionNumber;
 	}
 	
-	public TxInfo<T> attr(String name, Object value)
+	public TxInfo attr(String name, Object value)
 	{
 		this.attributes.put(name, value);
 		return this;

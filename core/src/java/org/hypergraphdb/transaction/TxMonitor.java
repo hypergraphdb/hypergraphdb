@@ -27,13 +27,13 @@ class TxMonitor implements TransactionMonitor
 		public String endTrace = null;
 	}
 	
-	Map<Long, TxInfo<?>> txMap = 
-			Collections.synchronizedMap(new HashMap<Long, TxInfo<?>>());
+	Map<Long, TxInfo> txMap = 
+			Collections.synchronizedMap(new HashMap<Long, TxInfo>());
 			
     volatile boolean enabled = false;
 	private HGTransactionManager manager;
 	
-	static class MonitorFilter implements Mapping<TxInfo<?>, Boolean> 
+	static class MonitorFilter implements Mapping<TxInfo, Boolean> 
 	{
 		HashMap<String, Object> params = new HashMap<String, Object>();
 		
@@ -44,7 +44,7 @@ class TxMonitor implements TransactionMonitor
 		}
 		
 		@Override
-		public Boolean eval(TxInfo<?> x)
+		public Boolean eval(TxInfo x)
 		{
 			for (Map.Entry<String, Object> e : params.entrySet())
 				if (!x.is(e.getKey(), e.getValue()))
@@ -77,24 +77,23 @@ class TxMonitor implements TransactionMonitor
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <T> TxInfo<T> tx()
+	public TxInfo tx()
 	{
 		if (manager.getContext().getCurrent() != null)
 		{
 			long txid = manager.getContext().getCurrent().getNumber();
-			return (TxInfo<T>) txMap.get(txid); 
+			return (TxInfo) txMap.get(txid); 
 		}
 		else
 			return null;
 	}
 
-	public Set<TxInfo<?>> lookup(Object... params)
+	public Set<TxInfo> lookup(Object... params)
 	{
-		HashSet<TxInfo<?>> S = new HashSet<TxInfo<?>>();
+		HashSet<TxInfo> S = new HashSet<TxInfo>();
 		MonitorFilter filter = new MonitorFilter(params);
-		for (TxInfo<?> tx : txMap.values())
+		for (TxInfo tx : txMap.values())
 			if (filter.eval(tx))
 				S.add(tx);
 		return S;
@@ -105,8 +104,8 @@ class TxMonitor implements TransactionMonitor
 		while (true)
 		{		    
 			manager.beginTransaction(config);
-			TxInfo<V> runner =
-				new TxInfo<V>(name, manager.getContext().getCurrent().getNumber());
+			TxInfo runner =
+				new TxInfo(name, manager.getContext().getCurrent().getNumber());
 			this.txMap.put(runner.transactionNumber(), runner);
 			V result;
 			try
