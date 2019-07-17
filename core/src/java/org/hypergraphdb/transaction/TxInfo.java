@@ -8,6 +8,7 @@
 package org.hypergraphdb.transaction;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A TxMonitoringRunner runs a HGDB transaction while monitoring 
@@ -90,12 +91,7 @@ public class TxInfo
 	{
 		return this.retryCount;
 	}
-	
-	public long transactionNumber()
-	{
-		return this.transactionNumber;
-	}
-	
+		
 	public TxInfo attr(String name, Object value)
 	{
 		this.attributes.put(name, value);
@@ -117,4 +113,9 @@ public class TxInfo
 	{
 		return this.has(name) && attr(name).equals(value);
 	}	
+	
+	public Map<String, Object> attributes()
+	{
+		return this.attributes;
+	}
 }

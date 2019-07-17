@@ -106,7 +106,7 @@ class TxMonitor implements TransactionMonitor
 			manager.beginTransaction(config);
 			TxInfo runner =
 				new TxInfo(name, manager.getContext().getCurrent().getNumber());
-			this.txMap.put(runner.transactionNumber(), runner);
+			this.txMap.put(runner.number(), runner);
 			V result;
 			try
 			{
