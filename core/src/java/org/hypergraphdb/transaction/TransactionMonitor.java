@@ -26,6 +26,12 @@ import java.util.concurrent.Callable;
 public interface TransactionMonitor
 {
 	/**
+	 * Store the {@link TxInfo} associated with the current transaction under
+	 * this attribute in the {@link HGTransaction} object.
+	 */
+	public static final String hgdbmonitorTxInfoKey = "hgdbmonitorTxInfoKey";
+	
+	/**
 	 * Return <code>true</code> is transaction monitoring is currently enabled
 	 * and <code>false</code> otherwise.
 	 */
@@ -68,4 +74,25 @@ public interface TransactionMonitor
 	 * @return
 	 */
 	<V> V transact(String name, Callable<V> transaction, HGTransactionConfig config);
+	
+	/**
+	 * Remove all information accumulated so far. This is important to do 
+	 * periodically as there is no "natural" cleanup mechanism when
+	 * the monitor has been enabled (disabled doesn't remove collected information).
+	 * 
+	 * @return <code>this</code>
+	 */
+	TransactionMonitor clear();
+	
+	/**
+	 * If the transaction retry loop is implemented elsewhere, use this method
+	 * to create a  {@link TxInfo} object in the monitor's map. That object
+	 * has to be properly managed by the caller. See methods in the {@link TxInfo}
+	 * class to know what to do.
+	 * 
+	 * @param name The name of the transaction.
+	 * @return a new TxInfo object with a unique monitoring transaction number that remains
+	 * the same throughout retries.
+	 */
+	TxInfo startTransaction(String name);
 }

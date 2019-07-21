@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-
+import java.util.concurrent.atomic.AtomicLong;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 
@@ -30,6 +30,7 @@ class TxMonitor implements TransactionMonitor
 	Map<Long, TxInfo> txMap = 
 			Collections.synchronizedMap(new HashMap<Long, TxInfo>());
 			
+	private AtomicLong operationNumber = new AtomicLong(0);
     volatile boolean enabled = false;
 	private HGTransactionManager manager;
 	
@@ -51,6 +52,15 @@ class TxMonitor implements TransactionMonitor
 					return false;
 			return true;
 		}
+	}
+	
+	Set<String> activeNames(TxInfo except)
+	{
+		HashSet<String> S = new HashSet<String>();
+		for (TxInfo info : txMap.values())
+			if (!info.isFinished() && info.number() != except.number())
+				S.add(info.name() + " - " + info.number());
+		return S;
 	}
 	
 	TxMonitor(HGTransactionManager manager)
@@ -82,8 +92,7 @@ class TxMonitor implements TransactionMonitor
 	{
 		if (manager.getContext().getCurrent() != null)
 		{
-			long txid = manager.getContext().getCurrent().getNumber();
-			return (TxInfo) txMap.get(txid); 
+			return (TxInfo)manager.getContext().getCurrent().getAttribute(hgdbmonitorTxInfoKey); 
 		}
 		else
 			return null;
@@ -99,14 +108,21 @@ class TxMonitor implements TransactionMonitor
 		return S;
 	}	
 	
+	public TxInfo startTransaction(String name)
+	{
+		long txNumber = operationNumber.incrementAndGet();
+		TxInfo txinfo = new TxInfo(name, txNumber);
+		this.txMap.put(txNumber, txinfo);		
+		return txinfo;
+	}
+	
 	public <V> V transact(String name, Callable<V> transaction, HGTransactionConfig config)
 	{
+		TxInfo txinfo = startTransaction(name);
 		while (true)
 		{		    
 			manager.beginTransaction(config);
-			TxInfo runner =
-				new TxInfo(name, manager.getContext().getCurrent().getNumber());
-			this.txMap.put(runner.number(), runner);
+			manager.getContext().getCurrent().setAttribute(hgdbmonitorTxInfoKey, txinfo);
 			V result;
 			try
 			{
@@ -116,7 +132,7 @@ class TxMonitor implements TransactionMonitor
 			{
 				try { manager.endTransaction(false); }
 				catch (HGTransactionException tex) { tex.printStackTrace(System.err); }
-				runner.failed(ex);
+				txinfo.failed(ex);
 				return null;
 			}
 			catch (Throwable t)
@@ -130,16 +146,16 @@ class TxMonitor implements TransactionMonitor
 				}
 				else
 				{
-					runner.failed(t);
+					txinfo.failed(t);
 					manager.handleTxException(t); // will re-throw if we can't retry the transaction
-					runner.retried();
+					txinfo.retried().conflicting().addAll(activeNames(txinfo));
 				}
 				continue;
 			}
 			try
 			{
 				manager.endTransaction(true);		
-				runner.succeeded();
+				txinfo.succeeded();
 				return result;
 			}  
 			catch (Throwable t)
@@ -151,11 +167,17 @@ class TxMonitor implements TransactionMonitor
                 }
                 else
                 {
-                	runner.failed(t);
+                	txinfo.failed(t);
                     manager.handleTxException(t); // will re-throw if we can't retry the transaction
-                    runner.retried();
+                    txinfo.retried().conflicting().addAll(activeNames(txinfo));                    
                 }
 			}
 		}		
+	}
+	
+	public TransactionMonitor clear()
+	{
+		txMap.clear();
+		return this;
 	}
 }

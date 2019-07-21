@@ -8,7 +8,9 @@
 package org.hypergraphdb.transaction;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A TxMonitoringRunner runs a HGDB transaction while monitoring 
@@ -24,6 +26,7 @@ public class TxInfo
 	private long transactionNumber = 0;
 	private Throwable failureException = null;
 	private HashMap<String, Object> attributes = new HashMap<String, Object>();
+	private HashSet<String> conflicting = new HashSet<String>(); // names of transactions which caused this one to retry
 	
 	public TxInfo(String name, long transactionNumber)
 	{
@@ -32,7 +35,7 @@ public class TxInfo
 		this.startTime = System.currentTimeMillis();
 	}
 	
-	TxInfo retried()
+	public TxInfo retried()
 	{
 		this.endTime = 0;
 		this.failureException = null;
@@ -40,17 +43,22 @@ public class TxInfo
 		return this;
 	}
 	
-	TxInfo succeeded()
+	public TxInfo succeeded()
 	{
 		this.endTime = System.currentTimeMillis();
 		return this;
 	}
 	
-	TxInfo failed(Throwable failureException)
+	public TxInfo failed(Throwable failureException)
 	{
 		this.failureException = failureException;
 		this.endTime = System.currentTimeMillis();
 		return this;
+	}
+	
+	public boolean isFinished()
+	{
+		return endTime > 0;
 	}
 	
 	public long number()
@@ -81,6 +89,11 @@ public class TxInfo
 	public Throwable failedWith()
 	{
 		return this.failureException;
+	}
+	
+	public Set<String> conflicting()
+	{
+		return this.conflicting;
 	}
 	
 	/**
