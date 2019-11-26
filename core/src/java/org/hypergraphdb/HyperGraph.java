@@ -1776,69 +1776,10 @@ public /*final*/ class HyperGraph implements HyperNode
     	}}, HGTransactionConfig.READONLY);
     }
     
-//    private void unloadAtom(final HGLiveHandle lHandle, final Object instance)
-//    {
-//    	try
-//    	{
-//	    	getTransactionManager().ensureTransaction(new Callable<Object>() 
-//	  	    { public Object call() {
-//	  	    	
-//	  	    	// The following (both the code for MUTABLE and MANAGED flags) cause
-//	  	    	// deadlocks with a 'get' operation in the PhnatomHandle while
-//	  	    	// an atom is waiting to be de-queued: graph.get(handle) blocks 
-//	  	    	// on waiting for the PhantomHandle to return, which in turn waits
-//	  	    	// for the atom (currently being GC-ed) to be dequeued, but this 
-//	  	    	// doesn't happen because unloadAtom can't proceed due to simultaneous
-//	  	    	// DB write with the get operation.
-///*		    	if ((lHandle.getFlags() & HGSystemFlags.MUTABLE) != 0)
-//		    	{
-//		    		//TODO: Maybe this should be done somewhere else or differently...
-//		    		//in atomAdded() attribs are added only for MANAGED flag
-//		    		AtomAttrib attrib = getAtomAttributes(lHandle.getPersistentHandle());
-//		    		if(attrib == null){
-//		    			attrib = new AtomAttrib();
-//		    			attrib.flags = lHandle.getFlags();
-//		    		   setAtomAttributes(lHandle.getPersistentHandle(), attrib);
-//		    		}
-//		    		//
-//		    		// We don't explicitly track what has changed in atom. So
-//		    		// we need to save its "whole" value. Because, the replace
-//		    		// operation is too general and it may interact with the cache
-//		    		// in complex ways, while this method may be called during cache
-//		    		// cleanup, we can't use 'replace'. We need a separate version
-//		    		// that is careful not to use the cache.
-//		    		//
-//		    		 // rawSave(lHandle.getPersistentHandle(), instance);
-//		    		replace(lHandle, instance);
-//		    	} 
-//		    	if ((lHandle.getFlags() & HGSystemFlags.MANAGED) != 0)
-//		    	{
-//		    		HGManagedLiveHandle mHandle = (HGManagedLiveHandle)lHandle;
-//		    		AtomAttrib attrib = getAtomAttributes(mHandle.getPersistentHandle());
-//		    		attrib.flags = mHandle.getFlags();
-//		    		attrib.retrievalCount += mHandle.getRetrievalCount();
-//		    		attrib.lastAccessTime = Math.max(mHandle.getLastAccessTime(), attrib.lastAccessTime);
-//		    		setAtomAttributes(lHandle.getPersistentHandle(), attrib);
-//		    	} */
-//		    	return null;
-//	    	}});
-//    	}
-//    	catch (HGException ex)
-//    	{
-//    		throw new HGException("Problem while unloading atom " + 
-//					  			  instance + " of type " + instance.getClass().getName() + " " + ex.getMessage(),
-//					  			  ex);
-//    	}
-//    	catch (Throwable t)
-//    	{
-//    		throw new HGException("Problem while unloading atom " + 
-//		  			  instance + " of type " + instance.getClass().getName(),
-//		  			  t);
-//    	}    	
-//    }
-    
     void updateLinksInIncidenceSet(IncidenceSet incidenceSet, HGLiveHandle liveHandle)
     {
+    	if (this.getConfig().isShortLivedCache())
+    		return;
     	HGSearchResult<HGHandle> rs = incidenceSet.getSearchResult();
     	try
     	{
@@ -1931,9 +1872,9 @@ public /*final*/ class HyperGraph implements HyperNode
 //        Set<HGPersistentHandle> inRemoval = TxAttribute.getSet(getTransactionManager(), 
 //															   TxAttribute.IN_REMOVAL, 
 //															   HashSet.class);
-        // Can't remember why atoms currently being removed should keep there incidence sets
+        // Can't remember why atoms currently being removed should keep their incidence sets
         // intact, next time a bug shows up related to this, please comment on why the following
-        // check is need.
+        // check is needed.
         // -Borislav
         //
         // However, if the following is uncommented, there's a problem when deleting

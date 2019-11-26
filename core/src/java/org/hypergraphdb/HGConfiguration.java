@@ -39,6 +39,7 @@ public class HGConfiguration
 	private int maxCachedIncidenceSetSize; 
 	private boolean useSystemAtomAttributes;
 	private boolean keepIncidentLinksOnRemoval = false;
+	private boolean shortLivedCache = false;
 	private HGTypeConfiguration typeConfiguration = new HGTypeConfiguration();
 	private HGQueryConfiguration queryConfiguration = new HGQueryConfiguration();
 	private HGAtomCache cacheImplementation = new WeakRefAtomCache();
@@ -410,4 +411,31 @@ public class HGConfiguration
     {
         this.cacheImplementation = cacheImplementation;
     }
+
+    /**
+     * @see {@link #setShortLivedCache(boolean)}
+     */
+	public boolean isShortLivedCache() 
+	{
+		return shortLivedCache;
+	}
+
+	/**
+	 * <p>
+	 * Specify that objects (specifically graph structure) in the cache are not expected to
+	 * stay long in the cache. The default is <code>false</code>. Set this parameter to true to
+	 * avoid performing some house keeping in the cache which will be unnecessary if the cache
+	 * is just a pass-through and it's rarely being used to traverse the same structure again.  
+	 * </p>
+	 * <p>
+	 * <b>NOTE</b> that you can switch this on and off any number of times during the lifetime of an
+	 * open graph. It governs some cache behavior that trades off performance during load time vs.
+	 * performance during traversal of atoms already in the cache. But functionality is not affected.
+	 * </p>
+	 * @param shortLivedCache
+	 */
+	public void setShortLivedCache(boolean shortLivedCache) 
+	{
+		this.shortLivedCache = shortLivedCache;
+	}
 }
