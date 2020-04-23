@@ -1505,6 +1505,8 @@ public abstract class HGQuery<SearchResult> implements HGGraphHolder
                 // as a don't care in query expressions.
                 return null; 
             }
+            
+            public boolean equals(Object x) { return x instanceof HGHandle; }
         };
         
         /**

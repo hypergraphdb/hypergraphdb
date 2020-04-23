@@ -8,6 +8,7 @@
 package org.hypergraphdb.indexing;
 
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
@@ -136,7 +137,11 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 	{
 //		return null;  //is this Ok???
 		if (projectionType == null)
+		{
 			getProjections(graph);
+			if (projectionType == null)
+				throw new HGException("Could not get the type of the projection for this index " + toString());
+		}
 		if (projectionType.getClass().equals(AtomRefType.class))
 			return null;
 		else if (projectionType instanceof HGPrimitiveType)
@@ -183,5 +188,12 @@ public class ByPartIndexer<KeyType> extends HGKeyIndexer<KeyType>
 		hash = 31 * hash + HGUtils.hashIt(dimensionPath);
 		hash = 31 * hash + getType().hashCode();
     return hash;
-	}	
+	}
+	
+	public String toString()
+	{
+		return "ByPartIndexer[name=" + this.getName() + "," +
+						"type=" + this.getType()  + ","  +
+						"dimensionPath=" + Arrays.asList(this.dimensionPath) +"]";
+	}
 }
