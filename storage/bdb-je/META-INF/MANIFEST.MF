@@ -41,5 +41,5 @@ Ignore-Package: javax.management,org.apache.tools.ant,org.apache.tools
  .ant.types
 Embed-Transitive: true
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.8.0_181
+Build-Jdk: 1.8.0_191
 

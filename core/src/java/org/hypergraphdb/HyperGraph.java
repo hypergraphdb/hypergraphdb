@@ -422,6 +422,7 @@ public /*final*/ class HyperGraph implements HyperNode
 	        try { cache.close(); 									 } catch (Throwable t) { problems.add(t); }        
 	    	try { idx_manager.close();								 } catch (Throwable t) { problems.add(t); }
 	    	try { eventManager.clear();								 } catch (Throwable t) { problems.add(t); }
+	    	try { typeSystem.close();								 } catch (Throwable t) { problems.add(t); }
 	        try { store.close();                                     } catch (Throwable t) { problems.add(t); }
 	        is_open = false;
 	        for (Throwable t : problems)
