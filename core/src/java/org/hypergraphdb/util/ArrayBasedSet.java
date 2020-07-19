@@ -196,7 +196,7 @@ public class ArrayBasedSet<E> implements HGSortedSet<E>, CloneMe
 		lock.writeLock().lock();
 		try
 		{
-			if (i < 0 || i > size())
+			if (i < 0 || i >= size())
 				throw new IllegalArgumentException("index " + i + " out of bounds [0," + size() + ").");
 			else
 			{
