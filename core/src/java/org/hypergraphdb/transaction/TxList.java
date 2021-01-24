@@ -47,44 +47,41 @@ public class TxList<E> implements List<E>
 	{
 		if (!I.hasNext())
 			return new VBox<Node<E>>(txManager, null);
-		E current = I.next();
-		sizebox = new VBox<Integer>(txManager, sizebox.get() + 1);
+		sizebox = new VBox<Integer>(txManager, sizebox.get() + 1);		
+		E currentElement = I.next();
+		VBox<Node<E>> nextNodeBox = I.hasNext() ? fromInitial(I) : new VBox<Node<E>>(txManager, null);
+		Node<E> currentNode = new Node<E>(currentElement, nextNodeBox); 
 		if (!I.hasNext())
-		{
-			tail = new VBox<Node<E>>(txManager, new Node<E>(current, null));
-			return tail;
-		}
-		else
-		{
-			VBox<Node<E>> next = fromInitial(I);
-			return new VBox<Node<E>>(txManager, new Node<E>(current, next));
-		}
+			tail = new VBox<Node<E>>(txManager, currentNode);
+		return new VBox<Node<E>>(txManager, currentNode);
 	}
 	
 	public TxList(HGTransactionManager txManager)
 	{
 		this.txManager = txManager;
 		sizebox = new VBox<Integer>(txManager, 0);
+		tail = new VBox<Node<E>>(txManager, null);		
 		head = new VBox<Node<E>>(txManager, null);
-		tail = new VBox<Node<E>>(txManager, null);
 	}
 
 	public TxList(HGTransactionManager txManager, Iterable<E> initialData)
 	{
-		this.txManager = txManager;
-		sizebox = new VBox<Integer>(txManager, 0);
+		this(txManager);		
 		head = fromInitial(initialData.iterator());
-		if (head.get() == null)
-			tail = new VBox<Node<E>>(txManager, null);
 	}
 	
     public boolean add(E e)
     {
-    	Node<E> node = new Node<E>(e, new VBox<Node<E>>(txManager, null));
+    	Node<E> node = new Node<E>(e, new VBox<Node<E>>(txManager, null));    	
     	if (isEmpty())
     		head.put(node);
     	else
-    		tail.get().next.put(node);
+    	{
+    		VBox<Node<E>> lastBox = head;
+    		while(lastBox.get() != null)
+    			lastBox = lastBox.get().next;
+    		lastBox.put(node);
+    	}
 		tail.put(node);
 		sizebox.put(sizebox.get() + 1);
         return true;

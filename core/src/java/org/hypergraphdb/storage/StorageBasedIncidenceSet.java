@@ -155,6 +155,15 @@ public class StorageBasedIncidenceSet implements HGSortedSet<HGHandle>
     public Iterator<HGHandle> iterator()
     {
         throw new UnsupportedOperationException("Use getSearchResult and make sure you close it.");
+        
+        // BELOW is for debugging whenever this gets hit 
+//    	ArrayList<HGHandle> L = new ArrayList<HGHandle>();
+//    	try (HGRandomAccessResult<HGHandle> rs = this.getSearchResult())
+//    	{
+//    		while (rs.hasNext())
+//    			L.add(rs.next());
+//    	}
+//    	return L.iterator();
     }
 
     public boolean remove(Object o)

@@ -22,11 +22,14 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             {
                 // a marker that we have loaded some older values for older, but still running tx
                 if (S.body.version == -1)
-                {
                     S.body = S.makeNewBody(x, txNumber, S.body.next);
-                }                
                 else if (S.body.version < txNumber) // otherwise we just add as the newest body with the current tx number
                     S.body = S.makeNewBody(x, txNumber, S.body);
+                else // s.body.version == txNumber, can't be bigger since we are the last TX
+                	// This means we are re-creating/restoring a set previously deleted in the current transaction
+                	// so we just replace with the new value provided, the previous state associated with that TX should
+                	// be wiped out
+                	S.body = S.makeNewBody(x, txNumber, S.body.next);
                 return S.body;
             }
             // if not current, we must insert it into the list of bodies 
@@ -141,21 +144,34 @@ public class TxCacheSet<Key, E> extends TxSet<E>
             return;
         }        
         S = writeMap.get(key);         
-        long txNumber = tx.getNumber();
         if (S == null)
         {
             S = new CacheSetTxBox<Key, E>(txManager, backingSet, this);
             
             // we need to tag the body with the current transaction's version
             // since body.version is final, we replace with a new body
-            S.body = S.makeNewBody(backingSet, txNumber, null); 
+            S.body = S.makeNewBody(backingSet, tx.getNumber(), null); 
             // if this is an old transaction, we need to put null at the top of the body
             // list so the latest will get reloaded if needed
-            if (txNumber < txManager.mostRecentRecord.transactionNumber)
+            if (tx.getNumber() < txManager.mostRecentRecord.transactionNumber)
                 S.body = S.makeNewBody(null, -1, S.body);
         }
         else
-            insertBody(txNumber, backingSet);
+        {
+        	// This means we have deleted the set for that key in this transaction and now we are restoring it,
+        	// that is creating a new set associated with the same key.
+        	// We do re-attached to the CacheSetTxBox, but we have to wipe out the state associated
+        	// with this transaction before the set was deleted. This means replacing the body
+        	// for this exact TX version with the new backing set and also deleting the local
+        	// version in the transaction object.
+        	//
+        	// Or is it possible we have evicted the set from the cache, but it's still
+        	// valid and there might changes in the TX boxesWritten that we want to preserve?
+        	// How to distinguish b/w delete sets from storage and evicted from the cache?
+        	// TODO: this is an open problem!!!        	
+    		insertBody(tx.getNumber(), backingSet);
+    		tx.removeBoxValue(S);
+        }
     }   
     
     public static class CacheSetTxBox<Key, E> extends SetTxBox<E>
@@ -195,7 +211,7 @@ public class TxCacheSet<Key, E> extends TxSet<E>
         {
             if (tx.getAttribute(this) != null)
             {
-                TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;                
+                TxCacheSet<Key, E> s = (TxCacheSet<Key, E>)thisSet;
                 s.writeMap.remove(s.key);
             }
         }        
