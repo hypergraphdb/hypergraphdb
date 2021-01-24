@@ -20,7 +20,7 @@ import org.hypergraphdb.query.impl.PredicateBasedFilter;
 import org.hypergraphdb.query.impl.SearchableBasedQuery;
 import org.hypergraphdb.type.HGAtomType;
 
-public class TypedValueToQuery implements ConditionToQuery
+public class TypedValueToQuery<T> implements ConditionToQuery<T>
 {
 	static class Query<T> extends HGQuery<T>
 	{
@@ -66,7 +66,7 @@ public class TypedValueToQuery implements ConditionToQuery
 						new SearchableBasedQuery(graph.getIndexManager().getIndexByValue(), 
 												 null,
 												 ComparisonOperator.EQ)), 
-						new AtomTypeCondition(typeHandle)).execute();
+					new AtomTypeCondition(typeHandle)).execute();
 			else
 				// else, we need to scan all atoms of the given type
 				return new PredicateBasedFilter(graph, 
@@ -77,9 +77,9 @@ public class TypedValueToQuery implements ConditionToQuery
 		}
 	}
 	
-	public HGQuery<?> getQuery(HyperGraph graph, HGQueryCondition c)
+	public HGQuery<T> getQuery(HyperGraph graph, HGQueryCondition c)
 	{
-		Query<?> q = new Query<Object>();
+		Query<T> q = new Query<T>();
 		q.vc = (TypedValueCondition) c;
 		q.graph = graph;
 		return q;
