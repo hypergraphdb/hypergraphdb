@@ -1322,16 +1322,7 @@ public /*final*/ class HyperGraph implements HyperNode
      */
     public void define(final HGHandle atomHandle, final Object instance, final int flags)
     {
-    	HGHandle typeHandle = null;
-    	if (instance == null)
-    		typeHandle = typeSystem.getNullType();
-    	else if (instance instanceof HGValueLink)
-    		typeHandle = typeSystem.getTypeHandle(((HGValueLink)instance).getValue().getClass());
-    	else
-    	    typeHandle = typeSystem.getTypeHandle(instance.getClass());
-    	if (typeHandle == null)
-    		throw new HGException("Could not find HyperGraph type for object of type " + instance.getClass());
-    	define(atomHandle, typeHandle, instance, flags);
+    	define(atomHandle, HGUtils.hgTypeOf(this, instance), instance, flags);
     }
 
     /**

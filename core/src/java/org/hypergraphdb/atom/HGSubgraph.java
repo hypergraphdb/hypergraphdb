@@ -3,6 +3,7 @@ package org.hypergraphdb.atom;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGGraphHolder;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGHandleHolder;
@@ -20,6 +21,7 @@ import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.SubgraphMemberCondition;
 import org.hypergraphdb.storage.BAtoHandle;
 import org.hypergraphdb.util.FilteredSortedSet;
+import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Mapping;
 
 /**
@@ -156,6 +158,11 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		return add(graph.add(atom, type, flags));
 	}
 
+	public HGHandle add(Object atom)
+	{
+		return this.add(atom, HGUtils.hgTypeOf(graph, atom), 0);
+	}
+	
 	public long count(HGQueryCondition condition)
 	{
 		return hg.count(graph, localizeCondition(condition));
@@ -173,6 +180,11 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 		add(handle);
 	}
 
+	public void define(HGHandle handle,  Object instance)
+	{
+		define(handle, HGUtils.hgTypeOf(getHyperGraph(), instance), instance, 0);
+	}
+	
 	public <T> HGSearchResult<T> find(HGQueryCondition condition)
 	{
 		return graph.find(localizeCondition(condition));
@@ -190,6 +202,7 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
         return (T)graph.getOne(localizeCondition(condition));
     }
 	
+    // NOTE: hmm, why is the return here List<HGHandle> instead of List<Object>?
 	@SuppressWarnings("unchecked")
     public List<HGHandle> findAll(HGQueryCondition condition)
 	{
@@ -271,6 +284,15 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 	    });
 	}
 
+	public boolean update(final Object atom)
+	{
+    	HGHandle h = getHyperGraph().getHandle(atom);
+    	if (h == null)
+    		throw new HGException("Could not find HyperGraph handle for atom " + atom);
+    	else
+    		return replace(h, atom, getType(h));		
+	}
+	
 	/**
 	 * Performs the replace in the global database as this only deals with
 	 * an atom's value.
@@ -286,6 +308,11 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
         });
 	}
 
+	public boolean replace(final HGHandle handle, final Object newValue)
+	{
+		return replace(handle, newValue, HGUtils.hgTypeOf(graph, newValue));
+	}
+	
 	public HGHandle getAtomHandle()
 	{
 		return this.thisHandle;
