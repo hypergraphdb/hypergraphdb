@@ -12,6 +12,7 @@ import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.indexing.ByPartIndexer;
 import org.hypergraphdb.indexing.ByTargetIndexer;
+import org.hypergraphdb.indexing.DirectValueIndexer;
 import org.hypergraphdb.query.And;
 import org.hypergraphdb.query.AtomPartCondition;
 import org.hypergraphdb.query.AtomTypeCondition;
@@ -64,8 +65,21 @@ public class ContractConjunction
                     throw new ContradictoryCondition();
             }
             else
-                tvc = new TypedValueCondition(tc.getTypeReference(), vc
-                        .getValueReference());
+                tvc = new TypedValueCondition(tc.getTypeReference(), vc.getValueReference());
+            
+            if (!hg.isVar(tvc.getTypeReference()))
+            {
+            	// TODO: we just check if we have a direct value reference index. In the older
+            	// "simplify" method we also checked for ByPart indexers to be and-ed as a quick
+            	// way to get to the correct,but it's really not that clear we should be doing that.
+            	Pair<HGHandle, HGIndex<Object,HGPersistentHandle>> p = 
+            			QEManip.findIndex(graph, new DirectValueIndexer<Object>(tvc.getTypeHandle()));
+                if (p != null)
+                {
+                    IndexCondition byindex = new IndexCondition(p.getSecond(), tvc.getValueReference(), tvc.getOperator());
+                    return new Pair<HGQueryCondition, Set<HGQueryCondition>>(byindex, (Set) HGUtils.set(tc, vc));
+                }
+            }    
             return new Pair<HGQueryCondition, Set<HGQueryCondition>>(tvc,
                     (Set) HGUtils.set(vc));
         }
@@ -99,7 +113,7 @@ public class ContractConjunction
                     return emptyresult;
                 else
                 {
-                    Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = ExpressionBasedQuery.findIndex(
+                    Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = QEManip.findIndex(
                             graph, new ByPartIndexer(typeHandle, pc.getDimensionPath())); // graph.getIndexManager().getIndex(indexer);
                     if (p != null)
                     {
@@ -151,7 +165,7 @@ public class ContractConjunction
                             || targetHandle.equals(hg.constant(graph
                                     .getHandleFactory().anyHandle())))
                         continue;
-                    Pair<HGHandle, HGIndex<HGPersistentHandle,HGPersistentHandle>> p = ExpressionBasedQuery.findIndex(
+                    Pair<HGHandle, HGIndex<HGPersistentHandle,HGPersistentHandle>> p = QEManip.findIndex(
                             graph, new ByTargetIndexer(typeHandle, ti));
                     if (p != null)
                     {

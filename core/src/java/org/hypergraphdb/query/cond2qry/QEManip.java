@@ -7,10 +7,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hypergraphdb.HGHandle;
+import org.hypergraphdb.HGIndex;
+import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.algorithms.DefaultALGenerator;
+import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.algorithms.HGTraversal;
 import org.hypergraphdb.atom.HGSubsumes;
+import org.hypergraphdb.indexing.HGKeyIndexer;
 import org.hypergraphdb.query.AtomTypeCondition;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.TypeCondition;
@@ -87,7 +92,7 @@ public class QEManip
             if (c.getTypeReference().get() instanceof Class<?>)
             {
                 th = graph.getTypeSystem().getTypeHandleIfDefined(
-                        c.getTypeReference().getClass());
+                        (Class<?>)c.getTypeReference().get());
                 if (th == null)
                 {
                     taggr.watchTypeReference(c);
@@ -153,4 +158,25 @@ public class QEManip
         }
         return M;
     }
+
+	static <Key> Pair<HGHandle, HGIndex<Key, HGPersistentHandle>> findIndex(HyperGraph graph, HGKeyIndexer<Key> indexer)
+	{
+	    HGTraversal typeWalk = new HGBreadthFirstTraversal(indexer.getType(),
+	                    new DefaultALGenerator(graph, 
+	                                           hg.type(HGSubsumes.class), 
+	                                           null, 
+	                                           true, 
+	                                           false, 
+	                                           false));
+	    for (HGHandle type = indexer.getType(); type != null; )
+	    {
+	        indexer.setType(type);
+	        HGIndex<Key, HGPersistentHandle> idx = graph.getIndexManager().getIndex(indexer);
+	        if (idx != null)
+	            return new Pair<HGHandle, HGIndex<Key, HGPersistentHandle>>(type, idx);
+	        else
+	            type = typeWalk.hasNext() ? typeWalk.next().getSecond() : null;
+	    }	    
+	    return null;
+	}
 }

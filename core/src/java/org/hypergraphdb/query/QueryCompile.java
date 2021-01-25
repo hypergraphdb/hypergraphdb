@@ -156,11 +156,23 @@ public class QueryCompile
         return aquery;
     }
 
+    /**
+     * An operation whereby a complex query expression (e.g. an "And") can be rewritten in a way
+     * where some of its parts are replaced with a single, simpler and/or more efficient part.
+     * For example a conjunction of a few conditions could be replaced with an index. 
+     * 
+     * @return A pair [SimplerCondition, ReplacedSet] consisting of the simpler HGQueryCondition
+     * and the set of HGQueryConditions that it is replacing. 
+     */
     public static interface Contract 
     {
         Pair<HGQueryCondition, Set<HGQueryCondition>> contract(HyperGraph graph, HGQueryCondition expression);
     }
     
+    /**
+     * Given a HGQueryCondition, rewrite it as an equivalent set of conditions to be taken as a
+     * conjunction.
+     */
     public static interface Expand
     {
         Set<HGQueryCondition> contract(HyperGraph graph, HGQueryCondition expression);
