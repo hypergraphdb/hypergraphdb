@@ -78,6 +78,8 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 //				size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
 //			if (size <= keepInMemoryThreshold)
 //			{
+//		    
+		    
 				ArrayList<HGPersistentHandle> A = new ArrayList<HGPersistentHandle>();
 				while (rs.hasNext())
 				{
@@ -98,6 +100,7 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);
 				return result;
+				
 //			}
 //			else
 //				return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));
