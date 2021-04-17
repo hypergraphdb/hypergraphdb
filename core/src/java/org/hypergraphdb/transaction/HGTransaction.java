@@ -333,6 +333,11 @@ public final class HGTransaction implements HGStorageTransaction
         return this.readonly;
     }
     
+    /**
+     * Add some piece of code to execute when a transaction is aborted. This
+     * useful to cleanup mutable data structures that need to restore their
+     * pre-transaction state in case of an abort.  
+     */
     public void addAbortAction(Runnable r)
     {
         this.abortActions.add(r);
