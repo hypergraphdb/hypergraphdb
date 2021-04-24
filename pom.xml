@@ -12,6 +12,7 @@
 
   <properties>
     <java.version>1.8</java.version>
+    <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
     <version>1.4-SNAPSHOT</version>
     <!-- Sleepycat libraries -->
     <bje.version>5.0.104</bje.version>
