@@ -10,6 +10,7 @@ package org.hypergraphdb.query;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.transaction.TransactionIsReadonlyException;
 import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.util.HGUtils;
 import org.hypergraphdb.util.Ref;
@@ -105,7 +106,17 @@ public class AtomTypeCondition implements HGQueryCondition, HGAtomPredicate, Typ
 		if (t instanceof HGHandle)
 			return (HGHandle)t;
 		else
-			return graph.getTypeSystem().getTypeHandle((Class<?>)t);
+			try
+			{
+				return graph.getTypeSystem().getTypeHandle((Class<?>)t);
+			}
+			catch (RuntimeException ex)
+			{
+				if (HGUtils.getRootCause(ex) instanceof TransactionIsReadonlyException)
+					throw new TransactionIsReadonlyException("while get type handle for " + t);
+				else
+					throw ex;
+			}
 	}
 	
 	public Ref<?> getTypeReference() 

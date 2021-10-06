@@ -1,19 +1,24 @@
 Manifest-Version: 1.0
-Bundle-SymbolicName: org.hypergraphdb-hgbdbnative;singleton:=true
+Bnd-LastModified: 1619289102422
+Build-Jdk: 1.8.0_261
 Built-By: borislav
-Bundle-ManifestVersion: 2
-Bnd-LastModified: 1454885619917
-Embed-Dependency: db
-Tool: Bnd-0.0.238
-Bundle-Version: 1.4.0.SNAPSHOT
-Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-ClassPath: .,db-5.3.15.jar
-Private-Package: com.sleepycat.asm,com.sleepycat.bind,com.sleepycat.bi
- nd.serial,com.sleepycat.bind.tuple,com.sleepycat.collections,com.slee
- pycat.compat,com.sleepycat.db,com.sleepycat.db.internal,com.sleepycat
- .persist,com.sleepycat.persist.evolve,com.sleepycat.persist.impl,com.
- sleepycat.persist.model,com.sleepycat.persist.raw,com.sleepycat.util,
- com.sleepycat.util.keyrange
+Bundle-ManifestVersion: 2
+Bundle-Name: HyperGraphDB BDB-JE Storage
+Bundle-SymbolicName: org.hypergraphdb-hgbdbnative;singleton:=true
+Bundle-Version: 1.4.0.SNAPSHOT
 Created-By: Apache Maven Bundle Plugin
-Build-Jdk: 1.8.0_40
-
+Embed-Dependency: db
+Embedded-Artifacts: db-5.3.15.jar;g="com.sleepycat";a="db";v="5.3.15"
+Export-Package: org.hypergraphdb.storage.bdb;uses:="org.hypergraphdb,org
+ .hypergraphdb.storage,org.hypergraphdb.storage.incidence,org.hypergraph
+ db.transaction,org.hypergraphdb.util";version="1.4.0.SNAPSHOT",org.hype
+ rgraphdb.storage.incidence;uses:="org.hypergraphdb,org.hypergraphdb.que
+ ry,org.hypergraphdb.query.cond2qry,org.hypergraphdb.storage,org.hypergr
+ aphdb.util";version="1.4.0.SNAPSHOT"
+Import-Package: org.hypergraphdb,org.hypergraphdb.query,org.hypergraphdb
+ .query.cond2qry,org.hypergraphdb.query.impl,org.hypergraphdb.storage,or
+ g.hypergraphdb.storage.incidence,org.hypergraphdb.transaction,org.hyper
+ graphdb.util
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+Tool: Bnd-3.0.0.201509101326

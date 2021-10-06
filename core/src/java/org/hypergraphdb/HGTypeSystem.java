@@ -1222,4 +1222,10 @@ public class HGTypeSystem
 			if (rs != null) try { rs.close(); } catch (Throwable _) { }
 		}
 	}
+	
+	void close()
+	{
+		try { aliases.close(); } catch (Throwable t) { t.printStackTrace(System.err); }
+		try { urisDB.close();  } catch (Throwable t) { t.printStackTrace(System.err); }
+	}
 }

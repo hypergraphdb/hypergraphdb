@@ -158,7 +158,7 @@ public class AnalyzedQuery<SearchResult> extends HGQuery<SearchResult>
         return redflags;
     }
 
-    private long estimateSize(HGQuery q)
+    private long estimateSize(HGQuery<?> q)
     {
         QueryMetaData meta = metadata.get(q);
         if (meta != null)
@@ -200,5 +200,5 @@ public class AnalyzedQuery<SearchResult> extends HGQuery<SearchResult>
             }
             return Boolean.TRUE;
         }
-    };    
+    };
 }

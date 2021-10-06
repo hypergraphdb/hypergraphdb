@@ -90,7 +90,7 @@ public interface HGHandleFactory
      * <p>
      * For efficiency reasons, the <code>equals</code> method of the various implementations of 
      * the <code>HGHandle</code> interface ignore this constant, even though it would be
-     * more consistent to for <code>anyHandle.equals(x)</code> and <code>x.equals(anyHandle)</code>
+     * more consistent for <code>anyHandle.equals(x)</code> and <code>x.equals(anyHandle)</code>
      * to always return true.
      * </p>
      */        

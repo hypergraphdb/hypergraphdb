@@ -623,18 +623,6 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		return findOrdered(key, true, true);
 	}
 
-	protected void finalize()
-	{
-		if (isOpen())
-			try
-			{
-				close();
-			}
-			catch (Throwable t)
-			{
-			}
-	}
-
 	public long count()
 	{
 		try

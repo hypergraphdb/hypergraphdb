@@ -385,19 +385,19 @@ public class BonesOfBeans
 	 *             is there's any error during the construction process, such as
 	 *             ClassNotFoundException etc.
 	 */
-	public static Object makeBean(String classname)
-	{
-		try
-		{
-			Class<?> clazz = Class.forName(classname);
-			return clazz.newInstance();
-		} catch (Exception ex)
-		{
-			throw new HGException("Could not construct a bean DataObject "
-					+ "from " + classname, ex);
-
-		}
-	}
+//	public static Object makeBean(String classname)
+//	{
+//		try
+//		{
+//			Class<?> clazz = Class.forName(classname);
+//			return clazz.newInstance();
+//		} catch (Exception ex)
+//		{
+//			throw new HGException("Could not construct a bean DataObject "
+//					+ "from " + classname, ex);
+//
+//		}
+//	}
 
 	/**
 	 * @param aClass

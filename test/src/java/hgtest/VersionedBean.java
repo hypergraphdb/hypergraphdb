@@ -81,7 +81,7 @@ public class VersionedBean
 		HGSearchResult<HGHandle> scan = idx.scanKeys();
 		while (scan.hasNext())
 		{
-			System.out.println(graph.get((HGHandle)idx.findFirst(scan.next())));
+			System.out.println((Object)graph.get((HGHandle)idx.findFirst(scan.next())));
 		}
 		
 		VersionedBean bean = new VersionedBean();

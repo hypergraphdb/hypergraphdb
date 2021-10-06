@@ -73,14 +73,20 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 		HGSearchResult<HGPersistentHandle> rs = graph.getStore().getIncidenceResultSet(key);
 		try
 		{
-			int size = keepInMemoryThreshold;
-			if (keepInMemoryThreshold < Integer.MAX_VALUE)
-				size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
-			if (size <= keepInMemoryThreshold)
-			{
+//			int size = keepInMemoryThreshold;
+//			if (keepInMemoryThreshold < Integer.MAX_VALUE)
+//				size = rs == HGSearchResult.EMPTY ? 0 : ((CountMe)rs).count();
+//			if (size <= keepInMemoryThreshold)
+//			{
+//		    
+		    
 				ArrayList<HGPersistentHandle> A = new ArrayList<HGPersistentHandle>();
 				while (rs.hasNext())
+				{
 					A.add(rs.next());
+					if (A.size() > keepInMemoryThreshold)
+						return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));					
+				}
 				ArrayBasedSet<HGHandle> impl = new ArrayBasedSet<HGHandle>(A.toArray(HGUtils.EMPTY_HANDLE_ARRAY));
 				impl.setLock(new DummyReadWriteLock());
 				IncidenceSet result = new IncidenceSet(key,
@@ -94,9 +100,10 @@ class ISRefResolver implements RefResolver<HGPersistentHandle, IncidenceSet>
 				if (lHandle != null)
 					graph.updateLinksInIncidenceSet(result, lHandle);
 				return result;
-			}
-			else
-				return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));
+				
+//			}
+//			else
+//				return new IncidenceSet(key, new StorageBasedIncidenceSet(key, graph));
 		}
 		finally
 		{

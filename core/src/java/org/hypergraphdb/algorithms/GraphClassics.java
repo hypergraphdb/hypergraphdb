@@ -8,12 +8,14 @@
 package org.hypergraphdb.algorithms;
 
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 import org.hypergraphdb.*;
 import org.hypergraphdb.atom.HGAtomSet;
 import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.util.Mapping;
 import org.hypergraphdb.util.Pair;
+import org.hypergraphdb.util.SimpleStack;
 
 /**
  * 
@@ -37,7 +39,64 @@ public class GraphClassics
 	 * @param adjencyGenerator Generator for atoms adjacent to the current node being examined.
 	 * @return <code>true</code> if the sub-graph has cycles and <code>false</code> otherwise.
 	 */
-	public static boolean hasCycles(final HGHandle root, final HGALGenerator adjencyGenerator)
+    public static boolean hasCycles(final HGHandle root, final HGALGenerator adjencyGenerator)
+    {
+        HashSet<HGHandle> processing = new HashSet<>();
+        HashSet<HGHandle> visited = new HashSet<>();
+        SimpleStack<HGHandle> to_explore = new SimpleStack<>();
+        to_explore.push(root);
+        HashMap<HGHandle, HGHandle> adjacentFrom = new HashMap<HGHandle, HGHandle>();
+        
+        while (!to_explore.isEmpty())
+        {
+            HGHandle next = to_explore.peek();
+            if (visited.add(next))
+            {
+                processing.add(next);
+            }
+            else
+            {
+                processing.remove(next);
+                to_explore.pop();
+            } 
+            HGSearchResult<Pair<HGHandle, HGHandle>> rs = adjencyGenerator.generate(next);
+            try
+            {
+                // Because we allow multiple edges between nodes, we have to be careful
+                // not to add the same adjacent node twice to explore. 
+                HashSet<HGHandle> adjacent = new HashSet<HGHandle>();
+                rs.forEachRemaining(p -> adjacent.add(p.getSecond()));
+                for (HGHandle x : adjacent)
+                {
+                    if (!visited.contains(x))
+                    {                        
+                        boolean inexplore = 
+                                StreamSupport.stream(to_explore.spliterator(), false)
+                                    .anyMatch(h->h.equals(x));
+                        if (!inexplore)
+                        {
+                            adjacentFrom.put(x, next);
+                            to_explore.push(x);                           
+                        }
+                        else
+                        {                            
+                            System.out.println("Conclusion from " + x + 
+                                    "Already adjacent to " + adjacentFrom.get(x));
+                        }
+                    }
+                    else if (processing.contains(x))
+                        return true;
+                }
+            }
+            finally
+            {
+                rs.close();
+            }
+        }
+        return false;        
+    }
+    
+	public static boolean hasCyclesOld(final HGHandle root, final HGALGenerator adjencyGenerator)
 	{
 		HGAtomSet visited = new HGAtomSet();
 		Queue<HGHandle> to_explore = new LinkedList<HGHandle>();

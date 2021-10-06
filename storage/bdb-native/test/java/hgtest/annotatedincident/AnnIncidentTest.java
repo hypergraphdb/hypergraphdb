@@ -14,10 +14,10 @@ import org.hypergraphdb.storage.incidence.TypeAndPositionIncidenceAnnotator;
 import org.hypergraphdb.storage.incidence.TypedIncidentCondition;
 import org.hypergraphdb.storage.incidence.TypedIncidentToQuery;
 import org.hypergraphdb.util.HGUtils;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import hgtest.HGTestBase;
 import hgtest.beans.BeanLink1;
@@ -25,7 +25,7 @@ import hgtest.beans.BeanLink1;
 public class AnnIncidentTest extends HGTestBase
 {
     @BeforeClass
-    public void setUp()
+    public static void setUp()
     {
         System.out.println("java.library.path"  + System.getProperty("java.library.path"));
         HGUtils.dropHyperGraphInstance(getGraphLocation());
@@ -35,13 +35,13 @@ public class AnnIncidentTest extends HGTestBase
         BDBStorageImplementation storage = new BDBStorageImplementation();
         storage.setIncidentAnnotator(new TypeAndPositionIncidenceAnnotator());
         config.setStoreImplementation(storage);
-        this.graph = HGEnvironment.get(getGraphLocation(), config);
+        graph = HGEnvironment.get(getGraphLocation(), config);
         config.getQueryConfiguration().addContractTransform(And.class, new QueryByTypedIncident());
         config.getQueryConfiguration().addCompiler(TypedIncidentCondition.class, new TypedIncidentToQuery());
     }
     
     @AfterClass    
-    public void tearDown()
+    public static void tearDown()
     {
         graph.close();
         HGUtils.dropHyperGraphInstance(getGraphLocation());

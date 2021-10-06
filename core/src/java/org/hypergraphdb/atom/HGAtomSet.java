@@ -32,26 +32,25 @@ import java.util.SortedSet;
  *  
  * @author Borislav Iordanov
  */
-@SuppressWarnings("unchecked")
 public class HGAtomSet implements HGSortedSet<HGHandle>
 {	
     static final long serialVersionUID = -1L;    
-	protected HGSortedSet<HGPersistentHandle> impl = null;
+	protected HGSortedSet<HGHandle> impl = null;
 
 	public HGAtomSet()
 	{
-		this.impl = new ArrayBasedSet<HGPersistentHandle>(new HGPersistentHandle[0]); 
+		this.impl = new ArrayBasedSet<HGHandle>(new HGPersistentHandle[0]); 
 //		this.impl = new LLRBTree<HGPersistentHandle>();
 	}
 	
-	public HGAtomSet(HGSortedSet implementation)
+	public HGAtomSet(HGSortedSet<HGHandle> implementation)
 	{
 		this.impl = implementation;
 	}
 	
 	public HGRandomAccessResult<HGHandle>  getSearchResult()
 	{
-		return (HGRandomAccessResult)impl.getSearchResult();
+		return impl.getSearchResult();
 	}
     public Comparator<? super HGHandle> comparator()
 	{
@@ -63,7 +62,7 @@ public class HGAtomSet implements HGSortedSet<HGHandle>
 	}
 	public SortedSet<HGHandle> headSet(HGHandle h)
 	{
-		return (SortedSet)impl.headSet(U.persistentHandle(h));
+		return impl.headSet(U.persistentHandle(h));
 	}
 	public HGHandle last()
 	{
@@ -71,11 +70,11 @@ public class HGAtomSet implements HGSortedSet<HGHandle>
 	}
 	public SortedSet<HGHandle> subSet(HGHandle fromElement, HGHandle toElement)
 	{
-		return (SortedSet)impl.subSet(U.persistentHandle(fromElement), U.persistentHandle(toElement));
+		return impl.subSet(U.persistentHandle(fromElement), U.persistentHandle(toElement));
 	}
 	public SortedSet<HGHandle> tailSet(HGHandle h)
 	{
-		return (SortedSet)impl.tailSet(U.persistentHandle(h));
+		return impl.tailSet(U.persistentHandle(h));
 	}
 	public boolean add(HGHandle h)
 	{
@@ -85,7 +84,7 @@ public class HGAtomSet implements HGSortedSet<HGHandle>
 	{
 		boolean changed = false;
 		for (HGHandle h : c)
-			changed = changed || add(h);
+			changed = add(h) || changed;
 		return changed;
 	}
 	public void clear()
@@ -109,7 +108,7 @@ public class HGAtomSet implements HGSortedSet<HGHandle>
 	}
 	public Iterator<HGHandle> iterator()
 	{
-		return (Iterator)impl.iterator();
+		return impl.iterator();
 	}
 	public boolean remove(Object o)
 	{

@@ -10,18 +10,17 @@ package org.hypergraphdb.query.cond2qry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.HGLink;
-import org.hypergraphdb.HGOrderedSearchable;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
+import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.HGSearchResult;
-import org.hypergraphdb.HGSearchable;
 import org.hypergraphdb.HGSortIndex;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.HGQuery.hg;
 import org.hypergraphdb.algorithms.DefaultALGenerator;
 import org.hypergraphdb.algorithms.HGBreadthFirstTraversal;
 import org.hypergraphdb.atom.HGSubgraph;
@@ -36,7 +35,6 @@ import org.hypergraphdb.query.AtomValueCondition;
 import org.hypergraphdb.query.BFSCondition;
 import org.hypergraphdb.query.ComparisonOperator;
 import org.hypergraphdb.query.DFSCondition;
-import org.hypergraphdb.query.HGAtomPredicate;
 import org.hypergraphdb.query.HGQueryCondition;
 import org.hypergraphdb.query.IncidentCondition;
 import org.hypergraphdb.query.IndexCondition;
@@ -61,16 +59,12 @@ import org.hypergraphdb.query.impl.IndexBasedQuery;
 import org.hypergraphdb.query.impl.IndexScanQuery;
 import org.hypergraphdb.query.impl.IntersectionQuery;
 import org.hypergraphdb.query.impl.LinkTargetsResultSet;
-import org.hypergraphdb.query.impl.PipeQuery;
 import org.hypergraphdb.query.impl.PredicateBasedFilter;
 import org.hypergraphdb.query.impl.ProjectionAtomResultSet;
 import org.hypergraphdb.query.impl.ResultMapQuery;
 import org.hypergraphdb.query.impl.SearchableBasedQuery;
 import org.hypergraphdb.query.impl.SortedIntersectionResult;
 import org.hypergraphdb.query.impl.TraversalBasedQuery;
-import org.hypergraphdb.query.impl.UnionQuery;
-//import org.hypergraphdb.query.impl.ZigZagIntersectionResult;
-import org.hypergraphdb.type.HGAtomType;
 import org.hypergraphdb.util.ArrayBasedSet;
 import org.hypergraphdb.util.Pair;
 import org.hypergraphdb.util.Ref;
@@ -189,7 +183,7 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 		            throw new HGException("Search by null values is not supported yet.");
 		        HGHandle type = graph.getTypeSystem().getTypeHandle(value);
 	            Pair<HGHandle, HGIndex<Object, HGPersistentHandle>> p = 
-	                    ExpressionBasedQuery.findIndex(graph, new DirectValueIndexer<Object>(type));
+	                    QEManip.findIndex(graph, new DirectValueIndexer<Object>(type));
 	            if (p != null)
 	                return (HGQuery<Object>)instance.get(IndexCondition.class).
 	                    getQuery(graph, new IndexCondition(p.getSecond(), value, op));
@@ -279,9 +273,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 		instance.put(IncidentCondition.class, new IncidentToQuery());
 		instance.put(PositionedIncidentCondition.class, new PositionedIncidentToQuery());
 		instance.put(LinkCondition.class, new LinkToQuery());
-		instance.put(SubsumesCondition.class, new ConditionToQuery()
+		instance.put(SubsumesCondition.class, new ConditionToQuery<HGHandle>()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<HGHandle> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumesCondition sc = (SubsumesCondition)c;
 				Ref<HGHandle> startAtom = sc.getSpecificHandleReference();
@@ -310,9 +304,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 				return x;
 			}
 		});
-		instance.put(BFSCondition.class, new ConditionToQuery()
+		instance.put(BFSCondition.class, new ConditionToQuery<HGHandle>()
 		{
-			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
+			public HGQuery<HGHandle> getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				BFSCondition cc = (BFSCondition)c;
 				return new TraversalBasedQuery(cc.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
@@ -325,9 +319,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 				return x;
 			}
 		});
-		instance.put(DFSCondition.class, new ConditionToQuery()
+		instance.put(DFSCondition.class, new ConditionToQuery<HGHandle>()
 		{
-			public HGQuery getQuery(HyperGraph graph, HGQueryCondition c)
+			public HGQuery<HGHandle> getQuery(HyperGraph graph, HGQueryCondition c)
 			{
 				DFSCondition cc = (DFSCondition)c;
 				return new TraversalBasedQuery(cc.getTraversal(graph), TraversalBasedQuery.ReturnType.targets);
@@ -337,9 +331,9 @@ public class ToQueryMap extends HashMap<Class<?>, ConditionToQuery<?>> implement
 				return QueryMetaData.MISTERY.clone(c);
 			}
 		});			
-		instance.put(SubsumedCondition.class, new ConditionToQuery()
+		instance.put(SubsumedCondition.class, new ConditionToQuery<HGHandle>()
 		{
-			public HGQuery getQuery(HyperGraph hg, HGQueryCondition c)
+			public HGQuery<HGHandle> getQuery(HyperGraph hg, HGQueryCondition c)
 			{
 				SubsumedCondition sc = (SubsumedCondition)c;
 				Ref<HGHandle> startAtom = sc.getGeneralHandleReference();

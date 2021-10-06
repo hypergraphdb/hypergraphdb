@@ -13,6 +13,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.IncidenceSetRef;
 import org.hypergraphdb.LazyRef;
+import org.hypergraphdb.util.HGUtils;
 
 public class MapTypeConstructor implements HGAtomType
 {
@@ -29,7 +30,7 @@ public class MapTypeConstructor implements HGAtomType
 		String className = new String(hg.getStore().getData(handle));
 		try
 		{
-			Class clazz = Class.forName(className);
+			Class<?> clazz = HGUtils.loadClass(hg, className);
 			GenericObjectFactory factory = new GenericObjectFactory(clazz);
 			result = new MapType(factory);
 		}

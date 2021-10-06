@@ -284,17 +284,6 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		throw new UnsupportedOperationException("HG - IndexResultSet does not implement remove.");
 	}
 
-	protected void finalize() {
-		/*
-		 * if (cursor != null) {
-		 * 
-		 * System.out.print("WARNING: set id " + id + " closing unclosed cursor in finalizer method -- DB is: ");
-		 * try { System.out.println(cursor.getDatabase().getDatabaseName()); } catch (Exception ex) {
-		 * ex.printStackTrace(System.err); } }
-		 */
-		closeNoException();
-	}
-
 	public int count() {
 		try {
 			return cursor.cursor().count();

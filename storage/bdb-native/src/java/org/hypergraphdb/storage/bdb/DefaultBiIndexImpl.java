@@ -39,9 +39,16 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
     						  HGTransactionManager transactionManager,
     						  ByteArrayConverter<KeyType> keyConverter,
     						  ByteArrayConverter<ValueType> valueConverter,
-    						  Comparator<?> comparator)
+    						  Comparator<?> comparator,
+    						  Comparator<?> duplicateComparator)
     {
-        super(indexName, storage, transactionManager, keyConverter, valueConverter, comparator);
+        super(indexName, 
+        	  storage, 
+        	  transactionManager, 
+        	  keyConverter, 
+        	  valueConverter, 
+        	  comparator, 
+        	  duplicateComparator);
     }
     
     public void open()

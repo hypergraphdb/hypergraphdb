@@ -64,19 +64,8 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 	public void close() {
 		HGException exception = null;
 
-		try {
-			super.close();
-		}
-		catch (HGException ex) {
-			exception = ex;
-		}
-
-		if (secondaryDb == null)
-			return;
-
-		// Attempt to close secondary database even if there was an exception
-		// during the close of the primary.
-		try {
+		// Newer version of BJE complain if you close the primary before closing the secondary
+		if (secondaryDb != null) try {
 			secondaryDb.close();
 		}
 		catch (Throwable t) {
@@ -85,6 +74,14 @@ public class DefaultBiIndexImpl<KeyType, ValueType> extends DefaultIndexImpl<Key
 		}
 		finally {
 			secondaryDb = null;
+		}
+		
+		try {
+			super.close();
+		}
+		catch (HGException ex) {
+			if (exception == null) // don't overwrite if we caught something during secondary db closure
+				exception = ex;
 		}
 
 		if (exception != null)

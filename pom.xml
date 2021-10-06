@@ -11,10 +11,11 @@
   <url>http://hypergraphdb.org</url>
 
   <properties>
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
+    <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
     <version>1.4-SNAPSHOT</version>
     <!-- Sleepycat libraries -->
-    <bje.version>5.0.34</bje.version>
+    <bje.version>5.0.104</bje.version>
     <bdb.version>5.3.15</bdb.version>
     <!-- Other third-party libraries -->
     <libraries.powermock.version>1.6.5</libraries.powermock.version>

@@ -29,19 +29,25 @@
       <id>central</id>
       <url>http://repo1.maven.org/maven2/</url>
     </repository>
-     -->
+     
     <repository>
       <id>multitestermvn</id>
       <url>http://yuriysechko.bitbucket.org</url>
     </repository>
+  -->
   </repositories>
 
   <dependencies>
+
     <dependency>
       <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
+      <!--
+      <version>7.4.5</version>
+    -->
       <version>${bje.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdb</artifactId>
@@ -115,7 +121,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
+        <version>${maven-bundle-plugin.version}</version>
         <extensions>true</extensions>
         <configuration>
           <manifestLocation>META-INF</manifestLocation>

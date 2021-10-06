@@ -167,8 +167,7 @@ public class JavaTypeFactory implements JavaTypeMapper
 	
 	public static HGHandle getSlotHandle(HyperGraph graph, String label, HGHandle type)
 	{
-		HGHandle slotHandle = hg.findOne(graph, 
-				 						 hg.eq(new Slot(label,type)));
+		HGHandle slotHandle = hg.findOne(graph, hg.eq(new Slot(label,type)));
 		if (slotHandle == null)
 			return graph.add(new Slot(label, type));
 		else

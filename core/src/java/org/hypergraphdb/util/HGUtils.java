@@ -29,6 +29,7 @@ import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGRandomAccessResult.GotoResult;
 
@@ -423,6 +424,32 @@ public class HGUtils
 		}		
 	}
 	
+    /**
+     * <p>
+     * Given an arbitrary object, what would be the default HyperGraphDB type
+     * for it: {@link org.hypergraphdb.HGTypeSystem#getNullType} if <code>null</code>, or otherwise
+     * {@link org.hypergraphdb.HGTypeSystem#getTypeHandle(Class)} of the class 
+     * of that object. Note that if <code>instance</code> is a {@link org.hypergraphdb.HGValueLink}
+     * the wrapped value is used instead.
+     * </p>
+     * @throws HGException if it cannot determine the type. The method will never return null, it will
+     * throw an exception instead.
+     */
+    public static HGHandle hgTypeOf(HyperGraph db, Object instance)
+    {
+    	HGHandle typeHandle = null;
+    	if (instance == null)
+    		typeHandle = db.getTypeSystem().getNullType();
+    	else if (instance instanceof HGValueLink)
+    		typeHandle = db.getTypeSystem().getTypeHandle(((HGValueLink)instance).getValue().getClass());
+    	else
+    	    typeHandle = db.getTypeSystem().getTypeHandle(instance.getClass());
+    	if (typeHandle == null)
+    		throw new HGException("Could not find HyperGraph type for object of type " + instance.getClass());
+    	else
+    		return typeHandle;
+    }
+    
     public static void directoryRecurse(File top, Mapping<File, Boolean> mapping) 
     {        
         File[] subs = top.listFiles();        

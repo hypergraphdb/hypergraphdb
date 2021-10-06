@@ -1,6 +1,6 @@
 package org.hypergraphdb.util;
 
-//@FunctionalInterface
+@FunctionalInterface
 public interface Ref<T>
 {
 	T get();

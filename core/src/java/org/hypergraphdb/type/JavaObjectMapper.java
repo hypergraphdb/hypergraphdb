@@ -39,7 +39,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 		if (idx == null)
 		{
 			HGHandle t = graph.getTypeSystem().getTypeHandle(HGSerializable.class);
-			HGIndexer indexer = new ByPartIndexer(t, "classname");
+			HGIndexer<String, HGPersistentHandle> indexer = new ByPartIndexer<String>(t, "classname");
 			idx = graph.getIndexManager().getIndex(indexer);
 			if (idx == null)
 			{
@@ -239,7 +239,7 @@ public class JavaObjectMapper implements JavaTypeMapper
 		initClasses();
 		try
 		{
-			Class<?> c = Class.forName(classname);
+			Class<?> c = HGUtils.loadClass(graph, classname);
 			for (String existing : classes)
 			{				
 				Class<?> e = null;

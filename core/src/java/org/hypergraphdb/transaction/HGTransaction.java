@@ -87,6 +87,11 @@ public final class HGTransaction implements HGStorageTransaction
         boxesWritten.put(vbox, value == null ? NULL_VALUE : value);
     }
 
+    <T> void removeBoxValue(VBox<T> vbox)
+    {
+    	boxesWritten.remove(vbox);
+    }
+    
     private boolean isWriteTransaction()
     {
         return !boxesWritten.isEmpty();
@@ -203,8 +208,6 @@ public final class HGTransaction implements HGStorageTransaction
     {
     	if (isReadOnly() && isWriteTransaction()) 
     	{
-    		for (Object obj : boxesWritten.values())
-    			System.out.println("written object:" + obj);
     		throw new TransactionIsReadonlyException();
     	}
         // If this is a nested transaction, everything is much simpler
@@ -330,6 +333,11 @@ public final class HGTransaction implements HGStorageTransaction
         return this.readonly;
     }
     
+    /**
+     * Add some piece of code to execute when a transaction is aborted. This
+     * useful to cleanup mutable data structures that need to restore their
+     * pre-transaction state in case of an abort.  
+     */
     public void addAbortAction(Runnable r)
     {
         this.abortActions.add(r);
