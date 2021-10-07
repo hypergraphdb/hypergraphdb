@@ -41,15 +41,15 @@ import org.junit.Test;
 
 public class TestCACT
 {
-	boolean both = true;
-	private boolean which = false; // true for peer 1, falsefor peer 2
-	private HyperGraph graph1, graph2;
-	private HyperGraphPeer peer1, peer2;
-	private File locationBase = new File(T.getTmpDirectory());
-	private File locationGraph1 = new File(locationBase, "hgp2p1");
-	private File locationGraph2 = new File(locationBase, "hgp2p2");
+	static boolean both = true;
+	static private boolean which = false; // true for peer 1, falsefor peer 2
+	static private HyperGraph graph1, graph2;
+	static private HyperGraphPeer peer1, peer2;
+	static private File locationBase = new File(T.getTmpDirectory());
+	static private File locationGraph1 = new File(locationBase, "hgp2p1");
+	static private File locationGraph2 = new File(locationBase, "hgp2p2");
 
-	private HyperGraphPeer startPeer(String dblocation, String username, String hostname)
+	static private HyperGraphPeer startPeer(String dblocation, String username, String hostname)
 	{
 		hostname = "evalhalla.com";
 		Json config = Json.object();
@@ -92,7 +92,7 @@ public class TestCACT
 	}
 
 	@BeforeClass
-	public void setUp()
+	public static void setUp()
 	{
 		String localhost = "localhost";
 		try
@@ -117,7 +117,7 @@ public class TestCACT
 	}
 
 	@AfterClass
-	public void tearDown()
+	public static void tearDown()
 	{
 		if (which || both)
 		{

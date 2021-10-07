@@ -47,7 +47,7 @@
     <dependency>
     	<groupId>org.sharegov</groupId>
     	<artifactId>mjson</artifactId>
-    	<version>1.4-SNAPSHOT</version>
+    	<version>1.4.1</version>
     </dependency>
   </dependencies>
   
