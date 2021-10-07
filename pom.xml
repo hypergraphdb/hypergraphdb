@@ -7,35 +7,31 @@
   <artifactId>hypergraphdb</artifactId>
   <packaging>pom</packaging>
   <name>HyperGraphDB Parent Project</name>
-  <version>1.4-SNAPSHOT</version>  
+  <version>2.0-SNAPSHOT</version>  
   <url>http://hypergraphdb.org</url>
 
   <properties>
     <java.version>1.8</java.version>
     <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
-    <version>1.4-SNAPSHOT</version>
-    <!-- Sleepycat libraries -->
-    <bje.version>5.0.104</bje.version>
-    <bdb.version>5.3.15</bdb.version>
-    <!-- Other third-party libraries -->
-    <libraries.powermock.version>1.6.5</libraries.powermock.version>
-    <libraries.easymock.version>3.4</libraries.easymock.version>
-    <libraries.multitester.version>1.0</libraries.multitester.version>
+    <version>2.0-SNAPSHOT</version>
   </properties>
 
+<!--
   <repositories>
     <repository>
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
-  </repositories>
-
+  </repositories>  
+-->  
+<!--
   <distributionManagement>
     <repository>
       <id>hypergraphdb-repository</id>
       <url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url>
     </repository>
-  </distributionManagement>                                                                             
+  </distributionManagement>    
+-->  
 
   <build>
     <directory>target</directory>
@@ -122,42 +118,13 @@
         <scope>test</scope>
     </dependency>    
   </dependencies>    
+ 
+  <modules>
+	<module>core</module>
+	<module>test</module>
+	<module>storage</module>
+	<module>p2p</module>
+	<module>testcore</module>
+  </modules>
   
-  <!-- Build Type -->
-  <profiles>
-    <profile>
-      <id>win32</id>
-      <properties>
-        <build.type>win32</build.type>
-      </properties>
-    </profile>
-    <profile>
-      <id>win64</id>
-      <properties>
-        <build.type>win64</build.type>
-      </properties>
-    </profile>
-    <profile>
-      <id>lin32</id>
-      <properties>
-        <build.type>lin32</build.type>
-      </properties>
-    </profile>
-    <profile>
-      <id>lin64</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <build.type>lin64</build.type>
-      </properties>
-    </profile>
-    <profile>
-      <id>mac</id>
-      <properties>
-        <build.type>mac</build.type>
-      </properties>
-    </profile>
-  </profiles>
-        
 </project>

@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hgdbstorage</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
   </parent>
   <properties>
     <packageit>bundle</packageit>
@@ -18,9 +18,9 @@
   <name>HyperGraphDB BDB-JE Storage</name>
   <url>http://hypergraphdb.org</url>
 
-
   <repositories>
     <repository>
+	  <!-- Only needed for Berkeley version -->
       <id>hypergraphdb</id>
       <url>http://hypergraphdb.org/maven</url>
     </repository>
@@ -42,10 +42,7 @@
     <dependency>
       <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
-      <!--
-      <version>7.4.5</version>
-    -->
-      <version>${bje.version}</version>
+      <version>5.0.104</version>
     </dependency>
 
     <dependency>
@@ -53,38 +50,14 @@
       <artifactId>hgdb</artifactId>
       <version>${project.version}</version>
     </dependency>
+	<!--
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
       <version>${project.version}</version>
 	  <scope>test</scope>
     </dependency>
-    <!-- 
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>${libraries.powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-easymock</artifactId>
-      <version>${libraries.powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>${libraries.easymock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.multitester</groupId>
-      <artifactId>multitester</artifactId>
-      <version>${libraries.multitester.version}</version>
-	  <scope>test</scope>
-    </dependency>
-    -->
+	-->
   </dependencies>
 
   <build>

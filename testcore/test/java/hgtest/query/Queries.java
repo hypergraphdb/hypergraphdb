@@ -41,7 +41,7 @@ import hgtest.beans.Person;
 import hgtest.beans.SimpleBean;
 import hgtest.beans.Transport;
 import hgtest.beans.Truck;
-import hgtest.links.SampleLink1;
+//import hgtest.links.SampleLink1;
 import hgtest.utils.RSUtils;
 
 //@Test(sequential=true)
@@ -60,7 +60,7 @@ public class Queries extends HGTestBase
         Queries q = new Queries();
 //        q.test();
         setUp();
-        q.testCount();
+        //q.testCount();
         tearDown();
     }
 
@@ -501,7 +501,7 @@ public class Queries extends HGTestBase
         Assert.assertNotNull(somenested);
         Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.incident(somenested))));
     }
-    
+    /*
     @Test
     public void testCount()
     {
@@ -525,6 +525,7 @@ public class Queries extends HGTestBase
 //    		 hg.type(Double.class)))
 //    	)
     }
+	*/
     
     @BeforeClass
     public static void setUp()

@@ -1,25 +1,29 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1619289111828
-Build-Jdk: 1.8.0_261
-Built-By: borislav
+Bnd-LastModified: 1633644324118
+Build-Jdk: 1.8.0_291
+Built-By: Gary
 Bundle-ClassPath: .,je-5.0.104.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
-Bundle-Version: 1.4.0.SNAPSHOT
+Bundle-Version: 2.0.0.SNAPSHOT
 Created-By: Apache Maven Bundle Plugin
 Embed-Dependency: je
 Embed-Transitive: true
 Embedded-Artifacts: je-5.0.104.jar;g="com.sleepycat";a="je";v="5.0.104"
 Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,org
  .hypergraphdb.storage,org.hypergraphdb.transaction,org.hypergraphdb.uti
- l";version="1.4.0.SNAPSHOT"
-Import-Package: javax.transaction.xa,org.hypergraphdb,org.hypergraphdb.u
- til,org.hypergraphdb.storage,org.hypergraphdb.transaction,org.hypergrap
- hdb.algorithms,org.hypergraphdb.query,org.hypergraphdb.type,org.hypergr
- aphdb.annotation,org.hypergraphdb.atom,org.hypergraphdb.cache,org.hyper
- graphdb.event,org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.
- hypergraphdb.type.javaprimitive,org.hypergraphdb.indexing,org.hypergrap
- hdb.query.cond2qry,org.hypergraphdb.query.impl
+ l";version="2.0.0.SNAPSHOT"
+Import-Package: javax.transaction.xa,org.hypergraphdb;version="[2.0,3)",
+ org.hypergraphdb.util;version="[2.0,3)",org.hypergraphdb.storage;versio
+ n="[2.0,3)",org.hypergraphdb.transaction;version="[2.0,3)",org.hypergra
+ phdb.algorithms;version="[2.0,3)",org.hypergraphdb.query;version="[2.0,
+ 3)",org.hypergraphdb.type;version="[2.0,3)",org.hypergraphdb.annotation
+ ;version="[2.0,3)",org.hypergraphdb.atom;version="[2.0,3)",org.hypergra
+ phdb.cache;version="[2.0,3)",org.hypergraphdb.event;version="[2.0,3)",o
+ rg.hypergraphdb.handle;version="[2.0,3)",org.hypergraphdb.maintenance;v
+ ersion="[2.0,3)",org.hypergraphdb.type.javaprimitive;version="[2.0,3)",
+ org.hypergraphdb.indexing;version="[2.0,3)",org.hypergraphdb.query.cond
+ 2qry;version="[2.0,3)",org.hypergraphdb.query.impl;version="[2.0,3)"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
 Tool: Bnd-3.0.0.201509101326
