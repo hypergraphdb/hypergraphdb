@@ -1,6 +1,7 @@
 gov.miamidade.owlgdb/
 **/*.iml
 .idea
+**/maven*.log
 **/target
 core/META-INF/
 **/.project

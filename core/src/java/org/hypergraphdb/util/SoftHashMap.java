@@ -234,7 +234,7 @@ public class SoftHashMap <K, V> extends AbstractMap<K, V>
 
     		public Object[] toArray() 
     		{
-    			return toArray(null);
+    			return toArray((Object[]) null);
     		}
 
     		public Object[] toArray(Object[] a) 
