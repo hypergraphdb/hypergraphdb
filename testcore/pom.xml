@@ -53,7 +53,19 @@
       <aggregate>true</aggregate>
       <!--also set this to link to generated source reports-->
       <linkXRef>true</linkXRef>
-	  <skipTests>true</skipTests>
+	  <excludes>
+		<exclude>**/TestValueLink.java</exclude>
+		<exclude>**/Queries.java</exclude>
+		<exclude>**/QueryCompilation.java</exclude>
+		<exclude>**/NestedTxTests.java</exclude>
+		<exclude>**/BigTypePlus.java</exclude>
+		<exclude>**/ConcurrentTypeCreation.java</exclude>
+		<exclude>**/LinkTxTests.java</exclude>
+		<exclude>**/DataTxTests.java</exclude>
+		<exclude>**/TypingTxTests.java</exclude>
+		<exclude>**/TestTxMap.java</exclude>
+		<exclude>**/benchmark/*.java</exclude>
+	  </excludes>
     </configuration>
   </plugin>
    </plugins>
