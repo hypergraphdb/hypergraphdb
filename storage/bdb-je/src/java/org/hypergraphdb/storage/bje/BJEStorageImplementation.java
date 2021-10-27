@@ -66,6 +66,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
 			return TransactionBJEImpl.nullTransaction();
+//			throw new RuntimeException("No transaction in effect");
 		else
 			return (TransactionBJEImpl) tx.getStorageTransaction();
 	}

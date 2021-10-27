@@ -1,6 +1,7 @@
 package hgtest.tx;
 
 import java.util.concurrent.ExecutorService;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -34,11 +35,11 @@ public class ConcurrentTypeCreation extends HGTestBase
 	
 	@Test
 	public void concurrentSlotCreation()
-	{
-		final String label = "title";
+	{	
 		final HGHandle stringType = graph.getTypeSystem().getTypeHandle(String.class);
 		for (int i = 0; i < 50; i++)
 		{
+			final String label = "title" + i;
 			try
 			{
 				Future<HGHandle> f1 = pool.submit(() -> {
@@ -60,13 +61,10 @@ public class ConcurrentTypeCreation extends HGTestBase
 				t.printStackTrace(System.err);
 				throw new RuntimeException(t);
 			}
-			HGTestBase.tearDown();
-			HGTestBase.setUp();
 			System.out.println("Parallel slot creation iteration: " + i);
 		}
 	}
 
-	
 	@Test
 	public void concurrentTypeCreation()
 	{

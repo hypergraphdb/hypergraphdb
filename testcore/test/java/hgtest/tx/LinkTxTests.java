@@ -95,9 +95,9 @@ public class LinkTxTests extends HGTestBase
         } while (j < linksCount);        
     }
     
-    public void checkLinkSanity(HGPersistentHandle handle)
+    public void checkLinkSanity(HGHandle handle)
     {
-        HGPersistentHandle [] atomLayout = graph.getStore().getLink(handle);
+        HGPersistentHandle [] atomLayout = graph.getStore().getLink(handle.getPersistent());
         HGPersistentHandle [] valueLayout = graph.getStore().getLink(atomLayout[1]);
         if (HGUtils.eq(atomLayout, valueLayout))
             System.out.println("problem");
@@ -145,7 +145,7 @@ public class LinkTxTests extends HGTestBase
         while (i < linksCount - 1)
         {
             final int finali = i;
-            Integer result = txman.transact(new Callable<Integer>() {
+            i = txman.transact(new Callable<Integer>() {
             public Integer call()
             {
                 LinkType first = new LinkType(threadId, finali, x, y);
@@ -155,7 +155,7 @@ public class LinkTxTests extends HGTestBase
                                                              hg.incident(y)));
                 if (existing != null)
                     return finali + 1;
-                checkLinkSanity(graph.getPersistentHandle(graph.add(first)));
+                checkLinkSanity(graph.add(first));
                 int next = finali + 1;
                 existing = hg.findOne(graph, hg.and(hg.type(LinkType.class), 
                                                     hg.eq("idx", next), 
@@ -172,13 +172,11 @@ public class LinkTxTests extends HGTestBase
                 {
                     if (log)
                         T.getLogger("LinkTxTests").info("Fine with " + finali + "-" + next + " at " + threadId);                    
-                    checkLinkSanity(graph.getPersistentHandle(graph.add(new LinkType(threadId, next, x , y))));
+                    checkLinkSanity(graph.add(new LinkType(threadId, next, x , y)));
                 }
                 return finali + 2;
             }
             });
-            if (result == null) i++;
-            else i = result;
             try { Thread.sleep((long)Math.random()*100); }
             catch (InterruptedException ex) {}
         }
@@ -239,7 +237,7 @@ public class LinkTxTests extends HGTestBase
             System.out.println("testTxMap interrupted.");
             return;
         }        
-        assertEquals(errors.size(), 0);
+        assertEquals(0, errors.size());
         this.reopenDb();
         verifyData();
     }

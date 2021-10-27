@@ -15,9 +15,9 @@ import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGQuery.hg;
+import org.hypergraphdb.HGValueLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.atom.HGSubgraph;
-import org.hypergraphdb.util.Ref;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -148,6 +148,9 @@ public class QueryCompilation extends HGTestBase
                         )
                     )
                 ); 
-        System.out.println(q.findInSet());
+        HGHandle a = graph.add("node 1");
+        HGHandle b = graph.add("node 2");
+        HGHandle l = graph.add(new HGValueLink("L1", a, b));
+        Assert.assertTrue(q.var("aNode", a).var("bNode", b).findInSet().contains(l));
     }
 }
