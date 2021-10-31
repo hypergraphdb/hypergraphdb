@@ -66,6 +66,14 @@ public class HGStore
     }
     
     /**
+     * <p>Return the configuration object used to initialize this <code>HGStore</code> </p>
+     */
+    public HGConfiguration getConfiguration()
+    {
+        return this.config;
+    }
+
+    /**
      * <p>Create and return a transaction factory for this <code>HGStore</code>.</p>
      */
     public HGTransactionFactory getTransactionFactory()

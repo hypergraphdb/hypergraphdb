@@ -1,12 +1,12 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1619289093061
-Build-Jdk: 1.8.0_261
+Bnd-LastModified: 1635577075199
+Build-Jdk: 11.0.12
 Built-By: borislav
 Bundle-ClassPath: .,smack-3.1.0.jar,smackx-3.1.0.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB P2P
 Bundle-SymbolicName: org.hypergraphdb-hgdbp2p;singleton:=true
-Bundle-Version: 1.4.0.SNAPSHOT
+Bundle-Version: 2.0.0.SNAPSHOT
 Created-By: Apache Maven Bundle Plugin
 Embed-Dependency: smack*;scope=compile|runtime;inline=false
 Embedded-Artifacts: smack-3.1.0.jar;g="jivesoftware";a="smack";v="3.1.0"
@@ -14,30 +14,34 @@ Embedded-Artifacts: smack-3.1.0.jar;g="jivesoftware";a="smack";v="3.1.0"
 Export-Package: org.hypergraphdb.peer;uses:="mjson,org.hypergraphdb,org.
  hypergraphdb.algorithms,org.hypergraphdb.peer.log,org.hypergraphdb.peer
  .workflow,org.hypergraphdb.query,org.hypergraphdb.storage,org.hypergrap
- hdb.type,org.hypergraphdb.util";version="1.4.0.SNAPSHOT",org.hypergraph
- db.peer.bootstrap;uses:="mjson,org.hypergraphdb.peer";version="1.4.0.SN
+ hdb.type,org.hypergraphdb.util";version="2.0.0.SNAPSHOT",org.hypergraph
+ db.peer.bootstrap;uses:="mjson,org.hypergraphdb.peer";version="2.0.0.SN
  APSHOT",org.hypergraphdb.peer.cact;uses:="mjson,org.hypergraphdb,org.hy
  pergraphdb.algorithms,org.hypergraphdb.peer,org.hypergraphdb.peer.workf
- low,org.hypergraphdb.query,org.hypergraphdb.util";version="1.4.0.SNAPSH
+ low,org.hypergraphdb.query,org.hypergraphdb.util";version="2.0.0.SNAPSH
  OT",org.hypergraphdb.peer.log;uses:="org.hypergraphdb,org.hypergraphdb.
- peer,org.hypergraphdb.query,org.hypergraphdb.storage";version="1.4.0.SN
+ peer,org.hypergraphdb.query,org.hypergraphdb.storage";version="2.0.0.SN
  APSHOT",org.hypergraphdb.peer.replication;uses:="mjson,org.hypergraphdb
  ,org.hypergraphdb.peer,org.hypergraphdb.peer.log,org.hypergraphdb.peer.
- workflow,org.hypergraphdb.query";version="1.4.0.SNAPSHOT",org.hypergrap
- hdb.peer.serializer;uses:="mjson,org.hypergraphdb";version="1.4.0.SNAPS
+ workflow,org.hypergraphdb.query";version="2.0.0.SNAPSHOT",org.hypergrap
+ hdb.peer.serializer;uses:="mjson,org.hypergraphdb";version="2.0.0.SNAPS
  HOT",org.hypergraphdb.peer.workflow;uses:="mjson,org.hypergraphdb,org.h
- ypergraphdb.peer,org.hypergraphdb.query";version="1.4.0.SNAPSHOT",org.h
- ypergraphdb.peer.xmpp;uses:="mjson,org.hypergraphdb.peer";version="1.4.
+ ypergraphdb.peer,org.hypergraphdb.query";version="2.0.0.SNAPSHOT",org.h
+ ypergraphdb.peer.xmpp;uses:="mjson,org.hypergraphdb.peer";version="2.0.
  0.SNAPSHOT"
 Import-Package: javax.naming.directory,javax.net,javax.net.ssl,javax.sec
  urity.auth.callback,javax.security.sasl,javax.swing,javax.xml.parsers,m
- json;version="[1.4,2)",org.hypergraphdb,org.hypergraphdb.algorithms,org
- .hypergraphdb.annotation,org.hypergraphdb.event,org.hypergraphdb.handle
- ,org.hypergraphdb.peer.bootstrap,org.hypergraphdb.peer.cact,org.hypergr
- aphdb.peer.log,org.hypergraphdb.peer.replication,org.hypergraphdb.peer.
- serializer,org.hypergraphdb.peer.workflow,org.hypergraphdb.query,org.hy
- pergraphdb.query.impl,org.hypergraphdb.storage,org.hypergraphdb.transac
- tion,org.hypergraphdb.type,org.hypergraphdb.util,org.w3c.dom
+ json;version="[1.4,2)",org.hypergraphdb;version="[2.0,3)",org.hypergrap
+ hdb.algorithms;version="[2.0,3)",org.hypergraphdb.annotation;version="[
+ 2.0,3)",org.hypergraphdb.event;version="[2.0,3)",org.hypergraphdb.handl
+ e;version="[2.0,3)",org.hypergraphdb.peer.bootstrap,org.hypergraphdb.pe
+ er.cact,org.hypergraphdb.peer.log,org.hypergraphdb.peer.replication,org
+ .hypergraphdb.peer.serializer,org.hypergraphdb.peer.workflow,org.hyperg
+ raphdb.query;version="[2.0,3)",org.hypergraphdb.query.impl;version="[2.
+ 0,3)",org.hypergraphdb.storage;version="[2.0,3)",org.hypergraphdb.trans
+ action;version="[2.0,3)",org.hypergraphdb.type;version="[2.0,3)",org.hy
+ pergraphdb.util;version="[2.0,3)",org.jivesoftware.smackx.debugger,org.
+ w3c.dom,sun.security.pkcs11
 Require-Bundle: org.semanticweb.owl.owlapi
-Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
-Tool: Bnd-3.0.0.201509101326
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-4.2.0.201903051501

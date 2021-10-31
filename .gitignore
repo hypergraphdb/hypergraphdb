@@ -8,3 +8,7 @@ core/META-INF/
 **/.classpath
 **/.settings
 **/.gitignore
+**/.bloop
+**/.metals
+**/.vscode
+**/.bsp

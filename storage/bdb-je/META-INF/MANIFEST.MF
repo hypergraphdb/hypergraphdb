@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1633644324118
-Build-Jdk: 1.8.0_291
-Built-By: Gary
+Bnd-LastModified: 1635577074382
+Build-Jdk: 11.0.12
+Built-By: borislav
 Bundle-ClassPath: .,je-5.0.104.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB BDB-JE Storage
@@ -16,14 +16,15 @@ Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,org
  l";version="2.0.0.SNAPSHOT"
 Import-Package: javax.transaction.xa,org.hypergraphdb;version="[2.0,3)",
  org.hypergraphdb.util;version="[2.0,3)",org.hypergraphdb.storage;versio
- n="[2.0,3)",org.hypergraphdb.transaction;version="[2.0,3)",org.hypergra
- phdb.algorithms;version="[2.0,3)",org.hypergraphdb.query;version="[2.0,
- 3)",org.hypergraphdb.type;version="[2.0,3)",org.hypergraphdb.annotation
- ;version="[2.0,3)",org.hypergraphdb.atom;version="[2.0,3)",org.hypergra
- phdb.cache;version="[2.0,3)",org.hypergraphdb.event;version="[2.0,3)",o
- rg.hypergraphdb.handle;version="[2.0,3)",org.hypergraphdb.maintenance;v
- ersion="[2.0,3)",org.hypergraphdb.type.javaprimitive;version="[2.0,3)",
- org.hypergraphdb.indexing;version="[2.0,3)",org.hypergraphdb.query.cond
- 2qry;version="[2.0,3)",org.hypergraphdb.query.impl;version="[2.0,3)"
-Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
-Tool: Bnd-3.0.0.201509101326
+ n="[2.0,3)",org.hypergraphdb.transaction;version="[2.0,3)",com.sun.mana
+ gement,org.hypergraphdb.algorithms;version="[2.0,3)",org.hypergraphdb.q
+ uery;version="[2.0,3)",org.hypergraphdb.type;version="[2.0,3)",org.hype
+ rgraphdb.annotation;version="[2.0,3)",org.hypergraphdb.atom;version="[2
+ .0,3)",org.hypergraphdb.cache;version="[2.0,3)",org.hypergraphdb.event;
+ version="[2.0,3)",org.hypergraphdb.handle;version="[2.0,3)",org.hypergr
+ aphdb.maintenance;version="[2.0,3)",org.hypergraphdb.type.javaprimitive
+ ;version="[2.0,3)",org.hypergraphdb.indexing;version="[2.0,3)",org.hype
+ rgraphdb.query.cond2qry;version="[2.0,3)",org.hypergraphdb.query.impl;v
+ ersion="[2.0,3)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=11))"
+Tool: Bnd-4.2.0.201903051501
