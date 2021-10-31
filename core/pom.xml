@@ -7,13 +7,13 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hypergraphdb</artifactId>
-    <version>1.4-SNAPSHOT</version>  
+    <version>2.0-SNAPSHOT</version>  
   </parent>  
   <properties>
     <packageit>jar</packageit>
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph</bundle.namespace>    
-    <hgdb.version>1.4-SNAPSHOT</hgdb.version>
+    <hgdb.version>2.0-SNAPSHOT</hgdb.version>
   </properties>    
   <packaging>bundle</packaging>  
   <artifactId>hgdb</artifactId>
@@ -50,7 +50,7 @@
             org.hypergraphdb.handle,org.hypergraphdb.maintenance,org.hypergraphdb.storage,
             org.hypergraphdb.transaction,org.hypergraphdb.type.javaprimitive,
             org.hypergraphdb.indexing,org.hypergraphdb.query.cond2qry,org.hypergraphdb.query.impl,
-            org.hypergraphdb.atom.impl</Export-Package>
+            org.hypergraphdb.atom.impl,org.hypergraphdb.app.management.*</Export-Package>
             <!--
             javax.* packages must be explicitly imported as per OSGI. OSGI containers normally
             implicitly import them as "extras", see:

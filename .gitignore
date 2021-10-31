@@ -1,9 +1,14 @@
 gov.miamidade.owlgdb/
 **/*.iml
 .idea
+**/maven*.log
 **/target
 core/META-INF/
 **/.project
 **/.classpath
 **/.settings
 **/.gitignore
+**/.bloop
+**/.metals
+**/.vscode
+**/.bsp

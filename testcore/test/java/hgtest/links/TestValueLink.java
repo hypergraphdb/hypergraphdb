@@ -2,9 +2,11 @@ package hgtest.links;
 
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HGValueLink;
+import org.hypergraphdb.HGQuery.hg;
 import org.junit.Test;
 
 import hgtest.HGTestBase;
+import org.junit.*;
 
 public class TestValueLink extends HGTestBase
 {
@@ -12,6 +14,10 @@ public class TestValueLink extends HGTestBase
 	{
 		private String name = "unnamed";
 		private int value = 100;
+		
+		public Bean()
+		{			
+		}
 		
 		public Bean(String name, int value)
 		{
@@ -46,7 +52,8 @@ public class TestValueLink extends HGTestBase
 			Bean bean = new Bean("hi", 100);
 			HGHandle a1 = getGraph().add("atom1");
 			HGHandle a2 = getGraph().add(10);
-			HGHandle vhandle = getGraph().add(new HGValueLink(bean, a1, a2));		
+			HGHandle vhandle = getGraph().add(new HGValueLink(bean, a1, a2));
+			Assert.assertEquals(vhandle, graph.findOne(hg.and(hg.type(Bean.class), hg.orderedLink(a1, a2))));
 		}
 		catch (Throwable t)
 		{

@@ -1219,7 +1219,7 @@ public class HGTypeSystem
 		}
 		finally
 		{
-			if (rs != null) try { rs.close(); } catch (Throwable _) { }
+			if (rs != null) try { rs.close(); } catch (Throwable _throwable) { }
 		}
 	}
 	

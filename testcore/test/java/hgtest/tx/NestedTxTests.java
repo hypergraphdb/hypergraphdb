@@ -6,13 +6,18 @@ import org.hypergraphdb.HGPlainLink;
 import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.HGQuery.hg;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import hgtest.HGTestBase;
 
 public class NestedTxTests extends HGTestBase
 {
+	// need to ignore because BDB Java Edition does not support nested transactions, 
+	// unlike the native, should have a configuration/capability setting somewhere for 
+	// this as it's not a commonly needed feature
 	@Test
+	@Ignore 
 	public void testISChange()
 	{
 		final HyperGraph graph = getGraph();

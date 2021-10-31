@@ -105,7 +105,7 @@ public class HGStoreSubgraph implements StorageGraph
                 remaining.addLast(root);
             
             //TODO some UUIDs should not be visited?
-            visited.add(store.getTransactionManager().getHyperGraph().getHandleFactory().nullHandle());
+            visited.add(store.getConfiguration().getHandleFactory().nullHandle());
         }
         
         public boolean hasNext()
