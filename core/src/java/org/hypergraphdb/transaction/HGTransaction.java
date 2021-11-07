@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HyperGraph;
 import org.hypergraphdb.event.HGTransactionEndEvent;
 import org.hypergraphdb.util.Cons;
 
@@ -219,9 +218,7 @@ public final class HGTransaction implements HGStorageTransaction
                 parent.bodiesRead.putAll(bodiesRead);
             parent.boxesWritten.putAll(boxesWritten);
             finish();
-            HyperGraph graph = context.getManager().getHyperGraph();
-            graph.getEventManager().dispatch(graph,
-                                             new HGTransactionEndEvent(this, true));            
+            context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, true));
             return;
         }
         
@@ -285,9 +282,7 @@ public final class HGTransaction implements HGStorageTransaction
             if (stran != null)
                 stran.commit();
         }
-        HyperGraph graph = context.getManager().getHyperGraph();
-        graph.getEventManager().dispatch(graph,
-                                         new HGTransactionEndEvent(this, true));
+        context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, true));        
         finish();        
     }
 
@@ -303,9 +298,7 @@ public final class HGTransaction implements HGStorageTransaction
     public void abort() throws HGTransactionException
     {
         privateAbort();
-        HyperGraph graph = context.getManager().getHyperGraph();
-        graph.getEventManager().dispatch(graph, 
-                                         new HGTransactionEndEvent(this, false));
+        context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, false));
     }
 
     public <T> T getAttribute(Object key)

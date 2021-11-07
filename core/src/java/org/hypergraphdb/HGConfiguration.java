@@ -32,6 +32,7 @@ public class HGConfiguration
 	private HGHandleFactory handleFactory;
 	private HGStoreImplementation storeImplementation;
 	private boolean transactional;
+    private boolean enforceTransactionsInStorageLayer = false;
 	private boolean skipMaintenance;
 	private boolean cancelMaintenance;
 	private boolean skipOpenedEvent;
@@ -438,4 +439,21 @@ public class HGConfiguration
 	{
 		this.shortLivedCache = shortLivedCache;
 	}
+
+    /**
+     * Return <code>true</code> if the storage layer requires an active transaction for every operation.
+     */
+    public boolean isEnforceTransactionsInStorageLayer() 
+    {
+        return enforceTransactionsInStorageLayer;
+    }
+
+    /**
+     * Specify whether the storage layer should require an active transaction for every operation or not.
+     */
+    public HGConfiguration setEnforceTransactionsInStorageLayer(boolean enforceTransactionsInStorageLayer) 
+    {
+        this.enforceTransactionsInStorageLayer = enforceTransactionsInStorageLayer;
+        return this;
+    }    
 }

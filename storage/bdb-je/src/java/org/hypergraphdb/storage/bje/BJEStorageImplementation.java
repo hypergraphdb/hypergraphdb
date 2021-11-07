@@ -48,6 +48,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 	private static final String PRIMITIVE_DB_NAME = "primitivedb";
 	private static final String INCIDENCE_DB_NAME = "incidencedb";
 
+	HGConfiguration globalConfiguration;
 	private BJEConfig configuration;
 	private HGStore store;
 	private HGHandleFactory handleFactory;
@@ -65,10 +66,20 @@ public class BJEStorageImplementation implements HGStoreImplementation
 		HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
 
 		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
-			return TransactionBJEImpl.nullTransaction();
-//			throw new RuntimeException("No transaction in effect");
+		{
+			if (globalConfiguration.isEnforceTransactionsInStorageLayer())				
+				throw new IllegalStateException("No transaction in effect");
+			else
+				return TransactionBJEImpl.nullTransaction();
+		}
 		else
 			return (TransactionBJEImpl) tx.getStorageTransaction();
+	}
+
+	private void ensureOpen()
+	{
+		if (env == null)
+			throw new IllegalStateException("BJEStorageImplementation is either closed or was never initialized.");
 	}
 
 	public BJEStorageImplementation()
@@ -89,6 +100,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 	public void startup(HGStore store, HGConfiguration config)
 	{
 		this.store = store;
+		this.globalConfiguration = config;
 		this.handleFactory = config.getHandleFactory();
 		this.linkBinding = new LinkBinding(handleFactory);
 		EnvironmentConfig envConfig = configuration.getEnvironmentConfig();
@@ -218,11 +230,13 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			{
 				t.printStackTrace();
 			}
+			env = null;
 		}
 	}
 
 	public void removeLink(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		if (handle == null)
 		{
 			throw new NullPointerException("HGStore.remove called with a null handle.");
@@ -241,6 +255,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
 	{
+		ensureOpen();
 		try
 		{
 			OperationStatus result = primitive_db.put(txn().getBJETransaction(), new DatabaseEntry(handle.toByteArray()),
@@ -276,6 +291,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle[] link)
 	{
+		ensureOpen();
 		DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
 		DatabaseEntry value = new DatabaseEntry();
 		linkBinding.objectToEntry(link, value);
@@ -295,6 +311,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public void addIncidenceLink(HGPersistentHandle handle, HGPersistentHandle newLink)
 	{
+		ensureOpen();
 		Cursor cursor = null;
 		try
 		{
@@ -306,18 +323,6 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			{
 				throw new Exception("OperationStatus: " + result);
 			}
-
-			// cursor = incidence_db.openCursor(txn().getBDBTransaction(),
-			// cursorConfig);
-			// OperationStatus status = cursor.getSearchBoth(key, value,
-			// LockMode.DEFAULT);
-			// if (status == OperationStatus.NOTFOUND)
-			// {
-			// OperationStatus result =
-			// incidence_db.put(txn().getBDBTransaction(), key, value);
-			// if (result != OperationStatus.SUCCESS)
-			// throw new Exception("OperationStatus: " + result);
-			// }
 		}
 		catch (Exception ex)
 		{
@@ -338,6 +343,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public boolean containsLink(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
 		DatabaseEntry value = new DatabaseEntry();
 		value.setPartial(0, 0, true);
@@ -359,6 +365,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public boolean containsData(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
 		DatabaseEntry value = new DatabaseEntry();
 		value.setPartial(0, 0, true);
@@ -378,6 +385,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public byte[] getData(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		try
 		{
 			DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
@@ -396,6 +404,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 	@SuppressWarnings("unchecked")
 	public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		if (handle == null)
 			throw new NullPointerException("HGStore.getIncidenceSet called with a null handle.");
 
@@ -432,6 +441,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public long getIncidenceSetCardinality(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		if (handle == null)
 			throw new NullPointerException("HGStore.getIncidenceSetCardinality called with a null handle.");
 
@@ -465,6 +475,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public HGPersistentHandle[] getLink(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		try
 		{
 			DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
@@ -533,6 +544,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public void removeData(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		if (handle == null)
 			throw new NullPointerException("HGStore.remove called with a null handle.");
 		try
@@ -548,6 +560,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public void removeIncidenceLink(HGPersistentHandle handle, HGPersistentHandle oldLink)
 	{
+		ensureOpen();
 		Cursor cursor = null;
 		try
 		{
@@ -581,6 +594,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public void removeIncidenceSet(HGPersistentHandle handle)
 	{
+		ensureOpen();
 		try
 		{
 			DatabaseEntry key = new DatabaseEntry(handle.toByteArray());
@@ -637,6 +651,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(String name) 
     {
+		ensureOpen();
 		indicesLock.readLock().lock();		
 		try 
         {
@@ -655,6 +670,8 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			ByteArrayConverter<ValueType> valueConverter, Comparator<byte[]> keyComparator, Comparator<byte[]> valueComparator, 
 			boolean isBidirectional, boolean createIfNecessary)
 	{
+		ensureOpen();
+
 		indicesLock.readLock().lock();
 
 		try
@@ -705,6 +722,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 	public void removeIndex(String name)
 	{
+		ensureOpen();
 		indicesLock.writeLock().lock();
 
 		try

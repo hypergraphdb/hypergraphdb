@@ -1,3 +1,10 @@
+/* 
+ * This file is part of the HyperGraphDB source distribution. This is copyrighted 
+ * software. For permitted uses, licensing options and redistribution, please see  
+ * the LicensingInformation file at the root level of the distribution.  
+ * 
+ * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+ */
 package org.hypergraphdb.event;
 
 import org.hypergraphdb.transaction.HGTransaction;
@@ -9,23 +16,14 @@ import org.hypergraphdb.transaction.HGTransaction;
  * occurring in the database.
  *
  */
-public class HGTransactionEndEvent extends HGEventBase
+public class HGTransactionEndEvent extends HGTransactionEvent
 {
     private boolean success;
-    private HGTransaction transaction;
     
     public HGTransactionEndEvent(HGTransaction transaction, boolean success)
     {
-        this.transaction = transaction;
+        super(transaction);
         this.success = success;
-    }
-    
-    /**
-     * Return the transaction object representing the transaction that just ended.
-     */
-    public HGTransaction getTransaction()
-    {
-        return transaction;
     }
     
     /**

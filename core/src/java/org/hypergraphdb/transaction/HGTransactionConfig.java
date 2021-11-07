@@ -26,15 +26,17 @@ public class HGTransactionConfig
     private boolean noStorage = false;
     private boolean readonly = false;
     private boolean writeUpgradable = false;
-    
+    private Runnable beforeConflictRetry = null;
+
     public boolean isNoStorage()
     {
         return noStorage;
     }
 
-    public void setNoStorage(boolean noStorage)
+    public HGTransactionConfig setNoStorage(boolean noStorage)
     {
         this.noStorage = noStorage;
+        return this;
     }
 
     public boolean isReadonly()
@@ -42,10 +44,11 @@ public class HGTransactionConfig
         return readonly;
     }
 
-    public void setReadonly(boolean readonly)
+    public HGTransactionConfig setReadonly(boolean readonly)
     {
         this.readonly = readonly;
         writeUpgradable = false;
+        return this;
     }
 
 	public boolean isWriteUpgradable() 
@@ -53,10 +56,22 @@ public class HGTransactionConfig
 		return writeUpgradable;
 	}
 
-	public void setWriteUpgradable(boolean writeUpgradable) 
+	public HGTransactionConfig setWriteUpgradable(boolean writeUpgradable) 
 	{
 		this.writeUpgradable = writeUpgradable;
 		if (writeUpgradable)
 		    readonly = true;
-	}      
+        return this;
+	}
+
+    public Runnable getBeforeConflictRetry() 
+    {
+        return beforeConflictRetry;
+    }
+
+    public HGTransactionConfig setBeforeConflictRetry(Runnable beforeConflictRetry) 
+    {
+        this.beforeConflictRetry = beforeConflictRetry;
+        return this;
+    }    
 }

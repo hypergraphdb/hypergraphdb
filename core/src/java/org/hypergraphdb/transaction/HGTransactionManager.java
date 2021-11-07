@@ -7,10 +7,14 @@
  */
 package org.hypergraphdb.transaction;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HyperGraph;
+import org.hypergraphdb.event.HGTransactionEvent;
 import org.hypergraphdb.util.HGUtils;
 
 /**
@@ -21,13 +25,20 @@ import org.hypergraphdb.util.HGUtils;
  * HyperGraph by calling its <code>getTransactionManager</code> method.
  * </p>
  *
+ * <p>
+ * The transaction manager allows listening for transaction events independent
+ * from the {@link org.hypergraphdb.event.HGEventManager} and thus without
+ * having access or needing a {@link org.hypergraphdb.HyperGraph} instance. 
+ * Use the {@link #addTransactionEventListener(Consumer)} and {@link #removeTransactionEventListener(Consumer)}
+ * methods.
+ * </p>
  * @author Borislav Iordanov
  *
  */
 public class HGTransactionManager
 {
-	private HyperGraph graph;
 	private HGTransactionFactory factory;
+	private List<Consumer<HGTransactionEvent>> transactionEventListeners = new ArrayList<>();
 	private ThreadLocal<HGTransactionContext> tcontext = new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
 
@@ -37,6 +48,13 @@ public class HGTransactionManager
 	final ReentrantLock COMMIT_LOCK = new ReentrantLock(true);
 
 	TxMonitor txMonitor = null;
+
+	void fireTransactionEvent(final HGTransactionEvent ev)
+	{
+		transactionEventListeners.forEach(listener -> {
+			listener.accept(ev);
+		});
+	}
 
 	/**
 	 * <p>
@@ -117,31 +135,7 @@ public class HGTransactionManager
 	public HGTransactionManager(HGTransactionFactory factory)
 	{
 		this.factory = factory;
-
-	}
-
-	/**
-	 * <p>
-	 * Set the {@link HyperGraph} instance associated with this
-	 * <code>HGTransactionManager</code>. <strong>Do not call - used internally
-	 * during initialization.
-	 * </p>
-	 */
-	public void setHyperGraph(HyperGraph graph)
-	{
-		this.graph = graph;
 		this.txMonitor = new TxMonitor(this);
-	}
-
-	/**
-	 * <p>
-	 * Return the {@link HyperGraph} instance associated with this
-	 * <code>HGTransactionManager</code>.
-	 * </p>
-	 */
-	public HyperGraph getHyperGraph()
-	{
-		return graph;
 	}
 
 	/**
@@ -482,6 +476,11 @@ public class HGTransactionManager
 					handleTxException(t); // will re-throw if we can't retry the
 											// transaction
 				}
+
+				// retry transaction
+				if (config.getBeforeConflictRetry() != null)
+				    // don't try to catch exceptions here, we've already cleaned up, just propagate
+					config.getBeforeConflictRetry().run(); 
 				continue;
 			}
 			try
@@ -502,6 +501,10 @@ public class HGTransactionManager
 					handleTxException(t); // will re-throw if we can't retry the
 											// transaction
 				}
+				if (config.getBeforeConflictRetry() != null)
+				    // don't try to catch exceptions here, we've already cleaned up, just propagate
+					config.getBeforeConflictRetry().run(); 
+				// retry transaction
 			}
 		}
 	}
@@ -516,4 +519,23 @@ public class HGTransactionManager
 		return this.txMonitor;
 	}
 
+	/**
+	 * Add a listener for transaction events.
+	 * @return <code>this</code>
+	 */
+	public HGTransactionManager addTransactionEventListener(Consumer<HGTransactionEvent> listener)
+	{
+		this.transactionEventListeners.add(listener);
+		return this;
+	}
+
+	/**
+	 * Remove a previously added listener for transaction events.
+	 * @return <code>this</code>
+	 */	
+	public HGTransactionManager removeTransactionEventListener(Consumer<HGTransactionEvent> listener)
+	{
+		this.transactionEventListeners.remove(listener);
+		return this;
+	}	
 }
