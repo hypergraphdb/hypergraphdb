@@ -16,7 +16,7 @@ class StorageImplementationTests extends StorageTestBase {
   val store: HGStore = getStore()
 
   // test 1
-  it should "'double' should handle 0" in {
+  it should "'double' should handle 0" in { 
     val h = store.getConfiguration().getHandleFactory().makeHandle()
     info("Handle = " + h)
     assert(h != null)

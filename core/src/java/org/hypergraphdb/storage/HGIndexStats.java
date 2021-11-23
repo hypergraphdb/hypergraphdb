@@ -60,7 +60,15 @@ public interface HGIndexStats<Key, Value>
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
 	Count entries(long cost, boolean isEstimateOk);
-	
+
+	/**
+	 * Return to total number of key-value pairs. Equivalent to 
+	 * <code>entries(Long.MAX_VALUE, false).value()</code>
+	 */
+	default long countEntries() {
+		return entries(Long.MAX_VALUE, false).value();
+	}
+
 	/**
 	 * <p>Return the number of keys in the index. See this interface description
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
@@ -68,11 +76,27 @@ public interface HGIndexStats<Key, Value>
 	Count keys(long cost, boolean isEstimateOk);
 	
 	/**
+	 * Return to total number of keys. Equivalent to 
+	 * <code>keys(Long.MAX_VALUE, false).value()</code>
+	 */
+	default long countKeys() {
+		return keys(Long.MAX_VALUE, false).value();
+	}
+
+	/**
 	 * <p>Return the number of values stored for a given key in the index. See this interface description
 	 * for the meaning of the <code>cost</code> and <code>isEstimateOk<code>  arguments.</p>
 	 */
 	Count valuesOfKey(Key key, long cost, boolean isEstimateOk);
 	
+	/**
+	 * Return to total number of values for a given key. Equivalent to 
+	 * <code>valuesOfKey(key, Long.MAX_VALUE, false).value()</code>
+	 */
+	default long countValues(Key key) {
+		return valuesOfKey(key, Long.MAX_VALUE, false).value();
+	}
+
 	/**
 	 * <p>For {@link org.hypergraphdb.HGBidirectionalIndex}es, return the number of values in 
 	 * the index. See this interface description for the meaning of the 
@@ -81,9 +105,25 @@ public interface HGIndexStats<Key, Value>
 	Count values(long cost, boolean isEstimateOk);
 	
 	/**
+	 * Return to total number of values. Equivalent to 
+	 * <code>keys(Long.MAX_VALUE, false).value()</code>
+	 */
+	default long countValues() {
+		return values(Long.MAX_VALUE, false).value();
+	}
+
+	/**
 	 * <p>For {@link org.hypergraphdb.HGBidirectionalIndex}es, return the number of keys for which 
 	 * the specified <code>value</code> is a value. See this interface description for 
 	 * the meaning of the <code>cost</code> and <code>isEstimateOk<code> arguments.</p>
 	 */
 	Count keysWithValue(Value value, long cost, boolean isEstimateOk);	
+
+	/**
+	 * Return to total number of keys having the given value. Equivalent to 
+	 * <code>keysWithValue(key, Long.MAX_VALUE, false).value()</code>
+	 */
+	default long countKeys(Value value) {
+		return keysWithValue(value, Long.MAX_VALUE, false).value();
+	}	
 }
