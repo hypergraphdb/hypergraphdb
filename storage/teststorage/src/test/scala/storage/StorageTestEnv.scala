@@ -24,6 +24,8 @@ import scala.collection.mutable.ArrayBuffer
 import collection.convert.ImplicitConversions._
 import collection.convert.ImplicitConversionsToScala._
 
+object ToDebug extends Tag("ToDebug")
+
 trait StorageTestEnv extends should.Matchers 
                      with Suite
                      with OptionValues 
@@ -108,7 +110,7 @@ trait StorageTestEnv extends should.Matchers
     if (!storeOption.isDefined) {
         info("Using storage implementation " + storeImplementationClass)
         config = new HGConfiguration()
-        config.setEnforceTransactionsInStorageLayer(true)
+        config.setEnforceTransactionsInStorageLayer(false)
         storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
         config.setStoreImplementation(storeImplementation)
         storeOption = Some(new HGStore(databaseLocation, config))

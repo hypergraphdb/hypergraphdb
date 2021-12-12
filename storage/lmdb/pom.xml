@@ -15,7 +15,7 @@
   </properties>
   <packaging>${packageit}</packaging>
   <artifactId>hglmdb</artifactId>
-  <name>HyperGraphDB BDB-JE Storage</name>
+  <name>HyperGraphDB LMDB Storage</name>
   <url>http://hypergraphdb.org</url>
 
   <repositories>

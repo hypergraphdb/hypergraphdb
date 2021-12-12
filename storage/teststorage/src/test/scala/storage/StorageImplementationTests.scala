@@ -9,8 +9,6 @@ import scala.util.Using
 import org.hypergraphdb.HGRandomAccessResult.GotoResult
 import org.scalatest.Tag
 
-object ToDebug extends Tag("ToDebug")
-
 class StorageImplementationTests extends StorageTestBase {
   
   val store: HGStore = getStore()
