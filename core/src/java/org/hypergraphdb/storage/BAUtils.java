@@ -102,8 +102,11 @@ public class BAUtils
 		int i = leftPos;
 		int j = rightPos;
 		int comp = 0;
-		while (comp == 0 && i < maxLeft && j < maxRight)
-			comp = left[i++] - right[j++];
+		while (comp == 0 && i < maxLeft && j < maxRight) {
+			int l = left[i++] & 0xff;
+			int r = right[j++] & 0xff;
+			comp = l - r;
+		}
 		return comp;
 	}
 }

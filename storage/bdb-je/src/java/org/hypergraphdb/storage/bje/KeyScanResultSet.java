@@ -79,6 +79,46 @@ public class KeyScanResultSet<T> extends IndexResultSet<T> {
 		}
 	}
 
+	public void goBeforeFirst() {
+		try {
+			if (cursor.cursor().getFirst(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+				current = UNKNOWN;
+				prev = null;
+				next = converter.fromByteArray(key.getData(), key.getOffset(),key.getSize());
+				lookahead = 1;
+			}
+			else {
+				prev = next = null;
+				current = UNKNOWN;
+				lookahead = 0;
+			}
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
+	public void goAfterLast() {
+		try {
+			if (cursor.cursor().getLast(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+				current = UNKNOWN;
+				next = null;
+				prev = converter.fromByteArray(key.getData(), key.getOffset(), key.getSize());
+				lookahead = -1;
+			}
+			else {
+				prev = next = null;
+				current = UNKNOWN;
+				lookahead = 0;
+			}
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
 	public GotoResult goTo(T value, boolean exactMatch) {
 		byte[] B = converter.toByteArray(value);
 		assignData(key, B);

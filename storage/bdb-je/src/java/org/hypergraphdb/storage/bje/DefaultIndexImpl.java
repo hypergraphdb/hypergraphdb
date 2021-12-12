@@ -69,11 +69,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 	protected TransactionBJEImpl txn()
 	{
-		HGTransaction tx = transactionManager.getContext().getCurrent();
-		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
-			return TransactionBJEImpl.nullTransaction();
-		else
-			return (TransactionBJEImpl) tx.getStorageTransaction();
+		return storage.txn();
 	}
 
 	public DefaultIndexImpl(String indexName, 
@@ -531,15 +527,15 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 			if (status == OperationStatus.SUCCESS)
 			{
-				Comparator<byte[]> comparator = db.getConfig().getBtreeComparator();
-
+				Comparator<byte[]> comparator = getKeyComparator(); // db.getConfig().getBtreeComparator();
+				boolean found_exact_key = comparator.compare(keyAsBytes, keyEntry.getData()) == 0;
 				if (!compare_equals)
 				{ // strict < or >?
 					if (lower_range)
 					{
 						status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
 					}
-					else if (comparator.compare(keyAsBytes, keyEntry.getData()) == 0)
+					else if (found_exact_key)
 					{
 						status = cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
 					}
@@ -548,9 +544,22 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 				// greater than the key
 				// in the latter case we need to back up by one for < (or <=)
 				// query
-				else if (lower_range && comparator.compare(keyAsBytes, keyEntry.getData()) != 0)
+				else if (lower_range)
 				{
-					status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
+					if (!found_exact_key)
+						status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
+					else
+					{
+						// We need to go to the last value for this key before we
+						// can start moving backwards. To do that, we go to the next
+						// key and them move back one entry, or if we are on the last
+						// key already, just go to the last DB entry.
+						status = cursor.getNextNoDup(keyEntry, value, LockMode.DEFAULT);
+						if (status != OperationStatus.SUCCESS)
+							status = cursor.getLast(keyEntry, value, LockMode.DEFAULT);
+						else
+							status = cursor.getPrev(keyEntry, value, LockMode.DEFAULT);
+					}
 				}
 			}
 			else if (lower_range)

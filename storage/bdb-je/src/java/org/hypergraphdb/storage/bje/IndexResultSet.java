@@ -30,7 +30,7 @@ import com.sleepycat.je.OperationStatus;
  */
 @SuppressWarnings("unchecked")
 public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, CountMe {
-	private static final Object UNKNOWN = new Object();
+	protected static final Object UNKNOWN = new Object();
 
 	protected BJETxCursor cursor;
 	protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;

@@ -61,7 +61,7 @@ public class BJEStorageImplementation implements HGStoreImplementation
 	private ReentrantReadWriteLock indicesLock = new ReentrantReadWriteLock();
 	private LinkBinding linkBinding = null;
 
-	private TransactionBJEImpl txn()
+	TransactionBJEImpl txn()
 	{
 		HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
 

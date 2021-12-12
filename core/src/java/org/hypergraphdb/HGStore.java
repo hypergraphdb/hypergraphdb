@@ -334,6 +334,16 @@ public class HGStore
     }
 
     /**
+     * Get the HyperGraphDB bi-directional index with the given name. Return <code>null</code> if no
+     * index with that name exists.
+     */
+    @SuppressWarnings("unchecked")
+    public <KeyType, ValueType> HGBidirectionalIndex<KeyType, ValueType> getBidirectionalIndex(String name)
+    {
+    	return (HGBidirectionalIndex<KeyType, ValueType>)impl.getIndex(name);
+    }
+
+    /**
      * <p>
      * Retrieve an <code>HGIndex</code> by its name. An index will not 
      * be automatically created if it does not exists. To create an index,
