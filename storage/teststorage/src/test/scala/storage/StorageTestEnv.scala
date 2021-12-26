@@ -23,6 +23,7 @@ import org.hypergraphdb.HGSearchResult
 import scala.collection.mutable.ArrayBuffer
 import collection.convert.ImplicitConversions._
 import collection.convert.ImplicitConversionsToScala._
+import java.util.UUID
 
 object ToDebug extends Tag("ToDebug")
 
@@ -58,9 +59,15 @@ trait StorageTestEnv extends should.Matchers
     "org.hypergraphdb.storage.bje.BJEStorageImplementation"
   }                                              
 
-  def databaseLocation = {
+  def baseDatabaseLocation = {
     "/tmp/hgdb_storage_tests"
   }
+
+  def freshDatabaseLocation(): String = {
+    baseDatabaseLocation + "/" + UUID.randomUUID().toString()
+  }
+
+  val databaseLocation = freshDatabaseLocation()
 
   def tx[T](f: => T) = { //, onRetry: Option[Runnable] = None) = {
     // val config = new HGTransactionConfig()
@@ -71,6 +78,7 @@ trait StorageTestEnv extends should.Matchers
   }
 
   def assertResultContains[T](rs: HGRandomAccessResult[T], item: T): Unit = {
+    assert(true)
     Using.resource(rs) { rs => assert(rs.goTo(item, true) == GotoResult.found) }
   }
   
@@ -106,11 +114,11 @@ trait StorageTestEnv extends should.Matchers
     new HGPlainLink(handleArray(arity): _*)
   }  
 
-  def getStore() = {
+  def getStore(enforceTransactions: Boolean = false) = {
     if (!storeOption.isDefined) {
         info("Using storage implementation " + storeImplementationClass)
         config = new HGConfiguration()
-        config.setEnforceTransactionsInStorageLayer(false)
+        config.setEnforceTransactionsInStorageLayer(enforceTransactions)
         storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
         config.setStoreImplementation(storeImplementation)
         storeOption = Some(new HGStore(databaseLocation, config))
