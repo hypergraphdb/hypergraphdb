@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypergraphdb.util.HGDatabaseVersionFile;
 import org.hypergraphdb.util.MemoryWarningSystem;
+import org.hypergraphdb.util.OnMemoryThresholdExceededMemoryWarningSystem;
 
 /**
  * <p>
@@ -74,7 +75,7 @@ public class HGEnvironment
 	{
 		if (memWarning == null)
 		{
-			memWarning = new MemoryWarningSystem();
+			memWarning = new OnMemoryThresholdExceededMemoryWarningSystem();
 			memWarning.setPercentageUsageThreshold(0.7);
 		}
 		return memWarning;

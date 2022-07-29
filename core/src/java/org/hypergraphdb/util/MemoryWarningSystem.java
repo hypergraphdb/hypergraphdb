@@ -7,12 +7,14 @@
  */
 package org.hypergraphdb.util;
 
-import javax.management.*;
-
 import org.hypergraphdb.HGEnvironment;
 
+import javax.management.Notification;
+import javax.management.NotificationEmitter;
+import javax.management.NotificationListener;
 import java.lang.management.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * <p>
@@ -51,85 +53,21 @@ import java.util.*;
  * <em>Code taken from http://www.roseindia.net/javatutorials/OutOfMemoryError_Warning_System.shtml
  * </em></p>
  */
-public class MemoryWarningSystem 
+public interface MemoryWarningSystem
 {
-	private final Collection<Listener> listeners = new ArrayList<Listener>();
-	private MemoryPoolMXBean tenuredGenPool = null;
 	
-	public static interface Listener 
+	public static interface Listener
 	{
 		void memoryUsageLow(long usedMemory, long maxMemory);
 	}
 
-	public MemoryWarningSystem() 
-	{
-	    MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
-	    tenuredGenPool = this.findTenuredGenPool();
-	    NotificationEmitter emitter = (NotificationEmitter) mbean;
-	    emitter.addNotificationListener(new NotificationListener() 
-	    {
-	    	public void handleNotification(Notification n, Object hb) 
-	    	{
-	    		if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) 
-	    		{	    			
-		            long maxMemory = tenuredGenPool.getUsage().getMax();
-		            long usedMemory = tenuredGenPool.getUsage().getUsed();
-		            for (Listener listener : listeners) 
-		            {
-		              listener.memoryUsageLow(usedMemory, maxMemory);
-		            }
-	    		}
-	    	}
-	    }, null, null);
-	}
 
-	public boolean addListener(Listener listener) 
-	{
-		return listeners.add(listener);
-	}
+	public boolean addListener(Listener listener);
 
-	public boolean removeListener(Listener listener) 
-	{
-		return listeners.remove(listener);
-	}
+	public boolean removeListener(Listener listener);
 
-	public void setPercentageUsageThreshold(double percentage) 
-	{
-		if (percentage <= 0.0 || percentage > 1.0) 
-			throw new IllegalArgumentException("Percentage not in range");
+	public void setPercentageUsageThreshold(double percentage);
 
-	    long maxMemory = tenuredGenPool.getUsage().getMax();
-	    long warningThreshold = (long) (maxMemory * percentage);
-	    tenuredGenPool.setUsageThreshold(warningThreshold);	    
-	}
-
-	public double getPercentageUsageThreshold()
-	{
-	    long maxMemory = tenuredGenPool.getUsage().getMax();
-	    long warningThreshold = tenuredGenPool.getUsageThreshold(); 
-	    return (double)warningThreshold/(double)maxMemory;
-	}
+	public double getPercentageUsageThreshold();
 	
-	/**
-     * Tenured Space Pool can be determined by it being of type
-     * HEAP and by it being possible to set the usage threshold.
-     */
-	private MemoryPoolMXBean findTenuredGenPool() 
-	{
-	    MemoryPoolMXBean last = null;
-		for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans()) 
-		{
-			// I don't know whether this approach is better, or whether
-			// we should rather check for the pool name "Tenured Gen"?
-			if (pool.getType() == MemoryType.HEAP && pool.isUsageThresholdSupported())
-			{
-				last = pool;
-//				System.out.println("pool " + pool);
-			}
-		}
-		if (last != null)
-		    return last;
-		else
-		    throw new AssertionError("Could not find tenured space");
-	}
 }
