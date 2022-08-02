@@ -56,7 +56,7 @@ import java.util.Collection;
 public interface MemoryWarningSystem
 {
 	
-	public static interface Listener
+	public static interface Listener 
 	{
 		void memoryUsageLow(long usedMemory, long maxMemory);
 	}
