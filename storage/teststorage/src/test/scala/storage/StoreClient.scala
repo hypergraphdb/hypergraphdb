@@ -12,8 +12,13 @@ class StoreClient {
   }
 
   def execute(env:StorageTestEnv): Unit = {
-    operations.foreach(_.prepare(env))
-    operations.foreach(_.perform())
-    operations.foreach(_.verify())
+    operations.foreach(op => { 
+      op.prepare(env)
+      op.perform()
+      op.verify()
+    })
+    // operations.foreach(_.prepare(env))
+    // operations.foreach(_.perform())
+    // operations.foreach(_.verify())
   }
 }

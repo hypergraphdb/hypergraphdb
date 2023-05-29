@@ -7,6 +7,7 @@
  */
 package org.hypergraphdb.storage.bje;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 
 import org.hypergraphdb.HGException;
@@ -19,6 +20,7 @@ import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
+import org.hypergraphdb.util.HGUtils;
 
 import com.sleepycat.je.BtreeStats;
 import com.sleepycat.je.Cursor;
@@ -313,7 +315,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		}
 		catch (Exception ex)
 		{
-			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);
+			throw new HGException("Failed to remove entry from index '" + name + "': " + ex.toString(), ex);
 		}
 		finally
 		{
@@ -334,14 +336,20 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 	{
 		checkOpen();
 		DatabaseEntry dbkey = new DatabaseEntry(keyConverter.toByteArray(key));
-
+		Cursor cursor = null;
 		try
 		{
-			db.delete(txn().getBJETransaction(), dbkey);
+			 OperationStatus status = db.delete(txn().getBJETransaction(), dbkey);
+			 if (status != OperationStatus.SUCCESS && status != OperationStatus.NOTFOUND)
+				 throw new Exception("Failed to delete all entries for key " + dbkey);
 		}
 		catch (Exception ex)
 		{
 			throw new HGException("Failed to delete entry from index '" + name + "': " + ex.toString(), ex);
+		}
+		finally
+		{
+			if (cursor != null) try { cursor.close(); } catch (Throwable t) { }
 		}
 	}
 
@@ -471,10 +479,10 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		try
 		{
 			TransactionBJEImpl tx = txn();
-			cursor = db.openCursor(txn().getBJETransaction(), cursorConfig);
+			cursor = db.openCursor(tx.getBJETransaction(), cursorConfig);
 			OperationStatus status = cursor.getSearchKey(keyEntry, value, LockMode.DEFAULT);
 
-			if (status == OperationStatus.SUCCESS /* && cursor.count() > 0 */)
+			if (status == OperationStatus.SUCCESS  && cursor.count() > 0)
 			{
 				result = new SingleKeyResultSet<ValueType>(tx.attachCursor(cursor), keyEntry, valueConverter);
 			}
@@ -504,6 +512,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 			}
 			throw new HGException("Failed to lookup index '" + name + "': " + ex.toString(), ex);
 		}
+		result.hasNext();
 		return result;
 	}
 

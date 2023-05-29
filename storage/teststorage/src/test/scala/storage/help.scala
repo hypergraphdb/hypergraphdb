@@ -7,6 +7,8 @@ import scala.util.Try
 import scala.util.Success
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
+import scala.reflect.ClassTag
+import scala.collection.mutable.ArrayBuffer
 
 object help {
 
@@ -22,7 +24,12 @@ object help {
   def futureToFutureTry[T](future: Future[T])(implicit ec: ExecutionContext): Future[Try[T]] = 
     future map (Success(_)) recover { case x => Failure(x)}
 
-  def allOf[T](futures: Future[T]*)(implicit ec: ExecutionContext): Future[Seq[Try[T]]] = 
-    Future.sequence(futures map futureToFutureTry)
+  def allOf[T](futures: IterableOnce[Future[T]])(implicit ec: ExecutionContext) : Future[Seq[Try[T]]] = {
+    val buf: List[Future[T]] = futures.iterator.foldLeft(List[Future[T]]())( (l, x) => x :: l)
+    Future.sequence(buf map futureToFutureTry)
+  }
+    
+  // def allOf[T](futures: Future[T]*)(implicit ec: ExecutionContext): Future[Seq[Try[T]]] = 
+  //   Future.sequence(futures map futureToFutureTry)
 
 }

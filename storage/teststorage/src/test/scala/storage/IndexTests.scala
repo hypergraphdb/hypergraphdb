@@ -144,18 +144,13 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
   }
 
   override def withFixture(test: OneArgTest) = {
-    try {      
-      val fixture = test.configMap("fixture").asInstanceOf[FixtureParam]
-      info("Running test " + test.name + " with tags " + test.tags)
-      withFixture(test.toNoArgTest(fixture))      
-      // if (test.tags.contains(ToDebug.name))
-      //   withFixture(test.toNoArgTest(fixture))
-      // else
-      //   Succeeded
-    }
-    finally {
-
-    }
+    val fixture = test.configMap("fixture").asInstanceOf[FixtureParam]
+    info("Running test " + test.name + " with tags " + test.tags)
+    withFixture(test.toNoArgTest(fixture))      
+    // if (test.tags.contains(ToDebug.name))
+    //   withFixture(test.toNoArgTest(fixture))
+    // else
+    //   Succeeded
   }
 
   it should "allow new entries to be added"   in { (fixture: FixtureParam) =>
