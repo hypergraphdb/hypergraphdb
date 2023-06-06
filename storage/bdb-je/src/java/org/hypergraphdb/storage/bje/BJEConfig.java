@@ -18,6 +18,7 @@ public class BJEConfig
 
 	private EnvironmentConfig envConfig;
 	private DatabaseConfig dbConfig;
+	private boolean serializableIsolation = true;
 
 	private void resetDefaults(boolean readOnly)
 	{
@@ -70,7 +71,7 @@ public class BJEConfig
 		// subtle non repeatable read issues (a record read twice in the same transaction giving
 		// two different results because another transaction committed a new value).
 		
-		envConfig.setTxnSerializableIsolation(true);
+		envConfig.setTxnSerializableIsolation(this.isSerializableIsolation());
 		envConfig.setLockTimeout(100, TimeUnit.MILLISECONDS);
 
 		Durability defaultDurability = new Durability(
@@ -79,5 +80,16 @@ public class BJEConfig
 				Durability.ReplicaAckPolicy.NONE); // unused by non-HA
 													// applications.
 		envConfig.setDurability(defaultDurability);
+	}
+
+	public boolean isSerializableIsolation()
+	{
+		return this.serializableIsolation;
+	}
+
+	public BJEConfig setSerializableIsolation(boolean serializableIsolation)
+	{
+		this.serializableIsolation = serializableIsolation;
+		return this;
 	}
 }

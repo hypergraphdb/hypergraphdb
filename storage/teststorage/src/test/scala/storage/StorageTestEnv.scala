@@ -1,6 +1,7 @@
 package storage
 
 import org.hypergraphdb.HGRandomAccessResult
+
 import scala.util.Using
 import scala.util.Random
 import org.hypergraphdb.HGStore
@@ -16,13 +17,15 @@ import org.scalatest.OptionValues
 import org.scalatest.Inside
 import org.scalatest.Inspectors
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest._
-import flatspec._
-import matchers._
+import org.scalatest.*
+import flatspec.*
+import matchers.*
 import org.hypergraphdb.HGSearchResult
+import org.hypergraphdb.storage.bje.BJEConfig
+
 import scala.collection.mutable.ArrayBuffer
-import collection.convert.ImplicitConversions._
-import collection.convert.ImplicitConversionsToScala._
+import collection.convert.ImplicitConversions.*
+import collection.convert.ImplicitConversionsToScala.*
 import java.util.UUID
 
 object ToDebug extends Tag("ToDebug")
@@ -116,12 +119,13 @@ trait StorageTestEnv extends should.Matchers
 
   def getStore(enforceTransactions: Boolean = false) = {
     if (!storeOption.isDefined) {
-        info("Using storage implementation " + storeImplementationClass)
-        config = new HGConfiguration()
-        config.setEnforceTransactionsInStorageLayer(enforceTransactions)
-        storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
-        config.setStoreImplementation(storeImplementation)
-        storeOption = Some(new HGStore(databaseLocation, config))
+      info("Using storage implementation " + storeImplementationClass)
+      config = new HGConfiguration()
+      config.setEnforceTransactionsInStorageLayer(enforceTransactions)
+      storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
+      storeImplementation.getConfiguration().asInstanceOf[BJEConfig].setSerializableIsolation(false)
+      config.setStoreImplementation(storeImplementation)
+      storeOption = Some(new HGStore(databaseLocation, config))
     }
     storeOption.get
   }

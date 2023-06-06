@@ -42,6 +42,10 @@ import com.sleepycat.je.OperationStatus;
 import com.sleepycat.je.Transaction;
 import com.sleepycat.je.TransactionConfig;
 
+/**
+ * For BekeleyDB Java Edition transactions docs, see:
+ * https://download.oracle.com/berkeley-db/docs/je/3.2.76/TransactionGettingStarted/BerkeleyDB-JE-Txn.pdf
+ */
 public class BJEStorageImplementation implements HGStoreImplementation
 {
 	private static final String DATA_DB_NAME = "datadb";

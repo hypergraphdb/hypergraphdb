@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1636010397879
+Bnd-LastModified: 1677453182742
 Build-Jdk: 11.0.12
 Built-By: borislav
 Bundle-ClassPath: .,smack-3.1.0.jar,smackx-3.1.0.jar
