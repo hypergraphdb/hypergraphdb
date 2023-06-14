@@ -1,7 +1,7 @@
-package org.hypergraphdb.storage.lmdb.type;
+package org.hypergraphdb.storage.lmdbold.type;
 
 import org.fusesource.lmdbjni.DatabaseEntry;
-import org.hypergraphdb.storage.lmdb.type.util.UtfOps;
+import org.hypergraphdb.storage.lmdbold.type.util.UtfOps;
 
 /**
  * A concrete <code>TupleBinding</code> for a simple <code>String</code> value.

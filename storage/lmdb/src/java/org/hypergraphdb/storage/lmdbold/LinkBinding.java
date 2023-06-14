@@ -5,16 +5,16 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGStore;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.storage.lmdb.type.TupleBinding;
-import org.hypergraphdb.storage.lmdb.type.TupleInput;
-import org.hypergraphdb.storage.lmdb.type.TupleOutput;
+import org.hypergraphdb.storage.lmdbold.type.TupleBinding;
+import org.hypergraphdb.storage.lmdbold.type.TupleInput;
+import org.hypergraphdb.storage.lmdbold.type.TupleOutput;
 
 /**
  * <p>

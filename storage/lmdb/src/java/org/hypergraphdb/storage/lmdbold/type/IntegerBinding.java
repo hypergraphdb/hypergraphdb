@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdb.type;
+package org.hypergraphdb.storage.lmdbold.type;
 
 import org.fusesource.lmdbjni.DatabaseEntry;
 

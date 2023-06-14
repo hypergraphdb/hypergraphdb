@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import java.io.IOException;
 import java.io.InputStream;

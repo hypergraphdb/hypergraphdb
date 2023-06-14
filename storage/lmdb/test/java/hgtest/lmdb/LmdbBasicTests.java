@@ -10,7 +10,7 @@ import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.storage.lmdb.LmdbStorageImplementation;
+import org.hypergraphdb.storage.lmdbold.LmdbStorageImplementation;
 import org.hypergraphdb.util.HGUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -49,6 +49,6 @@ public class LmdbBasicTests
 	public void addRetrieveAtom()
 	{
 		HGHandle h = graph.add("test");
-		System.out.println(graph.get(h.getPersistent()));
+		System.out.println((Object)graph.get(h.getPersistent()));
 	}
 }

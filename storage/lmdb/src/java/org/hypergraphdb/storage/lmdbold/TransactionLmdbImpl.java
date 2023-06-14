@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,8 +21,8 @@ import org.fusesource.lmdbjni.Transaction;
 import org.hypergraphdb.HGHandleFactory;
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.handle.LongHandleFactory;
-import org.hypergraphdb.storage.lmdb.type.HGDataOutput;
-import org.hypergraphdb.storage.lmdb.type.util.ByteArrayComparator;
+import org.hypergraphdb.storage.lmdbold.type.HGDataOutput;
+import org.hypergraphdb.storage.lmdbold.type.util.ByteArrayComparator;
 import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransactionException;
 

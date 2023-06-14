@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 public class test {
 public static void main(String[] args) {

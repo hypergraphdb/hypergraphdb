@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage.lmdbold;
+package org.hypergraphdb.storage.lmdb;
 
 import java.util.Comparator;
 
@@ -24,8 +24,8 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.transaction.HGTransactionManager;
 
 @SuppressWarnings("unchecked")
-public class DefaultBiIndexImpl<KeyType, ValueType>
-		extends DefaultIndexImpl<KeyType, ValueType>
+public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
+		extends DefaultIndexImpl<BufferType, KeyType, ValueType>
 		implements HGBidirectionalIndex<KeyType, ValueType>
 {
 	private static final String SECONDARY_DB_NAME_PREFIX = DB_NAME_PREFIX
@@ -33,14 +33,20 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
 	SecondaryDatabase secondaryDb = null;
 
 	public DefaultBiIndexImpl(String indexName,
-			LmdbStorageImplementation storage,
+			StorageImplementationLMDB<BufferType> storage,
 			HGTransactionManager transactionManager,
 			ByteArrayConverter<KeyType> keyConverter,
 			ByteArrayConverter<ValueType> valueConverter,
+			HGBufferProxyLMDB<BufferType> hgBufferProxy,
 			Comparator<byte[]> comparator)
 	{
-		super(indexName, storage, transactionManager, keyConverter,
-				valueConverter, comparator);
+		super(indexName, 
+			  storage, 
+			  transactionManager, 
+			  keyConverter,
+			  valueConverter, 
+			  hgBufferProxy,
+			  comparator);
 	}
 
 	public void open()
@@ -49,6 +55,7 @@ public class DefaultBiIndexImpl<KeyType, ValueType>
 		super.open();
 		try
 		{
+			storage.lmdbEnv().op
 			SecondaryDbConfig dbConfig = new SecondaryDbConfig();
 			dbConfig.setCreate(true);
 			dbConfig.setDupSort(true);

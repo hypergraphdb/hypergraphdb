@@ -1,22 +1,18 @@
-package org.hypergraphdb.storage.lmdbold;
+package org.hypergraphdb.storage.lmdb;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.util.Ref;
-import org.fusesource.lmdbjni.Cursor;
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.Entry;
-import org.fusesource.lmdbjni.JNI.MDB_stat;
-import org.fusesource.lmdbjni.LMDBException;
-import org.fusesource.lmdbjni.SecondaryCursor;
+import org.lmdbjava.Cursor;
+import org.lmdbjava.GetOp;
+import org.lmdbjava.Stat;
 
-public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
+public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key, Value>
 {
-	DefaultIndexImpl<Key, Value> index;
+	DefaultIndexImpl<BufferType, Key, Value> index;
 	
-	public LMDBIndexStats(DefaultIndexImpl<Key, Value> index)
+	public LMDBIndexStats(DefaultIndexImpl<BufferType, Key, Value> index)
 	{
 		this.index = index;
 	}
@@ -30,14 +26,9 @@ public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 			{
 				try
 				{
-					long cnt = index.db.stat(index.txn().getDbTransaction()).ms_entries;
-					if (index.isSplitIndex())
-					{
-						cnt += index.db2.stat(index.txn().getDbTransaction()).ms_entries;
-					}
-					return cnt;
+					return index.db.stat(index.txn().lmdbTxn()).entries;
 				}
-				catch (LMDBException ex)
+				catch (Exception ex)
 				{
 					throw new HGException(ex);
 				}				
@@ -68,8 +59,8 @@ public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-					MDB_stat stat = index.db.stat();					
-					return stat.ms_entries;
+					Stat stat = index.db.stat(index.txn().lmdbTxn());					
+					return stat.entries;
 				}
 			}, true);
 		}
@@ -97,8 +88,8 @@ public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-					MDB_stat stat = index.db.stat();					
-					return stat.ms_entries;	
+					Stat stat = index.db.stat(index.txn().lmdbTxn());				
+					return stat.entries;	
 				}
 			}, true);			
 		}		
@@ -113,17 +104,15 @@ public class LMDBIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 		{
 			Ref<Long> counter = new Ref<Long>() {
 			public Long get() {
-				Database db = index.keyBucket(key) == 0 ? index.db : index.db2;
-				try (Cursor cursor = db.openCursor(index.txn().getDbTransaction())) 
+				try (Cursor<BufferType> cursor = index.db.openCursor(index.txn().lmdbTxn())) 
 				{
-					byte[] keyAsBytes = index.keyConverter.toByteArray(key);
-					Entry entry = cursor.get(CursorOp.SET, keyAsBytes);
-					if (entry != null)
+					BufferType keybuf = index.hgBufferProxy.fromBytes(index.keyConverter.toByteArray(key));
+					if (cursor.get(keybuf, GetOp.MDB_SET))
 						return cursor.count();
 					else
 						return 0l;
 				}
-				catch (LMDBException ex)
+				catch (Exception ex)
 				{
 					throw new HGException(ex);
 				}

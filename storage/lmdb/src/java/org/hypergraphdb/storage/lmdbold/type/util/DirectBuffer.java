@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdb.type.util;
+package org.hypergraphdb.storage.lmdbold.type.util;
 
 import sun.misc.Unsafe;
 
@@ -166,7 +166,7 @@ public class DirectBuffer
 		else
 		{
 			byteArray = null;
-			addressOffset = ((sun.nio.ch.DirectBuffer) buffer).address();
+//			addressOffset = ((sun.nio.ch.DirectBuffer) buffer).address();
 		}
 
 		capacity = buffer.capacity();
@@ -619,12 +619,12 @@ public class DirectBuffer
 		else
 		{
 			dstByteArray = null;
-			dstBaseOffset = ((sun.nio.ch.DirectBuffer) dstBuffer).address();
+//			dstBaseOffset = ((sun.nio.ch.DirectBuffer) dstBuffer).address();
 		}
 
-		UNSAFE.copyMemory(byteArray, addressOffset + index, dstByteArray,
-				dstBaseOffset + dstOffset, count);
-		dstBuffer.position(dstBuffer.position() + count);
+//		UNSAFE.copyMemory(byteArray, addressOffset + index, dstByteArray,
+//				dstBaseOffset + dstOffset, count);
+//		dstBuffer.position(dstBuffer.position() + count);
 
 		return count;
 	}
@@ -681,11 +681,11 @@ public class DirectBuffer
 		else
 		{
 			srcByteArray = null;
-			srcBaseOffset = ((sun.nio.ch.DirectBuffer) srcBuffer).address();
+//			srcBaseOffset = ((sun.nio.ch.DirectBuffer) srcBuffer).address();
 		}
 
-		UNSAFE.copyMemory(srcByteArray, srcBaseOffset + srcIndex, byteArray,
-				addressOffset + index, count);
+//		UNSAFE.copyMemory(srcByteArray, srcBaseOffset + srcIndex, byteArray,
+//				addressOffset + index, count);
 
 		return count;
 	}

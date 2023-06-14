@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdbold;
+package org.hypergraphdb.storage.lmdb;
 
 public class LMDBUtils {
 	public static void checkArgNotNull(Object value, String name) {

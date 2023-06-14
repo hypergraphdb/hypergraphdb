@@ -1,9 +1,9 @@
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.lmdb.type.HGDataInput;
-import org.hypergraphdb.storage.lmdb.type.HGDataOutput;
-import org.hypergraphdb.storage.lmdb.type.TupleInput;
+import org.hypergraphdb.storage.lmdbold.type.HGDataInput;
+import org.hypergraphdb.storage.lmdbold.type.HGDataOutput;
+import org.hypergraphdb.storage.lmdbold.type.TupleInput;
 
 public class LmdbDataInput extends TupleInput implements HGDataInput {
   public LmdbDataInput(final byte[] buffer) {

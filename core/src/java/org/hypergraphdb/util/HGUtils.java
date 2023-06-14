@@ -179,7 +179,7 @@ public class HGUtils
 		printStackTrace(Thread.currentThread().getStackTrace(), out);
 	}
 
-	public static void closeNoException(HGSearchResult<?> rs)
+	public static void closeNoException(AutoCloseable rs)
 	{
 		if (rs == null) return;
 		try { rs.close(); } catch (Throwable t) { }

@@ -15,10 +15,12 @@
     <bundle.namespace>org.hypergraph</bundle.namespace>    
     <hgdb.version>2.0-SNAPSHOT</hgdb.version>
   </properties>    
-  <packaging>bundle</packaging>  
+  <packaging>${packageit}</packaging>  
   <artifactId>hgdb</artifactId>
   <name>HyperGraphDB Core</name>
   <build>
+   <!-- <sourceDirectory>src/java</sourceDirectory>
+   <testSourceDirectory>test/java</testSourceDirectory>        -->
    <plugins>
      <plugin>
         <groupId>org.apache.maven.plugins</groupId>

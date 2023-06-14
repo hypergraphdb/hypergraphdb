@@ -1,11 +1,11 @@
-package org.hypergraphdb.storage.lmdb.type;
+package org.hypergraphdb.storage.lmdbold.type;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import org.hypergraphdb.storage.lmdb.type.util.FastOutputStream;
-import org.hypergraphdb.storage.lmdb.type.util.PackedInteger;
-import org.hypergraphdb.storage.lmdb.type.util.UtfOps;
+import org.hypergraphdb.storage.lmdbold.type.util.FastOutputStream;
+import org.hypergraphdb.storage.lmdbold.type.util.PackedInteger;
+import org.hypergraphdb.storage.lmdbold.type.util.UtfOps;
 
 
 /**

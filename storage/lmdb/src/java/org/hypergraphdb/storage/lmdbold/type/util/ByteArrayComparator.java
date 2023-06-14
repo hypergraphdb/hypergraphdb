@@ -1,8 +1,8 @@
-package org.hypergraphdb.storage.lmdb.type.util;
+package org.hypergraphdb.storage.lmdbold.type.util;
 
 import java.util.Comparator;
 
-import org.hypergraphdb.storage.lmdb.type.util.unsafe.Unsafe;
+import org.hypergraphdb.storage.lmdbold.type.util.unsafe.Unsafe;
 
 public final class ByteArrayComparator
 {

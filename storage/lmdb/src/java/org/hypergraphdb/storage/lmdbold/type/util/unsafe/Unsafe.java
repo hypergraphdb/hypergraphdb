@@ -1,10 +1,10 @@
-package org.hypergraphdb.storage.lmdb.type.util.unsafe;
+package org.hypergraphdb.storage.lmdbold.type.util.unsafe;
 
 import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 
-import org.hypergraphdb.storage.lmdb.type.util.IsAndroid;
+import org.hypergraphdb.storage.lmdbold.type.util.IsAndroid;
 
 public class Unsafe
 {

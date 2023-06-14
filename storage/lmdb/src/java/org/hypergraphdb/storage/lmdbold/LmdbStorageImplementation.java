@@ -1,4 +1,4 @@
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import static org.fusesource.lmdbjni.Constants.NODUPDATA;
 

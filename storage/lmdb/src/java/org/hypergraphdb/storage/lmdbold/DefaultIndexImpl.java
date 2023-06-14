@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import java.nio.ByteOrder;
 import java.text.MessageFormat;
@@ -22,9 +22,8 @@ import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.VanillaTransaction;
 
-import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
-
 import static org.fusesource.lmdbjni.Constants.*;
+import static org.hypergraphdb.storage.lmdbold.LMDBUtils.checkArgNotNull;
 
 import org.fusesource.lmdbjni.CursorOp;
 import org.fusesource.lmdbjni.Database;

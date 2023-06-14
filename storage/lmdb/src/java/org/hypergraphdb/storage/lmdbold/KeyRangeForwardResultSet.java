@@ -5,7 +5,7 @@
  * 
  * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
  */
-package org.hypergraphdb.storage.lmdb;
+package org.hypergraphdb.storage.lmdbold;
 
 import org.fusesource.lmdbjni.CursorOp;
 import org.fusesource.lmdbjni.DatabaseEntry;
