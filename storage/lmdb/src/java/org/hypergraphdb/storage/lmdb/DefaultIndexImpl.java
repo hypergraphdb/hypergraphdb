@@ -232,9 +232,6 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 	public void addEntry(KeyType key, ValueType value)
 	{
 		checkOpen();
-		if (key == null)
-			return;
- 
 		try
 		{
 			db.put(txn().lmdbTxn(), 

@@ -125,28 +125,15 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 	public Count keysWithValue(final Value value, final long cost, final boolean isEstimateOk)
 	{
 		index.checkOpen();
-		if (index instanceof DefaultBiIndexImpl)
+		if (! (index instanceof DefaultBiIndexImpl) || cost == 0)
 			return null;
-		if (cost == 0)
-			return null;
+
 		else
 		{
-			final DefaultBiIndexImpl<Key, Value> bindex = (DefaultBiIndexImpl<Key, Value>)index;
+			final DefaultBiIndexImpl<BufferType, Key, Value> bindex = (DefaultBiIndexImpl<BufferType, Key, Value>)index;
 			Ref<Long> counter = new Ref<Long>() {
 			public Long get() {				
-				try (SecondaryCursor cursor = bindex.secondaryDb.openSecondaryCursor(index.txn().getDbTransaction())) 
-				{
-					byte [] valueAsBytes = bindex.valueConverter.toByteArray(value);
-					Entry entry = cursor.get(CursorOp.SET, valueAsBytes);
-					if (entry != null)
-						return cursor.count();
-					else
-						return 0l;
-				}
-				catch (LMDBException ex)
-				{
-					throw new HGException(ex);
-				}
+				return bindex.countKeys(value);
 			}};
 			return new Count(counter, false);
 		}		

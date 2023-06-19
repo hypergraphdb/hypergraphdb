@@ -7,21 +7,22 @@
  */
 package org.hypergraphdb.storage.lmdb;
 
+import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
+
 import java.util.Comparator;
 
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.Entry;
-import org.fusesource.lmdbjni.LMDBException;
-import org.fusesource.lmdbjni.SecondaryCursor;
-import org.fusesource.lmdbjni.SecondaryDatabase;
-import org.fusesource.lmdbjni.SecondaryDbConfig;
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.transaction.HGTransactionManager;
+import org.hypergraphdb.util.HGUtils;
+import org.lmdbjava.Cursor;
+import org.lmdbjava.Dbi;
+import org.lmdbjava.DbiFlags;
+import org.lmdbjava.GetOp;
+import org.lmdbjava.PutFlags;
 
 @SuppressWarnings("unchecked")
 public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
@@ -30,7 +31,7 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 {
 	private static final String SECONDARY_DB_NAME_PREFIX = DB_NAME_PREFIX
 			+ "_secondary";
-	SecondaryDatabase secondaryDb = null;
+	Dbi<BufferType> secondaryDb = null;
 
 	public DefaultBiIndexImpl(String indexName,
 			StorageImplementationLMDB<BufferType> storage,
@@ -51,17 +52,13 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 
 	public void open()
 	{
-		sort_duplicates = false;
 		super.open();
 		try
-		{
-			storage.lmdbEnv().op
-			SecondaryDbConfig dbConfig = new SecondaryDbConfig();
-			dbConfig.setCreate(true);
-			dbConfig.setDupSort(true);
-			secondaryDb = storage.getEnvironment().openSecondaryDatabase(
-					txn().getDbTransaction(), db,
-					SECONDARY_DB_NAME_PREFIX + name, dbConfig);
+		{			
+			this.secondaryDb = storage.lmdbEnv().openDbi(
+					SECONDARY_DB_NAME_PREFIX + getName(), 
+					this.getComparator(), 
+					DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);
 		}
 		catch (Throwable t)
 		{
@@ -114,18 +111,18 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 	public void addEntry(KeyType key, ValueType value)
 	{
 		checkOpen();
-		// System.err.println("addEntry First for " + name + ",key:" + key +
-		// ",val:" + value);
-		byte[] dbkey = keyConverter.toByteArray(key);
-		byte[] dbvalue = valueConverter.toByteArray(value);
 		try
 		{
-			db.put(txn().getDbTransaction(), dbkey, dbvalue);
-			// System.out.println("IndexPut." + dbkey.length + "," +
-			// dbvalue.length);
-
+			db.put(txn().lmdbTxn(), 
+					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)), 
+					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+					PutFlags.MDB_NODUPDATA);
+			secondaryDb.put(txn().lmdbTxn(), 					
+					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)),
+					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)),					
+					PutFlags.MDB_NODUPDATA);
 		}
-		catch (LMDBException ex)
+		catch (Exception ex)
 		{
 			throw new HGException("Failed to add entry to index '" + name
 					+ "': " + ex.toString(), ex);
@@ -134,47 +131,33 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 
 	public HGRandomAccessResult<KeyType> findByValue(ValueType value)
 	{
-		if (!isOpen())
-			throw new HGException("Attempting to lookup index '" + name
-					+ "' while it is closed.");
-		/*
-		 * if (value == null) throw new HGException(
-		 * "Attempting to lookup index '" + name + "' with a null key.");
-		 */
-		byte[] dbkey = valueConverter.toByteArray(value);
+		checkOpen();
+		checkArgNotNull(value, "value");
+		LMDBTxCursor<BufferType> cursor = null;
+		
+		BufferType valuebuf = this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value));
 		HGRandomAccessResult<KeyType> result = null;
-		SecondaryCursor cursor = null;
+		
 		try
 		{
-			TransactionLmdbImpl tx = txn();
-			cursor = secondaryDb.openSecondaryCursor(tx.getDbTransaction());
-			Entry entry = cursor.get(CursorOp.SET, dbkey);
-			if (entry != null)
-				result = new SingleValueResultSet<KeyType>(
-						tx.attachCursor(cursor),
-						new DatabaseEntry(entry.getKey()), keyConverter);
+			cursor = new LMDBTxCursor<BufferType>(secondaryDb.openCursor(txn().lmdbTxn()), txn());
+			if (cursor.cursor().get(valuebuf, GetOp.MDB_SET))
+				result = new SingleKeyResultSet<BufferType, KeyType>(
+						cursor,
+						valuebuf,
+						keyConverter,
+						this.hgBufferProxy);
 			else
 			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+				HGUtils.closeNoException(cursor);
 				result = (HGRandomAccessResult<KeyType>) HGSearchResult.EMPTY;
 			}
 		}
-		catch (Exception ex)
+		catch (Throwable ex)
 		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			HGUtils.closeNoException(cursor);
+			System.out.println("Inner Exception:");
+			ex.printStackTrace();
 			throw new HGException(
 					"Failed to lookup index '" + name + "': " + ex.toString(),
 					ex);
@@ -184,72 +167,40 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 
 	public KeyType findFirstByValue(ValueType value)
 	{
-		if (!isOpen())
-			throw new HGException("Attempting to lookup by value index '" + name
-					+ "' while it is closed.");
-		/*
-		 * if (value == null) throw new HGException(
-		 * "Attempting to lookup by value index '" + name +
-		 * "' with a null value.");
-		 */
-		byte[] key = valueConverter.toByteArray(value);
-		KeyType result = null;
-		SecondaryCursor cursor = null;
-		try
+		checkOpen();
+		try (Cursor<BufferType> cursor = secondaryDb.openCursor(txn().lmdbTxn()))
 		{
-			cursor = secondaryDb.openSecondaryCursor(txn().getDbTransaction());
-			Entry entry = cursor.get(CursorOp.SET, key);
-			if (entry != null)
-				result = keyConverter.fromByteArray(entry.getKey(), 0,
-						entry.getKey().length);
+			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+							GetOp.MDB_SET))
+			{
+				byte [] data = this.hgBufferProxy.toBytes(cursor.val());
+				return keyConverter.fromByteArray(data, 0, data.length);
+			}
+			return null;
 		}
 		catch (Exception ex)
 		{
-			throw new HGException(
-					"Failed to lookup index '" + name + "': " + ex.toString(),
-					ex);
+			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
 		}
-		finally
-		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-		}
-		return result;
 	}
 
 	public long countKeys(ValueType value)
-	{
-		byte[] key = valueConverter.toByteArray(value);
-		SecondaryCursor cursor = null;
-		try
+	{	
+		checkOpen();
+		try (Cursor<BufferType> cursor = secondaryDb.openCursor(txn().lmdbTxn()))
 		{
-			cursor = secondaryDb.openSecondaryCursor(txn().getDbTransaction());
-			Entry entry = cursor.get(CursorOp.SET, key);
-			if (entry != null)
+			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+							GetOp.MDB_SET))
+			{
 				return cursor.count();
+			}
 			else
-				return 0;
+				return 0L;
 		}
-		catch (LMDBException ex)
+		catch (Exception ex)
 		{
-			throw new HGException(ex);
+			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
 		}
-		finally
-		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-		}
+		
 	}
 }
