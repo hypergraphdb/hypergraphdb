@@ -8,9 +8,14 @@ resolvers +=
   ("HyperGraphDB Artifacts" at "http://hypergraphdb.org/maven").withAllowInsecureProtocol(true)
 resolvers += Resolver.mavenLocal
 
+
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.9" % Test
 )
+
+libraryDependencies += "junit" % "junit" % "4.12" % Test
+
+libraryDependencies += "org.hypergraphdb" % "hgdbtest" % hgdbVersion % Test
 
 libraryDependencies ++= Seq(
   "org.hypergraphdb" % "hypergraphdb" % hgdbVersion % Test
@@ -23,3 +28,5 @@ libraryDependencies ++= Seq(
 libraryDependencies ++= Seq(
   "org.hypergraphdb" % "hgbdbje" % hgdbVersion % Test
 )
+
+// excludeFilter in Test := ".*\\.java"

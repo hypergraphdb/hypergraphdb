@@ -18,7 +18,7 @@
     </dependency>
   </dependencies>
   <modules>
-	<module>bdb-je</module>
+	  <module>bdb-je</module>
   </modules>
   
 </project>
