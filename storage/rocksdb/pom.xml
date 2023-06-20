@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.hypergraphdb</groupId>
+        <artifactId>hgdbstorage</artifactId>
+        <version>2.0-SNAPSHOT</version>
+    </parent>
+    <properties>
+        <packageit>bundle</packageit>
+        <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
+        <bundle.namespace>org.hypergraph.storage.rocksdb</bundle.namespace>
+        <rocksdb.version>8.1.1.1</rocksdb.version>
+    </properties>
+    <artifactId>hgrocksdb</artifactId>
+    <name>HyperGraphDB RocksDB Storage</name>
+    <url>http://hypergraphdb.org</url>
+
+    <repositories>
+        <repository>
+            <id>hypergraphdb</id>
+            <url>http://hypergraphdb.org/maven</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.hypergraphdb</groupId>
+            <artifactId>hgdb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+            <version>${rocksdb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hypergraphdb</groupId>
+            <artifactId>hgdbtest</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <!-- Provide tests classes so they can be used in 'testcore' module -->
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

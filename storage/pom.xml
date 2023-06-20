@@ -19,6 +19,7 @@
   </dependencies>
   <modules>
 	<module>bdb-je</module>
+    <module>rocksdb</module>
   </modules>
   
 </project>
