@@ -14,10 +14,9 @@ import org.hypergraphdb.util.CountMe;
 
 /**
  *
- * @param <BufferType> TODO
  * @param <T> TODO
  */
-public class IndexResultSet <BufferType, T> implements HGRandomAccessResult<T>,
+public class IndexResultSet <T> implements HGRandomAccessResult<T>,
         CountMe
 {
     @Override

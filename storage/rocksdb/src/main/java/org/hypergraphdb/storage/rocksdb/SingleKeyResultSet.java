@@ -14,7 +14,7 @@ package org.hypergraphdb.storage.rocksdb;
  * @param <BufferType>
  * @param <T>
  */
-public class SingleKeyResultSet<BufferType, T> extends IndexResultSet<BufferType, T>
+public class SingleKeyResultSet<T> extends IndexResultSet<T>
 {
     protected T advance()
     {

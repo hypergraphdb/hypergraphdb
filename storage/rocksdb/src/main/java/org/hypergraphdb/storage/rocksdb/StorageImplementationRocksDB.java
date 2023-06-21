@@ -18,7 +18,10 @@ import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
 import java.io.File;
+import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 
@@ -50,6 +53,29 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private Statistics stats;
     private RateLimiter rateLimiter;
     private HGStore store;
+    private HGConfiguration hgConfig;
+    private int handleSize;
+
+    private enum KeyType
+    {
+        INCIDENCE("incidence"),
+        PRIMITIVE("primitive"),
+        DATA("data");
+
+        private final byte[] prefix;
+        private KeyType(String prefix)
+        {
+            this.prefix = prefix.getBytes(StandardCharsets.UTF_8);
+        }
+
+        public byte[] scopeKey(byte[] key)
+        {
+            byte[] res = new byte[prefix.length + key.length];
+            System.arraycopy(prefix, 0, res, 0, prefix.length);
+            System.arraycopy(key, 0, res, prefix.length, key.length);
+            return res;
+        }
+    }
 
     @Override
     public Object getConfiguration()
@@ -109,7 +135,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         this.readOptions.close();
         this.stats.close();
         this.rateLimiter.close();
+        this.datadb.close();
     }
+
 
     /*
     TODO use the supplied configuration to set the needed options;
@@ -120,6 +148,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public void startup(HGStore store, HGConfiguration configuration)
     {
         this.store = store;
+        this.hgConfig = configuration;
+        this.handleSize = configuration.getHandleFactory().nullHandle().toByteArray().length;
+
         setup();
         try
         {
@@ -213,26 +244,19 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public HGPersistentHandle store(HGPersistentHandle handle,
             HGPersistentHandle[] link)
     {
+        var key = handle.toByteArray();
+        var value = fromHandleArray(link);
+        try
+        {
+            txn().rocksdbTxn().put(KeyType.DATA.scopeKey(key), value);
+        }
+        catch (RocksDBException e)
+        {
+            throw new HGException(e);
+        }
 
         return handle;
-    }
 
-    @Override
-    public HGPersistentHandle[] getLink(HGPersistentHandle handle)
-    {
-        return new HGPersistentHandle[0];
-    }
-
-    @Override
-    public void removeLink(HGPersistentHandle handle)
-    {
-
-    }
-
-    @Override
-    public boolean containsLink(HGPersistentHandle handle)
-    {
-        return false;
     }
 
     @Override
@@ -240,7 +264,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         try
         {
-            txn().rocksdbTxn().put(handle.toByteArray(), data);
+            txn().rocksdbTxn().put(KeyType.PRIMITIVE.scopeKey(handle.toByteArray()), data);
         }
         catch (RocksDBException e)
         {
@@ -254,7 +278,32 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         try
         {
-            return txn().rocksdbTxn().get(readOptions, handle.toByteArray());
+            return txn().rocksdbTxn().get(readOptions, KeyType.PRIMITIVE.scopeKey(handle.toByteArray()));
+        }
+        catch (RocksDBException e)
+        {
+            throw new HGException(e);
+        }
+    }
+
+    public HGPersistentHandle[] getLink(HGPersistentHandle handle)
+    {
+        try
+        {
+            byte[] bytes = txn().rocksdbTxn().get(readOptions, KeyType.DATA.scopeKey(handle.toByteArray()));
+            return toHandleArray(bytes);
+        }
+        catch (RocksDBException e)
+        {
+            throw new HGException(e);
+        }
+    }
+
+    private void removeKey(byte[] key)
+    {
+        try
+        {
+            txn().rocksdbTxn().delete(key);
         }
         catch (RocksDBException e)
         {
@@ -265,15 +314,75 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void removeData(HGPersistentHandle handle)
     {
+        this.removeKey(KeyType.PRIMITIVE.scopeKey(handle.toByteArray()));
+    }
 
+
+    @Override
+    public void removeLink(HGPersistentHandle handle)
+    {
+        this.removeKey(KeyType.DATA.scopeKey(handle.toByteArray()));
+    }
+
+    private boolean containsKey(byte[] key)
+    {
+        try
+        {
+            return txn().rocksdbTxn().get(readOptions, key) != null;
+        }
+        catch (RocksDBException e)
+        {
+            throw new HGException(e);
+        }
 
     }
 
     @Override
     public boolean containsData(HGPersistentHandle handle)
     {
-        return false;
+        return containsKey(KeyType.PRIMITIVE.scopeKey(handle.toByteArray()));
     }
+
+    @Override
+    public boolean containsLink(HGPersistentHandle handle)
+    {
+        return containsKey(KeyType.DATA.scopeKey(handle.toByteArray()));
+    }
+
+    /*
+    TODO
+        LMDB uses this logic as well, reuse it
+     */
+    public byte[] fromHandleArray(HGPersistentHandle[] handles)
+    {
+        byte [] result = new byte[handles.length * handleSize];
+        for (int i = 0; i < handles.length; i++)
+            System.arraycopy(handles[i].toByteArray(), 0, result, i*handleSize, handleSize);
+        return result;
+    }
+
+    /*
+    TODO
+        LMDB uses this logic as well, reuse it
+     */
+    private HGPersistentHandle[] toHandleArray(byte[] buffer)
+    {
+        HGPersistentHandle [] handles = new HGPersistentHandle[buffer.length / handleSize];
+        for (int i = 0; i < handles.length; i++)
+            handles[i] = this.hgConfig.getHandleFactory().makeHandle(buffer, i*handleSize);
+        return handles;
+    }
+
+    private HGPersistentHandle toHandle(byte[] buffer)
+    {
+        if (buffer.length != handleSize)
+        {
+            throw new HGException(String.format("Cannot convert a buffer of size %s to a handle. The expected size is %s", buffer.length, handleSize));
+        }
+
+        return this.hgConfig.getHandleFactory().makeHandle(buffer);
+    }
+
 
     @Override
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(
@@ -365,7 +474,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         HGStore store = new HGStore(location.getAbsolutePath(), config);
         try
         {
-            storageImpl.startup(store, config);
             HGPersistentHandle h = config.getHandleFactory().makeHandle();
 
             store.getTransactionManager().ensureTransaction(() -> {
@@ -406,6 +514,12 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     store.getTransactionManager().ensureTransaction(() -> {
                         return storageImpl.getLink(otherLink);
                     })));
+
+            if (1==1)
+            {
+                System.out.println("CUT SHORT");
+                return;
+            }
 
             HashSet<HGPersistentHandle> incidenceSet = new HashSet<HGPersistentHandle>();
             for (int i = 0; i < 11; i++)
@@ -451,4 +565,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             storageImpl.shutdown();
         }
     }
+
+
 }
