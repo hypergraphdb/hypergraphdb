@@ -11,8 +11,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Comparator;
-import java.util.function.Function;
-
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
@@ -76,36 +74,6 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 				StorageTransactionLMDB.nullTransaction() :
 				tx.getStorageTransaction());
 	}
-
-	<T> T inReadTxn(Function<Txn<BufferType>, T> f)
-	{
-	    StorageTransactionLMDB<BufferType> current = txn();
-	    if (current.lmdbTxn() != null)
-	        return f.apply(current.lmdbTxn());
-	    else
-	    {
-	        try (Txn<BufferType> tx = storage.lmdbEnv().txnRead())
-	        {
-	            return f.apply(tx);
-	        }
-	    }
-	}
-	
-    <T> T inWriteTxn(Function<Txn<BufferType>, T> f)
-    {
-        StorageTransactionLMDB<BufferType> current = txn();
-        if (current.lmdbTxn() != null && !current.lmdbTxn().isReadOnly())
-            return f.apply(current.lmdbTxn());
-        else
-        {
-            try (Txn<BufferType> tx = storage.lmdbEnv().txnWrite())
-            {
-                T x = f.apply(tx);
-                tx.commit();
-                return x;
-            }
-        }
-    }	
 	
 	public DefaultIndexImpl(String indexName, StorageImplementationLMDB<BufferType> storage,
 			HGTransactionManager transactionManager,
@@ -268,7 +236,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 		checkOpen();
 		try
 		{
-		     this.inWriteTxn(tx -> 
+		    storage.inWriteTxn(tx -> 
 		        db.put(tx, 
 					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)), 
 					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
@@ -292,7 +260,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 
 		try
 		{
-	        this.inWriteTxn(tx ->
+		    storage.inWriteTxn(tx ->
 			    db.delete(tx, 
 					  this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)),
 					  this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)))
@@ -315,7 +283,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 		byte[] dbkey = keyConverter.toByteArray(key);
 		try
 		{
-	        this.inWriteTxn(tx ->
+		    storage.inWriteTxn(tx ->
 			    db.delete(tx, this.hgBufferProxy.fromBytes(dbkey))
 			);
 		}
@@ -348,7 +316,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 
 		try
 		{
-		    return this.inReadTxn(tx -> {
+		    return storage.inReadTxn(tx -> {
     			BufferType value = db.get(txn().lmdbTxn(), this.hgBufferProxy.fromBytes(key));
     			if (value != null)
     			{
@@ -369,7 +337,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 	public ValueType findFirst(KeyType keyType)
 	{
 		checkOpen();
-		return inReadTxn(tx -> {
+		return storage.inReadTxn(tx -> {
     		try (Cursor<BufferType> cursor = db.openCursor(txn().lmdbTxn()))
     		{
     			if (cursor.get(this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType)), 
@@ -401,7 +369,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 	public ValueType findLast(KeyType keyType)
 	{		
 		checkOpen();
-        return inReadTxn(tx -> {		
+        return storage.inReadTxn(tx -> {		
     		try (Cursor<BufferType> cursor = db.openCursor(txn().lmdbTxn()))
     		{			
     			if (cursor.get(this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType)), 

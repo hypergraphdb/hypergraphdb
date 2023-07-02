@@ -8,11 +8,11 @@
 package org.hypergraphdb.storage.lmdb;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGException;
@@ -76,7 +76,7 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
         if (lmdbenv == null)
             throw new IllegalStateException("StorageImplementationLMDB is either closed or was never initialized.");
     }
-	
+	    
     boolean checkIndexExisting(String name)
     {
         if (openIndices.get(name) != null)
@@ -110,6 +110,36 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
         }
     }
     
+    <T> T inReadTxn(Function<Txn<BufferType>, T> f)
+    {
+        StorageTransactionLMDB<BufferType> current = txn();
+        if (current.lmdbTxn() != null)
+            return f.apply(current.lmdbTxn());
+        else
+        {
+            try (Txn<BufferType> tx = lmdbEnv().txnRead())
+            {
+                return f.apply(tx);
+            }
+        }
+    }
+    
+    <T> T inWriteTxn(Function<Txn<BufferType>, T> f)
+    {
+        StorageTransactionLMDB<BufferType> current = txn();
+        if (current.lmdbTxn() != null && !current.lmdbTxn().isReadOnly())
+            return f.apply(current.lmdbTxn());
+        else
+        {
+            try (Txn<BufferType> tx = lmdbEnv().txnWrite())
+            {
+                T x = f.apply(tx);
+                tx.commit();
+                return x;
+            }
+        }
+    }
+        
     public StorageImplementationLMDB()
     {
         this.bufferProxy = (BufferProxy<BufferType>) ByteArrayProxy.PROXY_BA; 
@@ -197,11 +227,13 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
 	@Override
 	public HGPersistentHandle store(HGPersistentHandle handle, byte[] data)
 	{
-	    ensureOpen();
-		BufferType keybuf = this.hgBufferProxy.fromHandle(handle);
-		BufferType databuf = this.hgBufferProxy.fromBytes(data);
-		primitive_db.put(txn().lmdbTxn(), keybuf, databuf);
-		return handle;
+	    ensureOpen();	    
+	    return this.inWriteTxn(tx -> {
+    		BufferType keybuf = this.hgBufferProxy.fromHandle(handle);
+    		BufferType databuf = this.hgBufferProxy.fromBytes(data);
+    		primitive_db.put(txn().lmdbTxn(), keybuf, databuf);
+    		return handle;
+	    });
 	}
 	
 	@Override
@@ -232,10 +264,19 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
 	public HGPersistentHandle store(HGPersistentHandle handle, HGPersistentHandle[] link)
 	{
 	    ensureOpen();	    
-		BufferType keybuf = this.hgBufferProxy.fromHandle(handle);
-		BufferType databuf = this.hgBufferProxy.fromHandleArray(link);
-		data_db.put(txn().lmdbTxn(), keybuf, databuf);
-		return handle;		
+	    try
+	    {
+	        return this.inWriteTxn(tx -> {
+        		BufferType keybuf = this.hgBufferProxy.fromHandle(handle);
+        		BufferType databuf = this.hgBufferProxy.fromHandleArray(link);
+        		data_db.put(tx, keybuf, databuf);
+        		return handle;
+	        });
+	    }
+	    catch (Exception ex)
+	    {
+	        throw new HGException(ex);
+	    }
 	}
 	
 	@Override

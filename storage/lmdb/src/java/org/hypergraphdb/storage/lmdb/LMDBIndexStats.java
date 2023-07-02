@@ -25,7 +25,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			{
 				try
 				{
-					return index.inReadTxn(tx -> index.db.stat(tx).entries);
+					return index.storage.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 				catch (Exception ex)
 				{
@@ -58,7 +58,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-				    return index.inReadTxn(tx -> index.db.stat(tx).entries);
+				    return index.storage.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 			}, true);
 		}
@@ -86,7 +86,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-					return index.inReadTxn(tx -> index.db.stat(tx).entries);
+					return index.storage.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 			}, true);			
 		}		
@@ -101,7 +101,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 		{
 			Ref<Long> counter = new Ref<Long>() {
 			public Long get() {
-			    return index.inReadTxn(tx -> {
+			    return index.storage.inReadTxn(tx -> {
     				try (Cursor<BufferType> cursor = index.db.openCursor(tx)) 
     				{
     					BufferType keybuf = index.hgBufferProxy.fromBytes(index.keyConverter.toByteArray(key));

@@ -25,13 +25,14 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "throw exception when transactions are enforced but no tx in effect" in { (fixture: FixtureParam) =>  
+  it should "throw exception when transactions are enforced but no tx in effect" taggedAs(ToDebug) in { (fixture: FixtureParam) =>  
     val location = freshDatabaseLocation()
     try {
       val config = new HGConfiguration()
       config.setEnforceTransactionsInStorageLayer(true)
       storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
       config.setStoreImplementation(storeImplementation)
+      (new java.io.File(location)).mkdirs()
       val store = new HGStore(location, config)
       assertThrows[HGException](store.store(handleArray(4)))
       store.close()
@@ -48,6 +49,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
       config.setEnforceTransactionsInStorageLayer(false)
       storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
       config.setStoreImplementation(storeImplementation)
+      (new java.io.File(location)).mkdirs()      
       val store = new HGStore(location, config)
       val handles = handleArray(4)
       val result = store.store(handles)

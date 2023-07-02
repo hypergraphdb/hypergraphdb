@@ -140,7 +140,7 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 		checkOpen();
 		try
 		{
-		    inWriteTxn(tx -> {
+		    storage.inWriteTxn(tx -> {
 		        db.put(tx, 
 					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)), 
 					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
@@ -198,7 +198,7 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 	public KeyType findFirstByValue(ValueType value)
 	{
 		checkOpen();
-	    return inReadTxn(tx -> {
+	    return storage.inReadTxn(tx -> {
     		try (Cursor<BufferType> cursor = secondaryDb.openCursor(tx))
     		{
     			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
@@ -219,7 +219,7 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 	public long countKeys(ValueType value)
 	{	
 		checkOpen();
-	    return inReadTxn(tx -> {
+	    return storage.inReadTxn(tx -> {
     		try (Cursor<BufferType> cursor = secondaryDb.openCursor(tx))
     		{
     			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 

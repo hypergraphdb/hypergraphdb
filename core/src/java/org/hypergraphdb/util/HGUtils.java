@@ -191,6 +191,8 @@ public class HGUtils
 			throw (RuntimeException)t;
 		else if (t instanceof Error)
 			throw (Error)t;
+		else if (t instanceof HGException)
+		    throw (HGException)t;
 		else
 			throw new HGException(t);
 	}
