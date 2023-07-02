@@ -178,8 +178,8 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
 		    this.hgBufferProxy = (HGBufferProxyLMDB<BufferType>)new HGByteArrayBufferProxyLMDB(hgconfig.getHandleFactory());
 		lmdbenv = Env.create(this.bufferProxy)
 			.setMaxDbs(10000)
-//			.setMapSize(10485760*100)
-			.setMapSize(0)
+			.setMapSize(10485760*100)
+//			.setMapSize(0)
 			.open(new File(store.getDatabaseLocation()), 
 				  EnvFlags.MDB_NOSYNC);
 		
