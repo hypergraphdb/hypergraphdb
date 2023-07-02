@@ -25,7 +25,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "throw exception when transactions are enforced but no tx in effect" taggedAs(ToDebug) in { (fixture: FixtureParam) =>  
+  it should "throw exception when transactions are enforced but no tx in effect" in { (fixture: FixtureParam) =>  
     val location = freshDatabaseLocation()
     try {
       val config = new HGConfiguration()
@@ -61,7 +61,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "ignore stored data in main storage upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in main storage upon transaction rollback" in { (fixture: FixtureParam) =>  
     // val somedata = randomBytes(100)    
     // store.getTransactionManager.beginTransaction()
     // var handle = store.store(somedata)
@@ -71,13 +71,14 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
 
     val link = handleArray(2)
     store.getTransactionManager.beginTransaction()
+    val tx = store.getTransactionManager().getContext().getCurrent()
     val handle = store.store(link)
     store.getLink(handle) should be(link)
     store.getTransactionManager.abort()
     store.getLink(handle) should be(null)
   }
 
-  it should "ignore stored data in index upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in index upon transaction rollback" in { (fixture: FixtureParam) =>  
     val idx = store.getIndex("III", 
           BAtoBA.getInstance(), 
           BAtoBA.getInstance(), 
@@ -98,7 +99,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "ignore stored data in bi-directional index upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in bi-directional index upon transaction rollback"  in { (fixture: FixtureParam) =>  
     val idx = store.getBidirectionalIndex("III", 
           BAtoBA.getInstance(), 
           BAtoBA.getInstance(), 

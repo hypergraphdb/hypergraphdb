@@ -115,6 +115,9 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
         StorageTransactionLMDB<BufferType> current = txn();
         if (current.lmdbTxn() != null)
             return f.apply(current.lmdbTxn());
+        else if (this.store.getConfiguration().isEnforceTransactionsInStorageLayer())
+            throw new HGException("No current transaction in effect - please use " +
+               "HGTransactionManager.ensureTransaction or turn off transaction enforceability.");
         else
         {
             try (Txn<BufferType> tx = lmdbEnv().txnRead())
@@ -126,17 +129,20 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
     
     <T> T inWriteTxn(Function<Txn<BufferType>, T> f)
     {
-        StorageTransactionLMDB<BufferType> current = txn();
-        if (current.lmdbTxn() != null && !current.lmdbTxn().isReadOnly())
-            return f.apply(current.lmdbTxn());
-        else
+        StorageTransactionLMDB<BufferType> current = txn();        
+        if (current.lmdbTxn() != null)
         {
-            try (Txn<BufferType> tx = lmdbEnv().txnWrite())
-            {
-                T x = f.apply(tx);
-                tx.commit();
-                return x;
-            }
+            if (!current.lmdbTxn().isReadOnly())
+                return f.apply(current.lmdbTxn());
+        }
+        else if (this.store.getConfiguration().isEnforceTransactionsInStorageLayer())
+            throw new HGException("No current transaction in effect - please use " +
+               "HGTransactionManager.ensureTransaction or turn off transaction enforceability.");        
+        try (Txn<BufferType> tx = lmdbEnv().txnWrite())
+        {
+            T x = f.apply(tx);
+            tx.commit();
+            return x;
         }
     }
         
@@ -282,9 +288,10 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
 	@Override
 	public HGPersistentHandle[] getLink(HGPersistentHandle handle)
 	{
-	    ensureOpen();	    
-		return hgBufferProxy.toHandleArray(data_db.get(txn().lmdbTxn(), 
-		        this.hgBufferProxy.fromHandle(handle)));
+	    ensureOpen();
+	    return this.inReadTxn(tx -> 
+	        hgBufferProxy.toHandleArray(data_db.get(tx, 
+	                                    this.hgBufferProxy.fromHandle(handle))));
 	}
 
 
@@ -467,7 +474,7 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
                     db.drop(tx, true);
                     if (secondaryDb != null) 
                     {
-                        db.drop(tx, true);
+                        secondaryDb.drop(tx, true);
                     }               
                     tx.commit();
                 }

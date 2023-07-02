@@ -338,7 +338,7 @@ public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 	{
 		checkOpen();
 		return storage.inReadTxn(tx -> {
-    		try (Cursor<BufferType> cursor = db.openCursor(txn().lmdbTxn()))
+    		try (Cursor<BufferType> cursor = db.openCursor(tx))
     		{
     			if (cursor.get(this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType)), 
     							GetOp.MDB_SET))
