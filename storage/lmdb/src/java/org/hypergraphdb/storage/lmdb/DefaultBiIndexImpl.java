@@ -9,6 +9,7 @@ package org.hypergraphdb.storage.lmdb;
 
 import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 
 import org.hypergraphdb.HGBidirectionalIndex;
@@ -23,6 +24,7 @@ import org.lmdbjava.Dbi;
 import org.lmdbjava.DbiFlags;
 import org.lmdbjava.GetOp;
 import org.lmdbjava.PutFlags;
+import org.lmdbjava.Txn;
 
 @SuppressWarnings("unchecked")
 public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
@@ -38,27 +40,52 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 			HGTransactionManager transactionManager,
 			ByteArrayConverter<KeyType> keyConverter,
 			ByteArrayConverter<ValueType> valueConverter,
-			HGBufferProxyLMDB<BufferType> hgBufferProxy,
-			Comparator<byte[]> comparator)
+			Comparator<byte[]> keyComparator,
+			Comparator<byte[]> valueComparator,
+			HGBufferProxyLMDB<BufferType> hgBufferProxy)
 	{
 		super(indexName, 
 			  storage, 
 			  transactionManager, 
 			  keyConverter,
-			  valueConverter, 
-			  hgBufferProxy,
-			  comparator);
+			  valueConverter,
+			  keyComparator,
+			  valueComparator,
+			  hgBufferProxy);
 	}
 
+    public Comparator<BufferType> getValueComparator()
+    {
+        return new Comparator<BufferType>() 
+        {
+            public int compare(BufferType left, BufferType right)           
+            {
+                if (valueComparator != null)
+                    return valueComparator.compare(hgBufferProxy.toBytes(left), hgBufferProxy.toBytes(right));
+                else
+                    return fastcompare(hgBufferProxy.toBytes(left), hgBufferProxy.toBytes(right));
+            }
+        };
+    }
+    
 	public void open()
 	{
 		super.open();
 		try
 		{			
-			this.secondaryDb = storage.lmdbEnv().openDbi(
-					SECONDARY_DB_NAME_PREFIX + getName(), 
-					this.getComparator(), 
-					DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);
+            Txn<BufferType> tx = txn().lmdbTxn();
+            if (tx != null)		    
+    			this.secondaryDb = storage.lmdbEnv().openDbi(txn().lmdbTxn(),
+    					(SECONDARY_DB_NAME_PREFIX + getName()).getBytes(StandardCharsets.UTF_8), 
+    					this.getValueComparator(), 
+    					false,
+    					DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);
+            else
+                this.secondaryDb = storage.lmdbEnv().openDbi(
+                        (SECONDARY_DB_NAME_PREFIX + getName()).getBytes(StandardCharsets.UTF_8), 
+                        this.getValueComparator(), 
+                        false,
+                        DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);                
 		}
 		catch (Throwable t)
 		{
@@ -113,14 +140,17 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 		checkOpen();
 		try
 		{
-			db.put(txn().lmdbTxn(), 
+		    inWriteTxn(tx -> {
+		        db.put(tx, 
 					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)), 
 					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
 					PutFlags.MDB_NODUPDATA);
-			secondaryDb.put(txn().lmdbTxn(), 					
+		        secondaryDb.put(tx, 					
 					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)),
 					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)),					
 					PutFlags.MDB_NODUPDATA);
+		        return null;
+		    });
 		}
 		catch (Exception ex)
 		{
@@ -168,39 +198,42 @@ public class DefaultBiIndexImpl<BufferType, KeyType, ValueType>
 	public KeyType findFirstByValue(ValueType value)
 	{
 		checkOpen();
-		try (Cursor<BufferType> cursor = secondaryDb.openCursor(txn().lmdbTxn()))
-		{
-			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
-							GetOp.MDB_SET))
-			{
-				byte [] data = this.hgBufferProxy.toBytes(cursor.val());
-				return keyConverter.fromByteArray(data, 0, data.length);
-			}
-			return null;
-		}
-		catch (Exception ex)
-		{
-			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
-		}
+	    return inReadTxn(tx -> {
+    		try (Cursor<BufferType> cursor = secondaryDb.openCursor(tx))
+    		{
+    			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+    							GetOp.MDB_SET))
+    			{
+    				byte [] data = this.hgBufferProxy.toBytes(cursor.val());
+    				return keyConverter.fromByteArray(data, 0, data.length);
+    			}
+    			return null;
+    		}
+    		catch (Exception ex)
+    		{
+    			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
+    		}
+	    });
 	}
 
 	public long countKeys(ValueType value)
 	{	
 		checkOpen();
-		try (Cursor<BufferType> cursor = secondaryDb.openCursor(txn().lmdbTxn()))
-		{
-			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
-							GetOp.MDB_SET))
-			{
-				return cursor.count();
-			}
-			else
-				return 0L;
-		}
-		catch (Exception ex)
-		{
-			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
-		}
-		
+	    return inReadTxn(tx -> {
+    		try (Cursor<BufferType> cursor = secondaryDb.openCursor(tx))
+    		{
+    			if (cursor.get(this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+    							GetOp.MDB_SET))
+    			{
+    				return cursor.count();
+    			}
+    			else
+    				return 0L;
+    		}
+    		catch (Exception ex)
+    		{
+    			throw new HGException("In database findFirstByValue for " + this.db.getName(), ex);
+    		}
+	    });
 	}
 }

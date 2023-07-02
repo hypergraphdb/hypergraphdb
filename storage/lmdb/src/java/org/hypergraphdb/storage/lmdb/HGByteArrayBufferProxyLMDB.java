@@ -46,6 +46,8 @@ public class HGByteArrayBufferProxyLMDB implements HGBufferProxyLMDB<byte[]>
 	@Override
 	public HGPersistentHandle[] toHandleArray(byte[] buffer)
 	{
+	    if (buffer == null)
+	        return null;
 		HGPersistentHandle [] handles= new HGPersistentHandle[buffer.length / handleSize];
 		for (int i = 0; i < handles.length; i++)
 			handles[i] = this.factory.makeHandle(buffer, i*handleSize);

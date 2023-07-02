@@ -33,8 +33,7 @@ public class KeyScanResultSet<BufferType, T> extends IndexResultSet<BufferType, 
         {
         	if (cursor.cursor().seek(SeekOp.MDB_NEXT_NODUP))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().key());
-        		return converter.fromByteArray(data, 0, data.length);
+                return this.currentFromCursor();
         	}
         	else
         		return null;
@@ -54,8 +53,7 @@ public class KeyScanResultSet<BufferType, T> extends IndexResultSet<BufferType, 
     		checkCursor();
         	if (cursor.cursor().seek(SeekOp.MDB_PREV_NODUP))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().key());
-        		return converter.fromByteArray(data, 0, data.length);
+        		return this.currentFromCursor();
         	}
         	else
         		return null;
@@ -67,6 +65,12 @@ public class KeyScanResultSet<BufferType, T> extends IndexResultSet<BufferType, 
         }		
     }
     
+	protected T currentFromCursor()
+	{
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().key());
+        return converter.fromByteArray(data, 0, data.length);	    
+	}
+	
     public KeyScanResultSet(LMDBTxCursor<BufferType> cursor, 
 			BufferType key, 
 			ByteArrayConverter<T> converter,
@@ -81,8 +85,7 @@ public class KeyScanResultSet<BufferType, T> extends IndexResultSet<BufferType, 
 		    try
 		    {
 		        cursor.cursor().get(key, GetOp.MDB_SET);
-		        byte [] keydata = this.hgBufferProxy.toBytes(key);
-		        next = converter.fromByteArray(keydata, 0, keydata.length);
+		        next = this.currentFromCursor();
 		        lookahead = 1;
 		    }
 		    catch (Throwable t)

@@ -16,6 +16,12 @@ class KeyRangeBackwardResultSet<BufferType, T> extends IndexResultSet<BufferType
 {    
     private byte [] initialKey = null;
     
+    protected T currentFromCursor()
+    {
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
+        return converter.fromByteArray(data, 0, data.length);       
+    }
+    
     protected T advance()
     {
     	checkCursor();
@@ -23,8 +29,7 @@ class KeyRangeBackwardResultSet<BufferType, T> extends IndexResultSet<BufferType
         {
         	if (cursor.cursor().seek(SeekOp.MDB_PREV))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
-        		return converter.fromByteArray(data, 0, data.length);
+        		return this.currentFromCursor();
         	}
         	else
         		return null;
@@ -46,8 +51,7 @@ class KeyRangeBackwardResultSet<BufferType, T> extends IndexResultSet<BufferType
     		checkCursor();
         	if (cursor.cursor().seek(seekop))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
-        		return converter.fromByteArray(data, 0, data.length);
+        	    return this.currentFromCursor();
         	}
         	else
         		return null;
@@ -64,8 +68,9 @@ class KeyRangeBackwardResultSet<BufferType, T> extends IndexResultSet<BufferType
 									 ByteArrayConverter<T> converter,
 									 HGBufferProxyLMDB<BufferType> hgBufferProxy)
     {
-    	super(cursor, key, converter, hgBufferProxy);
-    	initialKey = this.hgBufferProxy.toBytes(key);                
+    	super(cursor, key, converter, hgBufferProxy);    	
+    	initialKey = this.hgBufferProxy.toBytes(key);
+    	System.out.println("Key range back on " + initialKey + " at " + next);
     }
     
     public boolean isOrdered()

@@ -6,7 +6,6 @@ import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.util.Ref;
 import org.lmdbjava.Cursor;
 import org.lmdbjava.GetOp;
-import org.lmdbjava.Stat;
 
 public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key, Value>
 {
@@ -26,7 +25,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			{
 				try
 				{
-					return index.db.stat(index.txn().lmdbTxn()).entries;
+					return index.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 				catch (Exception ex)
 				{
@@ -59,8 +58,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-					Stat stat = index.db.stat(index.txn().lmdbTxn());					
-					return stat.entries;
+				    return index.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 			}, true);
 		}
@@ -88,8 +86,7 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 			return new Count(new Ref<Long>() {
 				public Long get()
 				{
-					Stat stat = index.db.stat(index.txn().lmdbTxn());				
-					return stat.entries;	
+					return index.inReadTxn(tx -> index.db.stat(tx).entries);
 				}
 			}, true);			
 		}		
@@ -104,18 +101,20 @@ public class LMDBIndexStats<BufferType, Key, Value> implements HGIndexStats<Key,
 		{
 			Ref<Long> counter = new Ref<Long>() {
 			public Long get() {
-				try (Cursor<BufferType> cursor = index.db.openCursor(index.txn().lmdbTxn())) 
-				{
-					BufferType keybuf = index.hgBufferProxy.fromBytes(index.keyConverter.toByteArray(key));
-					if (cursor.get(keybuf, GetOp.MDB_SET))
-						return cursor.count();
-					else
-						return 0l;
-				}
-				catch (Exception ex)
-				{
-					throw new HGException(ex);
-				}
+			    return index.inReadTxn(tx -> {
+    				try (Cursor<BufferType> cursor = index.db.openCursor(tx)) 
+    				{
+    					BufferType keybuf = index.hgBufferProxy.fromBytes(index.keyConverter.toByteArray(key));
+    					if (cursor.get(keybuf, GetOp.MDB_SET))
+    						return cursor.count();
+    					else
+    						return 0l;
+    				}
+    				catch (Exception ex)
+    				{
+    					throw new HGException(ex);
+    				}
+			    });
 			}};
 			return new Count(counter, false);
 		}		

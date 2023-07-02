@@ -29,17 +29,14 @@ public class SingleKeyResultSet<BufferType, T> extends IndexResultSet<BufferType
 	    					  HGBufferProxyLMDB<BufferType> hgBufferProxy)
 	{
 		super(cursor, key, converter, hgBufferProxy);
-//		try
-//		{
-//			ordered = cursor.cursor().getDatabase()
-//					.getConfig(cursor.txn().getDbTransaction()).isDupSort();
-//		}
-//		catch (Throwable t)
-//		{
-//			throw new HGException(t);
-//		}
 	}
 
+    protected T currentFromCursor()
+    {
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
+        return converter.fromByteArray(data, 0, data.length);       
+    }
+    
 	protected T advance()
 	{
 		checkCursor();
@@ -47,8 +44,8 @@ public class SingleKeyResultSet<BufferType, T> extends IndexResultSet<BufferType
 		{
 			if (cursor.cursor().get(key, data, SeekOp.MDB_NEXT_DUP))			
 			{
-				byte [] value = this.hgBufferProxy.toBytes(data);
-				return converter.fromByteArray(value, 0, value.length);
+			    this.data = cursor.cursor().val();
+				return this.currentFromCursor();
 			}
 			else
 				return null;
@@ -67,8 +64,8 @@ public class SingleKeyResultSet<BufferType, T> extends IndexResultSet<BufferType
 		{
 			if (cursor.cursor().get(key, data, SeekOp.MDB_PREV_DUP))
 			{
-				byte [] value = this.hgBufferProxy.toBytes(data);
-				return converter.fromByteArray(value, 0, value.length);
+			    this.data = cursor.cursor().val();
+			    return this.currentFromCursor();
 			}
 			else
 				return null;

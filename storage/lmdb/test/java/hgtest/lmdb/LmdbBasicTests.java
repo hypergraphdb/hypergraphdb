@@ -1,25 +1,24 @@
 package hgtest.lmdb;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 import org.hypergraphdb.HGConfiguration;
 import org.hypergraphdb.HGEnvironment;
 import org.hypergraphdb.HGHandle;
 import org.hypergraphdb.HyperGraph;
-import org.hypergraphdb.storage.lmdbold.LmdbStorageImplementation;
+import org.hypergraphdb.storage.lmdb.HGByteArrayBufferProxyLMDB;
+import org.hypergraphdb.storage.lmdb.StorageImplementationLMDB;
 import org.hypergraphdb.util.HGUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.lmdbjava.ByteArrayProxy;
 
 public class LmdbBasicTests
 {
 	static HyperGraph graph;
-	static String location = "/Users/borislav/temp/hglmdb_test";
+	static String location = "/home/borislav/temp/hglmdb_test";
 	
 	@BeforeClass
 	public static void openGraph()
@@ -29,9 +28,13 @@ public class LmdbBasicTests
 		{
 			//location = Files.createTempDirectory(null).toString();
 			HGConfiguration config = new HGConfiguration();
-			config.setStoreImplementation(new LmdbStorageImplementation());
+			config.setStoreImplementation(
+			        new StorageImplementationLMDB<byte[]>(ByteArrayProxy.PROXY_BA, 
+	                        new HGByteArrayBufferProxyLMDB(config.getHandleFactory())));			        
+//			        new StorageImplementationLMDB());
 			new File(location).mkdirs();
 			graph = HGEnvironment.get(location, config);
+			System.out.println("Graph " + graph.getLocation() + " opened.");
 		}
 		catch (Throwable t)
 		{

@@ -68,6 +68,7 @@ public abstract class IndexResultSet<BufferType, T> implements HGRandomAccessRes
     
     protected abstract T advance();
     protected abstract T back();
+    protected abstract T currentFromCursor();
     
     /**
      * <p>Construct an empty result set.</p>
@@ -98,8 +99,7 @@ public abstract class IndexResultSet<BufferType, T> implements HGRandomAccessRes
     	
     	try
 	    {    		
-			byte [] value = this.hgBufferProxy.toBytes(this.data);
-	        next = converter.fromByteArray(value, 0, value.length);
+	        next = this.currentFromCursor();
 	        lookahead = 1;
 	    }
 	    catch (Throwable t)
@@ -120,12 +120,12 @@ public abstract class IndexResultSet<BufferType, T> implements HGRandomAccessRes
     	checkCursor();
         try
         {
-    		if (cursor.cursor().get(key, data, SeekOp.MDB_FIRST_DUP))
+    		if (cursor.cursor().get(key, data, SeekOp.MDB_FIRST))
             {
                 current = UNKNOWN;
                 prev = null;
-                byte [] value = this.hgBufferProxy.toBytes(data);
-                next = converter.fromByteArray(value, 0, value.length);
+                this.data = cursor.cursor().val();
+                next = this.currentFromCursor();
                 lookahead = 1;
             }
             else
@@ -144,15 +144,15 @@ public abstract class IndexResultSet<BufferType, T> implements HGRandomAccessRes
     
     public void goAfterLast()
     {
-    		checkCursor();
+    	checkCursor();
         try
         {
-     		if (cursor.cursor().get(key, data, SeekOp.MDB_LAST_DUP))
+     		if (cursor.cursor().get(key, data, SeekOp.MDB_LAST))
             {
                 current = UNKNOWN;
                 next = null;
-                byte [] value = this.hgBufferProxy.toBytes(data);
-                prev = converter.fromByteArray(value, 0, value.length);
+                this.data = cursor.cursor().val();
+                prev = this.currentFromCursor();
                 lookahead = -1;
             }
             else

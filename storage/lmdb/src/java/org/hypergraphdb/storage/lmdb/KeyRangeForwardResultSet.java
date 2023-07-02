@@ -16,6 +16,12 @@ class KeyRangeForwardResultSet<BufferType, T> extends IndexResultSet<BufferType,
 {    
 	byte [] initialKey;
 	
+    protected T currentFromCursor()
+    {
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
+        return converter.fromByteArray(data, 0, data.length);       
+    }
+    
     protected T advance()
     {
     	checkCursor();
@@ -23,8 +29,7 @@ class KeyRangeForwardResultSet<BufferType, T> extends IndexResultSet<BufferType,
         {
         	if (cursor.cursor().seek(SeekOp.MDB_NEXT))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
-        		return converter.fromByteArray(data, 0, data.length);
+        	    return this.currentFromCursor();
         	}
         	else
         		return null;
@@ -46,8 +51,7 @@ class KeyRangeForwardResultSet<BufferType, T> extends IndexResultSet<BufferType,
     		checkCursor();
         	if (cursor.cursor().seek(seekop))
         	{
-        		byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
-        		return converter.fromByteArray(data, 0, data.length);
+        	    return this.currentFromCursor();
         	}
         	else
         		return null;

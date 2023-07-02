@@ -888,11 +888,13 @@ public /*final*/ class HyperGraph implements HyperNode
     	}
     	if (atom != null && atom instanceof HGTypeHolder)
     		return getHandle(((HGTypeHolder)atom).getAtomType());
-    	HGPersistentHandle [] link = store.getLink(pHandle);
-    	if (link == null || link.length < 2)
-    		return null;
-    	else
-    		return refreshHandle(link[0]);
+    	return getTransactionManager().ensureTransaction(() -> { 
+        	HGPersistentHandle [] link = store.getLink(pHandle);
+        	if (link == null || link.length < 2)
+        		return null;
+        	else
+        		return refreshHandle(link[0]);
+    	});
     }
 
     /**
