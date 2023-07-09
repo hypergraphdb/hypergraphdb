@@ -8,9 +8,12 @@
 package org.hypergraphdb.storage.lmdb;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
@@ -630,18 +633,59 @@ public class StorageImplementationLMDB<BufferType> implements HGStoreImplementat
 						new HGByteArrayBufferProxyLMDB(config.getHandleFactory()));
 		config.setStoreImplementation(storageImpl);
 		HGStore store = new HGStore(location.getAbsolutePath(), config);
+		
+		Function<Callable, Object> cx = (Callable f) -> {
+		    return store.getTransactionManager().ensureTransaction(f);		    
+		};
+		
+        Function<Runnable, Object> rx = (Runnable f) -> {
+            return store.getTransactionManager().ensureTransaction(() -> { f.run(); return null; } );
+        };
+        
 		try
 		{
 			storageImpl.startup(store, config);
 //			checkBasicStoreOperations(storageImpl, config, store);
-            HGIndex index = store.getTransactionManager().ensureTransaction(() -> {
-                return store.getIndex("theindex", BAtoBA.getInstance(), BAtoBA.getInstance(), null, null, true);			
-            });
+//            HGIndex index = store.getTransactionManager().ensureTransaction(() -> {
+//                return store.getIndex("theindex", BAtoBA.getInstance(), BAtoBA.getInstance(), null, null, true);			
+//            });
 //			checkMultipleValuePerKeyInIndex(index, store);
 //			store.getTransactionManager().ensureTransaction(() -> {
-			    store.removeIndex("theindex");
+//			    store.removeIndex("theindex");
 //			    return null;
 //			});
+			    
+			ByteArrayConverter<String> stringConverter = new ByteArrayConverter<String>() 
+	        {
+
+                @Override
+                public byte[] toByteArray(String object)
+                {
+                    return object.getBytes(StandardCharsets.UTF_8);
+                }
+
+                @Override
+                public String fromByteArray(byte[] byteArray, int offset,
+                        int length)
+                {
+                    return new String(byteArray, offset, length, StandardCharsets.UTF_8);
+                }
+	        };
+            HGIndex strindex = store.getTransactionManager().ensureTransaction(() -> {
+                return store.getIndex("strindex", 
+                        stringConverter, 
+                        stringConverter, null, null, true);            
+            });
+            
+            
+            byte[] array = new byte[1120];
+            new Random().nextBytes(array);
+            String key = new String(array, StandardCharsets.UTF_8);
+            
+            rx.apply(() -> strindex.addEntry(key,  "bye") );
+         
+            
+            System.out.println("Searching found: " + cx.apply(()-> strindex.findFirst(key)));
 		}
 		catch (Throwable tx)
 		{
