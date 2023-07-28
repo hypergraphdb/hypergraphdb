@@ -56,7 +56,7 @@ class ConcurrentTransactionsTests  extends AnyFlatSpec
     exceptions.headOption.map(throw _)
   }
 
-  it should "store multiple entries concurrently in index" in { // (fixture: FixtureParam) =>
+  it should "store multiple entries concurrently in index"  in { // (fixture: FixtureParam) =>
     val threadCount = 20
     val iterations = 100
     val keySet = scala.collection.mutable.Set[Array[Byte]]()

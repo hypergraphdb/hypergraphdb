@@ -18,7 +18,12 @@
     </dependency>
   </dependencies>
   <modules>
-	<module>bdb-je</module>
+    <module>lmdb</module>  
+  	<module>bdb-je</module>	   
   </modules>
   
+   <!-- <build>
+	 <sourceDirectory>src/java</sourceDirectory>	
+	 <testSourceDirectory>test/java</testSourceDirectory>		
+	</build>  -->
 </project>
