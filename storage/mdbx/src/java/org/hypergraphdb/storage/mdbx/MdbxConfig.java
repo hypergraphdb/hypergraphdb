@@ -26,7 +26,6 @@ public class MdbxConfig
 																					// fallback
 																					// value
 
-//	private HGConfiguration hgConfig;
 	private EnvConfig envConfig;
 	private DatabaseConfig dbConfig;
 
@@ -55,10 +54,8 @@ public class MdbxConfig
 		return properties;
 	}
 
-	public MdbxConfig(HGConfiguration hgConfig)
+	public MdbxConfig()
 	{
-//		this.hgConfig = hgConfig;
-
 		mdbxProps = new Properties(getDefaultMdbxProperties())
 		{
 			private static final long serialVersionUID = 1L;
@@ -205,26 +202,26 @@ public class MdbxConfig
 
 		// settings for the pooled cursors, need at least pooled.cursors set to
 		// true to activate
-		envConfig.setUsePooledCursors(
-				Boolean.parseBoolean(mdbxProps.getProperty("pooled.cursors",
-						Boolean.toString(defaultConfig.isUsePooledCursors()))));
-		Optional.ofNullable(
-				mdbxProps.getProperty("pooled.cursor.eviction.time.secs"))
-				.map(Integer::parseInt)
-				.ifPresent(secs -> envConfig
-						.setPooledCursorTimeBetweenEvictionRuns(
-								Duration.ofSeconds(secs)));
-		envConfig.setPooledCursorMaxIdle(Integer.parseInt(mdbxProps.getProperty(
-				"pooled.cursor.max.idle",
-				Integer.toString(defaultConfig.getPooledCursorMaxIdle()))));
-		Optional.ofNullable(mdbxProps
-				.getProperty("pooled.cursor.eviction.min.idle.time.secs"))
-				.map(Integer::parseInt).ifPresent(
-						secs -> envConfig.setPooledCursorMinEvictableIdleTime(
-								Duration.ofSeconds(secs)));
-		envConfig.setPooledCloseMaxWaitSeconds(Integer.parseInt(mdbxProps
-				.getProperty("pooled.close.max.wait.secs", Integer.toString(
-						defaultConfig.getPooledCloseMaxWaitSeconds()))));
+//		envConfig.setUsePooledCursors(
+//				Boolean.parseBoolean(mdbxProps.getProperty("pooled.cursors",
+//						Boolean.toString(defaultConfig.isUsePooledCursors()))));
+//		Optional.ofNullable(
+//				mdbxProps.getProperty("pooled.cursor.eviction.time.secs"))
+//				.map(Integer::parseInt)
+//				.ifPresent(secs -> envConfig
+//						.setPooledCursorTimeBetweenEvictionRuns(
+//								Duration.ofSeconds(secs)));
+//		envConfig.setPooledCursorMaxIdle(Integer.parseInt(mdbxProps.getProperty(
+//				"pooled.cursor.max.idle",
+//				Integer.toString(defaultConfig.getPooledCursorMaxIdle()))));
+//		Optional.ofNullable(mdbxProps
+//				.getProperty("pooled.cursor.eviction.min.idle.time.secs"))
+//				.map(Integer::parseInt).ifPresent(
+//						secs -> envConfig.setPooledCursorMinEvictableIdleTime(
+//								Duration.ofSeconds(secs)));
+//		envConfig.setPooledCloseMaxWaitSeconds(Integer.parseInt(mdbxProps
+//				.getProperty("pooled.close.max.wait.secs", Integer.toString(
+//						defaultConfig.getPooledCloseMaxWaitSeconds()))));
 
 		dbConfig.setCreate(true);
 

@@ -32,7 +32,8 @@ abstract class StorageTestBase extends AnyFlatSpec with should.Matchers
 
   def storeImplementationClass = {
     // "org.hypergraphdb.storage.bje.BJEStorageImplementation"
-    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
+    // "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
+    "org.hypergraphdb.storage.mdbx.MdbxStorageImplementation"
   }                                              
 
   def databaseLocation = {
@@ -73,16 +74,19 @@ abstract class StorageTestBase extends AnyFlatSpec with should.Matchers
   }  
 
   def getStore() = {
-    if (!storeOption.isDefined) {
-        info("Using storage implementation " + storeImplementationClass)
-        config = new HGConfiguration()
-        config.setEnforceTransactionsInStorageLayer(true)
-        storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
-        config.setStoreImplementation(storeImplementation)
-        (new java.io.File(databaseLocation)).mkdirs()
-        storeOption = Some(new HGStore(databaseLocation, config))
-    }
+    // if (!storeOption.isDefined) {
+    // }
     storeOption.get
+  }
+
+  override def beforeAll() = {
+    info("Using storage implementation " + storeImplementationClass)
+    config = new HGConfiguration()
+    config.setEnforceTransactionsInStorageLayer(true)
+    storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
+    config.setStoreImplementation(storeImplementation)
+    (new java.io.File(databaseLocation)).mkdirs()
+    storeOption = Some(new HGStore(databaseLocation, config))
   }
 
   override def afterAll() = {

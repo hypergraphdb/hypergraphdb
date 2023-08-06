@@ -11,7 +11,7 @@ import org.scalatest.Tag
 
 class StorageImplementationTests extends StorageTestBase {
   
-  val store: HGStore = getStore()
+  def store: HGStore = getStore()
 
   // test 1
   it should "'double' should handle 0" in { 
@@ -24,7 +24,7 @@ class StorageImplementationTests extends StorageTestBase {
     tx(assert(!store.containsData(newhandle())))
   }
 
-  "containsData" should "return true on existing data" in {
+  "containsData" should "return true on existing data" taggedAs(ToDebug) in {
     val h = newhandle()
     tx({ 
       store.store(h, randomBytes(10))
@@ -211,7 +211,7 @@ class StorageImplementationTests extends StorageTestBase {
     tx(Using.resource(store.getIncidenceResultSet(a)) { rs => assert(!rs.hasNext) })
   }        
 
-  "removeIncidentSet" should "work on a large incidence set"  taggedAs(ToDebug) in {
+  "removeIncidentSet" should "work on a large incidence set"  in {
     val max = 100000
     val incident = scala.collection.mutable.Set[HGHandle]()
     val a = newhandle()
@@ -235,7 +235,7 @@ class StorageImplementationTests extends StorageTestBase {
     }})
   }  
 
-  it should "throw an exception if attempted usage after a close" taggedAs(ToDebug) in {
+  it should "throw an exception if attempted usage after a close" in {
     tx(store.containsData(newhandle()))
     store.close()
     assertThrows[RuntimeException] { store.store(newhandle(), randomBytes(10)) }

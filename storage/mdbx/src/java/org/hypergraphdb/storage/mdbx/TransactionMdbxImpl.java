@@ -173,7 +173,7 @@ public class TransactionMdbxImpl implements HGStorageTransaction
 
 //			log.debug("Commit going to close {} cursors", mdbxCursors.size());
 //			long elapsed = System.currentTimeMillis();
-			int cnt = txn.releaseCursors();
+//			int cnt = txn.releaseCursors();
 //			for (int i = tmp.size() -1; i >= 0; i--) {
 //				MdbxTxCursor c = tmp.get(i);
 //				try {

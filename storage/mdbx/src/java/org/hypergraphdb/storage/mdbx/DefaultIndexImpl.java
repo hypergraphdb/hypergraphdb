@@ -21,8 +21,8 @@ import org.hypergraphdb.transaction.HGTransactionManager;
 import org.hypergraphdb.transaction.TransactionIsReadonlyException;
 import org.hypergraphdb.transaction.VanillaTransaction;
 import org.hypergraphdb.util.HGUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 import static org.hypergraphdb.storage.mdbx.MDBXUtils.*;
 import com.google.common.primitives.UnsignedBytes;
@@ -54,8 +54,8 @@ import com.castortech.mdbxjni.JNI.MDBX_stat;
 @SuppressWarnings("unchecked")
 public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType, ValueType>
 {
-	private static final Logger log = LoggerFactory
-			.getLogger(DefaultIndexImpl.class);
+//	private static final Logger log = LoggerFactory
+//			.getLogger(DefaultIndexImpl.class);
 
 	private static final String FAILED_LOOKUP_INDEX = "Failed to lookup index '{}': {}";
 	private static final String KEY_TYPE = "keyType";
@@ -260,8 +260,8 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		checkOpen();
 		if (keyType == null)
 		{
-			log.warn(KEYTYPE_NULL, getName());
-			return;
+//			log.warn(KEYTYPE_NULL, getName());
+			throw new IllegalArgumentException("Key is null");
 		}
 
 		try
@@ -286,8 +286,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		checkOpen();
 		if (keyType == null)
 		{
-			log.warn(KEYTYPE_NULL, getName());
-			return;
+			throw new IllegalArgumentException("Key is null");
 		}
 
 		try (Cursor cursor = getDb(keyType)
@@ -328,8 +327,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 
 		if (keyType == null)
 		{
-			log.warn(KEYTYPE_NULL, getName());
-			return;
+			throw new IllegalArgumentException("Key is null");
 		}
 
 		try
@@ -482,7 +480,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		catch (Exception ex)
 		{
 			HGUtils.closeNoException(cursor);
-			log.info("Inner Exception:", ex);
+//			log.info("Inner Exception:", ex);
 			throw new HGException(FAILED_LOOKUP_INDEX + " " + name + ":" + ex.toString(), ex);
 		}
 		return result;
@@ -560,7 +558,7 @@ public class DefaultIndexImpl<KeyType, ValueType> implements HGSortIndex<KeyType
 		catch (Exception ex)
 		{
 			HGUtils.closeNoException(cursor);
-			log.info("Inner Exception:", ex);
+//			log.info("Inner Exception:", ex);
 			throw new HGException(FAILED_LOOKUP_INDEX + " " + name + ":" + ex.toString(), ex);
 		}
 	}

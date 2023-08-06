@@ -72,7 +72,6 @@ public class MdbxStorageImplementation implements HGStoreImplementation
 	private static final String FAILED_RETRIEVE_LINK_WITH_HDL = "Failed to retrieve link with handle ";
 	private static final String FAILED_UPDATE_INCIDENCE_SET_FOR_HDL = "Failed to update incidence set for handle ";
 
-	private HGConfiguration hgConfig;
 	private MdbxConfig configuration;
 	private HGStore store;
 	private HGHandleFactory handleFactory;
@@ -98,10 +97,9 @@ public class MdbxStorageImplementation implements HGStoreImplementation
 			return (TransactionMdbxImpl) tx.getStorageTransaction();
 	}
 
-	public MdbxStorageImplementation(HGConfiguration hgConfig)
-	{
-		this.hgConfig = hgConfig;
-		configuration = new MdbxConfig(hgConfig);
+	public MdbxStorageImplementation()
+	{		
+		configuration = new MdbxConfig();
 	}
 
 	@Override
@@ -242,6 +240,7 @@ public class MdbxStorageImplementation implements HGStoreImplementation
 				e.printStackTrace();
 			}
 		}
+		
 	}
 
 	@Override

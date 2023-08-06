@@ -33,6 +33,11 @@ libraryDependencies += "org.hypergraphdb" % "hgdbtest" % hgdbVersion % Test
 // )
 
 // LMDB 
+//libraryDependencies ++= Seq(
+//  "org.hypergraphdb" % "hglmdb" % hgdbVersion % Test
+//)
+
+// MDBX
 libraryDependencies ++= Seq(
-  "org.hypergraphdb" % "hglmdb" % hgdbVersion % Test
+ "org.hypergraphdb" % "hgmdbx" % hgdbVersion % Test
 )
