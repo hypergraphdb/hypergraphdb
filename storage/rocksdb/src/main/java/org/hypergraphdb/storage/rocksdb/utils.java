@@ -9,30 +9,14 @@
 
 package org.hypergraphdb.storage.rocksdb;
 
-/**
- *
- * @param <BufferType>
- * @param <T>
- */
-public class SingleKeyResultSet<T> extends IndexResultSet<T>
+public class utils
 {
-    protected T advance()
+    public static byte[] concatByteArrays(byte[] a, byte[] b)
     {
-        throw new RuntimeException("not implemented");
+        byte[] res = new byte[a.length + b.length];
+        System.arraycopy(a, 0, res, 0, a.length);
+        System.arraycopy(b, 0, res, a.length, b.length);
+        return res;
     }
-
-    protected  T back()
-    {
-        throw new RuntimeException("not implemented");
-    }
-
-
-    public boolean isOrdered()
-    {
-        return true;
-    }
-
-
-
 
 }

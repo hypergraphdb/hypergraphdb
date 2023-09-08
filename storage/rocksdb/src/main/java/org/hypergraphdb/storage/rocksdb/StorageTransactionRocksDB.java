@@ -16,6 +16,9 @@ import org.rocksdb.Transaction;
 import org.rocksdb.TransactionOptions;
 import org.rocksdb.WriteOptions;
 
+/**
+ * An adapter for a RocksDB transaction
+ */
 public class StorageTransactionRocksDB implements HGStorageTransaction
 {
     private final Transaction txn;
@@ -32,14 +35,19 @@ public class StorageTransactionRocksDB implements HGStorageTransaction
         return txn;
     }
 
-    public StorageTransactionRocksDB(Transaction txn,
-            TransactionOptions txnOptions, WriteOptions writeOptions)
+    public StorageTransactionRocksDB(
+            Transaction txn,
+            TransactionOptions txnOptions,
+            WriteOptions writeOptions)
     {
         this.txn = txn;
         this.txnOptions = txnOptions;
         this.writeOptions = writeOptions;
     }
 
+    /**
+     *
+     */
     private void close()
     {
         this.txnOptions.close();
