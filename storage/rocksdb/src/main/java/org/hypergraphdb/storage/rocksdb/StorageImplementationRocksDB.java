@@ -18,18 +18,20 @@ import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
 
-    private static final String DB_ROOT = "data";
-    private static final String DATA_DB_NAME = "datadb";
-    private static final String PRIMITIVE_DB_NAME = "primitivedb";
-    private static final String INCIDENCE_DB_NAME = "incidencedb";
+    //    private static final String DB_ROOT = "data";
+//    private static final String DATA_DB_NAME = "datadb";
+//    private static final String PRIMITIVE_DB_NAME = "primitivedb";
+//    private static final String INCIDENCE_DB_NAME = "incidencedb";
 
     /*
     TODO when does this need to be loaded?
@@ -39,12 +41,11 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     }
 
 
-
     private TransactionDB db;
 
     private DBOptions dbOptions;
     private Options options;
-    private TransactionDBOptions txoptions;
+    private TransactionDBOptions txDBoptions;
     private Filter bloomfilter;
     private ReadOptions readOptions;
     private Statistics stats;
@@ -53,35 +54,25 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private HGConfiguration hgConfig;
     private int handleSize;
 
-    public static enum ColumnFamily
-    {
-        PRIMITIVE, DATA, INCIDENCE;
-        private ColumnFamilyHandle handle;
-        private ColumnFamilyDescriptor descriptor;
+    /*
+     *TODO
+     *  create an abstraction for a logical database, complete with
+     *  the necessary  database operations
+     */
 
-        private void initialize(ColumnFamilyHandle handle, ColumnFamilyDescriptor descriptor)
-        {
-            if (handle == null && descriptor == null)
-            {
-                throw new IllegalArgumentException("Arguments cannot be null");
-            }
-            this.handle = handle;
-            this.descriptor = descriptor;
-        }
-
-        public boolean isInitialized()
-        {
-            return this.handle != null;
-        }
-
-        public ColumnFamilyHandle handle()
-        {
-            return handle;
-        }
-    }
+    private static final String CF_INCIDENCE = "INCIDENCE";
+    private static final String CF_DATA= "DATA";
+    private static final String CF_PRIMITIVE = "PRIMITIVE";
+    private static final String CF_INDEX_PREFIX = "INDEX_";
 
     /*
+    TODO move the initialization logic
+        The enum becomes a map
+        the map is reset on Storage restart (startup())
+     */
+    private ConcurrentHashMap<String, ColumnFamilyHandle> columnFamilies;
 
+    /*
 
      Since RocksDB is a linear data structure without multiple values for
      a key, we need
@@ -119,7 +110,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             That's the 'physical' key we will use to store int the rocksDB
             database
 
-
      */
 
 
@@ -131,7 +121,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
 
     /**
-     * Get all column family descriptors in the database
+     * Get all column family descriptors present in the database
      * @return
      * @throws RocksDBException
      */
@@ -140,14 +130,75 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         /*
         The ids of the column families
          */
-        return TransactionDB.listColumnFamilies(options, Path.of(store.getDatabaseLocation()).toString())
-                .stream()
-                .map(cfId -> new ColumnFamilyDescriptor(
-                        cfId,
-                        new ColumnFamilyOptions()))
-                .collect(Collectors.toList());
+        var comparatorOptions = new ComparatorOptions();
+        var indexCFOptions = new ColumnFamilyOptions()
+
+        var columnFamilies = TransactionDB.listColumnFamilies(options, Path.of(store.getDatabaseLocation()).toString());
+        List<ColumnFamilyDescriptor> descriptors = new LinkedList<>();
+        for (var cfName : columnFamilies)
+        {
+            ColumnFamilyDescriptor cfd;
+            if (isIndex(cfName))
+            {
+
+                cfd = new ColumnFamilyDescriptor(cfName,
+                        new ColumnFamilyOptions().setComparator(new AbstractComparator(comparatorOptions)
+                        {
+
+                            @Override
+                            public String name()
+                            {
+                                return null;
+                            }
+
+                            @Override
+                            public int compare(
+                                    ByteBuffer byteBuffer,
+                                    ByteBuffer byteBuffer1)
+                            {
+                                /*
+                                the byte buffers are direct byte buffers
+                                they do not have to array, because they
+                                are not backed by an array
+                                they are not part of the heap
+                                 */
+
+                                return 0;
+                            }
+                        }));
+
+                /*
+                put the index, but it will be fully initialized when its
+                converters are set;
+                 */
+                indices.put(new String(cfName, StandardCharsets.UTF_8), new RocksDBIndex());
+            }
+            else
+            {
+                cfd = new ColumnFamilyDescriptor(cfName, new ColumnFamilyOptions());
+            }
+            descriptors.add(cfd);
+        }
+
+
+        if (descriptors.isEmpty())
+            descriptors.add(new ColumnFamilyDescriptor("default".getBytes(
+                    StandardCharsets.UTF_8)));
+
+        return descriptors;
+
     }
 
+    private ConcurrentHashMap<String, RocksDBIndex> indices = new ConcurrentHashMap<>();
+
+    private static boolean isIndex(byte[] cfId)
+    {
+        return new String(cfId, StandardCharsets.UTF_8).startsWith(CF_INDEX_PREFIX);
+    }
+
+    /**
+     * configure all the options objects needed for starting the database
+     */
     private void setup()
     {
         /*
@@ -156,8 +207,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         TODO move to a config object
          */
         this.options = new Options();
-        this.dbOptions = new DBOptions();
-        this.txoptions = new TransactionDBOptions();
+        this.dbOptions = new DBOptions().setCreateIfMissing(true);
+        this.txDBoptions = new TransactionDBOptions();
         this.bloomfilter = new BloomFilter(10);
         this.readOptions = new ReadOptions().setFillCache(false);
         this.stats = new Statistics();
@@ -200,7 +251,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         this.options.close();
         this.dbOptions.close();
-        this.txoptions.close();
+        this.txDBoptions.close();
         this.bloomfilter.close();
         this.readOptions.close();
         this.stats.close();
@@ -220,6 +271,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         this.store = store;
         this.hgConfig = configuration;
         this.handleSize = configuration.getHandleFactory().nullHandle().toByteArray().length;
+        this.columnFamilies = new ConcurrentHashMap<>();
 
         setup();
         try
@@ -232,23 +284,40 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             get the names of the existing column families in the database.
             this happens before opening the database
 
+            The
              */
             List<ColumnFamilyDescriptor> cfDescriptors = getColumnFamilyDescriptors();
 
             /*
+            open() needs the present column family descriptors. it will then
+            populate the cfHandles parameter with the handles corresponfing
+            to these column families.
             The call to open will fill this with the column family handles
+
+            What happens with column families which are supplied, but do
+            not exist
+
+            What happens with column families which exist, but are not supplied?
+
+            dbOptions.setCreateMissing
+
+            how is the default column family handled
              */
             List<ColumnFamilyHandle> cfHandles = new ArrayList<>();
+
             this.db = TransactionDB.open(
                     dbOptions,
-                    txoptions,
+//                    dbOptions.setCreateMissingColumnFamilies(),
+                    txDBoptions,
                     Path.of(store.getDatabaseLocation()).toString(),
                     cfDescriptors,
                     cfHandles);
 
+            /*
+            Create the column families which do not exist.
+
+             */
             ensureColumnFamilies(cfDescriptors, cfHandles);
-//            this.incidencedb = RocksDB.open(options, new File(new File(DB_ROOT), INCIDENCE_DB_NAME).getAbsolutePath());
-//            this.primitivedb = RocksDB.open(options, new File(new File(DB_ROOT), PRIMITIVE_DB_NAME).getAbsolutePath());
         }
         catch (RocksDBException e)
         {
@@ -271,16 +340,22 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      *
      * @param cfDescriptors the descriptors of the existing CFs
      * @param cfHandles the handles of the existing cfs
-     * @throws RocksDBException
      */
     private void ensureColumnFamilies(
             List<ColumnFamilyDescriptor> cfDescriptors,
             List<ColumnFamilyHandle> cfHandles) throws RocksDBException
     {
+        /*
+        We assume the column families are initialized once in a program run
+        which is not a valid assumption.
+         */
         if (cfHandles.size() != cfDescriptors.size())
         {
             throw new RuntimeException("The sizes have to be the same");
         }
+        /*
+        populate the column families map
+         */
         for (int i = 0; i < cfDescriptors.size(); i++)
         {
             var desc =  cfDescriptors.get(i);
@@ -294,48 +369,51 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             if ("default".equalsIgnoreCase(cfName))
                 continue;
 
-            ColumnFamily cf = ColumnFamily.valueOf(cfName);
+            columnFamilies.putIfAbsent(cfName, handle);
 
-            if (!cf.isInitialized())
-            {
-                cf.initialize(handle, desc);
-            }
-            else
-            {
-                throw new RuntimeException(String.format(
-                        "column family %s is already initialized.",
-                        cfName));
-                //problem
-            }
         }
         /*
         if some column families are not initialized from the existing
         database, create them
          */
-        if (!ColumnFamily.PRIMITIVE.isInitialized())
+        if (!columnFamilies.containsKey(CF_PRIMITIVE))
         {
+            /*
+            The keys in the primitive database are the serialization
+            of the handles of the first order atoms.
+            They can be compared lexicographically so no need to set a custom comparator
+             */
             ColumnFamilyDescriptor descriptor = new ColumnFamilyDescriptor(
-                    ColumnFamily.PRIMITIVE.name().getBytes(StandardCharsets.UTF_8));
+                    (CF_PRIMITIVE.getBytes(StandardCharsets.UTF_8)));
             var handle = db.createColumnFamily(descriptor);
-            ColumnFamily.PRIMITIVE.initialize(handle, descriptor);
+            columnFamilies.put(CF_PRIMITIVE, handle);
         }
 
-        if (!ColumnFamily.DATA.isInitialized())
+        if (!columnFamilies.containsKey(CF_DATA))
         {
+            /*
+            The keys in the primitive database are the serialization
+            of the handles of the first order atoms.
+            They can be compared lexicographically so no need to set a custom comparator
+             */
             ColumnFamilyDescriptor descriptor = new ColumnFamilyDescriptor(
-                    ColumnFamily.DATA.name().getBytes(StandardCharsets.UTF_8));
+                    (CF_DATA.getBytes(StandardCharsets.UTF_8)));
             var handle = db.createColumnFamily(descriptor);
-            ColumnFamily.DATA.initialize(handle, descriptor);
+            columnFamilies.put(CF_DATA, handle);
         }
 
-        if (!ColumnFamily.INCIDENCE.isInitialized())
+        if (!columnFamilies.containsKey(CF_INCIDENCE))
         {
+            /*
+            The keys in the primitive database are the serialization
+            of the handles of the first order atoms.
+            They can be compared lexicographically so no need to set a custom comparator
+             */
             ColumnFamilyDescriptor descriptor = new ColumnFamilyDescriptor(
-                    ColumnFamily.INCIDENCE.name().getBytes(StandardCharsets.UTF_8));
+                    (CF_INCIDENCE.getBytes(StandardCharsets.UTF_8)));
             var handle = db.createColumnFamily(descriptor);
-            ColumnFamily.INCIDENCE.initialize(handle, descriptor);
+            columnFamilies.put(CF_INCIDENCE, handle);
         }
-
 
 
     }
@@ -408,6 +486,11 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private StorageTransactionRocksDB txn()
     {
         HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
+        /*
+        TODO
+            this will fail. The client code should check whether the null transaction
+            is active
+         */
         if (tx == null)
             return StorageTransactionRocksDB.nullTransaction();
         else if (tx.getStorageTransaction() instanceof StorageTransactionRocksDB)
@@ -432,7 +515,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         var value = fromHandleArray(link);
         try
         {
-            txn().rocksdbTxn().put(ColumnFamily.DATA.handle(), key, value);
+            txn().rocksdbTxn().put(columnFamilies.get(CF_DATA), key, value);
         }
         catch (RocksDBException e)
         {
@@ -450,7 +533,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         try
         {
-            txn().rocksdbTxn().put(ColumnFamily.PRIMITIVE.handle(), handle.toByteArray(), data);
+            txn().rocksdbTxn().put(
+                    columnFamilies.get(CF_PRIMITIVE),
+                    handle.toByteArray(),
+                    data);
         }
         catch (RocksDBException e)
         {
@@ -464,7 +550,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         try
         {
-            var res = txn().rocksdbTxn().get(ColumnFamily.PRIMITIVE.handle(), readOptions, handle.toByteArray());
+            var res = txn().rocksdbTxn().get(
+                    columnFamilies.get(CF_PRIMITIVE),
+                    readOptions,
+                    handle.toByteArray());
 
 //            var stats = this.db.getApproximateMemTableStats(new Range(
 //                    new Slice(LogicalDatabase.primitive().firstGlobalKeyInDB()),
@@ -489,7 +578,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 //
 //            }
 
-            System.out.println(new String(res));
 //            datadb.getA
             return res;
         }
@@ -499,11 +587,12 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         }
     }
 
+    @Override
     public HGPersistentHandle[] getLink(HGPersistentHandle handle)
     {
         try
         {
-            byte[] bytes = txn().rocksdbTxn().get(ColumnFamily.DATA.handle(), readOptions, handle.toByteArray());
+            byte[] bytes = txn().rocksdbTxn().get(columnFamilies.get(CF_DATA), readOptions, handle.toByteArray());
             return toHandleArray(bytes);
         }
         catch (RocksDBException e)
@@ -512,29 +601,15 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         }
     }
 
-    /**
-     * Remove a rocks db key from the database
-     * @param rocksDBKey the rocks db key (i.e. prefixed to a given database and concatenated
-     *  with the value, if the database supports multivalued keys) to remove
-     */
-    private void removeRocksDBKey(byte[] rocksDBKey)
-    {
-        try
-        {
-            txn().rocksdbTxn().delete(rocksDBKey);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
-    }
 
     @Override
     public void removeData(HGPersistentHandle handle)
     {
         try
         {
-            txn().rocksdbTxn().delete(ColumnFamily.PRIMITIVE.handle(), handle.toByteArray());
+            txn().rocksdbTxn().delete(
+                    columnFamilies.get(CF_PRIMITIVE),
+                    handle.toByteArray());
         }
         catch (RocksDBException e)
         {
@@ -548,7 +623,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         try
         {
-            txn().rocksdbTxn().delete(ColumnFamily.DATA.handle(), handle.toByteArray());
+            txn().rocksdbTxn().delete(
+                    columnFamilies.get(CF_DATA),
+                    handle.toByteArray());
         }
         catch (RocksDBException e)
         {
@@ -556,24 +633,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         }
     }
 
-    /**
-     * Whether the database contains a given key
-     * @param rocksDBkey the rocksDB key to check (i.e. prefixed to a given database and concatenated
-     *  with the value, if the database supports multivalued keys)
-     * @return true if the database contains that key
-     */
-    private boolean containsRocksDBKey(byte[] rocksDBkey)
-    {
-        try
-        {
-            return txn().rocksdbTxn().get(readOptions, rocksDBkey) != null;
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
-
-    }
 
     @Override
     public boolean containsData(HGPersistentHandle handle)
@@ -581,9 +640,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         try
         {
             return txn().rocksdbTxn().get(
-                    ColumnFamily.PRIMITIVE.handle(),
+                    columnFamilies.get(CF_PRIMITIVE),
                     readOptions,
-                    handle.toByteArray() ) != null;
+                    handle.toByteArray()) != null;
         }
         catch (RocksDBException e)
         {
@@ -597,7 +656,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         try
         {
             return txn().rocksdbTxn().get(
-                    ColumnFamily.DATA.handle(),
+                    columnFamilies.get(CF_DATA),
                     readOptions,
                     handle.toByteArray() ) != null;
         }
@@ -646,44 +705,75 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(
             HGPersistentHandle handle)
     {
-
-        byte[] start =  LogicalDatabase.incidence().firstGlobalKeyInDB();
-        byte[] end =  LogicalDatabase.incidence().lastGlobalKeyInDB();
-        /*
-        TODO how do we attach the iterator to the transaction?
-         */
-        try (var ro = new ReadOptions().setIterateUpperBound(new Slice(end)))
-        {
-            var iterator = txn().rocksdbTxn().getIterator(ro);
-            //
-            byte[] rocksDBKey = LogicalDatabase.incidence()
-                    .scopeKey(handle.toByteArray(),
-                            new byte[LogicalDatabase.VALUE_KEY_SIZE]);
-
-            iterator.seek(rocksDBKey);
-
-            long size = db.getApproximateMemTableStats(new Range(new Slice(start), new Slice(end))).count;
-
-            return new SingleKeyRocksDBResultSet<>(db,
-                    LogicalDatabase.incidence(),
-                    iterator,
+            return new SingleKeyResultSet<>(
+                    txn(),
+                    columnFamilies.get(CF_INCIDENCE),
                     handle.toByteArray(),
                     HGPersistentHandle::toByteArray,
                     bytes -> hgConfig.getHandleFactory().makeHandle(bytes));
 
-        }
+    }
+    private void testResultSet()
+    {
+
     }
 
     @Override
     public void removeIncidenceSet(HGPersistentHandle handle)
     {
+        try (
+            var first = new Slice(
+                    FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray()));
+            var last = new Slice(
+                    FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()));
+
+            var iteratorReadOptions = new ReadOptions().setIterateLowerBound(first).setIterateUpperBound(last);
+
+            var iterator = txn().rocksdbTxn().getIterator(
+                    iteratorReadOptions,
+                    columnFamilies.get(CF_INCIDENCE)))
+        {
+            while (iterator.isValid())
+            {
+                iterator.next();
+                byte[] next = iterator.key();
+                try
+                {
+                    txn().rocksdbTxn().delete(columnFamilies.get(CF_INCIDENCE), next);
+                }
+                catch (RocksDBException e)
+                {
+                    throw new HGException(e);
+                }
+            }
+            try
+            {
+                iterator.status();
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+
+        }
+
+        new SingleKeyResultSet<>(
+                txn(),
+                columnFamilies.get(CF_INCIDENCE),
+                handle.toByteArray(),
+                HGPersistentHandle::toByteArray,
+                bytes -> hgConfig.getHandleFactory().makeHandle(bytes));
 
     }
 
     @Override
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
     {
-        return ((IndexResultSet<?>)this.getIncidenceResultSet(handle)).count();
+        try (var rs = ((SingleKeyResultSet<HGPersistentHandle>) this.getIncidenceResultSet(
+                handle)))
+        {
+            return rs.count();
+        }
     }
 
     @Override
@@ -692,10 +782,11 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         var localKey = atomHandle.toByteArray();
         var value = incidentLink.toByteArray();
-        var rocksDBkey = LogicalDatabase.incidence().scopeKey(localKey, value);
+
+        var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
         try
         {
-            db.put(rocksDBkey, new byte[0]);
+            txn().rocksdbTxn().put(columnFamilies.get(CF_INCIDENCE), rocksDBkey, new byte[0]);
         }
         catch (RocksDBException e)
         {
@@ -709,10 +800,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         var localKey = atomHandle.toByteArray();
         var value = incidentLink.toByteArray();
-        var rocksDBkey = LogicalDatabase.incidence().scopeKey(localKey, value);
+        var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
         try
         {
-            db.delete(rocksDBkey);
+            txn().rocksdbTxn().delete(columnFamilies.get(CF_INCIDENCE), rocksDBkey);
         }
         catch (RocksDBException e)
         {
@@ -721,22 +812,78 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     }
 
+    /*
+    for debugging only
+     */
     static void checkIncidence(HGPersistentHandle atom, HashSet<HGPersistentHandle> incidenceSet, HGStore store)
     {
         store.getTransactionManager().ensureTransaction(() -> {
             long storedIncidentCount = store.getIncidenceSetCardinality(atom);
 
-//            if (storedIncidentCount != incidenceSet.size())
-//                throw new RuntimeException("Not same number of incident links,  " + storedIncidentCount +
-//                        ", expecting " + incidenceSet.size());
+            if (storedIncidentCount != incidenceSet.size())
+                throw new RuntimeException("Not same number of incident links,  " + storedIncidentCount +
+                        ", expecting " + incidenceSet.size());
 
-            try (HGRandomAccessResult<HGPersistentHandle> rs = store.getIncidenceResultSet(atom))
+            try (SingleKeyResultSet<HGPersistentHandle> rs =
+                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
             {
                 while (rs.hasNext())
+                {
                     if (!incidenceSet.contains(rs.next()))
                         throw new RuntimeException("Did store incident link: " + rs.current());
                     else
-                        System.out.println("INcident " + rs.current() + " is correct.");
+                        System.out.println("Incident " + rs.current() + " is correct.");
+                }
+            }
+            //test the result set
+
+            try (SingleKeyResultSet<HGPersistentHandle> rs =
+                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
+            {
+                while (rs.hasNext())
+                {
+                    if (!incidenceSet.contains(rs.next()))
+                        throw new RuntimeException("Did store incident link: " + rs.current());
+                    else
+                        System.out.println("Incident " + rs.current() + " is correct.");
+                }
+            }
+
+            try (SingleKeyResultSet<HGPersistentHandle> rs =
+                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
+            {
+                System.out.println("Going forward");
+                System.out.println("has next is expected to not change the state of the result set");
+                System.out.println(rs.hasNext());
+                System.out.println(rs.hasNext());
+                System.out.println(rs.hasNext());
+                System.out.println(rs.hasNext());
+                System.out.println(rs.hasNext());
+                while (rs.hasNext())
+                {
+                    if (!incidenceSet.contains(rs.next()))
+                        throw new RuntimeException("Did store incident link: " + rs.current());
+                    else
+                        System.out.println("Incident " + rs.current() + " is correct.");
+                }
+
+                rs.goAfterLast();
+                System.out.println("Going backwards");
+                System.out.println("has prev is expected to not change the state of the result set");
+                System.out.println(rs.hasPrev());
+                System.out.println(rs.hasPrev());
+                System.out.println(rs.hasPrev());
+                System.out.println(rs.hasPrev());
+                System.out.println(rs.hasPrev());
+                while (rs.hasPrev())
+                {
+                    if (!incidenceSet.contains(rs.prev()))
+                        throw new RuntimeException("Did store incident link: " + rs.current());
+                    else
+                        System.out.println("Incident " + rs.current() + " is correct.");
+                }
+
+
             }
             return null;
         });
@@ -751,24 +898,65 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     @Override
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
-            String name, ByteArrayConverter<KeyType> keyConverter,
+            String name,
+            ByteArrayConverter<KeyType> keyConverter,
             ByteArrayConverter<ValueType> valueConverter,
             Comparator<byte[]> keyComparator,
-            Comparator<byte[]> valueComparator, boolean isBidirectional,
+            Comparator<byte[]> valueComparator,
+            boolean isBidirectional,
             boolean createIfNecessary)
     {
+        /*
+        1. Create a new column family for that index.
+        2. we need to store multiple values per key.
+            both keys and values are varlength.
+            how do we
+
+         */
+
+       var cfName = this.indexCF(name);
+       db.setOptions(columnFamilies.get(cfName), MutableColumnFamilyOptions.builder().);
+        //0.
         return null;
     }
 
     @Override
     public void removeIndex(String name)
     {
+        //Delete the entire column family
+        var cf = columnFamilies.get(indexCF(name));
 
+        if (cf == null)
+            throw new HGException(String.format(
+                    "Cannot remove index %s whose column family - %s does not exist.",
+                    name, indexCF(name)));
+
+        try
+        {
+            db.dropColumnFamily(cf);
+            columnFamilies.remove(indexCF(name));
+        }
+        catch (RocksDBException e)
+        {
+            throw new HGException(
+                    String.format("Could not delete column family %s which stores" +
+                            "the index %s.", indexCF(name), name), e);
+        }
     }
 
-    void printdb()
+    private String indexCF(String indexName)
     {
-        var i = this.db.newIterator();
+        return CF_INDEX_PREFIX + indexName;
+    }
+
+    /**
+     * Just print the contents of the
+     * primitive db for debugging purposes.
+     *
+     */
+    private void printPrimitiveDB()
+    {
+        var i = this.db.newIterator(columnFamilies.get(CF_PRIMITIVE));
         i.seekToFirst();
 
         while (i.isValid())
@@ -776,37 +964,24 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             var k = i.key();
             var v = i.value();
             System.out.println();
-            switch (k[0]) {
-            case (byte)0 : {
-                var parserdKey = this.toHandle(
-                        Arrays.copyOfRange(k, 1, 17));
-                var parsedValue = new String(v);
-                System.out.printf("primitive; key(%s); value(%s) %n", parserdKey, parsedValue);
+            var parserdKey = this.toHandle(
+                    Arrays.copyOfRange(k, 0, 16));
+            var parsedValue = new String(v);
+            System.out.printf("primitive; key(%s); value(%s) %n", parserdKey, parsedValue);
 
-                //primitive
-                break;
-            }
-            case (byte)1 : {
-                var parserdKey = this.toHandle(
-                        Arrays.copyOfRange(k, 1, 17));
-                var parsedValue = Arrays.stream(this.toHandleArray(v)).map(
-                        Object::toString).collect(Collectors.joining(","));
-                System.out.printf("data; key(%s); value(%s) %n", parserdKey, parsedValue);
-
-                //primitive
-                break;
-            }
-            case (byte)2 : {
-                var parserdKey = this.toHandle(
-                        Arrays.copyOfRange(k, 1, 17));
-                var parserdValue = this.toHandle(
-                        Arrays.copyOfRange(k, 17, 33));
-                System.out.printf("incidence; key(%s); value(%s) %n", parserdKey, parserdValue);
-                break;
-            }
-            }
+            //primitive
             i.next();
         }
+        try
+        {
+            i.status();
+        }
+        catch (RocksDBException e)
+        {
+            System.out.println("iterator failed with an exception");
+            throw new RuntimeException(e);
+        }
+        System.out.println("iterated the database successfully");
     }
 
 
@@ -820,39 +995,41 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 new StorageImplementationRocksDB();
         config.setStoreImplementation(storageImpl);
         HGStore store = new HGStore(location.getAbsolutePath(), config);
+        HGPersistentHandle handle;
         try
         {
-            for (int i = 0; i < 1_000_000; i++)
-            {
-                int j = i;
-                store.getTransactionManager().ensureTransaction(() -> {
+            System.out.println("storing into primitive");
+            handle = store.getTransactionManager().ensureTransaction(() -> {
+                HGPersistentHandle h = config.getHandleFactory().makeHandle();
+                storageImpl.store(h, ("Hello world").getBytes());
 
-                    HGPersistentHandle h = config.getHandleFactory().makeHandle();
-                    storageImpl.store(h, ("Hello world" + j).getBytes());
+                byte[] back = storageImpl.getData(h);
+                System.out.println("Read from database: " + new String(back));
+                return h;
+            });
 
-                    byte[] back = storageImpl.getData(h);
-//                    System.out.println(new String(back));
+            System.out.println("printing primitive db");
+            storageImpl.printPrimitiveDB();
 
-                    return null;
-                });
-            }
+//            System.out.println("restarting");
+//            storageImpl.shutdown();
+//            storageImpl.startup(store, config);
+//            System.out.println("restarted");
 
+            System.out.println("retrieving stored primitive atoms");
+            store.getTransactionManager().ensureTransaction(() -> {
+                byte [] back = storageImpl.getData(handle);
+                System.out.println(new String(back));
+                return handle;
+            });
 
-            storageImpl.shutdown();
-            storageImpl.startup(store, config);
-
-//            store.getTransactionManager().ensureTransaction(() -> {
-//                byte [] back = storageImpl.getData(h);
-//                System.out.println(new String(back));
-//                return h;
-//            });
-
-
+            System.out.println("Storing link data");
             HGPersistentHandle [] linkData = new HGPersistentHandle[] {
                     config.getHandleFactory().makeHandle(),
                     config.getHandleFactory().makeHandle(),
                     config.getHandleFactory().makeHandle()
             };
+
             HGPersistentHandle otherLink = config.getHandleFactory().makeHandle();
             HGPersistentHandle linkH = store.getTransactionManager().ensureTransaction(() -> {
                 storageImpl.store(otherLink, new HGPersistentHandle[]{
@@ -861,10 +1038,12 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 });
                 return storageImpl.store(config.getHandleFactory().makeHandle(), linkData);
             });
+
             System.out.println("Links arrays are equal= " + HGUtils.eq(linkData,
                     store.getTransactionManager().ensureTransaction(() -> {
                         return storageImpl.getLink(linkH);
                     })));
+
             System.out.println("Links arrays are equal= " + HGUtils.eq(linkData,
                     store.getTransactionManager().ensureTransaction(() -> {
                         return storageImpl.getLink(otherLink);
@@ -876,8 +1055,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 //                return;
 //            }
 
+            System.out.println("Storing incidence set ");
             HashSet<HGPersistentHandle> incidenceSet = new HashSet<HGPersistentHandle>();
-            for (int i = 0; i < 5_000; i++)
+            for (int i = 0; i < 5; i++)
             {
                 incidenceSet.add(config.getHandleFactory().makeHandle());
             }
@@ -897,28 +1077,29 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             });
 
 
-            checkIncidence(linkH, incidenceSet, store);
-
-            HGPersistentHandle removed = incidenceSet.stream().skip(4).findFirst().get();
-            HGPersistentHandle anotherRemoved = incidenceSet.stream().skip(2).findFirst().get();
-            incidenceSet.remove(removed);
-            incidenceSet.remove(anotherRemoved);
-            store.getTransactionManager().ensureTransaction(() -> {
-                storageImpl.removeIncidenceLink(linkH, removed);
-                storageImpl.removeIncidenceLink(linkH, anotherRemoved);
-                return null;
-            });
 
             checkIncidence(linkH, incidenceSet, store);
 
-            store.getTransactionManager().ensureTransaction(() -> {
-                storageImpl.removeIncidenceSet(linkH);
-                return null;
-            });
-
-            if (store.getTransactionManager().ensureTransaction(() -> storageImpl.getIncidenceSetCardinality(linkH))
-                    != 0)
-                throw new RuntimeException("Incience set for " + linkH + " should be clear.");
+//            HGPersistentHandle removed = incidenceSet.stream().skip(4).findFirst().get();
+//            HGPersistentHandle anotherRemoved = incidenceSet.stream().skip(2).findFirst().get();
+//            incidenceSet.remove(removed);
+//            incidenceSet.remove(anotherRemoved);
+//            store.getTransactionManager().ensureTransaction(() -> {
+//                storageImpl.removeIncidenceLink(linkH, removed);
+//                storageImpl.removeIncidenceLink(linkH, anotherRemoved);
+//                return null;
+//            });
+//
+//            checkIncidence(linkH, incidenceSet, store);
+//
+//            store.getTransactionManager().ensureTransaction(() -> {
+//                storageImpl.removeIncidenceSet(linkH);
+//                return null;
+//            });
+//
+//            if (store.getTransactionManager().ensureTransaction(() -> storageImpl.getIncidenceSetCardinality(linkH))
+//                    != 0)
+//                throw new RuntimeException("Incience set for " + linkH + " should be clear.");
 
         }
         catch (Throwable tx)
