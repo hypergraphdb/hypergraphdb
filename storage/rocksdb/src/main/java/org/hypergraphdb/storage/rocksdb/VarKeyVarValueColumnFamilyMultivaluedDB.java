@@ -9,8 +9,11 @@
 
 package org.hypergraphdb.storage.rocksdb;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
@@ -134,6 +137,84 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
       return res;
    }
 
+   /**
+    * Compare two rocks db keys.
+    * HGDB API tells the user to supply comparators for byte[]
+    * but RocksDB expects ByteBuffer (which are actually DirectBuffer) i.e. are
+    * outside the VM's heap and are not backed by a byte[]
+    * @param keyComparator
+    * @param valueComparator
+    * @return
+    */
+   public static int compareRocksDBKeys(
+           ByteBuffer buffer1,
+           ByteBuffer buffer2,
+           Comparator<byte[]> keyComparator,
+           Comparator<byte[]> valueComparator)
+   {
+      /*
+      We have two direct byte buffers
+       */
+      buffer1.rewind();
+      buffer2.rewind();
+
+      int keysize1 = Byte.toUnsignedInt(buffer1.get());
+      int keysize2 = Byte.toUnsignedInt(buffer2.get());
+
+      byte isSystem1 = buffer1.get();
+      byte isSystem2 = buffer2.get();
+
+
+      if (isFirst(isSystem1))
+      {
+         if (isFirst(isSystem2))
+            return 0;
+         else
+            return -1;
+
+      }
+      else if (isLast(isSystem1))
+      {
+         if (isLast(isSystem2))
+            return 0;
+         else
+            return 1;
+      }
+      else if (isLast(isSystem2))
+      {
+         return -1;
+      }
+      else if (isFirst(isSystem2))
+      {
+         return 1;
+      }
+
+
+      byte[] keyA = new byte[keysize1];
+      byte[] keyB = new byte[keysize2];
+
+      buffer1.get(keyA);
+      buffer2.get(keyB);
+
+      int keyComp = keyComparator.compare(keyA, keyB);
+
+      if (keyComp != 0)
+         return keyComp;
+
+      ByteArrayOutputStream valueA = new ByteArrayOutputStream();
+      ByteArrayOutputStream valueB = new ByteArrayOutputStream();
+
+
+      while (buffer1.hasRemaining())
+         valueA.write(buffer1.get());
+
+      while (buffer2.hasRemaining())
+         valueB.write(buffer2.get());
+
+      return valueComparator.compare(valueA.toByteArray(), valueB.toByteArray());
+
+   }
+
    public static int compareRocksDBKeys(
            byte[] a,
            byte[] b,
@@ -195,21 +276,28 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
    }
 
-   private static final boolean isSystem(byte[] key)
+   private static boolean isFirst(byte[] a)
    {
-      return key[SYSTEM_FLAG_INDEX] != (byte)0;
+      return false;
    }
-   private static final boolean isFirst(byte[] key)
+   private static boolean isLast(byte[] a)
    {
-      return key[SYSTEM_FLAG_INDEX] == (byte)1;
-   }
-   private static final boolean isLast(byte[] key)
-   {
-      return key[SYSTEM_FLAG_INDEX] == (byte)2;
+      return false;
    }
 
+   private static final boolean isSystem(byte systemFlag)
+   {
+      return systemFlag != 0b0000_0000;
+   }
+   private static final boolean isFirst(byte systemFlag)
+   {
+      return systemFlag != 0b0000_0001;
+   }
+   private static final boolean isLast(byte systemFlag)
+   {
+      return systemFlag != 0b0000_0010;
+   }
 
-   private static final int SYSTEM_FLAG_INDEX = 1;
 
    public static void main(String[] args)
    {

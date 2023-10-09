@@ -17,6 +17,7 @@ import org.hypergraphdb.util.HGUtils;
 import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
+import javax.xml.crypto.dsig.keyinfo.KeyValue;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -122,60 +123,58 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     /**
      * Get all column family descriptors present in the database
+     * This is called before the start of the DB because we need to
+     * explicitly supply all the column families present in the
+     * DB.
+     * This is so that when the DB is opened, RocksDB knows about the
+     * descriptor, namely the options which are not serialized but are needed
+     * for a column family from the very beginning -- say comparators
      * @return
      * @throws RocksDBException
      */
     private List<ColumnFamilyDescriptor>getColumnFamilyDescriptors() throws RocksDBException
     {
-        /*
-        The ids of the column families
-         */
-        var comparatorOptions = new ComparatorOptions();
-        var indexCFOptions = new ColumnFamilyOptions()
+        var columnFamilyIDs = TransactionDB.listColumnFamilies(
+                options,
+                Path.of(store.getDatabaseLocation()).toString());
 
-        var columnFamilies = TransactionDB.listColumnFamilies(options, Path.of(store.getDatabaseLocation()).toString());
         List<ColumnFamilyDescriptor> descriptors = new LinkedList<>();
-        for (var cfName : columnFamilies)
+
+        for (var cfID : columnFamilyIDs)
         {
             ColumnFamilyDescriptor cfd;
+
+            String cfName = new String(cfID, StandardCharsets.UTF_8);
+
             if (isIndex(cfName))
             {
-
-                cfd = new ColumnFamilyDescriptor(cfName,
-                        new ColumnFamilyOptions().setComparator(new AbstractComparator(comparatorOptions)
-                        {
-
-                            @Override
-                            public String name()
-                            {
-                                return null;
-                            }
-
-                            @Override
-                            public int compare(
-                                    ByteBuffer byteBuffer,
-                                    ByteBuffer byteBuffer1)
-                            {
-                                /*
-                                the byte buffers are direct byte buffers
-                                they do not have to array, because they
-                                are not backed by an array
-                                they are not part of the heap
-                                 */
-
-                                return 0;
-                            }
-                        }));
-
                 /*
-                put the index, but it will be fully initialized when its
-                converters are set;
+                we are opening a column family for an index
+                the difference is that we are setting a custom comparator
+                how do we set the comparator?
+
+                the compare method will call the
+
+                The index is created when the database is started
+
+                We need to supply th
+
                  */
-                indices.put(new String(cfName, StandardCharsets.UTF_8), new RocksDBIndex());
+                HGIndexAdapter adapter = new HGIndexAdapter(stripCFPrefix(cfName));
+
+                this.indexAdapter.put(stripCFPrefix(cfName), adapter);
+                /*
+                The cfd needs a comparator function
+                the comparator needs a reference to the index (which we do not
+                currently have)
+                 */
+                cfd = new ColumnFamilyDescriptor(cfID,
+                        new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+
             }
             else
             {
-                cfd = new ColumnFamilyDescriptor(cfName, new ColumnFamilyOptions());
+                cfd = new ColumnFamilyDescriptor(cfID, new ColumnFamilyOptions());
             }
             descriptors.add(cfd);
         }
@@ -191,10 +190,31 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     private ConcurrentHashMap<String, RocksDBIndex> indices = new ConcurrentHashMap<>();
 
-    private static boolean isIndex(byte[] cfId)
+    private ConcurrentHashMap<String, HGIndexAdapter> indexAdapter = new ConcurrentHashMap<>();
+
+    /**
+     * whether a column family is an index
+     * @param cfName
+     * @return
+     */
+    private static boolean isIndex(String  cfName)
     {
-        return new String(cfId, StandardCharsets.UTF_8).startsWith(CF_INDEX_PREFIX);
+        return cfName.startsWith(CF_INDEX_PREFIX);
     }
+
+    private static String stripCFPrefix(String cfName)
+    {
+        if (isIndex(cfName))
+        {
+           return cfName.substring(CF_INDEX_PREFIX.length());
+        }
+        else
+        {
+            throw new IllegalArgumentException(String.format("%s is not an index" +
+                    "column family", cfName));
+        }
+    }
+
 
     /**
      * configure all the options objects needed for starting the database
@@ -914,10 +934,46 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
          */
 
-       var cfName = this.indexCF(name);
-       db.setOptions(columnFamilies.get(cfName), MutableColumnFamilyOptions.builder().);
-        //0.
-        return null;
+        RocksDBIndex<KeyType, ValueType> index = indices.get(name);
+        if (index != null)
+        {
+            return index;
+        }
+
+        var adapter = indexAdapter.get(name);
+        if (adapter == null)
+        {
+            //the column family for the index was not present on startup,
+            // so we need to create a new column family, new index, and
+            // associate them one with the other.
+        }
+        else
+        {
+            /*
+            This is an 'old' index, it is already present in the data base and
+            just needs configuring with the non serialized data
+             */
+            var cfHandle = columnFamilies.get(indexCF(name));
+            if (cfHandle == null)
+            {
+                /*
+                TODO
+                    This means that there was an adapter configured for this index,
+                    but the column family has not been loaded.
+                    this is probably a bug
+                 */
+            }
+            index = new RocksDBIndex<KeyType, ValueType>(
+                    name,
+                    cfHandle,
+                    keyConverter,
+                    valueConverter,
+                    isBidirectional);
+
+
+            adapter.configure(keyComparator, valueComparator);
+        }
+        return index;
     }
 
     @Override

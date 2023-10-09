@@ -15,8 +15,6 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGIndexStats;
 import org.rocksdb.ColumnFamilyHandle;
 
-import java.util.Comparator;
-
 /**
  * An index stored in the
  * @param <Key>
@@ -24,26 +22,20 @@ import java.util.Comparator;
  */
 public class RocksDBIndex<Key, Value> implements HGIndex<Key, Value>
 {
-    private final ByteArrayConverter<Key> keyConverter;
-    private final ByteArrayConverter<Value> valueConverter;
-    private final Comparator<byte[]> keyComparator;
-    private final Comparator<byte[]> valueComparator;
-
+    private ByteArrayConverter<Key> keyConverter;
+    private ByteArrayConverter<Value> valueConverter;
 
     private boolean isInitialized = false;
 
     public RocksDBIndex(
-        String name,
-        ByteArrayConverter<Key> keyConverter,
-        ByteArrayConverter<Value> valueConverter,
-        Comparator<byte[]> keyComparator,
-        Comparator<byte[]> valueComparator,
-        boolean isBidirectional)
+            String name,
+            ColumnFamilyHandle columnFamily,
+            ByteArrayConverter<Key> keyConverter,
+            ByteArrayConverter<Value> valueConverter,
+            boolean isBidirectional)
     {
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
-        this.keyComparator = keyComparator;
-        this.valueComparator = valueComparator;
         /*
         we have multiple values for each key
         we must combine the keys and value
@@ -69,11 +61,6 @@ public class RocksDBIndex<Key, Value> implements HGIndex<Key, Value>
         return null;
     }
 
-    private ColumnFamilyHandle indexCF()
-    {
-        //the comparator is set when we create the column family
-        return null;
-    }
 
     private StorageTransactionRocksDB txn()
     {
@@ -160,4 +147,5 @@ public class RocksDBIndex<Key, Value> implements HGIndex<Key, Value>
     {
         return null;
     }
+
 }
