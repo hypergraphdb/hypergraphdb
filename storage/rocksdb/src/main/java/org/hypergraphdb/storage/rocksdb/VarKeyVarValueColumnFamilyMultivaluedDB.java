@@ -10,11 +10,8 @@
 package org.hypergraphdb.storage.rocksdb;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -47,17 +44,26 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
     */
    public static byte[] firstRocksDBKey(byte[] logicalKey)
    {
-      return makeVirtualRocksDBKey(logicalKey, RangeEdge.Start);
+      return makeVirtualRocksDBKey(logicalKey, RangeEdge.START);
    }
 
    public static byte[] lastRocksDBKey(byte[] logicalKey)
    {
-      return makeVirtualRocksDBKey(logicalKey, RangeEdge.End);
+      return makeVirtualRocksDBKey(logicalKey, RangeEdge.END);
+   }
+   public static byte[] globallyFirstRocksDBKey()
+   {
+      return makeVirtualRocksDBKey(new byte[0], RangeEdge.GLOBAL_END);
+   }
+   public static byte[] globallyLastRocksDBKey()
+   {
+      return makeVirtualRocksDBKey(new byte[0], RangeEdge.GLOBAL_START);
    }
 
    private enum RangeEdge
    {
-      Start((byte)1), End((byte)2);
+      START((byte)0b0000_0001), END((byte)0b0000_0010),
+      GLOBAL_START((byte)0b0000_0011), GLOBAL_END((byte)0b0000_0100);
 
       private final byte flag;
       RangeEdge(byte flag)
@@ -86,7 +92,7 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
    }
 
-   private static byte[] makeRocksDBKey(byte[] logicalKey, byte[] value)
+   public static byte[] makeRocksDBKey(byte[] logicalKey, byte[] value)
    {
 
       byte[] result = new byte[logicalKey.length + value.length + 2];
@@ -152,9 +158,6 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
            Comparator<byte[]> keyComparator,
            Comparator<byte[]> valueComparator)
    {
-      /*
-      We have two direct byte buffers
-       */
       buffer1.rewind();
       buffer2.rewind();
 
@@ -163,6 +166,16 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
       byte isSystem1 = buffer1.get();
       byte isSystem2 = buffer2.get();
+
+      if (isGloballyFirst(isSystem1) || isGloballyLast(isSystem2))
+      {
+         return -1;
+      }
+
+      if (isGloballyLast(isSystem1) || isGloballyFirst(isSystem2))
+      {
+         return 1;
+      }
 
 
       if (isFirst(isSystem1))
@@ -190,6 +203,10 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
       }
 
 
+      /*
+      TODO this is not efficient, we would like to compare the logical
+         key/values byte by byte or ideally with memcmp
+       */
       byte[] keyA = new byte[keysize1];
       byte[] keyB = new byte[keysize2];
 
@@ -215,74 +232,15 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
    }
 
-   public static int compareRocksDBKeys(
-           byte[] a,
-           byte[] b,
-           Comparator<byte[]> keyComparator,
-           Comparator<byte[]> valueComparator)
+
+   private static final boolean isGloballyFirst(byte systemFlag)
    {
-      /*
-      keyComparator and valueComparator are
-      possibly efficient i.e. they could be calling directly memcmp()
-      what can we do in order to ensure the comparison of the
-      complete rocks db key is also efficient?
-
-      copying the parts into separate byte arrays is not efficient.
-      we need to perform the comparison in place
-       */
-      byte[] keyA = extractKey(a);
-      byte[] keyB = extractKey(b);
-
-      /*
-      what is the first value for a given key
-      the first
-       */
-      int keyComparison = keyComparator.compare(keyA, keyB);
-
-      if (keyComparison != 0) return keyComparison;
-      else
-      {
-         /*
-         Handle the case when one of the keys is the 'first' or 'last'
-         key
-
-         TODO this is inefficient
-          */
-         if (isFirst(a))
-         {
-            if (isFirst(b))
-               return 0;
-            else
-               return -1;
-
-         }
-         else if (isLast(a))
-         {
-            if (isLast(b))
-               return 0;
-            else
-               return 1;
-         }
-         else if (isLast(b))
-         {
-               return -1;
-         }
-         else if (isFirst(b))
-         {
-            return 1;
-         }
-         return valueComparator.compare(extractValue(a), extractValue(b));
-      }
-
+      return systemFlag == RangeEdge.GLOBAL_START.flag;
    }
 
-   private static boolean isFirst(byte[] a)
+   public static final boolean isGloballyLast(byte systemFlag)
    {
-      return false;
-   }
-   private static boolean isLast(byte[] a)
-   {
-      return false;
+      return systemFlag == RangeEdge.GLOBAL_END.flag;
    }
 
    private static final boolean isSystem(byte systemFlag)
@@ -291,11 +249,11 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
    }
    private static final boolean isFirst(byte systemFlag)
    {
-      return systemFlag != 0b0000_0001;
+      return systemFlag == RangeEdge.START.flag;
    }
    private static final boolean isLast(byte systemFlag)
    {
-      return systemFlag != 0b0000_0010;
+      return systemFlag == RangeEdge.END.flag;
    }
 
 
@@ -320,18 +278,18 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
       var kv3 = makeRocksDBKey(stringBytes, k3bytes);
       var kv4 = makeRocksDBKey(stringBytes, k4bytes);
 
-      System.out.printf("first - last: %s %n", compareRocksDBKeys(first, last, Arrays::compare, Arrays::compare));
-      System.out.printf("last - first: %s %n", compareRocksDBKeys(last, first, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv1 - first: %s %n", compareRocksDBKeys(kv1, first, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv1 - last : %s %n", compareRocksDBKeys(kv1, last, Arrays::compare, Arrays::compare));
-      System.out.printf(" last - kv1 : %s %n", compareRocksDBKeys(last, kv1, Arrays::compare, Arrays::compare));
-      System.out.printf(" first - kv1 : %s %n", compareRocksDBKeys(first, kv1, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv2 - kv1 : %s %n", compareRocksDBKeys(kv2, kv1, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv1 - kv2 : %s %n", compareRocksDBKeys(kv1, kv2, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv1 - kv3 : %s %n", compareRocksDBKeys(kv1, kv3, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv1 - kv4 : %s %n", compareRocksDBKeys(kv1, kv4, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv2 - kv4 : %s %n", compareRocksDBKeys(kv2, kv4, Arrays::compare, Arrays::compare));
-      System.out.printf(" kv2 - kv3 : %s %n", compareRocksDBKeys(kv2, kv3, Arrays::compare, Arrays::compare));
+//      System.out.printf("first - last: %s %n", compareRocksDBKeys(first, last, Arrays::compare, Arrays::compare));
+//      System.out.printf("last - first: %s %n", compareRocksDBKeys(last, first, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv1 - first: %s %n", compareRocksDBKeys(kv1, first, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv1 - last : %s %n", compareRocksDBKeys(kv1, last, Arrays::compare, Arrays::compare));
+//      System.out.printf(" last - kv1 : %s %n", compareRocksDBKeys(last, kv1, Arrays::compare, Arrays::compare));
+//      System.out.printf(" first - kv1 : %s %n", compareRocksDBKeys(first, kv1, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv2 - kv1 : %s %n", compareRocksDBKeys(kv2, kv1, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv1 - kv2 : %s %n", compareRocksDBKeys(kv1, kv2, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv1 - kv3 : %s %n", compareRocksDBKeys(kv1, kv3, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv1 - kv4 : %s %n", compareRocksDBKeys(kv1, kv4, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv2 - kv4 : %s %n", compareRocksDBKeys(kv2, kv4, Arrays::compare, Arrays::compare));
+//      System.out.printf(" kv2 - kv3 : %s %n", compareRocksDBKeys(kv2, kv3, Arrays::compare, Arrays::compare));
 
    }
 

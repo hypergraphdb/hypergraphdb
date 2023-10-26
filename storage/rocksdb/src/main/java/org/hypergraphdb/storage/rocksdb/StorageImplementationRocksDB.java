@@ -17,14 +17,11 @@ import org.hypergraphdb.util.HGUtils;
 import org.rocksdb.*;
 import org.rocksdb.util.SizeUnit;
 
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
@@ -65,6 +62,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private static final String CF_DATA= "DATA";
     private static final String CF_PRIMITIVE = "PRIMITIVE";
     private static final String CF_INDEX_PREFIX = "INDEX_";
+    private static final String CF_INVERSE_INDEX_PREFIX = "INV_INDEX_";
 
     /*
     TODO move the initialization logic
@@ -146,7 +144,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
             String cfName = new String(cfID, StandardCharsets.UTF_8);
 
-            if (isIndex(cfName))
+            if (isIndex(cfName) || isInverseIndex(cfName))
             {
                 /*
                 we are opening a column family for an index
@@ -160,16 +158,21 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 We need to supply th
 
                  */
-                HGIndexAdapter adapter = new HGIndexAdapter(stripCFPrefix(cfName));
-
-                this.indexAdapter.put(stripCFPrefix(cfName), adapter);
+                var indexName = stripCFPrefix(cfName);
+                if (!this.indexAdapter.contains(indexName))
+                {
+                    HGIndexAdapter adapter = new HGIndexAdapter(stripCFPrefix(cfName));
+                    this.indexAdapter.put(stripCFPrefix(cfName), adapter);
+                }
                 /*
                 The cfd needs a comparator function
                 the comparator needs a reference to the index (which we do not
                 currently have)
+                so we supply the adapter's comparator which now is just
+                scaffolding, and will be hydrated when the user calles getIndex()
                  */
                 cfd = new ColumnFamilyDescriptor(cfID,
-                        new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+                        new ColumnFamilyOptions().setComparator(this.indexAdapter.get(indexName).getComparator()));
 
             }
             else
@@ -202,11 +205,25 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         return cfName.startsWith(CF_INDEX_PREFIX);
     }
 
+    /**
+     * whether a column family is an inverse index
+     * @param cfName
+     * @return
+     */
+    private static boolean isInverseIndex(String  cfName)
+    {
+        return cfName.startsWith(CF_INVERSE_INDEX_PREFIX);
+    }
+
     private static String stripCFPrefix(String cfName)
     {
         if (isIndex(cfName))
         {
            return cfName.substring(CF_INDEX_PREFIX.length());
+        }
+        else if (isInverseIndex(cfName))
+        {
+            return cfName.substring(CF_INVERSE_INDEX_PREFIX.length());
         }
         else
         {
@@ -725,18 +742,35 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(
             HGPersistentHandle handle)
     {
-            return new SingleKeyResultSet<>(
-                    txn(),
-                    columnFamilies.get(CF_INCIDENCE),
-                    handle.toByteArray(),
-                    HGPersistentHandle::toByteArray,
-                    bytes -> hgConfig.getHandleFactory().makeHandle(bytes));
+        return new IteratorResultSet<HGPersistentHandle>(
+                /*
+                TODO ReadOptions, Slice object close
+                 */
+                txn().rocksdbTxn().getIterator(new ReadOptions()
+                        .setIterateLowerBound(
+                                new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray())))
+                        .setIterateUpperBound(
+                                new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()))),
+                columnFamilies.get(CF_INCIDENCE)), false)
+        {
+            @Override
+            protected HGPersistentHandle extractValue()
+            {
+                return hgConfig.getHandleFactory().makeHandle(
+                        FixedKeyFixedValueColumnFamilyMultivaluedDB.extractValue(
+                                this.iterator.key()));
+            }
+
+            @Override
+            protected byte[] toRocksDBKey(HGPersistentHandle value)
+            {
+                return FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(handle.toByteArray(), value.toByteArray());
+            }
+        };
 
     }
-    private void testResultSet()
-    {
 
-    }
+
 
     @Override
     public void removeIncidenceSet(HGPersistentHandle handle)
@@ -777,19 +811,12 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
         }
 
-        new SingleKeyResultSet<>(
-                txn(),
-                columnFamilies.get(CF_INCIDENCE),
-                handle.toByteArray(),
-                HGPersistentHandle::toByteArray,
-                bytes -> hgConfig.getHandleFactory().makeHandle(bytes));
-
     }
 
     @Override
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
     {
-        try (var rs = ((SingleKeyResultSet<HGPersistentHandle>) this.getIncidenceResultSet(
+        try (var rs = ((IteratorResultSet<HGPersistentHandle>) this.getIncidenceResultSet(
                 handle)))
         {
             return rs.count();
@@ -844,8 +871,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 throw new RuntimeException("Not same number of incident links,  " + storedIncidentCount +
                         ", expecting " + incidenceSet.size());
 
-            try (SingleKeyResultSet<HGPersistentHandle> rs =
-                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
+            try (IteratorResultSet<HGPersistentHandle> rs =
+                         (IteratorResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
             {
                 while (rs.hasNext())
                 {
@@ -857,8 +884,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             }
             //test the result set
 
-            try (SingleKeyResultSet<HGPersistentHandle> rs =
-                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
+            try (IteratorResultSet<HGPersistentHandle> rs =
+                         (IteratorResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
             {
                 while (rs.hasNext())
                 {
@@ -869,8 +896,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 }
             }
 
-            try (SingleKeyResultSet<HGPersistentHandle> rs =
-                         (SingleKeyResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
+            try (IteratorResultSet<HGPersistentHandle> rs =
+                         (IteratorResultSet<HGPersistentHandle>) store.getIncidenceResultSet(atom))
             {
                 System.out.println("Going forward");
                 System.out.println("has next is expected to not change the state of the result set");
@@ -913,7 +940,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
             String name)
     {
-        return null;
+        return (RocksDBIndex<KeyType, ValueType>)indices.get(name);
     }
 
     @Override
@@ -934,45 +961,96 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
          */
 
-        RocksDBIndex<KeyType, ValueType> index = indices.get(name);
+        HGIndex<KeyType, ValueType> index = indices.get(name);
         if (index != null)
         {
             return index;
         }
 
+        ColumnFamilyHandle cfHandle = null, inverseCFHandle = null;
         var adapter = indexAdapter.get(name);
         if (adapter == null)
         {
-            //the column family for the index was not present on startup,
-            // so we need to create a new column family, new index, and
-            // associate them one with the other.
+            /*
+             if the adapter is null, the column families were not present
+             at startup, so we need to create them now.
+             TODO
+                what about just one if bidirectional?
+            */
+            adapter = new HGIndexAdapter(name);
+            indexAdapter.put(name, adapter);
+            /*
+            TODO lifecycle of the column family options
+             */
+            ColumnFamilyDescriptor cfd = new ColumnFamilyDescriptor(
+                    indexCF(name).getBytes(StandardCharsets.UTF_8),
+                    new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+            try
+            {
+                cfHandle = db.createColumnFamily(cfd);
+                columnFamilies.put(indexCF(name), cfHandle);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+            if (isBidirectional)
+            {
+                ColumnFamilyDescriptor inverseCFD = new ColumnFamilyDescriptor(
+                        inverseIndexCF(name).getBytes(StandardCharsets.UTF_8),
+                        new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+                try
+                {
+                    inverseCFHandle = db.createColumnFamily(inverseCFD);
+                }
+                catch (RocksDBException e)
+                {
+                    throw new HGException(e);
+                }
+                columnFamilies.put(inverseIndexCF(name), inverseCFHandle);
+            }
         }
         else
         {
-            /*
-            This is an 'old' index, it is already present in the data base and
-            just needs configuring with the non serialized data
-             */
-            var cfHandle = columnFamilies.get(indexCF(name));
-            if (cfHandle == null)
-            {
-                /*
-                TODO
-                    This means that there was an adapter configured for this index,
-                    but the column family has not been loaded.
-                    this is probably a bug
-                 */
-            }
+            cfHandle = columnFamilies.get(indexCF(name));
+            inverseCFHandle = columnFamilies.get(inverseIndexCF(name));
+        }
+
+
+        if (cfHandle == null || (isBidirectional && inverseCFHandle == null))
+        {
+            throw new HGException(String.format("Requesting an index named %s. Its adapter " +
+                    "is present and so its column families should be present ads well." +
+                    "Bidirectional: %s.", name, isBidirectional));
+        }
+        if (isBidirectional)
+        {
+            index = new BidirectionalRocksDBIndex<KeyType, ValueType>(
+                    name,
+                    cfHandle,
+                    inverseCFHandle,
+                    this.store.getTransactionManager(),
+                    keyConverter,
+                    valueConverter,
+                    db);
+        }
+        else
+        {
             index = new RocksDBIndex<KeyType, ValueType>(
                     name,
                     cfHandle,
+                    this.store.getTransactionManager(),
                     keyConverter,
                     valueConverter,
-                    isBidirectional);
-
-
-            adapter.configure(keyComparator, valueComparator);
+                    db);
         }
+
+        /*
+        Register the supplied comparators to the adapter so that the
+        comparators are available for index comparison
+         */
+        adapter.configure(keyComparator, valueComparator);
+
         return index;
     }
 
@@ -1003,6 +1081,16 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private String indexCF(String indexName)
     {
         return CF_INDEX_PREFIX + indexName;
+    }
+
+    /**
+     * The name for the inverse index column family for a given column
+     * @param indexName
+     * @return
+     */
+    private String inverseIndexCF(String indexName)
+    {
+        return CF_INVERSE_INDEX_PREFIX + indexName;
     }
 
     /**

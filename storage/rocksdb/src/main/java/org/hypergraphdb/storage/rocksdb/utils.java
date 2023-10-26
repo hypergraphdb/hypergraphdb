@@ -19,4 +19,10 @@ public class utils
         return res;
     }
 
+    public <T> T cast(Object o)
+    {
+        return (T) o;
+    }
+
+
 }

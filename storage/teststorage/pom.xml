@@ -98,5 +98,40 @@
 			</dependencies>
 		</profile>
 
+		<profile>
+			<id>rocksdb</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<property>
+					<name>rocksdb</name>
+					<value>false</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>2.5</version>
+						<configuration>
+							<argLine>-Dorg.hypergraphdb.storage.HGStoreImplementation=org.hypergraphdb.storage.lmdb.LmdbStorageImplementation</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<dependencies>
+				<dependency>
+					<groupId>org.hypergraphdb</groupId>
+					<artifactId>hglmdb</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+
+				<dependency>
+					<groupId>org.fusesource.lmdbjni</groupId>
+					<artifactId>lmdbjni-linux64</artifactId>
+					<version>${lmdb.version}</version>
+				</dependency>
+			</dependencies>
+		</profile>
 	</profiles>
 </project>

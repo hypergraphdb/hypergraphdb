@@ -9,40 +9,23 @@
 
 package org.hypergraphdb.storage.rocksdb;
 
+import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.util.CountMe;
 import org.rocksdb.*;
 
-import java.util.function.Function;
-import static org.hypergraphdb.storage.rocksdb.FixedKeyFixedValueColumnFamilyMultivaluedDB.*;
-
 /**
- *
- * A result set which represents the values for a single key in a
- * multivalued database
- * The database is assumed to be multivalued. i.e. the values will be stored
- * as part of the RocksDB keys
- * If the database is not
- * @param <T> the type of the elements in this result set. T must have a meaningful
- *           implementation of {@link Object#equals(Object)}
- *
- * TODO cleanup the concepts and the API
- *  what is an IndexResultSet?
- *  We shouldn't be having the need for a key;
- *  The concept of a key belongs to the single key result set
- *  an index result set is a range of values in an ordered index
- *  Single key result set is a range of values for a single key (a single rocksdb key
- *  as opposed to the logical hgdb level key ).
+ * a random access result which is backed by an iterator.
+ * @param <T> the type of the values in this result set
+ * @implSpec When implementing a concrete class which extends this one,
+ *  the following contract should be followed:
+ *      extractValue
  *
  */
-public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
-        CountMe
+public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {
-    private final ReadOptions iteratorReadOptions;
-    public RocksIterator iterator;
-    byte[] logicalKey;
-    Function<T, byte[]> toByteConverter;
-    private final Function<byte[], T> fromByteConverter;
+    protected RocksIterator iterator;
+    private final boolean unique;
 
     /*
     TODO come up with a good way to make this typesafe i.e. this needs to be of type T
@@ -73,17 +56,17 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
     private Object prev;
 
     /**
-    the lookahead is either -1, 0, or 1
-    it serves to designate the position of the cursor in relation to
-    current.
+     the lookahead is either -1, 0, or 1
+     it serves to designate the position of the cursor in relation to
+     current.
 
-    0 means that the cursor points to the same element as the current
-    1 means the cursor is one element ahead of current
-    -1 means the cursor is one element behind current
+     0 means that the cursor points to the same element as the current
+     1 means the cursor is one element ahead of current
+     -1 means the cursor is one element behind current
 
-    we need that in order to position before the start of the
-    result set or after the end of the result set or to inspect the adjacent
-    elements without changing our position
+     we need that in order to position before the start of the
+     result set or after the end of the result set or to inspect the adjacent
+     elements without changing our position
      */
     private int lookahead = 0;
 
@@ -121,49 +104,31 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
      * The result set is associated with a transaction.
      * TODO what happens with the iterator when the transaction is committed/
      *  rolled back?
-     * @param txn
-     * @param columnFamilyHandle
-     * @param logicalKey
-     * @param toByteConverter
-     * @param fromByteConverter
+     *
+     * @param iterator
+     *         The iterator which backs the result set. All the values in the
+     *         iterator are the serializations of the  values in the result
+     *         set.
      */
-    public SingleKeyResultSet(
-            StorageTransactionRocksDB txn,
-            ColumnFamilyHandle columnFamilyHandle,
-            byte[] logicalKey,
-            Function<T, byte[]> toByteConverter,
-            Function<byte[], T> fromByteConverter)
+    public IteratorResultSet(RocksIterator iterator)
     {
-
-        var first = new Slice(
-                FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(logicalKey));
-        var last = new Slice(
-                FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(logicalKey));
-
-        this.iteratorReadOptions = new ReadOptions().setIterateLowerBound(first).setIterateUpperBound(last);
-
-        this.iterator = txn.rocksdbTxn().getIterator(
-                this.iteratorReadOptions,
-                columnFamilyHandle);
+        this(iterator, false);
+    }
+    public IteratorResultSet(RocksIterator iterator, boolean unique)
+    {
+        this.iterator = iterator;
+        this.unique = unique;
 
         iterator.seekToFirst();
-        this.logicalKey = logicalKey;
-        this.toByteConverter = toByteConverter;
-        this.fromByteConverter = fromByteConverter;
 
         if (!iterator.isValid())
         {
             this.checkStatus();
-            /*
-            No values with that key, the result set is empty.
-             */
             this.next = this.prev = this.current = OUTSIDE;
             this.lookahead = 0;
         }
         else
         {
-//            this.prev = this.next = UNKNOWN;
-//            this.current = fromByteConverter.apply(extractValue(iterator.key()));
             goBeforeFirst();
         }
     }
@@ -218,12 +183,18 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
      * @return GotoResult.nothing if the result set is empty or it is not
      *  empty, but it does not contain the provided value ()
      *
+     * GOTO is
      */
     @Override
     public GotoResult goTo(T value, boolean exactMatch)
     {
-        byte[] valueBytes = toByteConverter.apply(value);
-        byte[] keyvalue = makeRocksDBKey(this.logicalKey, valueBytes);
+//        byte[] valueBytes = toByteConverter.apply(value);
+        /*
+        TODO
+            is GOTO necessary for all subclasses?
+            in order to have the goto we need a way to
+         */
+        byte[] keyvalue = this.toRocksDBKey(value);
 
         /*
          ensure the result set is not empty.
@@ -266,13 +237,14 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
             to exist because we checked whether the iterator is empty.
              */
             iterator.seekToFirst();
-            current = fromByteConverter.apply(extractValue(keyvalue));
+            current = this.extractValue();
             lookahead = 0;
             prev = OUTSIDE;
             next = UNKNOWN;
             return GotoResult.nothing;
         }
     }
+
 
     /**
      * make the result set 'empty'
@@ -373,7 +345,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (iterator.isValid())
                 {
                     lookahead = -1;
-                    prev = fromByteConverter.apply(extractValue(iterator.key()));
+                    prev = this.extractValue();
                     return true;
                 }
                 else
@@ -409,7 +381,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (iterator.isValid())
                 {
                     lookahead = -1;
-                    prev = fromByteConverter.apply(extractValue(iterator.key()));
+                    prev = this.extractValue();
                     return true;
                 }
                 else
@@ -470,7 +442,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (this.iterator.isValid())
                 {
                     this.next = this.current;
-                    this.current = fromByteConverter.apply(extractValue(this.iterator.key()));
+                    this.current = this.extractValue();
                     //lookahead is still 0;
                     this.prev = UNKNOWN;
                 }
@@ -493,7 +465,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (this.iterator.isValid())
                 {
                     this.next = this.current;
-                    current = fromByteConverter.apply(extractValue(this.iterator.key()));
+                    current = this.extractValue();
                     this.lookahead = 0;
                     this.prev= UNKNOWN;
                 }
@@ -516,7 +488,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
         }
         catch (RocksDBException e)
         {
-            throw new RuntimeException(e);
+            throw new HGException(e);
         }
     }
     @Override
@@ -554,7 +526,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (iterator.isValid())
                 {
                     lookahead = 1;
-                    next = fromByteConverter.apply(extractValue(iterator.key()));
+                    next = this.extractValue();
                     return true;
                 }
                 else
@@ -591,7 +563,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (iterator.isValid())
                 {
                     lookahead = 1;
-                    next = fromByteConverter.apply(extractValue(iterator.key()));
+                    next = this.extractValue();
                     return true;
                 }
                 else
@@ -653,7 +625,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (this.iterator.isValid())
                 {
                     this.prev = this.current;
-                    this.current = fromByteConverter.apply(extractValue(this.iterator.key()));
+                    this.current = this.extractValue();
                     //lookahead is still 0;
                     next = UNKNOWN;
                 }
@@ -678,7 +650,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
                 if (this.iterator.isValid())
                 {
                     prev = current;
-                    current = fromByteConverter.apply(extractValue(this.iterator.key()));
+                    current = this.extractValue();
                     this.lookahead = 0;
                     next = UNKNOWN;
                 }
@@ -696,7 +668,6 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
     @Override
     public void close()
     {
-        this.iteratorReadOptions.close();
         this.iterator.close();
     }
 
@@ -760,7 +731,7 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
     {
         if (iterator.isValid())
         {
-            return  fromByteConverter.apply(extractValue(iterator.key()));
+            return  this.extractValue();
         }
         else
         {
@@ -768,6 +739,118 @@ public class SingleKeyResultSet<T> implements HGRandomAccessResult<T>,
             return null;
         }
     }
+
+    /**
+     * Extract the value at the current position of the result set
+     * @return the result set value which is currently pointed to  by the iterator
+     * @throws HGException if the iterator is not valid
+     */
+    protected abstract T extractValue();
+
+    /**
+     * convert a result set value to the rocksDB key. Note that this is not
+     * simply the serialization of the value, but the rocksdb key which
+     * holds the given value.
+     * This is only possible if the result set itself allows for the conversion
+     * e.g. a result set for all the values of a given key will allow for
+     * creation of the rocksdb key by combining the key and value in the
+     * correct way
+     * @param value
+     * @return the rocksdb key which corresponds to the given value
+     * @throws HGException
+     * @throws UnsupportedOperationException if the specific result set
+     * does not allow conversion from a value back to rocksdb key. This
+     * may be necessary when the values in the result set do not contain
+     * enough information to construct a rocks db key -- e.g. if the result
+     * set contains only values
+     */
+    protected abstract byte[] toRocksDBKey(T value);
+
+
+
+     /*
+     The result set is backed by an iterator.
+       It should be possible to reconstruct the entire key from a value.
+      How?
+                    The methods returning HGRandomAccessResult<V> are:
+
+                    1. storage.getIncidentResultSet
+                       all the values for a single key in the incident column family
+                       the incidence column family is fixed key fixed value multi
+                       i.e. all the values are stored within the RocksDB key
+
+                       how is the iterator prepared? the iterator limits are
+                       the first and last record with that logical key
+
+                       goto()
+                       toRocksDBKey() (which is used by goto()) FixedKeyFixedValue.makeRocksDBKey
+
+                       extractValue() FKFV.extractValue
+
+                   2. index.scanKeys -- all the keys in the index cf
+                      the index cf is a var key var value multi db
+                      a result set containing all the keys.
+
+                      The iterator goes over the entire column family
+                      and returns all the logical keys.
+
+                       how is the iterator prepared? the iterator is not limited.
+                       It goes over all the records in the column family.
+
+                       goto()
+                       toRocksDBKey() (which is used by goto())
+                       We have a logical key in the index. we want to
+                       position the result set at that key. We need to
+                       set the iterator at VKVV.firstRocksDBKey
+
+                       extractValue() -- VKVV.extractKey
+
+                   3. index.scanValues -- all the values in the index cf
+                      the index cf is a var key var value multi db
+
+                       how is the iterator prepared? the iterator is not limited.
+                       It goes over all the records in the column family.
+
+                       goto()
+                       toRocksDBKey() (which is used by goto())
+                       we have no way to make this
+
+                       extractValue() -- VKVV.extractValue
+
+                   4. index.find -- all the values for a specific key
+                      the index cf is a var key var value multi db
+
+                       how is the iterator prepared? the iterator is limited to the first and last value with the given key.
+
+                       goto()
+                       toRocksDBKey() (which is used by goto())
+                       VKVV.makeRocksDBKey.
+
+                       extractValue() -- VKVV.extractValue
+
+                      The logical key
+
+                      The ResultSet needs a supplier for:
+                      1. extractValue
+                      2. toRocksDBKey
+                      3. backingIterator
+
+        */
+    /**
+     * Transform a value to an entire rocksDB key.
+     * @param value the value to convert to a rocks db key.
+     *
+     *
+     *
+     *
+     *
+     */
+    /*
+    Behaviour to customize
+    1. extract key/extract value
+    2.
+     */
+
 
 
 }
