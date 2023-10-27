@@ -8,19 +8,14 @@
 package org.hypergraphdb.storage.lmdb;
 
 import java.util.NoSuchElementException;
+import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.CountMe;
 import org.hypergraphdb.util.HGUtils;
-
-import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
-
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.LMDBException;
-import org.fusesource.lmdbjni.OperationStatus;
+import org.lmdbjava.SeekOp;
 
 /**
  * <p>
@@ -32,14 +27,15 @@ import org.fusesource.lmdbjni.OperationStatus;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, CountMe
+public abstract class IndexResultSet<BufferType, T> implements HGRandomAccessResult<T>, CountMe
 {        
-		private static final Object UNKNOWN = new Object();
-    protected LmdbTxCursor cursor;
+	private static final Object UNKNOWN = new Object();
+    protected LMDBTxCursor<BufferType> cursor;
     protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;    
-    protected DatabaseEntry key;        
-    protected DatabaseEntry data;
+    protected BufferType key;        
+    protected BufferType data;
     protected ByteArrayConverter<T> converter;
+    protected HGBufferProxyLMDB<BufferType> hgBufferProxy;
     protected int lookahead = 0;
     
     protected final void closeNoException()
@@ -53,65 +49,26 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
             throw new HGException(
                     "DefaultIndexImpl.IndexResultSet: attempt to perform an operation on a closed or invalid cursor.");
     }
-    
-    /**
-     * 
-     * <p>
-     * Copy <code>data</code> into the <code>entry</code>. Adjust <code>entry</code>'s
-     * byte buffer if needed.
-     * </p>
-     *
-     * @param dbEntry
-     * @param data
-     */
-    protected void assignData(DatabaseEntry dbEntry, byte [] data)
-    {
-    	byte [] dest = dbEntry.getData();
-    	if (dest == null || dest.length != data.length)
-    	{
-    		dest = new byte[data.length];
-    		dbEntry.setData(dest);
-    	}
-    	System.arraycopy(data, 0, dest, 0, data.length);
-//    	System.out.println(dbEntry.getData());
-    }
-    
+        
     protected final void moveNext()
     {
-//        checkCursor();
         prev = current;
         current = next;
         next = UNKNOWN;
         lookahead--;
-/*        while (true)
-        {
-        	next = advance();
-        	if (next == null)
-        		break;
-        	if (++lookahead == 1)
-        		break;
-        } */
     }
     
     protected final void movePrev()
     {
-//        checkCursor();
         next = current;
         current = prev;
         prev = UNKNOWN;
         lookahead++;
-/*        while (true)
-        {
-        	prev = back();
-        	if (prev == null)
-        		break;
-        	if (--lookahead == -1)
-        		break;
-        } */
     }
     
     protected abstract T advance();
     protected abstract T back();
+    protected abstract T currentFromCursor();
     
     /**
      * <p>Construct an empty result set.</p>
@@ -120,30 +77,29 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     {
     }
     
-//    static int idcounter = 0;    
-//    int id = 0;
-    
     /**
      * <p>Construct a result set matching a specific key.</p>
      * 
      * @param cursor
-     * @param key
+     * @param key The key of this result set. <b>IMPORTANT: Please note that we are not making a defensive copy
+     * of this key, we assume the content will not change.</b>
      */
-    public IndexResultSet(LmdbTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
+    public IndexResultSet(LMDBTxCursor<BufferType> cursor, 
+    					  BufferType key, 
+    					  ByteArrayConverter<T> converter,
+    					  HGBufferProxyLMDB<BufferType> hgBufferProxy)
     {
     	checkArgNotNull(cursor, "cursor");
     	
-      this.converter = converter;
-      this.cursor = cursor;
-      this.key = new DatabaseEntry();
-      this.data = new DatabaseEntry();
-      if (keyIn != null)
-      	assignData(this.key, keyIn.getData());
-
-      try
-	    {
-	        cursor.cursor().get(CursorOp.GET_CURRENT, key, data);
-	        next = converter.fromByteArray(data.getData(), 0, data.getData().length);
+    	this.converter = converter;
+    	this.hgBufferProxy = hgBufferProxy;
+    	this.cursor = cursor;
+    	this.key = key;
+    	this.data = cursor.cursor().val();
+    	
+    	try
+	    {    		
+	        next = this.currentFromCursor();
 	        lookahead = 1;
 	    }
 	    catch (Throwable t)
@@ -154,22 +110,22 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 
     protected void positionToCurrent(byte [] data)
     {
-    		current = converter.fromByteArray(data, 0, data.length);
+    	current = converter.fromByteArray(data, 0, data.length);
        	lookahead = 0;
         prev = next = UNKNOWN;
     }
     
     public void goBeforeFirst()
     {
-    		checkCursor();
+    	checkCursor();
         try
         {
-        		OperationStatus status = cursor.cursor().get(CursorOp.FIRST, key, data);
-        		if (status == OperationStatus.SUCCESS)
+    		if (cursor.cursor().get(key, data, SeekOp.MDB_FIRST))
             {
                 current = UNKNOWN;
                 prev = null;
-                next = converter.fromByteArray(data.getData(), 0, data.getData().length);
+                this.data = cursor.cursor().val();
+                next = this.currentFromCursor();
                 lookahead = 1;
             }
             else
@@ -188,15 +144,15 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     
     public void goAfterLast()
     {
-    		checkCursor();
+    	checkCursor();
         try
         {
-         		OperationStatus status = cursor.cursor().get(CursorOp.LAST, key, data);
-         		if (status == OperationStatus.SUCCESS)
+     		if (cursor.cursor().get(key, data, SeekOp.MDB_LAST))
             {
                 current = UNKNOWN;
                 next = null;
-                prev = converter.fromByteArray(data.getData(), 0, data.getData().length);
+                this.data = cursor.cursor().val();
+                prev = this.currentFromCursor();
                 lookahead = -1;
             }
             else
@@ -217,28 +173,26 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     {
   		checkCursor();
     	byte [] B = converter.toByteArray(value);
-    	assignData(data, B);
+    	this.data = this.hgBufferProxy.fromBytes(B);
     	try
     	{
-    	  OperationStatus status = null;
     		if (exactMatch)
     		{
-    			status = cursor.cursor().get(CursorOp.GET_BOTH, key, data);
-    			if (status == OperationStatus.SUCCESS)
+    			if (cursor.cursor().get(key, data, SeekOp.MDB_GET_BOTH))
     			{
-    				positionToCurrent(data.getData());
+    				positionToCurrent(this.hgBufferProxy.toBytes(data));
     				return GotoResult.found; 
     			}
     			else
     				return GotoResult.nothing;
     		}
     		else 
-    		{
-    			status = cursor.cursor().get(CursorOp.GET_BOTH_RANGE, key, data);
-    			if (status == OperationStatus.SUCCESS)
+    		{    			
+    			if (cursor.cursor().get(key, data, SeekOp.MDB_GET_BOTH_RANGE))
     			{
-    				GotoResult result = HGUtils.eq(B, data.getData()) ? GotoResult.found : GotoResult.close; 
-    				positionToCurrent(data.getData());
+    				byte [] read = this.hgBufferProxy.toBytes(data);
+    				GotoResult result = HGUtils.eq(B, read) ? GotoResult.found : GotoResult.close; 
+    				positionToCurrent(read);
     				return result;
     			}    				
     			else
@@ -342,7 +296,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
     	{
     		return (int)cursor.cursor().count();
     	}
-    	catch (LMDBException ex)
+    	catch (Exception ex)
     	{
     		throw new HGException(ex);
     	}

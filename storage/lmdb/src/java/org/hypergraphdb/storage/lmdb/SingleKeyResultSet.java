@@ -9,11 +9,7 @@ package org.hypergraphdb.storage.lmdb;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.storage.lmdb.IndexResultSet;
-
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.OperationStatus;
+import org.lmdbjava.SeekOp;
 
 /**
  * <p>
@@ -23,35 +19,33 @@ import org.fusesource.lmdbjni.OperationStatus;
  * 
  * @author Borislav Iordanov
  */
-public class SingleKeyResultSet<T> extends IndexResultSet<T>
+public class SingleKeyResultSet<BufferType, T> extends IndexResultSet<BufferType, T>
 {
-	private boolean ordered = false;
+//	private boolean ordered = false;
 
-	public SingleKeyResultSet(LmdbTxCursor cursor, DatabaseEntry key,
-			ByteArrayConverter<T> converter)
+	public SingleKeyResultSet(LMDBTxCursor<BufferType> cursor, 
+							  BufferType key,
+							  ByteArrayConverter<T> converter,
+	    					  HGBufferProxyLMDB<BufferType> hgBufferProxy)
 	{
-		super(cursor, key, converter);
-		try
-		{
-			ordered = cursor.cursor().getDatabase()
-					.getConfig(cursor.txn().getDbTransaction()).isDupSort();
-		}
-		catch (Throwable t)
-		{
-			throw new HGException(t);
-		}
+		super(cursor, key, converter, hgBufferProxy);
 	}
 
+    protected T currentFromCursor()
+    {
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
+        return converter.fromByteArray(data, 0, data.length);       
+    }
+    
 	protected T advance()
 	{
 		checkCursor();
 		try
 		{
-			OperationStatus status = cursor.cursor().get(CursorOp.NEXT_DUP, key,
-					data);
-			if (status == OperationStatus.SUCCESS)
+			if (cursor.cursor().get(key, data, SeekOp.MDB_NEXT_DUP))			
 			{
-				return converter.fromByteArray(data.getData(), 0, data.getData().length);
+			    this.data = cursor.cursor().val();
+				return this.currentFromCursor();
 			}
 			else
 				return null;
@@ -68,10 +62,11 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T>
 		checkCursor();
 		try
 		{
-			OperationStatus status = cursor.cursor().get(CursorOp.PREV_DUP, key,
-					data);
-			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData(), 0, data.getData().length);
+			if (cursor.cursor().get(key, data, SeekOp.MDB_PREV_DUP))
+			{
+			    this.data = cursor.cursor().val();
+			    return this.currentFromCursor();
+			}
 			else
 				return null;
 		}
@@ -84,6 +79,6 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T>
 
 	public boolean isOrdered()
 	{
-		return ordered;
+		return true;
 	}
 }

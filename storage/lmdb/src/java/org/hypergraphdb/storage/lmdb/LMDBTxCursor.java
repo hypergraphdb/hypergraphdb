@@ -3,35 +3,34 @@
  * software. For permitted uses, licensing options and redistribution, please see  
  * the LicensingInformation file at the root level of the distribution.  
  * 
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+ * Copyright (c) Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.storage.lmdb;
 
-import org.hypergraphdb.HGException;
+//import org.hypergraphdb.HGException;
 import org.hypergraphdb.util.CloseMe;
+import org.lmdbjava.Cursor;
 
-import org.fusesource.lmdbjni.Cursor;
-import org.fusesource.lmdbjni.LMDBException;
 
-public final class LmdbTxCursor implements CloseMe
+public final class LMDBTxCursor<BufferType> implements CloseMe
 {
-	private TransactionLmdbImpl tx;
-	private Cursor cursor = null;
+	private StorageTransactionLMDB<BufferType> tx;
+	private Cursor<BufferType> cursor = null;
 	private boolean open = true;
 	
-	public LmdbTxCursor(Cursor cursor, TransactionLmdbImpl tx)
+	public LMDBTxCursor(Cursor<BufferType> cursor, StorageTransactionLMDB<BufferType> tx)
 	{
 		this.cursor = cursor;
 		this.tx = tx;
 		open = cursor != null;
 	}
 
-	public Cursor cursor()
+	public Cursor<BufferType> cursor()
 	{
 		return cursor;
 	}
 	
-  protected TransactionLmdbImpl txn()
+  protected StorageTransactionLMDB<BufferType> txn()
 	{
 		return tx;
 	}
@@ -49,16 +48,16 @@ public final class LmdbTxCursor implements CloseMe
 		{
 			cursor.close();
 		}
-		catch (LMDBException ex)
-		{
-			throw new HGException(ex);
-		}
+//		catch (Exception ex)
+//		{
+//			throw new HGException(ex);
+//		}
 		finally
 		{
 			open = false;
 			cursor = null;
-			if (tx != null)
-				tx.removeCursor(this);
+//			if (tx != null)
+//				tx.removeCursor(this);
 		}		
 	}
 }

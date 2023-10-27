@@ -235,7 +235,7 @@ class StorageImplementationTests extends StorageTestBase {
     }})
   }  
 
-  it should "throw an exception if attempted usage after a close" in {
+  it should "throw an exception if attempted usage after a close" taggedAs(ToDebug) in {
     tx(store.containsData(newhandle()))
     store.close()
     assertThrows[RuntimeException] { store.store(newhandle(), randomBytes(10)) }

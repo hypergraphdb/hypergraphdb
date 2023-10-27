@@ -18,6 +18,7 @@
     </dependency>
   </dependencies>
   <modules>
+    <module>lmdb</module>
 	<module>bdb-je</module>
     <module>rocksdb</module>
   </modules>

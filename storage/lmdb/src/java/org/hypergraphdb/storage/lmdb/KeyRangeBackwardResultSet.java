@@ -7,27 +7,32 @@
  */
 package org.hypergraphdb.storage.lmdb;
 
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.OperationStatus;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
+import org.lmdbjava.SeekOp;
 
-class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
+class KeyRangeBackwardResultSet<BufferType, T> extends IndexResultSet<BufferType, T>
 {    
-    private DatabaseEntry initialKey = null;
+    private byte [] initialKey = null;
+    
+    protected T currentFromCursor()
+    {
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().val());
+        return converter.fromByteArray(data, 0, data.length);       
+    }
     
     protected T advance()
     {
-    		checkCursor();
+    	checkCursor();
         try
         {
-        		OperationStatus status = cursor.cursor().get(CursorOp.PREV, key, data);
-            if (status == OperationStatus.SUCCESS)
-              return converter.fromByteArray(data.getData(), 0, data.getData().length);
-            else
-                return null;
+        	if (cursor.cursor().seek(SeekOp.MDB_PREV))
+        	{
+        		return this.currentFromCursor();
+        	}
+        	else
+        		return null;
         }
         catch (Throwable t)
         {
@@ -38,15 +43,18 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
     
     protected T back()
     {
-        if (HGUtils.eq(key.getData(), initialKey.getData()))
-            return null;        
+    	SeekOp seekop = SeekOp.MDB_NEXT;
+        if (HGUtils.eq(this.hgBufferProxy.toBytes(this.key), initialKey))
+            seekop = SeekOp.MDB_NEXT_DUP;
         try
         {
-            OperationStatus status = cursor.cursor().get(CursorOp.NEXT, key, data);
-            if (status == OperationStatus.SUCCESS)
-                return converter.fromByteArray(data.getData(), 0, data.getData().length);
-            else
-                return null;
+    		checkCursor();
+        	if (cursor.cursor().seek(seekop))
+        	{
+        	    return this.currentFromCursor();
+        	}
+        	else
+        		return null;
         }
         catch (Throwable t)
         {
@@ -55,11 +63,14 @@ class KeyRangeBackwardResultSet<T> extends IndexResultSet<T>
         }                        
     }
 
-    public KeyRangeBackwardResultSet(LmdbTxCursor cursor, DatabaseEntry key,  ByteArrayConverter<T> converter)
+    public KeyRangeBackwardResultSet(LMDBTxCursor<BufferType> cursor, 
+									 BufferType key, 
+									 ByteArrayConverter<T> converter,
+									 HGBufferProxyLMDB<BufferType> hgBufferProxy)
     {
-        super(cursor, key, converter);     
-        initialKey = new DatabaseEntry();
-        assignData(initialKey, key.getData());                
+    	super(cursor, key, converter, hgBufferProxy);    	
+    	initialKey = this.hgBufferProxy.toBytes(key);
+    	System.out.println("Key range back on " + initialKey + " at " + next);
     }
     
     public boolean isOrdered()
