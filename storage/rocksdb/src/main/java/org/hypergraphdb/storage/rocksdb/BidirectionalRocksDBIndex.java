@@ -29,82 +29,120 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
             HGTransactionManager transactionManager,
             ByteArrayConverter<IndexKey> keyConverter,
             ByteArrayConverter<IndexValue> valueConverter,
-            TransactionDB db)
+            TransactionDB db,
+            StorageImplementationRocksDB store)
     {
         super(name, columnFamily, transactionManager, keyConverter,
-                valueConverter, db);
+                valueConverter, db, store);
         this.inverseCFHandle = inverseCFHandle;
     }
 
     @Override
     public void addEntry(IndexKey key, IndexValue value)
     {
+        checkOpen();
+        super.addEntry(key, value);
         byte[] keyBytes = this.keyConverter.toByteArray(key);
         byte[] valueBytes = this.valueConverter.toByteArray(value);
         /*
         the key is the value, the value is the key
          */
         byte[] rocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(valueBytes, keyBytes);
-        try
-        {
-            txn().rocksdbTxn().put(inverseCFHandle, rocksDBKey, new byte[0]);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        this.store.ensureTransaction(tx -> {
+            try
+            {
+               tx.put(inverseCFHandle, rocksDBKey, new byte[0]);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
     @Override
     public HGRandomAccessResult<IndexKey> findByValue(IndexValue value)
     {
-        return new IteratorResultSet<IndexKey>(
-                txn().rocksdbTxn().getIterator(new ReadOptions()
-                                .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value))))
-                                .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)))),
-                        inverseCFHandle), false)
-        {
-            @Override
-            protected IndexKey extractValue()
+        checkOpen();
+        return this.store.ensureTransaction(tx -> {
+            return new IteratorResultSet<IndexKey>(
+                    tx.getIterator(new ReadOptions()
+                                    .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value))))
+                                    .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)))),
+                            inverseCFHandle), false)
             {
-                var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-                return keyConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-            }
+                @Override
+                protected IndexKey extractValue()
+                {
+                    var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
+                    return keyConverter.fromByteArray(valueBytes, 0, valueBytes.length);
+                }
 
-            @Override
-            protected byte[] toRocksDBKey(IndexKey key)
-            {
+                @Override
+                protected byte[] toRocksDBKey(IndexKey key)
+                {
                 /*
                 Intentionally reversed, the values in the result set are
                 values in the column family, but keys from the original
                 index pov
                  */
-                return VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(
-                        valueConverter.toByteArray(value),
-                        keyConverter.toByteArray(key));
-            }
-        };
+                    return VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(
+                            valueConverter.toByteArray(value),
+                            keyConverter.toByteArray(key));
+                }
+            };
+
+        });
     }
 
     @Override
     public IndexKey findFirstByValue(IndexValue value)
     {
+        checkOpen();
+
         byte[] valueBytes = this.valueConverter.toByteArray(value);
-        byte[] rocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueBytes);
-        try
-        {
-            byte[] bytes = txn().rocksdbTxn().get(inverseCFHandle, new ReadOptions(), rocksDBKey);
-            return keyConverter.fromByteArray(bytes, 0, bytes.length);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        byte[] firstRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueBytes);
+        byte[] lastRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueBytes);
+
+        return this.store.ensureTransaction(tx -> {
+            var iterator = tx.getIterator(
+                    new ReadOptions()
+                            .setIterateLowerBound(new Slice(firstRocksDBKey))
+                            .setIterateUpperBound(new Slice(lastRocksDBKey)),
+                    inverseCFHandle);
+
+            iterator.seekToFirst();
+
+            if (iterator.isValid())
+            {
+                byte[] bytes = iterator.key();
+                var keyBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(bytes);
+                return keyConverter.fromByteArray(keyBytes, 0, keyBytes.length);
+
+            }
+            else
+            {
+                try
+                {
+                    iterator.status();
+                }
+                catch (RocksDBException e)
+                {
+                    throw new HGException(e);
+                }
+            /*
+            If the iterator is not valid and the
+             */
+                return null;
+            }
+
+        });
     }
 
     @Override
     public long countKeys(IndexValue value)
     {
+        checkOpen();
         try (var rs = (IteratorResultSet<IndexKey>)findByValue(value) )
         {
             return rs.count();

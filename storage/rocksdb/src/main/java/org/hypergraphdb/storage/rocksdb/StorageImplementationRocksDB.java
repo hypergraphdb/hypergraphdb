@@ -21,7 +21,10 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
@@ -70,6 +73,14 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         the map is reset on Storage restart (startup())
      */
     private ConcurrentHashMap<String, ColumnFamilyHandle> columnFamilies;
+    private boolean started = false;
+
+
+    private final void checkStarted()
+    {
+        if (!started)
+            throw new HGException("The storage layer is not started");
+    }
 
     /*
 
@@ -193,7 +204,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     private ConcurrentHashMap<String, RocksDBIndex> indices = new ConcurrentHashMap<>();
 
-    private ConcurrentHashMap<String, HGIndexAdapter> indexAdapter = new ConcurrentHashMap<>();
+    /*
+    TODO make private
+     */
+    public ConcurrentHashMap<String, HGIndexAdapter> indexAdapter = new ConcurrentHashMap<>();
 
     /**
      * whether a column family is an index
@@ -286,6 +300,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void shutdown()
     {
+        this.started = false;
         this.options.close();
         this.dbOptions.close();
         this.txDBoptions.close();
@@ -305,6 +320,13 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void startup(HGStore store, HGConfiguration configuration)
     {
+        /*
+        A single storage must be started only once. What are the actions whic
+        should not be performed more than once?
+        TODO when do we set the flag
+         */
+        this.started = true;
+
         this.store = store;
         this.hgConfig = configuration;
         this.handleSize = configuration.getHandleFactory().nullHandle().toByteArray().length;
@@ -490,12 +512,24 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                      */
                     final TransactionOptions txnOptions = new TransactionOptions().setSetSnapshot(true);
                     final WriteOptions writeOptions = new WriteOptions();
-//                    var parentTxn = ((StorageTransactionRocksDB)parent.getStorageTransaction()).txn();
+                    Transaction parentTxn = null;
+                    if (parent != null)
+                    {
+                        parentTxn = ((StorageTransactionRocksDB)parent.getStorageTransaction()).rocksdbTxn();
+                    }
                     /*
                     TODO do we have the correct semantics for the parent transaction?
                     TODO in RocksDB the transaction is created in the
                      */
-                    final Transaction txn = db.beginTransaction(writeOptions, txnOptions);
+                    Transaction txn;
+                    if (parentTxn == null)
+                    {
+                        txn = db.beginTransaction(writeOptions, txnOptions);
+                    }
+                    else
+                    {
+                        txn = db.beginTransaction(writeOptions, txnOptions, parentTxn);
+                    }
                     /*
                     TODO is this the place to take a snapshot?
                         What should the repeatable read logic be?
@@ -522,6 +556,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      */
     private StorageTransactionRocksDB txn()
     {
+        checkStarted();
         HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
         /*
         TODO
@@ -548,16 +583,20 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             HGPersistentHandle handle,
             HGPersistentHandle[] link)
     {
+        checkStarted();
         var key = handle.toByteArray();
         var value = fromHandleArray(link);
-        try
-        {
-            txn().rocksdbTxn().put(columnFamilies.get(CF_DATA), key, value);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        this.ensureTransaction(tx -> {
+           try
+           {
+               tx.put(columnFamilies.get(CF_DATA), key, value);
+               return null;
+           }
+           catch (RocksDBException e)
+           {
+               throw new HGException(e);
+           }
+        });
 
         return handle;
 
@@ -568,139 +607,141 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             HGPersistentHandle handle,
             byte[] data)
     {
-        try
+        checkStarted();
+        this.ensureTransaction(tx ->
         {
-            txn().rocksdbTxn().put(
-                    columnFamilies.get(CF_PRIMITIVE),
-                    handle.toByteArray(),
-                    data);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+            try
+            {
+                tx.put(
+                        columnFamilies.get(CF_PRIMITIVE),
+                        handle.toByteArray(),
+                        data);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+
+        });
         return handle;
     }
 
     @Override
     public byte[] getData(HGPersistentHandle handle)
     {
-        try
-        {
-            var res = txn().rocksdbTxn().get(
-                    columnFamilies.get(CF_PRIMITIVE),
-                    readOptions,
-                    handle.toByteArray());
+        checkStarted();
+        return ensureTransaction(tx -> {
+            try
+            {
 
-//            var stats = this.db.getApproximateMemTableStats(new Range(
-//                    new Slice(LogicalDatabase.primitive().firstGlobalKeyInDB()),
-//                    new Slice(LogicalDatabase.primitive().lastGlobalKeyInDB())));
-//
-//            long size = this.db.getApproximateSizes(List.of(new Range(
-//                    new Slice(LogicalDatabase.primitive().firstGlobalKeyInDB()),
-//                    new Slice(LogicalDatabase.primitive().lastGlobalKeyInDB()))),
-//                    SizeApproximationFlag.INCLUDE_FILES, SizeApproximationFlag.INCLUDE_MEMTABLES)[0];
+                var res = tx.get(
+                        columnFamilies.get(CF_PRIMITIVE),
+                        readOptions,
+                        handle.toByteArray());
 
-//            System.out.println("memtable count: " + stats.count);
-//            System.out.println("appr sizes: " + size/33.0);
-
-//            try (var ro = new ReadOptions()
-//                    .setIterateLowerBound(new Slice(LogicalDatabase.primitive().firstGlobalKeyInDB()))
-//                    .setIterateUpperBound(new Slice(LogicalDatabase.primitive().lastGlobalKeyInDB())))
-//            {
-//                var iterator = txn().rocksdbTxn().getIterator(ro);
-//                iterator.seek(LogicalDatabase.primitive().scopeKey(handle.toByteArray(), null));
-////                System.out.println(String.format( "value from iterator %s", new String(iterator.value())));
-//
-//
-//            }
-
-//            datadb.getA
-            return res;
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+                return res;
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
     @Override
     public HGPersistentHandle[] getLink(HGPersistentHandle handle)
     {
-        try
-        {
-            byte[] bytes = txn().rocksdbTxn().get(columnFamilies.get(CF_DATA), readOptions, handle.toByteArray());
-            return toHandleArray(bytes);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        return ensureTransaction(tx -> {
+            try
+            {
+                byte[] bytes = tx.get(columnFamilies.get(CF_DATA), readOptions, handle.toByteArray());
+
+                return bytes == null ? null : toHandleArray(bytes);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
 
     @Override
     public void removeData(HGPersistentHandle handle)
     {
-        try
-        {
-            txn().rocksdbTxn().delete(
-                    columnFamilies.get(CF_PRIMITIVE),
-                    handle.toByteArray());
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        ensureTransaction(tx -> {
+            try
+            {
+                tx.delete(
+                        columnFamilies.get(CF_PRIMITIVE),
+                        handle.toByteArray());
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+
+        });
     }
 
 
     @Override
     public void removeLink(HGPersistentHandle handle)
     {
-        try
-        {
-            txn().rocksdbTxn().delete(
-                    columnFamilies.get(CF_DATA),
-                    handle.toByteArray());
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        ensureTransaction(tx -> {
+            try
+            {
+                tx.delete(
+                        columnFamilies.get(CF_DATA),
+                        handle.toByteArray());
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
 
     @Override
     public boolean containsData(HGPersistentHandle handle)
     {
-        try
-        {
-            return txn().rocksdbTxn().get(
-                    columnFamilies.get(CF_PRIMITIVE),
-                    readOptions,
-                    handle.toByteArray()) != null;
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        return ensureTransaction(tx -> {
+            try
+            {
+                return tx.get(
+                        columnFamilies.get(CF_PRIMITIVE),
+                        readOptions,
+                        handle.toByteArray()) != null;
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
     @Override
     public boolean containsLink(HGPersistentHandle handle)
     {
-        try
-        {
-            return txn().rocksdbTxn().get(
-                    columnFamilies.get(CF_DATA),
-                    readOptions,
-                    handle.toByteArray() ) != null;
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        return ensureTransaction(tx -> {
+            try
+            {
+                return tx.get(
+                        columnFamilies.get(CF_DATA),
+                        readOptions,
+                        handle.toByteArray() ) != null;
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
     }
 
     /*
@@ -742,6 +783,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public HGRandomAccessResult<HGPersistentHandle> getIncidenceResultSet(
             HGPersistentHandle handle)
     {
+        checkStarted();
         return new IteratorResultSet<HGPersistentHandle>(
                 /*
                 TODO ReadOptions, Slice object close
@@ -775,47 +817,55 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void removeIncidenceSet(HGPersistentHandle handle)
     {
-        try (
-            var first = new Slice(
-                    FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray()));
-            var last = new Slice(
-                    FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()));
+        checkStarted();
+        ensureTransaction(tx -> {
+            try (
+                    var first = new Slice(
+                            FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray()));
+                    var last = new Slice(
+                            FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()));
 
-            var iteratorReadOptions = new ReadOptions().setIterateLowerBound(first).setIterateUpperBound(last);
+                    var iteratorReadOptions = new ReadOptions().setIterateLowerBound(first).setIterateUpperBound(last);
 
-            var iterator = txn().rocksdbTxn().getIterator(
-                    iteratorReadOptions,
-                    columnFamilies.get(CF_INCIDENCE)))
-        {
-            while (iterator.isValid())
+                    RocksIterator iterator = tx.getIterator(
+                            iteratorReadOptions,
+                            columnFamilies.get(CF_INCIDENCE)))
             {
-                iterator.next();
-                byte[] next = iterator.key();
+                while (iterator.isValid())
+                {
+                    iterator.next();
+                    byte[] next = iterator.key();
+                    try
+                    {
+                        tx.delete(columnFamilies.get(CF_INCIDENCE), next);
+                    }
+                    catch (RocksDBException e)
+                    {
+                        throw new HGException(e);
+                    }
+                }
                 try
                 {
-                    txn().rocksdbTxn().delete(columnFamilies.get(CF_INCIDENCE), next);
+                    iterator.status();
                 }
                 catch (RocksDBException e)
                 {
                     throw new HGException(e);
                 }
-            }
-            try
-            {
-                iterator.status();
-            }
-            catch (RocksDBException e)
-            {
-                throw new HGException(e);
+
             }
 
-        }
+        });
 
     }
 
     @Override
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
     {
+        checkStarted();
+        /*
+        TODO transactions
+         */
         try (var rs = ((IteratorResultSet<HGPersistentHandle>) this.getIncidenceResultSet(
                 handle)))
         {
@@ -827,35 +877,42 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public void addIncidenceLink(HGPersistentHandle atomHandle,
                 HGPersistentHandle incidentLink)
     {
-        var localKey = atomHandle.toByteArray();
-        var value = incidentLink.toByteArray();
+        checkStarted();
+        ensureTransaction(tx -> {
+            var localKey = atomHandle.toByteArray();
+            var value = incidentLink.toByteArray();
 
-        var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
-        try
-        {
-            txn().rocksdbTxn().put(columnFamilies.get(CF_INCIDENCE), rocksDBkey, new byte[0]);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+            var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
+            try
+            {
+                tx.put(columnFamilies.get(CF_INCIDENCE), rocksDBkey, new byte[0]);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+
+        });
     }
 
     @Override
     public void removeIncidenceLink(HGPersistentHandle atomHandle,
             HGPersistentHandle incidentLink)
     {
-        var localKey = atomHandle.toByteArray();
-        var value = incidentLink.toByteArray();
-        var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
-        try
-        {
-            txn().rocksdbTxn().delete(columnFamilies.get(CF_INCIDENCE), rocksDBkey);
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGException(e);
-        }
+        checkStarted();
+        ensureTransaction(tx -> {
+            var localKey = atomHandle.toByteArray();
+            var value = incidentLink.toByteArray();
+            var rocksDBkey = FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(localKey, value);
+            try
+            {
+                tx.delete(columnFamilies.get(CF_INCIDENCE), rocksDBkey);
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(e);
+            }
+        });
 
     }
 
@@ -940,6 +997,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
             String name)
     {
+        checkStarted();
         return (RocksDBIndex<KeyType, ValueType>)indices.get(name);
     }
 
@@ -953,15 +1011,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             boolean isBidirectional,
             boolean createIfNecessary)
     {
-        /*
-        1. Create a new column family for that index.
-        2. we need to store multiple values per key.
-            both keys and values are varlength.
-            how do we
+        checkStarted();
 
-         */
-
-        HGIndex<KeyType, ValueType> index = indices.get(name);
+        RocksDBIndex<KeyType, ValueType> index = indices.get(name);
         if (index != null)
         {
             return index;
@@ -1032,7 +1084,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     this.store.getTransactionManager(),
                     keyConverter,
                     valueConverter,
-                    db);
+                    db,
+                    this);
         }
         else
         {
@@ -1042,7 +1095,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     this.store.getTransactionManager(),
                     keyConverter,
                     valueConverter,
-                    db);
+                    db,
+                    this);
         }
 
         /*
@@ -1050,6 +1104,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         comparators are available for index comparison
          */
         adapter.configure(keyComparator, valueComparator);
+        indices.put(name, index);
 
         return index;
     }
@@ -1057,25 +1112,55 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void removeIndex(String name)
     {
+        checkStarted();
         //Delete the entire column family
         var cf = columnFamilies.get(indexCF(name));
 
         if (cf == null)
+        {
+            /*
+            What does it mean to have the cf not present?
+            either the index was not started
+            or it was already removed
+             */
             throw new HGException(String.format(
                     "Cannot remove index %s whose column family - %s does not exist.",
                     name, indexCF(name)));
+        }
+        else
+        {
+            try
+            {
+                db.dropColumnFamily(cf);
+                columnFamilies.remove(indexCF(name));
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(
+                        String.format("Could not delete column family %s which stores" +
+                                "the index %s.", indexCF(name), name), e);
+            }
+        }
+        var inversecf = columnFamilies.get(inverseIndexCF(name));
 
-        try
+        if (inversecf != null)
         {
-            db.dropColumnFamily(cf);
-            columnFamilies.remove(indexCF(name));
+            try
+            {
+                db.dropColumnFamily(inversecf);
+                columnFamilies.remove(inverseIndexCF(name));
+            }
+            catch (RocksDBException e)
+            {
+                throw new HGException(
+                        String.format("Could not delete column family %s which stores" +
+                                "the index %s.", inverseIndexCF(name), name), e);
+            }
         }
-        catch (RocksDBException e)
-        {
-            throw new HGException(
-                    String.format("Could not delete column family %s which stores" +
-                            "the index %s.", indexCF(name), name), e);
-        }
+
+        indexAdapter.remove(name);
+        indices.remove(name);
+
     }
 
     private String indexCF(String indexName)
@@ -1127,6 +1212,52 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         }
         System.out.println("iterated the database successfully");
     }
+
+    /**
+     * Execute a function in a transaction. If there is a current transaction,
+     * the function will be executed in it.
+     * If there is no current transaction, a new one just for the operation will be
+     * created unless the enforce transactions config option is set.
+     *
+     * @param f the function to execute.
+     * @return
+     * @param <T>
+     */
+    <T> T ensureTransaction(Function<Transaction, T> f)
+    {
+        var currentTxn = txn();
+        if (currentTxn.rocksdbTxn() != null)
+            return f.apply(currentTxn.rocksdbTxn());
+        else if (this.store.getConfiguration().isEnforceTransactionsInStorageLayer())
+            throw new HGException("No current transaction in effect - please use " +
+                    "HGTransactionManager.ensureTransaction or turn off transaction enforceability.");
+        else
+        {
+            try (Transaction tx = db.beginTransaction(new WriteOptions()))
+            {
+                var res = f.apply(tx);
+                try
+                {
+                    tx.commit();
+                }
+                catch (RocksDBException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                return res;
+            }
+        }
+    }
+
+
+    <T> void ensureTransaction(Consumer<Transaction> f)
+    {
+        this.ensureTransaction(tx -> {
+            f.accept(tx);
+            return null;
+        });
+    }
+
 
 
     public static void main(String [] argv)

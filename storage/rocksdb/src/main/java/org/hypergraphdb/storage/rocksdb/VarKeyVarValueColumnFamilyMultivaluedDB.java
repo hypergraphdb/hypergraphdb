@@ -12,6 +12,7 @@ package org.hypergraphdb.storage.rocksdb;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -158,8 +159,8 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
            Comparator<byte[]> keyComparator,
            Comparator<byte[]> valueComparator)
    {
-      buffer1.rewind();
-      buffer2.rewind();
+//      buffer1.rewind();
+//      buffer2.rewind();
 
       int keysize1 = Byte.toUnsignedInt(buffer1.get());
       int keysize2 = Byte.toUnsignedInt(buffer2.get());
@@ -177,32 +178,6 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
          return 1;
       }
 
-
-      if (isFirst(isSystem1))
-      {
-         if (isFirst(isSystem2))
-            return 0;
-         else
-            return -1;
-
-      }
-      else if (isLast(isSystem1))
-      {
-         if (isLast(isSystem2))
-            return 0;
-         else
-            return 1;
-      }
-      else if (isLast(isSystem2))
-      {
-         return -1;
-      }
-      else if (isFirst(isSystem2))
-      {
-         return 1;
-      }
-
-
       /*
       TODO this is not efficient, we would like to compare the logical
          key/values byte by byte or ideally with memcmp
@@ -213,23 +188,60 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
       buffer1.get(keyA);
       buffer2.get(keyB);
 
-      int keyComp = keyComparator.compare(keyA, keyB);
+      int keyComp;
+      if (keyComparator != null)
+      {
+         keyComp = keyComparator.compare(keyA, keyB);
+      }
+      else
+      {
+         keyComp = arrayCmp(keyA, keyB);
+      }
 
-      if (keyComp != 0)
-         return keyComp;
+      if (keyComp != 0) return keyComp;
+      else
+      {
+         if (isFirst(isSystem1))
+         {
+            if (isFirst(isSystem2))
+               return 0;
+            else
+               return -1;
+         }
+         else if (isLast(isSystem1))
+         {
+            if (isLast(isSystem2))
+               return 0;
+            else
+               return 1;
+         }
+         else if (isLast(isSystem2))
+         {
+            return -1;
+         }
+         else if (isFirst(isSystem2))
+         {
+            return 1;
+         }
+         else
+         {
+            ByteArrayOutputStream valueA = new ByteArrayOutputStream();
+            ByteArrayOutputStream valueB = new ByteArrayOutputStream();
 
-      ByteArrayOutputStream valueA = new ByteArrayOutputStream();
-      ByteArrayOutputStream valueB = new ByteArrayOutputStream();
+            while (buffer1.hasRemaining())
+               valueA.write(buffer1.get());
 
+            while (buffer2.hasRemaining())
+               valueB.write(buffer2.get());
 
-      while (buffer1.hasRemaining())
-         valueA.write(buffer1.get());
+            if (valueComparator != null)
+               return valueComparator.compare(valueA.toByteArray(), valueB.toByteArray());
+            else
+               return arrayCmp(valueA.toByteArray(), valueB.toByteArray());
 
-      while (buffer2.hasRemaining())
-         valueB.write(buffer2.get());
+         }
 
-      return valueComparator.compare(valueA.toByteArray(), valueB.toByteArray());
-
+      }
    }
 
 
@@ -301,6 +313,26 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
       bb.putLong(uuid.getLeastSignificantBits());
       return bb.array();
    }
+
+   /*
+   TODO this is slow but according to the tests we need to compare the
+      bytes unsigned. we need to use something native and fast to compare
+      not compare byte by byte
+    */
+   private static int arrayCmp(byte[] left, byte[] right)
+   {
+      int len = Math.min(left.length, right.length);
+      for (int i = 0; i < len; i++)
+      {
+         if (left[i] != right[i])
+         {
+            return Byte.toUnsignedInt(left[i]) - Byte.toUnsignedInt(right[i]);
+         }
+      }
+      return left.length - right.length;
+
+   }
+
 
 
 }

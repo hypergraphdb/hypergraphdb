@@ -522,9 +522,13 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
             }
             else if (lookahead == 0)
             {
+//                var nextval = current;
+//                while ()
                 iterator.next();
                 if (iterator.isValid())
                 {
+//                    var nextval = this.extractValue();
+//                    next = nextval
                     lookahead = 1;
                     next = this.extractValue();
                     return true;
