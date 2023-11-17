@@ -36,10 +36,3 @@ libraryDependencies += "org.hypergraphdb" % "hgdbtest" % hgdbVersion % Test
 libraryDependencies ++= Seq(
   "org.hypergraphdb" % "hglmdb" % hgdbVersion % Test
 )
-libraryDependencies ++= Seq(
-  "org.hypergraphdb" % "hgrocksdb" % hgdbVersion % Test
-)
-
-initialize ~= { _ =>
-  System.setProperty( "org.hypergraphdb.storage.HGStoreImplementation", "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB" )
-}

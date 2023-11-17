@@ -60,8 +60,7 @@ trait StorageTestEnv extends should.Matchers
   // HGDB stuff
   def storeImplementationClass = {
     // "org.hypergraphdb.storage.bje.BJEStorageImplementation"
-//    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
-    "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB"
+    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
   }                                              
 
   def baseDatabaseLocation = {
