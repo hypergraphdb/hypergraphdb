@@ -7,7 +7,7 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.dataformat;
 
 import java.util.Arrays;
 

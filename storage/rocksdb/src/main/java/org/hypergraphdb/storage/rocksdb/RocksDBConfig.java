@@ -8,6 +8,6 @@
  */
 package org.hypergraphdb.storage.rocksdb;
 
-public class ConfigRocksDB
+public class RocksDBConfig
 {
 }

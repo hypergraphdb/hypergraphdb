@@ -7,10 +7,12 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.index;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.HGIndexStats;
+import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 
 public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<IndexKey, IndexValue>
 {

@@ -7,7 +7,7 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.dataformat;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;

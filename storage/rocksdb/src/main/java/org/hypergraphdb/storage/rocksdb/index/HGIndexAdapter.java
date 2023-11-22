@@ -7,8 +7,9 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.index;
 
+import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.rocksdb.*;
 
 import java.nio.ByteBuffer;

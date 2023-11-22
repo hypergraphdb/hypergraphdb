@@ -19,15 +19,15 @@ import org.rocksdb.WriteOptions;
 /**
  * An adapter for a RocksDB transaction
  */
-public class StorageTransactionRocksDB implements HGStorageTransaction
+public class RocksDBStorageTransaction implements HGStorageTransaction
 {
     private final Transaction txn;
     private final TransactionOptions txnOptions;
     private final WriteOptions writeOptions;
 
-    public static StorageTransactionRocksDB nullTransaction()
+    public static RocksDBStorageTransaction nullTransaction()
     {
-        return new StorageTransactionRocksDB(null, null, null);
+        return new RocksDBStorageTransaction(null, null, null);
     }
 
     public Transaction rocksdbTxn()
@@ -35,7 +35,7 @@ public class StorageTransactionRocksDB implements HGStorageTransaction
         return txn;
     }
 
-    public StorageTransactionRocksDB(
+    public RocksDBStorageTransaction(
             Transaction txn,
             TransactionOptions txnOptions,
             WriteOptions writeOptions)

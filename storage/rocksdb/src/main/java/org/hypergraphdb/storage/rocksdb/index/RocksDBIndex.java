@@ -7,14 +7,15 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.index;
 
 import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGIndexStats;
-import org.hypergraphdb.transaction.HGTransaction;
+import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
+import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.hypergraphdb.transaction.VanillaTransaction;
 import org.rocksdb.*;
 
 import java.util.List;
@@ -97,7 +98,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         this.open = false;
     }
 
-    void checkOpen() throws HGException
+    public void checkOpen() throws HGException
     {
         if (!this.isOpen())
         {

@@ -12,6 +12,10 @@ package org.hypergraphdb.storage.rocksdb;
 import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.storage.rocksdb.dataformat.FixedKeyFixedValueColumnFamilyMultivaluedDB;
+import org.hypergraphdb.storage.rocksdb.index.BidirectionalRocksDBIndex;
+import org.hypergraphdb.storage.rocksdb.index.HGIndexAdapter;
+import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
 import org.hypergraphdb.transaction.*;
 import org.hypergraphdb.util.HGUtils;
 import org.rocksdb.*;
@@ -21,7 +25,6 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -515,7 +518,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     Transaction parentTxn = null;
                     if (parent != null)
                     {
-                        parentTxn = ((StorageTransactionRocksDB)parent.getStorageTransaction()).rocksdbTxn();
+                        parentTxn = ((RocksDBStorageTransaction)parent.getStorageTransaction()).rocksdbTxn();
                     }
                     /*
                     TODO do we have the correct semantics for the parent transaction?
@@ -536,7 +539,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                         When should we take snapshots
                      */
 //                    txn.setSnapshot(); I think the snapshot is automatically taken when the transaction is created
-                    return new StorageTransactionRocksDB(txn, txnOptions, writeOptions);
+                    return new RocksDBStorageTransaction(txn, txnOptions, writeOptions);
 
                 }
 
@@ -554,7 +557,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      * Get the current transaction
      * @return the transaction which is active in the current context
      */
-    private StorageTransactionRocksDB txn()
+    private RocksDBStorageTransaction txn()
     {
         checkStarted();
         HGTransaction tx = store.getTransactionManager().getContext().getCurrent();
@@ -564,10 +567,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             is active
          */
         if (tx == null)
-            return StorageTransactionRocksDB.nullTransaction();
-        else if (tx.getStorageTransaction() instanceof StorageTransactionRocksDB)
+            return RocksDBStorageTransaction.nullTransaction();
+        else if (tx.getStorageTransaction() instanceof RocksDBStorageTransaction)
         {
-            return (StorageTransactionRocksDB) tx.getStorageTransaction();
+            return (RocksDBStorageTransaction) tx.getStorageTransaction();
         }
         else
         {
@@ -790,7 +793,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                  */
                 txn().rocksdbTxn().getIterator(new ReadOptions()
                         .setIterateLowerBound(
-                                new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray())))
+                                new Slice(
+                                        FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray())))
                         .setIterateUpperBound(
                                 new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()))),
                 columnFamilies.get(CF_INCIDENCE)), false)
@@ -1223,7 +1227,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      * @return
      * @param <T>
      */
-    <T> T ensureTransaction(Function<Transaction, T> f)
+    public <T> T ensureTransaction(Function<Transaction, T> f)
     {
         var currentTxn = txn();
         if (currentTxn.rocksdbTxn() != null)
@@ -1250,7 +1254,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     }
 
 
-    <T> void ensureTransaction(Consumer<Transaction> f)
+    public <T> void ensureTransaction(Consumer<Transaction> f)
     {
         this.ensureTransaction(tx -> {
             f.accept(tx);

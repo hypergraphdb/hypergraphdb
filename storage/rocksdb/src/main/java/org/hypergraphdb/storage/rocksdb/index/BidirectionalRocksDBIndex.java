@@ -7,12 +7,16 @@
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.index;
 
 import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
+import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
+import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
+import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.rocksdb.*;
 
