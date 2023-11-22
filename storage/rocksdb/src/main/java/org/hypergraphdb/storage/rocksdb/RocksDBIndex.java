@@ -172,9 +172,9 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
                             columnFamily);
             )
             {
+                iterator.seekToFirst();
                 while (iterator.isValid())
                 {
-                    iterator.next();
                     byte[] next = iterator.key();
                     try
                     {
@@ -184,6 +184,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
                     {
                         throw new HGException(e);
                     }
+                    iterator.next();
                 }
                 try
                 {

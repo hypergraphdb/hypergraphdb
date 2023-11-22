@@ -32,11 +32,8 @@ import org.hypergraphdb.HGSortIndex
 
 import scala.collection.SortedMap
 import org.hypergraphdb.handle.SequentialUUIDHandleFactory
-import org.hypergraphdb.storage.rocksdb.{HGIndexAdapter, RocksDBIndex, VarKeyVarValueColumnFamilyMultivaluedDB}
 import org.scalatest.SucceededStatus
 import org.scalatest.Succeeded
-
-import java.nio.ByteBuffer
 
 object BiDirectional extends Tag("BiDirectional")
 object SortIndex extends Tag("SortIndex")
@@ -142,8 +139,8 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
   protected override def runTests(testName: Option[String], args: Args): Status = {
     val fixtures = List(
        new Fixture(uuids, aboutuuids, aboutuuids)
-//       ,
-//      new Fixture(strings, aboutstrings, aboutstrings)
+       ,
+      new Fixture(strings, aboutstrings, aboutstrings)
     )
     fixtures.map(fixture => {
       runTestsWithFixture(testName, args)(fixture)
@@ -160,7 +157,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     //   Succeeded
   }
 
-  it should "allow new entries to be added" taggedAs(ToDebug) in { (fixture: FixtureParam) =>
+  it should "allow new entries to be added"   in { (fixture: FixtureParam) =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")
     fixture.data.foreach( (key:Any, values:Iterable[Any]) => tx(values.foreach(index.addEntry(key, _))))
     fixture.data.keySet.foreach( key => {
@@ -169,26 +166,10 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     })
   }
 
-  it should "scan only keys, not values" in { (fixture: FixtureParam) =>
+  it should "scan only keys, not values" in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")   
-    // println("Index cnt " + index.count)
-    // fixture.data.foreach((key:Any, values:Iterable[Any]) => println(key.toString + "=" + values.mkString(",")))
-    // fixture.data.foreach( (key:Any, values:Iterable[Any]) => tx(values.foreach(index.addEntry(key, _))))
-    // tx(Using.resource(index.scanKeys()) { rs =>
-    //   rs.foreach(item => println("KEY IS " + item))
-    // })
     tx(Using.resource(index.scanKeys()) { rs =>
-      // rs.foreach(k => {
-      //   println(s"$k contained -- " + fixture.data.keySet.contains(k))
-      // })
       assert(rs.forall(fixture.data.keySet.contains(_)))
-      // (item => {
-      //   println("item " + item)
-      //   val result = fixture.data.keySet.contains(item)
-      //   if (!result)
-      //     println("Oops, missing item " + item + ":::" + item.getClass().getName + " in " + fixture.data.keySet)
-      //   result
-      // }))
       rs.goAfterLast()
       rs.prev()
       assert(fixture.data.keySet.contains(rs.current()))
@@ -198,7 +179,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     })
   }
 
-  it should "close, open, check if open properly"  in { fixture => 
+  it should "close, open, check if open properly"   in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")
     assert(index.isOpen())
     index.close()
@@ -295,72 +276,23 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
   }
 
   // Check navigation of various result sets: next, prev, goTo...        
-  it should "support result set navigation in both directions as well as random access" taggedAs(ToDebug) in { fixture =>
+  it should "support result set navigation in both directions as well as random access" taggedAs (ToDebug) in { fixture =>
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
-    fixture.data.foreach( (key:Any, values:Iterable[Any]) => tx(values.foreach(index.addEntry(key, _))))
     val marks = ArrayBuffer[Any]()
     val maxsteps = 1000
     var first: Option[Any] = None
     var last: Option[Any] = None
     val sortedkeys = fixture.data.keySet.toSeq.sorted(fixture.key.comparator)
-    val adapter = index.asInstanceOf[RocksDBIndex[HGPersistentHandle, HGPersistentHandle]].store.indexAdapter.values().toArray()(0).asInstanceOf[HGIndexAdapter]
-    val cfcomparator = adapter.getComparator //the rocksdb comparator used for the column family
     tx(Using.resource(index.scanKeys()) { rs =>
-//      while (rs.hasNext) {
-//        val key = rs.next()
-//        println(key)
-//      }
-
       if (rs.hasNext)
-      {
         first = Some(rs.next())
-      }
-
-      println("The first key is " + first)
-//      var prev: Any = first.get
-
       assert(first.get == sortedkeys.head)
       for (i <- 1 until maxsteps if rs.hasNext()) {
         val key = rs.next()
-//        println(key)
-//
-//        var bytesPrev = prev.asInstanceOf[HGPersistentHandle].toByteArray
-//        var bytesKey = key.asInstanceOf[HGPersistentHandle].toByteArray
-//
-//        val comparison = help.ByteArrayComparator.compare(
-//          prev.asInstanceOf[HGPersistentHandle].toByteArray,
-//          key.asInstanceOf[HGPersistentHandle].toByteArray)
-//
-//        val cfComparison = cfcomparator.compare(
-//          ByteBuffer.wrap(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(bytesPrev)),
-//          ByteBuffer.wrap(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(bytesKey))
-//        )
-//
-//        if (cfComparison > 0) {
-//          println("Issue")
-//        }
-//
-//
-//        if (comparison > 0)
-//        {
-//          println("Issue")
-//          help.ByteArrayComparator.compare(
-//            prev.asInstanceOf[HGPersistentHandle].toByteArray,
-//            key.asInstanceOf[HGPersistentHandle].toByteArray)
-//
-//          cfcomparator.compare(
-//            ByteBuffer.wrap(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(bytesPrev)),
-//            ByteBuffer.wrap(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(bytesKey))
-//          )
-//        }
-//
-//        prev = key
-
         if (marks.size < 5 && random.nextInt(5) == 0) {                    
           marks.append(key)
         }
       }
-
       rs.goAfterLast
       assert(!rs.hasNext)
       assert(rs.hasPrev)
@@ -376,17 +308,14 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
       marks.foreach(mark => {
         assert(rs.goTo(mark, true) == GotoResult.found)
         assert(rs.current() == mark)
-        var i = sortedkeys.indexOf(mark)
+        val i = sortedkeys.indexOf(mark)
         assert  (i > 0)
         assert(rs.hasPrev())
-        i -= 1
-        assert(rs.prev() == sortedkeys(i))
+        assert(rs.prev() == sortedkeys(i - 1))
         rs.next()
         if (i < sortedkeys.size - 1) {
           assert(rs.hasNext())
-          val next = rs.next()
-          i += 1
-          assert(next == sortedkeys.get(i))
+          assert(rs.next() == sortedkeys.get(i + 1))
         }
       })
     })
@@ -552,7 +481,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }))
   }  
 
-  it should "remove all entries for a key with multiple values" in { fixture =>
+  it should "remove all entries for a key with multiple values"  in { fixture =>
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
     fixture.data.keys.find( key => fixture.data(key).size > 1).map(key => tx({
       val value = fixture.data(key).head

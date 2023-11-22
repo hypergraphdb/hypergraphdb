@@ -14,6 +14,8 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.util.CountMe;
 import org.rocksdb.*;
 
+import java.util.Arrays;
+
 /**
  * a random access result which is backed by an iterator.
  * @param <T> the type of the values in this result set
@@ -24,7 +26,147 @@ import org.rocksdb.*;
  */
 public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {
-    protected RocksIterator iterator;
+//    protected AbstractIterator abstractIterator;
+    
+    protected interface AbstractIterator
+    {
+
+        void seek(byte[] keyvalue);
+
+        boolean isValid();
+
+        void seekToFirst();
+
+        void seekToLast();
+
+        void prev();
+
+        void status() throws RocksDBException;
+
+        void next();
+
+        void close();
+
+        byte[] key();
+    }
+    
+    private class RocksDBAbstractIterator implements AbstractIterator, AutoCloseable
+    {
+        protected final RocksIterator it;
+
+        private RocksDBAbstractIterator(RocksIterator it)
+        {
+            this.it = it;
+        }
+
+        @Override
+        public void seek(byte[] keyvalue)
+        {
+           it.seek(keyvalue);
+        }
+
+        @Override
+        public boolean isValid()
+        {
+            return it.isValid();
+        }
+
+        @Override
+        public void seekToFirst()
+        {
+            it.seekToFirst();
+        }
+
+        @Override
+        public void seekToLast()
+        {
+            it.seekToLast();
+        }
+
+        @Override
+        public void prev()
+        {
+            it.prev();
+        }
+
+        @Override
+        public void status() throws RocksDBException
+        {
+            it.status();
+        }
+
+        @Override
+        public void next()
+        {
+            it.next();
+        }
+
+        @Override
+        public void close()
+        {
+            it.close();
+        }
+
+        @Override
+        public byte[] key()
+        {
+            return it.key();
+        }
+    }
+    
+    private class DistinctRocksDBAbstractIterator extends RocksDBAbstractIterator
+    {
+        private DistinctRocksDBAbstractIterator(RocksIterator it)
+        {
+            super(it);
+        }
+
+        @Override
+        public void prev()
+        {
+            var current = extractValue();
+            while (true)
+            {
+                it.prev();
+                if (it.isValid())
+                {
+                    var prev = extractValue();
+                    if (!prev.equals(current))
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void next()
+        {
+            var current = extractValue();
+            while (true)
+            {
+                it.next();
+                if (it.isValid())
+                {
+                    var prev = extractValue();
+                    if (!prev.equals(current))
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+    
+    protected AbstractIterator iterator;
     private final boolean unique;
 
     /*
@@ -116,7 +258,17 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
     }
     public IteratorResultSet(RocksIterator iterator, boolean unique)
     {
-        this.iterator = iterator;
+        /*
+        TODO is there a better way to filter unique results
+         */
+        if (unique)
+        {
+            this.iterator = new DistinctRocksDBAbstractIterator(iterator);
+        }
+        else
+        {
+            this.iterator = new RocksDBAbstractIterator(iterator);
+        }
         this.unique = unique;
 
         iterator.seekToFirst();
@@ -351,11 +503,11 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
                 else
                 {
                     this.checkStatus();
-                    /*
-                    todo if the iterator is already invalid, will this work??
-                    if we dropped from the end, go to the last element,
-                    which was the current value
-                     */
+                /*
+                todo if the iterator is already invalid, will this work??
+                if we dropped from the end, go to the last element,
+                which was the current value
+                 */
                     iterator.seekToFirst();
                     prev = OUTSIDE;
                     return false;
