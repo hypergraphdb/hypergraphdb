@@ -22,12 +22,12 @@ import org.rocksdb.WriteOptions;
 public class RocksDBStorageTransaction implements HGStorageTransaction
 {
     private final Transaction txn;
-    private final TransactionOptions txnOptions;
+//    private final TransactionOptions txnOptions;
     private final WriteOptions writeOptions;
 
     public static RocksDBStorageTransaction nullTransaction()
     {
-        return new RocksDBStorageTransaction(null, null, null);
+        return new RocksDBStorageTransaction(null, null);
     }
 
     public Transaction rocksdbTxn()
@@ -37,11 +37,11 @@ public class RocksDBStorageTransaction implements HGStorageTransaction
 
     public RocksDBStorageTransaction(
             Transaction txn,
-            TransactionOptions txnOptions,
+//            TransactionOptions txnOptions,
             WriteOptions writeOptions)
     {
         this.txn = txn;
-        this.txnOptions = txnOptions;
+//        this.txnOptions = txnOptions;
         this.writeOptions = writeOptions;
     }
 
@@ -50,7 +50,7 @@ public class RocksDBStorageTransaction implements HGStorageTransaction
      */
     private void close()
     {
-        this.txnOptions.close();
+//        this.txnOptions.close();
         this.writeOptions.close();
     }
 

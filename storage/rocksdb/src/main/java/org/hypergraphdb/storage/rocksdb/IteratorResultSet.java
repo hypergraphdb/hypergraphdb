@@ -14,7 +14,6 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.util.CountMe;
 import org.rocksdb.*;
 
-import java.util.Arrays;
 
 /**
  * a random access result which is backed by an iterator.
@@ -26,8 +25,7 @@ import java.util.Arrays;
  */
 public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {
-//    protected AbstractIterator abstractIterator;
-    
+
     protected interface AbstractIterator
     {
 

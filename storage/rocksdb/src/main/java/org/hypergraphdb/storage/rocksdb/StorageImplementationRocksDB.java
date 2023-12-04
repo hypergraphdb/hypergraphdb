@@ -32,11 +32,6 @@ import java.util.function.Function;
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
 
-    //    private static final String DB_ROOT = "data";
-//    private static final String DATA_DB_NAME = "datadb";
-//    private static final String PRIMITIVE_DB_NAME = "primitivedb";
-//    private static final String INCIDENCE_DB_NAME = "incidencedb";
-
     /*
     TODO when does this need to be loaded?
      */
@@ -45,13 +40,13 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     }
 
 
-    private TransactionDB db;
+    private OptimisticTransactionDB db;
 
     private DBOptions dbOptions;
     private Options options;
     private TransactionDBOptions txDBoptions;
     private Filter bloomfilter;
-    private ReadOptions readOptions;
+//    private ReadOptions readOptions;
     private Statistics stats;
     private RateLimiter rateLimiter;
     private HGStore store;
@@ -264,7 +259,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         this.dbOptions = new DBOptions().setCreateIfMissing(true);
         this.txDBoptions = new TransactionDBOptions();
         this.bloomfilter = new BloomFilter(10);
-        this.readOptions = new ReadOptions().setFillCache(false);
+//        this.readOptions = new ReadOptions().setFillCache(false);
         this.stats = new Statistics();
         this.rateLimiter = new RateLimiter(10_000_000, 10_000, 10);
 
@@ -308,7 +303,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         this.dbOptions.close();
         this.txDBoptions.close();
         this.bloomfilter.close();
-        this.readOptions.close();
         this.stats.close();
         this.rateLimiter.close();
         this.db.close();
@@ -367,10 +361,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
              */
             List<ColumnFamilyHandle> cfHandles = new ArrayList<>();
 
-            this.db = TransactionDB.open(
+            this.db = OptimisticTransactionDB.open(
                     dbOptions,
 //                    dbOptions.setCreateMissingColumnFamilies(),
-                    txDBoptions,
+//                    txDBoptions,
                     Path.of(store.getDatabaseLocation()).toString(),
                     cfDescriptors,
                     cfHandles);
@@ -513,7 +507,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                         Set snapshot here?
 
                      */
-                    final TransactionOptions txnOptions = new TransactionOptions().setSetSnapshot(true);
+//                    final TransactionOptions txnOptions = new TransactionOptions().setSetSnapshot(true);
                     final WriteOptions writeOptions = new WriteOptions();
                     Transaction parentTxn = null;
                     if (parent != null)
@@ -527,19 +521,14 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     Transaction txn;
                     if (parentTxn == null)
                     {
-                        txn = db.beginTransaction(writeOptions, txnOptions);
+                        txn = db.beginTransaction(writeOptions);
                     }
                     else
                     {
-                        txn = db.beginTransaction(writeOptions, txnOptions, parentTxn);
+                        txn = db.beginTransaction(writeOptions, parentTxn);
                     }
-                    /*
-                    TODO is this the place to take a snapshot?
-                        What should the repeatable read logic be?
-                        When should we take snapshots
-                     */
-//                    txn.setSnapshot(); I think the snapshot is automatically taken when the transaction is created
-                    return new RocksDBStorageTransaction(txn, txnOptions, writeOptions);
+                    txn.setSnapshot();
+                    return new RocksDBStorageTransaction(txn, writeOptions);
 
                 }
 
@@ -634,9 +623,12 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
         return ensureTransaction(tx -> {
-            try
+            try (ReadOptions readOptions = new ReadOptions())
             {
-
+                /*
+                read from the snapshot set on the transaction
+                 */
+                readOptions.setSnapshot(tx.getSnapshot());
                 var res = tx.get(
                         columnFamilies.get(CF_PRIMITIVE),
                         readOptions,
@@ -656,8 +648,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
         return ensureTransaction(tx -> {
-            try
+            try (ReadOptions readOptions = new ReadOptions())
             {
+                readOptions.setSnapshot(tx.getSnapshot());
                 byte[] bytes = tx.get(columnFamilies.get(CF_DATA), readOptions, handle.toByteArray());
 
                 return bytes == null ? null : toHandleArray(bytes);
@@ -714,8 +707,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
         return ensureTransaction(tx -> {
-            try
+            try(var readOptions = new ReadOptions())
             {
+                readOptions.setSnapshot(tx.getSnapshot());
                 return tx.get(
                         columnFamilies.get(CF_PRIMITIVE),
                         readOptions,
@@ -733,8 +727,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
         return ensureTransaction(tx -> {
-            try
+            try(var readOptions = new ReadOptions())
             {
+                readOptions.setSnapshot(tx.getSnapshot());
                 return tx.get(
                         columnFamilies.get(CF_DATA),
                         readOptions,
@@ -787,32 +782,36 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             HGPersistentHandle handle)
     {
         checkStarted();
-        return new IteratorResultSet<HGPersistentHandle>(
+        return ensureTransaction(tx -> {
+            return new IteratorResultSet<HGPersistentHandle>(
                 /*
                 TODO ReadOptions, Slice object close
                  */
-                txn().rocksdbTxn().getIterator(new ReadOptions()
-                        .setIterateLowerBound(
-                                new Slice(
-                                        FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray())))
-                        .setIterateUpperBound(
-                                new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()))),
-                columnFamilies.get(CF_INCIDENCE)), false)
-        {
-            @Override
-            protected HGPersistentHandle extractValue()
+                    tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
+                                    .setIterateLowerBound(
+                                            new Slice(
+                                                    FixedKeyFixedValueColumnFamilyMultivaluedDB.firstRocksDBKey(handle.toByteArray())))
+                                    .setIterateUpperBound(
+                                            new Slice(FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()))),
+                            columnFamilies.get(CF_INCIDENCE)), false)
             {
-                return hgConfig.getHandleFactory().makeHandle(
-                        FixedKeyFixedValueColumnFamilyMultivaluedDB.extractValue(
-                                this.iterator.key()));
-            }
+                @Override
+                protected HGPersistentHandle extractValue()
+                {
+                    return hgConfig.getHandleFactory().makeHandle(
+                            FixedKeyFixedValueColumnFamilyMultivaluedDB.extractValue(
+                                    this.iterator.key()));
+                }
 
-            @Override
-            protected byte[] toRocksDBKey(HGPersistentHandle value)
-            {
-                return FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(handle.toByteArray(), value.toByteArray());
-            }
-        };
+                @Override
+                protected byte[] toRocksDBKey(HGPersistentHandle value)
+                {
+                    return FixedKeyFixedValueColumnFamilyMultivaluedDB.makeRocksDBKey(handle.toByteArray(), value.toByteArray());
+                }
+            };
+        });
+
 
     }
 
@@ -829,7 +828,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     var last = new Slice(
                             FixedKeyFixedValueColumnFamilyMultivaluedDB.lastRocksDBKey(handle.toByteArray()));
 
-                    var iteratorReadOptions = new ReadOptions().setIterateLowerBound(first).setIterateUpperBound(last);
+                    var iteratorReadOptions = new ReadOptions()
+                            .setIterateLowerBound(first)
+                            .setIterateUpperBound(last)
+                            .setSnapshot(tx.getSnapshot());
 
                     RocksIterator iterator = tx.getIterator(
                             iteratorReadOptions,

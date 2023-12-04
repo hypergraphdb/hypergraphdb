@@ -32,7 +32,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
     private final HGTransactionManager transactionManager;
     protected final ByteArrayConverter<IndexKey> keyConverter;
     protected final ByteArrayConverter<IndexValue> valueConverter;
-    private final TransactionDB db;
+    private final OptimisticTransactionDB db;
 
     private boolean open = true;
     //TODO make final
@@ -44,7 +44,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
             HGTransactionManager transactionManager,
             ByteArrayConverter<IndexKey> keyConverter,
             ByteArrayConverter<IndexValue> valueConverter,
-            TransactionDB db,
+            OptimisticTransactionDB db,
             StorageImplementationRocksDB store)
 
     {
@@ -81,15 +81,14 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         /*
         This implementation does not need to be explicitly opened
         because all the necessary resources are opened when RocksDB
-        is initialized.
-        The HGDB contract exptects the is open state to work as expected
+        is initialized or when the index is created.
+        The HGDB contract expects the is open state to work as expected
         though
          */
         /*
         TODO consider reopening any possibly closed objects here
          */
         this.open = true;
-        //no need to explicitly open
     }
 
     @Override
@@ -104,8 +103,6 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         {
             throw new HGException("The index is not open.");
         }
-
-
     }
 
     @Override
@@ -165,9 +162,27 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
     public void removeAllEntries(IndexKey key)
     {
         checkOpen();
+        /*
+        TODO consider this for the range delete but it appears that
+            RangeDelete is not supported by transactions
+         */
+
+
+//        try
+//        {
+//            db.deleteRange(
+//                    columnFamily,
+//                    VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key)),
+//                    VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)));
+//        }
+//        catch (RocksDBException e)
+//        {
+//            throw new HGException(e);
+//        }
         this.store.ensureTransaction(tx -> {
             try (
                     RocksIterator iterator  = tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key))))
                                     .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)))),
                             columnFamily);
@@ -211,6 +226,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             var iterator = tx.getIterator(
                     new ReadOptions()
+                            .setSnapshot(tx.getSnapshot())
                             .setIterateLowerBound(new Slice(firstRocksDBKey))
                             .setIterateUpperBound(new Slice(lastRocksDBKey)),
                     columnFamily);
@@ -251,6 +267,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key))))
                                     .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)))),
                             columnFamily), false)
@@ -289,7 +306,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
          */
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexKey>(
-                    tx.getIterator(new ReadOptions(), columnFamily), true)
+                    tx.getIterator(new ReadOptions().setSnapshot(
+                            tx.getSnapshot()), columnFamily), true)
             {
                 @Override
                 protected IndexKey extractValue()
@@ -328,7 +346,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
          */
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
-                    tx.getIterator(new ReadOptions(), columnFamily),
+                    tx.getIterator(new ReadOptions().setSnapshot(
+                            tx.getSnapshot()), columnFamily),
                     false)
             {
                 @Override
@@ -424,6 +443,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateUpperBound(
                                             new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
                                                     .firstRocksDBKey(keyConverter.toByteArray(key)))),
@@ -454,6 +474,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateLowerBound(
                                             new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
                                                     .lastRocksDBKey(keyConverter.toByteArray(key)))),
@@ -484,6 +505,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateUpperBound(
                                             new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
                                                     .lastRocksDBKey(keyConverter.toByteArray(key)))),
@@ -514,6 +536,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexValue>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateLowerBound(
                                             new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
                                                     .firstRocksDBKey(keyConverter.toByteArray(key)))),

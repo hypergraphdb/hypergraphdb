@@ -33,7 +33,7 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
             HGTransactionManager transactionManager,
             ByteArrayConverter<IndexKey> keyConverter,
             ByteArrayConverter<IndexValue> valueConverter,
-            TransactionDB db,
+            OptimisticTransactionDB db,
             StorageImplementationRocksDB store)
     {
         super(name, columnFamily, transactionManager, keyConverter,
@@ -71,6 +71,7 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
         return this.store.ensureTransaction(tx -> {
             return new IteratorResultSet<IndexKey>(
                     tx.getIterator(new ReadOptions()
+                                    .setSnapshot(tx.getSnapshot())
                                     .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value))))
                                     .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)))),
                             inverseCFHandle), false)
@@ -111,6 +112,7 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
         return this.store.ensureTransaction(tx -> {
             var iterator = tx.getIterator(
                     new ReadOptions()
+                            .setSnapshot(tx.getSnapshot())
                             .setIterateLowerBound(new Slice(firstRocksDBKey))
                             .setIterateUpperBound(new Slice(lastRocksDBKey)),
                     inverseCFHandle);

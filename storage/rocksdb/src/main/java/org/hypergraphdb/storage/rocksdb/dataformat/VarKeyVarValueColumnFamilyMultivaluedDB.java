@@ -12,27 +12,52 @@ package org.hypergraphdb.storage.rocksdb.dataformat;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
 
 /**
- * A logical DB backed by a specific column family
- * The logical DB supports multiple values per key
- * Both the keys and values are variable sized
+ * Utilities for the data format for a logical database which supports variable
+ * sized keys, variable sized values and multiple values per key.
+ * <br/>
+ * The data format is as follows:
+ * <br/>
+ * All the records are in a single RocksDB (RDB) column family (CF).
+ * The column family does not contain data other than the records in th
+ * logical database.
+ * All the information in this column family is stored in the record's
+ * key. (the value of the record is undefined)
+ * <br/>
+ * The format of the key is a byte array -- key[]
+ * key[0] -- KEY_LENGTH -- 8 bit unsigned int which represents the length of the logical
+ * key.
+ * key[1] -- system flag with the following semantics:
+ * Only the keys with this flag set to 0 are present in the CF. All other
+ * cases represent range edge keys which are used to define
+ *    0 -- a regular 'data' key which can be stored in the CF. All the
+ *       keys which are actually stored in the column family have this
+ *       set to 0
+ *    1 -- START a RDB key which is LT every key with the same value for
+ *       the logical key
+ *    2 -- END a RDB key which is GT every key with the same value for
+ *       the logical key
+ *    3 -- GLOBALLY_FIRST a RDB key which is LT every key in the CF
+ *    4 -- GLOBALLY_LAST a RDB key which is GT every key in the CF
  *
- * The rocks db keys in this column family have the following structure:
- * byte[0] unsigned
- * byte[1] a flag which stores the size of the logical key - key_size
- * byte[2 - key_size+2] the logical key
- * byte[key_size+2 - ...] the value for this record
- *
- * TODO only one byte for a size means the serialization of the key
- *    is
- *
+ * TODO why not just use the first value for the given key? is it defined?
+ *    We will need the actual comparator to supply the first value
+ * TODO describe why.
+ * key[2, 2+KEY_LENGTH] -- the logical key
+ *    KEY_LENGTH <= 255 . the logical key has a max size of 255 bytes
+ * TODO make the KEY_LENGTH at least short
+ * key[2+KEY_LENGTH, ...] -- the logical value
  */
 public class VarKeyVarValueColumnFamilyMultivaluedDB
 {
+
+   /*
+   This is a utility class (at least for now), so block the constructor
+    */
+   private VarKeyVarValueColumnFamilyMultivaluedDB(){};
 
 
    /**
@@ -45,20 +70,20 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
     */
    public static byte[] firstRocksDBKey(byte[] logicalKey)
    {
-      return makeVirtualRocksDBKey(logicalKey, RangeEdge.START);
+      return rangeEdgeRocksDBKey(logicalKey, RangeEdge.START);
    }
 
    public static byte[] lastRocksDBKey(byte[] logicalKey)
    {
-      return makeVirtualRocksDBKey(logicalKey, RangeEdge.END);
+      return rangeEdgeRocksDBKey(logicalKey, RangeEdge.END);
    }
    public static byte[] globallyFirstRocksDBKey()
    {
-      return makeVirtualRocksDBKey(new byte[0], RangeEdge.GLOBAL_END);
+      return rangeEdgeRocksDBKey(new byte[0], RangeEdge.GLOBAL_END);
    }
    public static byte[] globallyLastRocksDBKey()
    {
-      return makeVirtualRocksDBKey(new byte[0], RangeEdge.GLOBAL_START);
+      return rangeEdgeRocksDBKey(new byte[0], RangeEdge.GLOBAL_START);
    }
 
    private enum RangeEdge
@@ -75,12 +100,15 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
    }
 
    /**
-    * The system key is a key which does not actually
+    * Construct a range edge RocksDB key. They are not inserted
+    * in the column family, but are rather used to define ranges.
+    * The semantics of the constructed key is documented in the {@link RangeEdge}
+    * enum
     * @param logicalKey
     * @param edge
     * @return
     */
-   private static byte[] makeVirtualRocksDBKey(byte[] logicalKey, RangeEdge edge)
+   private static byte[] rangeEdgeRocksDBKey(byte[] logicalKey, RangeEdge edge)
    {
       byte[] result = new byte[logicalKey.length + 2];
 
@@ -245,25 +273,25 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
    }
 
 
-   private static final boolean isGloballyFirst(byte systemFlag)
+   private static boolean isGloballyFirst(byte systemFlag)
    {
       return systemFlag == RangeEdge.GLOBAL_START.flag;
    }
 
-   public static final boolean isGloballyLast(byte systemFlag)
+   public static boolean isGloballyLast(byte systemFlag)
    {
       return systemFlag == RangeEdge.GLOBAL_END.flag;
    }
 
-   private static final boolean isSystem(byte systemFlag)
+   private static boolean isSystem(byte systemFlag)
    {
       return systemFlag != 0b0000_0000;
    }
-   private static final boolean isFirst(byte systemFlag)
+   private static boolean isFirst(byte systemFlag)
    {
       return systemFlag == RangeEdge.START.flag;
    }
-   private static final boolean isLast(byte systemFlag)
+   private static boolean isLast(byte systemFlag)
    {
       return systemFlag == RangeEdge.END.flag;
    }
@@ -330,9 +358,5 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
          }
       }
       return left.length - right.length;
-
    }
-
-
-
 }
