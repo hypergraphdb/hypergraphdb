@@ -1,13 +1,9 @@
-/*
- * This file is part of the HyperGraphDB source distribution. This is copyrighted
- * software. For permitted uses, licensing options and redistribution, please see
- * the LicensingInformation file at the root level of the distribution.
- *
- * Copyright (c) 2005-2023 Kobrix Software, Inc.  All rights reserved.
- *
- */
+package org.hypergraphdb.storage.rocksdb.samples;// Copyright (c) 2011-present, Facebook, Inc.  All rights reserved.
+//  This source code is licensed under both the GPLv2 (found in the
+//  COPYING file in the root directory) and Apache 2.0 License
+//  (found in the LICENSE.Apache file in the root directory).
 
-package org.hypergraphdb.storage.rocksdb.samples;import org.rocksdb.*;
+import org.rocksdb.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -21,10 +17,10 @@ public class TransactionSample {
   public static final void main(final String args[]) throws RocksDBException {
 
     try(final Options options = new Options()
-        .setCreateIfMissing(true);
+            .setCreateIfMissing(true);
         final TransactionDBOptions txnDbOptions = new TransactionDBOptions();
         final TransactionDB txnDb =
-            TransactionDB.open(options, txnDbOptions, dbPath)) {
+                TransactionDB.open(options, txnDbOptions, dbPath)) {
 
       try (final WriteOptions writeOptions = new WriteOptions();
            final ReadOptions readOptions = new ReadOptions()) {
@@ -61,8 +57,8 @@ public class TransactionSample {
    * Demonstrates "Read Committed" isolation
    */
   private static void readCommitted(final TransactionDB txnDb,
-      final WriteOptions writeOptions, final ReadOptions readOptions)
-      throws RocksDBException {
+          final WriteOptions writeOptions, final ReadOptions readOptions)
+          throws RocksDBException {
     final byte key1[] = "abc".getBytes(UTF_8);
     final byte value1[] = "def".getBytes(UTF_8);
 
@@ -96,17 +92,17 @@ public class TransactionSample {
    * Demonstrates "Repeatable Read" (Snapshot Isolation) isolation
    */
   private static void repeatableRead(final TransactionDB txnDb,
-      final WriteOptions writeOptions, final ReadOptions readOptions)
-      throws RocksDBException {
+          final WriteOptions writeOptions, final ReadOptions readOptions)
+          throws RocksDBException {
 
     final byte key1[] = "ghi".getBytes(UTF_8);
     final byte value1[] = "jkl".getBytes(UTF_8);
 
     // Set a snapshot at start of transaction by setting setSnapshot(true)
     try(final TransactionOptions txnOptions = new TransactionOptions()
-          .setSetSnapshot(true);
+            .setSetSnapshot(true);
         final Transaction txn =
-            txnDb.beginTransaction(writeOptions, txnOptions)) {
+                txnDb.beginTransaction(writeOptions, txnOptions)) {
 
       final Snapshot snapshot = txn.getSnapshot();
 
@@ -139,8 +135,8 @@ public class TransactionSample {
    * implement.
    */
   private static void readCommitted_monotonicAtomicViews(
-      final TransactionDB txnDb, final WriteOptions writeOptions,
-      final ReadOptions readOptions) throws RocksDBException {
+          final TransactionDB txnDb, final WriteOptions writeOptions,
+          final ReadOptions readOptions) throws RocksDBException {
 
     final byte keyX[] = "x".getBytes(UTF_8);
     final byte valueX[] = "x".getBytes(UTF_8);
@@ -149,9 +145,9 @@ public class TransactionSample {
     final byte valueY[] = "y".getBytes(UTF_8);
 
     try (final TransactionOptions txnOptions = new TransactionOptions()
-        .setSetSnapshot(true);
+            .setSetSnapshot(true);
          final Transaction txn =
-             txnDb.beginTransaction(writeOptions, txnOptions)) {
+                 txnDb.beginTransaction(writeOptions, txnOptions)) {
 
       // Do some reads and writes to key "x"
       Snapshot snapshot = txnDb.getSnapshot();

@@ -11,7 +11,7 @@
         <packageit>bundle</packageit>
         <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
         <bundle.namespace>org.hypergraph.storage.rocksdb</bundle.namespace>
-        <rocksdb.version>8.5.4</rocksdb.version>
+        <rocksdb.version>8.8.1</rocksdb.version>
     </properties>
     <artifactId>hgrocksdb</artifactId>
     <name>HyperGraphDB RocksDB Storage</name>
