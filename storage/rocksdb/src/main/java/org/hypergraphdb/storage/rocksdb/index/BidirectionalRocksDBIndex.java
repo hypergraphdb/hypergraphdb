@@ -30,14 +30,18 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
     public BidirectionalRocksDBIndex(String name,
             ColumnFamilyHandle columnFamily,
             ColumnFamilyHandle inverseCFHandle,
-            HGTransactionManager transactionManager,
             ByteArrayConverter<IndexKey> keyConverter,
             ByteArrayConverter<IndexValue> valueConverter,
             OptimisticTransactionDB db,
             StorageImplementationRocksDB store)
     {
-        super(name, columnFamily, transactionManager, keyConverter,
-                valueConverter, db, store);
+        super(
+                name,
+                columnFamily,
+                keyConverter,
+                valueConverter,
+                db,
+                store);
         this.inverseCFHandle = inverseCFHandle;
     }
 

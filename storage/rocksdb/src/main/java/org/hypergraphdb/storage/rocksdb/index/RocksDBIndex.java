@@ -29,7 +29,6 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 {
     private final ColumnFamilyHandle columnFamily;
     private final String name;
-    private final HGTransactionManager transactionManager;
     protected final ByteArrayConverter<IndexKey> keyConverter;
     protected final ByteArrayConverter<IndexValue> valueConverter;
     private final OptimisticTransactionDB db;
@@ -41,7 +40,6 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
     public RocksDBIndex(
             String name,
             ColumnFamilyHandle columnFamily,
-            HGTransactionManager transactionManager,
             ByteArrayConverter<IndexKey> keyConverter,
             ByteArrayConverter<IndexValue> valueConverter,
             OptimisticTransactionDB db,
@@ -52,7 +50,6 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
         this.columnFamily = columnFamily;
         this.keyConverter = keyConverter;
         this.valueConverter = valueConverter;
-        this.transactionManager = transactionManager;
         this.db = db;
         this.store = store;
         /*

@@ -19,7 +19,6 @@ import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
 import org.hypergraphdb.transaction.*;
 import org.hypergraphdb.util.HGUtils;
 import org.rocksdb.*;
-import org.rocksdb.util.SizeUnit;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +27,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
@@ -39,16 +41,22 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         RocksDB.loadLibrary();
     }
 
-
     private OptimisticTransactionDB db;
 
-    private DBOptions dbOptions;
-    private Options options;
-    private TransactionDBOptions txDBoptions;
-    private Filter bloomfilter;
-//    private ReadOptions readOptions;
-    private Statistics stats;
-    private RateLimiter rateLimiter;
+   /*
+    Mostly use the defaults for DBptions and column family options.
+    This is the recommended approach for starters.
+    */
+    private final DBOptions dbOptions = new DBOptions()
+           .setCreateMissingColumnFamilies(true)
+           .setCreateIfMissing(true);
+    /*
+    Stores the column family options used for each column family so that we
+    can close them when we close the storage
+     */
+    private final List<ColumnFamilyOptions> cfOptions = new ArrayList<>();
+
+
     private HGStore store;
     private HGConfiguration hgConfig;
     private int handleSize;
@@ -73,52 +81,11 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private ConcurrentHashMap<String, ColumnFamilyHandle> columnFamilies;
     private boolean started = false;
 
-
-    private final void checkStarted()
+    private void checkStarted()
     {
         if (!started)
             throw new HGException("The storage layer is not started");
     }
-
-    /*
-
-     Since RocksDB is a linear data structure without multiple values for
-     a key, we need
-        1. a way to split that structure in different substructures ('tables')
-        2. a way to associate several values to a given key
-
-        From the users POV (thus API) we have (KEY, VALUE) which is part of a given DATABASE.
-        Assuming the logical database supports multiple values for a key,
-        the record logical record is represented by a physical RocksDB record
-        in the format
-        key: <DATABASE_PREFIX>_<KEY>_<VALUE>
-        value: null
-
-
-     A note on keys.
-
-    'Key' can mean three different things in different situations:
-
-
-        1. local key -- this is a key from a user point of view. e.g. this
-            is the handle.toByteArray() or indexed_value.toByteArray().
-            Conceptually, we have several databases and in each of which, we
-            can call database.get(logicalKey) and this will return all the values
-            for a given logical key, contained in that database.
-
-        2. global key ::= databaseId + logicalKey
-            unique key for the entire store. the different 'databases' can have
-            duplicate keys, so this is the local key, prefixed with the database id
-            This is the level at which we have the
-
-        3. rocksDBKey
-            ::= databaseKey + value (for multivalued tables)
-            ::= databaseKey (for single valued tables)
-
-            That's the 'physical' key we will use to store int the rocksDB
-            database
-
-     */
 
 
     @Override
@@ -139,88 +106,98 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      * @return
      * @throws RocksDBException
      */
-    private List<ColumnFamilyDescriptor>getColumnFamilyDescriptors() throws RocksDBException
+    private List<ColumnFamilyDescriptor> getColumnFamilyDescriptors() throws RocksDBException
     {
-        var columnFamilyIDs = TransactionDB.listColumnFamilies(
-                options,
-                Path.of(store.getDatabaseLocation()).toString());
+
+        List<byte[]> columnFamilyIDs;
+        try(Options options = new Options())
+        {
+             columnFamilyIDs = OptimisticTransactionDB.listColumnFamilies(
+                    options,
+                    Path.of(store.getDatabaseLocation()).toString());
+        }
+
+        Set<String> parsedColumnFamilyIDs = columnFamilyIDs
+                .stream()
+                .map(id -> new String(id, StandardCharsets.UTF_8))
+                .collect(Collectors.toSet());
 
         List<ColumnFamilyDescriptor> descriptors = new LinkedList<>();
 
-        for (var cfID : columnFamilyIDs)
+        for (var cfID : parsedColumnFamilyIDs)
         {
             ColumnFamilyDescriptor cfd;
 
-            String cfName = new String(cfID, StandardCharsets.UTF_8);
-
-            if (isIndex(cfName) || isInverseIndex(cfName))
+            if (isIndex(cfID) || isInverseIndex(cfID))
             {
                 /*
-                we are opening a column family for an index
-                the difference is that we are setting a custom comparator
-                how do we set the comparator?
-
-                the compare method will call the
-
-                The index is created when the database is started
-
-                We need to supply th
-
+                if we are opening a column family which represents
+                either an index or inverse index, we want to set
+                a custom comparator.
+                The way we do that is to pass the RocksDB runtime
+                a reference to a HGIndexAdapter.getComparator().
+                Later when the user opens the index, they will pass
+                the actual comparator and we can setup the HGIndexAdapter
                  */
-                var indexName = stripCFPrefix(cfName);
-                if (!this.indexAdapter.contains(indexName))
+                var indexName = stripCFPrefix(cfID);
+                if (!this.indexAdapters.containsKey(indexName))
                 {
-                    HGIndexAdapter adapter = new HGIndexAdapter(stripCFPrefix(cfName));
-                    this.indexAdapter.put(stripCFPrefix(cfName), adapter);
+                    HGIndexAdapter adapter = new HGIndexAdapter(indexName);
+                    this.indexAdapters.put(indexName, adapter);
                 }
-                /*
-                The cfd needs a comparator function
-                the comparator needs a reference to the index (which we do not
-                currently have)
-                so we supply the adapter's comparator which now is just
-                scaffolding, and will be hydrated when the user calles getIndex()
-                 */
-                cfd = new ColumnFamilyDescriptor(cfID,
-                        new ColumnFamilyOptions().setComparator(this.indexAdapter.get(indexName).getComparator()));
+                var cfOptions = new ColumnFamilyOptions()
+                        .setComparator(this.indexAdapters.get(indexName).getRocksDBComparator());
+                this.cfOptions.add(cfOptions);
+                cfd = new ColumnFamilyDescriptor(cfID.getBytes(StandardCharsets.UTF_8), cfOptions);
 
             }
             else
             {
-                cfd = new ColumnFamilyDescriptor(cfID, new ColumnFamilyOptions());
+                var cfOptions = new ColumnFamilyOptions();
+                this.cfOptions.add(cfOptions);
+                cfd = new ColumnFamilyDescriptor(cfID.getBytes(), cfOptions);
             }
             descriptors.add(cfd);
         }
 
-
-        if (descriptors.isEmpty())
-            descriptors.add(new ColumnFamilyDescriptor("default".getBytes(
-                    StandardCharsets.UTF_8)));
+        /*
+        Add the non index column families which are not already present
+        in the DB.
+        Note that when we are specifying the column families, we need to
+        specify the default explicitly
+        Opening the DB will create them.
+         */
+        Stream.of("default", CF_DATA, CF_PRIMITIVE, CF_INCIDENCE)
+            .filter(Predicate.not(parsedColumnFamilyIDs::contains))
+            .forEach(cf ->{
+                var cfOptions = new ColumnFamilyOptions();
+                this.cfOptions.add(cfOptions);
+                descriptors.add(new ColumnFamilyDescriptor(cf.getBytes(StandardCharsets.UTF_8)));
+            });
 
         return descriptors;
 
     }
 
-    private ConcurrentHashMap<String, RocksDBIndex> indices = new ConcurrentHashMap<>();
-
-    /*
-    TODO make private
-     */
-    public ConcurrentHashMap<String, HGIndexAdapter> indexAdapter = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, RocksDBIndex<?,?>> indices = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, HGIndexAdapter> indexAdapters = new ConcurrentHashMap<>();
 
     /**
      * whether a column family is an index
-     * @param cfName
-     * @return
+     * @param cfName the column family to check
+     * @return true iff the parameter starts with the prefix we expect for a column family which
+     * contains an index
      */
-    private static boolean isIndex(String  cfName)
+    private static boolean isIndex(String cfName)
     {
         return cfName.startsWith(CF_INDEX_PREFIX);
     }
 
-    /**
+     /**
      * whether a column family is an inverse index
-     * @param cfName
-     * @return
+     * @param cfName the column family to check
+     * @return true iff the parameter starts with the prefix we expect for a column family
+     * which contains an inverse index
      */
     private static boolean isInverseIndex(String  cfName)
     {
@@ -245,67 +222,16 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     }
 
 
-    /**
-     * configure all the options objects needed for starting the database
-     */
-    private void setup()
-    {
-        /*
-        All of the options below are from the sample application;
-        TODO investigate what they do and verify if they  are correct
-        TODO move to a config object
-         */
-        this.options = new Options();
-        this.dbOptions = new DBOptions().setCreateIfMissing(true);
-        this.txDBoptions = new TransactionDBOptions();
-        this.bloomfilter = new BloomFilter(10);
-//        this.readOptions = new ReadOptions().setFillCache(false);
-        this.stats = new Statistics();
-        this.rateLimiter = new RateLimiter(10_000_000, 10_000, 10);
-
-        options.setCreateIfMissing(true).setStatistics(stats)
-                .setWriteBufferSize(8 * SizeUnit.KB)
-                .setMaxWriteBufferNumber(3).setMaxBackgroundJobs(10)
-                .setCompressionType(CompressionType.ZLIB_COMPRESSION)
-                .setCompactionStyle(CompactionStyle.UNIVERSAL);
-
-//        options.setMemTableConfig(
-//                new HashSkipListMemTableConfig().setHeight(3)
-//                        .setBranchingFactor(3).setBucketCount(2000000));
-//        options.setMemTableConfig(
-//                new HashLinkedListMemTableConfig().setBucketCount(99999));
-//
-//        options.setMemTableConfig(
-//                new VectorMemTableConfig().setReservedSize(9999));
-
-        options.setMemTableConfig(new SkipListMemTableConfig());
-
-        options.setTableFormatConfig(new PlainTableConfig());
-        options.setAllowMmapReads(true);
-        options.setRateLimiter(rateLimiter);
-
-        final BlockBasedTableConfig tableOptions = new BlockBasedTableConfig();
-        Cache cache = new LRUCache(64 * 1024, 6);
-        tableOptions.setBlockCache(cache).setNoBlockCache(false)
-                .setFilterPolicy(bloomfilter).setBlockSizeDeviation(5)
-                .setBlockRestartInterval(10)
-                .setCacheIndexAndFilterBlocks(true);
-
-        options.setTableFormatConfig(tableOptions);
-
-    }
-
     @Override
     public void shutdown()
     {
         this.started = false;
-        this.options.close();
-        this.dbOptions.close();
-        this.txDBoptions.close();
-        this.bloomfilter.close();
-        this.stats.close();
-        this.rateLimiter.close();
         this.db.close();
+        this.dbOptions.close();
+        for (ColumnFamilyOptions cfOption : this.cfOptions)
+        {
+            cfOption.close();
+        }
     }
 
 
@@ -318,7 +244,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public void startup(HGStore store, HGConfiguration configuration)
     {
         /*
-        A single storage must be started only once. What are the actions whic
+        A single storage must be started only once. What are the actions which
         should not be performed more than once?
         TODO when do we set the flag
          */
@@ -329,51 +255,38 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         this.handleSize = configuration.getHandleFactory().nullHandle().toByteArray().length;
         this.columnFamilies = new ConcurrentHashMap<>();
 
-        setup();
         try
         {
             /*
-            Getting the column family descriptors happens before we open the
-            database itself
-             */
-            /*
-            get the names of the existing column families in the database.
-            this happens before opening the database
-
-            The
+            Get the column family descriptors of the column families
+            which are already present in the database
              */
             List<ColumnFamilyDescriptor> cfDescriptors = getColumnFamilyDescriptors();
 
             /*
-            open() needs the present column family descriptors. it will then
-            populate the cfHandles parameter with the handles corresponfing
-            to these column families.
-            The call to open will fill this with the column family handles
-
-            What happens with column families which are supplied, but do
-            not exist
-
-            What happens with column families which exist, but are not supplied?
-
-            dbOptions.setCreateMissing
-
-            how is the default column family handled
+            open() needs the ColumnFamilyDescriptors of the CFs present in
+            the database. It will then populate the cfHandles parameter
+            with the handles corresponding to these column families.
              */
             List<ColumnFamilyHandle> cfHandles = new ArrayList<>();
 
             this.db = OptimisticTransactionDB.open(
                     dbOptions,
-//                    dbOptions.setCreateMissingColumnFamilies(),
-//                    txDBoptions,
                     Path.of(store.getDatabaseLocation()).toString(),
                     cfDescriptors,
                     cfHandles);
 
+            for (int i = 0; i < cfDescriptors.size(); i++)
+            {
+                columnFamilies.putIfAbsent(
+                        new String(cfDescriptors.get(i).getName(), StandardCharsets.UTF_8),
+                        cfHandles.get(i));
+            }
             /*
-            Create the column families which do not exist.
-
+            If this is a brand new instance, there will be no column
+            families in it, so
              */
-            ensureColumnFamilies(cfDescriptors, cfHandles);
+//            ensureColumnFamilies(cfDescriptors, cfHandles);
         }
         catch (RocksDBException e)
         {
@@ -389,10 +302,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     /**
      * Ensure all expected column families are present in the database
-     *
-     *  TODO
-     *      we are ensuring the existence of the PRIMITIVE, DATA, and INCIDENT
-     *      CFs. we will need CFs for the indices as well
      *
      * @param cfDescriptors the descriptors of the existing CFs
      * @param cfHandles the handles of the existing cfs
@@ -507,7 +416,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                         Set snapshot here?
 
                      */
-//                    final TransactionOptions txnOptions = new TransactionOptions().setSetSnapshot(true);
                     final WriteOptions writeOptions = new WriteOptions();
                     Transaction parentTxn = null;
                     if (parent != null)
@@ -517,17 +425,24 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     /*
                     TODO do we have the correct semantics for the parent transaction?
                     TODO in RocksDB the transaction is created in the
-                     */
+                     */;
                     Transaction txn;
+
+                    /*
+                    Set a snapshot to the tx when the transaction begins
+                    This will be the snapshot will be the initial state
+                    the transaction  sees (by default, each record will
+                    have the state before it was first written to)
+                     */
+                    var transactionOptions = new OptimisticTransactionOptions().setSetSnapshot(true);
                     if (parentTxn == null)
                     {
-                        txn = db.beginTransaction(writeOptions);
+                        txn = db.beginTransaction(writeOptions, transactionOptions);
                     }
                     else
                     {
-                        txn = db.beginTransaction(writeOptions, parentTxn);
+                        txn = db.beginTransaction(writeOptions, transactionOptions, parentTxn);
                     }
-                    txn.setSnapshot();
                     return new RocksDBStorageTransaction(txn, writeOptions);
 
                 }
@@ -543,6 +458,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     }
 
     /**
+     *
      * Get the current transaction
      * @return the transaction which is active in the current context
      */
@@ -556,7 +472,18 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             is active
          */
         if (tx == null)
+        {
             return RocksDBStorageTransaction.nullTransaction();
+        }
+        else if (tx.getStorageTransaction() instanceof VanillaTransaction)
+        {
+            /*
+             TODO what should the client do
+                when the factory is creating VanillaTransactions?
+            ???
+             */
+            return null;
+        }
         else if (tx.getStorageTransaction() instanceof RocksDBStorageTransaction)
         {
             return (RocksDBStorageTransaction) tx.getStorageTransaction();
@@ -564,7 +491,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         else
         {
             throw new HGException("THe current transaction s not created by the " +
-                    "supported transaction factor. This is a bug.");
+                    "supported transaction factory. This is a bug.");
         }
     }
 
@@ -820,6 +747,10 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public void removeIncidenceSet(HGPersistentHandle handle)
     {
+        /*
+        TODO consider range delete instead of iterating over the entire
+            index
+         */
         checkStarted();
         ensureTransaction(tx -> {
             try (
@@ -869,9 +800,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public long getIncidenceSetCardinality(HGPersistentHandle handle)
     {
         checkStarted();
-        /*
-        TODO transactions
-         */
         try (var rs = ((IteratorResultSet<HGPersistentHandle>) this.getIncidenceResultSet(
                 handle)))
         {
@@ -1019,14 +947,14 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
 
-        RocksDBIndex<KeyType, ValueType> index = indices.get(name);
+        RocksDBIndex<KeyType, ValueType> index = (RocksDBIndex<KeyType, ValueType>) indices.get(name);
         if (index != null)
         {
             return index;
         }
 
         ColumnFamilyHandle cfHandle = null, inverseCFHandle = null;
-        var adapter = indexAdapter.get(name);
+        var adapter = indexAdapters.get(name);
         if (adapter == null)
         {
             /*
@@ -1036,13 +964,13 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 what about just one if bidirectional?
             */
             adapter = new HGIndexAdapter(name);
-            indexAdapter.put(name, adapter);
+            indexAdapters.put(name, adapter);
             /*
             TODO lifecycle of the column family options
              */
             ColumnFamilyDescriptor cfd = new ColumnFamilyDescriptor(
                     indexCF(name).getBytes(StandardCharsets.UTF_8),
-                    new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+                    new ColumnFamilyOptions().setComparator(adapter.getRocksDBComparator()));
             try
             {
                 cfHandle = db.createColumnFamily(cfd);
@@ -1056,7 +984,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             {
                 ColumnFamilyDescriptor inverseCFD = new ColumnFamilyDescriptor(
                         inverseIndexCF(name).getBytes(StandardCharsets.UTF_8),
-                        new ColumnFamilyOptions().setComparator(adapter.getComparator()));
+                        new ColumnFamilyOptions().setComparator(adapter.getRocksDBComparator()));
                 try
                 {
                     inverseCFHandle = db.createColumnFamily(inverseCFD);
@@ -1087,7 +1015,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     name,
                     cfHandle,
                     inverseCFHandle,
-                    this.store.getTransactionManager(),
                     keyConverter,
                     valueConverter,
                     db,
@@ -1098,7 +1025,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             index = new RocksDBIndex<KeyType, ValueType>(
                     name,
                     cfHandle,
-                    this.store.getTransactionManager(),
+//                    this.store.getTransactionManager(),
                     keyConverter,
                     valueConverter,
                     db,
@@ -1124,11 +1051,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
         if (cf == null)
         {
-            /*
-            What does it mean to have the cf not present?
-            either the index was not started
-            or it was already removed
-             */
             throw new HGException(String.format(
                     "Cannot remove index %s whose column family - %s does not exist.",
                     name, indexCF(name)));
@@ -1138,7 +1060,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             try
             {
                 db.dropColumnFamily(cf);
-                columnFamilies.remove(indexCF(name));
+                columnFamilies.remove(cf);
             }
             catch (RocksDBException e)
             {
@@ -1154,7 +1076,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             try
             {
                 db.dropColumnFamily(inversecf);
-                columnFamilies.remove(inverseIndexCF(name));
+                columnFamilies.remove(inversecf);
             }
             catch (RocksDBException e)
             {
@@ -1164,7 +1086,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             }
         }
 
-        indexAdapter.remove(name);
+        indexAdapters.remove(name);
         indices.remove(name);
 
     }

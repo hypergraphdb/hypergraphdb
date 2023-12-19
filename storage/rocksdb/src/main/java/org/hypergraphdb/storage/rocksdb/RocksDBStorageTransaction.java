@@ -11,10 +11,8 @@ package org.hypergraphdb.storage.rocksdb;
 
 import org.hypergraphdb.transaction.HGStorageTransaction;
 import org.hypergraphdb.transaction.HGTransactionException;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.Transaction;
-import org.rocksdb.TransactionOptions;
-import org.rocksdb.WriteOptions;
+import org.hypergraphdb.transaction.TransactionConflictException;
+import org.rocksdb.*;
 
 /**
  * An adapter for a RocksDB transaction
@@ -22,7 +20,6 @@ import org.rocksdb.WriteOptions;
 public class RocksDBStorageTransaction implements HGStorageTransaction
 {
     private final Transaction txn;
-//    private final TransactionOptions txnOptions;
     private final WriteOptions writeOptions;
 
     public static RocksDBStorageTransaction nullTransaction()
@@ -64,7 +61,10 @@ public class RocksDBStorageTransaction implements HGStorageTransaction
         }
         catch (RocksDBException e)
         {
-            throw new HGTransactionException(e);
+            Status s = e.getStatus();
+            //TODO do we need to throw transaction conflict only when the status is Busy
+//            s.getCode().equals(Status.Code.Busy);
+            throw new TransactionConflictException();
         }
         finally
         {

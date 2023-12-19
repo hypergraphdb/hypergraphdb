@@ -16,17 +16,21 @@ import java.nio.ByteBuffer;
 import java.util.Comparator;
 
 /**
- * the adapter is conceptually a reference to the comparators which
- * the index adapter provides a level of indirection between the comparator
- * which RocksDB uses to order the records in the database and the logical
+ * The adapter is conceptually a reference to the comparators which the
+ * RocksDB engine uses to sort the keys in the column family
+ * The index adapter provides a level of indirection between the comparator
+ * which RocksDB uses to order the records in the index's column family and the logical
  * key/value comparators which are specified by the user when an index is
  * initialized.
- * This is needed, because RocksDB needs the record comparators in order
+ *
+ * This is needed, because RocksDB needs the comparators in order
  * to start up.
  * So we provide the RocksDB runtime with the scaffolding of the comparator
- * i.e. HGIndexAdapter.getComparator() which initially would throw an exception
+ * i.e. HGIndexAdapter.getRocksDBComparator() which initially would throw an exception
  * if it were actually used because the keyComparator and valueComparator
- * are not yet specified.
+ * are not yet specified. This is safe, because the column family is not
+ * actually used before the index is initialized.
+ *
  * When the user initializes and index, they provide the key and value comparator
  * so that they can be used to configure the adapter and the actual RocksDB
  * comparator can be called
@@ -55,7 +59,7 @@ public class HGIndexAdapter
         this.configured = true;
     }
 
-    public AbstractComparator getComparator()
+    public AbstractComparator getRocksDBComparator()
     {
         /*
         TODO comparator.close? comparatoroptions.close?
