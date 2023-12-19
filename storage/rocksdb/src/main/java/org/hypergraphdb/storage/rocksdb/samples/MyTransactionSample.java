@@ -43,12 +43,13 @@ public class MyTransactionSample
 //        on_TDB_if_snapshot_tx_write_after_outside_write_should_fail_on_commit(txnDb, writeOptions, readOptions);
 //        on_TDB_tx_write_before_outside_write_should_fail_on_outside_write(txnDb, writeOptions, readOptions);
 //        on_TDB_tx_write_before_and_after_outside_write_fails_on_oustide_write(txnDb, writeOptions, readOptions)
-           on_TDB_only_snapshot_keys_are_locked_when_written_to_before_tx_write(txnDb, writeOptions, readOptions);
+//           on_TDB_only_snapshot_keys_are_locked_when_written_to_before_tx_write(txnDb, writeOptions, readOptions);
 
         //        writingAfterAnotherTransactionSucceedsShouldSucceed(txnDb, writeOptions, readOptions);
 //        readCommitted(txnDb, writeOptions, readOptions);
 //        repeatableRead(txnDb, writeOptions, readOptions);
 //        readCommitted_monotonicAtomicViews(txnDb, writeOptions, readOptions);
+        testSnapshots1(txnDb, writeOptions, readOptions);
       }
     }
   }
@@ -458,6 +459,68 @@ public class MyTransactionSample
     System.out.println(res == null ? "null" : new String(res, UTF_8));
   }
 
+  private static void testSnapshots(
+          final TransactionDB database,
+          final WriteOptions writeOptions,
+          final ReadOptions readOptions)
+          throws RocksDBException
+  {
+    try (final Transaction txn = database.beginTransaction(writeOptions)) {
+      database.put(key1, value2);
+      txn.put(key2, value2);
+      System.out.println("database iterator before commit");
+      try (var it = database.newIterator())
+      {
+        it.seekToFirst();
+        while(it.isValid())
+        {
+          System.out.println(String.format("k: %s ;v: %s", new String(it.key()), new String(it.value())));
+          it.next();
+        }
+      }
+      System.out.println("transaction iterator before commit");
+      try (var it = txn.getIterator(readOptions))
+      {
+        it.seekToFirst();
+        while(it.isValid())
+        {
+          System.out.println(String.format("k: %s ;v: %s", new String(it.key()), new String(it.value())));
+          it.next();
+        }
+      }
+
+      txn.commit(); //this fails, because the tx snapshot is taken before the outside change
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
+    }
+    System.out.println("Iterator after commit");
+    try (var it = database.newIterator())
+    {
+      it.seekToFirst();
+      while(it.isValid())
+      {
+        System.out.println(String.format("k: %s ;v: %s", new String(it.key()), new String(it.value())));
+        it.next();
+      }
+    }
+  }
+
+  private static void testSnapshots1(
+          final TransactionDB database,
+          final WriteOptions writeOptions,
+          final ReadOptions readOptions)
+          throws RocksDBException
+  {
+    try (final Transaction txn = database.beginTransaction(writeOptions))
+    {
+      txn.setSnapshot();
+      txn.put(key2, value2);
+      var res = txn.get(new ReadOptions().setSnapshot(txn.getSnapshot()), key2);
+      System.out.println(new String(res));
+    }
+  }
   /**
    * Demonstrates "Repeatable Read" (Snapshot Isolation) isolation
    */

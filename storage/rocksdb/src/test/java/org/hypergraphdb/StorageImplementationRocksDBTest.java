@@ -8,10 +8,10 @@ import org.junit.Test;
 
 import java.io.File;
 
-public class RocksDBTest
+public class StorageImplementationRocksDBTest
 {
     static HyperGraph graph;
-    static String location = "./hgdblmdb";
+    static String location = "./hgdbrocksdb";
 
     @BeforeClass
     public static void openGraph()
