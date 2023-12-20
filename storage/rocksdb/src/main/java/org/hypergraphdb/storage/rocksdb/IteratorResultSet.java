@@ -14,6 +14,7 @@ import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.util.CountMe;
 import org.rocksdb.*;
 
+import java.util.List;
 
 /**
  * a random access result which is backed by an iterator.
@@ -25,6 +26,8 @@ import org.rocksdb.*;
  */
 public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {
+
+    private final List<AbstractNativeReference> closables;
 
     protected interface AbstractIterator
     {
@@ -245,17 +248,20 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
      * TODO what happens with the iterator when the transaction is committed/
      *  rolled back?
      *
+     * @param closables The native dependencies of the result set which need to be closed when the result set
+     *                  is closed
      * @param iterator
      *         The iterator which backs the result set. All the values in the
      *         iterator are the serializations of the  values in the result
      *         set.
      */
-    public IteratorResultSet(RocksIterator iterator)
+    public IteratorResultSet(RocksIterator iterator, List<AbstractNativeReference> closables)
     {
-        this(iterator, false);
+        this(iterator, closables, false);
     }
-    public IteratorResultSet(RocksIterator iterator, boolean unique)
+    public IteratorResultSet(RocksIterator iterator, List<AbstractNativeReference> closables, boolean unique)
     {
+        this.closables = closables;
         /*
         TODO is there a better way to filter unique results
          */
@@ -823,6 +829,7 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
     public void close()
     {
         this.iterator.close();
+        for (var cl : this.closables) cl.close();
     }
 
     @Override

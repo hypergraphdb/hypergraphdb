@@ -20,6 +20,8 @@ import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
 import org.hypergraphdb.transaction.HGTransactionManager;
 import org.rocksdb.*;
 
+import java.util.List;
+
 public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
         extends RocksDBIndex<IndexKey, IndexValue>
         implements HGBidirectionalIndex<IndexKey, IndexValue>
@@ -73,12 +75,14 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
     {
         checkOpen();
         return this.store.ensureTransaction(tx -> {
+            var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value)));
+            var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)));
+            var ro = new ReadOptions()
+                    .setSnapshot(tx.getSnapshot())
+                    .setIterateLowerBound(lower)
+                    .setIterateUpperBound(upper);
             return new IteratorResultSet<IndexKey>(
-                    tx.getIterator(new ReadOptions()
-                                    .setSnapshot(tx.getSnapshot())
-                                    .setIterateLowerBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value))))
-                                    .setIterateUpperBound(new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)))),
-                            inverseCFHandle), false)
+                    tx.getIterator(ro, inverseCFHandle), List.of(lower, upper, ro), false)
             {
                 @Override
                 protected IndexKey extractValue()
@@ -114,38 +118,43 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
         byte[] lastRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueBytes);
 
         return this.store.ensureTransaction(tx -> {
-            var iterator = tx.getIterator(
-                    new ReadOptions()
+            try(
+                    var lower = new Slice(firstRocksDBKey);
+                    var upper = new Slice(lastRocksDBKey);
+                    var ro = new ReadOptions()
                             .setSnapshot(tx.getSnapshot())
-                            .setIterateLowerBound(new Slice(firstRocksDBKey))
-                            .setIterateUpperBound(new Slice(lastRocksDBKey)),
-                    inverseCFHandle);
-
-            iterator.seekToFirst();
-
-            if (iterator.isValid())
+                            .setIterateLowerBound(lower)
+                            .setIterateUpperBound(upper);
+                    RocksIterator iterator = tx.getIterator(ro, inverseCFHandle))
             {
-                byte[] bytes = iterator.key();
-                var keyBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(bytes);
-                return keyConverter.fromByteArray(keyBytes, 0, keyBytes.length);
 
-            }
-            else
-            {
-                try
+                iterator.seekToFirst();
+
+                if (iterator.isValid())
                 {
-                    iterator.status();
+                    byte[] bytes = iterator.key();
+                    var keyBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(
+                            bytes);
+                    return keyConverter.fromByteArray(keyBytes, 0,
+                            keyBytes.length);
+
                 }
-                catch (RocksDBException e)
+                else
                 {
-                    throw new HGException(e);
-                }
+                    try
+                    {
+                        iterator.status();
+                    }
+                    catch (RocksDBException e)
+                    {
+                        throw new HGException(e);
+                    }
             /*
             If the iterator is not valid and the
              */
-                return null;
+                    return null;
+                }
             }
-
         });
     }
 
