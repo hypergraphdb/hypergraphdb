@@ -413,15 +413,35 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 
 
             var memtableStats = db.getApproximateMemTableStats(columnFamily,range);
-            var avgRecordSize = memtableStats.size/memtableStats.count;
+            long avgRecordSize = 0;
+            if (memtableStats.count == 0)
+            {
+               if (memtableStats.size != 0)
+                   avgRecordSize = Integer.MAX_VALUE;
+            }
+            else
+            {
+                avgRecordSize = memtableStats.size / memtableStats.count;
+            }
 
             var sizeOnDisk = db.getApproximateSizes(columnFamily, List.of(range))[0];
+            if (avgRecordSize == 0)
+            {
+               if(sizeOnDisk == 0)
+                   return memtableStats.count;
+               else
+                   return Integer.MAX_VALUE;
+            }
+            else
+            {
+                return memtableStats.count + sizeOnDisk/avgRecordSize;
+            }
             /*
             the size on disk is the compressed size. Ideally we would have
             an estimation of the compression factor.
              */
 
-            return memtableStats.count + sizeOnDisk/avgRecordSize;
+
         }
 
     }
