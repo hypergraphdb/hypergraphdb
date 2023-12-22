@@ -9,9 +9,12 @@
 
 package org.hypergraphdb.storage.rocksdb.dataformat;
 
+import org.hypergraphdb.storage.rocksdb.utils;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.UUID;
 
@@ -99,6 +102,8 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
    }
 
+   private static final int FLAG_SIZE = 1;
+   private static final int KEY_LENGTH_SIZE = 4;
    /**
     * Construct a range edge RocksDB key. They are not inserted
     * in the column family, but are rather used to define ranges.
@@ -110,12 +115,11 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
     */
    private static byte[] rangeEdgeRocksDBKey(byte[] logicalKey, RangeEdge edge)
    {
-      byte[] result = new byte[logicalKey.length + 2];
-
-      result[0] = (byte) logicalKey.length;
-      result[1] = edge.flag;
-
-      System.arraycopy(logicalKey, 0, result, 2, logicalKey.length);
+      byte[] result = new byte[logicalKey.length + FLAG_SIZE + KEY_LENGTH_SIZE];
+      var lengthBytes = ByteBuffer.wrap(result,0, KEY_LENGTH_SIZE);
+      lengthBytes.putInt(logicalKey.length);
+      result[KEY_LENGTH_SIZE] = edge.flag;
+      System.arraycopy(logicalKey, 0, result, KEY_LENGTH_SIZE + 1, logicalKey.length);
 
       return result;
 
@@ -123,25 +127,11 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 
    public static byte[] makeRocksDBKey(byte[] logicalKey, byte[] value)
    {
-
-      byte[] result = new byte[logicalKey.length + value.length + 2];
-      /*
-      TODO
-         casting int to byte. consider range and overflow!
-
-       */
-      if (logicalKey.length > 255)
-      {
-         /*
-         TODO This obviously is not ok.
-         Determine whether we can use this scheme (just with more bytes)
-         or we need something else
-          */
-         throw new IllegalArgumentException("Keys larger than 255 bytes are not supported.");
-      }
-      result[0] =  (byte) logicalKey.length;
-      System.arraycopy(logicalKey, 0, result, 2, logicalKey.length);
-      System.arraycopy(value, 0, result, 2 + logicalKey.length, value.length);
+      byte[] result = new byte[logicalKey.length + value.length + FLAG_SIZE + KEY_LENGTH_SIZE];
+      var lengthBytes = ByteBuffer.wrap(result,0, KEY_LENGTH_SIZE);
+      lengthBytes.putInt(logicalKey.length);
+      System.arraycopy(logicalKey, 0, result, KEY_LENGTH_SIZE + FLAG_SIZE, logicalKey.length);
+      System.arraycopy(value, 0, result, KEY_LENGTH_SIZE + FLAG_SIZE + logicalKey.length, value.length);
 
       return result;
    }
@@ -153,21 +143,23 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
     */
    public static byte[] extractKey(byte[] keyvalue)
    {
-      var keySize = Byte.toUnsignedInt(keyvalue[0]);
+      var lengthBytes = ByteBuffer.wrap(keyvalue,0, KEY_LENGTH_SIZE);
+      var keySize = lengthBytes.getInt();
 
       byte[] res = new byte[keySize];
-      System.arraycopy(keyvalue, 2, res, 0, keySize);
+      System.arraycopy(keyvalue, KEY_LENGTH_SIZE + FLAG_SIZE, res, 0, keySize);
 
       return res;
    }
 
    public static byte[] extractValue(byte[] keyvalue)
    {
-      var keySize = Byte.toUnsignedInt(keyvalue[0]);
+      var lengthBytes = ByteBuffer.wrap(keyvalue,0, KEY_LENGTH_SIZE);
+      var keySize = lengthBytes.getInt();
 
-      int valueSize = keyvalue.length - keySize - 2;
+      int valueSize = keyvalue.length - keySize - KEY_LENGTH_SIZE - FLAG_SIZE;
       byte[] res = new byte[valueSize];
-      System.arraycopy(keyvalue, keySize + 2, res, 0, valueSize);
+      System.arraycopy(keyvalue, keySize + KEY_LENGTH_SIZE + FLAG_SIZE, res, 0, valueSize);
 
       return res;
    }
@@ -190,8 +182,12 @@ public class VarKeyVarValueColumnFamilyMultivaluedDB
 //      buffer1.rewind();
 //      buffer2.rewind();
 
-      int keysize1 = Byte.toUnsignedInt(buffer1.get());
-      int keysize2 = Byte.toUnsignedInt(buffer2.get());
+      byte[] keyLengthBytes1 = new byte[KEY_LENGTH_SIZE];
+      byte[] keyLengthBytes2 = new byte[KEY_LENGTH_SIZE];
+      buffer1.get(keyLengthBytes1);
+      buffer2.get(keyLengthBytes2);
+      int keysize1 = ByteBuffer.wrap(keyLengthBytes1).getInt();
+      int keysize2 = ByteBuffer.wrap(keyLengthBytes2).getInt();
 
       byte isSystem1 = buffer1.get();
       byte isSystem2 = buffer2.get();

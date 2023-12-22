@@ -9,6 +9,8 @@
 
 package org.hypergraphdb.storage.rocksdb;
 
+import java.nio.ByteBuffer;
+
 public class utils
 {
     public static byte[] concatByteArrays(byte[] a, byte[] b)
@@ -19,10 +21,11 @@ public class utils
         return res;
     }
 
-    public <T> T cast(Object o)
+    public static <T> T cast(Object o)
     {
         return (T) o;
     }
+
 
 
 }
