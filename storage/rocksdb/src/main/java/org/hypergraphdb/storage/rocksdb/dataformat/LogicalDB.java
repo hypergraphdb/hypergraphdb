@@ -18,7 +18,7 @@ import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
  */
 public interface LogicalDB
 {
-    void add(byte[] key, byte[] value);
-    void remove(byte[] key, byte[] value);
-    void remove(byte[] key);
+	void add(byte[] key, byte[] value);
+	void remove(byte[] key, byte[] value);
+	void remove(byte[] key);
 }

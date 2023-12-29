@@ -13,18 +13,18 @@ import java.nio.ByteBuffer;
 
 public class utils
 {
-    public static byte[] concatByteArrays(byte[] a, byte[] b)
-    {
-        byte[] res = new byte[a.length + b.length];
-        System.arraycopy(a, 0, res, 0, a.length);
-        System.arraycopy(b, 0, res, a.length, b.length);
-        return res;
-    }
+	public static byte[] concatByteArrays(byte[] a, byte[] b)
+	{
+		byte[] res = new byte[a.length + b.length];
+		System.arraycopy(a, 0, res, 0, a.length);
+		System.arraycopy(b, 0, res, a.length, b.length);
+		return res;
+	}
 
-    public static <T> T cast(Object o)
-    {
-        return (T) o;
-    }
+	public static <T> T cast(Object o)
+	{
+		return (T) o;
+	}
 
 
 

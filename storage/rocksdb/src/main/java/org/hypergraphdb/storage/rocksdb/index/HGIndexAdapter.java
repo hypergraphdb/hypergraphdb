@@ -38,55 +38,55 @@ import java.util.Comparator;
  */
 public class HGIndexAdapter
 {
-    private final String name;
-    boolean configured = false;
-    private Comparator<byte[]> keyComparator;
-    private Comparator<byte[]> valueComparator;
+	private final String name;
+	boolean configured = false;
+	private Comparator<byte[]> keyComparator;
+	private Comparator<byte[]> valueComparator;
 
-    public HGIndexAdapter(String name)
-    {
-        this.name = name;
-    }
+	public HGIndexAdapter(String name)
+	{
+		this.name = name;
+	}
 
-    public void configure(Comparator<byte[]> keyComparator, Comparator<byte[]> valueComparator)
-    {
-        if (this.configured)
-        {
-            throw new IllegalStateException("The adapter is already configured.");
-        }
-        this.keyComparator = keyComparator;
-        this.valueComparator = valueComparator;
-        this.configured = true;
-    }
+	public void configure(Comparator<byte[]> keyComparator, Comparator<byte[]> valueComparator)
+	{
+		if (this.configured)
+		{
+			throw new IllegalStateException("The adapter is already configured.");
+		}
+		this.keyComparator = keyComparator;
+		this.valueComparator = valueComparator;
+		this.configured = true;
+	}
 
-    public AbstractComparator getRocksDBComparator()
-    {
-        /*
-        TODO comparator.close? comparatoroptions.close?
-         */
-        return new AbstractComparator(new ComparatorOptions())
-        {
-            @Override
-            public String name()
-            {
-                return name;
-            }
+	public AbstractComparator getRocksDBComparator()
+	{
+		/*
+		TODO comparator.close? comparatoroptions.close?
+		 */
+		return new AbstractComparator(new ComparatorOptions())
+		{
+			@Override
+			public String name()
+			{
+				return name;
+			}
 
-            @Override
-            public int compare(ByteBuffer buffer1, ByteBuffer buffer2)
-            {
-                if (!configured)
-                {
-                    throw new IllegalStateException("The adapter is not yet configured and cannot" +
-                            "be called");
-                }
-                return VarKeyVarValueColumnFamilyMultivaluedDB.compareRocksDBKeys(
-                        buffer1,
-                        buffer2,
-                        keyComparator,
-                        valueComparator);
-            }
-        };
-    }
+			@Override
+			public int compare(ByteBuffer buffer1, ByteBuffer buffer2)
+			{
+				if (!configured)
+				{
+					throw new IllegalStateException("The adapter is not yet configured and cannot" +
+							"be called");
+				}
+				return VarKeyVarValueColumnFamilyMultivaluedDB.compareRocksDBKeys(
+						buffer1,
+						buffer2,
+						keyComparator,
+						valueComparator);
+			}
+		};
+	}
 
 }

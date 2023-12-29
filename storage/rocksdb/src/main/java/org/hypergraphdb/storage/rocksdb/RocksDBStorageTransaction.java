@@ -19,75 +19,75 @@ import org.rocksdb.*;
  */
 public class RocksDBStorageTransaction implements HGStorageTransaction
 {
-    private final Transaction txn;
-    private final WriteOptions writeOptions;
+	private final Transaction txn;
+	private final WriteOptions writeOptions;
 
-    public static RocksDBStorageTransaction nullTransaction()
-    {
-        return new RocksDBStorageTransaction(null, null);
-    }
+	public static RocksDBStorageTransaction nullTransaction()
+	{
+		return new RocksDBStorageTransaction(null, null);
+	}
 
-    public Transaction rocksdbTxn()
-    {
-        return txn;
-    }
+	public Transaction rocksdbTxn()
+	{
+		return txn;
+	}
 
-    public RocksDBStorageTransaction(
-            Transaction txn,
+	public RocksDBStorageTransaction(
+			Transaction txn,
 //            TransactionOptions txnOptions,
-            WriteOptions writeOptions)
-    {
-        this.txn = txn;
+			WriteOptions writeOptions)
+	{
+		this.txn = txn;
 //        this.txnOptions = txnOptions;
-        this.writeOptions = writeOptions;
-    }
+		this.writeOptions = writeOptions;
+	}
 
-    /**
-     *
-     */
-    private void close()
-    {
+	/**
+	 *
+	 */
+	private void close()
+	{
 //        this.txnOptions.close();
-        this.writeOptions.close();
-    }
+		this.writeOptions.close();
+	}
 
-    @Override
-    public void commit() throws HGTransactionException
-    {
-        try
-        {
-            if (txn != null)
-                this.txn.commit();
-        }
-        catch (RocksDBException e)
-        {
-            Status s = e.getStatus();
-            //TODO do we need to throw transaction conflict only when the status is Busy
+	@Override
+	public void commit() throws HGTransactionException
+	{
+		try
+		{
+			if (txn != null)
+				this.txn.commit();
+		}
+		catch (RocksDBException e)
+		{
+			Status s = e.getStatus();
+			//TODO do we need to throw transaction conflict only when the status is Busy
 //            s.getCode().equals(Status.Code.Busy);
-            throw new TransactionConflictException();
-        }
-        finally
-        {
-            this.close();
-        }
-    }
+			throw new TransactionConflictException();
+		}
+		finally
+		{
+			this.close();
+		}
+	}
 
-    @Override
-    public void abort() throws HGTransactionException
-    {
-        try
-        {
-            if (txn != null)
-                this.txn.rollback();
-        }
-        catch (RocksDBException e)
-        {
-            throw new HGTransactionException(e);
-        }
-        finally
-        {
-            this.close();
-        }
+	@Override
+	public void abort() throws HGTransactionException
+	{
+		try
+		{
+			if (txn != null)
+				this.txn.rollback();
+		}
+		catch (RocksDBException e)
+		{
+			throw new HGTransactionException(e);
+		}
+		finally
+		{
+			this.close();
+		}
 
-    }
+	}
 }
