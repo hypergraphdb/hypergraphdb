@@ -451,7 +451,6 @@ public class BJEStorageImplementation implements HGStoreImplementation
 				 */
 				var result = new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), key,
 						BAtoHandle.getInstance(handleFactory));
-				result.goAfterLast();
 
 				return result;
 
