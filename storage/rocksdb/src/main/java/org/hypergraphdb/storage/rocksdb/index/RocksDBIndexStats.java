@@ -14,6 +14,18 @@ import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 
+/*
+TODO
+TODO
+TODO
+    All counters ignore the cost and isEstimateOK parameters because the
+    clients seem to set the isEstimateOK parameter but expect precise
+    answer regardless.
+    We need to either fix the clients or implement better (what does better mean? how close to the real
+    result should we be? Is it allowed to estimate to 0, when there are any (1,2..) results?)
+    estimations
+
+ */
 public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<IndexKey, IndexValue>
 {
     private final RocksDBIndex<IndexKey, IndexValue> rocksDBIndex;
@@ -23,13 +35,11 @@ public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<Ind
         this.rocksDBIndex = rocksDBIndex;
     }
 
-    //            private HGIndexStats(HGIndex index)
-    //            {
-    //
-    //            }
     @Override
-    public Count entries(long cost, boolean isEstimateOk)
+    public Count entries(long ignoredCost, boolean ignoredIsEstimate)
     {
+        long cost = Long.MAX_VALUE;
+        boolean isEstimateOk = false;
         if (cost < Long.MAX_VALUE)
         {
             if (!isEstimateOk)
@@ -62,8 +72,10 @@ public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<Ind
     }
 
     @Override
-    public Count keys(long cost, boolean isEstimateOk)
+    public Count keys(long ignoredCost, boolean ignoredIsEstimate)
     {
+        boolean isEstimateOk = false;
+        long cost = Long.MAX_VALUE;
         if (cost < Long.MAX_VALUE)
         {
             /*
@@ -88,8 +100,11 @@ public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<Ind
     }
 
     @Override
-    public Count valuesOfKey(IndexKey key, long cost, boolean isEstimateOk)
+    public Count valuesOfKey(IndexKey key, long ignoredCost, boolean ignoredIsEstimate)
     {
+        long cost = Long.MAX_VALUE;
+        boolean isEstimateOk = false;
+
         if (cost < Long.MAX_VALUE)
         {
             if (!isEstimateOk)
@@ -127,8 +142,10 @@ public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<Ind
     }
 
     @Override
-    public Count values(long cost, boolean isEstimateOk)
+    public Count values(long ignoredcost, boolean ignoredisEstimateOk)
     {
+        long cost = Long.MAX_VALUE;
+        boolean isEstimateOk = false;
         if (cost < Long.MAX_VALUE)
             return null;
 
@@ -146,11 +163,14 @@ public class RocksDBIndexStats<IndexKey, IndexValue> implements HGIndexStats<Ind
     }
 
     @Override
-    public Count keysWithValue(IndexValue o, long cost, boolean isEstimateOk)
+    public Count keysWithValue(IndexValue o, long ignoredcost, boolean ignoredisEstimateOk)
     {
         /*
         TODO we can perform estimations
          */
+        long cost = Long.MAX_VALUE;
+        boolean isEstimateOk = false;
+
         if (cost < Long.MAX_VALUE)
             return null;
 
