@@ -13,6 +13,7 @@ import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
 import org.hypergraphdb.storage.rocksdb.dataformat.FixedKeyFixedValueColumnFamilyMultivaluedDB;
+import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.hypergraphdb.storage.rocksdb.index.BidirectionalRocksDBIndex;
 import org.hypergraphdb.storage.rocksdb.index.HGIndexAdapter;
 import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
@@ -21,6 +22,7 @@ import org.hypergraphdb.util.HGUtils;
 import org.rocksdb.*;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -35,8 +37,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 {
 
     /*
-    TODO when does this need to be loaded?
-     */
+        TODO when does this need to be loaded?
+         */
     static {
         RocksDB.loadLibrary();
     }
@@ -50,8 +52,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private static final String CF_INCIDENCE = "INCIDENCE";
     private static final String CF_DATA= "DATA";
     private static final String CF_PRIMITIVE = "PRIMITIVE";
-    private static final String CF_INDEX_PREFIX = "INDEX_";
-    private static final String CF_INVERSE_INDEX_PREFIX = "INV_INDEX_";
+    private static final String CF_INDEX_PREFIX = "INDEX";
+    private static final String CF_INVERSE_INDEX_PREFIX = "INV_INDEX";
+    private static final String CF_NAME_SEPARATOR = ">>>";
 
     /**
      * Guards the state of the indices
@@ -80,7 +83,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     //index name -- index
     private final ConcurrentHashMap<String, RocksDBIndex<?,?>> indices = new ConcurrentHashMap<>();
     //index name -- index adapter
-    private final ConcurrentHashMap<String, HGIndexAdapter> indexAdapters = new ConcurrentHashMap<>();
+//    private final ConcurrentHashMap<String, HGIndexAdapter> indexAdapters = new ConcurrentHashMap<>();
 
 
     /**
@@ -127,34 +130,61 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 .map(id -> new String(id, StandardCharsets.UTF_8))
                 .collect(Collectors.toSet());
 
+
         List<ColumnFamilyDescriptor> descriptors = new LinkedList<>();
 
         for (var cfID : parsedColumnFamilyIDs)
         {
             ColumnFamilyDescriptor cfd;
 
-            if (isIndex(cfID) || isInverseIndex(cfID))
+            if (isInverseIndex(cfID) || isIndex(cfID))
             {
-                /*
-                if we are opening a column family which represents
-                either an index or inverse index, we want to set
-                a custom comparator.
-                The way we do that is to pass the RocksDB runtime
-                a reference to a HGIndexAdapter.getComparator().
-                Later when the user opens the index, they will pass
-                the actual comparator and we can setup the HGIndexAdapter
-                 */
-                var indexName = stripCFPrefix(cfID);
-                if (!this.indexAdapters.containsKey(indexName))
+                var parsedCF = parseColumnFamily(cfID);
+                var indexName = parsedCF[1];
+                var keyComparatorClassName = parsedCF[2];
+                var valueComparatorClassName = parsedCF[3];
+                Comparator<byte[]> keyComparator, valueComparator;
+
+                try
                 {
-                    HGIndexAdapter adapter = new HGIndexAdapter(indexName);
-                    this.indexAdapters.put(indexName, adapter);
+                    Object kc = keyComparatorClassName == null
+                            ? null
+                            : Class.forName(keyComparatorClassName).getDeclaredConstructors()[0].newInstance();
+                    Object vc = valueComparatorClassName ==
+                            null ?
+                            null :
+                            Class.forName(valueComparatorClassName).getDeclaredConstructors()[0].newInstance();
+                    if (kc instanceof Comparator || kc == null)
+                    {
+                        keyComparator = (Comparator<byte[]>)kc;
+                    }
+                    else
+                    {
+                        throw new HGException(String.format("Comparator class %s is not a comparator", keyComparatorClassName));
+
+                    }
+                    if (vc instanceof Comparator || vc == null)
+                    {
+                        valueComparator = (Comparator<byte[]>)vc;
+                    }
+                    else
+                    {
+                        throw new HGException(String.format("Comparator class %s is not a comparator", valueComparatorClassName));
+                    }
                 }
-                var cfOptions = new ColumnFamilyOptions()
-                        .setComparator(this.indexAdapters.get(indexName).getRocksDBComparator());
+                catch (Throwable e)
+                {
+                    throw new HGException(String.format("Column family with name %s was present in the RocksDB database," +
+                            " but the comparators set for it %s, %s was not found", cfID, keyComparatorClassName, valueComparatorClassName), e);
+                }
+
+                //The key and value comparators need to be flipped for the inverse index
+                var cfOptions =
+                        isIndex(cfID)
+                                ? getIndexColumnFamilyOptions(keyComparator, valueComparator, cfID)
+                                : getIndexColumnFamilyOptions(valueComparator, keyComparator, cfID);
                 this.cfOptionsStore.put(cfID, cfOptions);
                 cfd = new ColumnFamilyDescriptor(cfID.getBytes(StandardCharsets.UTF_8), cfOptions);
-
             }
             else
             {
@@ -184,6 +214,31 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 
     }
 
+    private static ColumnFamilyOptions getIndexColumnFamilyOptions(
+            Comparator<byte[]> keyComparator,
+            Comparator<byte[]> valueComparator,
+            String name)
+    {
+        var cfOptions = new ColumnFamilyOptions();
+        cfOptions.setComparator(new AbstractComparator(new ComparatorOptions())
+        {
+            @Override
+            public String name()
+            {
+                return name;
+            }
+
+            @Override
+            public int compare(ByteBuffer buffer1,
+                    ByteBuffer buffer2)
+            {
+                return VarKeyVarValueColumnFamilyMultivaluedDB.compareRocksDBKeys(
+                        buffer1,
+                        buffer2, keyComparator, valueComparator);
+            }
+        });
+        return cfOptions;
+    }
 
     /**
      * whether a column family is an index
@@ -207,19 +262,37 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         return cfName.startsWith(CF_INVERSE_INDEX_PREFIX);
     }
 
-    private static String stripCFPrefix(String cfName)
+    /**
+     * Parse the column family name into its constituents
+     * We are embedding the index name, whether the CF is for the
+     * forward or inverse index and the comparator class name.
+     * TODO this approach for storing 'metadata' in the column family name does not feel optimal
+     *  however we need the column families to read any thing from the database
+     * @param cfName the name of the column family -- must be in the format INDEX|INV_INDEX>>>INDEX_NAME>>><key_comparator-class-name>>><value_comparator_class_name>
+     * @return if the column family is for an index or inverse index -- [INDEX|INV_INDEX, index_name, key_comparator_class_name|NULL, value_comparator_class_name|NULL]
+     *      if not -- [null, cfName, null]
+     */
+    private static String[] parseColumnFamily(String cfName)
     {
-        if (isIndex(cfName))
+        if (isIndex(cfName) || isInverseIndex(cfName))
         {
-           return cfName.substring(CF_INDEX_PREFIX.length());
-        }
-        else if (isInverseIndex(cfName))
-        {
-            return cfName.substring(CF_INVERSE_INDEX_PREFIX.length());
+            var parts = cfName.split(CF_NAME_SEPARATOR);
+            if (parts.length != 4)
+            {
+                throw new IllegalArgumentException(String.format("%s is not a legal index column family name", cfName));
+            }
+            if (parts[2].equalsIgnoreCase("NULL")) parts[2] = null;
+            if (parts[3].equalsIgnoreCase("NULL")) parts[3] = null;
+            return parts;
         }
         else
         {
-            throw new IllegalArgumentException(String.format("%s is not an index column family", cfName));
+            return new String[]{
+                    null,
+                    cfName,
+                    null,
+                    null
+            };
         }
     }
 
@@ -291,7 +364,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             index.close();
         }
         this.indices.clear();
-        this.indexAdapters.clear();
+//        this.indexAdapters.clear();
 
         /*
         close the cf options used to initialize the column families
@@ -772,47 +845,89 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             boolean isBidirectional,
             boolean createIfNecessary)
     {
+
         checkStarted();
 
         RocksDBIndex<KeyType, ValueType> index = (RocksDBIndex<KeyType, ValueType>) indices.get(name);
 
+        if (index != null) return index;
         synchronized (this.indexLock)
         {
-            if (index != null)
-            {
-                return index;
-            }
+            index = (RocksDBIndex<KeyType, ValueType>) indices.get(name);
+            if (index != null) return index;
+
             ColumnFamilyHandle cfHandle, inverseCFHandle = null;
-            var adapter = indexAdapters.get(name);
-            if (adapter == null)
-            {
+            String cfName = indexCF(name,
+                    keyComparator==null
+                            ?null
+                            :keyComparator.getClass().getName(), valueComparator==null?null:valueComparator.getClass().getName());
+            String invCFName = inverseIndexCF(name,
+                    keyComparator==null
+                            ?null
+                            :keyComparator.getClass().getName(), valueComparator==null?null:valueComparator.getClass().getName());
+
             /*
-             if the adapter is null, the column family(s) were not present
-             at startup, which means the index is not present in the db,
-             so we need to create them now.
-            */
-                if (cfOptionsStore.containsKey(indexCF(name)) || columnFamilies.containsKey(indexCF(name)))
+            we need the column family for the
+             */
+            if (columnFamilies.containsKey(cfName))
+            {
+                /*
+                The index exists, but is not open
+                 */
+                cfHandle = columnFamilies.get(cfName);
+                inverseCFHandle = columnFamilies.get(invCFName);
+                if (isBidirectional)
                 {
-                    throw new HGException(String.format("This is probably a bug. There was no index adapter for an index" +
-                                    " %s but a column family for that index appears to be setup. CF Options for name %s exists: %s. CF " +
-                                    " for name %s exists: %s",
+                    if (inverseCFHandle == null)
+                    {
+                        throw new HGException(String.format("This is probably a bug. The column family %s for the bidirectional index %s" +
+                                " exists but there is no column family %s for the inverse index.", name, cfName, invCFName));
+                    }
+                    index = new BidirectionalRocksDBIndex<KeyType, ValueType>(
                             name,
-                            indexCF(name),
-                            cfOptionsStore.containsKey(indexCF(name)),
-                            indexCF(name),
-                            columnFamilies.containsKey(indexCF(name))));
+                            cfHandle,
+                            cfName,
+                            inverseCFHandle,
+                            invCFName,
+                            keyConverter,
+                            valueConverter,
+                            db,
+                            this);
+                }
+                else
+                {
+                    index = new RocksDBIndex<KeyType, ValueType>(
+                            name,
+                            cfHandle,
+                            cfName,
+                            keyConverter,
+                            valueConverter,
+                            db,
+                            this);
                 }
 
-                adapter = new HGIndexAdapter(name);
-                indexAdapters.put(name, adapter);
-                var cfo = new ColumnFamilyOptions().setComparator(adapter.getRocksDBComparator());
-                cfOptionsStore.put(indexCF(name), cfo);
-                var cfd = new ColumnFamilyDescriptor(indexCF(name).getBytes(StandardCharsets.UTF_8), cfo);
+            }
+            else
+            {
+                /*
+                This is a new index
+                 */
+                var cfo = getIndexColumnFamilyOptions(keyComparator, valueComparator, cfName);
+                cfOptionsStore.put(cfName, cfo);
+                var cfd = new ColumnFamilyDescriptor(cfName.getBytes(StandardCharsets.UTF_8), cfo);
 
                 try
                 {
                     cfHandle = db.createColumnFamily(cfd);
-                    columnFamilies.put(indexCF(name), cfHandle);
+                    columnFamilies.put(cfName, cfHandle);
+                    index = new RocksDBIndex<KeyType, ValueType>(
+                            name,
+                            cfHandle,
+                            cfName,
+                            keyConverter,
+                            valueConverter,
+                            db,
+                            this);
                 }
                 catch (RocksDBException e)
                 {
@@ -820,25 +935,9 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 }
                 if (isBidirectional)
                 {
-                /*
-                 if the adapter is null, the column family(s) were not present
-                 at startup, which means the index is not present in the db,
-                 so we need to create them now.
-                */
-                    if (cfOptionsStore.containsKey(inverseIndexCF(name)) || columnFamilies.containsKey(inverseIndexCF(name)))
-                    {
-                        throw new HGException(String.format("This is probably a bug. There was no index adapter for an index" +
-                                        " %s but a column family for the inverse index appears to be setup. CF Options for name %s exists: %s. CF " +
-                                        " for name %s exists: %s",
-                                name,
-                                inverseIndexCF(name),
-                                cfOptionsStore.containsKey(inverseIndexCF(name)),
-                                inverseIndexCF(name),
-                                columnFamilies.containsKey(inverseIndexCF(name))));
-                    }
-                    var invCFO = new ColumnFamilyOptions().setComparator(adapter.getRocksDBComparator());
-                    cfOptionsStore.put(inverseIndexCF(name), invCFO);
-                    var inverseCFD = new ColumnFamilyDescriptor(inverseIndexCF(name).getBytes(StandardCharsets.UTF_8), invCFO);
+                    var invCFO = getIndexColumnFamilyOptions(valueComparator, keyComparator, invCFName);
+                    cfOptionsStore.put(invCFName, invCFO);
+                    var inverseCFD = new ColumnFamilyDescriptor(invCFName.getBytes(StandardCharsets.UTF_8), invCFO);
 
                     try
                     {
@@ -846,64 +945,21 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     }
                     catch (RocksDBException e)
                     {
-                        throw new HGException(e);
+                        throw new HGException(String.format("Error creating column family %s", invCFName), e);
                     }
-                    columnFamilies.put(inverseIndexCF(name), inverseCFHandle);
+                    columnFamilies.put(invCFName, inverseCFHandle);
+                    index = new BidirectionalRocksDBIndex<KeyType, ValueType>(
+                            name,
+                            cfHandle,
+                            cfName,
+                            inverseCFHandle,
+                            invCFName,
+                            keyConverter,
+                            valueConverter,
+                            db,
+                            this);
                 }
             }
-            else
-            {
-            /*
-            the index adapter is not null which means that this is a preexisting index which we have not
-            yet initialized.
-             */
-                cfHandle = columnFamilies.get(indexCF(name));
-                inverseCFHandle = columnFamilies.get(inverseIndexCF(name));
-            }
-
-            if (cfHandle == null || (isBidirectional && inverseCFHandle == null))
-            {
-            /*
-            This is possible if not all the necessary column families were present at startup
-            e.g. only the inverse column family or only the forward column family when the index is bidirectional
-             */
-                throw new HGException(String.format("Creating an index named %s. Its adapter " +
-                        "is present and so its column families should be present as well. " +
-                        "Bidirectional: %s.", name, isBidirectional));
-            }
-            if (!isBidirectional && inverseCFHandle != null)
-            {
-                throw new HGException(String.format("Creating a non bidirectional index named %s. " +
-                                "A column family for the inverse index is present which is illegal. ",
-                        name));
-            }
-
-            if (isBidirectional)
-            {
-                index = new BidirectionalRocksDBIndex<KeyType, ValueType>(
-                        name,
-                        cfHandle,
-                        inverseCFHandle,
-                        keyConverter,
-                        valueConverter,
-                        db,
-                        this);
-            }
-            else
-            {
-                index = new RocksDBIndex<KeyType, ValueType>(
-                        name,
-                        cfHandle,
-                        keyConverter,
-                        valueConverter,
-                        db,
-                        this);
-            }
-
-        /*
-        Register the supplied comparators with the adapter
-         */
-            adapter.configure(keyComparator, valueComparator);
             indices.put(name, index);
 
             return index;
@@ -917,12 +973,11 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         checkStarted();
         synchronized (indexLock)
         {
-            //Delete the entire column family
-            var indexCFName = indexCF(name);
-            var inverseIndexCFName = inverseIndexCF(name);
+            var index = indices.remove(name);
+            index.close();
 
-            var indexCFHandle = this.columnFamilies.get(indexCFName);
-            var indexCFOptions = this.cfOptionsStore.remove(indexCFName);
+            var indexCFHandle = index.getColumnFamilyHandle();
+            var indexCFOptions = this.cfOptionsStore.remove(index.getColumnFamilyName());
             if (indexCFOptions != null)
             {
                 indexCFOptions.close();
@@ -932,54 +987,59 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             {
                 throw new HGException(String.format(
                         "Cannot remove index %s whose column family - %s does not exist.",
-                        name, indexCF(name)));
+                        name, index.getColumnFamilyName()));
             }
             else
             {
                 try
                 {
                     db.dropColumnFamily(indexCFHandle);
-                    columnFamilies.remove(indexCFName);
+                    columnFamilies.remove(index.getColumnFamilyName());
                 }
                 catch (RocksDBException e)
                 {
                     throw new HGException(
-                            String.format("Could not delete column family %s which stores" +
-                                    "the index %s.", indexCF(name), name), e);
+                            String.format("Could not delete column family %s which stores " +
+                                    "the index %s.", index.getColumnFamilyName(), name), e);
                 }
             }
-            var inverseIndexCFHandle = this.columnFamilies.get(inverseIndexCFName);
-
-            var inverseIndexCFOptions = this.cfOptionsStore.remove(inverseIndexCFName);
-            if (inverseIndexCFOptions != null)
+            if (index instanceof BidirectionalRocksDBIndex)
             {
-                inverseIndexCFOptions.close();
+                var biIndex = (BidirectionalRocksDBIndex<?,?>)index;
+                var inverseIndexCFHandle = biIndex.getInverseCFHandle();
+                var inverseIndexCFOptions = this.cfOptionsStore.remove(biIndex.getInverseCFName());
+                if (inverseIndexCFOptions != null)
+                {
+                    inverseIndexCFOptions.close();
+                }
+                if (inverseIndexCFHandle != null)
+                {
+                    try
+                    {
+                        db.dropColumnFamily(inverseIndexCFHandle);
+                        columnFamilies.remove(biIndex.getColumnFamilyName());
+                    }
+                    catch (RocksDBException e)
+                    {
+                        throw new HGException(
+                                String.format("Could not delete column family %s which stores" +
+                                        "the index %s.", biIndex.getInverseCFName(), name), e);
+                    }
+                }
             }
 
-            if (inverseIndexCFHandle != null)
-            {
-                try
-                {
-                    db.dropColumnFamily(inverseIndexCFHandle);
-                    columnFamilies.remove(inverseIndexCFName);
-                }
-                catch (RocksDBException e)
-                {
-                    throw new HGException(
-                            String.format("Could not delete column family %s which stores" +
-                                    "the index %s.", inverseIndexCF(name), name), e);
-                }
-            }
-
-            indexAdapters.remove(name);
             indices.remove(name);
-
         }
     }
 
-    private String indexCF(String indexName)
+    private String indexCF(String indexName, String keyComparatorClass, String valueComparatorClass)
     {
-        return CF_INDEX_PREFIX + indexName;
+        return new StringJoiner(CF_NAME_SEPARATOR)
+                .add(CF_INDEX_PREFIX)
+                .add(indexName)
+                .add(keyComparatorClass)
+                .add(valueComparatorClass)
+                .toString();
     }
 
     /**
@@ -987,9 +1047,14 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
      * @param indexName
      * @return
      */
-    private String inverseIndexCF(String indexName)
+    private String inverseIndexCF(String indexName, String keyComparatorClass, String valueComparatorClass)
     {
-        return CF_INVERSE_INDEX_PREFIX + indexName;
+        return new StringJoiner(CF_NAME_SEPARATOR)
+                .add(CF_INVERSE_INDEX_PREFIX)
+                .add(indexName)
+                .add(keyComparatorClass)
+                .add(valueComparatorClass)
+                .toString();
     }
 
 

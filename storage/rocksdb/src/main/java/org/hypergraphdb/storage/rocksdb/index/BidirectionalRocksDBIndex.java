@@ -28,10 +28,13 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 {
 
 	private final ColumnFamilyHandle inverseCFHandle;
+	private final String inverseCFName;
 
 	public BidirectionalRocksDBIndex(String name,
 			ColumnFamilyHandle columnFamily,
+			String columnFamilyName,
 			ColumnFamilyHandle inverseCFHandle,
+			String inverseColumnFamilyName,
 			ByteArrayConverter<IndexKey> keyConverter,
 			ByteArrayConverter<IndexValue> valueConverter,
 			OptimisticTransactionDB db,
@@ -40,11 +43,23 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 		super(
 				name,
 				columnFamily,
+				columnFamilyName,
 				keyConverter,
 				valueConverter,
 				db,
 				store);
 		this.inverseCFHandle = inverseCFHandle;
+		this.inverseCFName = inverseColumnFamilyName;
+	}
+
+	public String getInverseCFName()
+	{
+		return this.inverseCFName;
+	}
+
+	public ColumnFamilyHandle getInverseCFHandle()
+	{
+		return this.inverseCFHandle;
 	}
 
 	@Override
