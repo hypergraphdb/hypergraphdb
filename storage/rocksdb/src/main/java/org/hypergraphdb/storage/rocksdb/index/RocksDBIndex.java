@@ -12,7 +12,9 @@ package org.hypergraphdb.storage.rocksdb.index;
 import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGIndexStats;
-import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB;
+import org.hypergraphdb.storage.rocksdb.iterate.ValueIterator;
+import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.rocksdb.*;
@@ -26,7 +28,9 @@ import java.util.List;
  */
 public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey, IndexValue>
 {
-	private final ColumnFamilyHandle columnFamily;
+	private final ColumnFamilyOptions columnFamilyOptions;
+	private final LogicalDB indexDB;
+	private ColumnFamilyHandle columnFamily;
 	private final String name;
 	protected final ByteArrayConverter<IndexKey> keyConverter;
 	protected final ByteArrayConverter<IndexValue> valueConverter;
@@ -39,6 +43,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 			String name,
 			ColumnFamilyHandle columnFamily,
 			String columnFamilyName,
+			ColumnFamilyOptions columnFamilyOptions,
 			ByteArrayConverter<IndexKey> keyConverter,
 			ByteArrayConverter<IndexValue> valueConverter,
 			OptimisticTransactionDB db,
@@ -48,10 +53,12 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 		this.name = name;
 		this.columnFamily = columnFamily;
 		this.columnFamilyName = columnFamilyName;
+		this.columnFamilyOptions = columnFamilyOptions;
 		this.keyConverter = keyConverter;
 		this.valueConverter = valueConverter;
 		this.db = db;
 		this.store = store;
+		this.indexDB = new LogicalDB.VKVVMVDB(columnFamilyName, columnFamily, columnFamilyOptions);
 		/*
 		we have multiple values for each key
 		we must combine the keys and value
@@ -71,6 +78,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 
 
 	}
+
+
 
 	public String getColumnFamilyName()
 	{
@@ -108,6 +117,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	   ...
 		*/
 		this.open = false;
+		this.columnFamilyOptions.close();
 	}
 
 	public void checkOpen() throws HGException
@@ -139,16 +149,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 		checkOpen();
 		byte[] keyBytes = this.keyConverter.toByteArray(key);
 		byte[] valueBytes = this.valueConverter.toByteArray(value);
-		byte[] rocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(keyBytes, valueBytes);
 		this.store.ensureTransaction(tx -> {
-			try
-			{
-				tx.put(columnFamily, rocksDBKey, new byte[0]);
-			}
-			catch (RocksDBException e)
-			{
-				throw new HGException(e);
-			}
+			this.indexDB.put(tx, keyBytes, valueBytes);
 		});
 	}
 
@@ -158,16 +160,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 		checkOpen();
 		byte[] keyBytes = this.keyConverter.toByteArray(key);
 		byte[] valueBytes = this.valueConverter.toByteArray(value);
-		byte[] rocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(keyBytes, valueBytes);
 		this.store.ensureTransaction(tx -> {
-			try
-			{
-				tx.delete(columnFamily, rocksDBKey);
-			}
-			catch (RocksDBException e)
-			{
-				throw new HGException(e);
-			}
+			this.indexDB.delete(tx, keyBytes, valueBytes);
 		});
 	}
 
@@ -175,55 +169,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	public void removeAllEntries(IndexKey key)
 	{
 		checkOpen();
-		/*
-			TODO consider using RangeDelete which is not yet supported by transactions
-		 */
-
-
-//        try
-//        {
-//            db.deleteRange(
-//                    columnFamily,
-//                    VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key)),
-//                    VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)));
-//        }
-//        catch (RocksDBException e)
-//        {
-//            throw new HGException(e);
-//        }
 		this.store.ensureTransaction(tx -> {
-			try (
-					var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key)));
-					var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)));
-					var ro = new ReadOptions()
-							.setSnapshot(tx.getSnapshot())
-							.setIterateLowerBound(lower)
-							.setIterateUpperBound(upper);
-					RocksIterator iterator  = tx.getIterator(ro, columnFamily))
-			{
-				iterator.seekToFirst();
-				while (iterator.isValid())
-				{
-					byte[] next = iterator.key();
-					try
-					{
-						tx.delete(columnFamily, next);
-					}
-					catch (RocksDBException e)
-					{
-						throw new HGException(e);
-					}
-					iterator.next();
-				}
-				try
-				{
-					iterator.status();
-				}
-				catch (RocksDBException e)
-				{
-					throw new HGException(e);
-				}
-			}
+			this.indexDB.delete(tx, keyConverter.toByteArray(key));
 
 		});
 
@@ -234,41 +181,9 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		byte[] keyBytes = this.keyConverter.toByteArray(key);
-		byte[] firstRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyBytes);
-		byte[] lastRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyBytes);
 		return this.store.ensureTransaction(tx -> {
-			try (var lower = new Slice(firstRocksDBKey);
-				 var upper = new Slice(lastRocksDBKey);
-				 var ro = new ReadOptions()
-						 .setSnapshot(tx.getSnapshot())
-						 .setIterateLowerBound(lower)
-						 .setIterateUpperBound(upper);
-				RocksIterator iterator = tx.getIterator(ro, columnFamily);
-			)
-			{
-				iterator.seekToFirst();
-
-				if (iterator.isValid())
-				{
-					byte[] bytes = iterator.key();
-					var valuebytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(bytes);
-					return valueConverter.fromByteArray(valuebytes, 0, valuebytes.length);
-				}
-				else
-				{
-					try
-					{
-						iterator.status();
-					}
-					catch (RocksDBException e)
-					{
-						throw new HGException(e);
-					}
-					return null;
-				}
-
-			}
-
+			var valuebytes = this.indexDB.get(tx, keyBytes);
+			return valuebytes == null ? null : valueConverter.fromByteArray(valuebytes, 0, valuebytes.length);
 		});
 
 	}
@@ -278,32 +193,13 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key)));
-			var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)));
-			var ro = new ReadOptions()
-					.setSnapshot(tx.getSnapshot())
-					.setIterateLowerBound(lower)
-					.setIterateUpperBound(upper);
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily), List.of(lower, upper, ro), false)
-			{
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
+			var iterator = this.indexDB.iterateValuesForKey(tx, keyConverter.toByteArray(key))
+					.map(bytes -> {
+						var value = this.valueConverter.fromByteArray(bytes, 0, bytes.length);
+						return value;
+					}, this.valueConverter::toByteArray);
 
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-					return VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(
-							keyConverter.toByteArray(key),
-							valueConverter.toByteArray(value));
-
-				}
-			};
-
+			return new IteratorResultSet<>(iterator);
 		});
 	}
 
@@ -320,31 +216,9 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 			keys. Here we are returning all the keys in the iterator
 		 */
 		return this.store.ensureTransaction(tx -> {
-			var ro = new ReadOptions()
-					.setSnapshot(tx.getSnapshot());
-			return new IteratorResultSet<IndexKey>(tx.getIterator(ro, columnFamily), List.of(ro), true)
-			{
-				@Override
-				protected IndexKey extractValue()
-				{
-					var keyBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractKey(this.iterator.key());
-					return keyConverter.fromByteArray(keyBytes, 0, keyBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexKey value)
-				{
-				/*
-				The first rocksdb key with the given logical key (which is
-				actually a value in the result set)
-
-				There could be more than one value, we return the first
-				 */
-					return VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(
-							keyConverter.toByteArray(value));
-				}
-			};
-
+			return new IteratorResultSet<>(this.indexDB.iterateKeys(tx).map(
+					bytes -> keyConverter.fromByteArray(bytes, 0, bytes.length),
+					keyConverter::toByteArray));
 		});
 
 	}
@@ -353,40 +227,11 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	public HGRandomAccessResult<IndexValue> scanValues()
 	{
 		checkOpen();
-		/*
-		TODO the 'values' in the result set are the 'keys' in the index
-			which is confusing
-
-		in lmdb scan values gives all (even duplicate values)
-		 */
 		return this.store.ensureTransaction(tx -> {
-			var ro = new ReadOptions().setSnapshot(
-					tx.getSnapshot());
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily),
-					List.of(ro),
-					false)
-			{
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-				/*
-				We have only the value. we cannot possibly recreate the
-				full rocks db key using only that. we need the logical key
-				as well
-				 */
-					throw new UnsupportedOperationException("Cannot create a rocks db" +
-							"key given only the index value");
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.indexDB.iterateValues(tx)
+							.map(bytes -> this.valueConverter.fromByteArray(bytes, 0, bytes.length),
+									this.valueConverter::toByteArray));
 		});
 	}
 
@@ -478,28 +323,10 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(keyConverter.toByteArray(key)));
-			var ro = new ReadOptions()
-					.setIterateUpperBound(upper)
-					.setSnapshot(tx.getSnapshot());
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily), List.of(upper, ro), false)
-			{
-
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-					throw new UnsupportedOperationException("Connot convert value to a complete key.");
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.indexDB.iterateLT(tx,keyConverter.toByteArray(key))
+							.map(bytes -> this.valueConverter.fromByteArray(bytes, 0, bytes.length),
+									this.valueConverter::toByteArray));
 		});
 	}
 
@@ -508,28 +335,10 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(keyConverter.toByteArray(key)));
-			var ro = new ReadOptions()
-					.setIterateLowerBound(lower)
-					.setSnapshot(tx.getSnapshot());
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily), List.of(lower, ro), false)
-			{
-
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-					throw new UnsupportedOperationException("Connot convert value to a complete key.");
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.indexDB.iterateGT(tx,keyConverter.toByteArray(key))
+							.map(bytes -> this.valueConverter.fromByteArray(bytes, 0, bytes.length),
+									this.valueConverter::toByteArray));
 		});
 	}
 
@@ -538,30 +347,12 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
-					.lastRocksDBKey(keyConverter.toByteArray(key)));
-			var ro = new ReadOptions()
-					.setSnapshot(tx.getSnapshot())
-					.setIterateUpperBound(upper);
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily), List.of(upper, ro), false)
-			{
-
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-					throw new UnsupportedOperationException("Connot convert value to a complete key.");
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.indexDB.iterateLTE(tx,keyConverter.toByteArray(key))
+							.map(bytes -> this.valueConverter.fromByteArray(bytes, 0, bytes.length),
+									this.valueConverter::toByteArray));
 		});
+
 	}
 
 	@Override
@@ -569,31 +360,11 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	{
 		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB
-					.firstRocksDBKey(keyConverter.toByteArray(key)));
-			var ro = new ReadOptions()
-					.setSnapshot(tx.getSnapshot())
-					.setIterateLowerBound(lower);
-
-			return new IteratorResultSet<IndexValue>(
-					tx.getIterator(ro, columnFamily), List.of(lower, ro),false)
-			{
-
-				@Override
-				protected IndexValue extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return valueConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexValue value)
-				{
-					throw new UnsupportedOperationException("Connot convert value to a complete key.");
-
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.indexDB.iterateGTE(tx,keyConverter.toByteArray(key))
+							.map(bytes -> this.valueConverter.fromByteArray(bytes, 0, bytes.length),
+									this.valueConverter::toByteArray));
 		});
+
 	}
 }

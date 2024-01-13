@@ -13,11 +13,10 @@ import org.hypergraphdb.HGBidirectionalIndex;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
-import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB;
+import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
-import org.hypergraphdb.storage.rocksdb.index.RocksDBIndex;
-import org.hypergraphdb.transaction.HGTransactionManager;
 import org.rocksdb.*;
 
 import java.util.List;
@@ -29,12 +28,30 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 
 	private final ColumnFamilyHandle inverseCFHandle;
 	private final String inverseCFName;
+	private final ColumnFamilyOptions inverseColumnFamilyOptions;
+	private final LogicalDB inverseIndexDB;
 
+	/**
+	 *
+	 * @param name
+	 * @param columnFamily
+	 * @param columnFamilyName
+	 * @param columnFamilyOptions
+	 * @param inverseCFHandle
+	 * @param inverseColumnFamilyName
+	 * @param inverseColumnFamilyOptions
+	 * @param keyConverter the converter for the keys as stored in the forward index
+	 * @param valueConverter the converter for the values as stored in the forward index
+	 * @param db
+	 * @param store
+	 */
 	public BidirectionalRocksDBIndex(String name,
 			ColumnFamilyHandle columnFamily,
 			String columnFamilyName,
+			ColumnFamilyOptions columnFamilyOptions,
 			ColumnFamilyHandle inverseCFHandle,
 			String inverseColumnFamilyName,
+			ColumnFamilyOptions inverseColumnFamilyOptions,
 			ByteArrayConverter<IndexKey> keyConverter,
 			ByteArrayConverter<IndexValue> valueConverter,
 			OptimisticTransactionDB db,
@@ -44,12 +61,15 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 				name,
 				columnFamily,
 				columnFamilyName,
+				columnFamilyOptions,
 				keyConverter,
 				valueConverter,
 				db,
 				store);
 		this.inverseCFHandle = inverseCFHandle;
 		this.inverseCFName = inverseColumnFamilyName;
+		this.inverseColumnFamilyOptions = inverseColumnFamilyOptions;
+		this.inverseIndexDB = new LogicalDB.VKVVMVDB(inverseColumnFamilyName, inverseCFHandle, inverseColumnFamilyOptions);
 	}
 
 	public String getInverseCFName()
@@ -72,54 +92,19 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 		/*
 		the key is the value, the value is the key
 		 */
-		byte[] rocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(valueBytes, keyBytes);
 		this.store.ensureTransaction(tx -> {
-			try
-			{
-			   tx.put(inverseCFHandle, rocksDBKey, new byte[0]);
-			}
-			catch (RocksDBException e)
-			{
-				throw new HGException(e);
-			}
+				this.inverseIndexDB.put(tx, valueBytes, keyBytes);
 		});
 	}
 
 	@Override
 	public HGRandomAccessResult<IndexKey> findByValue(IndexValue value)
 	{
-		checkOpen();
 		return this.store.ensureTransaction(tx -> {
-			var lower = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueConverter.toByteArray(value)));
-			var upper = new Slice(VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueConverter.toByteArray(value)));
-			var ro = new ReadOptions()
-					.setSnapshot(tx.getSnapshot())
-					.setIterateLowerBound(lower)
-					.setIterateUpperBound(upper);
-			return new IteratorResultSet<IndexKey>(
-					tx.getIterator(ro, inverseCFHandle), List.of(lower, upper, ro), false)
-			{
-				@Override
-				protected IndexKey extractValue()
-				{
-					var valueBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(this.iterator.key());
-					return keyConverter.fromByteArray(valueBytes, 0, valueBytes.length);
-				}
-
-				@Override
-				protected byte[] toRocksDBKey(IndexKey key)
-				{
-				/*
-				Intentionally reversed, the values in the result set are
-				values in the column family, but keys from the original
-				index pov
-				 */
-					return VarKeyVarValueColumnFamilyMultivaluedDB.makeRocksDBKey(
-							valueConverter.toByteArray(value),
-							keyConverter.toByteArray(key));
-				}
-			};
-
+			return new IteratorResultSet<>(
+					this.inverseIndexDB.iterateValuesForKey(tx, valueConverter.toByteArray(value))
+							.map(bytes -> this.keyConverter.fromByteArray(bytes, 0, bytes.length),
+									this.keyConverter::toByteArray));
 		});
 	}
 
@@ -127,49 +112,10 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 	public IndexKey findFirstByValue(IndexValue value)
 	{
 		checkOpen();
-
 		byte[] valueBytes = this.valueConverter.toByteArray(value);
-		byte[] firstRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.firstRocksDBKey(valueBytes);
-		byte[] lastRocksDBKey = VarKeyVarValueColumnFamilyMultivaluedDB.lastRocksDBKey(valueBytes);
-
 		return this.store.ensureTransaction(tx -> {
-			try(
-					var lower = new Slice(firstRocksDBKey);
-					var upper = new Slice(lastRocksDBKey);
-					var ro = new ReadOptions()
-							.setSnapshot(tx.getSnapshot())
-							.setIterateLowerBound(lower)
-							.setIterateUpperBound(upper);
-					RocksIterator iterator = tx.getIterator(ro, inverseCFHandle))
-			{
-
-				iterator.seekToFirst();
-
-				if (iterator.isValid())
-				{
-					byte[] bytes = iterator.key();
-					var keyBytes = VarKeyVarValueColumnFamilyMultivaluedDB.extractValue(
-							bytes);
-					return keyConverter.fromByteArray(keyBytes, 0,
-							keyBytes.length);
-
-				}
-				else
-				{
-					try
-					{
-						iterator.status();
-					}
-					catch (RocksDBException e)
-					{
-						throw new HGException(e);
-					}
-			/*
-			If the iterator is not valid and the
-			 */
-					return null;
-				}
-			}
+			var keyBytes = this.inverseIndexDB.get(tx, valueBytes);
+			return keyBytes == null ? null : keyConverter.fromByteArray(keyBytes, 0, keyBytes.length);
 		});
 	}
 
@@ -181,6 +127,13 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 		{
 			return rs.count();
 		}
+	}
+
+	@Override
+	public void close()
+	{
+		super.close();
+		this.inverseColumnFamilyOptions.close();
 	}
 }
 

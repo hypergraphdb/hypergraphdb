@@ -3,18 +3,21 @@
  * software. For permitted uses, licensing options and redistribution, please see
  * the LicensingInformation file at the root level of the distribution.
  *
- * Copyright (c) 2005-2023 Kobrix Software, Inc.  All rights reserved.
+ * Copyright (c) 2005-2024 Kobrix Software, Inc.  All rights reserved.
  *
  */
 
-package org.hypergraphdb.storage.rocksdb;
+package org.hypergraphdb.storage.rocksdb.resultset;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGRandomAccessResult;
-import org.hypergraphdb.util.CountMe;
+import org.hypergraphdb.storage.rocksdb.iterate.AbstractValueIterator;
+import org.hypergraphdb.storage.rocksdb.iterate.DistinctValueIterator;
+import org.hypergraphdb.storage.rocksdb.iterate.ValueIterator;
 import org.rocksdb.*;
 
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * a random access result which is backed by an iterator.
@@ -24,151 +27,33 @@ import java.util.List;
  *      extractValue
  *
  */
-public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
+public class IteratorResultSet<T> extends ResultSet<T>
 {
 
-	private final List<AbstractNativeReference> closables;
 
-	protected interface AbstractIterator
-	{
 
-		void seek(byte[] keyvalue);
+//	public <U> ResultSet<U> map(Function<U,T> to, Function<T,U> from)
+//	{
+//
+//		return new IteratorResultSet<U>(
+//				IteratorResultSet.this.iterator,
+//				IteratorResultSet.this.closables)
+//		{
+//			@Override
+//			protected U extractValue()
+//			{
+//				return from.apply(IteratorResultSet.this.extractValue());
+//			}
+//
+//			@Override
+//			protected byte[] toRocksDBKey(U value)
+//			{
+//				return IteratorResultSet.this.toRocksDBKey(to.apply(value));
+//			}
+//		};
+//	}
 
-		boolean isValid();
-
-		void seekToFirst();
-
-		void seekToLast();
-
-		void prev();
-
-		void status() throws RocksDBException;
-
-		void next();
-
-		void close();
-
-		byte[] key();
-	}
-
-	private class RocksDBAbstractIterator implements AbstractIterator, AutoCloseable
-	{
-		protected final RocksIterator it;
-
-		private RocksDBAbstractIterator(RocksIterator it)
-		{
-			this.it = it;
-		}
-
-		@Override
-		public void seek(byte[] keyvalue)
-		{
-		   it.seek(keyvalue);
-		}
-
-		@Override
-		public boolean isValid()
-		{
-			return it.isValid();
-		}
-
-		@Override
-		public void seekToFirst()
-		{
-			it.seekToFirst();
-		}
-
-		@Override
-		public void seekToLast()
-		{
-			it.seekToLast();
-		}
-
-		@Override
-		public void prev()
-		{
-			it.prev();
-		}
-
-		@Override
-		public void status() throws RocksDBException
-		{
-			it.status();
-		}
-
-		@Override
-		public void next()
-		{
-			it.next();
-		}
-
-		@Override
-		public void close()
-		{
-			it.close();
-		}
-
-		@Override
-		public byte[] key()
-		{
-			return it.key();
-		}
-	}
-
-	private class DistinctRocksDBAbstractIterator extends RocksDBAbstractIterator
-	{
-		private DistinctRocksDBAbstractIterator(RocksIterator it)
-		{
-			super(it);
-		}
-
-		@Override
-		public void prev()
-		{
-			var current = extractValue();
-			while (true)
-			{
-				it.prev();
-				if (it.isValid())
-				{
-					var prev = extractValue();
-					if (!prev.equals(current))
-					{
-						break;
-					}
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		@Override
-		public void next()
-		{
-			var current = extractValue();
-			while (true)
-			{
-				it.next();
-				if (it.isValid())
-				{
-					var prev = extractValue();
-					if (!prev.equals(current))
-					{
-						break;
-					}
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-	}
-
-	protected AbstractIterator iterator;
-	private final boolean unique;
+	protected AbstractValueIterator<T> iterator;
 
 	/*
 	TODO come up with a good way to make this typesafe i.e. this needs to be of type T
@@ -243,37 +128,24 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 		so the move operations should not do anything
 	 */
 
-	/**
-	 * The result set is associated with a transaction.
-	 * TODO what happens with the iterator when the transaction is committed/
-	 *  rolled back?
-	 *
-	 * @param closables The native dependencies of the result set which need to be closed when the result set
-	 *                  is closed
-	 * @param iterator
-	 *         The iterator which backs the result set. All the values in the
-	 *         iterator are the serializations of the  values in the result
-	 *         set.
+	/*
+	Th
 	 */
-	public IteratorResultSet(RocksIterator iterator, List<AbstractNativeReference> closables)
+	public IteratorResultSet(
+			RocksIterator iterator,
+			BiFunction<byte[], byte[],T> recordToValue,
+			Function<T,byte[]> valueToKey,
+			boolean unique,
+			List<AbstractNativeReference> closables)
 	{
-		this(iterator, closables, false);
+		this(
+				unique
+						? new DistinctValueIterator<T>(iterator, recordToValue, valueToKey, closables)
+						: new ValueIterator<T>(iterator, recordToValue, valueToKey, closables));
 	}
-	public IteratorResultSet(RocksIterator iterator, List<AbstractNativeReference> closables, boolean unique)
+	public IteratorResultSet(AbstractValueIterator<T> iterator)
 	{
-		this.closables = closables;
-		/*
-		TODO is there a better way to filter unique results
-		 */
-		if (unique)
-		{
-			this.iterator = new DistinctRocksDBAbstractIterator(iterator);
-		}
-		else
-		{
-			this.iterator = new RocksDBAbstractIterator(iterator);
-		}
-		this.unique = unique;
+		this.iterator = iterator;
 
 		iterator.seekToFirst();
 
@@ -287,7 +159,9 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 		{
 			goBeforeFirst();
 		}
+
 	}
+
 
 	private boolean isEmpty()
 	{
@@ -344,28 +218,8 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 	@Override
 	public GotoResult goTo(T value, boolean exactMatch)
 	{
-//        byte[] valueBytes = toByteConverter.apply(value);
-		/*
-		TODO
-			is GOTO necessary for all subclasses?
-			in order to have the goto we need a way to
-		 */
-		byte[] keyvalue = this.toRocksDBKey(value);
 
-		/*
-		 ensure the result set is not empty.
-		 if it is, there is no need to do anything.
-		 */
-
-		if (this.isEmpty())
-		{
-			/*
-			if the result set is empty, don't do anything
-			 */
-			return GotoResult.nothing;
-		}
-
-		this.iterator.seek(keyvalue);
+		this.iterator.seek(value);
 		/*
 		After this the iterator is at the first element
 		 */
@@ -393,7 +247,8 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 			to exist because we checked whether the iterator is empty.
 			 */
 			iterator.seekToFirst();
-			current = this.extractValue();
+			if (iterator.isValid())
+			current = (iterator.isValid()) ? this.extractValue() : null;
 			lookahead = 0;
 			prev = OUTSIDE;
 			next = UNKNOWN;
@@ -828,8 +683,14 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 	@Override
 	public void close()
 	{
-		this.iterator.close();
-		for (var cl : this.closables) cl.close();
+		try
+		{
+			this.iterator.close();
+		}
+		catch (Exception e)
+		{
+			throw new HGException(e);
+		}
 	}
 
 	@Override
@@ -906,26 +767,11 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 	 * @return the result set value which is currently pointed to  by the iterator
 	 * @throws HGException if the iterator is not valid
 	 */
-	protected abstract T extractValue();
+	private T extractValue()
+	{
+		return this.iterator.current();
+	}
 
-	/**
-	 * convert a result set value to the rocksDB key. Note that this is not
-	 * simply the serialization of the value, but the rocksdb key which
-	 * holds the given value.
-	 * This is only possible if the result set itself allows for the conversion
-	 * e.g. a result set for all the values of a given key will allow for
-	 * creation of the rocksdb key by combining the key and value in the
-	 * correct way
-	 * @param value
-	 * @return the rocksdb key which corresponds to the given value
-	 * @throws HGException
-	 * @throws UnsupportedOperationException if the specific result set
-	 * does not allow conversion from a value back to rocksdb key. This
-	 * may be necessary when the values in the result set do not contain
-	 * enough information to construct a rocks db key -- e.g. if the result
-	 * set contains only values
-	 */
-	protected abstract byte[] toRocksDBKey(T value);
 
 
 
@@ -1011,7 +857,6 @@ public abstract class IteratorResultSet<T> implements HGRandomAccessResult<T>, C
 	1. extract key/extract value
 	2.
 	 */
-
 
 
 }

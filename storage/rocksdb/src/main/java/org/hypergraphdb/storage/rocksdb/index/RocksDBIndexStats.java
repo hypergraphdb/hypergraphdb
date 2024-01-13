@@ -11,7 +11,7 @@ package org.hypergraphdb.storage.rocksdb.index;
 
 import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.storage.HGIndexStats;
-import org.hypergraphdb.storage.rocksdb.IteratorResultSet;
+import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 
 /*
