@@ -34,11 +34,9 @@ public class RocksDBStorageTransaction implements HGStorageTransaction
 
 	public RocksDBStorageTransaction(
 			Transaction txn,
-//            TransactionOptions txnOptions,
 			WriteOptions writeOptions)
 	{
 		this.txn = txn;
-//        this.txnOptions = txnOptions;
 		this.writeOptions = writeOptions;
 	}
 
@@ -47,7 +45,6 @@ public class RocksDBStorageTransaction implements HGStorageTransaction
 	 */
 	private void close()
 	{
-//        this.txnOptions.close();
 		this.writeOptions.close();
 	}
 

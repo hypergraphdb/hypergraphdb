@@ -13,7 +13,7 @@ import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGIndexStats;
 import org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB;
-import org.hypergraphdb.storage.rocksdb.iterate.ValueIterator;
+import org.hypergraphdb.storage.rocksdb.dataformat.VKVVMVDB;
 import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
@@ -28,14 +28,11 @@ import java.util.List;
  */
 public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey, IndexValue>
 {
-	private final ColumnFamilyOptions columnFamilyOptions;
 	private final LogicalDB indexDB;
-	private ColumnFamilyHandle columnFamily;
 	private final String name;
 	protected final ByteArrayConverter<IndexKey> keyConverter;
 	protected final ByteArrayConverter<IndexValue> valueConverter;
 	private final OptimisticTransactionDB db;
-	private final String columnFamilyName;
 	private volatile boolean open = true;
 	public final StorageImplementationRocksDB store;
 
@@ -51,14 +48,11 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 
 	{
 		this.name = name;
-		this.columnFamily = columnFamily;
-		this.columnFamilyName = columnFamilyName;
-		this.columnFamilyOptions = columnFamilyOptions;
 		this.keyConverter = keyConverter;
 		this.valueConverter = valueConverter;
 		this.db = db;
 		this.store = store;
-		this.indexDB = new LogicalDB.VKVVMVDB(columnFamilyName, columnFamily, columnFamilyOptions);
+		this.indexDB = new VKVVMVDB(columnFamilyName, columnFamily, columnFamilyOptions);
 		/*
 		we have multiple values for each key
 		we must combine the keys and value
@@ -83,12 +77,12 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 
 	public String getColumnFamilyName()
 	{
-		return this.columnFamilyName;
+		return this.indexDB.cfName();
 	}
 
 	public ColumnFamilyHandle getColumnFamilyHandle()
 	{
-		return this.columnFamily;
+		return this.indexDB.cfHandle();
 	}
 	@Override
 	public void open()
@@ -109,15 +103,8 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 	@Override
 	public void close()
 	{
-	   /*
-	   Resources logically held by the index are
-	   Column family
-	   Column family options
-	   However their lifecycle has to be managed by the storage layer
-	   ...
-		*/
 		this.open = false;
-		this.columnFamilyOptions.close();
+		this.indexDB.close();
 	}
 
 	public void checkOpen() throws HGException
@@ -269,7 +256,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 			var range = new Range(start, end);
 
 
-			var memtableStats = db.getApproximateMemTableStats(columnFamily,range);
+			var memtableStats = db.getApproximateMemTableStats(this.indexDB.cfHandle(), range);
 			long avgRecordSize = 0;
 			if (memtableStats.count == 0)
 			{
@@ -281,7 +268,7 @@ public class RocksDBIndex<IndexKey, IndexValue> implements HGSortIndex<IndexKey,
 				avgRecordSize = memtableStats.size / memtableStats.count;
 			}
 
-			var sizeOnDisk = db.getApproximateSizes(columnFamily, List.of(range))[0];
+			var sizeOnDisk = db.getApproximateSizes(this.indexDB.cfHandle(), List.of(range))[0];
 			if (avgRecordSize == 0)
 			{
 			   if(sizeOnDisk == 0)

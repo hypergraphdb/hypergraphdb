@@ -10,16 +10,13 @@
 package org.hypergraphdb.storage.rocksdb.index;
 
 import org.hypergraphdb.HGBidirectionalIndex;
-import org.hypergraphdb.HGException;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB;
+import org.hypergraphdb.storage.rocksdb.dataformat.VKVVMVDB;
 import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
-import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.rocksdb.*;
-
-import java.util.List;
 
 public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 		extends RocksDBIndex<IndexKey, IndexValue>
@@ -33,17 +30,8 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 
 	/**
 	 *
-	 * @param name
-	 * @param columnFamily
-	 * @param columnFamilyName
-	 * @param columnFamilyOptions
-	 * @param inverseCFHandle
-	 * @param inverseColumnFamilyName
-	 * @param inverseColumnFamilyOptions
 	 * @param keyConverter the converter for the keys as stored in the forward index
 	 * @param valueConverter the converter for the values as stored in the forward index
-	 * @param db
-	 * @param store
 	 */
 	public BidirectionalRocksDBIndex(String name,
 			ColumnFamilyHandle columnFamily,
@@ -69,7 +57,7 @@ public class BidirectionalRocksDBIndex<IndexKey, IndexValue>
 		this.inverseCFHandle = inverseCFHandle;
 		this.inverseCFName = inverseColumnFamilyName;
 		this.inverseColumnFamilyOptions = inverseColumnFamilyOptions;
-		this.inverseIndexDB = new LogicalDB.VKVVMVDB(inverseColumnFamilyName, inverseCFHandle, inverseColumnFamilyOptions);
+		this.inverseIndexDB = new VKVVMVDB(inverseColumnFamilyName, inverseCFHandle, inverseColumnFamilyOptions);
 	}
 
 	public String getInverseCFName()

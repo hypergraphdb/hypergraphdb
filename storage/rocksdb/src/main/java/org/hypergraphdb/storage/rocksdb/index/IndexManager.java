@@ -32,7 +32,6 @@ public class IndexManager implements AutoCloseable
     private static final String CF_NAME_SEPARATOR = ">>>";
 
 
-
     /*
     Indices which are fully initialised
      */

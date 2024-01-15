@@ -12,7 +12,9 @@ package org.hypergraphdb.storage.rocksdb;
 import org.hypergraphdb.*;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.storage.rocksdb.dataformat.FKFVMVDB;
 import org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB;
+import org.hypergraphdb.storage.rocksdb.dataformat.SVDB;
 import org.hypergraphdb.storage.rocksdb.index.IndexManager;
 import org.hypergraphdb.storage.rocksdb.resultset.IteratorResultSet;
 import org.hypergraphdb.transaction.*;
@@ -26,8 +28,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static org.hypergraphdb.storage.rocksdb.dataformat.LogicalDB.*;
 
 public class StorageImplementationRocksDB implements HGStoreImplementation
 {
@@ -45,11 +45,23 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     public static final String CF_DEFAULT = "default";
 
 
+    /*
+    A flag which denotes the storage as started and fully initialized.
+    Each method accessing the storage must check the flag in
+    order to ensure the store is started.
+
+    The flag is set only once -- after all the dependencies are fully initialized.
+    Thus, as long as each method accessing the state of the storage checks the flag first,
+    they are guaranteed to see the initialized state of the storage.
+     */
     private volatile boolean started = false;
+    private volatile HashMap<String, LogicalDB> primaryDBs;
+    private volatile IndexManager indexManager;
     private int handleSize;
     private OptimisticTransactionDB db;
     private HGStore store;
     private HGConfiguration hgConfig;
+
 
    /*
     Mostly use the defaults for DBOptions and column family options.
@@ -59,11 +71,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     private final DBOptions dbOptions = new DBOptions()
            .setCreateMissingColumnFamilies(true)
            .setCreateIfMissing(true);
-
-
-//    private final ColumnFamilyRegistry primaryCFs = new ColumnFamilyRegistry();
-    public final HashMap<String, LogicalDB> primaryDBs = new HashMap<>();
-    private IndexManager indexManager;
 
 
     /**
@@ -175,6 +182,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                     cfDescriptors,
                     cfHandles);
             this.indexManager = new IndexManager(db, this);
+            this.primaryDBs = new HashMap<>();
 
             for (int i = 0; i < cfDescriptors.size(); i++)
             {
@@ -229,9 +237,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     @Override
     public synchronized void shutdown()
     {
-        /*
-        TODO make sure the closing order is correct
-         */
         if (!this.started)
         {
             return;
@@ -253,7 +258,8 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
         {
             @Override
             public HGStorageTransaction createTransaction(
-                    HGTransactionContext context, HGTransactionConfig config,
+                    HGTransactionContext context,
+                    HGTransactionConfig config,
                     HGTransaction parent)
             {
                 if (config.isNoStorage())
@@ -265,18 +271,6 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
                 TODO support readonly transactions
                  */
                 {
-                    /*
-                    TODO
-                        this needs to be closed, but when? Probably when
-                        the transaction is committed / rolled back
-                        right now we close the options in the transaction
-                        itself
-                     */
-                    /*
-                    TODO how do we set the transaction as readonly?
-                        Set snapshot here?
-
-                     */
                     final WriteOptions writeOptions = new WriteOptions();
                     Transaction parentTxn = null;
                     if (parent != null)
@@ -381,7 +375,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
     {
         checkStarted();
         return ensureTransaction(tx -> {
-            return this.primaryDBs.get(CF_PRIMITIVE).get(tx,  handle.toByteArray());
+            return this.primaryDBs.get(CF_PRIMITIVE).get(tx, handle.toByteArray());
         });
     }
 
@@ -613,6 +607,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
             }
         }
     }
+
 
 
     public void ensureTransaction(Consumer<Transaction> f)

@@ -14,6 +14,7 @@ import org.rocksdb.ColumnFamilyOptions;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+
 public class ColumnFamilyRegistry implements AutoCloseable
 {
     /*
@@ -23,52 +24,40 @@ public class ColumnFamilyRegistry implements AutoCloseable
     So, the CF are stored in a registry in the index manager and are retrieved from it when an index requests
     them.
      */
-    private final ConcurrentHashMap<String, ColumnFamilyOptions> cfOptionsStore = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, ColumnFamilyHandle> columnFamilies = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Tuple.Pair<ColumnFamilyHandle, ColumnFamilyOptions>> store = new ConcurrentHashMap<>();
 
-    /**
-     * Register a column family with the index manager
-     * Conceptually, the CF is a dependency of an index however its lifecycle does not allow the index to
-     * cleanly manage it. -- the CF can be created (in the case of preexisting index) before the index.
-     * So, the CF are stored in a registry in the index manager and are retrieved from it when an index requests
-     * them.
-     */
     public void registerColumnFamily(String cfName, ColumnFamilyHandle handle, ColumnFamilyOptions columnFamilyOptions)
     {
-        this.columnFamilies.put(cfName, handle);
-        this.cfOptionsStore.put(cfName, columnFamilyOptions);
+        this.store.put(cfName, Tuple.pair(handle, columnFamilyOptions ));
     }
 
     public ColumnFamilyHandle handle(String cfName)
     {
-        return this.columnFamilies.get(cfName);
+        return this.store.get(cfName).a;
     }
 
     public ColumnFamilyOptions options(String cfName)
     {
-        return this.cfOptionsStore.get(cfName);
+        return this.store.get(cfName).b;
     }
 
     public Tuple.Pair<ColumnFamilyHandle, ColumnFamilyOptions> remove(String cfName)
     {
-        var handle = this.columnFamilies.remove(cfName);
-        var options = this.cfOptionsStore.remove(cfName);
-        return Tuple.pair(handle, options);
+        return this.store.remove(cfName);
     }
 
     @Override
     public void close()
     {
-        for (var o : cfOptionsStore.values())
+        for (var o : store.values())
         {
-            o.close();
+            o.b.close();
         }
-        this.columnFamilies.clear();
-        this.cfOptionsStore.clear();
+        this.store.clear();
     }
 
     public boolean containsKey(String cfName)
     {
-        return this.columnFamilies.containsKey(cfName);
+        return this.store.containsKey(cfName);
     }
 }

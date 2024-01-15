@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class ValueIterator<T> implements AbstractValueIterator<T>
+public class ValueIterator<T>
 {
 	protected final BiFunction<byte[], byte[], T> recordToValue;
 	protected final RocksIterator it;
@@ -63,55 +63,48 @@ public class ValueIterator<T> implements AbstractValueIterator<T>
 				},
 				this.toClose);
 	}
-	@Override
+
 	public T current()
 	{
 		return recordToValue.apply(it.key(), it.value());
 	}
 
-	@Override
+
 	public void seek(T value)
 	{
 		it.seek(valueToKey.apply(value));
 	}
 
-	@Override
 	public void prev()
 	{
 		it.prev();
 	}
 
-	@Override
 	public void next()
 	{
 		it.next();
 	}
 
-	@Override
 	public void seekToFirst()
 	{
 		it.seekToFirst();
 	}
 
-	@Override
 	public boolean isValid()
 	{
 		return it.isValid();
 	}
 
-	@Override
 	public void status() throws RocksDBException
 	{
 		it.status();
 	}
 
-	@Override
 	public void seekToLast()
 	{
 		it.seekToLast();
 	}
 
-	@Override
 	public void close() throws Exception
 	{
 		it.close();

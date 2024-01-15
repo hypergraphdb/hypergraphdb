@@ -26,6 +26,7 @@ public class DistinctValueIterator<T> extends ValueIterator<T>
 		super(it, toValue, valueToKey, toClose);
 	}
 
+	@Override
 	public <U> DistinctValueIterator<U> map(Function<T,U> originalValueToNewValue, Function<U, T> newValueToOriginalValue)
 	{
 		return new DistinctValueIterator<>(it,

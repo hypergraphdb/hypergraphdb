@@ -10,9 +10,10 @@
 package org.hypergraphdb.storage.rocksdb.resultset;
 
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.storage.rocksdb.iterate.AbstractValueIterator;
+import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.storage.rocksdb.iterate.DistinctValueIterator;
 import org.hypergraphdb.storage.rocksdb.iterate.ValueIterator;
+import org.hypergraphdb.util.CountMe;
 import org.rocksdb.*;
 
 import java.util.List;
@@ -27,33 +28,10 @@ import java.util.function.Function;
  *      extractValue
  *
  */
-public class IteratorResultSet<T> extends ResultSet<T>
+public class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 {
 
-
-
-//	public <U> ResultSet<U> map(Function<U,T> to, Function<T,U> from)
-//	{
-//
-//		return new IteratorResultSet<U>(
-//				IteratorResultSet.this.iterator,
-//				IteratorResultSet.this.closables)
-//		{
-//			@Override
-//			protected U extractValue()
-//			{
-//				return from.apply(IteratorResultSet.this.extractValue());
-//			}
-//
-//			@Override
-//			protected byte[] toRocksDBKey(U value)
-//			{
-//				return IteratorResultSet.this.toRocksDBKey(to.apply(value));
-//			}
-//		};
-//	}
-
-	protected AbstractValueIterator<T> iterator;
+	protected ValueIterator<T> iterator;
 
 	/*
 	TODO come up with a good way to make this typesafe i.e. this needs to be of type T
@@ -143,7 +121,7 @@ public class IteratorResultSet<T> extends ResultSet<T>
 						? new DistinctValueIterator<T>(iterator, recordToValue, valueToKey, closables)
 						: new ValueIterator<T>(iterator, recordToValue, valueToKey, closables));
 	}
-	public IteratorResultSet(AbstractValueIterator<T> iterator)
+	public IteratorResultSet(ValueIterator<T> iterator)
 	{
 		this.iterator = iterator;
 
