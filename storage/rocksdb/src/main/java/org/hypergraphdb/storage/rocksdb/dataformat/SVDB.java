@@ -68,13 +68,13 @@ public class SVDB extends LogicalDB
 	public ValueIterator<byte[]> iterateValuesForKey(Transaction tx,
 			byte[] byteArray)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void delete(Transaction tx, byte[] localKey, byte[] value)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -86,42 +86,42 @@ public class SVDB extends LogicalDB
 	@Override
 	public ValueIterator<byte[]> iterateKeys(Transaction tx)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ValueIterator<byte[]> iterateValues(Transaction tx)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ValueIterator<byte[]> iterateLT(Transaction tx, byte[] byteArray)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ValueIterator<byte[]> iterateLTE(Transaction tx, byte[] byteArray)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ValueIterator<byte[]> iterateGT(Transaction tx, byte[] byteArray)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public ValueIterator<byte[]> iterateGTE(Transaction tx, byte[] byteArray)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void printDB(Transaction tx)
 	{
-		throw new IllegalStateException();
+		throw new UnsupportedOperationException();
 	}
 }

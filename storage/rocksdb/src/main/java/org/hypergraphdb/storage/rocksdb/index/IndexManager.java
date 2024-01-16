@@ -283,10 +283,17 @@ public class IndexManager implements AutoCloseable
     @Override
     public void close()
     {
-        /*
-        close all the column families which were not taken responsibility of by an index
-         */
-        this.preexistingColumnFamilies.close();
+        synchronized (this.indexLock)
+        {
+            /*
+            Close all indices
+             */
+            this.indices.values().forEach(RocksDBIndex::close);
+            /*
+            Close all column families which were not taken responsibility of by an index
+             */
+            this.preexistingColumnFamilies.close();
+        }
     }
 
     public <KeyType, ValueType> HGIndex<KeyType, ValueType> getIndex(
@@ -429,6 +436,13 @@ public class IndexManager implements AutoCloseable
         return (HGIndex<KeyType, ValueType>) this.indices.get(name);
     }
 
+    /**
+     * Register a preeexisting column family with the index manager so that it is used when the
+     * index which corresponds to it is requested
+     * @param cfName
+     * @param columnFamilyHandle
+     * @param options
+     */
     public void registerColumnFamily(String cfName, ColumnFamilyHandle columnFamilyHandle, ColumnFamilyOptions options)
     {
         this.preexistingColumnFamilies.registerColumnFamily(cfName, columnFamilyHandle, options);
