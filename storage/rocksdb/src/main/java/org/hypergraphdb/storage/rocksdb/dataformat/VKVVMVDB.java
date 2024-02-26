@@ -17,10 +17,28 @@ import org.rocksdb.*;
 import java.util.List;
 
 /**
- * Var length key var length value multivalued DB
+ * A LogicalDB which supports multiple values per key where each key is allowed to have variable size and
+ * each value is allowed to have variable size.
+ *<br/>
+ * The exact data format is described in {@link VarKeyVarValueColumnFamilyMultivaluedDB}
+ * The records are ordered according to the column family's comparator,
+ * which is expected to have been constructed using the user provided key
+ * comparator + value comparator so that smaller keys are before larger keys
+ * and within each key smaller values are before larger values.<br/>
+ * The exact way key and value comparators are combined in order to construct
+ * the
+ * TODO consider enforcing this in this class -- this class creates the
+ * 	column family and configures its comparator instead of relying on the
+ * 	correct comparator being constructed elsewhere (StorageImplementation)
  */
 public class VKVVMVDB extends LogicalDB
 {
+	/**
+	 *
+	 * @param name the name of the logical database
+	 * @param cfHandle the handle of the column family backing this LogicalDB
+	 * @param cfOptions
+	 */
 	public VKVVMVDB(String name, ColumnFamilyHandle cfHandle,
 			ColumnFamilyOptions cfOptions)
 	{

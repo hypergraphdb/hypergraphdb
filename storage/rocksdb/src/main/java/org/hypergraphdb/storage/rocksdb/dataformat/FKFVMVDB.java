@@ -18,7 +18,23 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Fixed key - fixed value multivalued DB
+ * Fixed key - fixed value multivalued DB <br/>
+ * A LogicalDB which supports multiple values for a given key and keys and values
+ * of predefined size (16 bytes)<br/>
+ * TODO consider making this size explicit and possibly configurable. Currently
+ * 	this is set to the size of the hghandle
+ * 	<br/>
+ * The RocksDB key is a concatenation of the logical key and logical value.
+ * The RocksDB value is empty.
+ * <br/>
+ * The records are ordered according to the column family's comparator,
+ * which is expected to have been constructed using the user provided key
+ * comparator + value comparator so that smaller keys are before larger keys
+ * and within each key smaller values are before larger values.<br/>
+ * TODO consider enforcing this in this class -- this class creates the
+ * 	column family and configures its comparator instead of relying on the
+ * 	correct comparator being constructed elsewhere (StorageImplementation)
+ *
  */
 public class FKFVMVDB extends LogicalDB
 {

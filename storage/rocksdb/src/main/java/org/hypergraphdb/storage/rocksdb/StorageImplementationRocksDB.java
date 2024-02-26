@@ -151,7 +151,7 @@ public class StorageImplementationRocksDB implements HGStoreImplementation
 	{
 		if (started)
 		{
-			return;
+			throw new HGException("The storage is already started.");
 		}
 
 		this.store = store;

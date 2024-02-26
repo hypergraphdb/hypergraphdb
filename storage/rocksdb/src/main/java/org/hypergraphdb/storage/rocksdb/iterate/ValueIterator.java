@@ -17,6 +17,13 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ *
+ * An iterator which iterates over the values represented by the records contained
+ * in a given RocksDB iterator
+ *
+ * @param <T> the type of the values to be extracted from the iterator
+ */
 public class ValueIterator<T>
 {
 	protected final BiFunction<byte[], byte[], T> recordToValue;
@@ -24,6 +31,18 @@ public class ValueIterator<T>
 	protected final Function<T, byte[]> valueToKey;
 	protected final List<AbstractNativeReference> toClose;
 
+	/**
+	 *
+	 * @param it the RocksIterator whose records will be converted into values
+	 * @param recordToValue convertor from a raw RocksDB record to a value
+	 * @param valueToKey convertor from a value to a rocksdb record. If the
+	 *                   values in the Value iterator lose information i.e. cannot
+	 *                   be converted back to a RocksIterator, the function must
+	 *                   throw an exception
+	 * @param toClose a list of native references which are assumed owned
+	 *                by this ValueIterator and will be closed when the
+	 *                ValueIterator itself is closed
+	 */
 	public ValueIterator(RocksIterator it,
 			BiFunction<byte[], byte[], T> recordToValue,
 			Function<T, byte[]> valueToKey,
@@ -35,20 +54,22 @@ public class ValueIterator<T>
 		this.toClose = toClose;
 	}
 
-	/*
-
-	 */
-
 	/**
-	 * Map t
-	 * @param originalValueToNewValue
-	 * @param newValueToOriginalValue
+	 * Map a ValueIterator to another ValueIterator i.e. to a ValueIterator
+	 * whose values are constructed from the values of the original ValueItreator
+	 * by applying a map function
+	 * @param originalValueToNewValue convertor from a value in the original iterator
+	 *                                to a value in the new iterator
+	 * @param newValueToOriginalValue convertor from a value in the new iterator
+	 *                                to a value in the original iterator.
+	 *                                If the values in the new iterator lose information
+	 *                                i.e. cannot be converted back to values in the
+	 *                                original iterator, this function must throw an exception
 	 * @return
-	 * @param <U>
+	 * @param <U> The type of the values in the new ValueIterator
 	 */
 	public <U> ValueIterator<U> map(Function<T,U> originalValueToNewValue, Function<U, T> newValueToOriginalValue)
 	{
-//		return new ValueIterator<>(it, this.recordToValue.andThen(originalValueToNewValue), newValueToOriginalValue.andThen(this.valueToKey), this.toClose);
 		return new ValueIterator<>(
 				it,
 				(key, value) -> {

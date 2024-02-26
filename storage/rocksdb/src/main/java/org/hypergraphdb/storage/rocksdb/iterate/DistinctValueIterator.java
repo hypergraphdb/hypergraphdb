@@ -16,6 +16,13 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+/**
+ * A ValueIterator which produces only distinct values.
+ * It is assumed that the backing iterator will produce values
+ * in order. i.e. if a value X is returned by current() and a value Y (!= X) is
+ * produced on next(), subsequent calls to next() will not return value X
+ * @param <T> the type of the values in the ValueIterator
+ */
 public class DistinctValueIterator<T> extends ValueIterator<T>
 {
 	public DistinctValueIterator(RocksIterator it,

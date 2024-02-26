@@ -14,7 +14,6 @@ import org.hypergraphdb.HGIndex;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.rocksdb.ColumnFamilyRegistry;
 import org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB;
-import org.hypergraphdb.storage.rocksdb.Tuple;
 import org.hypergraphdb.storage.rocksdb.dataformat.VarKeyVarValueColumnFamilyMultivaluedDB;
 import org.rocksdb.*;
 
@@ -24,6 +23,10 @@ import java.util.Comparator;
 import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Manages the creation/retrieval/disposal of the indices and the backing
+ * RocksDB resources associated with them
+ */
 public class IndexManager implements AutoCloseable
 {
 
@@ -36,6 +39,7 @@ public class IndexManager implements AutoCloseable
     Indices which are fully initialised
      */
     private final ConcurrentHashMap<String, RocksDBIndex<?,?>> indices = new ConcurrentHashMap<>();
+
     /*
     The column families which are preexisting in the database but the indices
     for them are not yet initialized
@@ -54,7 +58,7 @@ public class IndexManager implements AutoCloseable
 
 
     /**
-     * Whether the given column family is an index
+     * Whether the given column family contains an index (either forward or inverse)
      */
     public static boolean isIndexCF(String columnFamily)
     {
@@ -62,7 +66,7 @@ public class IndexManager implements AutoCloseable
     }
 
     /**
-     * whether a column family is an index
+     * Whether a column family constains a forward index
      * @param cfName the column family to check
      * @return true iff the parameter starts with the prefix we expect for a column family which
      * contains an index
@@ -73,7 +77,7 @@ public class IndexManager implements AutoCloseable
     }
 
     /**
-     * whether a column family is an inverse index
+     * Whether a column family contains an inverse index
      * @param cfName the column family to check
      * @return true iff the parameter starts with the prefix we expect for a column family
      * which contains an inverse index
@@ -83,6 +87,14 @@ public class IndexManager implements AutoCloseable
         return cfName.startsWith(CF_INVERSE_INDEX_PREFIX);
     }
 
+    /**
+     * Construct the name for the column family which will contain a given index
+     * @param indexName the name of the index
+     * @param keyComparatorClass the class name of the comparator which is to be
+     *                           used when comparing the keys in this index
+     * @param valueComparatorClass the class name of the comparator which is to be
+     *                           used when comparing the values in this index
+     */
     private static String indexCF(String indexName, String keyComparatorClass, String valueComparatorClass)
     {
         return new StringJoiner(CF_NAME_SEPARATOR)
@@ -94,9 +106,20 @@ public class IndexManager implements AutoCloseable
     }
 
     /**
-     * The name for the inverse index column family for a given column
-     * @param indexName
-     * @return
+     * Construct the name for the column family which will contain the inverse index
+     * for a given bidirectional index
+     * @param indexName the name of the index
+     * @param keyComparatorClass the class name of the comparator which is to be
+     *                           used when comparing the keys in this index
+     *                           This is the comparator for the original keys in
+     *                           the index, not the comparator for the values
+     *                           which become keys in the inverse index
+     * @param valueComparatorClass the class name of the comparator which is to be
+     *                             used when comparing the values in this index.
+     *                             This is the comparator for the original values
+     *                             in the index, not the comparator for the keys
+     *                             which become values in the inverse index.
+     *
      */
     private static String inverseIndexCF(String indexName, String keyComparatorClass, String valueComparatorClass)
     {
@@ -110,12 +133,18 @@ public class IndexManager implements AutoCloseable
 
 
     /**
-     * Parse the column family name into its constituents
+     * Parse a column family name which is either an index or inverse index into its constituents.
+     * The constituents are:
+     * <p>1.INDEX|INVERSE_INDEX</p>
+     * <p>2.&lt;index_name&gt;</p>
+     * <p>3.&lt;key_comparator_classname&gt;</p>
+     * <p>4.&lt;value_comparator_classname&gt;</p>
      * We are embedding the index name, whether the CF is for the
      * forward or inverse index and the comparator class name.
      * TODO this approach for storing 'metadata' in the column family name does not feel optimal
      *  however we need the column families to read any thing from the database
-     * @param cfName the name of the column family -- must be in the format INDEX|INV_INDEX>>>INDEX_NAME>>><key_comparator-class-name>>><value_comparator_class_name>
+     * @param cfName the name of the column family
+     *               -- must be in the format INDEX|INV_INDEX>>>INDEX_NAME>>>&lt;key_comparator-class-name&gt;>>&lt;value_comparator_class_name&gt;
      * @return if the column family is for an index or inverse index -- [INDEX|INV_INDEX, index_name, key_comparator_class_name|NULL, value_comparator_class_name|NULL]
      *      if not -- [null, cfName, null]
      */
@@ -144,9 +173,10 @@ public class IndexManager implements AutoCloseable
     }
 
     /**
-     * Generate the column family descriptor for the given index
-     * @param cfID
-     * @return
+     * Construct the column family descriptor for the given index
+     * @param cfID The column family id which is expected to encode the needed
+     *             information
+     * @return a column family descriptor, confi
      */
     public static ColumnFamilyDescriptor indexCFD(String cfID)
     {
@@ -335,11 +365,11 @@ public class IndexManager implements AutoCloseable
                 var preexisting = preexistingColumnFamilies.remove(cfName);
                 var invpreexisting = preexistingColumnFamilies.containsKey(invCFName)?preexistingColumnFamilies.remove(invCFName):null;
 
-                cfHandle = preexisting.a;
+                cfHandle = preexisting.getFirst();
 
                 if (isBidirectional)
                 {
-                    inverseCFHandle = invpreexisting==null ? null : invpreexisting.a;
+                    inverseCFHandle = invpreexisting==null ? null : invpreexisting.getFirst();
                     if (inverseCFHandle == null)
                     {
                         throw new HGException(String.format("This is probably a bug. The column family %s for the bidirectional index %s" +
@@ -349,10 +379,10 @@ public class IndexManager implements AutoCloseable
                             name,
                             cfHandle,
                             cfName,
-                            preexisting.b,
+                            preexisting.getSecond(),
                             inverseCFHandle,
                             invCFName,
-                            invpreexisting.b,
+                            invpreexisting.getSecond(),
                             keyConverter,
                             valueConverter,
                             db,
@@ -364,7 +394,7 @@ public class IndexManager implements AutoCloseable
                             name,
                             cfHandle,
                             cfName,
-                            preexisting.b,
+                            preexisting.getSecond(),
                             keyConverter,
                             valueConverter,
                             db,

@@ -14,7 +14,15 @@ import org.hypergraphdb.storage.rocksdb.iterate.ValueIterator;
 import org.rocksdb.*;
 
 /**
- * Single valued DB
+ * Single valued logical DB.
+ * A logical DB which allows for efficient storage of single value for a key.
+ * The keys and values are allowed to be of variable size.
+ * The keys are stored as RocksDB keys and values are stored directly as
+ * RocksDB values.
+ * The records are ordered according to the column family's comparator,
+ * which is expected to have been set to the user provided key comparator.
+ * TODO consider enforcing this in this class -- this class creates the
+ * 	column family and configures its comparator
  */
 public class SVDB extends LogicalDB
 {

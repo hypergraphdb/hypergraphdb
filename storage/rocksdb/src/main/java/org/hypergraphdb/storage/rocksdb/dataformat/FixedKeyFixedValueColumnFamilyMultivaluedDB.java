@@ -12,9 +12,8 @@ package org.hypergraphdb.storage.rocksdb.dataformat;
 import java.util.Arrays;
 
 /**
- * A logical DB backed by a specific column family
- * The logical DB supports multiple values per key
- * Both the keys and values are fixed in size
+ * Utilities for the FKFVMVB
+ * TODO consider merging into the actual FKFVMVDB
  */
 public class FixedKeyFixedValueColumnFamilyMultivaluedDB
 {
@@ -23,20 +22,8 @@ public class FixedKeyFixedValueColumnFamilyMultivaluedDB
 	*/
    public static final int LOGICAL_KEY_SIZE = 16;
 
-   /*
-   If we are storing multiple values for the same key, this is the
-	*/
    public static final int VALUE_KEY_SIZE = 16;
 
-//   private final boolean multivalued;
-
-//   private final StorageImplementationRocksDB.ColumnFamily cf;
-//
-//   public ColumnFamilyLogicalDB(StorageImplementationRocksDB.ColumnFamily cf, boolean multivalued)
-//   {
-//      this.multivalued = multivalued;
-//      this.cf = cf;
-//   }
    private static byte[] FIRST_VALUE = new byte[VALUE_KEY_SIZE];
    private static byte[] LAST_VALUE = new byte[VALUE_KEY_SIZE];
    static
@@ -44,7 +31,6 @@ public class FixedKeyFixedValueColumnFamilyMultivaluedDB
 	  Arrays.fill(LAST_VALUE, (byte)0x00); //this is the default but better be explicit
 	  Arrays.fill(LAST_VALUE, (byte)0xff);
    }
-
 
 
    /**

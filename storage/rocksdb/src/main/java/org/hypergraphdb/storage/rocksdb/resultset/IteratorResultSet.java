@@ -21,7 +21,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * a random access result which is backed by an iterator.
+ * A random access result which is backed by a ValueIterator.
  * @param <T> the type of the values in this result set
  * @implSpec When implementing a concrete class which extends this one,
  *  the following contract should be followed:
@@ -188,7 +188,7 @@ public class IteratorResultSet<T> implements HGRandomAccessResult<T>, CountMe
 	 * be positioned to the closest value. Here "closest" means "smallest
 	 * greater than the <code>value</code> parameter.
 	 * <br/>
-	 * @return GotoResult.nothing if the result set is empty or it is not
+	 * @return GotoResult.nothing if the result set is empty, or it is not
 	 *  empty, but it does not contain the provided value ()
 	 *
 	 * GOTO is
