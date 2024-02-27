@@ -32,8 +32,9 @@ abstract class StorageTestBase extends AnyFlatSpec with should.Matchers
 
   def storeImplementationClass = {
     // "org.hypergraphdb.storage.bje.BJEStorageImplementation"
-    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
-  }                                              
+//    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
+      "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB"
+  }
 
   def databaseLocation = {
     "/tmp/hgdb_storage_tests"

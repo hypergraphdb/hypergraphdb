@@ -71,7 +71,6 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
 
     val link = handleArray(2)
     store.getTransactionManager.beginTransaction()
-    val tx = store.getTransactionManager().getContext().getCurrent()
     val handle = store.store(link)
     store.getLink(handle) should be(link)
     store.getTransactionManager.abort()

@@ -57,3 +57,4 @@ storage/lmdb/lmdbold/type/util/IsAndroid.java
 storage/lmdb/lmdbold/type/util/PackedInteger.java
 storage/lmdb/lmdbold/type/util/UtfOps.java
 storage/lmdb/lmdbold/type/util/unsafe/Unsafe.java
+storage/rocksdb/hgdbrocksdb/

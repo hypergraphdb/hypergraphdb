@@ -9,6 +9,7 @@ package org.hypergraphdb;
 
 import org.hypergraphdb.util.CloseMe;
 
+
 /**
  * <p>
  * Represents the result set of a {@link HyperGraph} query. Note that results are
@@ -16,7 +17,7 @@ import org.hypergraphdb.util.CloseMe;
  * in general search results must be properly closed as they may hold external system
  * resources such open disk files etc.  
  * </p>
- * 
+ *
  * @author Borislav Iordanov
  */
 public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe, AutoCloseable
@@ -26,25 +27,25 @@ public interface HGSearchResult<T> extends TwoWayIterator<T>, CloseMe, AutoClose
      * <code>java.util.NoSuchElementException</code> is thrown. There
      * is no current element if the <code>next</code> method was never invoked.
      * </p>
-     * 
+     *
      * @return The current element in a <code>HGSearchResult</code>.
      * @throw NoSuchElementException if there is no current element.
      */
     T current();
-    
+
     /**
      * <p>Free all system resources held up by the result set and invalidate
      * it for further use.</p> 
      */
-    void close();    
-    
+    void close();
+
     /**
      * <p>Return <code>true</code> if the elements in this search result are in ordered
      * and <code>false</code> otherwise. It is assumed that when elements are ordered, 
      * they are instances of <code>java.lang.Comparable</code>
      */
     boolean isOrdered();
-    
+
     /**
      * <p>
      * This object represents an empty <code>HGSearchResult</code>. Calls to

@@ -18,12 +18,9 @@
     </dependency>
   </dependencies>
   <modules>
-    <module>lmdb</module>  
-  	<module>bdb-je</module>	   
+    <module>lmdb</module>
+	<module>bdb-je</module>
+    <module>rocksdb</module>
   </modules>
   
-   <!-- <build>
-	 <sourceDirectory>src/java</sourceDirectory>	
-	 <testSourceDirectory>test/java</testSourceDirectory>		
-	</build>  -->
 </project>

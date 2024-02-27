@@ -49,3 +49,11 @@ libraryDependencies += "org.hypergraphdb" % "hgdbtest" % hgdbVersion % Test
 // )
 
 // excludeFilter in Test := ".*\\.java"
+
+libraryDependencies ++= Seq(
+  "org.hypergraphdb" % "hgrocksdb" % hgdbVersion % Test
+)
+
+initialize ~= { _ =>
+  System.setProperty( "org.hypergraphdb.storage.HGStoreImplementation", "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB" )
+}
