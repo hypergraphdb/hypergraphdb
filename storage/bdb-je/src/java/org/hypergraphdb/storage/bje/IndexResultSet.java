@@ -32,13 +32,39 @@ import com.sleepycat.je.OperationStatus;
 public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, CountMe {
 	protected static final Object UNKNOWN = new Object();
 
+	/**
+	 * The underlying cursor
+	 */
 	protected BJETxCursor cursor;
+
+	/**
+	what are current, prev and next?
+	 */
 	protected Object current = UNKNOWN, prev = UNKNOWN, next = UNKNOWN;
+
+
+	/**
+	Those key and data are passed to all cursor operations, either
+	as input, or output
+	 */
 	protected DatabaseEntry key;
+	/**
+	 Those key and data are passed to all cursor operations, either
+	 as input, or output
+	 */
 	protected DatabaseEntry data = new DatabaseEntry();
+
+	/**
+	From database serialization to type
+	 */
 	protected ByteArrayConverter<T> converter;
+
+	// what is this?
 	protected int lookahead = 0;
 
+	/**
+	 * Silently close the cursor
+	 */
 	protected final void closeNoException() {
 		try {
 			close();
@@ -47,6 +73,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		}
 	}
 
+	/**
+	 * Check whether the cursor is open
+	 */
 	protected final void checkCursor() {
 		if (!cursor.isOpen())
 			throw new HGException(
@@ -59,8 +88,8 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 	 * Copy <code>data</code> into the <code>entry</code>. Adjust <code>entry</code>'s byte buffer if needed.
 	 * </p>
 	 * 
-	 * @param entry
-	 * @param data
+	 * @param entry the destination
+	 * @param data the source
 	 */
 	protected void assignData(DatabaseEntry entry, byte[] data) {
 		byte[] dest = entry.getData();
@@ -71,6 +100,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		System.arraycopy(data, 0, dest, 0, data.length);
 	}
 
+	/**
+	 * just shuffle prev, current, next and lookahead
+	 */
 	protected final void moveNext() {
 		//        checkCursor();
 		prev = current;
@@ -82,6 +114,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		 */
 	}
 
+	/**
+	 * just shuffle prev, current, next and lookahead
+	 */
 	protected final void movePrev() {
 		//        checkCursor();
 		next = current;
@@ -93,8 +128,16 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		 */
 	}
 
+	/**
+	 *
+	 * @return
+	 */
 	protected abstract T advance();
 
+	/**
+	 *
+	 * @return
+	 */
 	protected abstract T back();
 
 	/**
@@ -125,12 +168,19 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		this.converter = converter;
 		this.cursor = cursor;
 		this.key = new DatabaseEntry();
-		
+
+		/*
+		First, if the user has supplied a keyIn,
+		 */
 		if (keyIn != null) {
 			assignData(this.key, keyIn.getData());
 		}
 		
 		try {
+			//what if the cursor is not set?
+			/*
+			key, data are outputs, so we are overriding them.
+			 */
 			cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
 			next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			lookahead = 1;
@@ -217,6 +267,9 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		}
 	}
 
+	/**
+	 * Close the underlying cursor
+	 */
 	public final void close() {
 		if (cursor == null)
 			return;

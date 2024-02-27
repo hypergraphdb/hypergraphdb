@@ -5,15 +5,15 @@
   <parent>
     <groupId>org.hypergraphdb</groupId>
     <artifactId>hgdbstorage</artifactId>
-    <version>1.4-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
   </parent>
   <properties>
-    <packageit>bundle</packageit>
+    <packageit>jar</packageit>
     <bundle.symbolicName>${project.groupId}-${project.artifactId};singleton:=true</bundle.symbolicName>
     <bundle.namespace>org.hypergraph.storage.lmdb</bundle.namespace>
-    <lmdb.version>99-master-SNAPSHOT</lmdb.version>
+<!--    <lmdb.version>99-master-SNAPSHOT</lmdb.version> -->
   </properties>
-  <packaging>${packageit}</packaging>
+  <packaging>${packageit}</packaging> 
   <artifactId>hglmdb</artifactId>
   <name>HyperGraphDB LMDB Storage</name>
   <url>http://hypergraphdb.org</url>
@@ -31,6 +31,18 @@
       <artifactId>hgdb</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
+    <!--
+    NEW, correct version 
+     -->
+    <dependency>
+      <groupId>org.lmdbjava</groupId>
+      <artifactId>lmdbjava</artifactId>
+      <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+        
+    <!--
+    Old, deprecated version 
     <dependency>
       <groupId>org.fusesource.lmdbjni</groupId>
       <artifactId>lmdbjni</artifactId>
@@ -41,6 +53,7 @@
       <artifactId>lmdbjni-osx64</artifactId>
       <version>${lmdb.version}</version>
     </dependency>    
+         -->
     <dependency>
       <groupId>org.hypergraphdb</groupId>
       <artifactId>hgdbtest</artifactId>
@@ -51,13 +64,14 @@
   
   <build>
     <sourceDirectory>src/java</sourceDirectory>
+    <testSourceDirectory>test/java</testSourceDirectory>     
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
-            <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+<!--             <manifestFile>META-INF/MANIFEST.MF</manifestFile> -->
           </archive>
         </configuration>
         <executions>
@@ -69,6 +83,7 @@
           </execution>
         </executions>
       </plugin>
+      <!-- 
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -94,6 +109,7 @@
           </instructions>
         </configuration>
       </plugin>
+       -->
     </plugins>
   </build>
   

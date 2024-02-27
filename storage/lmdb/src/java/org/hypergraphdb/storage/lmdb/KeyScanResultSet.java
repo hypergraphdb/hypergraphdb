@@ -3,16 +3,15 @@
  * software. For permitted uses, licensing options and redistribution, please see  
  * the LicensingInformation file at the root level of the distribution.  
  * 
- * Copyright (c) 2005-2010 Kobrix Software, Inc.  All rights reserved. 
+ * Copyright (c) Kobrix Software, Inc.  All rights reserved. 
  */
 package org.hypergraphdb.storage.lmdb;
 
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.OperationStatus;
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.util.HGUtils;
+import org.lmdbjava.GetOp;
+import org.lmdbjava.SeekOp;
 
 /**
  * 
@@ -24,64 +23,69 @@ import org.hypergraphdb.util.HGUtils;
  * @author Borislav Iordanov
  *
  */
-public class KeyScanResultSet<T> extends IndexResultSet<T>
+public class KeyScanResultSet<BufferType, T> extends IndexResultSet<BufferType, T>
 {
 	@Override
 	protected T advance()
 	{
-				checkCursor();
+    	checkCursor();
         try
         {
-	        	OperationStatus status = cursor.cursor().get(CursorOp.NEXT_NODUP, key, data);
-	          if (status == OperationStatus.SUCCESS)
-	          	return converter.fromByteArray(key.getData(), 0, key.getData().length);
-            else
-                return null;
+        	if (cursor.cursor().seek(SeekOp.MDB_NEXT_NODUP))
+        	{
+                return this.currentFromCursor();
+        	}
+        	else
+        		return null;
         }
         catch (Throwable t)
         {
             closeNoException();
             throw new HGException(t);
-        }      
+        }            
     }
 
 	@Override
 	protected T back()
 	{
-				checkCursor();
-				try
+        try
         {
-						OperationStatus status = cursor.cursor().get(CursorOp.PREV_NODUP, key, data);
-	          if (status == OperationStatus.SUCCESS)
-	          	return converter.fromByteArray(key.getData(), 0, key.getData().length);
-            else
-                return null;
+    		checkCursor();
+        	if (cursor.cursor().seek(SeekOp.MDB_PREV_NODUP))
+        	{
+        		return this.currentFromCursor();
+        	}
+        	else
+        		return null;
         }
         catch (Throwable t)
         {
             closeNoException();
             throw new HGException(t);
-        } 
+        }		
     }
-
-	public boolean isOrdered()
-	{
-		return true;
-	}
     
-    public KeyScanResultSet(LmdbTxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter)
+	protected T currentFromCursor()
+	{
+        byte [] data = this.hgBufferProxy.toBytes(cursor.cursor().key());
+        return converter.fromByteArray(data, 0, data.length);	    
+	}
+	
+    public KeyScanResultSet(LMDBTxCursor<BufferType> cursor, 
+			BufferType key, 
+			ByteArrayConverter<T> converter,
+			HGBufferProxyLMDB<BufferType> hgBufferProxy)
     {
+    	super(cursor, key, converter, hgBufferProxy);
+    	
         this.converter = converter;
         this.cursor = cursor;
-        this.key = new DatabaseEntry();
-        this.data = new DatabaseEntry();
 
-        if (keyIn != null)
-        	assignData(key, keyIn.getData());
+        if (key != null)
 		    try
 		    {
-		        cursor.cursor().get(CursorOp.GET_CURRENT, key, data);
-		        next = converter.fromByteArray(key.getData(), 0, key.getData().length);
+		        cursor.cursor().get(key, GetOp.MDB_SET);
+		        next = this.currentFromCursor();
 		        lookahead = 1;
 		    }
 		    catch (Throwable t)
@@ -92,15 +96,15 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     
     public GotoResult goTo(T value, boolean exactMatch)
     {
-    	byte [] B = converter.toByteArray(value);
-    	assignData(key, B);
+    	byte [] keydata = converter.toByteArray(value);
+    	this.key = this.hgBufferProxy.fromBytes(keydata);
     	try
     	{
     		if (exactMatch)
     		{
-					OperationStatus status = cursor.cursor().get(CursorOp.SET, key, data);
-          if (status == OperationStatus.SUCCESS) {
-    				positionToCurrent(key.getData());
+				if (cursor.cursor().get(key, GetOp.MDB_SET))
+				{
+    				positionToCurrent(keydata);
     				return GotoResult.found;
     			}
     			else
@@ -108,13 +112,14 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     		}
     		else 
     		{
-					OperationStatus status = cursor.cursor().get(CursorOp.SET_RANGE, key, data);
-          if (status == OperationStatus.SUCCESS) {
-    				positionToCurrent(key.getData());
-    				return HGUtils.eq(B, key.getData()) ? GotoResult.found : GotoResult.close;
+				if (cursor.cursor().get(key, GetOp.MDB_SET_RANGE))
+				{
+					byte [] closest = this.hgBufferProxy.toBytes(key);
+    				positionToCurrent(closest);
+    				return HGUtils.eq(keydata, closest) ? GotoResult.found : GotoResult.close;
     			}
     			else
-    				return GotoResult.nothing;    			
+    				return GotoResult.nothing;				
     		}
     	}
     	catch (Throwable t)
@@ -123,4 +128,9 @@ public class KeyScanResultSet<T> extends IndexResultSet<T>
     		throw new HGException(t);
     	}
     }        
+    
+	public boolean isOrdered()
+	{
+		return true;
+	}    
 }

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1677453182742
-Build-Jdk: 11.0.12
-Built-By: borislav
+Bnd-LastModified: 1698311547916
+Build-Jdk: 11.0.16.1
+Built-By: plkos
 Bundle-ClassPath: .,smack-3.1.0.jar,smackx-3.1.0.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB P2P

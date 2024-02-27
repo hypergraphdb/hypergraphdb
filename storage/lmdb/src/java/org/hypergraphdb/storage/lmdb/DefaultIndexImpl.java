@@ -8,11 +8,10 @@
 package org.hypergraphdb.storage.lmdb;
 
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Comparator;
-
 import org.hypergraphdb.HGException;
-import org.hypergraphdb.HGPersistentHandle;
 import org.hypergraphdb.HGRandomAccessResult;
 import org.hypergraphdb.HGSearchResult;
 import org.hypergraphdb.HGSortIndex;
@@ -20,21 +19,17 @@ import org.hypergraphdb.storage.ByteArrayConverter;
 import org.hypergraphdb.storage.SearchResultWrapper;
 import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.HGTransactionManager;
-import org.hypergraphdb.transaction.VanillaTransaction;
+import org.hypergraphdb.util.HGUtils;
+import org.lmdbjava.Cursor;
+import org.lmdbjava.Dbi;
+import org.lmdbjava.DbiFlags;
+import org.lmdbjava.GetOp;
+import org.lmdbjava.PutFlags;
+import org.lmdbjava.SeekOp;
+import org.lmdbjava.Txn;
 
 import static org.hypergraphdb.storage.lmdb.LMDBUtils.checkArgNotNull;
 
-import static org.fusesource.lmdbjni.Constants.*;
-
-import org.fusesource.lmdbjni.CursorOp;
-import org.fusesource.lmdbjni.Database;
-import org.fusesource.lmdbjni.DatabaseConfig;
-import org.fusesource.lmdbjni.DatabaseEntry;
-import org.fusesource.lmdbjni.LMDBException;
-import org.fusesource.lmdbjni.Cursor;
-import org.fusesource.lmdbjni.Entry;
-import org.fusesource.lmdbjni.OperationStatus;
-import org.fusesource.lmdbjni.Transaction;
 
 /**
  * <p>
@@ -47,7 +42,7 @@ import org.fusesource.lmdbjni.Transaction;
  * @author Borislav Iordanov
  */
 @SuppressWarnings("unchecked")
-public class DefaultIndexImpl<KeyType, ValueType>
+public class DefaultIndexImpl<BufferType, KeyType, ValueType>
 		implements HGSortIndex<KeyType, ValueType>
 {
 	/**
@@ -55,17 +50,16 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	 */
 	public static final String DB_NAME_PREFIX = "hgstore_idx_";
 
-	protected LmdbStorageImplementation storage;
+	protected StorageImplementationLMDB<BufferType> storage;
 	protected HGTransactionManager transactionManager;
 	protected String name;
-	protected Database db;
-	protected Database db2;
-	private boolean owndb;
-	protected Comparator<byte[]> comparator;
-	protected boolean sort_duplicates = true;
+	Dbi<BufferType> db;
+	protected Comparator<byte[]> keyComparator;
+	protected Comparator<byte[]> valueComparator; // ignored
 	protected ByteArrayConverter<KeyType> keyConverter;
 	protected ByteArrayConverter<ValueType> valueConverter;
-
+	protected HGBufferProxyLMDB<BufferType> hgBufferProxy;
+	
 	protected void checkOpen()
 	{
 		if (!isOpen())
@@ -73,40 +67,30 @@ public class DefaultIndexImpl<KeyType, ValueType>
 					+ "' while the index is being closed.");
 	}
 
-	protected TransactionLmdbImpl txn()
+	protected StorageTransactionLMDB<BufferType> txn()
 	{
 		HGTransaction tx = transactionManager.getContext().getCurrent();
-		if (tx == null || tx.getStorageTransaction() instanceof VanillaTransaction)
-			return TransactionLmdbImpl.nullTransaction();
-		else
-		{
-			TransactionLmdbImpl result = (TransactionLmdbImpl) tx.getStorageTransaction();
-			if (comparator != null && db != null)
-				result.ensureComparator(db.pointer(), comparator);
-			return result;
-		}
+		return (StorageTransactionLMDB<BufferType>)(tx == null ? 
+				StorageTransactionLMDB.nullTransaction() :
+				tx.getStorageTransaction());
 	}
-
-	boolean isSplitIndex()
-	{
-		return name.equals("HGATOMTYPE") || name.equals("subgraph.index")
-				|| name.equals("revsubgraph.index")
-				|| name.equals("type_subgraph.index");
-	}
-
-	public DefaultIndexImpl(String indexName, LmdbStorageImplementation storage,
+	
+	public DefaultIndexImpl(String indexName, StorageImplementationLMDB<BufferType> storage,
 			HGTransactionManager transactionManager,
 			ByteArrayConverter<KeyType> keyConverter,
 			ByteArrayConverter<ValueType> valueConverter,
-			Comparator<byte[]> comparator)
+			Comparator<byte[]> keyComparator,
+			Comparator<byte[]> valueComparator,
+			HGBufferProxyLMDB<BufferType> hgBufferProxy)
 	{
 		this.name = indexName;
 		this.storage = storage;
 		this.transactionManager = transactionManager;
 		this.keyConverter = keyConverter;
 		this.valueConverter = valueConverter;
-		this.comparator = comparator;
-		owndb = true;
+		this.hgBufferProxy = hgBufferProxy;
+		this.keyComparator = keyComparator;
+		this.valueComparator = valueComparator;
 	}
 
 	public String getName()
@@ -119,52 +103,38 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		return DB_NAME_PREFIX + name;
 	}
 
-	public Comparator<byte[]> getComparator()
+	public Comparator<BufferType> getKeyComparator()
 	{
-		Comparator<byte[]> comp = null;
-
-		try
+		return new Comparator<BufferType>() 
 		{
-			if (comparator != null)
-				return comparator;
-
-			comp = db.getConfig().getComparator();
-			if (comp == null)
-				comp = new Comparator<byte[]>() 
-				{
-					public int compare(byte[]left, byte[]right)			
-					{
-						return fastcompare(left, right);
-					}
-				};
-
-			return comp;
-		}
-		catch (LMDBException ex)
-		{
-			throw new HGException(ex);
-		}
+			public int compare(BufferType left, BufferType right)			
+			{
+				if (keyComparator != null)
+					return keyComparator.compare(hgBufferProxy.toBytes(left), hgBufferProxy.toBytes(right));
+				else
+					return fastcompare(hgBufferProxy.toBytes(left), hgBufferProxy.toBytes(right));
+			}
+		};
 	}
 
 	public void open()
 	{
 		try
 		{
-			DatabaseConfig dbConfig = storage.getConfiguration().getDatabaseConfig().cloneConfig();
-			dbConfig.setDupSort(sort_duplicates);
-			if (comparator != null)
-				dbConfig.setComparator(comparator);
-			db = storage.getEnvironment().openDatabase(
-					txn().getDbTransaction(),
-					DB_NAME_PREFIX + name, 
-					dbConfig);
-			
-			if (isSplitIndex())
-			{
-				db2 = storage.getEnvironment().openDatabase(
-						txn().getDbTransaction(), DB_NAME_PREFIX + name + "2",
-						dbConfig);
-			}
+		    Txn<BufferType> tx = txn().lmdbTxn();
+		    if (tx != null)
+    			db = storage.lmdbEnv().openDbi(
+    			        tx,
+    					(DB_NAME_PREFIX + name).getBytes(StandardCharsets.UTF_8), 
+    					this.getKeyComparator(),
+    					false,
+    					DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);
+		    else
+		        db = storage.lmdbEnv().openDbi(
+                        (DB_NAME_PREFIX + name).getBytes(StandardCharsets.UTF_8), 
+                        this.getKeyComparator(),
+                        false,
+                        DbiFlags.MDB_CREATE, DbiFlags.MDB_DUPSORT);
 		}
 		catch (Throwable t)
 		{
@@ -175,7 +145,7 @@ public class DefaultIndexImpl<KeyType, ValueType>
 
 	public void close()
 	{
-		if (db == null || !owndb)
+		if (db == null)
 			return;
 
 		try
@@ -190,22 +160,6 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		{
 			db = null;
 		}
-
-		if (isSplitIndex())
-		{
-			try
-			{
-				db2.close();
-			}
-			catch (Throwable t)
-			{
-				throw new HGException(t);
-			}
-			finally
-			{
-				db2 = null;
-			}
-		}
 	}
 
 	public boolean isOpen()
@@ -216,41 +170,28 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	public HGRandomAccessResult<ValueType> scanValues()
 	{
 		checkOpen();
-		assert !isSplitIndex() : "Not expecting scans on split index";
 		HGRandomAccessResult<ValueType> result = null;
-		Cursor cursor = null;
+		LMDBTxCursor<BufferType> cursor = null;
 
 		try
 		{
-			TransactionLmdbImpl tx = txn();
-			cursor = db.openCursor(tx.getDbTransaction());
-			Entry entry = cursor.get(CursorOp.FIRST);
-			if (entry != null)
-				result = new KeyRangeForwardResultSet<ValueType>(
-						tx.attachCursor(cursor),
-						new DatabaseEntry(entry.getKey()), valueConverter);
+			cursor = new LMDBTxCursor<BufferType>(db.openCursor(txn().lmdbTxn()), txn());
+			if (cursor.cursor().seek(SeekOp.MDB_FIRST))
+                result = new KeyRangeForwardResultSet<BufferType, ValueType>(
+                        cursor,
+                        cursor.cursor().key(),
+                        valueConverter,
+                        this.hgBufferProxy);
 			else
 			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			    HGUtils.closeNoException(cursor);
 				result = (HGRandomAccessResult<ValueType>) HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex)
 		{
 			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			    HGUtils.closeNoException(cursor);
 			throw new HGException(
 					"Failed to lookup index '" + name + "': " + ex.toString(),
 					ex);
@@ -261,39 +202,28 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	public HGRandomAccessResult<KeyType> scanKeys()
 	{
 		checkOpen();
-		assert !isSplitIndex() : "Not expecting scans on split index";
 		HGRandomAccessResult<KeyType> result = null;
-		Cursor cursor = null;
+		LMDBTxCursor<BufferType> cursor = null;
 		try
 		{
-			TransactionLmdbImpl tx = txn();
-			cursor = db.openCursor(tx.getDbTransaction());
-			Entry entry = cursor.get(CursorOp.FIRST);
-			if (entry != null)
-				result = new KeyScanResultSet<KeyType>(tx.attachCursor(cursor),
-						new DatabaseEntry(entry.getKey()), keyConverter);
+			cursor = new LMDBTxCursor<BufferType>(db.openCursor(txn().lmdbTxn()), txn());
+			if (cursor.cursor().first())
+			{
+				return new KeyScanResultSet<BufferType, KeyType>(
+								cursor,
+								cursor.cursor().key(), 
+								keyConverter,
+								this.hgBufferProxy);
+			}
 			else
 			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+				HGUtils.closeNoException(cursor);
 				result = (HGRandomAccessResult<KeyType>) HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex)
 		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			HGUtils.closeNoException(cursor);
 			throw new HGException(
 					"Failed to lookup index '" + name + "': " + ex.toString(),
 					ex);
@@ -301,89 +231,40 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		return result;
 	}
 
-	public void addEntry(KeyType keyType, ValueType value)
+	public void addEntry(KeyType key, ValueType value)
 	{
 		checkOpen();
-		if (keyType == null)
-		{
-			// System.out.println("Keytype is null for:" + getName());
-			return;
-		}
-
-		// System.err.println("addEntry First for " + name + ",key:" + keyType +
-		// ",val:" + value);
-
-		byte[] key = keyConverter.toByteArray(keyType);
-		byte[] dbvalue = valueConverter.toByteArray(value);
 		try
 		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				db.put(txn().getDbTransaction(), key, dbvalue, NODUPDATA);
-				break;
-
-			default:
-				db2.put(txn().getDbTransaction(), key, dbvalue, NODUPDATA);
-				break;
-			}
-
-			// System.out.println("Indexput." + key.length + "," +
-			// dbvalue.length);
+		    storage.inWriteTxn(tx -> 
+		        db.put(tx, 
+					this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)), 
+					this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)), 
+					PutFlags.MDB_NODUPDATA)
+		      );
 		}
-		catch (LMDBException ex)
+		catch (Exception ex)
 		{
 			String msg = MessageFormat.format(
 					"Failed to add entry (key:{0},data:{1}) to index {2}: {3}",
-					keyType, value, name, ex.toString());
+					key, value, name, ex.toString());
 			throw new HGException(msg, ex);
 		}
 	}
 
-	public void removeEntry(KeyType keyType, ValueType value)
+	public void removeEntry(KeyType key, ValueType value)
 	{
 		checkOpen();
-		if (keyType == null)
-		{
-			// System.out.println("Keytype is null for:" + getName());
+		if (key == null || value == null)
 			return;
-		}
-
-		DatabaseEntry keyEntry = new DatabaseEntry(
-				keyConverter.toByteArray(keyType));
-		DatabaseEntry valueEntry = new DatabaseEntry(
-				valueConverter.toByteArray(value));
-		Cursor cursor = null;
 
 		try
 		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				cursor = db.openCursor(txn().getDbTransaction());
-				break;
-
-			default:
-				cursor = db2.openCursor(txn().getDbTransaction());
-				break;
-			}
-
-			Entry entry = null;
-
-			if (sort_duplicates)
-			{
-				entry = cursor.get(CursorOp.GET_BOTH, keyEntry.getData(),
-						valueEntry.getData());
-				if (entry != null)
-					cursor.delete();
-			}
-			else
-			{
-				OperationStatus status = cursor.get(CursorOp.GET_CURRENT,
-						keyEntry, valueEntry);
-				if (status == OperationStatus.SUCCESS)
-					cursor.delete();
-			}
+		    storage.inWriteTxn(tx ->
+			    db.delete(tx, 
+					  this.hgBufferProxy.fromBytes(keyConverter.toByteArray(key)),
+					  this.hgBufferProxy.fromBytes(valueConverter.toByteArray(value)))
+			);
 		}
 		catch (Exception ex)
 		{
@@ -391,41 +272,20 @@ public class DefaultIndexImpl<KeyType, ValueType>
 					"Failed to lookup index '" + name + "': " + ex.toString(),
 					ex);
 		}
-		finally
-		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-		}
 	}
 
-	public void removeAllEntries(KeyType keyType)
+	public void removeAllEntries(KeyType key)
 	{
 		checkOpen();
-		if (keyType == null)
-		{
-			// System.out.println("Keytype is null for:" + getName());
+		if (key == null)
 			return;
-		}
 
-		byte[] dbkey = keyConverter.toByteArray(keyType);
+		byte[] dbkey = keyConverter.toByteArray(key);
 		try
 		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				db.delete(txn().getDbTransaction(), dbkey);
-				break;
-
-			default:
-				db2.delete(txn().getDbTransaction(), dbkey);
-				break;
-			}
+		    storage.inWriteTxn(tx ->
+			    db.delete(tx, this.hgBufferProxy.fromBytes(dbkey))
+			);
 		}
 		catch (Exception ex)
 		{
@@ -434,43 +294,37 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		}
 	}
 
-	void ping(Transaction tx)
-	{
-		byte[] key = new byte[1];
-		try
-		{
-			db.get(tx, key);
-		}
-		catch (Exception ex)
-		{
-			throw new HGException(
-					"Failed to ping index '" + name + "': " + ex.toString(),
-					ex);
-		}
-	}
+//	void ping(Transaction tx)
+//	{
+//		byte[] key = new byte[1];
+//		try
+//		{
+//			db.get(tx, key);
+//		}
+//		catch (Exception ex)
+//		{
+//			throw new HGException(
+//					"Failed to ping index '" + name + "': " + ex.toString(),
+//					ex);
+//		}
+//	}
 
 	public ValueType getData(KeyType keyType)
 	{
 		checkOpen();
 		byte[] key = keyConverter.toByteArray(keyType);
-		byte[] value = null;
-		ValueType result = null;
 
 		try
 		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				value = db.get(txn().getDbTransaction(), key);
-				break;
-
-			default:
-				value = db2.get(txn().getDbTransaction(), key);
-				break;
-			}
-
-			if (value != null)
-				result = valueConverter.fromByteArray(value, 0, value.length);
+		    return storage.inReadTxn(tx -> {
+    			BufferType value = db.get(txn().lmdbTxn(), this.hgBufferProxy.fromBytes(key));
+    			if (value != null)
+    			{
+    				byte [] data = this.hgBufferProxy.toBytes(value);
+    				return valueConverter.fromByteArray(data, 0, data.length);
+    			}
+    			return null;
+		    });
 		}
 		catch (Exception ex)
 		{
@@ -478,72 +332,27 @@ public class DefaultIndexImpl<KeyType, ValueType>
 					"Failed to lookup index '" + name + "': " + ex.toString(),
 					ex);
 		}
-		return result;
 	}
 
 	public ValueType findFirst(KeyType keyType)
 	{
-		try
-		{
-			// System.out.println(getStats());
-		}
-		catch (Throwable t)
-		{
-			t.printStackTrace();
-		}
-
 		checkOpen();
-		// System.err.println("findFirst for " + name + ",key:" + keyType);
-		byte[] key = keyConverter.toByteArray(keyType);
-		ValueType result = null;
-		Cursor cursor = null;
-		try
-		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				cursor = db.openCursor(txn().getDbTransaction());
-				break;
-
-			default:
-				cursor = db2.openCursor(txn().getDbTransaction());
-				break;
-			}
-
-			Entry entry = cursor.get(CursorOp.SET, key);
-			if (entry != null)
-				result = valueConverter.fromByteArray(entry.getValue(), 0,
-						entry.getValue().length);
-		}
-		catch (Exception ex)
-		{
-			// try to get the db flags to understand why the error is happening.
-			int flags = 0;
-			try
-			{
-				flags = db.getFlags(txn().getDbTransaction());
-			}
-			catch (Exception ex2)
-			{
-				// do nothing
-			}
-			String msg = MessageFormat.format(
-					"Failed to add lookup index {0} (key:{1}): {2}. Db Flage: {3}",
-					keyType, name, ex.toString(), flags);
-			throw new HGException(msg, ex);
-		}
-		finally
-		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-		}
-		return result;
+		return storage.inReadTxn(tx -> {
+    		try (Cursor<BufferType> cursor = db.openCursor(tx))
+    		{
+    			if (cursor.get(this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType)), 
+    							GetOp.MDB_SET))
+    			{
+    				byte [] data = this.hgBufferProxy.toBytes(cursor.val());
+    				return valueConverter.fromByteArray(data, 0, data.length);
+    			}
+    			return null;
+    		}
+    		catch (Exception ex)
+    		{
+    			throw new HGException("In database findFirst for " + this.db.getName(), ex);
+    		}
+		});
 	}
 
 	/**
@@ -558,99 +367,53 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	 *         null if the set of entries for the key is empty.
 	 */
 	public ValueType findLast(KeyType keyType)
-	{
+	{		
 		checkOpen();
-		byte[] key = keyConverter.toByteArray(keyType);
-		ValueType result = null;
-		Cursor cursor = null;
-		try
-		{
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				cursor = db.openCursor(txn().getDbTransaction());
-				break;
-
-			default:
-				cursor = db2.openCursor(txn().getDbTransaction());
-				break;
-			}
-
-			Entry entry = cursor.get(CursorOp.LAST, key);
-			if (entry != null)
-				result = valueConverter.fromByteArray(entry.getValue(), 0,
-						entry.getValue().length);
-		}
-		catch (Exception ex)
-		{
-			throw new HGException(
-					"Failed to lookup index '" + name + "': " + ex.toString(),
-					ex);
-		}
-		finally
-		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-		}
-		return result;
+        return storage.inReadTxn(tx -> {		
+    		try (Cursor<BufferType> cursor = db.openCursor(txn().lmdbTxn()))
+    		{			
+    			if (cursor.get(this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType)), 
+    							GetOp.MDB_SET) && cursor.last())
+    			{
+    				byte [] data = this.hgBufferProxy.toBytes(cursor.val());
+    				return valueConverter.fromByteArray(data, 0, data.length);
+    			}
+    			return null;
+    		}
+    		catch (Exception ex)
+    		{
+    			throw new HGException("In database findFirst for " + this.db.getName(), ex);
+    		}
+        });
 	}
 
 	public HGRandomAccessResult<ValueType> find(KeyType keyType)
 	{
 		checkOpen();
 		checkArgNotNull(keyType, "keyType");
-
-		byte[] key = keyConverter.toByteArray(keyType);
+		LMDBTxCursor<BufferType> cursor = null;
+		
+		BufferType key = this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType));
 		HGRandomAccessResult<ValueType> result = null;
-		Cursor cursor = null;
+		
 		try
 		{
-			TransactionLmdbImpl tx = txn();
-
-			switch (keyBucket(keyType))
-			{
-			case 0:
-				cursor = db.openCursor(tx.getDbTransaction());
-				break;
-
-			default:
-				cursor = db2.openCursor(tx.getDbTransaction());
-				break;
-			}
-
-			Entry entry = cursor.get(CursorOp.SET, key);
-			if (entry != null)
-				result = new SingleKeyResultSet<ValueType>(
-						tx.attachCursor(cursor),
-						new DatabaseEntry(entry.getKey()), valueConverter);
+			cursor = new LMDBTxCursor<BufferType>(db.openCursor(txn().lmdbTxn()), txn());
+			if (cursor.cursor().get(key, GetOp.MDB_SET))
+				return new SingleKeyResultSet<BufferType, ValueType>(
+						cursor,
+						key,
+						valueConverter,
+						this.hgBufferProxy);
 			else
 			{
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+				HGUtils.closeNoException(cursor);
 				result = (HGRandomAccessResult<ValueType>) HGSearchResult.EMPTY;
 			}
 		}
 		catch (Throwable ex)
 		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			HGUtils.closeNoException(cursor);
 			System.out.println("Inner Exception:");
 			ex.printStackTrace();
 			throw new HGException(
@@ -660,91 +423,80 @@ public class DefaultIndexImpl<KeyType, ValueType>
 		return result;
 	}
 
+	@SuppressWarnings({ "resource" })
 	private HGSearchResult<ValueType> findOrdered(KeyType keyType,
-			boolean lower_range, boolean compare_equals)
+												  boolean lower_range, 
+												  boolean compare_equals)
 	{
 		checkOpen();
 		/*
 		 * if (key == null) throw new HGException("Attempting to lookup index '"
 		 * + name + "' with a null key.");
 		 */
-		byte[] keyAsBytes = keyConverter.toByteArray(keyType);
-		Cursor cursor = null;
+		BufferType key = this.hgBufferProxy.fromBytes(keyConverter.toByteArray(keyType));
+		LMDBTxCursor<BufferType> cursor = null;
 
 		try
 		{
-			TransactionLmdbImpl tx = txn();
-			switch (keyBucket(keyType))
+			cursor = new LMDBTxCursor<BufferType>(db.openCursor(txn().lmdbTxn()), txn());
+			boolean has_data = cursor.cursor().get(key, GetOp.MDB_SET_RANGE); 
+			if (has_data)
 			{
-			case 0:
-				cursor = db.openCursor(tx.getDbTransaction());
-				break;
-
-			default:
-				cursor = db2.openCursor(tx.getDbTransaction());
-				break;
-			}
-
-			Entry entry = cursor.get(CursorOp.SET_RANGE, keyAsBytes);
-
-			if (entry != null)
-			{
-				Comparator<byte[]> comparator = getComparator();
+				Comparator<BufferType> comparator = getKeyComparator();
+				boolean found_exact_key = comparator.compare(key, cursor.cursor().key()) == 0;
 				if (!compare_equals) // strict < or >?
 				{
 					if (lower_range)
-						entry = cursor.get(CursorOp.PREV);
-					else if (comparator.compare(keyAsBytes,
-							entry.getKey()) == 0)
-						entry = cursor.get(CursorOp.NEXT_NODUP);
+						has_data = cursor.cursor().seek(SeekOp.MDB_PREV);
+					else if (found_exact_key)
+						has_data = cursor.cursor().seek(SeekOp.MDB_NEXT_NODUP);
 				}
 				// Lmdb cursor will position on the key or on the next element
 				// greater than the key
 				// in the latter case we need to back up by one for < (or <=)
 				// query
-				else if (lower_range
-						&& comparator.compare(keyAsBytes, entry.getKey()) != 0)
-					entry = cursor.get(CursorOp.PREV);
+				else if (lower_range)
+				{
+				    if (!found_exact_key)
+				        has_data = cursor.cursor().seek(SeekOp.MDB_PREV);
+				    else
+				    {
+				        if (cursor.cursor().seek(SeekOp.MDB_NEXT_NODUP))
+				            cursor.cursor().seek(SeekOp.MDB_PREV);
+				        else
+				            cursor.cursor().seek(SeekOp.MDB_LAST);
+				    }
+				}
 			}
 			else if (lower_range)
-				entry = cursor.get(CursorOp.LAST);
+				has_data = cursor.cursor().seek(SeekOp.MDB_LAST);
 			else
-				entry = cursor.get(CursorOp.FIRST);
+				has_data = cursor.cursor().seek(SeekOp.MDB_FIRST);
 
-			if (entry != null)
+			if (has_data)
 				if (lower_range)
 					return new SearchResultWrapper<ValueType>(
-							new KeyRangeBackwardResultSet<ValueType>(
-									tx.attachCursor(cursor),
-									new DatabaseEntry(entry.getKey()),
-									valueConverter));
+							new KeyRangeBackwardResultSet<BufferType, ValueType>(
+									cursor,
+									key,
+									valueConverter,
+									this.hgBufferProxy));
 				else
 					return new SearchResultWrapper<ValueType>(
-							new KeyRangeForwardResultSet<ValueType>(
-									tx.attachCursor(cursor),
-									new DatabaseEntry(entry.getKey()),
-									valueConverter));
+							new KeyRangeForwardResultSet<BufferType, ValueType>(
+									cursor,
+									key,
+									valueConverter,
+									this.hgBufferProxy));
 			else
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
-
-			return (HGSearchResult<ValueType>) HGSearchResult.EMPTY;
+			{
+				HGUtils.closeNoException(cursor);
+				return (HGSearchResult<ValueType>) HGSearchResult.EMPTY;
+			}
 		}
 		catch (Throwable ex)
 		{
-			if (cursor != null)
-				try
-				{
-					cursor.close();
-				}
-				catch (Throwable t)
-				{
-				}
+			HGUtils.closeNoException(cursor);
 			System.out.println("Inner Exception:");
 			ex.printStackTrace();
 			throw new HGException(
@@ -784,42 +536,10 @@ public class DefaultIndexImpl<KeyType, ValueType>
 	}
 
 	@Override
-	public LMDBIndexStats<KeyType, ValueType> stats()
+	public LMDBIndexStats<BufferType, KeyType, ValueType> stats()
 	{
-		return new LMDBIndexStats<KeyType, ValueType>(this);
+		return new LMDBIndexStats<BufferType, KeyType, ValueType>(this);
 	}
-
-	int keyBucket(KeyType keyType)
-	{
-		if (isSplitIndex())
-		{
-			if (keyType instanceof HGPersistentHandle)
-			{
-				HGPersistentHandle handle = (HGPersistentHandle) keyType;
-				String hdlStr = handle.toString();
-				char lastChar = hdlStr.charAt(hdlStr.length() - 1);
-				if (lastChar == '1' || lastChar == '3' || lastChar == '5'
-						|| lastChar == '7' || lastChar == '9')
-				{
-					return 1;
-				}
-			}
-			if (keyType instanceof HGPersistentHandle[])
-			{
-				HGPersistentHandle[] handles = (HGPersistentHandle[]) keyType;
-				HGPersistentHandle handle = handles[0];
-				String hdlStr = handle.toString();
-				char lastChar = hdlStr.charAt(hdlStr.length() - 1);
-				if (lastChar == '1' || lastChar == '3' || lastChar == '5'
-						|| lastChar == '7' || lastChar == '9')
-				{
-					return 1;
-				}
-			}
-		}
-		return 0;
-	}
-
 	
 	// what follows is code copied from the Google Guava package: specifically the 
 	// UnsignedBytes.lexicographicalComparator is copied here with all its dependency bits
@@ -845,10 +565,10 @@ public class DefaultIndexImpl<KeyType, ValueType>
     static final boolean BIG_ENDIAN = ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN);
     private static final int UNSIGNED_MASK = 0xFF;
     
-    private static long flip(long a) 
-    {
-        return a ^ Long.MIN_VALUE;
-    }
+//    private static long flip(long a) 
+//    {
+//        return a ^ Long.MIN_VALUE;
+//    }
     
     public static int compare(long a, long b) 
     {

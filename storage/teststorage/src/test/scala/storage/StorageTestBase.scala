@@ -31,8 +31,10 @@ abstract class StorageTestBase extends AnyFlatSpec with should.Matchers
   var storeImplementation:HGStoreImplementation = null
 
   def storeImplementationClass = {
-    "org.hypergraphdb.storage.bje.BJEStorageImplementation"
-  }                                              
+    // "org.hypergraphdb.storage.bje.BJEStorageImplementation"
+//    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
+      "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB"
+  }
 
   def databaseLocation = {
     "/tmp/hgdb_storage_tests"
@@ -78,6 +80,7 @@ abstract class StorageTestBase extends AnyFlatSpec with should.Matchers
         config.setEnforceTransactionsInStorageLayer(true)
         storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
         config.setStoreImplementation(storeImplementation)
+        (new java.io.File(databaseLocation)).mkdirs()
         storeOption = Some(new HGStore(databaseLocation, config))
     }
     storeOption.get

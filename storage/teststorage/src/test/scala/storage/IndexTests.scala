@@ -10,13 +10,15 @@ import org.scalatest.FixtureTestSuite
 import org.scalatest.flatspec.FixtureAnyFlatSpecLike
 import org.scalatest.flatspec.FixtureAnyFlatSpec
 import org.hypergraphdb.storage.ByteArrayConverter
+
 import java.util.Comparator
 import org.hypergraphdb.storage.BAtoHandle
 import org.hypergraphdb.`type`.javaprimitive.StringType
 import org.hypergraphdb.storage.BAtoBA
+
 import scala.collection.mutable.ArrayBuffer
-import collection.convert.ImplicitConversions._
-import collection.convert.ImplicitConversionsToScala._
+import collection.convert.ImplicitConversions.*
+import collection.convert.ImplicitConversionsToScala.*
 import scala.util.Using
 import scala.collection.mutable
 import scala.util.Random
@@ -27,6 +29,7 @@ import org.hypergraphdb.HGRandomAccessResult
 import org.hypergraphdb.HGBidirectionalIndex
 import org.scalatest.Tag
 import org.hypergraphdb.HGSortIndex
+
 import scala.collection.SortedMap
 import org.hypergraphdb.handle.SequentialUUIDHandleFactory
 import org.scalatest.SucceededStatus
@@ -68,8 +71,8 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
   val aboutstrings = Metadata[String](() => randomString(50), stringType, stringComparator, null)
 
   /**
-    * @param keyGenerator Produces new keys on demand
-    * @param valueGenerator Produces new values for a give key. The key can be ignored if
+    * @param aboutkeys Produces new keys on demand
+    * @param aboutvalues Produces new values for a give key. The key can be ignored if
     * there is no logical dependency b/w values and keys.
     * @param maxKeys The maximum number of keys to generate
     * @param duplicateFraction The fraction of keys with more than one corresponding value
@@ -88,7 +91,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
       val key = aboutkeys.generator()
       result(key) = List(aboutvalues.generator())
     }
-    for (i <- 5 until maxKeys) {
+      for (i <- 5 until maxKeys) {
       val key = aboutkeys.generator()
       val values = new ArrayBuffer[Value]()
       values += aboutvalues.generator()
@@ -135,7 +138,8 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
 
   protected override def runTests(testName: Option[String], args: Args): Status = {
     val fixtures = List(
-      new Fixture(uuids, aboutuuids, aboutuuids),
+       new Fixture(uuids, aboutuuids, aboutuuids)
+       ,
       new Fixture(strings, aboutstrings, aboutstrings)
     )
     fixtures.map(fixture => {
@@ -163,8 +167,8 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
   }
 
   it should "scan only keys, not values" in { fixture =>
-    val index: HGIndex[Any, Any] = store.getIndex("theindex")    
-    tx(Using.resource(index.scanKeys()) { rs =>       
+    val index: HGIndex[Any, Any] = store.getIndex("theindex")   
+    tx(Using.resource(index.scanKeys()) { rs =>
       assert(rs.forall(fixture.data.keySet.contains(_)))
       rs.goAfterLast()
       rs.prev()
@@ -175,7 +179,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     })
   }
 
-  it should "close, open, check if open properly" in { fixture => 
+  it should "close, open, check if open properly"   in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")
     assert(index.isOpen())
     index.close()
@@ -185,8 +189,10 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     index.open()
     assert(index.isOpen())
     val first = fixture.data.head
-    assert(collect(index.find(first._1)).toSet == first._2.toSet)
-    assert(index.stats().countKeys() == fixture.data.size)
+    tx({
+      assert(collect(index.find(first._1)).toSet == first._2.toSet)
+      assert(index.stats().countKeys() == fixture.data.size)
+    })
   }
 
   it should "count properly" in { fixture =>
@@ -195,11 +201,13 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
       assert(index.count() == 0)
       index.addEntry(super.randomBytes(14), super.randomBytes(54))
       assert(index.count() == 1)
-      for (i <- 0 to 100)
-        index.addEntry(super.randomBytes(i + 1), super.randomBytes(4*(i +2 )))
+      tx({
+        for (i <- 0 to 100)
+          index.addEntry(super.randomBytes(i + 1), super.randomBytes(4*(i +2 )))
+      })      
       assert(index.count() == 102)
       val keys = new ArrayBuffer[Array[Byte]]()
-      Using.resource(index.scanKeys) { rs => rs.take(20).foreach(keys.add(_)) }
+      tx(Using.resource(index.scanKeys) { rs => rs.take(20).foreach(keys.add(_)) })
       keys.foreach(index.removeAllEntries)
       assert(index.count() == 102 - 20)
     }
@@ -222,13 +230,13 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
 
     for ( (key, cound) <- data.keySet.zipWithIndex if indices.contains(cound)) {
       val values = data(key)
-      Using.resource(index.find(key)) { rs => assert(values.forall(rs.goTo(_, true) == GotoResult.found)) }
+      tx(Using.resource(index.find(key)) { rs => assert(values.forall(rs.goTo(_, true) == GotoResult.found)) })
     }
   }
 
   it should "return empty set for non existing key" in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")
-    Using.resource(index.find(fixture.key.generator())) { rs => assert(!rs.hasNext()) }
+    tx(Using.resource(index.find(fixture.key.generator())) { rs => assert(!rs.hasNext()) })
   }
 
   it should "return correct value counts for keys" in { fixture => 
@@ -239,12 +247,12 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
 
   it should "scanKeys return all keys" in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")
-    assert(fixture.data.keySet == collect(index.scanKeys).toSet)
+    tx(assert(fixture.data.keySet == collect(index.scanKeys).toSet))
   }
 
   it should "scanValues return all Values" in { fixture =>
     val index: HGIndex[Any, Any] = store.getIndex("theindex")    
-    assert(fixture.data.values.flatten.toSet == collect(index.scanValues).toSet)
+    tx(assert(fixture.data.values.flatten.toSet == collect(index.scanValues).toSet))
   } 
 
   it should "return correct estimated stats" in { fixture =>
@@ -255,7 +263,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
     val order = fixture.value.comparator    
     fixture.data.keys.foreach(key => {
-      Using.resource(index.find(key)) ( left => {
+      tx(Using.resource(index.find(key)) ( left => {
         Using.resource(index.find(key)) ( right => {
           if (right.hasNext()) {
             right.next
@@ -263,11 +271,12 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
           }
         })
       })
+      )
     })
   }
 
   // Check navigation of various result sets: next, prev, goTo...        
-  it should "support result set navigation in both directions as well as random access" in { fixture =>
+  it should "support result set navigation in both directions as well as random access" taggedAs (ToDebug) in { fixture =>
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
     val marks = ArrayBuffer[Any]()
     val maxsteps = 1000
@@ -291,7 +300,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
       rs.goBeforeFirst()
       assert(!rs.hasPrev)
       assert(rs.hasNext)
-      
+
       assert(last.get == sortedkeys.last)
 
       assert(rs.goTo(fixture.key.generator(), true) == GotoResult.nothing)
@@ -472,7 +481,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }))
   }  
 
-  it should "remove all entries for a key with multiple values" in { fixture =>
+  it should "remove all entries for a key with multiple values"  in { fixture =>
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
     fixture.data.keys.find( key => fixture.data(key).size > 1).map(key => tx({
       val value = fixture.data(key).head
@@ -481,7 +490,7 @@ class IndexTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }))    
   }
 
-  it should "ignore removal of all entries for a key with no values (a NOP)" in { fixture =>
+  it should "ignore removal of all entries for a key with no values (a NOP)"  in { fixture =>
     val index: HGIndex[Any,Any] = store.getIndex("theindex")
     tx(index.removeAllEntries(fixture.key.generator()))
   }    

@@ -21,7 +21,7 @@ import org.scalatest.*
 import flatspec.*
 import matchers.*
 import org.hypergraphdb.HGSearchResult
-import org.hypergraphdb.storage.bje.BJEConfig
+// import org.hypergraphdb.storage.bje.BJEConfig
 
 import scala.collection.mutable.ArrayBuffer
 import collection.convert.ImplicitConversions.*
@@ -59,7 +59,9 @@ trait StorageTestEnv extends should.Matchers
 
   // HGDB stuff
   def storeImplementationClass = {
-    "org.hypergraphdb.storage.bje.BJEStorageImplementation"
+    // "org.hypergraphdb.storage.bje.BJEStorageImplementation"
+//    "org.hypergraphdb.storage.lmdb.StorageImplementationLMDB"
+    "org.hypergraphdb.storage.rocksdb.StorageImplementationRocksDB"
   }                                              
 
   def baseDatabaseLocation = {
@@ -123,8 +125,9 @@ trait StorageTestEnv extends should.Matchers
       config = new HGConfiguration()
       config.setEnforceTransactionsInStorageLayer(enforceTransactions)
       storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
-      storeImplementation.getConfiguration().asInstanceOf[BJEConfig].setSerializableIsolation(false)
+      // storeImplementation.getConfiguration().asInstanceOf[BJEConfig].setSerializableIsolation(false)
       config.setStoreImplementation(storeImplementation)
+      (new java.io.File(databaseLocation)).mkdirs()
       storeOption = Some(new HGStore(databaseLocation, config))
     }
     storeOption.get

@@ -32,6 +32,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
       config.setEnforceTransactionsInStorageLayer(true)
       storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
       config.setStoreImplementation(storeImplementation)
+      (new java.io.File(location)).mkdirs()
       val store = new HGStore(location, config)
       assertThrows[HGException](store.store(handleArray(4)))
       store.close()
@@ -48,6 +49,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
       config.setEnforceTransactionsInStorageLayer(false)
       storeImplementation = Class.forName(storeImplementationClass).newInstance.asInstanceOf[HGStoreImplementation]
       config.setStoreImplementation(storeImplementation)
+      (new java.io.File(location)).mkdirs()      
       val store = new HGStore(location, config)
       val handles = handleArray(4)
       val result = store.store(handles)
@@ -59,7 +61,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "ignore stored data in main storage upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in main storage upon transaction rollback" in { (fixture: FixtureParam) =>  
     // val somedata = randomBytes(100)    
     // store.getTransactionManager.beginTransaction()
     // var handle = store.store(somedata)
@@ -75,7 +77,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     store.getLink(handle) should be(null)
   }
 
-  it should "ignore stored data in index upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in index upon transaction rollback" in { (fixture: FixtureParam) =>  
     val idx = store.getIndex("III", 
           BAtoBA.getInstance(), 
           BAtoBA.getInstance(), 
@@ -96,7 +98,7 @@ class TransactionStorageTests extends FixtureAnyFlatSpec with StorageTestEnv {
     }
   }
 
-  it should "ignore stored data in bi-directional index upon transaction rollback"   in { (fixture: FixtureParam) =>  
+  it should "ignore stored data in bi-directional index upon transaction rollback"  in { (fixture: FixtureParam) =>  
     val idx = store.getBidirectionalIndex("III", 
           BAtoBA.getInstance(), 
           BAtoBA.getInstance(), 

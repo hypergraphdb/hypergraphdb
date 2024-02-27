@@ -122,9 +122,7 @@ public class BJEIndexStats<Key, Value> implements HGIndexStats<Key, Value>
 	public Count keysWithValue(final Value value, final long cost, final boolean isEstimateOk)
 	{
 		index.checkOpen();
-		if (index instanceof DefaultBiIndexImpl)
-			return null;
-		if (cost == 0)
+		if (! (index instanceof DefaultBiIndexImpl) || cost == 0)
 			return null;
 		else
 		{
