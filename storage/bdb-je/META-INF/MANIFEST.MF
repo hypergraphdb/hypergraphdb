@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1677453182252
-Build-Jdk: 11.0.12
-Built-By: borislav
+Bnd-LastModified: 1698311545469
+Build-Jdk: 11.0.16.1
+Built-By: plkos
 Bundle-ClassPath: .,je-5.0.104.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB BDB-JE Storage

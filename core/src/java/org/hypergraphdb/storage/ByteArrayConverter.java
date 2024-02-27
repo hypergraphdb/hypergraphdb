@@ -19,4 +19,5 @@ public interface ByteArrayConverter<T>
 {
     byte [] toByteArray(T object);
     T fromByteArray(byte [] byteArray, int offset, int length);
+
 }

@@ -419,6 +419,15 @@ public class BJEStorageImplementation implements HGStoreImplementation
 			DatabaseEntry value = new DatabaseEntry();
 			TransactionBJEImpl tx = txn();
 			cursor = incidence_db.openCursor(tx.getBJETransaction(), cursorConfig);
+			/*
+
+			If the cursor is only used to go to record with a given (key, value)
+			combination, there is no need to search for the key by itself.
+			Unless there is some performance benefit in doing so.
+			i.e. in theory, we could be supplying an empty cursor here
+
+			key is ignored.
+			 */
 			OperationStatus status = cursor.getSearchKey(key, value, LockMode.DEFAULT);
 			if (status == OperationStatus.NOTFOUND)
 			{
@@ -426,8 +435,26 @@ public class BJEStorageImplementation implements HGStoreImplementation
 				return (HGRandomAccessResult<HGPersistentHandle>) HGSearchResult.EMPTY;
 			}
 			else
-				return new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), key,
+			{
+				/*
+				A cursor-like result set which is backed by the records which have the
+				same key.
+
+				the cursor is pointing to the first record which has the given key.
+
+				we still can move the underlying cursor to the beginning of the
+				index (which in the general case has a different key from the
+				original one., which will effectively change the result set
+
+				key is ignored
+
+				 */
+				var result = new SingleKeyResultSet<HGPersistentHandle>(tx.attachCursor(cursor), key,
 						BAtoHandle.getInstance(handleFactory));
+
+				return result;
+
+			}
 		}
 		catch (Throwable ex)
 		{

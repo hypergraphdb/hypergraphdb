@@ -23,8 +23,8 @@
 		</repository>
 	</repositories>
 
-	<!-- <distributionManagement> <repository> <id>hypergraphdb-repository</id> 
-		<url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url> </repository> 
+	<!-- <distributionManagement> <repository> <id>hypergraphdb-repository</id>
+		<url>scp://hypergraphdb.org/var/www/hypergraphdb.org/maven</url> </repository>
 		</distributionManagement> -->
 
 	<build>
@@ -123,7 +123,7 @@
 
 	<modules>
 	  <module>core</module>
-		<module>storage</module>		
+		<module>storage</module>
 <!--
 		<module>p2p</module>
 		<module>test</module>

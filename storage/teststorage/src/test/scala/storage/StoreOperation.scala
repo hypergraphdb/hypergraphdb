@@ -182,48 +182,48 @@ class IndexAddMultipleData extends storage.StoreOperationBase {
 
 class IndexRemoveMultipleData extends storage.StoreOperationBase {
 
-   var key: Option[Array[Byte]] = None
-   var values: Option[IndexedSeq[Array[Byte]]] = None
-   var key_keep_some: Option[Array[Byte]] = None
-   var values_keep_some: Option[IndexedSeq[Array[Byte]]] = None
+    var key: Option[Array[Byte]] = None
+    var values: Option[IndexedSeq[Array[Byte]]] = None
+    var key_keep_some: Option[Array[Byte]] = None
+    var values_keep_some: Option[IndexedSeq[Array[Byte]]] = None
   
-  override def prepare(env: StorageTestEnv): StoreOperation = {
-    super.prepare(env)
-     values_keep_some = Some(
-       1 to (5 + env.random.nextInt(15)) map { size => env.randomBytes(10 + env.random.nextInt(40)) }
-     )
-    this
-  }
+    override def prepare(env: StorageTestEnv): StoreOperation = {
+      super.prepare(env)
+       values_keep_some = Some(
+         1 to (5 + env.random.nextInt(15)) map { size => env.randomBytes(10 + env.random.nextInt(40)) }
+       )
+      this
+    }
 
-  def perform():Unit = {        
-    val key = Some(env.randomBytes(100))
-    key_keep_some = Some(env.randomBytes(100))
-    val values = Some(
-      1 to (5 + env.random.nextInt(15)) map { size => env.randomBytes(10 + env.random.nextInt(40)) }
-    )
+    def perform():Unit = {
+      val key = Some(env.randomBytes(100))
+      key_keep_some = Some(env.randomBytes(100))
+      val values = Some(
+        1 to (5 + env.random.nextInt(15)) map { size => env.randomBytes(10 + env.random.nextInt(40)) }
+      )
 
-    tx(s => {
-      val idx: HGIndex[Array[Byte], Array[Byte]] = s.getIndex(indexName())
-      values.get map { v => idx.addEntry(key.get, v) }
-      values_keep_some.get map { v => idx.addEntry(key_keep_some.get, v) }
-    })
+      tx(s => {
+        val idx: HGIndex[Array[Byte], Array[Byte]] = s.getIndex(indexName())
+        values.get map { v => idx.addEntry(key.get, v) }
+        values_keep_some.get map { v => idx.addEntry(key_keep_some.get, v) }
+      })
 
-    tx(s =>  {
-      val idx: HGIndex[Array[Byte], Array[Byte]] = env.storeOption.get.getIndex(indexName())
-      key.map(keydata => idx.removeAllEntries(keydata))
-      idx.removeAllEntries(key.get)
-      assert(idx.findFirst(key.get) == null)
-      key_keep_some.map(keydata => idx.removeEntry(keydata, values_keep_some.get.head))
-    })
-  }
+      tx(s =>  {
+        val idx: HGIndex[Array[Byte], Array[Byte]] = env.storeOption.get.getIndex(indexName())
+        key.map(keydata => idx.removeAllEntries(keydata))
+        idx.removeAllEntries(key.get)
+        assert(idx.findFirst(key.get) == null)
+        key_keep_some.map(keydata => idx.removeEntry(keydata, values_keep_some.get.head))
+      })
+    }
 
-  def verify():Unit = {
-     tx(s => key.map(keydata => assert(
-       s.getIndex[Array[Byte], Array[Byte]](indexName()).findFirst(keydata) == null)))
-     tx(s => {
-       val idx: HGIndex[Array[Byte], Array[Byte]] = s.getIndex(indexName())
-       key_keep_some.map(keydata =>
-         env.collect(idx.find(keydata)) should not contain(values_keep_some.get.head))
-     })
-  }
+    def verify():Unit = {
+       tx(s => key.map(keydata => assert(
+         s.getIndex[Array[Byte], Array[Byte]](indexName()).findFirst(keydata) == null)))
+       tx(s => {
+         val idx: HGIndex[Array[Byte], Array[Byte]] = s.getIndex(indexName())
+         key_keep_some.map(keydata =>
+           env.collect(idx.find(keydata)) should not contain(values_keep_some.get.head))
+       })
+    }
 }

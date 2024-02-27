@@ -35,6 +35,10 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T> {
 		}
 	}
 
+	/**
+	 * Moves the cursor to the next duplicate record, if exists, else null
+	 * @return
+	 */
 	protected T advance() {
 		try {
 			OperationStatus status = cursor.cursor().getNextDup(key, data, LockMode.DEFAULT);
@@ -49,6 +53,10 @@ public class SingleKeyResultSet<T> extends IndexResultSet<T> {
 		}
 	}
 
+	/**
+	 * Moves the cursor to the previous duplicate record, if exists, else null
+	 * @return
+	 */
 	protected T back() {
 		try {
 			OperationStatus status = cursor.cursor().getPrevDup(key, data, LockMode.DEFAULT);
