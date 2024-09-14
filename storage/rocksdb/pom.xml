@@ -20,7 +20,7 @@
     <repositories>
         <repository>
             <id>hypergraphdb</id>
-            <url>http://hypergraphdb.org/maven</url>
+            <url>https://hypergraphdb.org/maven</url>
         </repository>
     </repositories>
 

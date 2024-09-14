@@ -22,7 +22,7 @@
     <repository>
 	  <!-- Only needed for Berkeley version -->
       <id>hypergraphdb</id>
-      <url>http://hypergraphdb.org/maven</url>
+      <url>https://hypergraphdb.org/maven</url>
     </repository>
     <!-- 
     <repository>
