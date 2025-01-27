@@ -176,7 +176,13 @@ public class HGSubgraph implements HyperNode, HGHandleHolder, HGGraphHolder
 					   Object instance,
 					   int flags)
 	{
-		graph.define(handle, type, instance, flags);
+		Object existing = graph.get(handle);
+		if (existing == null)
+			graph.define(handle, type, instance, flags);
+		else if (!type.equals(graph.getType(handle)))
+			throw new IllegalArgumentException("Trying to re-define an atom with a different type " + type);
+		else if (!instance.equals(existing))
+			throw new IllegalArgumentException("Trying to re-define an atom with a different payloaf " + instance);
 		add(handle);
 	}
 
