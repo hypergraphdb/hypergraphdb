@@ -247,8 +247,14 @@ public class ZigZagIntersectionResult<T> implements HGRandomAccessResult<T> // ,
 
 	public void close() 
 	{
-		left.close();
-		right.close();		
+		try
+		{
+			left.close();
+		}
+		finally
+		{
+			right.close();
+		}
 	}
 
 	public T current() 

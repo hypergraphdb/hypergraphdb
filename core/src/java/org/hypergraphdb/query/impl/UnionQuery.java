@@ -12,6 +12,7 @@ import java.util.Iterator;
 
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.util.HGUtils;
 
 
 /**
@@ -42,26 +43,37 @@ public class UnionQuery<T> extends HGQuery<T> implements Iterable<HGQuery<T>>
 	@SuppressWarnings({ "rawtypes", "unchecked" })
     public HGSearchResult<T> execute()
 	{
-		HGSearchResult<T> leftResult = left.execute();
-		HGSearchResult<T> rightResult = right.execute();		
-		if (!leftResult.hasNext() && !rightResult.hasNext())
+		HGSearchResult<T> leftResult = null, rightResult = null;
+		try
 		{
-			leftResult.close();
-			rightResult.close();
-			return (HGSearchResult)HGSearchResult.EMPTY;
+			leftResult = left.execute();
+			rightResult = right.execute();
+			if (!leftResult.hasNext() && !rightResult.hasNext())
+			{
+				leftResult.close();
+				rightResult.close();
+				return (HGSearchResult)HGSearchResult.EMPTY;
+			}
+			else if (!leftResult.hasNext())
+			{
+				leftResult.close();
+				return rightResult;
+			}
+			else if (!rightResult.hasNext())
+			{
+				rightResult.close();
+				return leftResult;
+			}
+			else
+				return new UnionResult(leftResult, rightResult);
 		}
-		else if (!leftResult.hasNext())
+		catch (RuntimeException | Error ex)
 		{
-			leftResult.close();
-			return rightResult;
+			// Don't leave sub-results (and their storage cursors and locks) open.
+			HGUtils.closeNoException(leftResult);
+			HGUtils.closeNoException(rightResult);
+			throw ex;
 		}
-		else if (!rightResult.hasNext())
-		{
-			rightResult.close();
-			return leftResult;
-		}
-		else
-			return new UnionResult(leftResult, rightResult);
 	}
 	
     @SuppressWarnings("unchecked")

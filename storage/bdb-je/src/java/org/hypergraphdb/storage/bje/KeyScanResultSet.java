@@ -70,7 +70,7 @@ public class KeyScanResultSet<T> extends IndexResultSet<T> {
 		}
 		
 		try {
-			cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
+			checkFound(cursor.cursor().getCurrent(key, data, LockMode.DEFAULT), "getCurrent");
 			next = converter.fromByteArray(key.getData(), key.getOffset(), key.getSize());
 			lookahead = 1;
 		}

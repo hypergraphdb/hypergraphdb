@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bnd-LastModified: 1698311545469
 Build-Jdk: 11.0.16.1
 Built-By: plkos
-Bundle-ClassPath: .,je-5.0.104.jar
+Bundle-ClassPath: .,je-18.3.12.jar
 Bundle-ManifestVersion: 2
 Bundle-Name: HyperGraphDB BDB-JE Storage
 Bundle-SymbolicName: org.hypergraphdb-hgbdbje;singleton:=true
@@ -10,7 +10,7 @@ Bundle-Version: 2.0.0.SNAPSHOT
 Created-By: Apache Maven Bundle Plugin
 Embed-Dependency: je
 Embed-Transitive: true
-Embedded-Artifacts: je-5.0.104.jar;g="com.sleepycat";a="je";v="5.0.104"
+Embedded-Artifacts: je-18.3.12.jar;g="com.sleepycat";a="je";v="18.3.12"
 Export-Package: org.hypergraphdb.storage.bje;uses:="org.hypergraphdb,org
  .hypergraphdb.storage,org.hypergraphdb.transaction,org.hypergraphdb.uti
  l";version="2.0.0.SNAPSHOT"

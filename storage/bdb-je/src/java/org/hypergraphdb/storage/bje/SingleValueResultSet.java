@@ -28,6 +28,8 @@ import com.sleepycat.je.SecondaryCursor;
  */
 public class SingleValueResultSet<T> extends IndexResultSet<T> {
 	private DatabaseEntry pkey = new DatabaseEntry();
+	// The (secondary) key whose primary keys this result set iterates.
+	private byte[] keyBytes;
 
 	public SingleValueResultSet(BJETxCursor cursor, DatabaseEntry keyIn, ByteArrayConverter<T> converter) {
 		//
@@ -43,7 +45,8 @@ public class SingleValueResultSet<T> extends IndexResultSet<T> {
 		}
 		
 		try {
-			((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT);
+			checkFound(((SecondaryCursor)cursor.cursor()).getCurrent(key, pkey, data, LockMode.DEFAULT), "getCurrent");
+			keyBytes = java.util.Arrays.copyOfRange(key.getData(), key.getOffset(), key.getOffset() + key.getSize());
 			next = converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize());
 			lookahead = 1;
 		}
@@ -103,6 +106,44 @@ public class SingleValueResultSet<T> extends IndexResultSet<T> {
 				else
 					return GotoResult.nothing;
 			}
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
+	/** Position on the first primary key for this result set's (secondary) key. */
+	public void goBeforeFirst() {
+		try {
+			key = new DatabaseEntry(keyBytes.clone());
+			if (((SecondaryCursor)cursor.cursor()).getSearchKey(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+				positionedBeforeFirst(converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize()));
+			else
+				positionedNowhere();
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
+	/** Position on the last primary key for this result set's (secondary) key. */
+	public void goAfterLast() {
+		try {
+			SecondaryCursor c = (SecondaryCursor)cursor.cursor();
+			key = new DatabaseEntry(keyBytes.clone());
+			OperationStatus status = c.getSearchKey(key, pkey, data, LockMode.DEFAULT);
+			if (status == OperationStatus.SUCCESS) {
+				if (c.getNextNoDup(key, pkey, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+					status = c.getPrev(key, pkey, data, LockMode.DEFAULT);
+				else
+					status = c.getLast(key, pkey, data, LockMode.DEFAULT);
+			}
+			if (status == OperationStatus.SUCCESS)
+				positionedAfterLast(converter.fromByteArray(pkey.getData(), pkey.getOffset(), pkey.getSize()));
+			else
+				positionedNowhere();
 		}
 		catch (Throwable t) {
 			closeNoException();

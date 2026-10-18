@@ -24,13 +24,56 @@ import com.sleepycat.je.OperationStatus;
  */
 public class SingleKeyResultSet<T> extends IndexResultSet<T> {
 	private boolean ordered = false;
+	// The key whose values this result set iterates.
+	private final byte[] keyBytes;
 
 	public SingleKeyResultSet(BJETxCursor cursor, DatabaseEntry key, ByteArrayConverter<T> converter) {
 		super(cursor, key, converter);
+		this.keyBytes = java.util.Arrays.copyOfRange(this.key.getData(), this.key.getOffset(), this.key.getOffset() + this.key.getSize());
 		try {
 			ordered = cursor.cursor().getDatabase().getConfig().getSortedDuplicates();
 		}
 		catch (Throwable t) {
+			throw new HGException(t);
+		}
+	}
+
+	/** Position on the first value of this result set's key. */
+	public void goBeforeFirst() {
+		try {
+			key = new DatabaseEntry(keyBytes.clone());
+			if (cursor.cursor().getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+				positionedBeforeFirst(converter.fromByteArray(data.getData(), data.getOffset(), data.getSize()));
+			else
+				positionedNowhere();
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
+	/**
+	 * Position on the last value of this result set's key: move to the next key and back one record,
+	 * or to the last record of the database if this key is the last one.
+	 */
+	public void goAfterLast() {
+		try {
+			key = new DatabaseEntry(keyBytes.clone());
+			OperationStatus status = cursor.cursor().getSearchKey(key, data, LockMode.DEFAULT);
+			if (status == OperationStatus.SUCCESS) {
+				if (cursor.cursor().getNextNoDup(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+					status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
+				else
+					status = cursor.cursor().getLast(key, data, LockMode.DEFAULT);
+			}
+			if (status == OperationStatus.SUCCESS)
+				positionedAfterLast(converter.fromByteArray(data.getData(), data.getOffset(), data.getSize()));
+			else
+				positionedNowhere();
+		}
+		catch (Throwable t) {
+			closeNoException();
 			throw new HGException(t);
 		}
 	}

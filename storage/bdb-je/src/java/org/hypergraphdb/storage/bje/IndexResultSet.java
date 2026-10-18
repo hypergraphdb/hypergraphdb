@@ -181,7 +181,7 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 			/*
 			key, data are outputs, so we are overriding them.
 			 */
-			cursor.cursor().getCurrent(key, data, LockMode.DEFAULT);
+			checkFound(cursor.cursor().getCurrent(key, data, LockMode.DEFAULT), "getCurrent");
 			next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 			lookahead = 1;
 		}
@@ -196,44 +196,45 @@ public abstract class IndexResultSet<T> implements HGRandomAccessResult<T>, Coun
 		prev = next = UNKNOWN;
 	}
 
-	public void goBeforeFirst() {
-		try {
-			if (cursor.cursor().getFirst(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
-				current = UNKNOWN;
-				prev = null;
-				next = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
-				lookahead = 1;
-			}
-			else {
-				prev = next = null;
-				current = UNKNOWN;
-				lookahead = 0;
-			}
-		}
-		catch (Throwable t) {
-			closeNoException();
-			throw new HGException(t);
-		}
+	/**
+	 * Position before the first element of this result set. Each kind of result set defines its own
+	 * first element (the first value of a key, the start of a key range...), which is generally not
+	 * the first record of the index database.
+	 */
+	public abstract void goBeforeFirst();
+
+	/**
+	 * Position after the last element of this result set; see {@link #goBeforeFirst()}.
+	 */
+	public abstract void goAfterLast();
+
+	/** The cursor is on the first element: nothing before it, and it is the next element. */
+	protected final void positionedBeforeFirst(T first) {
+		current = UNKNOWN;
+		prev = null;
+		next = first;
+		lookahead = 1;
 	}
 
-	public void goAfterLast() {
-		try {
-			if (cursor.cursor().getLast(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
-				current = UNKNOWN;
-				next = null;
-				prev = converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
-				lookahead = -1;
-			}
-			else {
-				prev = next = null;
-				current = UNKNOWN;
-				lookahead = 0;
-			}
-		}
-		catch (Throwable t) {
-			closeNoException();
-			throw new HGException(t);
-		}
+	/** The cursor is on the last element: nothing after it, and it is the previous element. */
+	protected final void positionedAfterLast(T last) {
+		current = UNKNOWN;
+		next = null;
+		prev = last;
+		lookahead = -1;
+	}
+
+	/** No element to position on. */
+	protected final void positionedNowhere() {
+		prev = next = null;
+		current = UNKNOWN;
+		lookahead = 0;
+	}
+
+	/** Throw if a cursor operation that must find a record didn't. */
+	protected static void checkFound(OperationStatus status, String operation) {
+		if (status != OperationStatus.SUCCESS)
+			throw new HGException("Index cursor " + operation + " returned " + status + " where a record was expected.");
 	}
 
 	public GotoResult goTo(T value, boolean exactMatch) {
