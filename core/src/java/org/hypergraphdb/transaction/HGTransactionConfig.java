@@ -27,6 +27,7 @@ public class HGTransactionConfig
     private boolean readonly = false;
     private boolean writeUpgradable = false;
     private Runnable beforeConflictRetry = null;
+    private TransactionRetryPolicy retryPolicy = null;
 
     public boolean isNoStorage()
     {
@@ -74,4 +75,23 @@ public class HGTransactionConfig
         this.beforeConflictRetry = beforeConflictRetry;
         return this;
     }    
+
+    /**
+     * Return the retry policy for transactions run with this configuration, or <code>null</code> to use
+     * the transaction manager's (see {@link HGTransactionManager#getRetryPolicy()}).
+     */
+    public TransactionRetryPolicy getRetryPolicy()
+    {
+        return retryPolicy;
+    }
+
+    /**
+     * Set the retry policy for transactions run with this configuration, overriding the transaction
+     * manager's; <code>null</code> uses the manager's.
+     */
+    public HGTransactionConfig setRetryPolicy(TransactionRetryPolicy retryPolicy)
+    {
+        this.retryPolicy = retryPolicy;
+        return this;
+    }
 }

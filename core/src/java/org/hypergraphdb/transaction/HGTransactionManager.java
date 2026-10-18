@@ -41,6 +41,7 @@ public class HGTransactionManager
 	private List<Consumer<HGTransactionEvent>> transactionEventListeners = new ArrayList<>();
 	private ThreadLocal<HGTransactionContext> tcontext = new ThreadLocal<HGTransactionContext>();
 	private boolean enabled = true;
+	private TransactionRetryPolicy retryPolicy = new RandomExponentialBackoff();
 
 	volatile ActiveTransactionsRecord mostRecentRecord = new ActiveTransactionsRecord(
 			0, null);
@@ -346,6 +347,56 @@ public class HGTransactionManager
 			return transact(transaction, config);
 	}
 
+	/**
+	 * Return the retry policy used by {@link #transact(Callable)} for transactions whose
+	 * {@link HGTransactionConfig} doesn't specify one.
+	 */
+	public TransactionRetryPolicy getRetryPolicy()
+	{
+		return retryPolicy;
+	}
+
+	/**
+	 * Set the retry policy used by {@link #transact(Callable)} for transactions whose
+	 * {@link HGTransactionConfig} doesn't specify one. Normally set from
+	 * {@link org.hypergraphdb.HGConfiguration#setTransactionRetryPolicy(TransactionRetryPolicy)}.
+	 */
+	public HGTransactionManager setRetryPolicy(TransactionRetryPolicy retryPolicy)
+	{
+		if (retryPolicy == null)
+			throw new NullPointerException("retryPolicy");
+		this.retryPolicy = retryPolicy;
+		return this;
+	}
+
+	TransactionRetryPolicy retryPolicyFor(HGTransactionConfig config)
+	{
+		return config.getRetryPolicy() != null ? config.getRetryPolicy() : retryPolicy;
+	}
+
+	/**
+	 * Called before retrying a transaction that failed with a retryable conflict: throw a
+	 * {@link TransactionRetryLimitException} if the policy's limit is exceeded, otherwise wait
+	 * as long as the policy says, so that transactions that conflicted with each other (for
+	 * example the two sides of a deadlock detected by the storage) don't retry in lockstep.
+	 */
+	void backoffBeforeRetry(TransactionRetryPolicy policy, int retry, Throwable conflict)
+	{
+		if (policy.maxRetries() >= 0 && retry > policy.maxRetries())
+			throw new TransactionRetryLimitException(retry - 1, conflict);
+		long millis = policy.waitMillis(retry);
+		if (millis > 0)
+			try
+			{
+				Thread.sleep(millis);
+			}
+			catch (InterruptedException ex)
+			{
+				Thread.currentThread().interrupt();
+				throw new HGException("Interrupted while waiting to retry a transaction.", ex);
+			}
+	}
+
 	void handleTxException(Throwable t)
 	{
 		// If there is a DeadlockException at the root of this, we have to
@@ -435,6 +486,8 @@ public class HGTransactionManager
 		// We retry for as long as it takes. There's no reason
 		// why a transaction shouldn't eventually be able to acquire
 		// the locks it needs.
+		final TransactionRetryPolicy policy = retryPolicyFor(config);
+		int retries = 0;
 		while (true)
 		{
 			beginTransaction(config);
@@ -475,6 +528,7 @@ public class HGTransactionManager
 				{
 					handleTxException(t); // will re-throw if we can't retry the
 											// transaction
+					backoffBeforeRetry(policy, ++retries, t);
 				}
 
 				// retry transaction
@@ -500,6 +554,7 @@ public class HGTransactionManager
 				{
 					handleTxException(t); // will re-throw if we can't retry the
 											// transaction
+					backoffBeforeRetry(policy, ++retries, t);
 				}
 				if (config.getBeforeConflictRetry() != null)
 				    // don't try to catch exceptions here, we've already cleaned up, just propagate

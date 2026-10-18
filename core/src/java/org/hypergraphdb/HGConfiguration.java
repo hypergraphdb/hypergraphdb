@@ -13,6 +13,9 @@ import org.hypergraphdb.event.HGDefaultEventManager;
 import org.hypergraphdb.event.HGEventManager;
 import org.hypergraphdb.query.HGQueryConfiguration;
 import org.hypergraphdb.storage.HGStoreImplementation;
+import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.transaction.RandomExponentialBackoff;
+import org.hypergraphdb.transaction.TransactionRetryPolicy;
 import org.hypergraphdb.type.HGTypeConfiguration;
 import org.hypergraphdb.util.HGUtils;
 
@@ -33,6 +36,7 @@ public class HGConfiguration
 	private HGStoreImplementation storeImplementation;
 	private boolean transactional;
     private boolean enforceTransactionsInStorageLayer = false;
+    private TransactionRetryPolicy transactionRetryPolicy = new RandomExponentialBackoff();
 	private boolean skipMaintenance;
 	private boolean cancelMaintenance;
 	private boolean skipOpenedEvent;
@@ -456,4 +460,27 @@ public class HGConfiguration
         this.enforceTransactionsInStorageLayer = enforceTransactionsInStorageLayer;
         return this;
     }    
+
+    /**
+     * Return the policy deciding how transactions that fail with a retryable conflict are retried
+     * (how long to wait, how many times at most). The default is {@link RandomExponentialBackoff}
+     * with unlimited retries.
+     */
+    public TransactionRetryPolicy getTransactionRetryPolicy()
+    {
+        return transactionRetryPolicy;
+    }
+
+    /**
+     * Set the policy deciding how transactions that fail with a retryable conflict are retried. It
+     * applies to all transactions of the graph, unless a transaction's {@link HGTransactionConfig}
+     * specifies its own. Use <code>RandomExponentialBackoff.immediate()</code> to retry immediately.
+     */
+    public HGConfiguration setTransactionRetryPolicy(TransactionRetryPolicy transactionRetryPolicy)
+    {
+        if (transactionRetryPolicy == null)
+            throw new NullPointerException("transactionRetryPolicy");
+        this.transactionRetryPolicy = transactionRetryPolicy;
+        return this;
+    }
 }
