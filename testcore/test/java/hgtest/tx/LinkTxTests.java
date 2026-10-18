@@ -145,7 +145,9 @@ public class LinkTxTests extends HGTestBase
         while (i < linksCount - 1)
         {
             final int finali = i;
-            i = txman.transact(new Callable<Integer>() {
+            // transact returns null when the transaction is aborted with HGUserAbortException:
+            // then try again from the same index.
+            Integer nextIndex = txman.transact(new Callable<Integer>() {
             public Integer call()
             {
                 LinkType first = new LinkType(threadId, finali, x, y);
@@ -177,6 +179,8 @@ public class LinkTxTests extends HGTestBase
                 return finali + 2;
             }
             });
+            if (nextIndex != null)
+                i = nextIndex;
             try { Thread.sleep((long)Math.random()*100); }
             catch (InterruptedException ex) {}
         }

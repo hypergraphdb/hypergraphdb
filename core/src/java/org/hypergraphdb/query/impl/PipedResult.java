@@ -10,6 +10,7 @@ package org.hypergraphdb.query.impl;
 import java.util.NoSuchElementException;
 
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * 
@@ -47,10 +48,21 @@ public class PipedResult<Key, Value> implements HGSearchResult<Value>
 		this.pipe = pipe;
 		this.own_in = own_in;
 		
-		if (in.hasNext())
+		try
 		{
-			pipe.setKey(in.next());
-			currentPiped = pipe.execute();
+			if (in.hasNext())
+			{
+				pipe.setKey(in.next());
+				currentPiped = pipe.execute();
+			}
+		}
+		catch (RuntimeException | Error ex)
+		{
+			// The caller gets no result set to close: close what this constructor was given.
+			HGUtils.closeNoException(currentPiped);
+			if (own_in)
+				HGUtils.closeNoException(in);
+			throw ex;
 		}
 	}
 	
@@ -64,24 +76,36 @@ public class PipedResult<Key, Value> implements HGSearchResult<Value>
 
 	public void close() 
 	{
-		if (currentPiped != null)
+		// Close everything even if closing one of them fails.
+		try
 		{
-			currentPiped.close();
+			if (currentPiped != null)
+				currentPiped.close();
+		}
+		finally
+		{
 			currentPiped = null;
+			try
+			{
+				if (nextPiped != null)
+					nextPiped.close();
+			}
+			finally
+			{
+				nextPiped = null;
+				try
+				{
+					if (previousPiped != null)
+						previousPiped.close();
+				}
+				finally
+				{
+					previousPiped = null;
+					if (own_in && in != null)
+						in.close();
+				}
+			}
 		}
-		if (nextPiped != null)
-		{
-			nextPiped.close();
-			nextPiped = null;
-		}
-		if (previousPiped != null)
-		{
-			previousPiped.close();
-			previousPiped = null;
-		}
-		
-		if (own_in && in != null )
-			in.close();
 	}
 
 	public boolean hasPrev() 

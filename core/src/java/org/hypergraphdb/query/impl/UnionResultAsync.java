@@ -290,8 +290,14 @@ public class UnionResultAsync<T> implements AsyncSearchResult<T>
 
     public void close()
     {
-        left.close();
-        right.close();
+        try
+        {
+            left.close();
+        }
+        finally
+        {
+            right.close();
+        }
     }
     
     public boolean hasPrev()

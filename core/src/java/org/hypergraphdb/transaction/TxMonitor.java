@@ -119,6 +119,8 @@ class TxMonitor implements TransactionMonitor
 	public <V> V transact(String name, Callable<V> transaction, HGTransactionConfig config)
 	{
 		TxInfo txinfo = startTransaction(name);
+		final TransactionRetryPolicy policy = manager.retryPolicyFor(config);
+		int retries = 0;
 		while (true)
 		{		    
 			manager.beginTransaction(config);
@@ -149,6 +151,7 @@ class TxMonitor implements TransactionMonitor
 					txinfo.failed(t);
 					manager.handleTxException(t); // will re-throw if we can't retry the transaction
 					txinfo.retried().conflicting().addAll(activeNames(txinfo));
+					manager.backoffBeforeRetry(policy, ++retries, t);
 				}
 				continue;
 			}
@@ -170,6 +173,7 @@ class TxMonitor implements TransactionMonitor
                 	txinfo.failed(t);
                     manager.handleTxException(t); // will re-throw if we can't retry the transaction
                     txinfo.retried().conflicting().addAll(activeNames(txinfo));                    
+                    manager.backoffBeforeRetry(policy, ++retries, t);
                 }
 			}
 		}		

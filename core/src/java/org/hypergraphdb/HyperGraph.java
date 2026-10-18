@@ -532,7 +532,7 @@ public /*final*/ class HyperGraph implements HyperNode
      */
     public boolean isFrozen(HGHandle handle)
     {
-        HGLiveHandle lHandle =  (handle instanceof HGPersistentHandle) ? cache.get((HGPersistentHandle)handle) : (HGLiveHandle)handle;
+        HGLiveHandle lHandle = currentLiveHandle(handle);
         return (lHandle == null) ? false : cache.isFrozen(lHandle);
     }
 
@@ -572,11 +572,11 @@ public /*final*/ class HyperGraph implements HyperNode
     	        if (handle == null)
     	            throw new NullPointerException("Trying to freeze null atom handle.");
     	        get(handle);
-    	        HGLiveHandle lHandle =  (handle instanceof HGPersistentHandle) ? cache.get((HGPersistentHandle)handle) : (HGLiveHandle)handle;
+    	        HGLiveHandle lHandle = currentLiveHandle(handle);
     	        while (lHandle == null)
     	        {
     	            get(handle);
-    	            lHandle = cache.get((HGPersistentHandle)handle);
+    	            lHandle = cache.get(handle.getPersistent());
     	        }
     	        if (!cache.isFrozen(lHandle))
     	            cache.freeze(lHandle);
@@ -597,7 +597,7 @@ public /*final*/ class HyperGraph implements HyperNode
      */
     public void unfreeze(HGHandle handle)
     {
-        HGLiveHandle lHandle =  (handle instanceof HGPersistentHandle) ? cache.get((HGPersistentHandle)handle) : (HGLiveHandle)handle;
+        HGLiveHandle lHandle = currentLiveHandle(handle);
         if (lHandle != null && cache.isFrozen(lHandle))
             cache.unfreeze(lHandle);
     }
@@ -765,7 +765,7 @@ public /*final*/ class HyperGraph implements HyperNode
     	else
     	{
     		HGLiveHandle live = (HGLiveHandle)handle;
-    		if (live.getRef() == null)
+    		if (live.getRef() == null || isSupersededInCurrentTransaction(live))
     		{
     			HGLiveHandle updated = cache.get(live.getPersistent());
     			if (updated != null)
@@ -776,6 +776,35 @@ public /*final*/ class HyperGraph implements HyperNode
     		else
     			return handle;
     	}
+    }
+
+    /**
+     * Return <code>true</code> if the current transaction replaced the atom of the given live handle
+     * with a different runtime instance. Such a handle still refers to the old instance (which other
+     * transactions must keep seeing) until the transaction commits.
+     */
+    private boolean isSupersededInCurrentTransaction(HGLiveHandle handle)
+    {
+    	HGTransaction tx = getTransactionManager().getContext().getCurrent();
+    	return tx != null && tx.isSuperseded(handle);
+    }
+
+    /**
+     * Return the live handle that refers to the current runtime instance of an atom for the current
+     * transaction, or <code>null</code> if the atom is not in the cache. A live handle superseded in
+     * the current transaction is resolved through the cache.
+     */
+    private HGLiveHandle currentLiveHandle(HGHandle handle)
+    {
+    	if (handle instanceof HGPersistentHandle)
+    		return cache.get((HGPersistentHandle)handle);
+    	HGLiveHandle live = (HGLiveHandle)handle;
+    	if (isSupersededInCurrentTransaction(live))
+    	{
+    		HGLiveHandle current = cache.get(live.getPersistent());
+    		return current != null ? current : live;
+    	}
+    	return live;
     }
     
     /**
@@ -807,6 +836,8 @@ public /*final*/ class HyperGraph implements HyperNode
         if (liveHandle != null)
         {
         	T theAtom = (T)liveHandle.getRef();
+        	if (theAtom != null && isSupersededInCurrentTransaction(liveHandle))
+        		theAtom = null; // replaced in this transaction, resolve it through the cache below
         	if (theAtom == null)
         	{
         		//
@@ -874,14 +905,14 @@ public /*final*/ class HyperGraph implements HyperNode
     {
     	HGPersistentHandle pHandle;
     	Object atom = null;
-    	if (handle instanceof HGLiveHandle)
+    	if (handle instanceof HGLiveHandle && !isSupersededInCurrentTransaction((HGLiveHandle)handle))
     	{
     		atom = ((HGLiveHandle)handle).getRef();
     		pHandle = ((HGLiveHandle)handle).getPersistent();
     	}
     	else
     	{
-    		pHandle = (HGPersistentHandle)handle;
+    		pHandle = handle.getPersistent();
     		HGLiveHandle lHandle = cache.get(pHandle);
     		if (lHandle != null)
     			atom = lHandle.getRef();
@@ -1228,7 +1259,7 @@ public /*final*/ class HyperGraph implements HyperNode
         }
         else
         {
-        	lHandle = (HGLiveHandle)handle;
+        	lHandle = currentLiveHandle(handle);
             pHandle = lHandle.getPersistent();
         }
         

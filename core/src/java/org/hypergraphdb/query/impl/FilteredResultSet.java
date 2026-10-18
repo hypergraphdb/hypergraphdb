@@ -62,9 +62,15 @@ public class FilteredResultSet<T> implements HGSearchResult<T>
 	
 	public void close() 
 	{
-		searchResult.close();
-		if (predicate instanceof CloseMe)
-			((CloseMe)predicate).close();
+		try
+		{
+			searchResult.close();
+		}
+		finally
+		{
+			if (predicate instanceof CloseMe)
+				((CloseMe)predicate).close();
+		}
 	}
 
 	public T current() 

@@ -494,7 +494,8 @@ public class Queries extends HGTestBase
     {
         Assert.assertNotNull(hg.findOne(graph, 
                 hg.and(hg.type(SimpleBean.class), hg.eq("strProp", "nestbeansLink"))));
-        HGHandle somenested = hg.findOne(graph, hg.type(NestedBean.class));
+        // Not just any NestedBean: one duplicate (second_fifth) is not a target of the value link.
+        HGHandle somenested = getNestedBeanHandle(0);
         Assert.assertNotNull(somenested);
         Assert.assertNotNull(hg.findOne(graph, hg.and(hg.type(SimpleBean.class), hg.incident(somenested))));
     }

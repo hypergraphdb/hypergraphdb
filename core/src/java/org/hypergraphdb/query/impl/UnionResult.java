@@ -112,8 +112,14 @@ public class UnionResult<T> implements HGSearchResult<T>
 
 	public void close() 
 	{
-		left.close();
-		right.close();
+		try
+		{
+			left.close();
+		}
+		finally
+		{
+			right.close();
+		}
 	}
 
 	public T prev() 

@@ -25,6 +25,7 @@ import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.handle.WeakHandle;
 import org.hypergraphdb.handle.WeakManagedHandle;
 import org.hypergraphdb.transaction.HGTransactionConfig;
+import org.hypergraphdb.transaction.HGTransaction;
 import org.hypergraphdb.transaction.TxCacheMap;
 import org.hypergraphdb.transaction.VBox;
 import org.hypergraphdb.transaction.VBoxBody;
@@ -371,7 +372,13 @@ public class WeakRefAtomCache implements HGAtomCache
 	    // race condition
 	    
 	    Object curr = handle.getRef();
-	    ((WeakHandle)handle).clear();
+	    // Don't clear the old handle yet: if the transaction aborts, the maps below revert to it and
+	    // it must still refer to the original runtime instance, which other transactions keep seeing
+	    // until this one commits. It's cleared on commit; meanwhile this transaction resolves it
+	    // through the maps (see HGTransaction.isSuperseded).
+	    HGTransaction tx = graph.getTransactionManager().getContext().getCurrent();
+	    tx.markSuperseded(handle);
+	    tx.addCommitAction(new ClearHandleAction((WeakHandle)handle));
 	    
 	    // If we have some other Java instance as the atom, we need to force a replace
 	    // even if strictly speaking we don't need to (e.g. this happens with type wrappers)

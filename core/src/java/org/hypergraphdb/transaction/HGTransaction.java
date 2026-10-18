@@ -7,15 +7,20 @@
  */
 package org.hypergraphdb.transaction;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hypergraphdb.HGException;
 import org.hypergraphdb.event.HGTransactionEndEvent;
+import org.hypergraphdb.handle.HGLiveHandle;
 import org.hypergraphdb.util.Cons;
 
 /**
@@ -49,7 +54,11 @@ public final class HGTransaction implements HGStorageTransaction
     private boolean readonly = false;
     private ActiveTransactionsRecord activeTxRecord;
     private Set<Runnable> abortActions = new HashSet<Runnable>();
-    
+    private List<Runnable> commitActions = null;
+    // Live handles whose atom this transaction replaced with a different runtime instance. Compared
+    // by identity: the old and new live handles of an atom are equal (same persistent handle).
+    private Set<HGLiveHandle> supersededHandles = null;
+
     long getNumber()
     {
         return number;
@@ -217,6 +226,14 @@ public final class HGTransaction implements HGStorageTransaction
             if (!readonly)
                 parent.bodiesRead.putAll(bodiesRead);
             parent.boxesWritten.putAll(boxesWritten);
+            // What remains to be done on abort or commit now depends on the parent's outcome.
+            parent.abortActions.addAll(abortActions);
+            if (commitActions != null)
+                for (Runnable r : commitActions)
+                    parent.addCommitAction(r);
+            if (supersededHandles != null)
+                for (HGLiveHandle h : supersededHandles)
+                    parent.markSuperseded(h);
             finish();
             context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, true));
             return;
@@ -282,8 +299,11 @@ public final class HGTransaction implements HGStorageTransaction
             if (stran != null)
                 stran.commit();
         }
-        context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, true));        
-        finish();        
+        if (commitActions != null)
+            for (Runnable r : commitActions)
+                r.run();
+        context.getManager().fireTransactionEvent(new HGTransactionEndEvent(this, true));
+        finish();
     }
 
     private void privateAbort() throws HGTransactionException
@@ -335,7 +355,44 @@ public final class HGTransaction implements HGStorageTransaction
     {
         this.abortActions.add(r);
     }
-    
+
+    /**
+     * Add some piece of code to execute after the transaction commits successfully. For a nested
+     * transaction, the action is passed on to the parent when the nested transaction commits, and
+     * runs when the top-level transaction commits.
+     */
+    public void addCommitAction(Runnable r)
+    {
+        if (commitActions == null)
+            commitActions = new ArrayList<Runnable>();
+        commitActions.add(r);
+    }
+
+    /**
+     * Record that this transaction replaced the atom of the given live handle with a different
+     * runtime instance. The handle keeps referring to the old instance, which is what other
+     * transactions must see until this one commits. Within this transaction, the handle has to be
+     * resolved through the atom cache instead, see {@link #isSuperseded(HGLiveHandle)}.
+     */
+    public void markSuperseded(HGLiveHandle handle)
+    {
+        if (supersededHandles == null)
+            supersededHandles = Collections.newSetFromMap(new IdentityHashMap<HGLiveHandle, Boolean>());
+        supersededHandles.add(handle);
+    }
+
+    /**
+     * Return <code>true</code> if this transaction, or one of its parents, replaced the atom of the
+     * given live handle with a different runtime instance.
+     */
+    public boolean isSuperseded(HGLiveHandle handle)
+    {
+        for (HGTransaction tx = this; tx != null; tx = tx.parent)
+            if (tx.supersededHandles != null && tx.supersededHandles.contains(handle))
+                return true;
+        return false;
+    }
+
     /**
      * <p>Return the parent transaction of this transaction or <code>null</code> is this is not a nested
      * transaction.</p>

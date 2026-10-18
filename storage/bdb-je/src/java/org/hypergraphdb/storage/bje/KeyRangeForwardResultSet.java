@@ -33,14 +33,18 @@ class KeyRangeForwardResultSet<T> extends IndexResultSet<T> {
 	}
 
 	protected T back() {
-		if (HGUtils.eq(key.getData(), initialKey.getData()))
-			return null;
 		try {
+			// The range starts at the values of initialKey: moving back from one of them must not
+			// leave that key (it is the smallest key of the range).
+			boolean atInitialKey = HGUtils.eq(key.getData(), initialKey.getData());
 			OperationStatus status = cursor.cursor().getPrev(key, data, LockMode.DEFAULT);
-			if (status == OperationStatus.SUCCESS)
-				return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
-			else
+			if (status != OperationStatus.SUCCESS)
 				return null;
+			if (atInitialKey && !HGUtils.eq(key.getData(), initialKey.getData())) {
+				cursor.cursor().getNext(key, data, LockMode.DEFAULT);
+				return null;
+			}
+			return converter.fromByteArray(data.getData(), data.getOffset(), data.getSize());
 		}
 		catch (Throwable t) {
 			closeNoException();
@@ -52,6 +56,35 @@ class KeyRangeForwardResultSet<T> extends IndexResultSet<T> {
 		super(cursor, key, converter);
 		initialKey = new DatabaseEntry();
 		assignData(initialKey, key.getData());
+	}
+
+	/** Position on the first value of the range's first key. */
+	public void goBeforeFirst() {
+		try {
+			key = new DatabaseEntry(initialKey.getData().clone());
+			if (cursor.cursor().getSearchKey(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+				positionedBeforeFirst(converter.fromByteArray(data.getData(), data.getOffset(), data.getSize()));
+			else
+				positionedNowhere();
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
+	}
+
+	/** The range extends to the end of the database: position on its last record. */
+	public void goAfterLast() {
+		try {
+			if (cursor.cursor().getLast(key, data, LockMode.DEFAULT) == OperationStatus.SUCCESS)
+				positionedAfterLast(converter.fromByteArray(data.getData(), data.getOffset(), data.getSize()));
+			else
+				positionedNowhere();
+		}
+		catch (Throwable t) {
+			closeNoException();
+			throw new HGException(t);
+		}
 	}
 
 	public boolean isOrdered() {

@@ -61,7 +61,6 @@
 							<exclude>**/BigTypePlus.java</exclude> <exclude>**/ConcurrentTypeCreation.java</exclude> 
 							<exclude>**/DataTxTests.java</exclude> <exclude>**/TypingTxTests.java</exclude> 
 							<exclude>**/TestTxMap.java</exclude> -->
-						<exclude>**/LinkTxTests.java</exclude>
 						<exclude>**/benchmark/*.java</exclude>
 					</excludes>
 				</configuration>

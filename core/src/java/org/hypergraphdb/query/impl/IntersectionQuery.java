@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 import org.hypergraphdb.HGQuery;
 import org.hypergraphdb.HGSearchResult;
+import org.hypergraphdb.util.HGUtils;
 
 /**
  * <p>
@@ -45,18 +46,26 @@ public class IntersectionQuery<T> extends HGQuery<T> implements Iterable<HGQuery
 	public HGSearchResult<T> execute()
 	{
 		//combiner.reset();
-		HGSearchResult<T> leftResult = left.execute();
-		HGSearchResult<T> rightResult = right.execute();
-		if (!leftResult.hasNext() || !rightResult.hasNext())
+		HGSearchResult<T> leftResult = null, rightResult = null;
+		try
 		{
-			leftResult.close();
-			rightResult.close();
-			return (HGSearchResult<T>)HGSearchResult.EMPTY;
+			leftResult = left.execute();
+			rightResult = right.execute();
+			if (!leftResult.hasNext() || !rightResult.hasNext())
+			{
+				leftResult.close();
+				rightResult.close();
+				return (HGSearchResult<T>)HGSearchResult.EMPTY;
+			}
+			return combiner.combine(leftResult, rightResult);
 		}
-	//	return new SortedIntersectionResult(leftResult, rightResult);
-//		combiner.init(leftResult, rightResult);
-//		return combiner;
-		return combiner.combine(leftResult, rightResult);
+		catch (RuntimeException | Error ex)
+		{
+			// Don't leave sub-results (and their storage cursors and locks) open.
+			HGUtils.closeNoException(leftResult);
+			HGUtils.closeNoException(rightResult);
+			throw ex;
+		}
 	}
 
     public HGQuery<T> getLeft()

@@ -22,14 +22,37 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>//,
 	{
 		if (intersection != null)
 			return;
-		ArrayBasedSet<Object> set = new ArrayBasedSet<Object>(new Object[0]);
-		ZigZagIntersectionResult<T> zigzag = new ZigZagIntersectionResult<T>(left, right);
-		while (zigzag.hasNext())
-			set.add(zigzag.next());
-		intersection = (HGRandomAccessResult<T>)set.getSearchResult();		
-		left.close();
-		right.close();
-		left = right = null;		
+		if (left == null)
+			throw new IllegalStateException("The result set is closed, or computing it failed.");
+		try
+		{
+			ArrayBasedSet<Object> set = new ArrayBasedSet<Object>(new Object[0]);
+			ZigZagIntersectionResult<T> zigzag = new ZigZagIntersectionResult<T>(left, right);
+			while (zigzag.hasNext())
+				set.add(zigzag.next());
+			intersection = (HGRandomAccessResult<T>)set.getSearchResult();
+		}
+		finally
+		{
+			closeInputs();
+		}
+	}
+
+	// The inputs are only needed until the intersection is computed.
+	private void closeInputs()
+	{
+		HGRandomAccessResult<T> l = left, r = right;
+		left = right = null;
+		try
+		{
+			if (l != null)
+				l.close();
+		}
+		finally
+		{
+			if (r != null)
+				r.close();
+		}
 	}
 	
 	public InMemoryIntersectionResult(HGRandomAccessResult<T> left, HGRandomAccessResult<T> right)
@@ -58,8 +81,15 @@ public class InMemoryIntersectionResult<T> implements HGRandomAccessResult<T>//,
 
 	public void close()
 	{
-		if (intersection != null)
-			intersection.close();
+		try
+		{
+			if (intersection != null)
+				intersection.close();
+		}
+		finally
+		{
+			closeInputs();
+		}
 	}
 
 	public T current()

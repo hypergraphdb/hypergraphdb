@@ -137,8 +137,14 @@ public class SortedIntersectionResult<T> implements HGSearchResult<T> //, RSComb
 
 	public void close() 
 	{
-		left.close();
-		right.close();
+		try
+		{
+			left.close();
+		}
+		finally
+		{
+			right.close();
+		}
 	}
 
 	public boolean hasPrev() 

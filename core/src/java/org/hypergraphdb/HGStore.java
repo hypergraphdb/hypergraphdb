@@ -61,6 +61,7 @@ public class HGStore
         this.impl = config.getStoreImplementation();
         impl.startup(this, config);
         transactionManager = new HGTransactionManager(impl.getTransactionFactory());
+        transactionManager.setRetryPolicy(config.getTransactionRetryPolicy());
         if (!config.isTransactional())
             transactionManager.disable();        
     }
