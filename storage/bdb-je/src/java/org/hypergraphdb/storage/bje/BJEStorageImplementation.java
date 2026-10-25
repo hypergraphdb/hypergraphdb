@@ -567,8 +567,11 @@ public class BJEStorageImplementation implements HGStoreImplementation
 
 			public boolean canRetryAfter(Throwable ex)
 			{
-				return ex instanceof TransactionConflictException || ex instanceof LockConflictException; // DeadlockException;
-
+				// Conflicts usually arrive wrapped (e.g. in HGException): look at the whole cause chain.
+				for (Throwable cause = ex; cause != null; cause = cause.getCause())
+					if (cause instanceof TransactionConflictException || cause instanceof LockConflictException)
+						return true;
+				return false;
 			}
 		};
 	}

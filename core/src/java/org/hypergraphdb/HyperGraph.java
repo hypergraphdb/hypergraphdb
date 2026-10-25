@@ -2029,6 +2029,8 @@ public /*final*/ class HyperGraph implements HyperNode
         	newValue = ((HGValueLink)atom).getValue();
 
         HGPersistentHandle [] layout = store.getLink(pHandle);
+        if (layout == null)
+        	throw new HGException("Cannot replace atom " + pHandle + ": no such atom in the store.");
         HGPersistentHandle oldValueHandle = layout[1];        
         HGPersistentHandle oldTypeHandle = layout[0];
         HGAtomType oldType = (HGAtomType)get(oldTypeHandle);
