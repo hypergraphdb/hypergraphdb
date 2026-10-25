@@ -339,9 +339,15 @@ public class HGTransactionManager
 			{
 				return transaction.call();
 			}
+			catch (RuntimeException ex)
+			{
+				// Unchanged, so that nested calls don't add a layer each (and retryable conflicts
+				// stay easy to recognize); this matches what transact() does.
+				throw ex;
+			}
 			catch (Exception ex)
 			{
-				throw new RuntimeException(ex);
+				throw new HGException(ex);
 			}
 		else
 			return transact(transaction, config);
@@ -397,20 +403,27 @@ public class HGTransactionManager
 			}
 	}
 
+	/**
+	 * Return <code>true</code> if a transaction that failed with the given exception can be retried:
+	 * the exception or one of its causes is a conflict the storage layer considers retryable (for
+	 * example a lock timeout or a deadlock). Conflicts usually arrive wrapped in other exceptions, so
+	 * applications with their own retry loops should use this method rather than asking the storage's
+	 * transaction factory about the outer exception only.
+	 */
+	public boolean canRetry(Throwable t)
+	{
+		for (Throwable cause = t; cause != null; cause = cause.getCause())
+			if (factory.canRetryAfter(cause))
+				return true;
+		return false;
+	}
+
 	void handleTxException(Throwable t)
 	{
 		// If there is a DeadlockException at the root of this, we have to
 		// simply abort
 		// the transaction and try again.
-		boolean retry = false;
-		for (Throwable cause = t; cause != null; cause = cause.getCause())
-			if (factory.canRetryAfter(cause))
-			{
-				retry = true;
-				break;
-			}
-
-		if (!retry)
+		if (!canRetry(t))
 		{
 			if (t instanceof RuntimeException)
 				throw (RuntimeException) t;
@@ -433,11 +446,15 @@ public class HGTransactionManager
 	/**
 	 * <p>
 	 * Perform a unit of work encapsulated as a transaction and return the
-	 * result. This method explicitly allows deadlock (or write conflicts) to
-	 * occur and it will re-attempt the transaction in such a case indefinitely.
-	 * In order for the transaction to eventually complete, the underlying
-	 * transactional system must be configured to be fair or to prioritize
-	 * transaction randomly (which is the default behavior).
+	 * result. This method explicitly allows deadlocks (or write conflicts) to
+	 * occur and re-attempts the transaction when one happens, as decided by the
+	 * transaction's {@link TransactionRetryPolicy} (see
+	 * {@link HGTransactionConfig#setRetryPolicy(TransactionRetryPolicy)} and
+	 * {@link #setRetryPolicy(TransactionRetryPolicy)}): by default it waits a
+	 * random, growing time before each retry, so that conflicting transactions
+	 * don't retry in lockstep, and retries without limit. The storage layer picks
+	 * which transaction loses a conflict; there is no fairness guarantee, such as
+	 * older transactions winning.
 	 * </p>
 	 * 
 	 * <p>

@@ -82,7 +82,28 @@ public class TxCacheSet<Key, E> extends TxSet<E>
     {
         HGTransaction tx = txManager.getContext().getCurrent();
         if (tx == null)
-            return S.body.value;
+        {
+            if (S.body.version != -1)
+                return S.body.value;
+            // The top body is the marker "a newer version may exist, reload it". Load the latest
+            // committed state without holding the commit lock (a committing transaction holds it
+            // while waiting for its storage commit, so a storage read under it could deadlock), and
+            // keep the result as the latest version only if no commit happened in between.
+            // Otherwise return it without caching, as a plain non-transactional read would.
+            long latest = txManager.mostRecentRecord.transactionNumber;
+            HGSortedSet<E> x = loader.resolve(key);
+            txManager.COMMIT_LOCK.lock();
+            try
+            {
+                if (txManager.mostRecentRecord.transactionNumber == latest)
+                    return insertBody(latest, x).value;
+            }
+            finally
+            {
+                txManager.COMMIT_LOCK.unlock();
+            }
+            return x;
+        }
         HGSortedSet<E> x = tx.getLocalValue(S);        
         if (x == null) // no local value, we get the correct version if loaded or return null if not
         {

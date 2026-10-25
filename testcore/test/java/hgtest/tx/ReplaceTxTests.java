@@ -60,6 +60,22 @@ public class ReplaceTxTests extends HGTestBase
     }
 
     @Test
+    public void replaceMissingAtomFailsClearly()
+    {
+        org.hypergraphdb.HGPersistentHandle missing = graph.getHandleFactory().makeHandle();
+        try
+        {
+            graph.replace(missing, new Holder("replacement"));
+            fail("expected HGException");
+        }
+        catch (org.hypergraphdb.HGException ex)
+        {
+            assertTrue("message names the handle: " + ex.getMessage(),
+                       String.valueOf(ex.getMessage()).contains(missing.toString()));
+        }
+    }
+
+    @Test
     public void replaceAbortKeepsRuntimeInstance()
     {
         HGHandle h = addHolder("original");

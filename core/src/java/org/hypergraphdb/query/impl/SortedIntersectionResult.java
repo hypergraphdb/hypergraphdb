@@ -85,8 +85,8 @@ public class SortedIntersectionResult<T> implements HGSearchResult<T> //, RSComb
 			}
 			else
 			{
-				back_left = false;
-				back_right = true;
+				back_left = true; // lprev > rprev: the left side steps back
+				back_right = false;
 			}				
 		}		
 	}
